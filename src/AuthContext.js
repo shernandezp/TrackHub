@@ -26,7 +26,6 @@ export const AuthProvider = ({ children, navigate }) => {
       "&code_challenge_method=S256";
   };
 
-  // Example of a function to handle login callback (assuming your app redirects back to a specific route after authentication)
   const handleLoginCallback = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get("code");
@@ -48,6 +47,6 @@ export const AuthProvider = ({ children, navigate }) => {
 };
 
 AuthProvider.propTypes = {
-    children: PropTypes.node.isRequired, // Children must be provided and should be a valid React node
+    children: PropTypes.node.isRequired,
     navigate: PropTypes.func.isRequired
   };

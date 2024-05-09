@@ -1,5 +1,3 @@
-
-
 export const exchangeAuthorizationCode = async (authorizationCode, codeVerifier) => {
     const requestBody = {
       grant_type: "authorization_code",

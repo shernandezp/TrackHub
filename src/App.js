@@ -69,7 +69,7 @@ export default function App() {
   useEffect(() => {
     if (!isAuthenticated && pathname !== "/login") {
       // Redirect to login page if not authenticated
-      login(); // Implement your login method to redirect to the authority server
+      login();
     }
   }, [isAuthenticated, pathname, login]);
 
