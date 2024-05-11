@@ -40,9 +40,8 @@ import Billing from "layouts/billing";
 import VirtualReality from "layouts/virtual-reality";
 import RTL from "layouts/rtl";
 import Profile from "layouts/profile";
-import SignIn from "layouts/authentication/sign-in";
-import SignUp from "layouts/authentication/sign-up";
 import Callback from "layouts/authentication/callback";
+import AuthorizeRedirect from "layouts/authentication/authorizeredirect";
 
 // Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
@@ -106,6 +105,13 @@ const routes = [
     route: "/authentication/callback",
     icon: <ArgonBox component="i" color="info" fontSize="14px" className="ni ni-collection" />,
     component: <Callback />,
+  },
+  {
+    type: "route",
+    name: "Authorize Redirect",
+    key: "authorize-redirect",
+    route: "/authentication/authorize",
+    component: <AuthorizeRedirect />,
   }
 ];
 

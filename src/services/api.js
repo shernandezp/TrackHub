@@ -1,4 +1,6 @@
-export const exchangeAuthorizationCode = async (authorizationCode, codeVerifier) => {
+import axios from 'axios';
+
+export const exchangeAuthorizationCode = async (authorizationCode) => {
     const requestBody = {
       grant_type: "authorization_code",
       code: authorizationCode,
@@ -8,19 +10,17 @@ export const exchangeAuthorizationCode = async (authorizationCode, codeVerifier)
     };
   
     try {
-      const response = await fetch("https://localhost/Identity/token", {
-        method: "POST",
+      const response = await axios.post("https://localhost:7158/token", requestBody, {
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: JSON.stringify(requestBody),
       });
-  
-      if (!response.ok) {
+
+      if (response.status !== 200) {
         throw new Error("Failed to exchange authorization code for access token");
       }
-  
-      const data = await response.json();
+
+      const data = await response.data;
       return data.access_token;
     } catch (error) {
       console.error("Error exchanging authorization code:", error.message);
