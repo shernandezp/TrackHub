@@ -55,16 +55,16 @@ export default function App() {
   const { miniSidenav, direction, layout, openConfigurator, sidenavColor, darkSidenav, darkMode } =
     controller;
   const [onMouseEnter, setOnMouseEnter] = useState(false);
-  const { isAuthenticated, isAuthenticating, login } = useAuth();
+  const { isAuthenticated, login } = useAuth();
   const { pathname } = useLocation();
 
   useEffect(() => {
     // Redirect to login page if not authenticated
-    if (!isAuthenticated && !isAuthenticating) {
+    if (!isAuthenticated && pathname != "/authentication/callback") {
       login();
     }
   
-  }, [isAuthenticated, isAuthenticating, login]);
+  }, [isAuthenticated, login, pathname]);
 
   // Open sidenav when mouse enter on mini sidenav
   const handleOnMouseEnter = () => {

@@ -7,7 +7,7 @@ import { useAuth } from "AuthContext";
 const CallbackPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { handleLoginCallback, isAuthenticated } = useAuth();
+  const { setIsAuthenticated } = useAuth();
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -18,7 +18,7 @@ const CallbackPage = () => {
       exchangeAuthorizationCode(authorizationCode).then((accessToken) => {
         // Store access token in local storage or state management
         localStorage.setItem("accessToken", accessToken);
-        handleLoginCallback();
+        setIsAuthenticated(true);
         // Redirect to dashboard or desired page
         navigate("/dashboard");
       })

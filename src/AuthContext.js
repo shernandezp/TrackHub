@@ -12,41 +12,31 @@ export const useAuth = () => useContext(AuthContext);
 // Authentication provider component
 export const AuthProvider = ({ children, navigate }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   const login = () => {
-    if (!isAuthenticating) { // Added this check
-      setIsAuthenticating(true);
-      
-      const codeChallenge = generateCodeChallenge('dce35c1f-194d-48c4-bd90-6f14e9042023');
-      const authorizationEndpoint = "https://localhost:7158/authorize";
-      const redirectUri = "http://localhost:3000/authentication/callback";
-      const clientId = "web_client";
-      const responseType = "code";
-      const scope = "web_scope offline_access";
-      const state = "123";
+    const codeChallenge = generateCodeChallenge('dce35c1f-194d-48c4-bd90-6f14e9042023');
+    const authorizationEndpoint = "https://localhost/Identity/authorize";
+    const redirectUri = "http://localhost:3000/authentication/callback";
+    const clientId = "web_client";
+    const responseType = "code";
+    const scope = "web_scope offline_access";
+    const state = "123";
 
-      const queryParams = new URLSearchParams({
-        client_id: clientId,
-        redirect_uri: redirectUri,
-        response_type: responseType,
-        scope: scope,
-        state: state,
-        code_challenge: codeChallenge,
-        code_challenge_method: "S256"
-      });
-      const authorizationUrl = `${authorizationEndpoint}?${queryParams.toString()}`;
-      navigate(`/authentication/authorize?authorizationUrl=${encodeURIComponent(authorizationUrl)}`);
-    }
-  };
-
-  const handleLoginCallback = () => {
-    setIsAuthenticated(true);
-    setIsAuthenticating(false);
+    const queryParams = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      response_type: responseType,
+      scope: scope,
+      state: state,
+      code_challenge: codeChallenge,
+      code_challenge_method: "S256"
+    });
+    const authorizationUrl = `${authorizationEndpoint}?${queryParams.toString()}`;
+    navigate(`/authentication/authorize?authorizationUrl=${encodeURIComponent(authorizationUrl)}`);
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, isAuthenticating, login, handleLoginCallback }}>
+    <AuthContext.Provider value={{ isAuthenticated, setIsAuthenticated, login }}>
       {children}
     </AuthContext.Provider>
   );

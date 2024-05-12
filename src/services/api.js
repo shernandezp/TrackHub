@@ -10,7 +10,7 @@ export const exchangeAuthorizationCode = async (authorizationCode) => {
     };
   
     try {
-      const response = await axios.post("https://localhost:7158/token", requestBody, {
+      const response = await axios.post("https://localhost/Identity/token", requestBody, {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
