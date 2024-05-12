@@ -5,13 +5,13 @@ import axios from 'axios';
     const requestBody = {
       grant_type: "authorization_code",
       code: authorizationCode,
-      redirect_uri: "http://localhost:3000/authentication/callback",
+      redirect_uri: process.env.REACT_APP_CALLBACK_ENDPOINT,
       code_verifier: codeVerifier, 
-      client_id: "web_client"
+      client_id: process.env.REACT_APP_CLIENT_ID
     };
   
     try {
-      const response = await axios.post("https://localhost/Identity/token", requestBody, {
+      const response = await axios.post(process.env.REACT_APP_TOKEN_ENDPOINT, requestBody, {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
@@ -30,10 +30,10 @@ import axios from 'axios';
 
   export async function refreshAccessToken(refreshToken) {
     try {
-      const response = await axios.post('https://localhost/Identity/token', new URLSearchParams({
+      const response = await axios.post(process.env.REACT_APP_TOKEN_ENDPOINT, new URLSearchParams({
         grant_type: 'refresh_token',
         refresh_token: refreshToken,
-        client_id: 'web_client',
+        client_id: process.env.REACT_APP_CLIENT_ID,
       }), {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',

@@ -23,23 +23,20 @@ export const AuthProvider = ({ children, navigate }) => {
       sessionStorage.setItem('code_verifier', codeVerifierRef.current);
     }
     const codeChallenge = generateCodeChallenge(codeVerifierRef.current);
-    const authorizationEndpoint = "https://localhost/Identity/authorize";
-    const redirectUri = "http://localhost:3000/authentication/callback";
-    const clientId = "web_client";
     const responseType = "code";
     const scope = "web_scope offline_access";
     const state = "123";
 
     const queryParams = new URLSearchParams({
-      client_id: clientId,
-      redirect_uri: redirectUri,
+      client_id: process.env.REACT_APP_CLIENT_ID,
+      redirect_uri: process.env.REACT_APP_CALLBACK_ENDPOINT,
       response_type: responseType,
       scope: scope,
       state: state,
       code_challenge: codeChallenge,
       code_challenge_method: "S256"
     });
-    const authorizationUrl = `${authorizationEndpoint}?${queryParams.toString()}`;
+    const authorizationUrl = `${process.env.REACT_APP_AUTHORIZATION_ENDPOINT}?${queryParams.toString()}`;
     navigate(`/authentication/authorize?authorizationUrl=${encodeURIComponent(authorizationUrl)}`);
   };
 
