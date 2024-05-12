@@ -1,11 +1,12 @@
 import axios from 'axios';
 
-export const exchangeAuthorizationCode = async (authorizationCode) => {
+  export const exchangeAuthorizationCode = async (authorizationCode) => {
+    const codeVerifier = sessionStorage.getItem('code_verifier');
     const requestBody = {
       grant_type: "authorization_code",
       code: authorizationCode,
       redirect_uri: "http://localhost:3000/authentication/callback",
-      code_verifier: 'dce35c1f-194d-48c4-bd90-6f14e9042023', 
+      code_verifier: codeVerifier, 
       client_id: "web_client"
     };
   
@@ -20,10 +21,27 @@ export const exchangeAuthorizationCode = async (authorizationCode) => {
         throw new Error("Failed to exchange authorization code for access token");
       }
 
-      const data = await response.data;
-      return data.access_token;
+      return await response.data;
     } catch (error) {
       console.error("Error exchanging authorization code:", error.message);
       throw error;
     }
   };
+
+  export async function refreshAccessToken(refreshToken) {
+    try {
+      const response = await axios.post('https://localhost/Identity/token', new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+        client_id: 'web_client',
+      }), {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      });
+  
+      return response.data;
+    } catch (error) {
+      throw new Error('Failed to refresh access token');
+    }
+  }

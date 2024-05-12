@@ -55,7 +55,7 @@ export default function App() {
   const { miniSidenav, direction, layout, openConfigurator, sidenavColor, darkSidenav, darkMode } =
     controller;
   const [onMouseEnter, setOnMouseEnter] = useState(false);
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated, login, accessToken } = useAuth();
   const { pathname } = useLocation();
 
   useEffect(() => {

@@ -1,30 +1,29 @@
 import React, { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useNavigate } from 'react-router-dom';
-import { exchangeAuthorizationCode } from "services/api"; // Function to exchange authorization code for access token
+import { exchangeAuthorizationCode } from "services/api";
 import { useAuth } from "AuthContext";
 
 const CallbackPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { setIsAuthenticated } = useAuth();
+  const { setIsAuthenticated, setAccessToken, setRefreshToken } = useAuth();
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const authorizationCode = searchParams.get("code");
 
     if (authorizationCode) {
-      // Exchange authorization code for access token (typically done on the server-side)
-      exchangeAuthorizationCode(authorizationCode).then((accessToken) => {
-        // Store access token in local storage or state management
-        localStorage.setItem("accessToken", accessToken);
+      // Exchange authorization code for access token
+      exchangeAuthorizationCode(authorizationCode).then((data) => {
+        setAccessToken(data.access_token);
+        setRefreshToken(data.refresh_token);
         setIsAuthenticated(true);
-        // Redirect to dashboard or desired page
+        // Redirect to dashboard
         navigate("/dashboard");
       })
       .catch((error) => {
         console.error("Error exchanging authorization code:", error);
-        // Handle the error here, for example by navigating to an error page
         navigate("/error");
       });
     } else {
