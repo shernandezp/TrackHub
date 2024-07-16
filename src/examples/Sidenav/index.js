@@ -33,7 +33,6 @@ import ArgonTypography from "components/ArgonTypography";
 
 // Argon Dashboard 2 MUI example components
 import SidenavItem from "examples/Sidenav/SidenavItem";
-import SidenavFooter from "examples/Sidenav/SidenavFooter";
 
 // Custom styles for the Sidenav
 import SidenavRoot from "examples/Sidenav/SidenavRoot";
@@ -69,8 +68,11 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
     return () => window.removeEventListener("resize", handleMiniSidenav);
   }, [dispatch, location]);
 
-  // Render all the routes from the routes.js (All the visible items on the Sidenav)
-  const renderRoutes = routes.map(({ type, name, icon, title, key, href, route }) => {
+  const keysToFilterOut = ['authorize-redirect', 'callback'];
+  // Render all the routes (except keysToFilterOut) from the routes.js
+  const renderRoutes = routes
+    .filter(({ key }) => !keysToFilterOut.includes(key))
+    .map(({ type, name, icon, title, key, href, route }) => {
     let returnValue;
 
     if (type === "route") {
@@ -135,7 +137,7 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
         </ArgonBox>
         <ArgonBox component={NavLink} to="/" display="flex" alignItems="center">
           {brand && (
-            <ArgonBox component="img" src={brand} alt="Argon Logo" width="2rem" mr={0.25} />
+            <ArgonBox component="img" src={brand} alt="Argon Logo" width="3rem" mr={0.25} />
           )}
           <ArgonBox
             width={!brandName && "100%"}
@@ -154,10 +156,6 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
       </ArgonBox>
       <Divider light={darkSidenav} />
       <List>{renderRoutes}</List>
-
-      <ArgonBox pt={1} mt="auto" mb={2} mx={2}>
-        <SidenavFooter />
-      </ArgonBox>
     </SidenavRoot>
   );
 }

@@ -13,7 +13,7 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 
 // react-router components
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
@@ -41,8 +41,8 @@ import routes from "routes";
 import { useArgonController, setMiniSidenav, setOpenConfigurator } from "context";
 
 // Images
-import brand from "assets/images/logo-ct.png";
-import brandDark from "assets/images/logo-ct-dark.png";
+import brand from "assets/images/logo-th.svg";
+import brandDark from "assets/images/logo-th-dark.svg";
 
 // Icon Fonts
 import "assets/css/nucleo-icons.css";
@@ -141,7 +141,7 @@ export default function App() {
           <Sidenav
             color={sidenavColor}
             brand={darkSidenav || darkMode ? brand : brandDark}
-            brandName="Argon Dashboard 2 PRO"
+            brandName="Track Hub"
             routes={routes}
             onMouseEnter={handleOnMouseEnter}
             onMouseLeave={handleOnMouseLeave}
