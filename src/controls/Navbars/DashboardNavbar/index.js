@@ -18,6 +18,8 @@ import { useState, useEffect } from "react";
 // react-router components
 import { useLocation, Link } from "react-router-dom";
 
+import { useAuth } from "AuthContext";
+
 // prop-types is a library for typechecking of props.
 import PropTypes from "prop-types";
 
@@ -65,6 +67,7 @@ function DashboardNavbar({ absolute, light, isMini }) {
   const { miniSidenav, transparentNavbar, fixedNavbar, openConfigurator } = controller;
   const [openMenu, setOpenMenu] = useState(false);
   const route = useLocation().pathname.split("/").slice(1);
+  const { logoff } = useAuth();
 
   useEffect(() => {
     // Setting the navbar type
@@ -171,7 +174,7 @@ function DashboardNavbar({ absolute, light, isMini }) {
               />
             </ArgonBox>
             <ArgonBox color={light ? "white" : "inherit"}>
-              <Link to="/authentication/sign-in/basic">
+              <Link onClick={logoff}>
                 <IconButton sx={navbarIconButton} size="small">
                   <Icon
                     sx={({ palette: { dark, white } }) => ({
@@ -183,9 +186,8 @@ function DashboardNavbar({ absolute, light, isMini }) {
                   <ArgonTypography
                     variant="button"
                     fontWeight="medium"
-                    color={light && transparentNavbar ? "white" : "dark"}
-                  >
-                    Sign in
+                    color={light && transparentNavbar ? "white" : "dark"}>
+                    Sign off
                   </ArgonTypography>
                 </IconButton>
               </Link>

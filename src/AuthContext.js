@@ -40,6 +40,15 @@ export const AuthProvider = ({ children, navigate }) => {
     navigate(`/authentication/authorize?authorizationUrl=${encodeURIComponent(authorizationUrl)}`);
   };
 
+  const logoff = () => {
+    // Clear any stored tokens or user information
+    localStorage.removeItem('token');
+    sessionStorage.removeItem('user');
+  
+    // Redirect to logged-out page or login page
+    navigate('/authentication/logged-out');
+  };
+
   const handleApiError = async (error) => {
     if (error.response.status === 401) { // Unauthorized
       try {
@@ -54,7 +63,7 @@ export const AuthProvider = ({ children, navigate }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, setIsAuthenticated, login, setAccessToken, setRefreshToken, accessToken }}>
+    <AuthContext.Provider value={{ isAuthenticated, setIsAuthenticated, login, logoff, setAccessToken, setRefreshToken, accessToken }}>
       {children}
     </AuthContext.Provider>
   );
