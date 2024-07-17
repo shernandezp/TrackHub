@@ -27,8 +27,8 @@ import Icon from "@mui/material/Icon";
 import ArgonBox from "components/ArgonBox";
 
 // Argon Dashboard 2 MUI example components
-import Sidenav from "examples/Sidenav";
-import Configurator from "examples/Configurator";
+import Sidenav from "controls/Sidenav";
+import Configurator from "controls/Configurator";
 
 // Argon Dashboard 2 MUI themes
 import theme from "assets/theme";

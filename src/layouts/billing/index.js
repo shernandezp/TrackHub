@@ -20,8 +20,8 @@ import Grid from "@mui/material/Grid";
 import ArgonBox from "components/ArgonBox";
 
 // Argon Dashboard 2 MUI components
-import MasterCard from "examples/Cards/MasterCard";
-import DefaultInfoCard from "examples/Cards/InfoCards/DefaultInfoCard";
+import MasterCard from "controls/Cards/MasterCard";
+import DefaultInfoCard from "controls/Cards/InfoCards/DefaultInfoCard";
 
 // Billing page components
 import BaseLayout from "layouts/billing/components/BaseLayout";

@@ -28,7 +28,7 @@ import ArgonTypography from "components/ArgonTypography";
 import ArgonAvatar from "components/ArgonAvatar";
 
 // Argon Dashboard 2 MUI example components
-import DashboardNavbar from "examples/Navbars/DashboardNavbar";
+import DashboardNavbar from "controls/Navbars/DashboardNavbar";
 
 // Argon Dashboard 2 MUI base styles
 import breakpoints from "assets/theme/base/breakpoints";
