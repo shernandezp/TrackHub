@@ -45,3 +45,20 @@ import axios from 'axios';
       throw new Error('Failed to refresh access token');
     }
   }
+
+  export async function revokeAccessToken(refreshToken) {
+    const revokeBody = new URLSearchParams({
+      token: refreshToken,
+      client_id: process.env.REACT_APP_CLIENT_ID,
+    });
+
+    try {
+      await axios.post(process.env.REACT_APP_LOGOUT_ENDPOINT, revokeBody.toString(), {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      });
+    } catch (error) {
+      console.error('Error revoking token:', error.message);
+    }
+  }
