@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useNavigate } from 'react-router-dom';
-import { exchangeAuthorizationCode } from "services/api";
+import { exchangeAuthorizationCode } from "services/auth";
 import { useAuth } from "AuthContext";
 
 const CallbackPage = () => {

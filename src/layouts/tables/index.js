@@ -16,6 +16,11 @@ Coded by www.creative-tim.com
 // @mui material components
 import Card from "@mui/material/Card";
 
+import Accordion from '@mui/material/Accordion';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+
 // Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
 import ArgonTypography from "components/ArgonTypography";
@@ -38,42 +43,130 @@ function Tables() {
     <DashboardLayout>
       <DashboardNavbar />
       <ArgonBox py={3}>
-        <ArgonBox mb={3}>
-          <Card>
-            <ArgonBox display="flex" justifyContent="space-between" alignItems="center" p={3}>
-              <ArgonTypography variant="h6">Authors table</ArgonTypography>
-            </ArgonBox>
-            <ArgonBox
-              sx={{
-                "& .MuiTableRow-root:not(:last-child)": {
-                  "& td": {
-                    borderBottom: ({ borders: { borderWidth, borderColor } }) =>
-                      `${borderWidth[1]} solid ${borderColor}`,
-                  },
-                },
-              }}
-            >
-              <Table columns={columns} rows={rows} />
-            </ArgonBox>
-          </Card>
-        </ArgonBox>
-        <Card>
-          <ArgonBox display="flex" justifyContent="space-between" alignItems="center" p={3}>
-            <ArgonTypography variant="h6">Projects table</ArgonTypography>
-          </ArgonBox>
-          <ArgonBox
-            sx={{
-              "& .MuiTableRow-root:not(:last-child)": {
-                "& td": {
-                  borderBottom: ({ borders: { borderWidth, borderColor } }) =>
-                    `${borderWidth[1]} solid ${borderColor}`,
-                },
-              },
-            }}
-          >
-            <Table columns={prCols} rows={prRows} />
-          </ArgonBox>
-        </Card>
+        <Accordion>
+            <AccordionSummary
+                expandIcon={<ExpandMoreIcon />}
+                aria-controls="panel1a-content"
+                id="panel1a-header">
+              <ArgonTypography variant="h6">Accounts</ArgonTypography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <Card>
+                <ArgonBox
+                  sx={{
+                    "& .MuiTableRow-root:not(:last-child)": {
+                      "& td": {
+                        borderBottom: ({ borders: { borderWidth, borderColor } }) =>
+                          `${borderWidth[1]} solid ${borderColor}`,
+                      },
+                    },
+                  }}
+                >
+                  <Table columns={columns} rows={rows} />
+                </ArgonBox>
+              </Card>
+            </AccordionDetails>
+        </Accordion>
+
+        <Accordion>
+            <AccordionSummary
+                expandIcon={<ExpandMoreIcon />}
+                aria-controls="panel2a-content"
+                id="panel2a-header">
+              <ArgonTypography variant="h6">Operators</ArgonTypography>
+            </AccordionSummary>
+            <AccordionDetails>
+                <Card>
+                    <ArgonBox
+                        sx={{
+                            "& .MuiTableRow-root:not(:last-child)": {
+                                "& td": {
+                                    borderBottom: ({ borders: { borderWidth, borderColor } }) =>
+                                        `${borderWidth[1]} solid ${borderColor}`,
+                                },
+                            },
+                        }}
+                    >
+                        <Table columns={prCols} rows={prRows} />
+                    </ArgonBox>
+                </Card>
+            </AccordionDetails>
+        </Accordion>
+
+        <Accordion>
+            <AccordionSummary
+                expandIcon={<ExpandMoreIcon />}
+                aria-controls="panel3a-content"
+                id="panel3a-header">
+              <ArgonTypography variant="h6">Devices</ArgonTypography>
+            </AccordionSummary>
+            <AccordionDetails>
+                <Card>
+                    <ArgonBox
+                        sx={{
+                            "& .MuiTableRow-root:not(:last-child)": {
+                                "& td": {
+                                    borderBottom: ({ borders: { borderWidth, borderColor } }) =>
+                                        `${borderWidth[1]} solid ${borderColor}`,
+                                },
+                            },
+                        }}
+                    >
+                        <Table columns={prCols} rows={prRows} />
+                    </ArgonBox>
+                </Card>
+            </AccordionDetails>
+        </Accordion>
+
+        <Accordion>
+            <AccordionSummary
+                expandIcon={<ExpandMoreIcon />}
+                aria-controls="panel4a-content"
+                id="panel4a-header">
+              <ArgonTypography variant="h6">Users</ArgonTypography>
+            </AccordionSummary>
+            <AccordionDetails>
+                <Card>
+                    <ArgonBox
+                        sx={{
+                            "& .MuiTableRow-root:not(:last-child)": {
+                                "& td": {
+                                    borderBottom: ({ borders: { borderWidth, borderColor } }) =>
+                                        `${borderWidth[1]} solid ${borderColor}`,
+                                },
+                            },
+                        }}
+                    >
+                        <Table columns={prCols} rows={prRows} />
+                    </ArgonBox>
+                </Card>
+            </AccordionDetails>
+        </Accordion>
+
+        <Accordion>
+            <AccordionSummary
+                expandIcon={<ExpandMoreIcon />}
+                aria-controls="panel5a-content"
+                id="panel5a-header">
+              <ArgonTypography variant="h6">Groups</ArgonTypography>
+            </AccordionSummary>
+            <AccordionDetails>
+                <Card>
+                    <ArgonBox
+                        sx={{
+                            "& .MuiTableRow-root:not(:last-child)": {
+                                "& td": {
+                                    borderBottom: ({ borders: { borderWidth, borderColor } }) =>
+                                        `${borderWidth[1]} solid ${borderColor}`,
+                                },
+                            },
+                        }}
+                    >
+                        <Table columns={prCols} rows={prRows} />
+                    </ArgonBox>
+                </Card>
+            </AccordionDetails>
+        </Accordion>
       </ArgonBox>
       <Footer />
     </DashboardLayout>

@@ -65,7 +65,7 @@ const routes = [
   },
   {
     type: "route",
-    name: "Billing",
+    name: "Reports",
     key: "billing",
     route: "/billing",
     icon: <ArgonBox component="i" color="success" fontSize="14px" className="ni ni-credit-card" />,

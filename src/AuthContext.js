@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useRef } from "react";
 import { generateCodeVerifier, generateCodeChallenge } from "utils/authutils";
-import { refreshAccessToken, revokeAccessToken } from "services/api";
+import { refreshAccessToken, revokeAccessToken, logout } from "services/auth";
 
 import PropTypes from 'prop-types';
 
@@ -40,14 +40,15 @@ export const AuthProvider = ({ children, navigate }) => {
     navigate(`/authentication/authorize?authorizationUrl=${encodeURIComponent(authorizationUrl)}`);
   };
 
-  const logoff = () => {
+  const logoff = async () => {
+    await revokeAccessToken(accessToken, refreshToken);
+    await logout();
+
     // Clear any stored tokens or user information
     setAccessToken('');
     setRefreshToken('');
-
-    revokeAccessToken(refreshToken);
   
-    // Redirect to logged-out page or login page
+    // Create a logout page
     login();
   };
 

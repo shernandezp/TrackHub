@@ -46,19 +46,36 @@ import axios from 'axios';
     }
   }
 
-  export async function revokeAccessToken(refreshToken) {
+  export async function revokeAccessToken(accessToken) {
     const revokeBody = new URLSearchParams({
-      token: refreshToken,
+      token: accessToken,
       client_id: process.env.REACT_APP_CLIENT_ID,
     });
 
     try {
-      await axios.post(process.env.REACT_APP_LOGOUT_ENDPOINT, revokeBody.toString(), {
+      console.log(`Token: ${accessToken}`);
+      console.log(`Refresh Token: ${refreshToken}`);
+      await axios.post(process.env.REACT_APP_REVOKE_TOKEN_ENDPOINT, revokeBody.toString(), {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
+      }).then(response => {
+        console.log(response);
       });
     } catch (error) {
       console.error('Error revoking token:', error.message);
     }
   }
+
+  export async function logout() {
+    try {
+        const response = await axios.post(process.env.REACT_APP_LOGOUT_ENDPOINT, {}, {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        });
+        console.log(response);
+    } catch (error) {
+        console.error('Error during logout:', error.message);
+    }
+}
