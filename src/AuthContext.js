@@ -52,21 +52,28 @@ export const AuthProvider = ({ children, navigate }) => {
     login();
   };
 
-  const handleApiError = async (error) => {
-    if (error.response.status === 401) { // Unauthorized
-      try {
-        const data = await refreshAccessToken(refreshToken);
-        setAccessToken(data.access_token);
-        setRefreshToken(data.refresh_token);
-      } catch (refreshError) {
-        // Refresh token is also expired or invalid, redirect to login page
-        login();
-      }
+  const handleRefreshToken = async () => {
+    try {
+      const data = await refreshAccessToken(refreshToken);
+      setAccessToken(data.access_token);
+      setRefreshToken(data.refresh_token);
+    } catch (refreshError) {
+      // Refresh token is also expired or invalid, redirect to login page
+      login();
     }
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, setIsAuthenticated, login, logoff, setAccessToken, setRefreshToken, accessToken }}>
+    <AuthContext.Provider value={{ 
+        isAuthenticated, 
+        setIsAuthenticated, 
+        login, 
+        logoff, 
+        accessToken,
+        setAccessToken, 
+        setRefreshToken,
+        handleRefreshToken
+      }}>
       {children}
     </AuthContext.Provider>
   );
