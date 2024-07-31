@@ -13,6 +13,7 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
+import { useState, useEffect } from 'react';
 // @mui material components
 import Card from "@mui/material/Card";
 
@@ -32,10 +33,15 @@ import Footer from "controls/Footer";
 import Table from "controls/Tables/Table";
 
 // Data
+import useAccountsTableData from "layouts/tables/data/accountsTableData";
 import authorsTableData from "layouts/tables/data/authorsTableData";
 import projectsTableData from "layouts/tables/data/projectsTableData";
 
 function Tables() {
+  const [expanded, setExpanded] = useState(false);
+  const data = useAccountsTableData(expanded);
+ 
+  const { data: { columns: accountCols, rows: accountRows } } = data;
   const { columns, rows } = authorsTableData;
   const { columns: prCols, rows: prRows } = projectsTableData;
 
@@ -43,7 +49,7 @@ function Tables() {
     <DashboardLayout>
       <DashboardNavbar />
       <ArgonBox py={3}>
-        <Accordion>
+        <Accordion expanded={expanded} onChange={() => setExpanded(!expanded)}>
             <AccordionSummary
                 expandIcon={<ExpandMoreIcon />}
                 aria-controls="panel1a-content"
@@ -62,7 +68,7 @@ function Tables() {
                     },
                   }}
                 >
-                  <Table columns={columns} rows={rows} />
+                  <Table columns={accountCols} rows={accountRows} />
                 </ArgonBox>
               </Card>
             </AccordionDetails>
@@ -87,7 +93,7 @@ function Tables() {
                             },
                         }}
                     >
-                        <Table columns={prCols} rows={prRows} />
+                        <Table columns={columns} rows={rows} />
                     </ArgonBox>
                 </Card>
             </AccordionDetails>
