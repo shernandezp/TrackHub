@@ -22,7 +22,16 @@ import PropTypes from "prop-types";
 import ArgonBadgeRoot from "components/ArgonBadge/ArgonBadgeRoot";
 
 const ArgonBadge = forwardRef(
-  ({ color, variant, size, circular, indicator, border, container, children, ...rest }, ref) => (
+  ({ 
+    color = "info", 
+    variant = "gradient", 
+    size = "sm", 
+    circular = false, 
+    indicator = false, 
+    border = false, 
+    container = false, 
+    children = false, 
+    ...rest }, ref) => (
     <ArgonBadgeRoot
       {...rest}
       ownerState={{ color, variant, size, circular, indicator, border, container, children }}
@@ -33,18 +42,6 @@ const ArgonBadge = forwardRef(
     </ArgonBadgeRoot>
   )
 );
-
-// Setting default values for the props of ArgonBadge
-ArgonBadge.defaultProps = {
-  color: "info",
-  variant: "gradient",
-  size: "sm",
-  circular: false,
-  indicator: false,
-  border: false,
-  children: false,
-  container: false,
-};
 
 // Typechecking props of the ArgonBadge
 ArgonBadge.propTypes = {

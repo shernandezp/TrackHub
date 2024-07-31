@@ -31,7 +31,7 @@ import { item, itemIcon, itemText, itemIconBox } from "controls/Sidenav/styles/s
 // Argon Dashboard 2 MUI context
 import { useArgonController } from "context";
 
-function SidenavItem({ icon, name, active, open, ...rest }) {
+function SidenavItem({ color = "info", icon, name, active = false, open = false, ...rest }) {
   const [controller] = useArgonController();
   const { miniSidenav, darkSidenav, sidenavColor } = controller;
 
@@ -59,13 +59,6 @@ function SidenavItem({ icon, name, active, open, ...rest }) {
     </>
   );
 }
-
-// Setting default values for the props of SidenavItem
-SidenavItem.defaultProps = {
-  color: "info",
-  active: false,
-  open: false,
-};
 
 // Typechecking props for the SidenavItem
 SidenavItem.propTypes = {

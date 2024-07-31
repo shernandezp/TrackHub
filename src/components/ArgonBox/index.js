@@ -22,7 +22,14 @@ import PropTypes from "prop-types";
 import ArgonBoxRoot from "components/ArgonBox/ArgonBoxRoot";
 
 const ArgonBox = forwardRef(
-  ({ variant, bgColor, color, opacity, borderRadius, shadow, ...rest }, ref) => (
+  ({ 
+    variant = "contained", 
+    bgColor = "transparent", 
+    color = "dark", 
+    opacity = 1, 
+    borderRadius = "none", 
+    shadow = "none", 
+    ...rest }, ref) => (
     <ArgonBoxRoot
       {...rest}
       ref={ref}
@@ -30,16 +37,6 @@ const ArgonBox = forwardRef(
     />
   )
 );
-
-// Setting default values for the props of ArgonBox
-ArgonBox.defaultProps = {
-  variant: "contained",
-  bgColor: "transparent",
-  color: "dark",
-  opacity: 1,
-  borderRadius: "none",
-  shadow: "none",
-};
 
 // Typechecking props for the ArgonBox
 ArgonBox.propTypes = {

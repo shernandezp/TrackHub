@@ -24,7 +24,12 @@ import ArgonInputRoot from "components/ArgonInput/ArgonInputRoot";
 // Argon Dashboard 2 MUI context
 import { useArgonController } from "context";
 
-const ArgonInput = forwardRef(({ size, error, success, disabled, ...rest }, ref) => {
+const ArgonInput = forwardRef(({ 
+  size = "medium", 
+  error = false, 
+  success = false, 
+  disabled = false, 
+  ...rest }, ref) => {
   const [controller] = useArgonController();
   const { darkMode } = controller;
 
@@ -32,14 +37,6 @@ const ArgonInput = forwardRef(({ size, error, success, disabled, ...rest }, ref)
     <ArgonInputRoot {...rest} ref={ref} ownerState={{ size, error, success, disabled, darkMode }} />
   );
 });
-
-// Setting default values for the props of ArgonInput
-ArgonInput.defaultProps = {
-  size: "medium",
-  error: false,
-  success: false,
-  disabled: false,
-};
 
 // Typechecking props for the ArgonInput
 ArgonInput.propTypes = {

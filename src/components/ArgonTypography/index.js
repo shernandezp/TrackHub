@@ -12,7 +12,6 @@ Coded by www.creative-tim.com
 
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
-
 import { forwardRef } from "react";
 
 // prop-types is a library for typechecking of props
@@ -26,7 +25,14 @@ import { useArgonController } from "context";
 
 const ArgonTypography = forwardRef(
   (
-    { color, fontWeight, textTransform, verticalAlign, textGradient, opacity, children, ...rest },
+    { color = "dark", 
+      fontWeight = false, 
+      textTransform = "none", 
+      verticalAlign = "unset", 
+      textGradient = false, 
+      opacity = 1, 
+      children, 
+      ...rest },
     ref
   ) => {
     const [controller] = useArgonController();
@@ -51,16 +57,6 @@ const ArgonTypography = forwardRef(
     );
   }
 );
-
-// Setting default values for the props of ArgonTypography
-ArgonTypography.defaultProps = {
-  color: "dark",
-  fontWeight: false,
-  textTransform: "none",
-  verticalAlign: "unset",
-  textGradient: false,
-  opacity: 1,
-};
 
 // Typechecking props for the ArgonTypography
 ArgonTypography.propTypes = {

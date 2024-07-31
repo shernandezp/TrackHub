@@ -22,7 +22,14 @@ import PropTypes from "prop-types";
 import ArgonButtonRoot from "components/ArgonButton/ArgonButtonRoot";
 
 const ArgonButton = forwardRef(
-  ({ color, variant, size, circular, iconOnly, children, ...rest }, ref) => (
+  ({ 
+    color = "white", 
+    variant = "contained", 
+    size = "medium", 
+    circular = false, 
+    iconOnly = false, 
+    children, 
+    ...rest }, ref) => (
     <ArgonButtonRoot
       {...rest}
       ref={ref}
@@ -35,15 +42,6 @@ const ArgonButton = forwardRef(
     </ArgonButtonRoot>
   )
 );
-
-// Setting default values for the props of ArgonButton
-ArgonButton.defaultProps = {
-  size: "medium",
-  variant: "contained",
-  color: "white",
-  circular: false,
-  iconOnly: false,
-};
 
 // Typechecking props for the ArgonButton
 ArgonButton.propTypes = {

@@ -24,7 +24,12 @@ import ArgonTypography from "components/ArgonTypography";
 // Custom styles for ArgonProgress
 import ArgonProgressRoot from "components/ArgonProgress/ArgonProgressRoot";
 
-const ArgonProgress = forwardRef(({ variant, color, value, label, ...rest }, ref) => (
+const ArgonProgress = forwardRef(({ 
+  variant = "contained", 
+  color = "info", 
+  value = 0, 
+  label = false, 
+  ...rest }, ref) => (
   <>
     {label && (
       <ArgonTypography variant="button" fontWeight="medium" color="text">
@@ -40,14 +45,6 @@ const ArgonProgress = forwardRef(({ variant, color, value, label, ...rest }, ref
     />
   </>
 ));
-
-// Setting default values for the props of ArgonProgress
-ArgonProgress.defaultProps = {
-  variant: "contained",
-  color: "info",
-  value: 0,
-  label: false,
-};
 
 // Typechecking props for the ArgonProgress
 ArgonProgress.propTypes = {

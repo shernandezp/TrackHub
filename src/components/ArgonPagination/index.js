@@ -28,7 +28,14 @@ import ArgonPaginationItemRoot from "components/ArgonPagination/ArgonPaginationI
 const Context = createContext();
 
 const ArgonPagination = forwardRef(
-  ({ item, variant, color, size, active, children, ...rest }, ref) => {
+  ({ 
+    item = false, 
+    variant = "gradient", 
+    color = "info", 
+    size = "medium", 
+    active = false, 
+    children, 
+    ...rest }, ref) => {
     const context = useContext(Context);
     const paginationSize = context ? context.size : null;
     const value = useMemo(() => ({ variant, color, size }), [variant, color, size]);
@@ -61,15 +68,6 @@ const ArgonPagination = forwardRef(
     );
   }
 );
-
-// Setting default values for the props of ArgonPagination
-ArgonPagination.defaultProps = {
-  item: false,
-  variant: "gradient",
-  color: "info",
-  size: "medium",
-  active: false,
-};
 
 // Typechecking props for the ArgonPagination
 ArgonPagination.propTypes = {

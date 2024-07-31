@@ -23,7 +23,7 @@ import TableCell from "@mui/material/TableCell";
 import ArgonTypography from "components/ArgonTypography";
 import ArgonBox from "components/ArgonBox";
 
-function SalesTableCell({ title, content, image, noBorder, ...rest }) {
+function SalesTableCell({ title, content, image = "", noBorder = false, ...rest }) {
   let template;
 
   if (image) {
@@ -69,12 +69,6 @@ function SalesTableCell({ title, content, image, noBorder, ...rest }) {
 
   return template;
 }
-
-// Setting default values for the props of SalesTableCell
-SalesTableCell.defaultProps = {
-  image: "",
-  noBorder: false,
-};
 
 // Typechecking props for the SalesTableCell
 SalesTableCell.propTypes = {

@@ -41,7 +41,7 @@ import sidenavLogoLabel from "controls/Sidenav/styles/sidenav";
 // Argon Dashboard 2 MUI context
 import { useArgonController, setMiniSidenav } from "context";
 
-function Sidenav({ color, brand, brandName, routes, ...rest }) {
+function Sidenav({ color = "info", brand = "", brandName, routes, ...rest }) {
   const [controller, dispatch] = useArgonController();
   const { miniSidenav, darkSidenav, layout } = controller;
   const location = useLocation();
@@ -159,12 +159,6 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
     </SidenavRoot>
   );
 }
-
-// Setting default values for the props of Sidenav
-Sidenav.defaultProps = {
-  color: "info",
-  brand: "",
-};
 
 // Typechecking props for the Sidenav
 Sidenav.propTypes = {

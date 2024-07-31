@@ -32,7 +32,10 @@ import ArgonBox from "components/ArgonBox";
 // Argon Dashboard 2 MUI example components
 import SalesTableCell from "controls/Tables/SalesTable/SalesTableCell";
 
-function SalesTable({ title, rows }) {
+function SalesTable({ 
+  title, 
+  rows = [{}]
+  }) {
   const renderTableCells = rows.map((row, key) => {
     const tableRows = [];
     const rowKey = `row-${key}`;
@@ -76,11 +79,6 @@ function SalesTable({ title, rows }) {
     </TableContainer>
   );
 }
-
-// Setting default values for the props of SalesTable
-SalesTable.defaultProps = {
-  rows: [{}],
-};
 
 // Typechecking props for the SalesTable
 SalesTable.propTypes = {

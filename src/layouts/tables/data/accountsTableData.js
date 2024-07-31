@@ -15,7 +15,6 @@ function useAccountsTableData(fetchData) {
       async function fetchData() {
         const account = await getAccountByUser();
         const accounts = [account];
-        console.log(accounts);
         setData({
           columns: [
             { name: "name", align: "left" },

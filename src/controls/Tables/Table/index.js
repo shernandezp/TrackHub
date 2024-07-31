@@ -36,7 +36,10 @@ import ArgonTypography from "components/ArgonTypography";
 import typography from "assets/theme/base/typography";
 import borders from "assets/theme/base/borders";
 
-function Table({ columns, rows }) {
+function Table({ 
+  columns = [],
+  rows = [{}]
+  }) {
   const { size, fontWeightBold } = typography;
   const { borderWidth } = borders;
 
@@ -109,7 +112,7 @@ function Table({ columns, rows }) {
             component="td"
             p={1}
             textAlign={align}
-            verticalAlign="middle"
+            verticalalign="middle"
             lineHeight={0.65}
             sx={({ palette: { light } }) => ({
               borderBottom: row.hasBorder ? `${borderWidth[1]} solid ${light.main}` : null,
@@ -147,12 +150,6 @@ function Table({ columns, rows }) {
     [columns, rows]
   );
 }
-
-// Setting default values for the props of Table
-Table.defaultProps = {
-  columns: [],
-  rows: [{}],
-};
 
 // Typechecking props for the Table
 Table.propTypes = {

@@ -21,16 +21,14 @@ import PropTypes from "prop-types";
 // Custom styles for ArgonAvatar
 import ArgonAvatarRoot from "components/ArgonAvatar/ArgonAvatarRoot";
 
-const ArgonAvatar = forwardRef(({ bgColor, size, shadow, ...rest }, ref) => (
+const ArgonAvatar = forwardRef((
+  { 
+    bgColor = "transparent", 
+    size = "md", 
+    shadow = "none", 
+    ...rest }, ref) => (
   <ArgonAvatarRoot ref={ref} ownerState={{ shadow, bgColor, size }} {...rest} />
 ));
-
-// Setting default values for the props of ArgonAvatar
-ArgonAvatar.defaultProps = {
-  bgColor: "transparent",
-  size: "md",
-  shadow: "none",
-};
 
 // Typechecking props for the ArgonAvatar
 ArgonAvatar.propTypes = {
