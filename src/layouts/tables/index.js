@@ -13,8 +13,7 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
-import { useState, useEffect } from 'react';
-// @mui material components
+import { useState } from 'react';
 import Card from "@mui/material/Card";
 
 import Accordion from '@mui/material/Accordion';
@@ -31,6 +30,7 @@ import DashboardLayout from "controls/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "controls/Navbars/DashboardNavbar";
 import Footer from "controls/Footer";
 import Table from "controls/Tables/Table";
+import DefaultDialog from "controls/Dialogs/DefaultDialog";
 
 // Data
 import useAccountsTableData from "layouts/tables/data/accountsTableData";
@@ -39,9 +39,9 @@ import projectsTableData from "layouts/tables/data/projectsTableData";
 
 function Tables() {
   const [expanded, setExpanded] = useState(false);
-  const data = useAccountsTableData(expanded);
+  const { data: accountsData, open, handleSave, setOpen } = useAccountsTableData(expanded);
  
-  const { data: { columns: accountCols, rows: accountRows } } = data;
+  const { columns: accountCols, rows: accountRows } = accountsData;
   const { columns, rows } = authorsTableData;
   const { columns: prCols, rows: prRows } = projectsTableData;
 
@@ -174,6 +174,14 @@ function Tables() {
             </AccordionDetails>
         </Accordion>
       </ArgonBox>
+      <DefaultDialog 
+            title="My Dialog Title"
+            handleSave={handleSave}
+            open={open}
+            setOpen={setOpen}
+        >
+          <p>This is the dialog content.</p>
+      </DefaultDialog>
       <Footer />
     </DashboardLayout>
   );

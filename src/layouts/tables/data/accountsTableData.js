@@ -7,8 +7,18 @@ import { formatDateTime } from "utils/dateUtils";
 
 function useAccountsTableData(fetchData) {
   const [data, setData] = useState({ columns: [], rows: [] });
+  const [open, setOpen] = useState(false);
   const hasLoaded = useRef(false);
   const { getAccountByUser } = useAccountService();
+
+  const handleSave = () => {
+    // Perform save operation here
+    console.log('Save button clicked');
+  };
+
+  const handleOpen = () => {
+      setOpen(true);
+  };
 
   useEffect(() => {
     if (fetchData && !hasLoaded.current) {
@@ -41,6 +51,7 @@ function useAccountsTableData(fetchData) {
                 variant="caption"
                 color="secondary"
                 fontWeight="medium"
+                onClick={handleOpen}
               >
                 Edit
               </ArgonTypography>
@@ -53,7 +64,7 @@ function useAccountsTableData(fetchData) {
     }
   }, [fetchData]);
 
-  return { data };
+  return { data, open, handleOpen, handleSave, setOpen };
 }
 
 export default useAccountsTableData;
