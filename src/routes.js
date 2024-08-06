@@ -35,7 +35,7 @@ Coded by www.creative-tim.com
 
 // Argon Dashboard 2 MUI layouts
 import Dashboard from "layouts/dashboard";
-import Tables from "layouts/tables";
+import ManageAdmin from "layouts/manageadmin";
 import Billing from "layouts/billing";
 import Profile from "layouts/profile";
 import Callback from "layouts/authentication/callback";
@@ -55,13 +55,13 @@ const routes = [
   },
   {
     type: "route",
-    name: "Tables",
-    key: "tables",
-    route: "/tables",
+    name: "Manage Admin",
+    key: "manageAdmin",
+    route: "/manageAdmin",
     icon: (
       <ArgonBox component="i" color="warning" fontSize="14px" className="ni ni-calendar-grid-58" />
     ),
-    component: <Tables />,
+    component: <ManageAdmin />,
   },
   {
     type: "route",

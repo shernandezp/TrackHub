@@ -5,19 +5,21 @@ import ArgonBadge from "components/ArgonBadge";
 import useAccountService from "services/account";
 import { formatDateTime } from "utils/dateUtils";
 
-function useAccountsTableData(fetchData) {
+function useAccountsTableData(fetchData, handleRowClick) {
   const [data, setData] = useState({ columns: [], rows: [] });
   const [open, setOpen] = useState(false);
   const hasLoaded = useRef(false);
-  const { getAccountByUser } = useAccountService();
+  const { getAccountByUser, updateAccount } = useAccountService();
 
-  const handleSave = () => {
-    // Perform save operation here
-    console.log('Save button clicked');
+  const handleSave = async (account) => {
+    console.log(account);
+    let response = await updateAccount(account.accountId, account);
+    console.log(response);
   };
 
-  const handleOpen = () => {
-      setOpen(true);
+  const handleOpen = (account) => {
+    handleRowClick(account);
+    setOpen(true);
   };
 
   useEffect(() => {
@@ -51,7 +53,7 @@ function useAccountsTableData(fetchData) {
                 variant="caption"
                 color="secondary"
                 fontWeight="medium"
-                onClick={handleOpen}
+                onClick={() => handleOpen(account)}
               >
                 Edit
               </ArgonTypography>
@@ -64,7 +66,7 @@ function useAccountsTableData(fetchData) {
     }
   }, [fetchData]);
 
-  return { data, open, handleOpen, handleSave, setOpen };
+  return { data, open, handleSave, setOpen };
 }
 
 export default useAccountsTableData;

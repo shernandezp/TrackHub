@@ -21,7 +21,7 @@ const useAccountService = () => {
         `
       };
       const response = await post(data);
-      return response.account;
+      return response.data.account;
     } catch (error) {
       handleError(error);
     }
@@ -67,7 +67,7 @@ const useAccountService = () => {
         `
       };
       const response = await post(data);
-      return response.accounts;
+      return response.data.accounts;
     } catch (error) {
       handleError(error);
     }
@@ -97,7 +97,7 @@ const useAccountService = () => {
         `
       };
       const response = await post(data);
-      return response.createAccount;
+      return response.data.createAccount;
     } catch (error) {
       handleError(error);
     }
@@ -124,7 +124,7 @@ const useAccountService = () => {
         `
       };
       const response = await post(data);
-      return response.updateAccount;
+      return response.data.updateAccount;
     } catch (error) {
       handleError(error);
       return false;
@@ -141,7 +141,7 @@ const useAccountService = () => {
         `
       };
       const response = await post(data);
-      return response.deleteAccount;
+      return response.data.deleteAccount;
     } catch (error) {
       handleError(error);
       return false;
