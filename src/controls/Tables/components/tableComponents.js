@@ -15,6 +15,22 @@ function Name({ name }) {
   );
 }
 
+function NameDetail({ name, detail, image }) {
+  return (
+    <ArgonBox display="flex" alignItems="center" px={1} py={0.5}>
+      {image && <ArgonBox component="img" src={image} alt={name} width="10%" mr={2} />}
+      <ArgonBox display="flex" flexDirection="column">
+        <ArgonTypography variant="button" fontWeight="medium">
+          {name}
+        </ArgonTypography>
+        <ArgonTypography variant="caption" color="secondary">
+          {detail}
+        </ArgonTypography>
+      </ArgonBox>
+    </ArgonBox>
+  );
+}
+
 function Description({ description }) {
   return (
     <ArgonBox display="flex" flexDirection="column" px={1} py={0.5}>
@@ -25,4 +41,17 @@ function Description({ description }) {
   );
 }
 
-export { Name, Description };
+function DescriptionDetail({ description, detail }) {
+  return (
+    <ArgonBox display="flex" flexDirection="column">
+      <ArgonTypography variant="caption" fontWeight="medium" color="text">
+        {description}
+      </ArgonTypography>
+      <ArgonTypography variant="caption" color="secondary">
+        {detail}
+      </ArgonTypography>
+    </ArgonBox>
+  );
+}
+
+export { Name, NameDetail, Description, DescriptionDetail };

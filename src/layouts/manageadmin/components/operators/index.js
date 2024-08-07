@@ -12,19 +12,19 @@ import DefaultDialog from "controls/Dialogs/DefaultDialog";
 import CustomTextField from 'controls/Dialogs/CustomTextField';
 import useForm from 'controls/Dialogs/useForm';
 
-import useAccountTableData from "layouts/manageadmin/data/accountTableData";
+import useOperatorTableData from "layouts/manageadmin/data/operatorsTableData";
 
-function ManageAccount() {
+function ManageOperators() {
 
   const handleRowClick = (rowData) => {
     setValues(rowData);
   };
 
   const [expanded, setExpanded] = useState(false);
-  const { data: accountsData, open, handleSave, setOpen } = useAccountTableData(expanded, handleRowClick);
+  const { data: operatorsData, open, handleSave, setOpen } = useOperatorTableData(expanded, handleRowClick);
   const [values, handleChange, setValues] = useForm({ name: '', description: '' });
 
-  const { columns, rows } = accountsData;
+  const { columns, rows } = operatorsData;
 
   return (
     <>
@@ -33,7 +33,7 @@ function ManageAccount() {
             expandIcon={<ExpandMoreIcon />}
             aria-controls="panel1a-content"
             id="panel1a-header">
-          <ArgonTypography variant="h6">Account</ArgonTypography>
+          <ArgonTypography variant="h6">Operators</ArgonTypography>
         </AccordionSummary>
         <AccordionDetails>
           <Card>
@@ -54,7 +54,7 @@ function ManageAccount() {
       </Accordion>
 
       <DefaultDialog 
-          title="Account Details"
+          title="Operator Details"
           handleSave={async() => await handleSave(values)}
           open={open}
           setOpen={setOpen}
@@ -88,4 +88,4 @@ function ManageAccount() {
   );
 }
 
-export default ManageAccount;
+export default ManageOperators;

@@ -5,6 +5,7 @@ import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ManageAccount from "layouts/manageadmin/components/account";
+import ManageOperators from "layouts/manageadmin/components/operators";
 
 // Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
@@ -17,12 +18,10 @@ import Footer from "controls/Footer";
 import Table from "controls/Tables/Table";
 
 // Data
-import authorsTableData from "layouts/manageadmin/data/authorsTableData";
 import projectsTableData from "layouts/manageadmin/data/projectsTableData";
 
 function ManageAdmin() {
   
-  const { columns, rows } = authorsTableData;
   const { columns: prCols, rows: prRows } = projectsTableData;
 
   return (
@@ -30,31 +29,7 @@ function ManageAdmin() {
       <DashboardNavbar />
       <ArgonBox py={3}>
         <ManageAccount/>
-
-        <Accordion>
-            <AccordionSummary
-                expandIcon={<ExpandMoreIcon />}
-                aria-controls="panel2a-content"
-                id="panel2a-header">
-              <ArgonTypography variant="h6">Operators</ArgonTypography>
-            </AccordionSummary>
-            <AccordionDetails>
-                <Card>
-                    <ArgonBox
-                        sx={{
-                            "& .MuiTableRow-root:not(:last-child)": {
-                                "& td": {
-                                    borderBottom: ({ borders: { borderWidth, borderColor } }) =>
-                                        `${borderWidth[1]} solid ${borderColor}`,
-                                },
-                            },
-                        }}
-                    >
-                        <Table columns={columns} rows={rows} />
-                    </ArgonBox>
-                </Card>
-            </AccordionDetails>
-        </Accordion>
+        <ManageOperators/>
 
         <Accordion>
             <AccordionSummary
