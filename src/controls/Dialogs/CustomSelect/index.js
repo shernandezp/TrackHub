@@ -5,6 +5,15 @@ import Select from '@mui/material/Select';
 import PropTypes from 'prop-types';
 
 function CustomSelect({ list, handleChange, name, id, label, value }) {
+    const handleSelectChange = (event) => {
+        handleChange({
+          target: {
+            name: name,
+            value: event.target.value,
+          },
+        });
+      };
+
     return (
         <div>
             <InputLabel id={`${id}-label`} shrink={true}>{label}</InputLabel>
@@ -14,7 +23,7 @@ function CustomSelect({ list, handleChange, name, id, label, value }) {
                 id={id}
                 value={value}
                 label={label}
-                onChange={handleChange}
+                onChange={handleSelectChange}
                 name={name}
             >
                 {list.map((item, index) => (

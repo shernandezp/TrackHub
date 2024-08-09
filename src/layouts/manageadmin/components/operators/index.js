@@ -132,8 +132,8 @@ function ManageOperators() {
           <CustomSelect
             list={protocolTypes}
             handleChange={handleChange}
-            name="protocolType"
-            id="protocolType"
+            name="protocolTypeId"
+            id="protocolTypeId"
             label="Protocol Type"
             value={values.protocolTypeId}
           />

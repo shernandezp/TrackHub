@@ -7,6 +7,7 @@ import useOperatorService from "services/operator";
 import { formatDateTime } from "utils/dateUtils";
 import Icon from "@mui/material/Icon";
 import logoJira from "assets/images/small-logos/logo-jira.svg";
+import protocolTypes from 'layouts/manageadmin/data/protocolTypes';
 
 function useOperatorTableData(fetchData, handleRowClick) {
   const [data, setData] = useState({ columns: [], rows: [] });
@@ -18,6 +19,8 @@ function useOperatorTableData(fetchData, handleRowClick) {
   const handleSave = async (operator) => {
     let response = await updateOperator(operator.operatorId, operator);
     if (response) {
+      const selectedProtocolType = protocolTypes.find(pt => pt.value === operator.protocolTypeId);
+      operator.protocolType = selectedProtocolType.label;
       const updatedOperators = [...operators];
       const index = updatedOperators.findIndex(a => a.operatorId === operator.operatorId);
       updatedOperators[index] = operator;

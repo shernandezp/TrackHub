@@ -96,15 +96,7 @@ const useOperatorService = () => {
                     accountId: "${operatorData.accountId}"
                     address: "${operatorData.address}"
                     contactName: "${operatorData.contactName}"
-                    credential: {
-                        key: "${operatorData.credential.key}"
-                        key2: "${operatorData.credential.key2}"
-                        operatorId: "${operatorData.operatorId}"
-                        password: "${operatorData.credential.password}"
-                        uri: "${operatorData.credential.uri}"
-                        username: "${operatorData.credential.username}"
-                    }
-                    protocolType: ${operatorData.protocolType}
+                    protocolTypeId: ${operatorData.protocolTypeId}
                     phoneNumber: "${operatorData.phoneNumber}"
                     name: "${operatorData.name}"
                     emailAddress: "${operatorData.emailAddress}"
@@ -141,7 +133,7 @@ const useOperatorService = () => {
                 id: "${operatorId}",
                 command: {
                     operator: {
-                    protocolType: ${operatorData.protocolType}
+                    protocolTypeId: ${operatorData.protocolTypeId}
                     phoneNumber: "${operatorData.phoneNumber}"
                     operatorId: "${operatorId}"
                     name: "${operatorData.name}"
