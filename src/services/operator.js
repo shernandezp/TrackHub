@@ -113,6 +113,7 @@ const useOperatorService = () => {
                 operatorId
                 phoneNumber
                 protocolType
+                protocolTypeId
                 }
             }
         `

@@ -1,12 +1,5 @@
 import { useState } from 'react';
-import Card from "@mui/material/Card";
-
-import Accordion from '@mui/material/Accordion';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ArgonBox from "components/ArgonBox";
-import ArgonTypography from "components/ArgonTypography";
+import TableAccordion from "controls/Accordions/TableAccordion";
 import Table from "controls/Tables/Table";
 import DefaultDialog from "controls/Dialogs/DefaultDialog";
 import CustomTextField from 'controls/Dialogs/CustomTextField';
@@ -18,42 +11,31 @@ import useOperatorTableData from "layouts/manageadmin/data/operatorsTableData";
 
 function ManageOperators() {
 
-  const handleRowClick = (rowData) => {
+  const handleEditClick = (rowData) => {
     setValues(rowData);
   };
 
+  const handleAddClick = () => {
+    setValues({protocolTypeId: 0});
+  };
+
   const [expanded, setExpanded] = useState(false);
-  const { data: operatorsData, open, handleSave, setOpen } = useOperatorTableData(expanded, handleRowClick);
-  const [values, handleChange, setValues] = useForm({ name: '', description: '', protocolTypeId: 0 });
+  const { data: operatorsData, open, handleSave, setOpen } = useOperatorTableData(expanded, handleEditClick);
+  const [values, handleChange, setValues] = useForm({});
 
   const { columns, rows } = operatorsData;
 
   return (
     <>
-      <Accordion expanded={expanded} onChange={() => setExpanded(!expanded)}>
-        <AccordionSummary
-            expandIcon={<ExpandMoreIcon />}
-            aria-controls="panel1a-content"
-            id="panel1a-header">
-          <ArgonTypography variant="h6">Operators</ArgonTypography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Card>
-            <ArgonBox
-              sx={{
-                "& .MuiTableRow-root:not(:last-child)": {
-                  "& td": {
-                    borderBottom: ({ borders: { borderWidth, borderColor } }) =>
-                      `${borderWidth[1]} solid ${borderColor}`,
-                  },
-                },
-              }}
-            >
-              <Table columns={columns} rows={rows} />
-            </ArgonBox>
-          </Card>
-        </AccordionDetails>
-      </Accordion>
+      <TableAccordion 
+        title="Operators" 
+        showAddIcon={true}
+        expanded={expanded} 
+        setOpen={setOpen} 
+        handleAddClick={handleAddClick}
+        setExpanded={setExpanded}>
+        <Table columns={columns} rows={rows} />
+      </TableAccordion>
 
       <DefaultDialog 
           title="Operator Details"
@@ -70,7 +52,7 @@ function ManageOperators() {
             label="Name"
             type="text"
             fullWidth
-            value={values.name}
+            value={values.name || ''}
             onChange={handleChange}
           />
           
@@ -81,7 +63,7 @@ function ManageOperators() {
             label="Description"
             type="text"
             fullWidth
-            value={values.description}
+            value={values.description || ''}
             onChange={handleChange}
           />
 
@@ -92,7 +74,7 @@ function ManageOperators() {
             label="Phone Number"
             type="text"
             fullWidth
-            value={values.phoneNumber}
+            value={values.phoneNumber || ''}
             onChange={handleChange}
           />
 
@@ -103,7 +85,7 @@ function ManageOperators() {
             label="Email Address"
             type="email"
             fullWidth
-            value={values.emailAddress}
+            value={values.emailAddress || ''}
             onChange={handleChange}
           />
 
@@ -114,7 +96,7 @@ function ManageOperators() {
             label="Address"
             type="text"
             fullWidth
-            value={values.address}
+            value={values.address || ''}
             onChange={handleChange}
           />
 
@@ -125,7 +107,7 @@ function ManageOperators() {
             label="Contact Name"
             type="text"
             fullWidth
-            value={values.contactName}
+            value={values.contactName || ''}
             onChange={handleChange}
           />
 

@@ -25,7 +25,11 @@ function CustomSelect({ list, handleChange, name, id, label, value }) {
                 label={label}
                 onChange={handleSelectChange}
                 name={name}
+                displayEmpty
             >
+                <MenuItem value={0} disabled>
+                    Select an Item
+                </MenuItem>
                 {list.map((item, index) => (
                     <MenuItem key={index} value={item.value}>
                         {item.label}
@@ -42,7 +46,7 @@ CustomSelect.propTypes = {
     name: PropTypes.string.isRequired,
     id: PropTypes.string.isRequired,
     label: PropTypes.string.isRequired,
-    value: PropTypes.any.isRequired,
+    value: PropTypes.any,
 };
 
 export default CustomSelect;

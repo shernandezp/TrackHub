@@ -1,12 +1,5 @@
 import { useState } from 'react';
-import Card from "@mui/material/Card";
-
-import Accordion from '@mui/material/Accordion';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import AccordionDetails from '@mui/material/AccordionDetails';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ArgonBox from "components/ArgonBox";
-import ArgonTypography from "components/ArgonTypography";
+import TableAccordion from "controls/Accordions/TableAccordion";
 import Table from "controls/Tables/Table";
 import DefaultDialog from "controls/Dialogs/DefaultDialog";
 import CustomTextField from 'controls/Dialogs/CustomTextField';
@@ -28,30 +21,12 @@ function ManageAccount() {
 
   return (
     <>
-      <Accordion expanded={expanded} onChange={() => setExpanded(!expanded)}>
-        <AccordionSummary
-            expandIcon={<ExpandMoreIcon />}
-            aria-controls="panel1a-content"
-            id="panel1a-header">
-          <ArgonTypography variant="h6">Account</ArgonTypography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <Card>
-            <ArgonBox
-              sx={{
-                "& .MuiTableRow-root:not(:last-child)": {
-                  "& td": {
-                    borderBottom: ({ borders: { borderWidth, borderColor } }) =>
-                      `${borderWidth[1]} solid ${borderColor}`,
-                  },
-                },
-              }}
-            >
-              <Table columns={columns} rows={rows} />
-            </ArgonBox>
-          </Card>
-        </AccordionDetails>
-      </Accordion>
+      <TableAccordion 
+        title="Account" 
+        expanded={expanded} 
+        setExpanded={setExpanded}>
+        <Table columns={columns} rows={rows} />
+      </TableAccordion>
 
       <DefaultDialog 
           title="Account Details"

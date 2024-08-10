@@ -2,6 +2,8 @@ import { useEffect, useState, useRef } from "react";
 import {Name, Description} from "controls/Tables/components/tableComponents";
 import ArgonTypography from "components/ArgonTypography";
 import ArgonBadge from "components/ArgonBadge";
+import ArgonButton from "components/ArgonButton";
+import Icon from "@mui/material/Icon";
 import useAccountService from "services/account";
 import { formatDateTime } from "utils/dateUtils";
 
@@ -48,16 +50,12 @@ function useAccountTableData(fetchData, handleRowClick) {
         </ArgonTypography>
       ),
       action: (
-        <ArgonTypography
-          component="a"
-          href="#"
-          variant="caption"
-          color="secondary"
-          fontWeight="medium"
-          onClick={() => handleOpen(account)}
-        >
-          Edit
-        </ArgonTypography>
+        <ArgonButton 
+            variant="text" 
+            color="dark" 
+            onClick={() => handleOpen(account)}>
+          <Icon>edit</Icon>&nbsp;Edit
+        </ArgonButton>
       ),
     })),
   });

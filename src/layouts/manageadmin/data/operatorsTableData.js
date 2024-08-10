@@ -9,14 +9,32 @@ import Icon from "@mui/material/Icon";
 import logoJira from "assets/images/small-logos/logo-jira.svg";
 import protocolTypes from 'layouts/manageadmin/data/protocolTypes';
 
-function useOperatorTableData(fetchData, handleRowClick) {
+function useOperatorTableData(fetchData, handleEditClick) {
   const [data, setData] = useState({ columns: [], rows: [] });
   const [operators, setOperators] = useState([]);
   const [open, setOpen] = useState(false);
   const hasLoaded = useRef(false);
-  const { getOperatorsByCurrentAccount, updateOperator } = useOperatorService();
+  const { getOperatorsByCurrentAccount, updateOperator, createOperator } = useOperatorService();
 
   const handleSave = async (operator) => {
+    console.log(operator);
+    if (!operator.operatorId) {
+      handleAdd(operator);
+    } else {
+      handleEdit(operator);
+    }
+  };
+
+  const handleAdd = async (operator) => {
+    let response = await createOperator(operator);
+    if (response) {
+      const updatedOperators = [...operators, response];
+      setOperators(updatedOperators);
+      setData(buildTableData(updatedOperators));
+    }
+  };
+
+  const handleEdit = async (operator) => {
     let response = await updateOperator(operator.operatorId, operator);
     if (response) {
       const selectedProtocolType = protocolTypes.find(pt => pt.value === operator.protocolTypeId);
@@ -30,7 +48,7 @@ function useOperatorTableData(fetchData, handleRowClick) {
   };
 
   const handleOpen = (operator) => {
-    handleRowClick(operator);
+    handleEditClick(operator);
     setOpen(true);
   };
 
