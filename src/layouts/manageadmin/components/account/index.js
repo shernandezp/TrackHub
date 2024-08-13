@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import TableAccordion from "controls/Accordions/TableAccordion";
 import Table from "controls/Tables/Table";
-import DefaultDialog from "controls/Dialogs/DefaultDialog";
+import FormDialog from "controls/Dialogs/FormDialog";
 import CustomTextField from 'controls/Dialogs/CustomTextField';
 import useForm from 'controls/Dialogs/useForm';
 
@@ -14,7 +14,7 @@ function ManageAccount() {
   };
 
   const [expanded, setExpanded] = useState(false);
-  const { data: accountsData, open, handleSave, setOpen } = useAccountTableData(expanded, handleRowClick);
+  const { data: accountsData, open, onSave, setOpen } = useAccountTableData(expanded, handleRowClick);
   const [values, handleChange, setValues] = useForm({ name: '', description: '' });
 
   const { columns, rows } = accountsData;
@@ -28,9 +28,9 @@ function ManageAccount() {
         <Table columns={columns} rows={rows} />
       </TableAccordion>
 
-      <DefaultDialog 
+      <FormDialog 
           title="Account Details"
-          handleSave={async() => await handleSave(values)}
+          handleSave={async() => await onSave(values)}
           open={open}
           setOpen={setOpen}
           maxWidth="md">
@@ -58,7 +58,7 @@ function ManageAccount() {
             onChange={handleChange}
           />
         </form>
-      </DefaultDialog>
+      </FormDialog>
     </>
   );
 }

@@ -8,48 +8,47 @@ import { formatDateTime } from "utils/dateUtils";
 import Icon from "@mui/material/Icon";
 import logoJira from "assets/images/small-logos/logo-jira.svg";
 import protocolTypes from 'layouts/manageadmin/data/protocolTypes';
+import { handleDelete, handleSave } from "layouts/manageadmin/actions/operatorsActions";
 
-function useOperatorTableData(fetchData, handleEditClick) {
+function useOperatorTableData(fetchData, handleEditClick, handleDeleteClick) {
   const [data, setData] = useState({ columns: [], rows: [] });
   const [operators, setOperators] = useState([]);
   const [open, setOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
   const hasLoaded = useRef(false);
-  const { getOperatorsByCurrentAccount, updateOperator, createOperator } = useOperatorService();
+  const { getOperatorsByCurrentAccount, updateOperator, createOperator, deleteOperator } = useOperatorService();
 
-  const handleSave = async (operator) => {
-    console.log(operator);
-    if (!operator.operatorId) {
-      handleAdd(operator);
-    } else {
-      handleEdit(operator);
-    }
+  const onSave = async (operator) => {
+    await handleSave(
+      operator, 
+      operators, 
+      setOperators, 
+      setData, 
+      buildTableData, 
+      createOperator, 
+      updateOperator, 
+      protocolTypes);
   };
 
-  const handleAdd = async (operator) => {
-    let response = await createOperator(operator);
-    if (response) {
-      const updatedOperators = [...operators, response];
-      setOperators(updatedOperators);
-      setData(buildTableData(updatedOperators));
-    }
-  };
-
-  const handleEdit = async (operator) => {
-    let response = await updateOperator(operator.operatorId, operator);
-    if (response) {
-      const selectedProtocolType = protocolTypes.find(pt => pt.value === operator.protocolTypeId);
-      operator.protocolType = selectedProtocolType.label;
-      const updatedOperators = [...operators];
-      const index = updatedOperators.findIndex(a => a.operatorId === operator.operatorId);
-      updatedOperators[index] = operator;
-      setOperators(updatedOperators);
-      setData(buildTableData(updatedOperators));
-    }
-  };
+  const onDelete = (operatorId) => {
+    handleDelete(
+      operatorId, 
+      operators, 
+      setOperators, 
+      setData, 
+      buildTableData, 
+      deleteOperator);
+  }
 
   const handleOpen = (operator) => {
     handleEditClick(operator);
     setOpen(true);
+  };
+
+  const handleOpenDelete = (operatorId) => {
+    handleDeleteClick(operatorId);
+    setConfirmOpen(true);
   };
 
   const buildTableData = (operators) => ({
@@ -84,7 +83,10 @@ function useOperatorTableData(fetchData, handleEditClick) {
                 onClick={() => handleOpen(operator)}>
               <Icon>edit</Icon>&nbsp;Edit
             </ArgonButton>
-            <ArgonButton variant="text" color="error">
+            <ArgonButton 
+              variant="text" 
+              color="error"
+              onClick={() => handleOpenDelete(operator.operatorId)}>
               <Icon>delete</Icon>&nbsp;Delete
             </ArgonButton>
         </>
@@ -115,7 +117,7 @@ function useOperatorTableData(fetchData, handleEditClick) {
     }
   }, [fetchData]);
 
-  return { data, open, handleSave, setOpen };
+  return { data, open, confirmOpen, onSave, onDelete, setOpen, setConfirmOpen };
 }
 
 export default useOperatorTableData;

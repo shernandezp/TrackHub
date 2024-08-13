@@ -1,12 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 
-const DefaultDialog = ({ title, children, handleSave, open, setOpen }) => {
+const FormDialog = ({ title, children, handleSave, open, setOpen }) => {
     const handleClose = () => {
         setOpen(false);
     };
@@ -25,7 +21,7 @@ const DefaultDialog = ({ title, children, handleSave, open, setOpen }) => {
     );
 };
 
-DefaultDialog.propTypes = {
+FormDialog.propTypes = {
     title: PropTypes.string.isRequired,
     children: PropTypes.node.isRequired,
     handleSave: PropTypes.func.isRequired,
@@ -33,4 +29,4 @@ DefaultDialog.propTypes = {
     setOpen: PropTypes.func.isRequired,
 };
 
-export default DefaultDialog;
+export default FormDialog;

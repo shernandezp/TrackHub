@@ -1,27 +1,33 @@
 import { useState } from 'react';
 import TableAccordion from "controls/Accordions/TableAccordion";
 import Table from "controls/Tables/Table";
-import DefaultDialog from "controls/Dialogs/DefaultDialog";
+import FormDialog from "controls/Dialogs/FormDialog";
 import CustomTextField from 'controls/Dialogs/CustomTextField';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
 import useForm from 'controls/Dialogs/useForm';
 import protocolTypes from 'layouts/manageadmin/data/protocolTypes';
-
+import ConfirmDialog from 'controls/Dialogs/ConfirmDialog';
 import useOperatorTableData from "layouts/manageadmin/data/operatorsTableData";
 
 function ManageOperators() {
-
-  const handleEditClick = (rowData) => {
-    setValues(rowData);
-  };
 
   const handleAddClick = () => {
     setValues({protocolTypeId: 0});
   };
 
+  const handleEditClick = (rowData) => {
+    setValues(rowData);
+  };
+
+  const handleDeleteClick = (operatorId) => {
+    setToDelete(operatorId);
+  };
+
   const [expanded, setExpanded] = useState(false);
-  const { data: operatorsData, open, handleSave, setOpen } = useOperatorTableData(expanded, handleEditClick);
+  const { data: operatorsData, open, confirmOpen, onSave, onDelete, setOpen, setConfirmOpen } 
+    = useOperatorTableData(expanded, handleEditClick, handleDeleteClick);
   const [values, handleChange, setValues] = useForm({});
+  const [toDelete, setToDelete] = useState(null);
 
   const { columns, rows } = operatorsData;
 
@@ -37,9 +43,9 @@ function ManageOperators() {
         <Table columns={columns} rows={rows} />
       </TableAccordion>
 
-      <DefaultDialog 
+      <FormDialog 
           title="Operator Details"
-          handleSave={async() => await handleSave(values)}
+          handleSave={async() => await onSave(values)}
           open={open}
           setOpen={setOpen}
           maxWidth="md">
@@ -121,7 +127,13 @@ function ManageOperators() {
           />
           
         </form>
-      </DefaultDialog>
+      </FormDialog>
+      <ConfirmDialog 
+        title="Delete Operator"
+        message="Are you sure you want to delete this operator?"
+        open={confirmOpen} 
+        setOpen={setConfirmOpen} 
+        onConfirm={async() => await onDelete(toDelete)} />
     </>
   );
 }

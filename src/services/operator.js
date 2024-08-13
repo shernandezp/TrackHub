@@ -93,7 +93,6 @@ const useOperatorService = () => {
                 createOperator(
                 command: {
                     operator: {
-                    accountId: "${operatorData.accountId}"
                     address: "${operatorData.address}"
                     contactName: "${operatorData.contactName}"
                     protocolTypeId: ${operatorData.protocolTypeId}

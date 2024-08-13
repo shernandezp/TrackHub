@@ -6,6 +6,7 @@ import ArgonButton from "components/ArgonButton";
 import Icon from "@mui/material/Icon";
 import useAccountService from "services/account";
 import { formatDateTime } from "utils/dateUtils";
+import { handleSave } from "layouts/manageadmin/actions/accountActions";
 
 function useAccountTableData(fetchData, handleRowClick) {
   const [data, setData] = useState({ columns: [], rows: [] });
@@ -14,16 +15,9 @@ function useAccountTableData(fetchData, handleRowClick) {
   const hasLoaded = useRef(false);
   const { getAccountByUser, updateAccount } = useAccountService();
 
-  const handleSave = async (account) => {
-    let response = await updateAccount(account.accountId, account);
-    if (response) {
-      const updatedAccounts = [...accounts];
-      const index = updatedAccounts.findIndex(a => a.accountId === account.accountId);
-      updatedAccounts[index] = account;
-      setAccounts(updatedAccounts);
-      setData(buildTableData(updatedAccounts));
-    }
-  };
+  const onSave = (account) => {
+    handleSave(account, accounts, setAccounts, setData, buildTableData, updateAccount);
+  }
 
   const handleOpen = (account) => {
     handleRowClick(account);
@@ -73,7 +67,7 @@ function useAccountTableData(fetchData, handleRowClick) {
     }
   }, [fetchData]);
 
-  return { data, open, handleSave, setOpen };
+  return { data, open, onSave, setOpen };
 }
 
 export default useAccountTableData;
