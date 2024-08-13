@@ -15,7 +15,7 @@ const FormDialog = ({ title, children, handleSave, open, setOpen }) => {
             </DialogContent>
             <DialogActions>
                 <Button onClick={handleClose}>Cancel</Button>
-                <Button onClick={() => { handleSave(); handleClose(); }} autoFocus>Save</Button>
+                <Button onClick={handleSave} autoFocus>Save</Button>
             </DialogActions>
         </Dialog>
     );

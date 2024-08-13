@@ -8,7 +8,7 @@ import useAccountService from "services/account";
 import { formatDateTime } from "utils/dateUtils";
 import { handleSave } from "layouts/manageadmin/actions/accountActions";
 
-function useAccountTableData(fetchData, handleRowClick) {
+function useAccountTableData(fetchData, handleEditClick) {
   const [data, setData] = useState({ columns: [], rows: [] });
   const [accounts, setAccounts] = useState([]);
   const [open, setOpen] = useState(false);
@@ -16,11 +16,18 @@ function useAccountTableData(fetchData, handleRowClick) {
   const { getAccountByUser, updateAccount } = useAccountService();
 
   const onSave = (account) => {
-    handleSave(account, accounts, setAccounts, setData, buildTableData, updateAccount);
+    handleSave(account, 
+      accounts, 
+      setAccounts, 
+      setData, 
+      buildTableData, 
+      updateAccount);
+      
+    setOpen(false);
   }
 
   const handleOpen = (account) => {
-    handleRowClick(account);
+    handleEditClick(account);
     setOpen(true);
   };
 

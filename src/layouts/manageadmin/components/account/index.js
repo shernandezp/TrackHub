@@ -9,15 +9,22 @@ import useAccountTableData from "layouts/manageadmin/data/accountTableData";
 
 function ManageAccount() {
 
-  const handleRowClick = (rowData) => {
+  const handleEditClick = (rowData) => {
     setValues(rowData);
+    setErrors({});
   };
 
   const [expanded, setExpanded] = useState(false);
-  const { data: accountsData, open, onSave, setOpen } = useAccountTableData(expanded, handleRowClick);
-  const [values, handleChange, setValues] = useForm({ name: '', description: '' });
-
+  const { data: accountsData, open, onSave, setOpen } = useAccountTableData(expanded, handleEditClick);
+  const requiredFields = ['name'];
+  const [values, handleChange, setValues, setErrors, validate, errors] = useForm({}, requiredFields);
   const { columns, rows } = accountsData;
+
+  const handleSubmit = async () => {
+    if (validate()) {
+      onSave(values);
+    }
+  };
 
   return (
     <>
@@ -30,7 +37,7 @@ function ManageAccount() {
 
       <FormDialog 
           title="Account Details"
-          handleSave={async() => await onSave(values)}
+          handleSave={handleSubmit}
           open={open}
           setOpen={setOpen}
           maxWidth="md">
@@ -43,18 +50,20 @@ function ManageAccount() {
             label="Name"
             type="text"
             fullWidth
-            value={values.name}
+            value={values.name || ''}
             onChange={handleChange}
+            errorMsg={errors.name}
+            required
           />
           
           <CustomTextField
-            margin="normal"
+            margin="dense"
             name="description"
             id="description"
             label="Description"
             type="text"
             fullWidth
-            value={values.description}
+            value={values.description || ''}
             onChange={handleChange}
           />
         </form>

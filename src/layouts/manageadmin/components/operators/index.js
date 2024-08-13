@@ -13,10 +13,12 @@ function ManageOperators() {
 
   const handleAddClick = () => {
     setValues({protocolTypeId: 0});
+    setErrors({});
   };
 
   const handleEditClick = (rowData) => {
     setValues(rowData);
+    setErrors({});
   };
 
   const handleDeleteClick = (operatorId) => {
@@ -26,10 +28,16 @@ function ManageOperators() {
   const [expanded, setExpanded] = useState(false);
   const { data: operatorsData, open, confirmOpen, onSave, onDelete, setOpen, setConfirmOpen } 
     = useOperatorTableData(expanded, handleEditClick, handleDeleteClick);
-  const [values, handleChange, setValues] = useForm({});
+  const requiredFields = ['name', 'protocolTypeId'];
+  const [values, handleChange, setValues, setErrors, validate, errors] = useForm({}, requiredFields);
   const [toDelete, setToDelete] = useState(null);
-
   const { columns, rows } = operatorsData;
+
+  const handleSubmit = async () => {
+    if (validate()) {
+      onSave(values);
+    }
+  };
 
   return (
     <>
@@ -45,7 +53,7 @@ function ManageOperators() {
 
       <FormDialog 
           title="Operator Details"
-          handleSave={async() => await onSave(values)}
+          handleSave={handleSubmit}
           open={open}
           setOpen={setOpen}
           maxWidth="md">
@@ -60,8 +68,9 @@ function ManageOperators() {
             fullWidth
             value={values.name || ''}
             onChange={handleChange}
+            required
+            errorMsg={errors.name}
           />
-          
           <CustomTextField
             margin="normal"
             name="description"
@@ -124,7 +133,9 @@ function ManageOperators() {
             id="protocolTypeId"
             label="Protocol Type"
             value={values.protocolTypeId}
+            required
           />
+          {errors.protocolTypeId && <p>{errors.protocolTypeId}</p>}
           
         </form>
       </FormDialog>

@@ -29,6 +29,8 @@ function useOperatorTableData(fetchData, handleEditClick, handleDeleteClick) {
       createOperator, 
       updateOperator, 
       protocolTypes);
+
+      setOpen(false);
   };
 
   const onDelete = (operatorId) => {
@@ -39,6 +41,8 @@ function useOperatorTableData(fetchData, handleEditClick, handleDeleteClick) {
       setData, 
       buildTableData, 
       deleteOperator);
+
+      setConfirmOpen(false);
   }
 
   const handleOpen = (operator) => {

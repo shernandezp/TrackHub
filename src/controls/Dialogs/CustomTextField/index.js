@@ -1,7 +1,13 @@
 import TextField from '@mui/material/TextField';
 import { styled } from '@mui/system';
 
-const CustomTextField = styled(TextField)({
+const CustomTextField = styled(({ errorMsg, ...props }) => (
+  <TextField
+    error={!!errorMsg}
+    helperText={errorMsg}
+    {...props}
+  />
+))({
   '& .MuiInputBase-input': {
     width: '100% !important',
   },
