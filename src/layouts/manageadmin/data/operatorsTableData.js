@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useContext } from "react";
 import { NameDetail, Description, DescriptionDetail } from "controls/Tables/components/tableComponents";
 import ArgonTypography from "components/ArgonTypography";
 import ArgonBadge from "components/ArgonBadge";
@@ -9,17 +9,20 @@ import Icon from "@mui/material/Icon";
 import logoJira from "assets/images/small-logos/logo-jira.svg";
 import protocolTypes from 'layouts/manageadmin/data/protocolTypes';
 import { handleDelete, handleSave } from "layouts/manageadmin/actions/operatorsActions";
+import { LoadingContext } from 'LoadingContext';
 
 function useOperatorTableData(fetchData, handleEditClick, handleDeleteClick) {
   const [data, setData] = useState({ columns: [], rows: [] });
   const [operators, setOperators] = useState([]);
   const [open, setOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const { setLoading } = useContext(LoadingContext);
 
   const hasLoaded = useRef(false);
   const { getOperatorsByCurrentAccount, updateOperator, createOperator, deleteOperator } = useOperatorService();
 
   const onSave = async (operator) => {
+    setLoading(true);
     await handleSave(
       operator, 
       operators, 
@@ -29,20 +32,21 @@ function useOperatorTableData(fetchData, handleEditClick, handleDeleteClick) {
       createOperator, 
       updateOperator, 
       protocolTypes);
-
       setOpen(false);
+      setLoading(false);
   };
 
-  const onDelete = (operatorId) => {
-    handleDelete(
+  const onDelete = async (operatorId) => {
+    setLoading(true);
+    await handleDelete(
       operatorId, 
       operators, 
       setOperators, 
       setData, 
       buildTableData, 
       deleteOperator);
-
       setConfirmOpen(false);
+      setLoading(false);
   }
 
   const handleOpen = (operator) => {
@@ -112,10 +116,12 @@ function useOperatorTableData(fetchData, handleEditClick, handleDeleteClick) {
   useEffect(() => {
     if (fetchData && !hasLoaded.current) {
       async function fetchData() {
+        setLoading(true);
         const operators = await getOperatorsByCurrentAccount();
         setOperators(operators);
         setData(buildTableData(operators));
         hasLoaded.current = true;
+        setLoading(false);
       }
       fetchData();
     }

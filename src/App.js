@@ -12,8 +12,7 @@ Coded by www.creative-tim.com
 
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
-
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 
 // react-router components
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
@@ -49,6 +48,8 @@ import "assets/css/nucleo-icons.css";
 import "assets/css/nucleo-svg.css";
 
 import { useAuth } from "AuthContext";
+import { LoadingContext } from 'LoadingContext';
+import { ClipLoader } from 'react-spinners';
 
 export default function App() {
   const [controller, dispatch] = useArgonController();
@@ -57,6 +58,7 @@ export default function App() {
   const [onMouseEnter, setOnMouseEnter] = useState(false);
   const { isAuthenticated, login, accessToken } = useAuth();
   const { pathname } = useLocation();
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     // Redirect to login page if not authenticated
@@ -134,26 +136,44 @@ export default function App() {
   );
 
   return (
-    <ThemeProvider theme={darkMode ? themeDark : theme}>
-      <CssBaseline />
-      {layout === "dashboard" && (
-        <>
-          <Sidenav
-            color={sidenavColor}
-            brand={darkSidenav || darkMode ? brand : brandDark}
-            brandName="Track Hub"
-            routes={routes}
-            onMouseEnter={handleOnMouseEnter}
-            onMouseLeave={handleOnMouseLeave}
-          />
-          <Configurator />
-          {configsButton}
-        </>
-      )}
-      <Routes>
-        {getRoutes(routes)}
-        <Route path="*" element={<Navigate to="/dashboard" />} />
-      </Routes>
-    </ThemeProvider>
+    <LoadingContext.Provider value={{ loading, setLoading }}>
+      <ThemeProvider theme={darkMode ? themeDark : theme}>
+        <CssBaseline />
+        {layout === "dashboard" && (
+          <>
+            <Sidenav
+              color={sidenavColor}
+              brand={darkSidenav || darkMode ? brand : brandDark}
+              brandName="Track Hub"
+              routes={routes}
+              onMouseEnter={handleOnMouseEnter}
+              onMouseLeave={handleOnMouseLeave}
+            />
+            <Configurator />
+            {configsButton}
+          </>
+        )}
+        <Routes>
+          {getRoutes(routes)}
+          <Route path="*" element={<Navigate to="/dashboard" />} />
+        </Routes>
+        {loading && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 9999,
+          }}>
+            <ClipLoader color="#00BFFF" loading={loading} size={150} />
+          </div>
+        )}
+      </ThemeProvider>
+    </LoadingContext.Provider>
   );
 }

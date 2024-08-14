@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useContext } from "react";
 import {Name, Description} from "controls/Tables/components/tableComponents";
 import ArgonTypography from "components/ArgonTypography";
 import ArgonBadge from "components/ArgonBadge";
@@ -7,6 +7,7 @@ import Icon from "@mui/material/Icon";
 import useAccountService from "services/account";
 import { formatDateTime } from "utils/dateUtils";
 import { handleSave } from "layouts/manageadmin/actions/accountActions";
+import { LoadingContext } from 'LoadingContext';
 
 function useAccountTableData(fetchData, handleEditClick) {
   const [data, setData] = useState({ columns: [], rows: [] });
@@ -14,16 +15,18 @@ function useAccountTableData(fetchData, handleEditClick) {
   const [open, setOpen] = useState(false);
   const hasLoaded = useRef(false);
   const { getAccountByUser, updateAccount } = useAccountService();
+  const { setLoading } = useContext(LoadingContext);
 
   const onSave = (account) => {
+    setLoading(true);
     handleSave(account, 
       accounts, 
       setAccounts, 
       setData, 
       buildTableData, 
       updateAccount);
-      
     setOpen(false);
+    setLoading(false);
   }
 
   const handleOpen = (account) => {
@@ -64,11 +67,13 @@ function useAccountTableData(fetchData, handleEditClick) {
   useEffect(() => {
     if (fetchData && !hasLoaded.current) {
       async function fetchData() {
+        setLoading(true);
         const account = await getAccountByUser();
         const accounts = [account];
         setAccounts(accounts);
         setData(buildTableData(accounts));
         hasLoaded.current = true;
+        setLoading(false);
       }
       fetchData();
     }
