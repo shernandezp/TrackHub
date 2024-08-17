@@ -1,10 +1,21 @@
+
 import axios from 'axios';
 import { useAuth } from '../AuthContext';
 import { jwtDecode } from 'jwt-decode';
 
+/**
+ * Custom hook for making API requests.
+ * @param {string} endpoint - The API endpoint to make requests to.
+ * @returns {object} - An object containing the post function for making POST requests.
+ */
 const useApiService = (endpoint) => {
   const { accessToken, handleRefreshToken } = useAuth();
 
+  /**
+   * Checks if the access token is valid.
+   * @param {string} token - The access token to check.
+   * @returns {boolean} - True if the token is valid, false otherwise.
+   */
   const isTokenValid = (token) => {
     try {
       const decoded = jwtDecode(token);
@@ -17,20 +28,23 @@ const useApiService = (endpoint) => {
     }
   };
 
+  /**
+   * Makes a POST request to the API endpoint.
+   * @param {object} data - The data to send in the request body.
+   * @returns {Promise<object>} - A promise that resolves to the response data.
+   */
   const post = async (data) => {
     if (!isTokenValid(accessToken)) {
       await handleRefreshToken();
     }
-    try {
-      const response = await axios.post(endpoint, data, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
-      });
-      return response.data;
-    } catch (error) {
-      console.error(error);
-    }
+    
+    const response = await axios.post(endpoint, data, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    });
+    return response.data;
+    
   };
 
   return { post };

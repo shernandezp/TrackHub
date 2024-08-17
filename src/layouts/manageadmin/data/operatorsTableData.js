@@ -4,22 +4,26 @@ import ArgonTypography from "components/ArgonTypography";
 import ArgonBadge from "components/ArgonBadge";
 import ArgonButton from "components/ArgonButton";
 import useOperatorService from "services/operator";
+import useCredentialService from "services/credential";
 import { formatDateTime } from "utils/dateUtils";
 import Icon from "@mui/material/Icon";
 import logoJira from "assets/images/small-logos/logo-jira.svg";
 import protocolTypes from 'layouts/manageadmin/data/protocolTypes';
 import { handleDelete, handleSave } from "layouts/manageadmin/actions/operatorsActions";
+import { handleSaveCredential } from "layouts/manageadmin/actions/credentialActions";
 import { LoadingContext } from 'LoadingContext';
 
-function useOperatorTableData(fetchData, handleEditClick, handleDeleteClick) {
+function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialClick, handleDeleteClick) {
   const [data, setData] = useState({ columns: [], rows: [] });
   const [operators, setOperators] = useState([]);
   const [open, setOpen] = useState(false);
+  const [openCredential, setOpenCredential] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const { setLoading } = useContext(LoadingContext);
 
   const hasLoaded = useRef(false);
   const { getOperatorsByCurrentAccount, updateOperator, createOperator, deleteOperator } = useOperatorService();
+  const { getCredentialByOperator, createCredential, updateCredential } = useCredentialService();
 
   const onSave = async (operator) => {
     setLoading(true);
@@ -32,6 +36,7 @@ function useOperatorTableData(fetchData, handleEditClick, handleDeleteClick) {
       createOperator, 
       updateOperator, 
       protocolTypes);
+
       setOpen(false);
       setLoading(false);
   };
@@ -49,9 +54,26 @@ function useOperatorTableData(fetchData, handleEditClick, handleDeleteClick) {
       setLoading(false);
   }
 
+  const onSaveCredential = async (credential) => {
+    setLoading(true);
+    await handleSaveCredential(
+      credential, 
+      createCredential, 
+      updateCredential);
+
+      setOpenCredential(false);
+      setLoading(false);
+  };
+
   const handleOpen = (operator) => {
     handleEditClick(operator);
     setOpen(true);
+  };
+
+  const handleOpenCredential = async (operatorId) => {
+    const credential = await getCredentialByOperator(operatorId) || { operatorId };
+    handleEditCredentialClick(credential);
+    setOpenCredential(true);
   };
 
   const handleOpenDelete = (operatorId) => {
@@ -106,8 +128,9 @@ function useOperatorTableData(fetchData, handleEditClick, handleDeleteClick) {
           variant="caption"
           color="secondary"
           fontWeight="medium"
+          onClick={async() => await handleOpenCredential(operator.operatorId)}
         >
-          Update
+          Credentials
         </ArgonTypography>
       ),
     })),
@@ -127,7 +150,17 @@ function useOperatorTableData(fetchData, handleEditClick, handleDeleteClick) {
     }
   }, [fetchData]);
 
-  return { data, open, confirmOpen, onSave, onDelete, setOpen, setConfirmOpen };
+  return { 
+    data, 
+    open, 
+    openCredential, 
+    confirmOpen, 
+    onSave, 
+    onDelete, 
+    onSaveCredential,
+    setOpen, 
+    setOpenCredential, 
+    setConfirmOpen };
 }
 
 export default useOperatorTableData;

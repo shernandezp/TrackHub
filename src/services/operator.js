@@ -1,9 +1,23 @@
+/**
+ * Service for managing operators.
+ * @module useOperatorService
+ */
+
 import useApiService from './apiService';
 import { handleError } from 'utils/errorHandler';
 
+/**
+ * Creates an instance of the operator service.
+ * @returns {Object} The operator service object.
+ */
 const useOperatorService = () => {
   const { post } = useApiService(process.env.REACT_APP_MANAGER_ENDPOINT);
 
+  /**
+   * Retrieves an operator by ID.
+   * @param {string} operatorId - The ID of the operator.
+   * @returns {Promise<Object>} A promise that resolves to the operator object.
+   */
   const getOperator = async (operatorId) => {
     try {
       const data = {
@@ -31,6 +45,10 @@ const useOperatorService = () => {
     }
   };
 
+  /**
+   * Retrieves operators by the current account.
+   * @returns {Promise<Array>} A promise that resolves to an array of operators.
+   */
   const getOperatorsByCurrentAccount = async () => {
     try {
       const data = {
@@ -58,6 +76,11 @@ const useOperatorService = () => {
     }
   };
 
+  /**
+   * Retrieves operators by account ID.
+   * @param {string} accountId - The ID of the account.
+   * @returns {Promise<Array>} A promise that resolves to an array of operators.
+   */
   const getOperatorByAccount = async (accountId) => {
     try {
       const data = {
@@ -85,6 +108,11 @@ const useOperatorService = () => {
     }
   };
 
+  /**
+   * Creates a new operator.
+   * @param {Object} operatorData - The data of the operator to create.
+   * @returns {Promise<Object>} A promise that resolves to the created operator object.
+   */
   const createOperator = async (operatorData) => {
     try {
       const data = {
@@ -93,13 +121,13 @@ const useOperatorService = () => {
                 createOperator(
                 command: {
                     operator: {
-                    address: "${operatorData.address}"
+                    address: "${operatorData.address ?? ''}"
                     contactName: "${operatorData.contactName}"
                     protocolTypeId: ${operatorData.protocolTypeId}
-                    phoneNumber: "${operatorData.phoneNumber}"
-                    name: "${operatorData.name}"
-                    emailAddress: "${operatorData.emailAddress}"
-                    description: "${operatorData.description}"
+                    phoneNumber: "${operatorData.phoneNumber ?? ''}"
+                    name: "${operatorData.name ?? ''}"
+                    emailAddress: "${operatorData.emailAddress ?? ''}"
+                    description: "${operatorData.description ?? ''}"
                     }
                 }
                 ) {
@@ -124,6 +152,12 @@ const useOperatorService = () => {
     }
   };
 
+  /**
+   * Updates an existing operator.
+   * @param {string} operatorId - The ID of the operator to update.
+   * @param {Object} operatorData - The updated data of the operator.
+   * @returns {Promise<Object>} A promise that resolves to the updated operator object.
+   */
   const updateOperator = async (operatorId, operatorData) => {
     try {
       const data = {
@@ -155,6 +189,11 @@ const useOperatorService = () => {
     }
   };
 
+  /**
+   * Deletes an operator.
+   * @param {string} operatorId - The ID of the operator to delete.
+   * @returns {Promise<boolean>} A promise that resolves to true if the operator is deleted successfully, false otherwise.
+   */
   const deleteOperator = async (operatorId) => {
     try {
       const data = {

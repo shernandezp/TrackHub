@@ -1,24 +1,27 @@
 import { useState } from 'react';
 import TableAccordion from "controls/Accordions/TableAccordion";
 import Table from "controls/Tables/Table";
-import FormDialog from "controls/Dialogs/FormDialog";
-import CustomTextField from 'controls/Dialogs/CustomTextField';
-import CustomSelect from 'controls/Dialogs/CustomSelect';
+import OperatorFormDialog from 'layouts/manageadmin/components/operators/OperatorDialog';
+import CredentialFormDialog from 'layouts/manageadmin/components/operators/CredentialDialog';
 import useForm from 'controls/Dialogs/useForm';
-import protocolTypes from 'layouts/manageadmin/data/protocolTypes';
 import ConfirmDialog from 'controls/Dialogs/ConfirmDialog';
 import useOperatorTableData from "layouts/manageadmin/data/operatorsTableData";
 
 function ManageOperators() {
 
   const handleAddClick = () => {
-    setValues({protocolTypeId: 0});
-    setErrors({});
+    setOperatorValues({protocolTypeId: 0});
+    setOperatorErrors({});
   };
 
   const handleEditClick = (rowData) => {
-    setValues(rowData);
-    setErrors({});
+    setOperatorValues(rowData);
+    setOperatorErrors({});
+  };
+
+  const handleEditCredentialClick = (rowData) => {
+    setCredentialValues(rowData);
+    setCredentialErrors({});
   };
 
   const handleDeleteClick = (operatorId) => {
@@ -26,16 +29,24 @@ function ManageOperators() {
   };
 
   const [expanded, setExpanded] = useState(false);
-  const { data: operatorsData, open, confirmOpen, onSave, onDelete, setOpen, setConfirmOpen } 
-    = useOperatorTableData(expanded, handleEditClick, handleDeleteClick);
-  const requiredFields = ['name', 'protocolTypeId'];
-  const [values, handleChange, setValues, setErrors, validate, errors] = useForm({}, requiredFields);
+  const { data, open, openCredential, confirmOpen, onSave, onSaveCredential, onDelete, setOpen, setOpenCredential, setConfirmOpen } 
+    = useOperatorTableData(expanded, handleEditClick, handleEditCredentialClick, handleDeleteClick);
+  const requiredOperatorFields = ['name', 'protocolTypeId'];
+  const requiredCredentialFields = ['uri'];
+  const [operatorValues, handleOperatorChange, setOperatorValues, setOperatorErrors, validateOperator, operatorErrors] = useForm({}, requiredOperatorFields);
+  const [credentialValues, handleCredentialChange, setCredentialValues, setCredentialErrors, validateCredential, credentialErrors] = useForm({}, requiredCredentialFields);
   const [toDelete, setToDelete] = useState(null);
-  const { columns, rows } = operatorsData;
+  const { columns, rows } = data;
 
   const handleSubmit = async () => {
-    if (validate()) {
-      onSave(values);
+    if (validateOperator()) {
+      onSave(operatorValues);
+    }
+  };
+
+  const handleSubmitCredential = async () => {
+    if (validateCredential()) {
+      onSaveCredential(credentialValues);
     }
   };
 
@@ -51,94 +62,24 @@ function ManageOperators() {
         <Table columns={columns} rows={rows} />
       </TableAccordion>
 
-      <FormDialog 
-          title="Operator Details"
-          handleSave={handleSubmit}
-          open={open}
-          setOpen={setOpen}
-          maxWidth="md">
-        <form>
-          <CustomTextField
-            autoFocus
-            margin="dense"
-            name="name"
-            id="name"
-            label="Name"
-            type="text"
-            fullWidth
-            value={values.name || ''}
-            onChange={handleChange}
-            required
-            errorMsg={errors.name}
-          />
-          <CustomTextField
-            margin="normal"
-            name="description"
-            id="description"
-            label="Description"
-            type="text"
-            fullWidth
-            value={values.description || ''}
-            onChange={handleChange}
-          />
+      <OperatorFormDialog 
+        open={open}
+        setOpen={setOpen}
+        handleSubmit={handleSubmit}
+        values={operatorValues}
+        handleChange={handleOperatorChange}
+        errors={operatorErrors}
+      />
 
-          <CustomTextField
-            margin="normal"
-            name="phoneNumber"
-            id="phoneNumber"
-            label="Phone Number"
-            type="text"
-            fullWidth
-            value={values.phoneNumber || ''}
-            onChange={handleChange}
-          />
+      <CredentialFormDialog 
+        open={openCredential}
+        setOpen={setOpenCredential}
+        handleSubmit={handleSubmitCredential}
+        values={credentialValues}
+        handleChange={handleCredentialChange}
+        errors={credentialErrors}
+      />
 
-          <CustomTextField
-            margin="normal"
-            name="emailAddress"
-            id="emailAddress"
-            label="Email Address"
-            type="email"
-            fullWidth
-            value={values.emailAddress || ''}
-            onChange={handleChange}
-          />
-
-          <CustomTextField
-            margin="normal"
-            name="address"
-            id="address"
-            label="Address"
-            type="text"
-            fullWidth
-            value={values.address || ''}
-            onChange={handleChange}
-          />
-
-          <CustomTextField
-            margin="normal"
-            name="contactName"
-            id="contactName"
-            label="Contact Name"
-            type="text"
-            fullWidth
-            value={values.contactName || ''}
-            onChange={handleChange}
-          />
-
-          <CustomSelect
-            list={protocolTypes}
-            handleChange={handleChange}
-            name="protocolTypeId"
-            id="protocolTypeId"
-            label="Protocol Type"
-            value={values.protocolTypeId}
-            required
-          />
-          {errors.protocolTypeId && <p>{errors.protocolTypeId}</p>}
-          
-        </form>
-      </FormDialog>
       <ConfirmDialog 
         title="Delete Operator"
         message="Are you sure you want to delete this operator?"

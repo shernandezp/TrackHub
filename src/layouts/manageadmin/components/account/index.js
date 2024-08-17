@@ -15,10 +15,10 @@ function ManageAccount() {
   };
 
   const [expanded, setExpanded] = useState(false);
-  const { data: accountsData, open, onSave, setOpen } = useAccountTableData(expanded, handleEditClick);
+  const { data, open, onSave, setOpen } = useAccountTableData(expanded, handleEditClick);
   const requiredFields = ['name'];
   const [values, handleChange, setValues, setErrors, validate, errors] = useForm({}, requiredFields);
-  const { columns, rows } = accountsData;
+  const { columns, rows } = data;
 
   const handleSubmit = async () => {
     if (validate()) {
