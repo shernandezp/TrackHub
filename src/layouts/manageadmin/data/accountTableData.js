@@ -36,11 +36,11 @@ function useAccountTableData(fetchData, handleEditClick) {
 
   const buildTableData = (accounts) => ({
     columns: [
-      { name: "name", align: "left" },
-      { name: "description", align: "left" },
-      { name: "type", align: "center" },
-      { name: "modified", align: "center" },
-      { name: "action", align: "center" },
+      { name: "name", title:"", align: "left" },
+      { name: "description", title:"", align: "left" },
+      { name: "type", title:"", align: "center" },
+      { name: "modified", title:"", align: "center" },
+      { name: "action", title:"", align: "center" },
     ],
     rows: accounts.map(account => ({
       name: <Name name={account.name} />,

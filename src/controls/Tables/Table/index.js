@@ -43,7 +43,7 @@ function Table({
   const { size, fontWeightBold } = typography;
   const { borderWidth } = borders;
 
-  const renderColumns = columns.map(({ name, align, width }, key) => {
+  const renderColumns = columns.map(({ name, title, align, width }, key) => {
     let pl;
     let pr;
 
@@ -74,7 +74,7 @@ function Table({
         opacity={0.7}
         sx={({ palette: { light } }) => ({ borderBottom: `${borderWidth[1]} solid ${light.main}` })}
       >
-        {name.toUpperCase()}
+        {(title || name).toUpperCase()}
       </ArgonBox>
     );
   });

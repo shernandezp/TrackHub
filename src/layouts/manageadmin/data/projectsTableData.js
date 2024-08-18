@@ -36,11 +36,11 @@ const action = (
 
 const projectsTableData = {
   columns: [
-    { name: "project", align: "left" },
-    { name: "budget", align: "left" },
-    { name: "status", align: "left" },
-    { name: "completion", align: "center" },
-    { name: "action", align: "center" },
+    { name: "project", title:"", align: "left" },
+    { name: "budget", title:"", align: "left" },
+    { name: "status", title:"", align: "left" },
+    { name: "completion", title:"", align: "center" },
+    { name: "action", title:"", align: "center" },
   ],
 
   rows: [

@@ -97,15 +97,15 @@ function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialCl
 
   const buildTableData = (operators) => ({
     columns: [
-      { name: "name", align: "left" },
-      { name: "description", align: "left" },
-      { name: "address", align: "left" },
-      { name: "contactname", align: "left" },
-      { name: "protocoltype", align: "center" },
-      { name: "modified", align: "center" },
-      { name: "action", align: "center" },
-      { name: "credential", align: "center" },
-      { name: "testcredential", align: "center" }
+      { name: "name", title:"", align: "left" },
+      { name: "description", title:"", align: "left" },
+      { name: "address", title:"", align: "left" },
+      { name: "contactname", title:"Contact Name", align: "left" },
+      { name: "protocoltype", title:"Protocol", align: "center" },
+      { name: "modified", title:"", align: "center" },
+      { name: "action", title:"", align: "center" },
+      { name: "credential", title:"", align: "center" },
+      { name: "testcredential", title:"Test Credential", align: "center" }
     ],
     rows: operators.map(operator => ({
       name: <NameDetail name={operator.name} detail={operator.emailAddress} image={logoJira} />,
