@@ -1,6 +1,6 @@
 
 import useApiService from './apiService';
-import { handleError } from 'utils/errorHandler';
+import { handleSilentError } from 'utils/errorHandler';
 
 /**
  * A custom hook for handling connectivity tests to operators.
@@ -19,14 +19,14 @@ const useConnectivityService = () => {
             const data = {
                 query: `
                     query {
-                        pingOperator(query: { operatorId: ${operatorId} }) 
+                        pingOperator(query: { operatorId: "${operatorId}" }) 
                     }
                 `
             };
             const response = await post(data);
             return response.data.pingOperator;
         } catch (error) {
-            handleError(error);
+            handleSilentError(error);
             return false;
         }
     };

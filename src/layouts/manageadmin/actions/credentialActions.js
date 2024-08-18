@@ -32,3 +32,13 @@ export async function handleSaveCredential(credential, createCredential, updateC
         await handleEdit(credential, updateCredential);
     }
 }
+
+/**
+ * Handles testing the connectivity of a credential.
+ * @param {string} operatorId - The ID of the operator to test connectivity for.
+ * @param {Function} testConnectivity - The function to test the connectivity of an operator.
+ * @returns {Promise<any>} - A promise that resolves with the test result.
+ */
+export async function handleTestCredential(operatorId, testConnectivity) {
+    return await testConnectivity(operatorId);
+}

@@ -5,12 +5,13 @@ import ArgonBadge from "components/ArgonBadge";
 import ArgonButton from "components/ArgonButton";
 import useOperatorService from "services/operator";
 import useCredentialService from "services/credential";
+import useConnectivityService from "services/connectivity";
 import { formatDateTime } from "utils/dateUtils";
 import Icon from "@mui/material/Icon";
 import logoJira from "assets/images/small-logos/logo-jira.svg";
 import protocolTypes from 'layouts/manageadmin/data/protocolTypes';
 import { handleDelete, handleSave } from "layouts/manageadmin/actions/operatorsActions";
-import { handleSaveCredential } from "layouts/manageadmin/actions/credentialActions";
+import { handleSaveCredential, handleTestCredential } from "layouts/manageadmin/actions/credentialActions";
 import { LoadingContext } from 'LoadingContext';
 
 function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialClick, handleDeleteClick) {
@@ -19,11 +20,14 @@ function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialCl
   const [open, setOpen] = useState(false);
   const [openCredential, setOpenCredential] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [testOpen, setTestOpen] = useState(false);
+  const [testMessage, setTestMessage] = useState("");
   const { setLoading } = useContext(LoadingContext);
 
   const hasLoaded = useRef(false);
   const { getOperatorsByCurrentAccount, updateOperator, createOperator, deleteOperator } = useOperatorService();
   const { getCredentialByOperator, createCredential, updateCredential } = useCredentialService();
+  const { testConnectivity } = useConnectivityService();
 
   const onSave = async (operator) => {
     setLoading(true);
@@ -81,6 +85,16 @@ function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialCl
     setConfirmOpen(true);
   };
 
+  const onTestCredential = async (operatorId) => {
+    setLoading(true);
+    let result = await handleTestCredential(
+      operatorId, 
+      testConnectivity);
+    setTestMessage(result ? "Test successful" : "Test failed");
+    setTestOpen(true);
+    setLoading(false);
+  };
+
   const buildTableData = (operators) => ({
     columns: [
       { name: "name", align: "left" },
@@ -91,6 +105,7 @@ function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialCl
       { name: "modified", align: "center" },
       { name: "action", align: "center" },
       { name: "credential", align: "center" },
+      { name: "testcredential", align: "center" }
     ],
     rows: operators.map(operator => ({
       name: <NameDetail name={operator.name} detail={operator.emailAddress} image={logoJira} />,
@@ -133,6 +148,16 @@ function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialCl
           Credentials
         </ArgonTypography>
       ),
+      testcredential: (
+        <>
+            <ArgonButton 
+                variant="text"
+                color="dark" 
+                onClick={async() => await onTestCredential(operator.operatorId)}>
+              <Icon>check</Icon>
+            </ArgonButton>
+        </>
+      )
     })),
   });
 
@@ -154,13 +179,16 @@ function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialCl
     data, 
     open, 
     openCredential, 
-    confirmOpen, 
+    confirmOpen,
+    testOpen,
+    testMessage,
     onSave, 
     onDelete, 
     onSaveCredential,
     setOpen, 
     setOpenCredential, 
-    setConfirmOpen };
+    setConfirmOpen,
+    setTestOpen };
 }
 
 export default useOperatorTableData;

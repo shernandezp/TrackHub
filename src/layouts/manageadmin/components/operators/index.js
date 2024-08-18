@@ -5,6 +5,7 @@ import OperatorFormDialog from 'layouts/manageadmin/components/operators/Operato
 import CredentialFormDialog from 'layouts/manageadmin/components/operators/CredentialDialog';
 import useForm from 'controls/Dialogs/useForm';
 import ConfirmDialog from 'controls/Dialogs/ConfirmDialog';
+import MessageDialog from 'controls/Dialogs/MessageDialog';
 import useOperatorTableData from "layouts/manageadmin/data/operatorsTableData";
 
 function ManageOperators() {
@@ -29,8 +30,20 @@ function ManageOperators() {
   };
 
   const [expanded, setExpanded] = useState(false);
-  const { data, open, openCredential, confirmOpen, onSave, onSaveCredential, onDelete, setOpen, setOpenCredential, setConfirmOpen } 
-    = useOperatorTableData(expanded, handleEditClick, handleEditCredentialClick, handleDeleteClick);
+  const { 
+    data, 
+    open, 
+    openCredential, 
+    confirmOpen, 
+    testOpen,
+    testMessage,
+    onSave, 
+    onSaveCredential, 
+    onDelete, 
+    setOpen, 
+    setOpenCredential, 
+    setConfirmOpen,
+    setTestOpen } = useOperatorTableData(expanded, handleEditClick, handleEditCredentialClick, handleDeleteClick);
   const requiredOperatorFields = ['name', 'protocolTypeId'];
   const requiredCredentialFields = ['uri'];
   const [operatorValues, handleOperatorChange, setOperatorValues, setOperatorErrors, validateOperator, operatorErrors] = useForm({}, requiredOperatorFields);
@@ -86,6 +99,12 @@ function ManageOperators() {
         open={confirmOpen} 
         setOpen={setConfirmOpen} 
         onConfirm={async() => await onDelete(toDelete)} />
+
+      <MessageDialog 
+        title="Connectivity Test"
+        message={testMessage}
+        open={testOpen} 
+        setOpen={setTestOpen} />
     </>
   );
 }
