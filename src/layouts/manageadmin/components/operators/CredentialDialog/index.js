@@ -1,14 +1,15 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { useTranslation } from 'react-i18next';
 import FormDialog from "controls/Dialogs/FormDialog";
 import CustomTextField from 'controls/Dialogs/CustomTextField';
 import CustomPasswordField from 'controls/Dialogs/CustomPasswordField';
 
 function CredentialFormDialog({ open, setOpen, handleSubmit, values, handleChange, errors }) {
-
+  const { t } = useTranslation();
   return (
     <FormDialog 
-          title="Credentials"
+          title={t('credential.title')}
           handleSave={handleSubmit}
           open={open}
           setOpen={setOpen}
@@ -31,7 +32,7 @@ function CredentialFormDialog({ open, setOpen, handleSubmit, values, handleChang
             margin="normal"
             name="username"
             id="username"
-            label="Username"
+            label={t('credential.username')}
             type="text"
             fullWidth
             value={values.username || ''}
@@ -42,7 +43,7 @@ function CredentialFormDialog({ open, setOpen, handleSubmit, values, handleChang
             margin="normal"
             name="password"
             id="password"
-            label="Password"
+            label={t('credential.password')}
             fullWidth
             value={values.password || ''}
             onChange={handleChange}
@@ -52,7 +53,7 @@ function CredentialFormDialog({ open, setOpen, handleSubmit, values, handleChang
             margin="normal"
             name="key"
             id="key"
-            label="Key"
+            label={t('credential.key')}
             fullWidth
             value={values.key || ''}
             onChange={handleChange}
@@ -62,7 +63,7 @@ function CredentialFormDialog({ open, setOpen, handleSubmit, values, handleChang
             margin="normal"
             name="key2"
             id="key2"
-            label="Key 2"
+            label={t('credential.key2')}
             fullWidth
             value={values.key2 || ''}
             onChange={handleChange}

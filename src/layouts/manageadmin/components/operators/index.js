@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import TableAccordion from "controls/Accordions/TableAccordion";
+import { useTranslation } from 'react-i18next';
 import Table from "controls/Tables/Table";
+import TableAccordion from "controls/Accordions/TableAccordion";
 import OperatorFormDialog from 'layouts/manageadmin/components/operators/OperatorDialog';
 import CredentialFormDialog from 'layouts/manageadmin/components/operators/CredentialDialog';
 import useForm from 'controls/Dialogs/useForm';
@@ -9,7 +10,7 @@ import MessageDialog from 'controls/Dialogs/MessageDialog';
 import useOperatorTableData from "layouts/manageadmin/data/operatorsTableData";
 
 function ManageOperators() {
-
+  const { t } = useTranslation();
   const handleAddClick = () => {
     setOperatorValues({protocolTypeId: 0});
     setOperatorErrors({});
@@ -66,7 +67,7 @@ function ManageOperators() {
   return (
     <>
       <TableAccordion 
-        title="Operators" 
+        title={t('operator.title')}
         showAddIcon={true}
         expanded={expanded} 
         setOpen={setOpen} 
@@ -94,14 +95,14 @@ function ManageOperators() {
       />
 
       <ConfirmDialog 
-        title="Delete Operator"
-        message="Are you sure you want to delete this operator?"
+        title={t('operator.deleteTitle')}
+        message={t('operator.deleteMessage')}
         open={confirmOpen} 
         setOpen={setConfirmOpen} 
         onConfirm={async() => await onDelete(toDelete)} />
 
       <MessageDialog 
-        title="Connectivity Test"
+        title={t('credential.connectivityTest')}
         message={testMessage}
         open={testOpen} 
         setOpen={setTestOpen} />

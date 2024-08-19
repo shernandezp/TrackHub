@@ -4,10 +4,11 @@ import Table from "controls/Tables/Table";
 import FormDialog from "controls/Dialogs/FormDialog";
 import CustomTextField from 'controls/Dialogs/CustomTextField';
 import useForm from 'controls/Dialogs/useForm';
-
 import useAccountTableData from "layouts/manageadmin/data/accountTableData";
+import { useTranslation } from 'react-i18next';
 
 function ManageAccount() {
+  const { t } = useTranslation();
 
   const handleEditClick = (rowData) => {
     setValues(rowData);
@@ -29,14 +30,14 @@ function ManageAccount() {
   return (
     <>
       <TableAccordion 
-        title="Account" 
+        title={t('account.title')}
         expanded={expanded} 
         setExpanded={setExpanded}>
         <Table columns={columns} rows={rows} />
       </TableAccordion>
 
       <FormDialog 
-          title="Account Details"
+          title={t('account.details')}
           handleSave={handleSubmit}
           open={open}
           setOpen={setOpen}
@@ -47,7 +48,7 @@ function ManageAccount() {
             margin="dense"
             name="name"
             id="name"
-            label="Name"
+            label={t('account.name')}
             type="text"
             fullWidth
             value={values.name || ''}
@@ -60,7 +61,7 @@ function ManageAccount() {
             margin="dense"
             name="description"
             id="description"
-            label="Description"
+            label={t('account.description')}
             type="text"
             fullWidth
             value={values.description || ''}

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Custom hook for managing form state.
@@ -8,6 +9,7 @@ import { useState } from 'react';
  * @returns {Array} - An array containing the form values, handleChange function, setValues function, and validate function.
  */
 function useForm(initialValues, requiredFields = []) {
+  const { t } = useTranslation();
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState({});
   const [types, setTypes] = useState({});
@@ -40,11 +42,11 @@ function useForm(initialValues, requiredFields = []) {
       let type = types[field];
       if (type === 'select-one') {
         if (value === '0') {
-          newErrors[field] = `Please select a value for the ${field} field`;
+          newErrors[field] = t('validation.selectValue', { field: field });
         }
       } else {
         if (!value || value === '') {
-          newErrors[field] = `Please fill the ${field} field`;
+          newErrors[field] = t('validation.required', { field: field });
         }
       }
     }

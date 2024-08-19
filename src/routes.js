@@ -47,7 +47,7 @@ import ArgonBox from "components/ArgonBox";
 const routes = [
   {
     type: "route",
-    name: "Dashboard",
+    name: "screen.dashboard",
     key: "dashboard",
     route: "/dashboard",
     icon: <ArgonBox component="i" color="primary" fontSize="14px" className="ni ni-tv-2" />,
@@ -55,7 +55,7 @@ const routes = [
   },
   {
     type: "route",
-    name: "Manage Admin",
+    name: "screen.manager",
     key: "manageAdmin",
     route: "/manageAdmin",
     icon: (
@@ -65,7 +65,7 @@ const routes = [
   },
   {
     type: "route",
-    name: "Reports",
+    name: "screen.reports",
     key: "billing",
     route: "/billing",
     icon: <ArgonBox component="i" color="success" fontSize="14px" className="ni ni-credit-card" />,
@@ -74,7 +74,7 @@ const routes = [
   { type: "title", title: "Account Pages", key: "account-pages" },
   {
     type: "route",
-    name: "Profile",
+    name: "screen.profile",
     key: "profile",
     route: "/profile",
     icon: <ArgonBox component="i" color="dark" fontSize="14px" className="ni ni-single-02" />,

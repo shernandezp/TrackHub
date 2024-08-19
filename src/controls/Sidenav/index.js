@@ -40,6 +40,7 @@ import sidenavLogoLabel from "controls/Sidenav/styles/sidenav";
 
 // Argon Dashboard 2 MUI context
 import { useArgonController, setMiniSidenav } from "context";
+import { useTranslation } from 'react-i18next';
 
 function Sidenav({ color = "info", brand = "", brandName, routes, ...rest }) {
   const [controller, dispatch] = useArgonController();
@@ -47,6 +48,7 @@ function Sidenav({ color = "info", brand = "", brandName, routes, ...rest }) {
   const location = useLocation();
   const { pathname } = location;
   const itemName = pathname.split("/").slice(1)[0];
+  const { t } = useTranslation();
 
   const closeSidenav = () => setMiniSidenav(dispatch, true);
 
@@ -80,7 +82,7 @@ function Sidenav({ color = "info", brand = "", brandName, routes, ...rest }) {
         returnValue = (
           <Link href={href} key={key} target="_blank" rel="noreferrer">
             <SidenavItem
-              name={name}
+              name={t(name)}
               icon={icon}
               active={key === itemName}
               noCollapse={noCollapse}
@@ -90,7 +92,7 @@ function Sidenav({ color = "info", brand = "", brandName, routes, ...rest }) {
       } else {
         returnValue = (
           <NavLink to={route} key={key}>
-            <SidenavItem name={name} icon={icon} active={key === itemName} />
+            <SidenavItem name={t(name)} icon={icon} active={key === itemName} />
           </NavLink>
         );
       }

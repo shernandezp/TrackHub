@@ -1,15 +1,16 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { useTranslation } from 'react-i18next';
 import FormDialog from "controls/Dialogs/FormDialog";
 import CustomTextField from 'controls/Dialogs/CustomTextField';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
 import protocolTypes from 'layouts/manageadmin/data/protocolTypes';
 
 function OperatorFormDialog({ open, setOpen, handleSubmit, values, handleChange, errors }) {
-
+  const { t } = useTranslation();
   return (
     <FormDialog 
-          title="Operator Details"
+          title={t('operator.details')}
           handleSave={handleSubmit}
           open={open}
           setOpen={setOpen}
@@ -20,7 +21,7 @@ function OperatorFormDialog({ open, setOpen, handleSubmit, values, handleChange,
             margin="dense"
             name="name"
             id="name"
-            label="Name"
+            label={t('operator.name')}
             type="text"
             fullWidth
             value={values.name || ''}
@@ -32,7 +33,7 @@ function OperatorFormDialog({ open, setOpen, handleSubmit, values, handleChange,
             margin="normal"
             name="description"
             id="description"
-            label="Description"
+            label={t('operator.description')}
             type="text"
             fullWidth
             value={values.description || ''}
@@ -43,7 +44,7 @@ function OperatorFormDialog({ open, setOpen, handleSubmit, values, handleChange,
             margin="normal"
             name="phoneNumber"
             id="phoneNumber"
-            label="Phone Number"
+            label={t('generic.phoneNumber')}
             type="text"
             fullWidth
             value={values.phoneNumber || ''}
@@ -54,7 +55,7 @@ function OperatorFormDialog({ open, setOpen, handleSubmit, values, handleChange,
             margin="normal"
             name="emailAddress"
             id="emailAddress"
-            label="Email Address"
+            label={t('generic.emailAddress')}
             type="email"
             fullWidth
             value={values.emailAddress || ''}
@@ -65,7 +66,7 @@ function OperatorFormDialog({ open, setOpen, handleSubmit, values, handleChange,
             margin="normal"
             name="address"
             id="address"
-            label="Address"
+            label={t('generic.address')}
             type="text"
             fullWidth
             value={values.address || ''}
@@ -76,7 +77,7 @@ function OperatorFormDialog({ open, setOpen, handleSubmit, values, handleChange,
             margin="normal"
             name="contactName"
             id="contactName"
-            label="Contact Name"
+            label={t('operator.contactName')}
             type="text"
             fullWidth
             value={values.contactName || ''}
@@ -88,7 +89,7 @@ function OperatorFormDialog({ open, setOpen, handleSubmit, values, handleChange,
             handleChange={handleChange}
             name="protocolTypeId"
             id="protocolTypeId"
-            label="Protocol Type"
+            label={t('operator.type')}
             value={values.protocolTypeId}
             required
           />

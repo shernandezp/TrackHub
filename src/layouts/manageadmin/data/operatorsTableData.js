@@ -1,5 +1,9 @@
 import { useEffect, useState, useRef, useContext } from "react";
+import { useTranslation } from 'react-i18next';
 import { NameDetail, Description, DescriptionDetail } from "controls/Tables/components/tableComponents";
+import Icon from "@mui/material/Icon";
+import logoJira from "assets/images/small-logos/logo-jira.svg";
+import protocolTypes from 'layouts/manageadmin/data/protocolTypes';
 import ArgonTypography from "components/ArgonTypography";
 import ArgonBadge from "components/ArgonBadge";
 import ArgonButton from "components/ArgonButton";
@@ -7,14 +11,12 @@ import useOperatorService from "services/operator";
 import useCredentialService from "services/credential";
 import useConnectivityService from "services/connectivity";
 import { formatDateTime } from "utils/dateUtils";
-import Icon from "@mui/material/Icon";
-import logoJira from "assets/images/small-logos/logo-jira.svg";
-import protocolTypes from 'layouts/manageadmin/data/protocolTypes';
 import { handleDelete, handleSave } from "layouts/manageadmin/actions/operatorsActions";
 import { handleSaveCredential, handleTestCredential } from "layouts/manageadmin/actions/credentialActions";
 import { LoadingContext } from 'LoadingContext';
 
 function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialClick, handleDeleteClick) {
+  const { t } = useTranslation();
   const [data, setData] = useState({ columns: [], rows: [] });
   const [operators, setOperators] = useState([]);
   const [open, setOpen] = useState(false);
@@ -90,22 +92,22 @@ function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialCl
     let result = await handleTestCredential(
       operatorId, 
       testConnectivity);
-    setTestMessage(result ? "Test successful" : "Test failed");
+    setTestMessage(result ? t('credential.testSuccess') : t('credential.testError'));
     setTestOpen(true);
     setLoading(false);
   };
 
   const buildTableData = (operators) => ({
     columns: [
-      { name: "name", title:"", align: "left" },
-      { name: "description", title:"", align: "left" },
-      { name: "address", title:"", align: "left" },
-      { name: "contactname", title:"Contact Name", align: "left" },
-      { name: "protocoltype", title:"Protocol", align: "center" },
-      { name: "modified", title:"", align: "center" },
-      { name: "action", title:"", align: "center" },
-      { name: "credential", title:"", align: "center" },
-      { name: "testcredential", title:"Test Credential", align: "center" }
+      { name: "name", title:t('operator.name'), align: "left" },
+      { name: "description", title:t('operator.description'), align: "left" },
+      { name: "address", title:t('generic.address'), align: "left" },
+      { name: "contactname", title:t('operator.contactName'), align: "left" },
+      { name: "protocoltype", title:t('operator.type'), align: "center" },
+      { name: "modified", title:t('generic.modified'), align: "center" },
+      { name: "action", title:t('generic.action'), align: "center" },
+      { name: "credential", title:t('credential.title'), align: "center" },
+      { name: "testcredential", title:t('credential.testCredential'), align: "center" }
     ],
     rows: operators.map(operator => ({
       name: <NameDetail name={operator.name} detail={operator.emailAddress} image={logoJira} />,
@@ -126,13 +128,13 @@ function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialCl
                 variant="text" 
                 color="dark" 
                 onClick={() => handleOpen(operator)}>
-              <Icon>edit</Icon>&nbsp;Edit
+              <Icon>edit</Icon>&nbsp;{t('generic.edit')}
             </ArgonButton>
             <ArgonButton 
               variant="text" 
               color="error"
               onClick={() => handleOpenDelete(operator.operatorId)}>
-              <Icon>delete</Icon>&nbsp;Delete
+              <Icon>delete</Icon>&nbsp;{t('generic.delete')}
             </ArgonButton>
         </>
       ),
@@ -145,7 +147,7 @@ function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialCl
           fontWeight="medium"
           onClick={async() => await handleOpenCredential(operator.operatorId)}
         >
-          Credentials
+          {t('credential.title')}
         </ArgonTypography>
       ),
       testcredential: (

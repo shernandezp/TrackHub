@@ -3,8 +3,10 @@ import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import PropTypes from 'prop-types';
+import { useTranslation } from 'react-i18next';
 
 function CustomSelect({ list, handleChange, name, id, label, value }) {
+    const { t } = useTranslation();
     const handleSelectChange = (event) => {
         handleChange({
           target: {
@@ -28,7 +30,7 @@ function CustomSelect({ list, handleChange, name, id, label, value }) {
                 displayEmpty
             >
                 <MenuItem value={0} disabled>
-                    Select an Item
+                    {t('generic.selectItem')}
                 </MenuItem>
                 {list.map((item, index) => (
                     <MenuItem key={index} value={item.value}>

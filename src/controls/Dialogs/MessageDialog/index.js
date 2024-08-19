@@ -1,8 +1,10 @@
 import React from 'react';
-import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
 import PropTypes from 'prop-types';
+import { useTranslation } from 'react-i18next';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
 
 function MessageDialog({ title, message, open, setOpen }) {
+  const { t } = useTranslation();
   const handleClose = () => {
     setOpen(false);
   };
@@ -22,7 +24,7 @@ function MessageDialog({ title, message, open, setOpen }) {
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} color="primary" autoFocus>
-          Close
+          {t('generic.close')}
         </Button>
       </DialogActions>
     </Dialog>

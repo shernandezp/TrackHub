@@ -1,0 +1,59 @@
+{
+    "account": {
+        "title":"Cuenta",
+        "details":"Detalle de la Cuenta",
+        "name": "Nombre",
+        "description": "Descripción",
+        "type": "Tipo"
+    },
+    "credential": {
+        "title":"Credencial",
+        "details":"Detalle de la Credencial",
+        "username": "Nombre de Usuario",
+        "password": "Contraseña",
+        "key": "Clave Secreta",
+        "key2": "Clave Secreta 2",
+        "connectivityTest": "Prueba de Conectividad",
+        "testCredential": "Probar Credencial",
+        "testSuccess": "La credencial fue probada con éxito",
+        "testError": "Ocurrió un error al probar la credencial"
+    },
+    "generic": {
+        "modified":"Modificado",
+        "action":"Acción",
+        "add": "Agregar",
+        "edit": "Editar",
+        "delete": "Eliminar",
+        "save": "Guardar",
+        "confirm": "Confirmar",
+        "cancel": "Cancelar",
+        "close": "Cerrar",
+        "selectItem": "Seleccionar un Elemento",
+        "emailAddress": "Correo Electrónico",
+        "phoneNumber": "Número de Teléfono",
+        "address": "Dirección"
+    },
+    "operator": {
+        "title":"Operadores",
+        "singleTitle":"Operador",
+        "details":"Detalle del Operador",
+        "name": "Nombre",
+        "description": "Descripción",
+        "type": "Protocolo",
+        "contactName": "Nombre de Contacto",
+        "deleteTitle": "Eliminar Operador",
+        "deleteMessage": "¿Está seguro de que desea eliminar este operador?"
+    },
+    "screen": {
+        "dashboard": "Tablero",
+        "superManager": "Administrador del Sistema",
+        "manager": "Administración de Cuentas",
+        "userManager": "Panel de Control",
+        "reports": "Reportes",
+        "profile": "Perfil"
+    },
+    "validation": {
+        "selectValue": "Por favor seleccione un valor para el campo {{field}}",
+        "required": "Por favor llene el campo {{field}}"
+    }
+}

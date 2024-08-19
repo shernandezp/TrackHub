@@ -8,8 +8,10 @@ import useAccountService from "services/account";
 import { formatDateTime } from "utils/dateUtils";
 import { handleSave } from "layouts/manageadmin/actions/accountActions";
 import { LoadingContext } from 'LoadingContext';
+import { useTranslation } from 'react-i18next';
 
 function useAccountTableData(fetchData, handleEditClick) {
+  const { t } = useTranslation();
   const [data, setData] = useState({ columns: [], rows: [] });
   const [accounts, setAccounts] = useState([]);
   const [open, setOpen] = useState(false);
@@ -36,11 +38,11 @@ function useAccountTableData(fetchData, handleEditClick) {
 
   const buildTableData = (accounts) => ({
     columns: [
-      { name: "name", title:"", align: "left" },
-      { name: "description", title:"", align: "left" },
-      { name: "type", title:"", align: "center" },
-      { name: "modified", title:"", align: "center" },
-      { name: "action", title:"", align: "center" },
+      { name: "name", title:t('account.name'), align: "left" },
+      { name: "description", title:t('account.description'), align: "left" },
+      { name: "type", title:t('account.type'), align: "center" },
+      { name: "modified", title:t('generic.modified'), align: "center" },
+      { name: "action", title:t('generic.action'), align: "center" },
     ],
     rows: accounts.map(account => ({
       name: <Name name={account.name} />,
@@ -58,7 +60,7 @@ function useAccountTableData(fetchData, handleEditClick) {
             variant="text" 
             color="dark" 
             onClick={() => handleOpen(account)}>
-          <Icon>edit</Icon>&nbsp;Edit
+          <Icon>edit</Icon>&nbsp;{t('generic.edit')}
         </ArgonButton>
       ),
     })),

@@ -1,8 +1,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { useTranslation } from 'react-i18next';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 
 const FormDialog = ({ title, children, handleSave, open, setOpen }) => {
+    const { t } = useTranslation();
     const handleClose = () => {
         setOpen(false);
     };
@@ -14,8 +16,8 @@ const FormDialog = ({ title, children, handleSave, open, setOpen }) => {
                 {children}
             </DialogContent>
             <DialogActions>
-                <Button onClick={handleClose}>Cancel</Button>
-                <Button onClick={handleSave} autoFocus>Save</Button>
+                <Button onClick={handleClose}>{t('generic.cancel')}</Button>
+                <Button onClick={handleSave} autoFocus>{t('generic.save')}</Button>
             </DialogActions>
         </Dialog>
     );
