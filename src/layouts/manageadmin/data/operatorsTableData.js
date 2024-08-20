@@ -151,14 +151,12 @@ function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialCl
         </ArgonTypography>
       ),
       testcredential: (
-        <>
-            <ArgonButton 
-                variant="text"
-                color="dark" 
-                onClick={async() => await onTestCredential(operator.operatorId)}>
-              <Icon>check</Icon>
-            </ArgonButton>
-        </>
+        <ArgonButton 
+            variant="text"
+            color="dark" 
+            onClick={async() => await onTestCredential(operator.operatorId)}>
+          <Icon>check</Icon>
+        </ArgonButton>
       )
     })),
   });
