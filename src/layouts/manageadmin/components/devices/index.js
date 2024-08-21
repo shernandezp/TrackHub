@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import Table from "controls/Tables/Table";
 import TableAccordion from "controls/Accordions/TableAccordion";
 import DeviceFormDialog from "layouts/manageadmin/components/devices/DeviceDialog";
+import DeviceOperatorFormDialog from 'layouts/manageadmin/components/devices/DeviceOperatorDialog';
 import useForm from 'controls/Dialogs/useForm';
 import ConfirmDialog from 'controls/Dialogs/ConfirmDialog';
 import useDeviceTableData from "layouts/manageadmin/data/devicesTableData";
@@ -24,6 +25,7 @@ function ManageDevices() {
   };
 
   const [expanded, setExpanded] = useState(false);
+  const [openAssignment, setOpenAssignment] = useState(false);
   const { 
     data, 
     open, 
@@ -43,17 +45,27 @@ function ManageDevices() {
     }
   };
 
+  const handleAssignmentSubmit = async () => {
+    console.log('Assignment submitted');
+  };
+
   return (
     <>
       <TableAccordion 
         title={t('device.title')}
         showAddIcon={true}
         expanded={expanded} 
-        setOpen={setOpen} 
+        setOpen={setOpenAssignment} 
         handleAddClick={handleAddClick}
         setExpanded={setExpanded}>
         <Table columns={columns} rows={rows} />
       </TableAccordion>
+
+      <DeviceOperatorFormDialog
+        open={openAssignment}
+        setOpen={setOpenAssignment}
+        handleSubmit={handleAssignmentSubmit}
+      />
 
       <DeviceFormDialog 
         open={open}

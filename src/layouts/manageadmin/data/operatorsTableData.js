@@ -9,7 +9,7 @@ import ArgonBadge from "components/ArgonBadge";
 import ArgonButton from "components/ArgonButton";
 import useOperatorService from "services/operator";
 import useCredentialService from "services/credential";
-import useConnectivityService from "services/connectivity";
+import useRouterService from "services/router";
 import { formatDateTime } from "utils/dateUtils";
 import { handleDelete, handleSave } from "layouts/manageadmin/actions/operatorsActions";
 import { handleSaveCredential, handleTestCredential } from "layouts/manageadmin/actions/credentialActions";
@@ -29,7 +29,7 @@ function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialCl
   const hasLoaded = useRef(false);
   const { getOperatorsByCurrentAccount, updateOperator, createOperator, deleteOperator } = useOperatorService();
   const { getCredentialByOperator, createCredential, updateCredential } = useCredentialService();
-  const { testConnectivity } = useConnectivityService();
+  const { testConnectivity } = useRouterService();
 
   const onSave = async (operator) => {
     setLoading(true);

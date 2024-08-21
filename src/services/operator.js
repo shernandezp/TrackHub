@@ -77,6 +77,29 @@ const useOperatorService = () => {
   };
 
   /**
+   * Retrieves simple list of operators by the current account.
+   * @returns {Promise<Array>} A promise that resolves to an array of operators.
+   */
+  const getOperators = async () => {
+    try {
+      const data = {
+        query: `
+        query {
+            operatorsByCurrentAccount {
+              name
+              operatorId
+            }
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.operatorsByCurrentAccount;
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+  /**
    * Retrieves operators by account ID.
    * @param {string} accountId - The ID of the account.
    * @returns {Promise<Array>} A promise that resolves to an array of operators.
@@ -215,6 +238,7 @@ const useOperatorService = () => {
     getOperator,
     getOperatorsByCurrentAccount,
     getOperatorByAccount,
+    getOperators,
     createOperator,
     updateOperator,
     deleteOperator,

@@ -5,7 +5,14 @@ import Select from '@mui/material/Select';
 import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 
-function CustomSelect({ list, handleChange, name, id, label, value }) {
+function CustomSelect({ 
+        list, 
+        handleChange = () => {}, 
+        name, 
+        id, 
+        label, 
+        value 
+    }) {
     const { t } = useTranslation();
     const handleSelectChange = (event) => {
         handleChange({
@@ -44,7 +51,7 @@ function CustomSelect({ list, handleChange, name, id, label, value }) {
 
 CustomSelect.propTypes = {
     list: PropTypes.array.isRequired,
-    handleChange: PropTypes.func.isRequired,
+    handleChange: PropTypes.func,
     name: PropTypes.string.isRequired,
     id: PropTypes.string.isRequired,
     label: PropTypes.string.isRequired,
