@@ -8,15 +8,18 @@ const useDeviceService = () => {
     try {
       const data = {
         query: `
-            query {
-                device(query: { id: "${deviceId}" }) {
-                    description
-                    name
-                    deviceType
-                    deviceTypeId
-                    deviceId
-                }
+          query {
+            device(query: { id: "${deviceId}" }) {
+              description
+              deviceId
+              deviceTypeId
+              identifier
+              name
+              operatorId
+              serial
+              transporterId
             }
+          }
         `
       };
       const response = await post(data);
@@ -26,41 +29,22 @@ const useDeviceService = () => {
     }
   };
 
-  const getDevicesByCurrentAccount = async () => {
+  const getDevicesByAccount = async () => {
     try {
       const data = {
         query: `
-            query {
-                devicesByCurrentAccount {
-                    description
-                    deviceId
-                    deviceType
-                    deviceTypeId
-                    name
-                }
+          query {
+            devicesByAccount {
+              description
+              deviceId
+              deviceTypeId
+              identifier
+              name
+              operatorId
+              serial
+              transporterId
             }
-        `
-      };
-      const response = await post(data);
-      return response.data.devicesByCurrentAccount;
-    } catch (error) {
-      handleError(error);
-    }
-  };
-
-  const getDevicesByAccount = async (accountId) => {
-    try {
-      const data = {
-        query: `
-            query {
-                devicesByAccount(query: { accountId: "${accountId}" }) {
-                    description
-                    deviceId
-                    deviceType
-                    deviceTypeId
-                    name
-                }
-            }
+          }
         `
       };
       const response = await post(data);
@@ -92,46 +76,34 @@ const useDeviceService = () => {
     }
   };
 
-  const getDevicesByUser = async () => {
-    try {
-      const data = {
-        query: `
-            query {
-                devicesByUser {
-                    description
-                    deviceId
-                    deviceType
-                    deviceTypeId
-                    name
-                }
-            }
-        `
-      };
-      const response = await post(data);
-      return response.data.devicesByUser;
-    } catch (error) {
-      handleError(error);
-    }
-  };
-
   const createDevice = async (deviceData) => {
     try {
       const data = {
         query: `
-            mutation {
-                createDevice(
-                command: {
-                    device: {
-                        description: "${deviceData.description}",
-                        deviceTypeId: ${deviceData.deviceTypeId},
-                        name: "${deviceData.name}"
-                    }}) {
-                    description
-                    deviceId
-                    deviceType
-                    deviceTypeId
+          mutation {
+            createDevice(
+              command: {
+                device: {
+                  transporterId: "${deviceData.transporterId}"
+                  serial: "${deviceData.serial}"
+                  operatorId: "${deviceData.operatorId}"
+                  name: "${deviceData.name}"
+                  identifier: "${deviceData.identifier}"
+                  deviceTypeId: ${deviceData.deviceTypeId}
+                  description: "${deviceData.description}"
                 }
+              }
+            ) {
+              transporterId
+              serial
+              operatorId
+              name
+              deviceTypeId
+              deviceId
+              identifier
+              description
             }
+          }
         `
       };
       const response = await post(data);
@@ -145,18 +117,22 @@ const useDeviceService = () => {
     try {
       const data = {
         query: `
-        mutation {
+          mutation {
             updateDevice(
               id: "${deviceId}"
               command: {
                 device: {
+                  transporterId: "${deviceData.transporterId}"
+                  serial: "${deviceData.serial}"
+                  operatorId: "${deviceData.operatorId}"
                   name: "${deviceData.name}"
+                  identifier: "${deviceData.identifier}"
                   deviceTypeId: ${deviceData.deviceTypeId}
                   deviceId: "${deviceData.deviceId}"
                   description: "${deviceData.description}"
                 }
               }
-            )
+            ) 
           }
         `
       };
@@ -172,9 +148,9 @@ const useDeviceService = () => {
     try {
       const data = {
         query: `
-            mutation {
-                deleteDevice(id: "${deviceId}")
-            }
+          mutation {
+            deleteDevice(deviceId: "${deviceId}") 
+          }
         `
       };
       const response = await post(data);
@@ -187,10 +163,8 @@ const useDeviceService = () => {
 
   return {
     getDevice,
-    getDevicesByCurrentAccount,
     getDevicesByAccount,
     getDevicesByGroup,
-    getDevicesByUser,
     createDevice,
     updateDevice,
     deleteDevice

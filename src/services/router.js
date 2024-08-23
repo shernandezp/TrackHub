@@ -48,10 +48,11 @@ const useRouterService = () => {
             query: `
                 query {
                     devicesByOperator(query: { operatorId: "${operatorId}" }) {
-                        deviceId
                         identifier
                         name
                         serial
+                        deviceTypeId
+                        transporterTypeId
                     }
                 }
             `

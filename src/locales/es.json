@@ -26,7 +26,8 @@
         "description": "Descripción",
         "type": "Tipo",
         "deleteTitle": "Eliminar Dispositivo",
-        "deleteMessage": "¿Está seguro de que desea eliminar este dispositivo?"
+        "deleteMessage": "¿Está seguro de que desea eliminar este dispositivo?",
+        "overwrite": "Sobrescribir"
     },
     "generic": {
         "modified":"Modificado",

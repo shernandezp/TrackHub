@@ -18,7 +18,7 @@ function useDeviceTableData(fetchData, handleEditClick, handleDeleteClick) {
   const { setLoading } = useContext(LoadingContext);
 
   const hasLoaded = useRef(false);
-  const { getDevicesByCurrentAccount, createDevice, updateDevice, deleteDevice } = useDeviceService();
+  const { getDevicesByAccount, createDevice, updateDevice, deleteDevice } = useDeviceService();
 
   const onSave = async (device) => {
     setLoading(true);
@@ -95,7 +95,7 @@ function useDeviceTableData(fetchData, handleEditClick, handleDeleteClick) {
     if (fetchData && !hasLoaded.current) {
       async function fetchData() {
         setLoading(true);
-        const devices = await getDevicesByCurrentAccount();
+        const devices = await getDevicesByAccount();
         setDevices(devices);
         setData(buildTableData(devices));
         hasLoaded.current = true;

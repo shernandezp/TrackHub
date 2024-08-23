@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useContext } from 'react';
 import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
-import FormDialog from "controls/Dialogs/FormDialog";
 import TableDialog from 'controls/Dialogs/TableDialog';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
 import useRouterService from 'services/router';
 import useOperatorService from 'services/operator';
 import { LoadingContext } from 'LoadingContext';
 
-function DeviceOperatorFormDialog({ open, setOpen, handleSubmit }) {
+function DeviceAllocatorDialog({ open, setOpen }) {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
   const { getDevicesByOperator } = useRouterService();
@@ -21,7 +20,7 @@ function DeviceOperatorFormDialog({ open, setOpen, handleSubmit }) {
     { field: 'identifier', headerName: 'ID' },
     { field: 'name', headerName: 'Name' },
     { field: 'serial', headerName: 'Serial' }
-];
+  ];
 
   useEffect(() => {
     const fetchOperators = async () => {
@@ -45,34 +44,40 @@ function DeviceOperatorFormDialog({ open, setOpen, handleSubmit }) {
     setLoading(false);
   };
 
+  const handleSubmit = async (selectedRows, checked) => {
+    selectedRows.forEach((index) => {
+        console.log(data[index]);
+    });
+    setOperator(0);
+    setData([]);
+    setOpen(false);
+  };
+
   return (
-    <FormDialog 
+    <TableDialog 
       title={t('device.details')}
       handleSave={handleSubmit}
       open={open}
       setOpen={setOpen}
-      maxWidth="md"
-    >
-      <form>
-        <CustomSelect
-          list={operators}
-          name="name"
-          id="operatorId"
-          label={t('operator.singleTitle')}
-          value={operator}
-          handleChange={handleChange}
-          required
-        />
-        <TableDialog data={data} columns={columns}/>
-      </form>
-    </FormDialog>
+      checkLabel={t('device.overwrite')}
+      data={data} 
+      columns={columns}>
+      <CustomSelect
+        list={operators}
+        name="name"
+        id="operatorId"
+        label={t('operator.singleTitle')}
+        value={operator}
+        handleChange={handleChange}
+        required
+      />
+    </TableDialog>
   );
 }
 
-DeviceOperatorFormDialog.propTypes = {
+DeviceAllocatorDialog.propTypes = {
     open: PropTypes.bool.isRequired,
-    setOpen: PropTypes.func.isRequired,
-    handleSubmit: PropTypes.func.isRequired,
+    setOpen: PropTypes.func.isRequired
 };
 
-export default DeviceOperatorFormDialog;
+export default DeviceAllocatorDialog;
