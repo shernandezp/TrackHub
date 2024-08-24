@@ -64,6 +64,15 @@
         "reports": "Reportes",
         "profile": "Perfil"
     },
+    "transporter": {
+        "title":"Unidades",
+        "singleTitle":"Unidad",
+        "details":"Detalle de la Unidad",
+        "name": "Nombre",
+        "type": "Tipo",
+        "deleteTitle": "Eliminar Unidad",
+        "deleteMessage": "¿Está seguro de que desea eliminar esta unidad?"
+    },
     "validation": {
         "selectValue": "Por favor seleccione un valor para el campo {{field}}",
         "required": "Por favor llene el campo {{field}}"

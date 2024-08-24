@@ -7,6 +7,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ManageAccount from "layouts/manageadmin/components/account";
 import ManageOperators from "layouts/manageadmin/components/operators";
 import ManageDevices from "layouts/manageadmin/components/devices";
+import ManageTransporters from "layouts/manageadmin/components/transporters";
 
 // Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
@@ -32,6 +33,7 @@ function ManageAdmin() {
         <ManageAccount/>
         <ManageOperators/>
         <ManageDevices/>
+        <ManageTransporters/>
 
         <Accordion>
             <AccordionSummary

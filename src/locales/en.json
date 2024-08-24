@@ -46,7 +46,7 @@
         "address": "Address"
     },
     "operator": {
-        "title":"Operadores",
+        "title":"Operators",
         "singleTitle":"Operator",
         "details":"Operator Details",
         "name": "Name",
@@ -63,6 +63,15 @@
         "userManager": "Control Panel",
         "reports": "Reports",
         "profile": "Profile"
+    },
+    "transporter": {
+        "title":"Transporters",
+        "singleTitle":"Transporter",
+        "details":"Transporter Details",
+        "name": "Name",
+        "type": "Type",
+        "deleteTitle": "Delete Transporter",
+        "deleteMessage": "Are you sure you want to delete this transporter?"
     },
     "validation": {
         "selectValue": "Please select a value for the {{field}} field",
