@@ -84,12 +84,12 @@ const useOperatorService = () => {
     try {
       const data = {
         query: `
-        query {
-            operatorsByCurrentAccount {
-              name
-              operatorId
+          query {
+              operatorsByCurrentAccount {
+                name
+                operatorId
+              }
             }
-          }
         `
       };
       const response = await post(data);

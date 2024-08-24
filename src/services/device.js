@@ -1,5 +1,5 @@
 import useApiService from './apiService';
-import { handleError } from 'utils/errorHandler';
+import { handleError, handleSilentError } from 'utils/errorHandler';
 
 const useDeviceService = () => {
   const { post } = useApiService(process.env.REACT_APP_MANAGER_ENDPOINT);
@@ -37,6 +37,7 @@ const useDeviceService = () => {
             devicesByAccount {
               description
               deviceId
+              deviceType
               deviceTypeId
               identifier
               name
@@ -76,70 +77,31 @@ const useDeviceService = () => {
     }
   };
 
-  const createDevice = async (deviceData) => {
+  const processDevice = async (deviceData, operatorId) => {
     try {
       const data = {
         query: `
           mutation {
-            createDevice(
+            processDevice(
               command: {
-                device: {
-                  transporterId: "${deviceData.transporterId}"
+                processDevice: {
+                  transporterTypeId: ${deviceData.transporterTypeId}
                   serial: "${deviceData.serial}"
-                  operatorId: "${deviceData.operatorId}"
                   name: "${deviceData.name}"
-                  identifier: "${deviceData.identifier}"
+                  identifier: ${deviceData.identifier}
                   deviceTypeId: ${deviceData.deviceTypeId}
-                  description: "${deviceData.description}"
+                  description: "${deviceData.description || ''}"
                 }
-              }
-            ) {
-              transporterId
-              serial
-              operatorId
-              name
-              deviceTypeId
-              deviceId
-              identifier
-              description
-            }
-          }
-        `
-      };
-      const response = await post(data);
-      return response.data.createDevice;
-    } catch (error) {
-      handleError(error);
-    }
-  };
-
-  const updateDevice = async (deviceId, deviceData) => {
-    try {
-      const data = {
-        query: `
-          mutation {
-            updateDevice(
-              id: "${deviceId}"
-              command: {
-                device: {
-                  transporterId: "${deviceData.transporterId}"
-                  serial: "${deviceData.serial}"
-                  operatorId: "${deviceData.operatorId}"
-                  name: "${deviceData.name}"
-                  identifier: "${deviceData.identifier}"
-                  deviceTypeId: ${deviceData.deviceTypeId}
-                  deviceId: "${deviceData.deviceId}"
-                  description: "${deviceData.description}"
-                }
+                operatorId: "${operatorId}"
               }
             ) 
           }
         `
       };
       const response = await post(data);
-      return response.data.updateDevice;
+      return response.data.processDevice;
     } catch (error) {
-      handleError(error);
+      handleSilentError(error);
       return false;
     }
   };
@@ -161,13 +123,30 @@ const useDeviceService = () => {
     }
   };
 
+  const wipeDevices = async (operatorId) => {
+    try {
+      const data = {
+        query: `
+          mutation {
+            wipeDevices(operatorId: "${operatorId}") 
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.wipeDevices;
+    } catch (error) {
+      handleError(error);
+      return false;
+    }
+  };
+
   return {
     getDevice,
     getDevicesByAccount,
     getDevicesByGroup,
-    createDevice,
-    updateDevice,
-    deleteDevice
+    processDevice,
+    deleteDevice,
+    wipeDevices
   };
 };
 

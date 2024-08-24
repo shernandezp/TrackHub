@@ -24,6 +24,7 @@
         "details":"Device Details",
         "name": "Name",
         "description": "Description",
+        "serial": "Serial Number",
         "type": "Type",
         "deleteTitle": "Delete Device",
         "deleteMessage": "Are you sure you want to delete this device?",

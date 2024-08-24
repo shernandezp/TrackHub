@@ -9,7 +9,15 @@ import ArgonTypography from "components/ArgonTypography";
 import Card from "@mui/material/Card";
 import ArgonBox from "components/ArgonBox";
 
-const TableAccordion = ({ title, expanded, showAddIcon=false, setOpen, setExpanded, handleAddClick, children }) => {
+const TableAccordion = ({ 
+        title, 
+        expanded, 
+        showAddIcon=false, 
+        setOpen, 
+        setExpanded, 
+        handleAddClick = () => {}, 
+        children 
+    }) => {
     
     const handleOpen = () => {
         handleAddClick();

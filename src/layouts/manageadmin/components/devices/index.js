@@ -2,23 +2,12 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Table from "controls/Tables/Table";
 import TableAccordion from "controls/Accordions/TableAccordion";
-import DeviceFormDialog from "layouts/manageadmin/components/devices/DeviceDialog";
 import DeviceAllocatorDialog from 'layouts/manageadmin/components/devices/DeviceAllocatorDialog';
-import useForm from 'controls/Dialogs/useForm';
 import ConfirmDialog from 'controls/Dialogs/ConfirmDialog';
 import useDeviceTableData from "layouts/manageadmin/data/devicesTableData";
 
 function ManageDevices() {
   const { t } = useTranslation();
-  const handleAddClick = () => {
-    setValues({deviceTypeId: 0});
-    setErrors({});
-  };
-
-  const handleEditClick = (rowData) => {
-    setValues(rowData);
-    setErrors({});
-  };
 
   const handleDeleteClick = (deviceId) => {
     setToDelete(deviceId);
@@ -28,22 +17,11 @@ function ManageDevices() {
   const [openAssignment, setOpenAssignment] = useState(false);
   const { 
     data, 
-    open, 
     confirmOpen, 
-    onSave, 
     onDelete, 
-    setOpen, 
-    setConfirmOpen } = useDeviceTableData(expanded, handleEditClick, handleDeleteClick);
-  const requiredFields = ['name', 'deviceTypeId'];
-  const [values, handleChange, setValues, setErrors, validate, errors] = useForm({}, requiredFields);
+    setConfirmOpen } = useDeviceTableData(expanded, handleDeleteClick);
   const [toDelete, setToDelete] = useState(null);
   const { columns, rows } = data;
-
-  const handleSubmit = async () => {
-    if (validate()) {
-      onSave(values);
-    }
-  };
 
   return (
     <>
@@ -52,7 +30,6 @@ function ManageDevices() {
         showAddIcon={true}
         expanded={expanded} 
         setOpen={setOpenAssignment} 
-        handleAddClick={handleAddClick}
         setExpanded={setExpanded}>
         <Table columns={columns} rows={rows} />
       </TableAccordion>
@@ -60,15 +37,6 @@ function ManageDevices() {
       <DeviceAllocatorDialog
         open={openAssignment}
         setOpen={setOpenAssignment}
-      />
-
-      <DeviceFormDialog 
-        open={open}
-        setOpen={setOpen}
-        handleSubmit={handleSubmit}
-        values={values}
-        handleChange={handleChange}
-        errors={errors}
       />
 
       <ConfirmDialog 

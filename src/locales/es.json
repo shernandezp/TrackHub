@@ -24,6 +24,7 @@
         "details":"Detalle del Dispositivo",
         "name": "Nombre",
         "description": "Descripción",
+        "serial": "Número de Serie",
         "type": "Tipo",
         "deleteTitle": "Eliminar Dispositivo",
         "deleteMessage": "¿Está seguro de que desea eliminar este dispositivo?",

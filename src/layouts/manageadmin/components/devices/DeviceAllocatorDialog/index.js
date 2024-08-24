@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 import TableDialog from 'controls/Dialogs/TableDialog';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
+import useDeviceService from 'services/device';
 import useRouterService from 'services/router';
 import useOperatorService from 'services/operator';
 import { LoadingContext } from 'LoadingContext';
@@ -10,6 +11,7 @@ import { LoadingContext } from 'LoadingContext';
 function DeviceAllocatorDialog({ open, setOpen }) {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
+  const { processDevice, wipeDevices } = useDeviceService();
   const { getDevicesByOperator } = useRouterService();
   const { getOperators } = useOperatorService();
   const [data, setData] = useState([]);
@@ -45,9 +47,15 @@ function DeviceAllocatorDialog({ open, setOpen }) {
   };
 
   const handleSubmit = async (selectedRows, checked) => {
-    selectedRows.forEach((index) => {
-        console.log(data[index]);
+    setLoading(true);
+    if (checked)
+    {
+      await wipeDevices(operator);
+    }
+    selectedRows.forEach(async(index) => {
+      await processDevice(data[index], operator);
     });
+    setLoading(false);
     setOperator(0);
     setData([]);
     setOpen(false);
