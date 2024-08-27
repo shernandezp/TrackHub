@@ -73,6 +73,24 @@
         "deleteTitle": "Delete Transporter",
         "deleteMessage": "Are you sure you want to delete this transporter?"
     },
+    "user": {
+        "title":"Users",
+        "singleTitle":"User",
+        "details":"User Details",
+        "firstName": "First Name",
+        "secondName": "Second Name",
+        "lastName": "Last Name",
+        "secondSurname": "Second Surname",
+        "username": "Username",
+        "password": "Password",
+        "emailAddress": "Email Address",
+        "phone": "Phone",
+        "dob": "Date of Birth",
+        "active": "Active",
+        "deleteTitle": "Delete User",
+        "deleteMessage": "Are you sure you want to delete this user?",
+        "updatePassword": "Update Password"
+    },
     "validation": {
         "selectValue": "Please select a value for the {{field}} field",
         "required": "Please fill the {{field}} field"

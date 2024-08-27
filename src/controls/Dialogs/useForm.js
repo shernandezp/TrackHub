@@ -20,9 +20,10 @@ function useForm(initialValues, requiredFields = []) {
    * @param {Object} event - The change event object.
    */
   const handleChange = (event) => {
+    const isCheckbox = event.target.type === 'checkbox';
     setValues({
       ...values,
-      [event.target.name]: event.target.value,
+      [event.target.name]: isCheckbox ? event.target.checked : event.target.value,
     });
     setTypes({
       ...types,

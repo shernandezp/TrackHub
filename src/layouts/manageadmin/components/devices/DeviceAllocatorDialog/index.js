@@ -34,9 +34,9 @@ function DeviceAllocatorDialog({ open, setOpen }) {
         })));
         setLoading(false);
     };
-
-    fetchOperators();
-  }, []);
+    if (open)
+      fetchOperators();
+  }, [open]);
 
   const handleChange = async (event) => {
     setLoading(true);

@@ -73,6 +73,24 @@
         "deleteTitle": "Eliminar Unidad",
         "deleteMessage": "¿Está seguro de que desea eliminar esta unidad?"
     },
+    "user": {
+        "title":"Usuarios",
+        "singleTitle":"Usuario",
+        "details":"Detalle del Usuario",
+        "firstName": "Primer Nombre",
+        "secondName": "Segundo Nombre",
+        "lastName": "Apellido",
+        "secondSurname": "Segundo Apellido",
+        "username": "Nombre de Usuario",
+        "password": "Contraseña",
+        "emailAddress": "Correo Electrónico",
+        "phone": "Número de Teléfono",
+        "dob": "Fecha de Nacimiento",
+        "active": "Activo",
+        "deleteTitle": "Eliminar Usuario",
+        "deleteMessage": "¿Está seguro de que desea eliminar este usuario?",
+        "updatePassword": "Actualizar Contraseña"
+    },
     "validation": {
         "selectValue": "Por favor seleccione un valor para el campo {{field}}",
         "required": "Por favor llene el campo {{field}}"

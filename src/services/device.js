@@ -1,9 +1,24 @@
+
+/**
+ * A service for managing devices.
+ * @module useDeviceService
+ */
+
 import useApiService from './apiService';
 import { handleError, handleSilentError } from 'utils/errorHandler';
 
+/**
+ * Creates a device service object.
+ * @returns {Object} The device service object.
+ */
 const useDeviceService = () => {
   const { post } = useApiService(process.env.REACT_APP_MANAGER_ENDPOINT);
 
+  /**
+   * Retrieves a device by its ID.
+   * @param {string} deviceId - The ID of the device.
+   * @returns {Promise<Object>} A promise that resolves to the device object.
+   */
   const getDevice = async (deviceId) => {
     try {
       const data = {
@@ -29,6 +44,10 @@ const useDeviceService = () => {
     }
   };
 
+  /**
+   * Retrieves devices associated with the current account.
+   * @returns {Promise<Array>} A promise that resolves to an array of device objects.
+   */
   const getDevicesByAccount = async () => {
     try {
       const data = {
@@ -55,6 +74,11 @@ const useDeviceService = () => {
     }
   };
 
+  /**
+   * Retrieves devices associated with a specific group.
+   * @param {string} groupId - The ID of the group.
+   * @returns {Promise<Array>} A promise that resolves to an array of device objects.
+   */
   const getDevicesByGroup = async (groupId) => {
     try {
       const data = {
@@ -77,6 +101,12 @@ const useDeviceService = () => {
     }
   };
 
+  /**
+   * Processes a device.
+   * @param {Object} deviceData - The data of the device to be processed.
+   * @param {string} operatorId - The ID of the operator.
+   * @returns {Promise<boolean>} A promise that resolves to a boolean indicating the success of the operation.
+   */
   const processDevice = async (deviceData, operatorId) => {
     try {
       const data = {
@@ -106,6 +136,11 @@ const useDeviceService = () => {
     }
   };
 
+  /**
+   * Deletes a device by its ID.
+   * @param {string} deviceId - The ID of the device to be deleted.
+   * @returns {Promise<boolean>} A promise that resolves to a boolean indicating the success of the operation.
+   */
   const deleteDevice = async (deviceId) => {
     try {
       const data = {
@@ -123,6 +158,11 @@ const useDeviceService = () => {
     }
   };
 
+  /**
+   * Wipes all devices associated with an operator.
+   * @param {string} operatorId - The ID of the operator.
+   * @returns {Promise<boolean>} A promise that resolves to a boolean indicating the success of the operation.
+   */
   const wipeDevices = async (operatorId) => {
     try {
       const data = {

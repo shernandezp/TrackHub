@@ -8,6 +8,7 @@ import ManageAccount from "layouts/manageadmin/components/account";
 import ManageOperators from "layouts/manageadmin/components/operators";
 import ManageDevices from "layouts/manageadmin/components/devices";
 import ManageTransporters from "layouts/manageadmin/components/transporters";
+import ManageUsers from "layouts/manageadmin/components/users";
 
 // Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
@@ -34,31 +35,7 @@ function ManageAdmin() {
         <ManageOperators/>
         <ManageDevices/>
         <ManageTransporters/>
-
-        <Accordion>
-            <AccordionSummary
-                expandIcon={<ExpandMoreIcon />}
-                aria-controls="panel4a-content"
-                id="panel4a-header">
-              <ArgonTypography variant="h6">Users</ArgonTypography>
-            </AccordionSummary>
-            <AccordionDetails>
-                <Card>
-                    <ArgonBox
-                        sx={{
-                            "& .MuiTableRow-root:not(:last-child)": {
-                                "& td": {
-                                    borderBottom: ({ borders: { borderWidth, borderColor } }) =>
-                                        `${borderWidth[1]} solid ${borderColor}`,
-                                },
-                            },
-                        }}
-                    >
-                        <Table columns={prCols} rows={prRows} />
-                    </ArgonBox>
-                </Card>
-            </AccordionDetails>
-        </Accordion>
+        <ManageUsers/>
 
         <Accordion>
             <AccordionSummary
