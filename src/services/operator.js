@@ -5,6 +5,7 @@
 
 import useApiService from './apiService';
 import { handleError } from 'utils/errorHandler';
+import { formatValue } from 'utils/dataUtils';
 
 /**
  * Creates an instance of the operator service.
@@ -144,13 +145,13 @@ const useOperatorService = () => {
                 createOperator(
                 command: {
                     operator: {
-                    address: "${operatorData.address ?? ''}"
-                    contactName: "${operatorData.contactName}"
+                    address: "${formatValue(operatorData.address)}"
+                    contactName: "${formatValue(operatorData.contactName)}"
                     protocolTypeId: ${operatorData.protocolTypeId}
-                    phoneNumber: "${operatorData.phoneNumber ?? ''}"
-                    name: "${operatorData.name ?? ''}"
-                    emailAddress: "${operatorData.emailAddress ?? ''}"
-                    description: "${operatorData.description ?? ''}"
+                    phoneNumber: "${formatValue(operatorData.phoneNumber)}"
+                    name: "${formatValue(operatorData.name)}"
+                    emailAddress: "${formatValue(operatorData.emailAddress)}"
+                    description: "${formatValue(operatorData.description)}"
                     }
                 }
                 ) {
@@ -191,13 +192,13 @@ const useOperatorService = () => {
                 command: {
                     operator: {
                     protocolTypeId: ${operatorData.protocolTypeId}
-                    phoneNumber: "${operatorData.phoneNumber}"
+                    phoneNumber: "${formatValue(operatorData.phoneNumber)}"
                     operatorId: "${operatorId}"
-                    name: "${operatorData.name}"
-                    emailAddress: "${operatorData.emailAddress}"
-                    description: "${operatorData.description}"
-                    address: "${operatorData.address}"
-                    contactName: "${operatorData.contactName}"
+                    name: "${formatValue(operatorData.name)}"
+                    emailAddress: "${formatValue(operatorData.emailAddress)}"
+                    description: "${formatValue(operatorData.description)}"
+                    address: "${formatValue(operatorData.address)}"
+                    contactName: "${formatValue(operatorData.contactName)}"
                     }
                 }
                 ) 

@@ -1,3 +1,7 @@
+/**
+ * A module that provides functions for interacting with user data.
+ * @module useUserService
+ */
 import useApiService from './apiService';
 import { handleError } from 'utils/errorHandler';
 import { formatValue } from 'utils/dataUtils';
@@ -5,6 +9,12 @@ import { formatValue } from 'utils/dataUtils';
 const useUserService = () => {
   const { post } = useApiService(process.env.REACT_APP_SECURITY_ENDPOINT);
 
+  /**
+   * Retrieves a user by their ID.
+   * @async
+   * @param {string} userId - The ID of the user.
+   * @returns {Promise<Object>} A promise that resolves to the user object.
+   */
   const getUser = async (userId) => {
     try {
       const data = {
@@ -33,6 +43,11 @@ const useUserService = () => {
     }
   };
 
+  /**
+   * Retrieves all users associated with an account.
+   * @async
+   * @returns {Promise<Array>} A promise that resolves to an array of user objects.
+   */
   const getUsersByAccount = async () => {
     try {
       const data = {
@@ -61,6 +76,12 @@ const useUserService = () => {
     }
   };
 
+  /**
+   * Creates a new user.
+   * @async
+   * @param {Object} userData - The data of the user to be created.
+   * @returns {Promise<Object>} A promise that resolves to the created user object.
+   */
   const createUser = async (userData) => {
     try {
       const data = {
@@ -91,6 +112,7 @@ const useUserService = () => {
                     emailAddress
                     dob
                     accountId
+                    active
                 }
             }
         `
@@ -102,6 +124,13 @@ const useUserService = () => {
     }
   };
 
+  /**
+   * Updates an existing user.
+   * @async
+   * @param {string} userId - The ID of the user to be updated.
+   * @param {Object} userData - The updated data of the user.
+   * @returns {Promise<Object>} A promise that resolves to the updated user object.
+   */
   const updateUser = async (userId, userData) => {
     try {
       const data = {
@@ -135,17 +164,20 @@ const useUserService = () => {
     }
   };
 
+  /**
+   * Updates the password of a user.
+   * @async
+   * @param {string} userId - The ID of the user whose password will be updated.
+   * @param {Object} userData - The updated password data.
+   * @returns {Promise<boolean>} A promise that resolves to a boolean indicating the success of the password update.
+   */
   const updatePassword = async (userId, userData) => {
     try {
       const data = {
         query: `
-          updatePassword(id: "${userId}", 
-            command: { user: 
-              { 
-                userId: "${userData.userId}", 
-                password: "${userData.password}" 
-            } 
-          })
+          mutation {
+            updatePassword(command: { user: { userId: "${userData.userId}", password: "${userData.password}" } }, id: "${userId}")
+          }
         `
       };
       const response = await post(data);
@@ -156,6 +188,12 @@ const useUserService = () => {
     }
   };
 
+  /**
+   * Deletes a user.
+   * @async
+   * @param {string} userId - The ID of the user to be deleted.
+   * @returns {Promise<boolean>} A promise that resolves to a boolean indicating the success of the deletion.
+   */
   const deleteUser = async (userId) => {
     try {
       const data = {
