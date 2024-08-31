@@ -48,14 +48,13 @@ async function handleEdit(user, users, setUsers, setData, buildTableData, update
  * @param {Function} buildTableData - The function to build table data.
  * @param {Function} createUser - The function to create a new user.
  * @param {Function} updateUser - The function to update an existing user.
- * @param {Array} protocolTypes - The array of protocol types.
  * @returns {Promise<void>}
  */
-export async function handleSave(user, users, setUsers, setData, buildTableData, createUser, updateUser, protocolTypes) {
+export async function handleSave(user, users, setUsers, setData, buildTableData, createUser, updateUser) {
     if (!user.userId) {
         await handleAdd(user, users, setUsers, setData, buildTableData, createUser);
     } else {
-        await handleEdit(user, users, setUsers, setData, buildTableData, updateUser, protocolTypes);
+        await handleEdit(user, users, setUsers, setData, buildTableData, updateUser);
     }
 }
 

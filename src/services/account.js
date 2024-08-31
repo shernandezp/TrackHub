@@ -1,5 +1,6 @@
 import useApiService from './apiService';
 import { handleError } from 'utils/errorHandler';
+import { formatValue } from 'utils/dataUtils';
 
 /**
  * Service for managing account-related operations.
@@ -79,6 +80,7 @@ const useAccountService = () => {
               lastModified
               name
               type
+              typeId
             }
           }
         `
@@ -101,12 +103,18 @@ const useAccountService = () => {
         query: `
           mutation {
             createAccount(
-              command: { account: { 
-                active: ${accountData.active},
-                description: "${accountData.description}",
-                name: "${accountData.name}",
-                type: "${accountData.type}"
-              } }
+              command: {
+                account: {
+                  active: ${accountData.active}
+                  typeId: ${accountData.typeId}
+                  password: ${formatValue(accountData.password)}
+                  name: ${formatValue(accountData.name)}
+                  lastName: ${formatValue(accountData.lastName)}
+                  firstName: ${formatValue(accountData.firstName)}
+                  emailAddress: ${formatValue(accountData.emailAddress)}
+                  description: ${formatValue(accountData.description)}
+                }
+              }
             ) {
               accountId
               active
@@ -114,6 +122,7 @@ const useAccountService = () => {
               lastModified
               name
               type
+              typeId
             }
           }
         `
@@ -140,11 +149,10 @@ const useAccountService = () => {
               id: "${accountId}",
               command: {
                 account: {
-                  type: ${accountData.type},
-                  name: "${accountData.name}",
-                  description: "${accountData.description}",
-                  active: ${accountData.active},
-                  accountId: "${accountData.accountId}"
+                  typeId: ${accountData.typeId},
+                  name: ${formatValue(accountData.name)},
+                  description: ${formatValue(accountData.description)}",
+                  accountId: ${accountData.accountId}"
                 }
               }
             ) 
@@ -164,17 +172,17 @@ const useAccountService = () => {
    * @param {string} accountId - The ID of the account to delete.
    * @returns {Promise<boolean>} A promise that resolves to true if the account was successfully deleted, or false if an error occurred.
    */
-  const deleteAccount = async (accountId) => {
+  const disableAccount = async (accountId) => {
     try {
       const data = {
         query: `
           mutation {
-            deleteAccount(id: "${accountId}")
+            disableAccount(id: "${accountId}")
           }
         `
       };
       const response = await post(data);
-      return response.data.deleteAccount;
+      return response.data.disableAccount;
     } catch (error) {
       handleError(error);
       return false;
@@ -187,7 +195,7 @@ const useAccountService = () => {
     getAccounts,
     createAccount,
     updateAccount,
-    deleteAccount,
+    disableAccount,
   };
 };
 

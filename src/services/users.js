@@ -6,6 +6,10 @@ import useApiService from './apiService';
 import { handleError } from 'utils/errorHandler';
 import { formatValue } from 'utils/dataUtils';
 
+/**
+ * Custom hook for user-related services.
+ * @returns {Object} An object containing functions for user operations.
+ */
 const useUserService = () => {
   const { post } = useApiService(process.env.REACT_APP_SECURITY_ENDPOINT);
 
@@ -125,6 +129,46 @@ const useUserService = () => {
   };
 
   /**
+   * Creates a new manager.
+   * @async
+   * @param {Object} userData - The data of the manager to be created.
+   * @param {string} accountId - The ID of the account to which the manager will be associated.
+   * @returns {Promise<Object>} A promise that resolves to the created manager object.
+   */
+  const createManager = async (userData, accountId) => {
+    try {
+      const data = {
+        query: `
+          mutation {
+            createManager(
+              command: {
+                accountId: "${accountId}"
+                user: {
+                  username: ${formatValue(userData.username)}
+                  secondSurname: ${formatValue(userData.secondSurname)}
+                  secondName: ${formatValue(userData.secondName)}
+                  lastName: ${formatValue(userData.lastName)}
+                  firstName: ${formatValue(userData.firstName)}
+                  password: ${formatValue(userData.password)}
+                  dob: ${formatValue(userData.dob)}
+                  active: ${userData.active}
+                  emailAddress: ${formatValue(userData.emailAddress)
+                }
+              }
+            ) {
+              userId
+            }
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.createManager;
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+  /**
    * Updates an existing user.
    * @async
    * @param {string} userId - The ID of the user to be updated.
@@ -215,6 +259,7 @@ const useUserService = () => {
     getUser,
     getUsersByAccount,
     createUser,
+    createManager,
     updateUser,
     updatePassword,
     deleteUser,
