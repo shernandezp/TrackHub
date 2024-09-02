@@ -151,8 +151,9 @@ const useAccountService = () => {
                 account: {
                   typeId: ${accountData.typeId},
                   name: ${formatValue(accountData.name)},
-                  description: ${formatValue(accountData.description)}",
-                  accountId: ${accountData.accountId}"
+                  description: ${formatValue(accountData.description)},
+                  accountId: "${accountData.accountId}",
+                  active: ${accountData.active},
                 }
               }
             ) 
@@ -167,35 +168,12 @@ const useAccountService = () => {
     }
   };
 
-  /**
-   * Deletes an account.
-   * @param {string} accountId - The ID of the account to delete.
-   * @returns {Promise<boolean>} A promise that resolves to true if the account was successfully deleted, or false if an error occurred.
-   */
-  const disableAccount = async (accountId) => {
-    try {
-      const data = {
-        query: `
-          mutation {
-            disableAccount(id: "${accountId}")
-          }
-        `
-      };
-      const response = await post(data);
-      return response.data.disableAccount;
-    } catch (error) {
-      handleError(error);
-      return false;
-    }
-  };
-
   return {
     getAccount,
     getAccountByUser,
     getAccounts,
     createAccount,
-    updateAccount,
-    disableAccount,
+    updateAccount
   };
 };
 

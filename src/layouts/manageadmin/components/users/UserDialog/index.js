@@ -109,6 +109,7 @@ function UserFormDialog({ open, setOpen, handleSubmit, values, handleChange, err
             value={values.dob || ''}
             onChange={handleChange}
           />
+          
           <FormControlLabel
             control={
               <Checkbox

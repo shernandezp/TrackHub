@@ -4,7 +4,8 @@
         "details":"Account Details",
         "name": "Name",
         "description": "Description",
-        "type": "Type"
+        "type": "Type",
+        "active":"Active"
     },
     "credential": {
         "title":"Credential",

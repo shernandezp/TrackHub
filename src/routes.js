@@ -36,6 +36,7 @@ Coded by www.creative-tim.com
 // Argon Dashboard 2 MUI layouts
 import Dashboard from "layouts/dashboard";
 import ManageAdmin from "layouts/manageadmin";
+import SystemAdmin from "layouts/systemadmin";
 import Billing from "layouts/billing";
 import Profile from "layouts/profile";
 import Callback from "layouts/authentication/callback";
@@ -52,6 +53,16 @@ const routes = [
     route: "/dashboard",
     icon: <ArgonBox component="i" color="primary" fontSize="14px" className="ni ni-tv-2" />,
     component: <Dashboard />,
+  },
+  {
+    type: "route",
+    name: "screen.superManager",
+    key: "systemAdmin",
+    route: "/systemAdmin",
+    icon: (
+      <ArgonBox component="i" color="warning" fontSize="14px" className="ni ni-calendar-grid-58" />
+    ),
+    component: <SystemAdmin />,
   },
   {
     type: "route",

@@ -61,22 +61,3 @@ export async function handleSave(account, accounts, setAccounts, setData, buildT
         await handleEdit(account, accounts, setAccounts, setData, buildTableData, updateAccount, accountTypes);
     }
 }
-
-/**
- * Handles deleting an account.
- * @param {string} accountId - The ID of the account to be deleted.
- * @param {Array} accounts - The current list of accounts.
- * @param {Function} setAccounts - The function to update the list of accounts.
- * @param {Function} setData - The function to update the data used for building the table.
- * @param {Function} buildTableData - The function to build the table data.
- * @param {Function} disableAccount - The function to disable an account.
- * @returns {Promise<void>}
- */
-export async function handleDelete(accountId, accounts, setAccounts, setData, buildTableData, disableAccount) {
-    let response = await disableAccount(accountId);
-    if (response) {
-        const updatedAccounts = accounts.filter(a => a.accountId !== accountId);
-        setAccounts(updatedAccounts);
-        setData(buildTableData(updatedAccounts));
-    }
-}

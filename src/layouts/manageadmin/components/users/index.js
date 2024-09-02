@@ -52,7 +52,6 @@ function ManageUsers() {
 
   const handleSubmit = async () => {
     if (validateUser()) {
-      console.log('userValues', userValues);
       onSave(userValues);
     }
   };

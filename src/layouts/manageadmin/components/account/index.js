@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import TableAccordion from "controls/Accordions/TableAccordion";
 import Table from "controls/Tables/Table";
-import FormDialog from "controls/Dialogs/FormDialog";
-import CustomTextField from 'controls/Dialogs/CustomTextField';
 import useForm from 'controls/Dialogs/useForm';
 import useAccountTableData from "layouts/manageadmin/data/accountTableData";
+import AccountFormDialog from 'layouts/manageadmin/components/account/AccountDialog';
 import { useTranslation } from 'react-i18next';
 
 function ManageAccount() {
@@ -36,39 +35,14 @@ function ManageAccount() {
         <Table columns={columns} rows={rows} />
       </TableAccordion>
 
-      <FormDialog 
-          title={t('account.details')}
-          handleSave={handleSubmit}
-          open={open}
-          setOpen={setOpen}
-          maxWidth="md">
-        <form>
-          <CustomTextField
-            autoFocus
-            margin="dense"
-            name="name"
-            id="name"
-            label={t('account.name')}
-            type="text"
-            fullWidth
-            value={values.name || ''}
-            onChange={handleChange}
-            errorMsg={errors.name}
-            required
-          />
-          
-          <CustomTextField
-            margin="dense"
-            name="description"
-            id="description"
-            label={t('account.description')}
-            type="text"
-            fullWidth
-            value={values.description || ''}
-            onChange={handleChange}
-          />
-        </form>
-      </FormDialog>
+      <AccountFormDialog 
+        open={open}
+        setOpen={setOpen}
+        handleSubmit={handleSubmit}
+        values={values}
+        handleChange={handleChange}
+        errors={errors}
+      />
     </>
   );
 }

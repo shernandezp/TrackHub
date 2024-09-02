@@ -1,26 +1,25 @@
 import { useEffect, useState, useRef, useContext } from "react";
 import { useTranslation } from 'react-i18next';
-import { NameDetail } from "controls/Tables/components/tableComponents";
+import { Name, Description } from "controls/Tables/components/tableComponents";
 import Icon from "@mui/material/Icon";
 import ArgonTypography from "components/ArgonTypography";
+import ArgonBadge from "components/ArgonBadge";
 import ArgonButton from "components/ArgonButton";
-import useAccountService from "services/accounts";
-import useUserService from "services/users";
-import { handleSave, handleDelete } from "layouts/manageadmin/actions/accountsActions";
+import useAccountService from "services/account";
+import { handleSave } from "layouts/systemadmin/actions/accountsActions";
+import { formatDateTime } from "utils/dateUtils";
 import { LoadingContext } from 'LoadingContext';
+import accountTypes from "layouts/systemadmin/data/accountTypes";
 
-function useAccountTableData(fetchData, handleEditClick, handleAddAccountClick, handleDeleteClick) {
+function useAccountsTableData(fetchData, handleEditClick) {
   const { t } = useTranslation();
   const [data, setData] = useState({ columns: [], rows: [] });
   const [accounts, setAccounts] = useState([]);
   const [open, setOpen] = useState(false);
-  const [openAccount, setOpenAccount] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
   const { setLoading } = useContext(LoadingContext);
 
   const hasLoaded = useRef(false);
-  const { getAccounts, createAccount, updateAccount, disableAccount } = useAccountService();
-  const { createManager } = useUserService();
+  const { getAccounts, createAccount, updateAccount } = useAccountService();
 
   const onSave = async (account) => {
     setLoading(true);
@@ -31,30 +30,10 @@ function useAccountTableData(fetchData, handleEditClick, handleAddAccountClick, 
       setData, 
       buildTableData, 
       createAccount, 
-      updateAccount);
+      updateAccount,
+      accountTypes);
 
       setOpen(false);
-      setLoading(false);
-  };
-
-  const onDelete = async (accountId) => {
-    setLoading(true);
-    await handleDelete(
-      accountId, 
-      accounts, 
-      setAccounts, 
-      setData, 
-      buildTableData, 
-      disableAccount);
-      setConfirmOpen(false);
-      setLoading(false);
-  }
-
-  const onSaveUser = async (user, accountId) => {
-    setLoading(true);
-      await createManager(user, accountId);
-
-      setOpenUser(false);
       setLoading(false);
   };
 
@@ -63,56 +42,32 @@ function useAccountTableData(fetchData, handleEditClick, handleAddAccountClick, 
     setOpen(true);
   };
 
-  const handleOpenUser = async (accountId) => {
-    const user = { type: 0, accountId: accountId };
-    handleAddAccountClick(user);
-    setOpenUser(true);
-  };
-
-  const handleOpenDelete = (accountId) => {
-    handleDeleteClick(accountId);
-    setConfirmOpen(true);
-  };
-
   const buildTableData = (accounts) => ({
     columns: [
-      { name: "user", title:t('account.username'), align: "left" },
-      { name: "firstName", title:t('account.firstName'), align: "left" },
-      { name: "lastName", title:t('account.lastName'), align: "left" },
+      { name: "name", title:t('account.name'), align: "left" },
+      { name: "description", title:t('account.description'), align: "left" },
+      { name: "type", title:t('account.type'), align: "center" },
+      { name: "modified", title:t('generic.modified'), align: "center" },
       { name: "action", title:t('generic.action'), align: "center" },
-      { name: "password", title:t('user.password'), align: "center" },
     ],
     rows: accounts.map(account => ({
-      user: <NameDetail name={account.emailAddress} detail={account.username} />,
-      firstName: <NameDetail name={account.firstName} detail={account.secondName || ''} />,
-      lastName: <NameDetail name={account.lastName} detail={account.secondSurname || ''} />,
-      action: (
-        <>
-            <ArgonButton 
-                variant="text" 
-                color="dark" 
-                onClick={() => handleOpen(account)}>
-              <Icon>edit</Icon>&nbsp;{t('generic.edit')}
-            </ArgonButton>
-            <ArgonButton 
-              variant="text" 
-              color="error"
-              onClick={() => handleOpenDelete(account.accountId)}>
-              <Icon>delete</Icon>&nbsp;{t('generic.delete')}
-            </ArgonButton>
-        </>
+      name: <Name name={account.name} />,
+      description: <Description description={account.description} />,
+      type: (
+        <ArgonBadge variant="gradient" badgeContent={account.type} color="success" size="xs" container />
       ),
-      password: (
-        <ArgonTypography
-          component="a"
-          href="#"
-          variant="caption"
-          color="secondary"
-          fontWeight="medium"
-          onClick={async() => await handleOpenUser(account.accountId)}
-        >
-          {t('account.password')}
+      modified: (
+        <ArgonTypography variant="caption" color="secondary" fontWeight="medium">
+          {formatDateTime(account.lastModified)}
         </ArgonTypography>
+      ),
+      action: (
+        <ArgonButton 
+            variant="text" 
+            color="dark" 
+            onClick={() => handleOpen(account)}>
+          <Icon>edit</Icon>&nbsp;{t('generic.edit')}
+        </ArgonButton>
       )
     })),
   });
@@ -134,14 +89,8 @@ function useAccountTableData(fetchData, handleEditClick, handleAddAccountClick, 
   return { 
     data, 
     open, 
-    openAccount, 
-    confirmOpen,
     onSave, 
-    onDelete, 
-    onSaveUser,
-    setOpen, 
-    setOpenAccount, 
-    setConfirmOpen };
+    setOpen};
 }
 
-export default useAccountTableData;
+export default useAccountsTableData;
