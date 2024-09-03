@@ -95,6 +95,8 @@
     },
     "validation": {
         "selectValue": "Please select a value for the {{field}} field",
-        "required": "Please fill the {{field}} field"
+        "required": "Please fill the {{field}} field",
+        "invalidEmail": "Please enter a valid email address",
+        "passwordComplexity": "Password must contain at least 6 characters, one uppercase letter, one lowercase letter, one number and one special character"
     }
 }

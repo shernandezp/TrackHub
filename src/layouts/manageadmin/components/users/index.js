@@ -42,21 +42,23 @@ function ManageUsers() {
     setOpenPassword, 
     setConfirmOpen} = useUserTableData(expanded, handleEditClick, handleUpdatePasswordClick, handleDeleteClick);
 
-  const requiredUserFields = ['emailAddress', 'firstName', 'lastName'];
-  const requiredPasswordFields = ['password'];
-  const [userValues, handleUserChange, setUserValues, setUserErrors, validateUser, userErrors] = useForm({}, requiredUserFields);
-  const [passwordValues, handlePasswordChange, setPasswordValues, setPasswordErrors, validatePassword, passwordErrors] = useForm({}, requiredPasswordFields);
+  const [userValues, handleUserChange, setUserValues, setUserErrors, validateUser, userErrors] = useForm({});
+  const [passwordValues, handlePasswordChange, setPasswordValues, setPasswordErrors, validatePassword, passwordErrors] = useForm({});
   const [toDelete, setToDelete] = useState(null);
   const { columns, rows } = data;
 
   const handleSubmit = async () => {
-    if (validateUser()) {
+    let requiredFields = userValues.hasOwnProperty('userId') ? 
+      ['emailAddress', 'firstName', 'lastName'] :
+      ['emailAddress', 'firstName', 'lastName', 'password'];
+
+    if (validateUser(requiredFields)) {
       onSave(userValues);
     }
   };
 
   const handleSubmitPassword = async () => {
-    if (validatePassword()) {
+    if (validatePassword(['password'])) {
       onSavePassword(passwordValues);
     }
   };

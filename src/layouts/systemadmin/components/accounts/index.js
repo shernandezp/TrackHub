@@ -34,20 +34,18 @@ function ManageAccounts() {
     setOpen,
     setOpenUser} = useAccountsTableData(expanded, handleEditClick, handleAddManagerClick);
 
-  const requiredAccountFields = ['name', 'typeId'];
-  const requiredUserFields = ['emailAddress', 'firstName', 'lastName', 'password'];
-  const [accountValues, handleAccountChange, setAccountValues, setAccountErrors, validateAccount, accountErrors] = useForm({}, requiredAccountFields);
-  const [userValues, handleUserChange, setUserValues, setUserErrors, validateUser, userErrors] = useForm({}, requiredUserFields);
+    const [accountValues, handleAccountChange, setAccountValues, setAccountErrors, validateAccount, accountErrors] = useForm({});
+  const [userValues, handleUserChange, setUserValues, setUserErrors, validateUser, userErrors] = useForm({});
   const { columns, rows } = data;
 
   const handleSubmit = async () => {
-    if (validateAccount()) {
+    if (validateAccount(['name', 'typeId'])) {
       onSave(accountValues);
     }
   };
 
   const handleSubmitUser = async () => {
-    if (validateUser()) {
+    if (validateUser(['emailAddress', 'firstName', 'lastName', 'password'])) {
       onSaveUser(userValues);
     }
   };

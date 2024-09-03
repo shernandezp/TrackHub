@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { validateEmail, validatePassword } from 'utils/validationUtils';
 
 /**
  * Custom hook for managing form state.
@@ -8,7 +9,7 @@ import { useTranslation } from 'react-i18next';
  * @param {Array} requiredFields - The names of the required fields.
  * @returns {Array} - An array containing the form values, handleChange function, setValues function, and validate function.
  */
-function useForm(initialValues, requiredFields = []) {
+function useForm(initialValues) {
   const { t } = useTranslation();
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState({});
@@ -36,19 +37,32 @@ function useForm(initialValues, requiredFields = []) {
    *
    * @returns {boolean} - Whether the form is valid.
    */
-  const validate = () => {
+  const validate = (requiredFields) => {
     let newErrors = {};
     for (let field of requiredFields) {
       let value = values[field];
       let type = types[field];
-      if (type === 'select-one') {
-        if (value === '0') {
-          newErrors[field] = t('validation.selectValue', { field: field });
-        }
-      } else {
-        if (!value || value === '') {
-          newErrors[field] = t('validation.required', { field: field });
-        }
+      
+      switch (type) {
+        case 'select-one':
+          if (value === '0') {
+            newErrors[field] = t('validation.selectValue', { field: field });
+          }
+          break;
+        case 'email':
+          if (!validateEmail(value)) {
+            newErrors[field] = t('validation.invalidEmail', { field: field });
+          }
+          break;
+        case 'password':
+          if (!validatePassword(value)) {
+            newErrors[field] = t('validation.passwordComplexity', { field: field });
+          }
+          break;
+        default:
+          if (!value || value === '') {
+            newErrors[field] = t('validation.required', { field: field });
+          }
       }
     }
     setErrors(newErrors);

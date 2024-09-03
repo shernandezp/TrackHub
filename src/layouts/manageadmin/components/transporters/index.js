@@ -28,13 +28,12 @@ function ManageTransporters() {
     onDelete, 
     setOpen, 
     setConfirmOpen } = useTransporterTableData(expanded, handleEditClick, handleDeleteClick);
-  const requiredFields = ['name', 'transporterTypeId'];
-  const [values, handleChange, setValues, setErrors, validate, errors] = useForm({}, requiredFields);
+  const [values, handleChange, setValues, setErrors, validate, errors] = useForm({});
   const [toDelete, setToDelete] = useState(null);
   const { columns, rows } = data;
 
   const handleSubmit = async () => {
-    if (validate()) {
+    if (validate(['name', 'transporterTypeId'])) {
       onSave(values);
     }
   };

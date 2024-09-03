@@ -187,7 +187,6 @@ const useUserService = () => {
                     userId: ${formatValue(userData.userId)}
                     secondSurname: ${formatValue(userData.secondSurname)}
                     secondName: ${formatValue(userData.secondName)}
-                    password: ${formatValue(userData.password)}
                     lastName: ${formatValue(userData.lastName)}
                     firstName: ${formatValue(userData.firstName)}
                     emailAddress: ${formatValue(userData.emailAddress)}

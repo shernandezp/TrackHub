@@ -45,21 +45,19 @@ function ManageOperators() {
     setOpenCredential, 
     setConfirmOpen,
     setTestOpen } = useOperatorTableData(expanded, handleEditClick, handleEditCredentialClick, handleDeleteClick);
-  const requiredOperatorFields = ['name', 'protocolTypeId'];
-  const requiredCredentialFields = ['uri'];
-  const [operatorValues, handleOperatorChange, setOperatorValues, setOperatorErrors, validateOperator, operatorErrors] = useForm({}, requiredOperatorFields);
-  const [credentialValues, handleCredentialChange, setCredentialValues, setCredentialErrors, validateCredential, credentialErrors] = useForm({}, requiredCredentialFields);
+  const [operatorValues, handleOperatorChange, setOperatorValues, setOperatorErrors, validateOperator, operatorErrors] = useForm({});
+  const [credentialValues, handleCredentialChange, setCredentialValues, setCredentialErrors, validateCredential, credentialErrors] = useForm({});
   const [toDelete, setToDelete] = useState(null);
   const { columns, rows } = data;
 
   const handleSubmit = async () => {
-    if (validateOperator()) {
+    if (validateOperator(['name', 'protocolTypeId'])) {
       onSave(operatorValues);
     }
   };
 
   const handleSubmitCredential = async () => {
-    if (validateCredential()) {
+    if (validateCredential(['uri'])) {
       onSaveCredential(credentialValues);
     }
   };
