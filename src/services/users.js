@@ -152,10 +152,10 @@ const useUserService = () => {
                   password: ${formatValue(userData.password)}
                   dob: ${formatValue(userData.dob)}
                   active: ${userData.active}
-                  emailAddress: ${formatValue(userData.emailAddress)
-                }
+                  emailAddress: ${formatValue(userData.emailAddress)}
               }
-            ) {
+            }) 
+            {
               userId
             }
           }

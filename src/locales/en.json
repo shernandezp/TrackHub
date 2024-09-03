@@ -5,7 +5,8 @@
         "name": "Name",
         "description": "Description",
         "type": "Type",
-        "active":"Active"
+        "active":"Active",
+        "addUser": "Add User"
     },
     "credential": {
         "title":"Credential",

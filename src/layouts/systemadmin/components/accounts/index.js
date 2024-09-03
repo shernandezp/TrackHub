@@ -3,35 +3,52 @@ import { useTranslation } from 'react-i18next';
 import Table from "controls/Tables/Table";
 import TableAccordion from "controls/Accordions/TableAccordion";
 import AccountFormDialog from 'layouts/systemadmin/components/accounts/AccountsDialog';
+import UserFormDialog from 'layouts/manageadmin/components/users/UserDialog';
 import useForm from 'controls/Dialogs/useForm';
 import useAccountsTableData from 'layouts/systemadmin/data/accountsTableData';
 
 function ManageAccounts() {
   const { t } = useTranslation();
   const handleAddClick = () => {
-    setUserValues({active: true, typeId: 0});
-    setUserErrors({});
+    setAccountValues({active: true, typeId: 0});
+    setAccountErrors({});
   };
 
   const handleEditClick = (rowData) => {
-    setUserValues(rowData);
+    setAccountValues(rowData);
+    setAccountErrors({});
+  };
+
+  const handleAddManagerClick = (accountId) => {
+    setUserValues({active: true, accountId: accountId});
     setUserErrors({});
   };
 
   const [expanded, setExpanded] = useState(false);
   const { 
     data, 
-    open, 
+    open,
+    openUser,
     onSave, 
-    setOpen} = useAccountsTableData(expanded, handleEditClick);
+    onSaveUser,
+    setOpen,
+    setOpenUser} = useAccountsTableData(expanded, handleEditClick, handleAddManagerClick);
 
-  const requiredUserFields = ['name', 'typeId'];
+  const requiredAccountFields = ['name', 'typeId'];
+  const requiredUserFields = ['emailAddress', 'firstName', 'lastName', 'password'];
+  const [accountValues, handleAccountChange, setAccountValues, setAccountErrors, validateAccount, accountErrors] = useForm({}, requiredAccountFields);
   const [userValues, handleUserChange, setUserValues, setUserErrors, validateUser, userErrors] = useForm({}, requiredUserFields);
   const { columns, rows } = data;
 
   const handleSubmit = async () => {
+    if (validateAccount()) {
+      onSave(accountValues);
+    }
+  };
+
+  const handleSubmitUser = async () => {
     if (validateUser()) {
-      onSave(userValues);
+      onSaveUser(userValues);
     }
   };
 
@@ -51,6 +68,15 @@ function ManageAccounts() {
         open={open}
         setOpen={setOpen}
         handleSubmit={handleSubmit}
+        values={accountValues}
+        handleChange={handleAccountChange}
+        errors={accountErrors}
+      />
+
+      <UserFormDialog 
+        open={openUser}
+        setOpen={setOpenUser}
+        handleSubmit={handleSubmitUser}
         values={userValues}
         handleChange={handleUserChange}
         errors={userErrors}

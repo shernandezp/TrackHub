@@ -55,6 +55,7 @@ function AccountsFormDialog({ open, setOpen, handleSubmit, values, handleChange,
                 value={values.emailAddress || ''}
                 onChange={handleChange}
                 errorMsg={errors.emailAddress}
+                required
             />
           )}
           {!values.accountId && (
@@ -66,6 +67,7 @@ function AccountsFormDialog({ open, setOpen, handleSubmit, values, handleChange,
                 fullWidth
                 value={values.password || ''}
                 onChange={handleChange}
+                required
             />
           )}
           {!values.accountId && (
@@ -79,6 +81,7 @@ function AccountsFormDialog({ open, setOpen, handleSubmit, values, handleChange,
                 value={values.firstName || ''}
                 onChange={handleChange}
                 errorMsg={errors.password}
+                required
             />
           )}
           {!values.accountId && (
@@ -92,6 +95,7 @@ function AccountsFormDialog({ open, setOpen, handleSubmit, values, handleChange,
                 value={values.lastName || ''}
                 onChange={handleChange}
                 errorMsg={errors.password}
+                required
             />
           )}
 

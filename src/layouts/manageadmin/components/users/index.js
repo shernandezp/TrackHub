@@ -42,7 +42,6 @@ function ManageUsers() {
     setOpenPassword, 
     setConfirmOpen} = useUserTableData(expanded, handleEditClick, handleUpdatePasswordClick, handleDeleteClick);
 
-  //const [toDelete, setToDelete] = useState(['name', 'protocolTypeId']);
   const requiredUserFields = ['emailAddress', 'firstName', 'lastName'];
   const requiredPasswordFields = ['password'];
   const [userValues, handleUserChange, setUserValues, setUserErrors, validateUser, userErrors] = useForm({}, requiredUserFields);

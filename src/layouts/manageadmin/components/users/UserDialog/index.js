@@ -2,9 +2,9 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 import FormDialog from "controls/Dialogs/FormDialog";
+import CustomCheckbox from 'controls/Dialogs/CustomCheckbox';
 import CustomTextField from 'controls/Dialogs/CustomTextField';
 import CustomPasswordField from 'controls/Dialogs/CustomPasswordField';
-import { FormControlLabel, Checkbox } from '@mui/material';
 
 function UserFormDialog({ open, setOpen, handleSubmit, values, handleChange, errors }) {
   const { t } = useTranslation();
@@ -110,17 +110,13 @@ function UserFormDialog({ open, setOpen, handleSubmit, values, handleChange, err
             onChange={handleChange}
           />
           
-          <FormControlLabel
-            control={
-              <Checkbox
-                name="active"
-                id="active"
-                checked={values.active}
-                onChange={handleChange}
-              />
-            }
-            label={t('user.active')}
-          />
+          <CustomCheckbox 
+            name="active" 
+            id="active" 
+            value={values.active} 
+            handleChange={handleChange} 
+            label={t('user.active')} />
+
         </form>
       </FormDialog>
   );

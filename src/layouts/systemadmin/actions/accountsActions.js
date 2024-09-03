@@ -1,4 +1,3 @@
-
 /**
  * Handles adding a new account.
  * @param {Object} account - The account to be added.
