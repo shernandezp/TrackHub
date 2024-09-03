@@ -22,7 +22,7 @@ function UserFormDialog({ open, setOpen, handleSubmit, values, handleChange, err
             name="emailAddress"
             id="emailAddress"
             label={t('user.emailAddress')}
-            type="text"
+            type="email"
             fullWidth
             value={values.emailAddress || ''}
             onChange={handleChange}
@@ -62,7 +62,8 @@ function UserFormDialog({ open, setOpen, handleSubmit, values, handleChange, err
             fullWidth
             value={values.firstName || ''}
             onChange={handleChange}
-            errorMsg={errors.password}
+            errorMsg={errors.firstName}
+            required
           />
 
           <CustomTextField
@@ -85,7 +86,8 @@ function UserFormDialog({ open, setOpen, handleSubmit, values, handleChange, err
             fullWidth
             value={values.lastName || ''}
             onChange={handleChange}
-            errorMsg={errors.password}
+            errorMsg={errors.lastName}
+            required
           />
 
           <CustomTextField

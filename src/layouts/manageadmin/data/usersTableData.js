@@ -22,40 +22,47 @@ function useUserTableData(fetchData, handleEditClick, handleUpdatePasswordClick,
 
   const onSave = async (user) => {
     setLoading(true);
-    await handleSave(
-      user, 
-      users, 
-      setUsers, 
-      setData, 
-      buildTableData, 
-      createUser, 
-      updateUser);
-
-      setOpen(false);
+    try {
+      await handleSave(
+        user, 
+        users, 
+        setUsers, 
+        setData, 
+        buildTableData, 
+        createUser, 
+        updateUser);
+        setOpen(false);
+    } finally {
       setLoading(false);
+    }
   };
 
   const onDelete = async (userId) => {
     setLoading(true);
-    await handleDelete(
-      userId, 
-      users, 
-      setUsers, 
-      setData, 
-      buildTableData, 
-      deleteUser);
-      setConfirmOpen(false);
-      setLoading(false);
+    try {
+      await handleDelete(
+        userId, 
+        users, 
+        setUsers, 
+        setData, 
+        buildTableData, 
+        deleteUser);
+        setConfirmOpen(false);
+      } finally {
+        setLoading(false);
+      }
   }
 
   const onSavePassword = async (user) => {
     setLoading(true);
-    await handleUpdatePassword(
-      user, 
-      updatePassword);
-
-      setOpenPassword(false);
-      setLoading(false);
+    try {
+      await handleUpdatePassword(
+        user, 
+        updatePassword);
+        setOpenPassword(false);
+      } finally {
+        setLoading(false);
+      }
   };
 
   const handleOpen = (user) => {

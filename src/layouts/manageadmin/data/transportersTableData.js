@@ -22,30 +22,35 @@ function useTransporterTableData(fetchData, handleEditClick, handleDeleteClick) 
 
   const onSave = async (transporter) => {
     setLoading(true);
-    await handleEdit(
-      transporter, 
-      transporters, 
-      setTransporters, 
-      setData, 
-      buildTableData, 
-      updateTransporter, 
-      transporterTypes);
-
-      setOpen(false);
-      setLoading(false);
+    try {
+      await handleEdit(
+        transporter, 
+        transporters, 
+        setTransporters, 
+        setData, 
+        buildTableData, 
+        updateTransporter, 
+        transporterTypes);
+        setOpen(false);
+      } finally {
+        setLoading(false);
+      }
   };
 
   const onDelete = async (transporterId) => {
     setLoading(true);
-    await handleDelete(
-      transporterId, 
-      transporters, 
-      setTransporters, 
-      setData, 
-      buildTableData, 
-      deleteTransporter);
-      setConfirmOpen(false);
-      setLoading(false);
+    try {
+      await handleDelete(
+        transporterId, 
+        transporters, 
+        setTransporters, 
+        setData, 
+        buildTableData, 
+        deleteTransporter);
+        setConfirmOpen(false);
+      } finally {
+        setLoading(false);
+      }
   }
 
   const handleOpen = (transporter) => {

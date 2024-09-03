@@ -20,15 +20,18 @@ function useDeviceTableData(fetchData, handleDeleteClick) {
 
   const onDelete = async (deviceId) => {
     setLoading(true);
-    await handleDelete(
-      deviceId, 
-      devices, 
-      setDevices, 
-      setData, 
-      buildTableData, 
-      deleteDevice);
-      setConfirmOpen(false);
-      setLoading(false);
+    try {
+      await handleDelete(
+        deviceId, 
+        devices, 
+        setDevices, 
+        setData, 
+        buildTableData, 
+        deleteDevice);
+        setConfirmOpen(false);
+      } finally {
+        setLoading(false);
+      }
   }
 
   const handleOpenDelete = (deviceId) => {

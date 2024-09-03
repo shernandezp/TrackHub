@@ -33,42 +33,49 @@ function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialCl
 
   const onSave = async (operator) => {
     setLoading(true);
-    await handleSave(
-      operator, 
-      operators, 
-      setOperators, 
-      setData, 
-      buildTableData, 
-      createOperator, 
-      updateOperator, 
-      protocolTypes);
-
-      setOpen(false);
-      setLoading(false);
+    try {
+      await handleSave(
+        operator, 
+        operators, 
+        setOperators, 
+        setData, 
+        buildTableData, 
+        createOperator, 
+        updateOperator, 
+        protocolTypes);
+        setOpen(false);
+      } finally {
+        setLoading(false);
+      }
   };
 
   const onDelete = async (operatorId) => {
     setLoading(true);
-    await handleDelete(
-      operatorId, 
-      operators, 
-      setOperators, 
-      setData, 
-      buildTableData, 
-      deleteOperator);
-      setConfirmOpen(false);
-      setLoading(false);
+    try {
+      await handleDelete(
+        operatorId, 
+        operators, 
+        setOperators, 
+        setData, 
+        buildTableData, 
+        deleteOperator);
+        setConfirmOpen(false);
+      } finally {
+        setLoading(false);
+      }
   }
 
   const onSaveCredential = async (credential) => {
     setLoading(true);
-    await handleSaveCredential(
-      credential, 
-      createCredential, 
-      updateCredential);
-
-      setOpenCredential(false);
-      setLoading(false);
+    try {
+      await handleSaveCredential(
+        credential, 
+        createCredential, 
+        updateCredential);
+        setOpenCredential(false);
+      } finally {
+        setLoading(false);
+      }
   };
 
   const handleOpen = (operator) => {
@@ -89,12 +96,15 @@ function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialCl
 
   const onTestCredential = async (operatorId) => {
     setLoading(true);
-    let result = await handleTestCredential(
-      operatorId, 
-      testConnectivity);
-    setTestMessage(result ? t('credential.testSuccess') : t('credential.testError'));
-    setTestOpen(true);
-    setLoading(false);
+    try {
+      let result = await handleTestCredential(
+        operatorId, 
+        testConnectivity);
+      setTestMessage(result ? t('credential.testSuccess') : t('credential.testError'));
+      setTestOpen(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const buildTableData = (operators) => ({

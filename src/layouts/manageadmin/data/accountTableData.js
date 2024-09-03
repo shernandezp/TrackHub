@@ -21,14 +21,17 @@ function useAccountTableData(fetchData, handleEditClick) {
 
   const onSave = (account) => {
     setLoading(true);
-    handleSave(account, 
-      accounts, 
-      setAccounts, 
-      setData, 
-      buildTableData, 
-      updateAccount);
-    setOpen(false);
-    setLoading(false);
+    try{
+      handleSave(account, 
+        accounts, 
+        setAccounts, 
+        setData, 
+        buildTableData, 
+        updateAccount);
+      setOpen(false);
+    } finally {
+      setLoading(false);
+    }
   }
 
   const handleOpen = (account) => {

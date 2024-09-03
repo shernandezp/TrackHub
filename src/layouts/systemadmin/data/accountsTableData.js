@@ -26,25 +26,30 @@ function useAccountsTableData(fetchData, handleEditClick, handleAddManagerClick)
 
   const onSave = async (account) => {
     setLoading(true);
-    await handleSave(
-      account, 
-      accounts, 
-      setAccounts, 
-      setData, 
-      buildTableData, 
-      createAccount, 
-      updateAccount,
-      accountTypes);
-
-    setOpen(false);
-    setLoading(false);
+    try {
+      await handleSave(
+        account, 
+        accounts, 
+        setAccounts, 
+        setData, 
+        buildTableData, 
+        createAccount, 
+        updateAccount,
+        accountTypes);
+      setOpen(false);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const onSaveUser = async (user) => {
     setLoading(true);
-    await createManager(user, user.accountId);
-    setOpenUser(false);
-    setLoading(false);
+    try {
+      await createManager(user, user.accountId);
+      setOpenUser(false);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleOpen = (account) => {
