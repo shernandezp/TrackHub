@@ -58,6 +58,10 @@
         "deleteTitle": "Eliminar Operador",
         "deleteMessage": "¿Está seguro de que desea eliminar este operador?"
     },
+    "role": {
+        "title":"Roles",
+        "singleTitle":"Rol"
+    },
     "screen": {
         "dashboard": "Tablero",
         "superManager": "Administrador del Sistema",
