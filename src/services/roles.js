@@ -51,9 +51,58 @@ const useRoleService = () => {
     }
   };
 
+  const createResourceActionRole = async (resourceActionRoleData) => {
+    try {
+      const data = {
+        query: `
+          mutation {
+            createResourceActionRole(
+              command: { 
+                resourceActionRole: 
+                { 
+                  roleId: ${resourceActionRoleData.roleId}, 
+                  resourceId: ${resourceActionRoleData.resourceId}, 
+                  actionId: ${resourceActionRoleData.actionId}, 
+                } 
+              }) 
+              {
+                roleId
+                resourceId
+                actionId
+                resourceActionPolicyId
+              }
+            }
+        `
+      };
+      const response = await post(data);
+      return response.data.createResourceActionRole;
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+  const deleteResourceActionRole = async (resourceActionRoleId) => {
+    try {
+      const data = {
+        query: `
+          mutation {
+            deleteResourceActionRole(resourceActionRoleId: ${resourceActionRoleId})
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.createResourceActionRole;
+    } catch (error) {
+      handleError(error);
+      return false;
+    }
+  };
+
   return {
     getRoles,
-    getResourcesByRole
+    getResourcesByRole,
+    createResourceActionRole,
+    deleteResourceActionRole
   };
 };
 

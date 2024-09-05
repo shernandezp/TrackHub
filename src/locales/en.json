@@ -8,6 +8,17 @@
         "active":"Active",
         "addUser": "Add User"
     },
+    "actions": {
+        "read":"Read",
+        "edit":"Edit",
+        "export":"Export",
+        "execute":"Execute",
+        "write":"Write",
+        "delete":"Delete",
+        "updatePassword":"UpdatePassword",
+        "refreshToken":"RefreshToken",
+        "connectivityTest":"ConnectivityTest"
+    },
     "credential": {
         "title":"Credential",
         "details":"Credential Details",
@@ -58,9 +69,22 @@
         "deleteTitle": "Delete Operator",
         "deleteMessage": "Are you sure you want to delete this operator?"
     },
+    "resources": {
+        "accounts": "Accounts",
+        "positions": "Positions",
+        "permissions": "Permissions",
+        "settingsScreen": "Settings Screen",
+        "users": "Users",
+        "credentials": "Credentials",
+        "devices": "Devices",
+        "operators": "Operators",
+        "transporters": "Transporters",
+        "administrative": "Administrative"
+    },
     "role": {
         "title":"Roles",
-        "singleTitle":"Role"
+        "singleTitle":"Role",
+        "resources": "Resources"
     },
     "screen": {
         "dashboard": "Dashboard",

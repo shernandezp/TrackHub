@@ -8,6 +8,17 @@
         "active": "Activo",
         "addUser": "Agregar Usuario"
     },
+    "actions": {
+        "read":"Lectura",
+        "edit":"Edición",
+        "export":"Exportar",
+        "execute":"Ejecutar",
+        "write":"Escribir",
+        "delete":"Eliminar",
+        "updatePassword":"Actualizar Contraseña",
+        "refreshToken":"Actualizar Token",
+        "connectivityTest":"Prueba de Conectividad"
+    },
     "credential": {
         "title":"Credencial",
         "details":"Detalle de la Credencial",
@@ -58,9 +69,22 @@
         "deleteTitle": "Eliminar Operador",
         "deleteMessage": "¿Está seguro de que desea eliminar este operador?"
     },
+    "resources": {
+        "accounts": "Cuentas",
+        "positions": "Posiciones",
+        "permissions": "Permisos",
+        "settingsScreen": "Configuración",
+        "users": "Usuarios",
+        "credentials": "Credenciales",
+        "devices": "Dispositivos",
+        "operators": "Operadores",
+        "transporters": "Unidades",
+        "administrative": "Administración"
+    },
     "role": {
         "title":"Roles",
-        "singleTitle":"Rol"
+        "singleTitle":"Rol",
+        "resources": "Recursos"
     },
     "screen": {
         "dashboard": "Tablero",

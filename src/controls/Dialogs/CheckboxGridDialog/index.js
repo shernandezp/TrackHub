@@ -2,30 +2,30 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import '../styles/tableStyle.css';
 
-const CheckboxGridDialog = ({ children, resources, actions, data, handleSave }) => {
+const CheckboxGridDialog = ({ children, rows, columns, data, title, handleSave }) => {
     
     const [checkedState, setCheckedState] = useState({});
 
     useEffect(() => {
         const initialState = {};
-        resources.forEach(resource => {
-            actions.forEach(action => {
-                const resourceAction = data[resource.resourceId]?.[action.actionId];
-                if (resourceAction !== undefined) {
-                    initialState[`${resource.resourceId}-${action.actionId}`] = true;
+        rows.forEach(row => {
+            columns.forEach(column => {
+                const cell = data[row.value]?.[column.value];
+                if (cell !== undefined) {
+                    initialState[`${row.value}-${column.value}`] = true;
                 }
             });
         });
         setCheckedState(initialState);
-    }, [data, resources, actions]);
+    }, [data, rows, columns]);
 
     const handleCheckboxChange = async (event) => {
-        const { dataset: { resourceId, actionId }, checked } = event.target;
+        const { dataset: { rowId, columnId }, checked } = event.target;
         setCheckedState(prevState => ({
             ...prevState,
-            [`${resourceId}-${actionId}`]: checked,
+            [`${rowId}-${columnId}`]: checked,
         }));
-        await handleSave(resourceId, actionId, checked);
+        await handleSave(rowId, columnId, checked);
     };
     
     return (
@@ -35,24 +35,24 @@ const CheckboxGridDialog = ({ children, resources, actions, data, handleSave }) 
                 <table className="table">
                     <thead>
                         <tr>
-                            <th className="th">Resource</th>
-                            {actions.map(action => (
-                                <th key={action.actionId} className="th">{action.headerName}</th>
+                            <th className="th">{title}</th>
+                            {columns.map(column => (
+                                <th key={column.value} className="th">{column.name}</th>
                             ))}
                         </tr>
                     </thead>
                     <tbody>
-                        {resources.map(resource => (
-                            <tr key={resource.field}>
-                                <td className="td">{resource.labelName}</td>
-                                {actions.map(action => {
-                                    const isChecked = checkedState[`${resource.resourceId}-${action.actionId}`];
+                        {rows.map(row => (
+                            <tr key={row.name}>
+                                <td className="td">{row.label}</td>
+                                {columns.map(column => {
+                                    const isChecked = checkedState[`${row.value}-${column.value}`];
                                     return (
-                                        <td key={action.actionId} className="td">
+                                        <td key={column.value} className="td">
                                             <input
                                                 type="checkbox"
-                                                data-resource-id={resource.resourceId}
-                                                data-action-id={action.actionId}
+                                                data-row-id={row.value}
+                                                data-column-id={column.value}
                                                 onChange={handleCheckboxChange}
                                                 checked={!!isChecked}
                                             />
@@ -70,9 +70,10 @@ const CheckboxGridDialog = ({ children, resources, actions, data, handleSave }) 
 
 CheckboxGridDialog.propTypes = {
     children: PropTypes.node,
-    resources: PropTypes.array,
-    actions: PropTypes.array,
+    rows: PropTypes.array,
+    columns: PropTypes.array,
     data: PropTypes.any,
+    title: PropTypes.string,
     handleSave: PropTypes.func
 };
 
