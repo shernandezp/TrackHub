@@ -1,5 +1,5 @@
 import useApiService from './apiService';
-import { handleError } from 'utils/errorHandler';
+import { handleError, handleSilentError } from 'utils/errorHandler';
 
 const useRoleService = () => {
   const { post } = useApiService(process.env.REACT_APP_SECURITY_ENDPOINT);
@@ -51,7 +51,7 @@ const useRoleService = () => {
     }
   };
 
-  const createResourceActionRole = async (resourceActionRoleData) => {
+  const createResourceActionRole = async (resourceId, actionId, roleId) => {
     try {
       const data = {
         query: `
@@ -60,9 +60,9 @@ const useRoleService = () => {
               command: { 
                 resourceActionRole: 
                 { 
-                  roleId: ${resourceActionRoleData.roleId}, 
-                  resourceId: ${resourceActionRoleData.resourceId}, 
-                  actionId: ${resourceActionRoleData.actionId}, 
+                  roleId: ${roleId}, 
+                  resourceId: ${resourceId}, 
+                  actionId: ${actionId}, 
                 } 
               }) 
               {
@@ -75,25 +75,26 @@ const useRoleService = () => {
         `
       };
       const response = await post(data);
-      return response.data.createResourceActionRole;
+      return response.data.createResourceActionRole.roleId == roleId;
     } catch (error) {
-      handleError(error);
+      handleSilentError(error);
+      return false;
     }
   };
 
-  const deleteResourceActionRole = async (resourceActionRoleId) => {
+  const deleteResourceActionRole = async (resourceId, actionId, roleId) => {
     try {
       const data = {
         query: `
           mutation {
-            deleteResourceActionRole(resourceActionRoleId: ${resourceActionRoleId})
+            deleteResourceActionRole(resourceId: ${resourceId}, actionId: ${actionId}, roleId: ${roleId})
           }
         `
       };
       const response = await post(data);
-      return response.data.createResourceActionRole;
+      return response.data.deleteResourceActionRole == roleId;
     } catch (error) {
-      handleError(error);
+      handleSilentError(error);
       return false;
     }
   };

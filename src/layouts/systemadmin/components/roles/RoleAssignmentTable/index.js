@@ -12,7 +12,7 @@ import { toCamelCase } from 'utils/stringUtils';
 function RoleAssignmentTable({ open }) {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
-  const { getRoles, getResourcesByRole } = useRoleService();
+  const { getRoles, getResourcesByRole, createResourceActionRole, deleteResourceActionRole } = useRoleService();
   const { getActions } = useActionService();
   const { getResources } = useResourceService();
   const [data, setData] = useState({});
@@ -82,10 +82,14 @@ function RoleAssignmentTable({ open }) {
 
   const handleSubmit = async (resourceId, actionId, checked) => {
     setLoading(true);
-    console.log(resourceId);
-    console.log(actionId);
-    console.log(checked);
+    let result = null;
+    if (checked) {
+      result = await createResourceActionRole(resourceId, actionId, role);
+    } else {
+      result = await deleteResourceActionRole(resourceId, actionId, role);
+    }
     setLoading(false);
+    return result;
   };
 
   return (

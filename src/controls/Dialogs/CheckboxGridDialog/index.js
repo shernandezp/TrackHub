@@ -21,11 +21,13 @@ const CheckboxGridDialog = ({ children, rows, columns, data, title, handleSave }
 
     const handleCheckboxChange = async (event) => {
         const { dataset: { rowId, columnId }, checked } = event.target;
-        setCheckedState(prevState => ({
-            ...prevState,
-            [`${rowId}-${columnId}`]: checked,
-        }));
-        await handleSave(rowId, columnId, checked);
+        let result = await handleSave(rowId, columnId, checked);
+        if (result) {
+            setCheckedState(prevState => ({
+                ...prevState,
+                [`${rowId}-${columnId}`]: checked,
+            }));
+        }
     };
     
     return (
