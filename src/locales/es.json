@@ -69,6 +69,18 @@
         "deleteTitle": "Eliminar Operador",
         "deleteMessage": "¿Está seguro de que desea eliminar este operador?"
     },
+    "policies": {
+        "fullAccess": "Acceso Total",
+        "readOnly": "Solo Lectura",
+        "manageUsers": "Administrar Usuarios",
+        "limitedUpdate": "Actualización Limitada",
+        "audit": "Auditoría"
+    },
+    "policy": {
+        "title":"Políticas",
+        "singleTitle":"Política",
+        "resources": "Resources"
+    },
     "resources": {
         "accounts": "Cuentas",
         "positions": "Posiciones",
@@ -85,6 +97,11 @@
         "title":"Roles",
         "singleTitle":"Rol",
         "resources": "Recursos"
+    },
+    "roles": {
+        "manager": "Gestor",
+        "user": "Usuario",
+        "administrator": "Administrador"
     },
     "screen": {
         "dashboard": "Tablero",

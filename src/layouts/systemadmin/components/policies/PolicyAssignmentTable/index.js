@@ -3,23 +3,23 @@ import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 import CheckboxGridDialog from 'controls/Dialogs/CheckboxGridDialog';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
-import useRoleService from 'services/roles';
+import usePolicyService from 'services/policies';
 import useActionService from 'services/actions';
 import useResourceService from 'services/resources';
 import { LoadingContext } from 'LoadingContext';
 import { toCamelCase } from 'utils/stringUtils';
 
-function RoleAssignmentTable({ open }) {
+function PolicyAssignmentTable({ open }) {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
-  const { getRoles, getResourcesByRole, createResourceActionRole, deleteResourceActionRole } = useRoleService();
+  const { getPolicies, getResourcesByPolicy, createResourceActionPolicy, deleteResourceActionPolicy } = usePolicyService();
   const { getActions } = useActionService();
   const { getResources } = useResourceService();
   const [data, setData] = useState({});
-  const [roles, setRoles] = useState([]);
+  const [policies, setPolicies] = useState([]);
   const [actions, setActions] = useState([]);
   const [resources, setResources] = useState([]);
-  const [role, setRole] = useState(0);
+  const [policy, setPolicy] = useState(0);
 
   useEffect(() => {
     const fetchActions = async () => {
@@ -52,23 +52,23 @@ function RoleAssignmentTable({ open }) {
   }, [open]);
 
   useEffect(() => {
-    const fetchRoles = async () => {
+    const fetchPolicies = async () => {
         setLoading(true);
-        const result = await getRoles();
-        setRoles(result.map(role => ({
-            value: role.roleId,
-            label: t(`roles.${toCamelCase(role.name)}`, { defaultValue: role.name })
+        const result = await getPolicies();
+        setPolicies(result.map(policy => ({
+            value: policy.policyId,
+            label: t(`policies.${toCamelCase(policy.name)}`, { defaultValue: policy.name })
         })));
         setLoading(false);
     };
     if (open)
-      fetchRoles();
+        fetchPolicies();
   }, [open]);
 
   const handleChange = async (event) => {
     setLoading(true);
-    setRole(event.target.value);
-    let data = await getResourcesByRole(event.target.value);
+    setPolicy(event.target.value);
+    let data = await getResourcesByPolicy(event.target.value);
     let actionMap = data.resources.reduce((map, resource) => {
       map[resource.resourceId] = resource.actions.reduce((actionMap, action) => {
           actionMap[action.actionId] = action;
@@ -84,9 +84,9 @@ function RoleAssignmentTable({ open }) {
     setLoading(true);
     let result = null;
     if (checked) {
-      result = await createResourceActionRole(resourceId, actionId, role);
+      result = await createResourceActionPolicy(resourceId, actionId, policy);
     } else {
-      result = await deleteResourceActionRole(resourceId, actionId, role);
+      result = await deleteResourceActionPolicy(resourceId, actionId, policy);
     }
     setLoading(false);
     return result;
@@ -94,18 +94,18 @@ function RoleAssignmentTable({ open }) {
 
   return (
     <CheckboxGridDialog 
-      key="role"
+      key="policy"
       handleSave={handleSubmit}
-      title={t('role.resources')}
+      title={t('policy.resources')}
       data={data} 
       columns={actions}
       rows={resources}>
       <CustomSelect
-        list={roles}
+        list={policies}
         name="name"
-        id="roleId"
-        label={t('role.singleTitle')}
-        value={role}
+        id="policyId"
+        label={t('policy.singleTitle')}
+        value={policy}
         handleChange={handleChange}
         required
       />
@@ -113,8 +113,8 @@ function RoleAssignmentTable({ open }) {
   );
 }
 
-RoleAssignmentTable.propTypes = {
+PolicyAssignmentTable.propTypes = {
     open: PropTypes.bool.isRequired
 };
 
-export default RoleAssignmentTable;
+export default PolicyAssignmentTable;

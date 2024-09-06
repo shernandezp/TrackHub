@@ -1,9 +1,17 @@
 import useApiService from './apiService';
 import { handleError, handleSilentError } from 'utils/errorHandler';
 
+/**
+ * A service for managing roles and resources.
+ * @returns {Object} An object containing functions for interacting with roles and resources.
+ */
 const useRoleService = () => {
   const { post } = useApiService(process.env.REACT_APP_SECURITY_ENDPOINT);
 
+  /**
+   * Retrieves all roles.
+   * @returns {Promise<Array<Object>>} A promise that resolves to an array of roles.
+   */
   const getRoles = async () => {
     try {
       const data = {
@@ -23,6 +31,11 @@ const useRoleService = () => {
     }
   };
 
+  /**
+   * Retrieves resources associated with a specific role.
+   * @param {number} roleId - The ID of the role.
+   * @returns {Promise<Object>} A promise that resolves to the resources associated with the role.
+   */
   const getResourcesByRole = async (roleId) => {
     try {
       const data = {
@@ -51,6 +64,13 @@ const useRoleService = () => {
     }
   };
 
+  /**
+   * Creates a resource-action-role association.
+   * @param {number} resourceId - The ID of the resource.
+   * @param {number} actionId - The ID of the action.
+   * @param {number} roleId - The ID of the role.
+   * @returns {Promise<boolean>} A promise that resolves to true if the association is created successfully, false otherwise.
+   */
   const createResourceActionRole = async (resourceId, actionId, roleId) => {
     try {
       const data = {
@@ -67,9 +87,6 @@ const useRoleService = () => {
               }) 
               {
                 roleId
-                resourceId
-                actionId
-                resourceActionPolicyId
               }
             }
         `
@@ -82,6 +99,13 @@ const useRoleService = () => {
     }
   };
 
+  /**
+   * Deletes a resource-action-role association.
+   * @param {number} resourceId - The ID of the resource.
+   * @param {number} actionId - The ID of the action.
+   * @param {number} roleId - The ID of the role.
+   * @returns {Promise<boolean>} A promise that resolves to true if the association is deleted successfully, false otherwise.
+   */
   const deleteResourceActionRole = async (resourceId, actionId, roleId) => {
     try {
       const data = {

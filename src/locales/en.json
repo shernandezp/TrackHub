@@ -69,6 +69,18 @@
         "deleteTitle": "Delete Operator",
         "deleteMessage": "Are you sure you want to delete this operator?"
     },
+    "policies": {
+        "fullAccess": "Full Access",
+        "manageUsers": "Manage Users",
+        "readOnly": "Read Only",
+        "limitedUpdate": "Limited Update",
+        "audit": "Audit"
+    },
+    "policy": {
+        "title":"Policies",
+        "singleTitle":"Policy",
+        "resources": "Resources"
+    },
     "resources": {
         "accounts": "Accounts",
         "positions": "Positions",
@@ -85,6 +97,11 @@
         "title":"Roles",
         "singleTitle":"Role",
         "resources": "Resources"
+    },
+    "roles": {
+        "manager": "Manager",
+        "user": "User",
+        "administrator": "Administrator"
     },
     "screen": {
         "dashboard": "Dashboard",
