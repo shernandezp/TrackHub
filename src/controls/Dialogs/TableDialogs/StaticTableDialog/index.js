@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, Checkbox } from '@mui/material';
-import '../styles/tableStyle.css';
+import 'controls/Dialogs/styles/tableStyile.css';
 
-const TableDialog = ({ 
+const StaticTableDialog = ({ 
         title, 
         children, 
         handleSave, 
@@ -86,7 +86,7 @@ const TableDialog = ({
     );
 };
 
-TableDialog.propTypes = {
+StaticTableDialog.propTypes = {
     title: PropTypes.string.isRequired,
     children: PropTypes.node,
     handleSave: PropTypes.func.isRequired,
@@ -97,4 +97,4 @@ TableDialog.propTypes = {
     columns: PropTypes.array.isRequired
 };
 
-export default TableDialog;
+export default StaticTableDialog;

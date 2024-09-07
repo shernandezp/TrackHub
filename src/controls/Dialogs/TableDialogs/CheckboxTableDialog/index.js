@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import '../styles/tableStyle.css';
+import 'controls/Dialogs/styles/tableStyile.css';
 
-const CheckboxGridDialog = ({ children, rows, columns, data, title, handleSave }) => {
+const CheckboxTableDialog = ({ children, rows, columns, data, title, handleSave }) => {
     
     const [checkedState, setCheckedState] = useState({});
 
@@ -70,7 +70,7 @@ const CheckboxGridDialog = ({ children, rows, columns, data, title, handleSave }
     );
 }
 
-CheckboxGridDialog.propTypes = {
+CheckboxTableDialog.propTypes = {
     children: PropTypes.node,
     rows: PropTypes.array,
     columns: PropTypes.array,
@@ -79,4 +79,4 @@ CheckboxGridDialog.propTypes = {
     handleSave: PropTypes.func
 };
 
-export default CheckboxGridDialog;
+export default CheckboxTableDialog;

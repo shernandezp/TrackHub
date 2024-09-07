@@ -36,6 +36,7 @@
         "singleTitle":"Dispositivo",
         "details":"Detalle del Dispositivo",
         "name": "Nombre",
+        "identifier": "ID",
         "description": "Descripción",
         "serial": "Número de Serie",
         "type": "Tipo",
@@ -50,6 +51,7 @@
         "edit": "Editar",
         "delete": "Eliminar",
         "save": "Guardar",
+        "assign": "Asignar",
         "confirm": "Confirmar",
         "cancel": "Cancelar",
         "close": "Cerrar",
@@ -96,7 +98,8 @@
     "role": {
         "title":"Roles",
         "singleTitle":"Rol",
-        "resources": "Recursos"
+        "resources": "Recursos",
+        "assignRole": "Asignar Rol"
     },
     "roles": {
         "manager": "Gestor",

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
-import TableDialog from 'controls/Dialogs/TableDialog';
+import StaticTableDialog from 'controls/Dialogs/TableDialogs/StaticTableDialog';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
 import useDeviceService from 'services/device';
 import useRouterService from 'services/router';
@@ -19,9 +19,9 @@ function DeviceAllocatorDialog({ open, setOpen }) {
   const [operator, setOperator] = useState(0);
 
   const columns = [
-    { field: 'identifier', headerName: 'ID' },
-    { field: 'name', headerName: 'Name' },
-    { field: 'serial', headerName: 'Serial' }
+    { field: 'identifier', headerName: t('device.identifier') },
+    { field: 'name', headerName: t('device.name') },
+    { field: 'serial', headerName: t('device.serial') }
   ];
 
   useEffect(() => {
@@ -29,8 +29,8 @@ function DeviceAllocatorDialog({ open, setOpen }) {
         setLoading(true);
         const result = await getOperators();
         setOperators(result.map(operator => ({
-            value: operator.operatorId,
-            label: operator.name
+          value: operator.operatorId,
+          label: operator.name
         })));
         setLoading(false);
     };
@@ -62,7 +62,7 @@ function DeviceAllocatorDialog({ open, setOpen }) {
   };
 
   return (
-    <TableDialog 
+    <StaticTableDialog 
       title={t('device.details')}
       handleSave={handleSubmit}
       open={open}
@@ -79,7 +79,7 @@ function DeviceAllocatorDialog({ open, setOpen }) {
         handleChange={handleChange}
         required
       />
-    </TableDialog>
+    </StaticTableDialog>
   );
 }
 

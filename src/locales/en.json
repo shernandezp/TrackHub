@@ -36,6 +36,7 @@
         "singleTitle":"Device",
         "details":"Device Details",
         "name": "Name",
+        "identifier": "ID",
         "description": "Description",
         "serial": "Serial Number",
         "type": "Type",
@@ -50,6 +51,7 @@
         "edit": "Edit",
         "delete": "Delete",
         "save": "Save",
+        "assign": "Assign",
         "confirm": "Confirm",
         "cancel": "Cancel",
         "close": "Close",
@@ -96,7 +98,8 @@
     "role": {
         "title":"Roles",
         "singleTitle":"Role",
-        "resources": "Resources"
+        "resources": "Resources",
+        "assignRole": "Assign Role"
     },
     "roles": {
         "manager": "Manager",

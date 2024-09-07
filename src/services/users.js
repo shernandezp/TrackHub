@@ -25,17 +25,17 @@ const useUserService = () => {
         query: `
           query {
             user(query: { id: "${userId}" }) {
-                username
-                userId
-                secondSurname
-                secondName
-                loginAttempts
-                lastName
-                firstName
-                emailAddress
-                dob
-                accountId
-                active
+              username
+              userId
+              secondSurname
+              secondName
+              loginAttempts
+              lastName
+              firstName
+              emailAddress
+              dob
+              accountId
+              active
             }
           }
         `
@@ -56,21 +56,21 @@ const useUserService = () => {
     try {
       const data = {
         query: `
-            query {
-                usersByAccount {
-                    accountId
-                    username
-                    userId
-                    secondSurname
-                    secondName
-                    loginAttempts
-                    lastName
-                    firstName
-                    emailAddress
-                    dob
-                    active
-                }
+          query {
+            usersByAccount {
+              accountId
+              username
+              userId
+              secondSurname
+              secondName
+              loginAttempts
+              lastName
+              firstName
+              emailAddress
+              dob
+              active
             }
+          }
         `
       };
       const response = await post(data);
@@ -90,35 +90,35 @@ const useUserService = () => {
     try {
       const data = {
         query: `
-            mutation {
-                createUser(
-                command: {
-                    user: {
-                        username: ${formatValue(userData.username)}
-                        secondSurname: ${formatValue(userData.secondSurname)}
-                        secondName: ${formatValue(userData.secondName)}
-                        password: ${formatValue(userData.password)}
-                        lastName: ${formatValue(userData.lastName)}
-                        firstName: ${formatValue(userData.firstName)}
-                        emailAddress: ${formatValue(userData.emailAddress)}
-                        dob: ${formatValue(userData.dob)}
-                        active: ${userData.active ?? true}
-                    }
-                }
-                ) {
-                    username
-                    userId
-                    secondSurname
-                    secondName
-                    loginAttempts
-                    lastName
-                    firstName
-                    emailAddress
-                    dob
-                    accountId
-                    active
-                }
+          mutation {
+            createUser(
+            command: {
+              user: {
+                username: ${formatValue(userData.username)}
+                secondSurname: ${formatValue(userData.secondSurname)}
+                secondName: ${formatValue(userData.secondName)}
+                password: ${formatValue(userData.password)}
+                lastName: ${formatValue(userData.lastName)}
+                firstName: ${formatValue(userData.firstName)}
+                emailAddress: ${formatValue(userData.emailAddress)}
+                dob: ${formatValue(userData.dob)}
+                active: ${userData.active ?? true}
+              }
             }
+            ) {
+                username
+                userId
+                secondSurname
+                secondName
+                loginAttempts
+                lastName
+                firstName
+                emailAddress
+                dob
+                accountId
+                active
+            }
+          }
         `
       };
       const response = await post(data);
@@ -183,15 +183,15 @@ const useUserService = () => {
             updateUser(
               command: {
                 user: {
-                    username: ${formatValue(userData.username)}
-                    userId: ${formatValue(userData.userId)}
-                    secondSurname: ${formatValue(userData.secondSurname)}
-                    secondName: ${formatValue(userData.secondName)}
-                    lastName: ${formatValue(userData.lastName)}
-                    firstName: ${formatValue(userData.firstName)}
-                    emailAddress: ${formatValue(userData.emailAddress)}
-                    dob: ${formatValue(userData.dob)}
-                    active: ${userData.active}
+                  username: ${formatValue(userData.username)}
+                  userId: ${formatValue(userData.userId)}
+                  secondSurname: ${formatValue(userData.secondSurname)}
+                  secondName: ${formatValue(userData.secondName)}
+                  lastName: ${formatValue(userData.lastName)}
+                  firstName: ${formatValue(userData.firstName)}
+                  emailAddress: ${formatValue(userData.emailAddress)}
+                  dob: ${formatValue(userData.dob)}
+                  active: ${userData.active}
                 }
               }
               id: "${userId}"

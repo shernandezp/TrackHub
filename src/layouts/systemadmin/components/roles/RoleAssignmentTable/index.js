@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
-import CheckboxGridDialog from 'controls/Dialogs/CheckboxGridDialog';
+import CheckboxTableDialog from 'controls/Dialogs/TableDialogs/CheckboxTableDialog';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
 import useRoleService from 'services/roles';
 import useActionService from 'services/actions';
@@ -93,7 +93,7 @@ function RoleAssignmentTable({ open }) {
   };
 
   return (
-    <CheckboxGridDialog 
+    <CheckboxTableDialog 
       key="role"
       handleSave={handleSubmit}
       title={t('role.resources')}
@@ -109,7 +109,7 @@ function RoleAssignmentTable({ open }) {
         handleChange={handleChange}
         required
       />
-    </CheckboxGridDialog>
+    </CheckboxTableDialog>
   );
 }
 

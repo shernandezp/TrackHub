@@ -65,6 +65,33 @@ const useRoleService = () => {
   };
 
   /**
+   * Retrieves users associated with a specific role.
+   * @param {number} roleId - The ID of the role.
+   * @returns {Promise<Object>} A promise that resolves the users associated to the role.
+   */
+  const getUsersByRole = async (roleId) => {
+    try {
+      const data = {
+        query: `
+          query {
+            usersByRole(query: { roleId: ${roleId} }) {
+              emailAddress
+              firstName
+              lastName
+              userId
+              username
+            }
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.usersByRole;
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+  /**
    * Creates a resource-action-role association.
    * @param {number} resourceId - The ID of the resource.
    * @param {number} actionId - The ID of the action.
@@ -123,11 +150,67 @@ const useRoleService = () => {
     }
   };
 
+  /**
+   * Creates a user-role association.
+   * @param {number} userId - The ID of the user.
+   * @param {number} roleId - The ID of the role.
+   * @returns {Promise<boolean>} A promise that resolves to true if the association is created successfully.
+   */
+  const createUserRole = async (userId, roleId) => {
+    try {
+      const data = {
+        query: `
+          mutation {
+            createUserRole(command: { userRole: 
+              { 
+                userId: "${userId}", 
+                roleId: ${roleId}
+              } 
+            }) 
+            {
+              userId
+              roleId
+            }
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.createUserRole;
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+  /**
+   * Deletes a user-role association.
+   * @param {number} userId - The ID of the user.
+   * @param {number} roleId - The ID of the role.
+   * @returns {Promise<boolean>} A promise that resolves to true if the association is deleted successfully.
+   */
+  const deleteUserRole = async (userId, roleId) => {
+    try {
+      const data = {
+        query: `
+          mutation {
+            deleteUserRole(roleId: ${roleId}, userId: "${userId}")
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.deleteUserRole;
+    } catch (error) {
+      handleSilentError(error);
+    }
+  };
+
   return {
     getRoles,
     getResourcesByRole,
+    getUsersByRole,
     createResourceActionRole,
-    deleteResourceActionRole
+    deleteResourceActionRole,
+    createUserRole,
+    deleteUserRole
   };
 };
 

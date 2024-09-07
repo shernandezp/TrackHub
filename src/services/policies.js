@@ -64,6 +64,32 @@ const usePolicyService = () => {
   };
 
   /**
+   * Retrieves users associated with a specific policy.
+   * @param {string} policyId - The ID of the policy.
+   * @returns {Promise<Object>} A promise that resolves to an object containing associated users to the policy.
+   */
+  const getUsersByPolicy = async (policyId) => {
+    try {
+      const data = {
+        query: `
+          query {
+            usersByPolicy(query: { policyId: ${policyId} }) {
+              firstName
+              lastName
+              username
+              userId
+            }
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.usersByPolicy;
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+  /**
    * Creates a resource action policy.
    * @param {string} resourceId - The ID of the resource.
    * @param {string} actionId - The ID of the action.
@@ -121,11 +147,66 @@ const usePolicyService = () => {
     }
   };
 
+  /**
+   * Creates a user policy relation.
+   * @param {string} userId - The ID of the user.
+   * @param {string} policyId - The ID of the policy.
+   * @returns {Promise<boolean>} A promise that resolves to a boolean indicating whether the user policy was created successfully.
+   */
+  const createUserPolicy = async (userId, policyId) => {
+    try {
+      const data = {
+        query: `
+          mutation {
+            createUserPolicy(command: { userPolicy: 
+              { 
+                userId: "${userId}", 
+                policyId: ${policyId}
+              } 
+            }) {
+              userId
+              policyId
+            }
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.createUserPolicy;
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+  /**
+   * Deletes a user policy relation.
+   * @param {string} userId - The ID of the user.
+   * @param {string} policyId - The ID of the policy.
+   * @returns {Promise<boolean>} A promise that resolves to a boolean indicating whether the user policy was deleted successfully.
+   */
+  const deleteUserPolicy = async (userId, policyId) => {
+    try {
+      const data = {
+        query: `
+          mutation {
+            deleteUserPolicy(policyId: ${policyId}, userId: "${userId}")
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.deleteUserPolicy;
+    } catch (error) {
+      handleSilentError(error);
+    }
+  };
+
   return {
     getPolicies,
     getResourcesByPolicy,
+    getUsersByPolicy,
     createResourceActionPolicy,
-    deleteResourceActionPolicy
+    deleteResourceActionPolicy,
+    createUserPolicy,
+    deleteUserPolicy
   };
 };
 
