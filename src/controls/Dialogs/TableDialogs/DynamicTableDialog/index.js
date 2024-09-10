@@ -73,7 +73,7 @@ const DynamicTableDialog = ({
             <DialogActions>
                 <Button onClick={onClose}>{t('generic.close')}</Button>
                 <Button onClick={onDelete}>{t('generic.delete')}</Button>
-                <Button onClick={onSave} autoFocus>{t('generic.save')}</Button>
+                <Button onClick={onSave} autoFocus>{t('generic.add')}</Button>
             </DialogActions>
         </Dialog>
     );

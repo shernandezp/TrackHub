@@ -81,7 +81,8 @@
     "policy": {
         "title":"Políticas",
         "singleTitle":"Política",
-        "resources": "Resources"
+        "resources": "Resources",
+        "assignPolicy": "Asignar Política"
     },
     "resources": {
         "accounts": "Cuentas",
