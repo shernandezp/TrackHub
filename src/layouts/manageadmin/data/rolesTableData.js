@@ -7,7 +7,7 @@ import useRoleService from "services/roles";
 import { LoadingContext } from 'LoadingContext';
 import { toCamelCase } from 'utils/stringUtils';
 
-function useRoleTableData(fetchData) {
+function useRoleTableData(fetchData, handleOpenClick) {
   const { t } = useTranslation();
   const [data, setData] = useState({ columns: [], rows: [] });
   const [open, setOpen] = useState(false);
@@ -16,8 +16,8 @@ function useRoleTableData(fetchData) {
   const hasLoaded = useRef(false);
   const { getRoles } = useRoleService();
 
-  const handleOpen = () => {
-    setOpen(true);
+  const handleOpen = (roleId) => {
+    handleOpenClick(roleId);
   };
 
   const buildTableData = (roles) => ({
@@ -31,8 +31,8 @@ function useRoleTableData(fetchData) {
         <ArgonButton 
             variant="text" 
             color="dark" 
-            onClick={() => handleOpen(role)}>
-          <Icon>assign</Icon>&nbsp;{t('generic.assign')}
+            onClick={() => handleOpen(role.roleId)}>
+          <Icon>assignment</Icon>&nbsp;{t('generic.assign')}
         </ArgonButton>
       )
     })),

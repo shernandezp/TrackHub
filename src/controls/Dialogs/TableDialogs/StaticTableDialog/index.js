@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, Checkbox } from '@mui/material';
-import 'controls/Dialogs/styles/tableStyile.css';
+import 'controls/Dialogs/styles/tableStyle.css';
 
 const StaticTableDialog = ({ 
         title, 

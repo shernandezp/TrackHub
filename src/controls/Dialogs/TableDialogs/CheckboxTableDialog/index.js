@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import 'controls/Dialogs/styles/tableStyile.css';
+import 'controls/Dialogs/styles/tableStyle.css';
 
 const CheckboxTableDialog = ({ children, rows, columns, data, title, handleSave }) => {
     

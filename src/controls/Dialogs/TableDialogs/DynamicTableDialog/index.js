@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
-import 'controls/Dialogs/styles/tableStyile.css';
+import 'controls/Dialogs/styles/tableStyle.css';
 
 const DynamicTableDialog = ({ 
         title, 
@@ -86,7 +86,6 @@ DynamicTableDialog.propTypes = {
     handleDelete: PropTypes.func.isRequired,
     handleClose: PropTypes.func,
     open: PropTypes.bool.isRequired,
-    setOpen: PropTypes.func.isRequired,
     data: PropTypes.array.isRequired,
     columns: PropTypes.array.isRequired
 };
