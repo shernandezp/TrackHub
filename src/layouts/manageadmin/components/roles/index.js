@@ -14,12 +14,10 @@ function ManageRoles() {
   };
 
   const [expanded, setExpanded] = useState(false);
-  const { 
-    data, 
-    open, 
-    setOpen } = useRoleTableData(expanded, handleOpen);
+  const { data } = useRoleTableData(expanded, handleOpen);
   const { columns, rows } = data;
   const [roleId, setRoleId] = useState(0);
+  const [open, setOpen] = useState(false);
 
   return (
     <>

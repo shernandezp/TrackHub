@@ -145,13 +145,13 @@ const useOperatorService = () => {
                 createOperator(
                 command: {
                     operator: {
-                    address: "${formatValue(operatorData.address)}"
-                    contactName: "${formatValue(operatorData.contactName)}"
+                    address: ${formatValue(operatorData.address)}
+                    contactName: ${formatValue(operatorData.contactName)}
                     protocolTypeId: ${operatorData.protocolTypeId}
-                    phoneNumber: "${formatValue(operatorData.phoneNumber)}"
-                    name: "${formatValue(operatorData.name)}"
-                    emailAddress: "${formatValue(operatorData.emailAddress)}"
-                    description: "${formatValue(operatorData.description)}"
+                    phoneNumber: ${formatValue(operatorData.phoneNumber)}
+                    name: ${formatValue(operatorData.name)}
+                    emailAddress: ${formatValue(operatorData.emailAddress)}
+                    description: ${formatValue(operatorData.description)}
                     }
                 }
                 ) {
@@ -192,13 +192,13 @@ const useOperatorService = () => {
                 command: {
                     operator: {
                     protocolTypeId: ${operatorData.protocolTypeId}
-                    phoneNumber: "${formatValue(operatorData.phoneNumber)}"
+                    phoneNumber: ${formatValue(operatorData.phoneNumber)}
                     operatorId: "${operatorId}"
-                    name: "${formatValue(operatorData.name)}"
-                    emailAddress: "${formatValue(operatorData.emailAddress)}"
-                    description: "${formatValue(operatorData.description)}"
-                    address: "${formatValue(operatorData.address)}"
-                    contactName: "${formatValue(operatorData.contactName)}"
+                    name: ${formatValue(operatorData.name)}
+                    emailAddress: ${formatValue(operatorData.emailAddress)}
+                    description: ${formatValue(operatorData.description)}
+                    address: ${formatValue(operatorData.address)}
+                    contactName: ${formatValue(operatorData.contactName)}
                     }
                 }
                 ) 

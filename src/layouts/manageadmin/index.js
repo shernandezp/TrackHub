@@ -5,6 +5,7 @@ import ManageTransporters from "layouts/manageadmin/components/transporters";
 import ManageUsers from "layouts/manageadmin/components/users";
 import ManageRoles from "layouts/manageadmin/components/roles";
 import ManagePolicies from "layouts/manageadmin/components/policies";
+import ManageGroups from "layouts/manageadmin/components/groups";
 import ArgonBox from "components/ArgonBox";
 import DashboardLayout from "controls/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "controls/Navbars/DashboardNavbar";
@@ -23,6 +24,7 @@ function ManageAdmin() {
         <ManageUsers/>
         <ManageRoles/>
         <ManagePolicies/>
+        <ManageGroups/>
       </ArgonBox>
       <Footer />
     </DashboardLayout>

@@ -14,12 +14,10 @@ function ManagePolicies() {
   };
 
   const [expanded, setExpanded] = useState(false);
-  const { 
-    data, 
-    open, 
-    setOpen } = usePolicyTableData(expanded, handleOpen);
+  const { data } = usePolicyTableData(expanded, handleOpen);
   const { columns, rows } = data;
   const [policyId, setPolicyId] = useState(0);
+  const [open, setOpen] = useState(false);
 
   return (
     <>

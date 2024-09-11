@@ -85,7 +85,7 @@ const useTransporterService = () => {
         `
       };
       const response = await post(data);
-      return response.data.transporter;
+      return response.data.transportersByGroup;
     } catch (error) {
       handleError(error);
     }

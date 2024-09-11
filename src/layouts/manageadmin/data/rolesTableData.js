@@ -10,7 +10,6 @@ import { toCamelCase } from 'utils/stringUtils';
 function useRoleTableData(fetchData, handleOpenClick) {
   const { t } = useTranslation();
   const [data, setData] = useState({ columns: [], rows: [] });
-  const [open, setOpen] = useState(false);
   const { setLoading } = useContext(LoadingContext);
 
   const hasLoaded = useRef(false);
@@ -52,9 +51,7 @@ function useRoleTableData(fetchData, handleOpenClick) {
   }, [fetchData]);
 
   return { 
-    data, 
-    open, 
-    setOpen 
+    data
   };
 }
 

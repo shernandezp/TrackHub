@@ -49,8 +49,8 @@ function ManageUsers() {
 
   const handleSubmit = async () => {
     let requiredFields = userValues.hasOwnProperty('userId') ? 
-      ['emailAddress', 'firstName', 'lastName'] :
-      ['emailAddress', 'firstName', 'lastName', 'password'];
+      ['emailAddress', 'username', 'firstName', 'lastName'] :
+      ['emailAddress', 'username', 'firstName', 'lastName', 'password'];
 
     if (validateUser(requiredFields)) {
       onSave(userValues);

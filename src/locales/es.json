@@ -60,6 +60,18 @@
         "phoneNumber": "Número de Teléfono",
         "address": "Dirección"
     },
+    "group": {
+        "title":"Grupos",
+        "singleTitle":"Grupo",
+        "details":"Detalle del Grupo",
+        "name": "Nombre",
+        "description": "Descripción",
+        "active": "Activo",
+        "deleteTitle": "Eliminar Grupo",
+        "deleteMessage": "¿Está seguro de que desea eliminar este grupo?",
+        "assignTransporter": "Asignar Unidad",
+        "assignUser": "Asignar Usuario"
+    },
     "operator": {
         "title":"Operadores",
         "singleTitle":"Operador",
@@ -94,7 +106,8 @@
         "devices": "Dispositivos",
         "operators": "Operadores",
         "transporters": "Unidades",
-        "administrative": "Administración"
+        "administrative": "Administración",
+        "groups": "Grupos"
     },
     "role": {
         "title":"Roles",
