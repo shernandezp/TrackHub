@@ -4,6 +4,7 @@ import Table from "controls/Tables/Table";
 import TableAccordion from "controls/Accordions/TableAccordion";
 import GroupFormDialog from 'layouts/manageadmin/components/groups/GroupDialog';
 import TransporterAllocatorDialog from 'layouts/manageadmin/components/groups/TransporterAllocatorDialog';
+import UserAllocatorDialog from 'layouts/manageadmin/components/groups/UserAllocatorDialog';
 import useForm from 'controls/Dialogs/useForm';
 import ConfirmDialog from 'controls/Dialogs/ConfirmDialog';
 import useGroupTableData from "layouts/manageadmin/data/groupsTableData";
@@ -26,14 +27,13 @@ function ManageGroups() {
 
   const handleUserClick = (groupId) => {
     setGroupId(groupId);
-    setOpen(true);
+    setOpenUserAllocator(true);
   };
 
   const handleTransporterClick = (groupId) => {
     setGroupId(groupId);
     setOpenTransporterAllocator(true);
   };
-
 
   const [expanded, setExpanded] = useState(false);
   const { 
@@ -49,6 +49,7 @@ function ManageGroups() {
   const [toDelete, setToDelete] = useState(null);
   const { columns, rows } = data;
   const [groupId, setGroupId] = useState(0);
+  const [openUserAllocator, setOpenUserAllocator] = useState(false);
   const [openTransporterAllocator, setOpenTransporterAllocator] = useState(false);
 
   const handleSubmit = async () => {
@@ -92,6 +93,13 @@ function ManageGroups() {
         setOpen={setOpenTransporterAllocator}
         groupId={groupId}
       />
+
+      <UserAllocatorDialog 
+        open={openUserAllocator}
+        setOpen={setOpenUserAllocator}
+        groupId={groupId}
+      />
+
     </>
   );
 }

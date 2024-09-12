@@ -14,11 +14,10 @@ function PolicyAllocatorDialog({ open, setOpen, policyId }) {
   const { getUsersByPolicy, createUserPolicy, deleteUserPolicy } = usePolicyService();
   const [data, setData] = useState([]);
   const [users, setUsers] = useState([]);
-  const [userId, setUserId] = useState(0);
+  const [userId, setUserId] = useState('');
 
   const columns = [
-    { field: 'firstName', headerName: t('user.firstName') },
-    { field: 'lastName', headerName: t('user.lastName') }
+    { field: 'username', headerName: t('user.username') }
   ];
 
   const reloadData = async () => {
@@ -27,9 +26,10 @@ function PolicyAllocatorDialog({ open, setOpen, policyId }) {
     const unassignedUsers = users.filter(user => !assignedUsers.some(assignedUser => assignedUser.userId === user.userId));
     setUsers(unassignedUsers.map(user => ({
         value: user.userId,
-        label: `${user.firstName} ${user.lastName}`
+        label: user.username
     })));
     setData(assignedUsers);
+    setUserId('');
   };
 
   useEffect(() => {
@@ -65,7 +65,7 @@ function PolicyAllocatorDialog({ open, setOpen, policyId }) {
   };
 
   const handleClose = async () => {
-    setUserId(0);
+    setUserId('');
     setData([]);
     setOpen(false);
   };
@@ -86,6 +86,7 @@ function PolicyAllocatorDialog({ open, setOpen, policyId }) {
         label={t('user.singleTitle')}
         value={userId}
         handleChange={handleChange}
+        numericValue={false}
         required
       />
     </DynamicTableDialog>

@@ -7,11 +7,12 @@ import { useTranslation } from 'react-i18next';
 
 function CustomSelect({ 
         list, 
-        handleChange = () => {}, 
+        handleChange = () => {},
         name, 
         id, 
         label, 
-        value 
+        value,
+        numericValue = true
     }) {
     const { t } = useTranslation();
     const handleSelectChange = (event) => {
@@ -36,9 +37,16 @@ function CustomSelect({
                 name={name}
                 displayEmpty
             >
-                <MenuItem value={0} disabled>
-                    {t('generic.selectItem')}
-                </MenuItem>
+                {numericValue ? (
+                    <MenuItem value={0} disabled>
+                        {t('generic.selectItem')}
+                    </MenuItem>
+                ) : (
+                    <MenuItem value={''} disabled>
+                        {t('generic.selectItem')}
+                    </MenuItem>
+                )}
+                
                 {list.map((item, index) => (
                     <MenuItem key={index} value={item.value}>
                         {item.label}
@@ -56,6 +64,7 @@ CustomSelect.propTypes = {
     id: PropTypes.string.isRequired,
     label: PropTypes.string.isRequired,
     value: PropTypes.any,
+    numericValue: PropTypes.bool
 };
 
 export default CustomSelect;

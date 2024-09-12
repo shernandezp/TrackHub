@@ -41,32 +41,6 @@ const useGroupService = () => {
   };
 
   /**
-   * Retrieves all users in a specific group.
-   * @param {string} groupId - The ID of the group.
-   * @returns {Array} An array of user objects.
-   */
-  const getUsersByGroup = async (groupId) => {
-    try {
-      const data = {
-        query: `
-          query {
-            usersByGroup(query: { groupId: ${groupId} }) {
-              username
-              userId
-              active
-              accountId
-            }
-          }
-        `
-      };
-      const response = await post(data);
-      return response.data.usersByGroup;
-    } catch (error) {
-      handleError(error);
-    }
-  };
-
-  /**
    * Creates a new group.
    * @param {Object} groupData - The data of the group to be created.
    * @returns {boolean} A boolean indicating whether the group was created successfully.
@@ -151,6 +125,32 @@ const useGroupService = () => {
     } catch (error) {
       handleError(error);
       return false;
+    }
+  };
+
+  /**
+   * Retrieves all users in a specific group.
+   * @param {string} groupId - The ID of the group.
+   * @returns {Array} An array of user objects.
+   */
+  const getUsersByGroup = async (groupId) => {
+    try {
+      const data = {
+        query: `
+          query {
+            usersByGroup(query: { groupId: ${groupId} }) {
+              username
+              userId
+              active
+              accountId
+            }
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.usersByGroup;
+    } catch (error) {
+      handleError(error);
     }
   };
 
@@ -262,10 +262,10 @@ const useGroupService = () => {
 
   return {
     getGroups,
-    getUsersByGroup,
     createGroup,
     updateGroup,
     deleteGroup,
+    getUsersByGroup,
     createUserGroup,
     deleteUserGroup,
     createTransporterGroup,

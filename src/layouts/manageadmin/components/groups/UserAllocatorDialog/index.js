@@ -3,33 +3,33 @@ import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 import DynamicTableDialog from 'controls/Dialogs/TableDialogs/DynamicTableDialog';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
-import useTransporterService from 'services/transporter';
+import useUserService from 'services/users';
 import useGroupService from 'services/groups';
 import { LoadingContext } from 'LoadingContext';
 
-function TransporterAllocatorDialog({ open, setOpen, groupId }) {
+function UserAllocatorDialog({ open, setOpen, groupId }) {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
-  const { getTransporterByAccount, getTransportersByGroup } = useTransporterService();
-  const { createTransporterGroup, deleteTransporterGroup } = useGroupService();
+  const { getUsersByAccount } = useUserService();
+  const { createUserGroup, deleteUserGroup, getUsersByGroup } = useGroupService();
   const [data, setData] = useState([]);
-  const [transporters, setTrasporters] = useState([]);
-  const [transporterId, setTransporterId] = useState('');
+  const [users, setUsers] = useState([]);
+  const [userId, setUserId] = useState('');
 
   const columns = [
-    { field: 'name', headerName: t('transporter.name') }
+    { field: 'username', headerName: t('user.username') }
   ];
 
   const reloadData = async () => {
-    const transporters = await getTransporterByAccount();
-    const assignedTransporters = await getTransportersByGroup(groupId);
-    const unassignedTransporters = transporters.filter(transporter => !assignedTransporters.some(assignedTransporter => assignedTransporter.transporterId === transporter.transporterId));
-    setTrasporters(unassignedTransporters.map(transporter => ({
-        value: transporter.transporterId,
-        label: transporter.name
+    const users = await getUsersByAccount();
+    const assignedUsers = await getUsersByGroup(groupId);
+    const unassignedUsers = users.filter(user => !assignedUsers.some(assignedUser => assignedUser.userId === user.userId));
+    setUsers(unassignedUsers.map(user => ({
+        value: user.userId,
+        label: user.username
     })));
-    setData(assignedTransporters);
-    setTransporterId('');
+    setData(assignedUsers);
+    setUserId('');
   };
 
   useEffect(() => {
@@ -44,13 +44,13 @@ function TransporterAllocatorDialog({ open, setOpen, groupId }) {
 
   const handleChange = (event) => {
     setLoading(true);
-    setTransporterId(event.target.value);
+    setUserId(event.target.value);
     setLoading(false);
   };
 
   const handleAdd = async () => {
     setLoading(true);
-    await createTransporterGroup(transporterId, groupId);
+    await createUserGroup(userId, groupId);
     await reloadData();
     setLoading(false);
   };
@@ -58,21 +58,21 @@ function TransporterAllocatorDialog({ open, setOpen, groupId }) {
   const handleDelete = async (selectedRows) => {
     setLoading(true);
     selectedRows.forEach(async(index) => {
-      await deleteTransporterGroup(data[index].transporterId, groupId);
+      await deleteUserGroup(data[index].userId, groupId);
     });
     await reloadData();
     setLoading(false);
   };
 
   const handleClose = async () => {
-    setTransporterId('');
+    setUserId('');
     setData([]);
     setOpen(false);
   };
 
   return (
     <DynamicTableDialog 
-      title={t('group.assignTransporter')}
+      title={t('group.assignUser')}
       handleAdd={handleAdd}
       handleDelete={handleDelete}
       handleClose={handleClose}
@@ -80,11 +80,11 @@ function TransporterAllocatorDialog({ open, setOpen, groupId }) {
       data={data} 
       columns={columns}>
       <CustomSelect
-        list={transporters}
-        name="transporterId"
-        id="transporterId"
-        label={t('transporter.singleTitle')}
-        value={transporterId}
+        list={users}
+        name="userId"
+        id="userId"
+        label={t('user.singleTitle')}
+        value={userId}
         handleChange={handleChange}
         numericValue={false}
         required
@@ -93,10 +93,10 @@ function TransporterAllocatorDialog({ open, setOpen, groupId }) {
   );
 }
 
-TransporterAllocatorDialog.propTypes = {
+UserAllocatorDialog.propTypes = {
     open: PropTypes.bool.isRequired,
     setOpen: PropTypes.func.isRequired,
     groupId: PropTypes.number.isRequired
 };
 
-export default TransporterAllocatorDialog;
+export default UserAllocatorDialog;
