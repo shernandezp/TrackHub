@@ -50,23 +50,39 @@ import "assets/css/nucleo-svg.css";
 import { useAuth } from "AuthContext";
 import { LoadingContext } from 'LoadingContext';
 import { ClipLoader } from 'react-spinners';
+import useUserService from "services/users";
 
 export default function App() {
   const [controller, dispatch] = useArgonController();
   const { miniSidenav, direction, layout, openConfigurator, sidenavColor, darkSidenav, darkMode } =
     controller;
   const [onMouseEnter, setOnMouseEnter] = useState(false);
-  const { isAuthenticated, login, accessToken } = useAuth();
+  const { isAuthenticated, login, isLoggingIn } = useAuth();
   const { pathname } = useLocation();
   const [loading, setLoading] = useState(false);
+  const { isAdmin, isManager } = useUserService();
+  const [userIsAdmin, setUserIsAdmin] = useState(true);
+  const [userIsManager, setUserIsManager] = useState(true);
 
   useEffect(() => {
     // Redirect to login page if not authenticated
-    if (!isAuthenticated && pathname != "/authentication/callback") {
+    if (!isAuthenticated && !isLoggingIn && pathname != "/authentication/callback") {
       login();
     }
   
-  }, [isAuthenticated, login, pathname]);
+  }, [isAuthenticated, isLoggingIn, login, pathname]);
+
+  useEffect(() => {
+    const fetchPermissions = async () => {
+      if (isAuthenticated) {
+        const admin = await isAdmin();
+        const manager = await isManager();
+        setUserIsAdmin(admin);
+        setUserIsManager(manager);
+      }
+    };
+    fetchPermissions();
+  }, [isAuthenticated]);
 
   // Open sidenav when mouse enter on mini sidenav
   const handleOnMouseEnter = () => {
@@ -148,6 +164,8 @@ export default function App() {
               routes={routes}
               onMouseEnter={handleOnMouseEnter}
               onMouseLeave={handleOnMouseLeave}
+              isAdmin={userIsAdmin}
+              isManager={userIsManager}
             />
             <Configurator />
             {configsButton}

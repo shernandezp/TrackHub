@@ -3,7 +3,7 @@
  * @module useUserService
  */
 import useApiService from './apiService';
-import { handleError } from 'utils/errorHandler';
+import { handleError, handleSilentError } from 'utils/errorHandler';
 import { formatValue } from 'utils/dataUtils';
 
 /**
@@ -254,6 +254,52 @@ const useUserService = () => {
     }
   };
 
+  /**
+   * Checks if the current user is an admin.
+   * @async
+   * @returns {Promise<boolean>} A promise that resolves to a boolean indicating if the user is an admin.
+   * @returns {boolean} A boolean indicating if the user is an admin.
+   */
+  const isAdmin = async () => {
+    try {
+      const data = {
+        query: `
+          query {
+            userIsAdmin
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.userIsAdmin;
+    } catch (error) {
+      handleSilentError(error);
+      return false;
+    }
+  };
+
+  /**
+   * Checks if the current user is a manager.
+   * @async
+   * @returns {Promise<boolean>} A promise that resolves to a boolean indicating if the user is a manager.
+   * @returns {boolean} A boolean indicating if the user is a manager.
+   */
+  const isManager = async () => {
+    try {
+      const data = {
+        query: `
+          query {
+            userIsManager
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.userIsManager;
+    } catch (error) {
+      handleSilentError(error);
+      return false;
+    }
+  };
+
   return {
     getUser,
     getUsersByAccount,
@@ -262,6 +308,8 @@ const useUserService = () => {
     updateUser,
     updatePassword,
     deleteUser,
+    isAdmin,
+    isManager
   };
 };
 

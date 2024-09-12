@@ -60,7 +60,7 @@ const routes = [
     key: "systemAdmin",
     route: "/systemAdmin",
     icon: (
-      <ArgonBox component="i" color="warning" fontSize="14px" className="ni ni-calendar-grid-58" />
+      <ArgonBox component="i" color="warning" fontSize="14px" className="ni ni-key-25" />
     ),
     component: <SystemAdmin />,
   },
@@ -70,7 +70,7 @@ const routes = [
     key: "manageAdmin",
     route: "/manageAdmin",
     icon: (
-      <ArgonBox component="i" color="warning" fontSize="14px" className="ni ni-calendar-grid-58" />
+      <ArgonBox component="i" color="warning" fontSize="14px" className="ni ni-settings" />
     ),
     component: <ManageAdmin />,
   },

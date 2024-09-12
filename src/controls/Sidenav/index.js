@@ -42,7 +42,7 @@ import sidenavLogoLabel from "controls/Sidenav/styles/sidenav";
 import { useArgonController, setMiniSidenav } from "context";
 import { useTranslation } from 'react-i18next';
 
-function Sidenav({ color = "info", brand = "", brandName, routes, ...rest }) {
+function Sidenav({ color = "info", brand = "", isAdmin = false, isManager = false, brandName, routes, ...rest }) {
   const [controller, dispatch] = useArgonController();
   const { miniSidenav, darkSidenav, layout } = controller;
   const location = useLocation();
@@ -57,7 +57,6 @@ function Sidenav({ color = "info", brand = "", brandName, routes, ...rest }) {
     function handleMiniSidenav() {
       setMiniSidenav(dispatch, window.innerWidth < 1200);
     }
-
     /** 
      The event listener that's calling the handleMiniSidenav function when resizing the window.
     */
@@ -117,8 +116,17 @@ function Sidenav({ color = "info", brand = "", brandName, routes, ...rest }) {
     } else if (type === "divider") {
       returnValue = <Divider key={key} light={darkSidenav} />;
     }
+    
+    if (key === 'systemAdmin' && !isAdmin) {
+      return null;
+    }
+    else if (key === 'manageAdmin' && !isManager) {
+      return null;
+    }
+    else {
+      return returnValue;
+    }
 
-    return returnValue;
   });
 
   return (
@@ -166,6 +174,8 @@ function Sidenav({ color = "info", brand = "", brandName, routes, ...rest }) {
 Sidenav.propTypes = {
   color: PropTypes.oneOf(["primary", "secondary", "info", "success", "warning", "error", "dark"]),
   brand: PropTypes.string,
+  isAdmin: PropTypes.bool,
+  isManager: PropTypes.bool,
   brandName: PropTypes.string.isRequired,
   routes: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
