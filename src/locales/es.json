@@ -120,6 +120,13 @@
         "user": "Usuario",
         "administrator": "Administrador"
     },
+    "settings": {
+        "title": "Configuración",
+        "details": "Detalle de la Configuración",
+        "style": "Modo Claro/Oscuro",
+        "sidenav": "Collapsar Barra Lateral",
+        "language": "Idioma"
+    },
     "screen": {
         "dashboard": "Tablero",
         "superManager": "Administrador del Sistema",

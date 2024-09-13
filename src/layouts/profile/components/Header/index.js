@@ -18,9 +18,6 @@ import { useState, useEffect } from "react";
 // @mui material components
 import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
-import AppBar from "@mui/material/AppBar";
-import Tabs from "@mui/material/Tabs";
-import Tab from "@mui/material/Tab";
 
 // Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
@@ -34,11 +31,10 @@ import DashboardNavbar from "controls/Navbars/DashboardNavbar";
 import breakpoints from "assets/theme/base/breakpoints";
 
 // Images
-import burceMars from "assets/images/bruce-mars.jpg";
+import profileImage from "assets/images/profile.jpeg";
 
 function Header() {
   const [tabsOrientation, setTabsOrientation] = useState("horizontal");
-  const [tabValue, setTabValue] = useState(0);
 
   useEffect(() => {
     // A function that sets the orientation state of the tabs.
@@ -60,8 +56,6 @@ function Header() {
     return () => window.removeEventListener("resize", handleTabsOrientation);
   }, [tabsOrientation]);
 
-  const handleSetTabValue = (event, newValue) => setTabValue(newValue);
-
   return (
     <ArgonBox position="relative">
       <DashboardNavbar absolute light />
@@ -76,7 +70,7 @@ function Header() {
         <Grid container spacing={3} alignItems="center">
           <Grid item>
             <ArgonAvatar
-              src={burceMars}
+              src={profileImage}
               alt="profile-image"
               variant="rounded"
               size="xl"
@@ -92,36 +86,6 @@ function Header() {
                 CEO / Co-Founder
               </ArgonTypography>
             </ArgonBox>
-          </Grid>
-          <Grid item xs={12} md={6} lg={4} sx={{ ml: "auto" }}>
-            <AppBar position="static">
-              <Tabs orientation={tabsOrientation} value={tabValue} onChange={handleSetTabValue}>
-                <Tab
-                  label="App"
-                  icon={
-                    <i className="ni ni-app" style={{ marginTop: "6px", marginRight: "8px" }} />
-                  }
-                />
-                <Tab
-                  label="Message"
-                  icon={
-                    <i
-                      className="ni ni-email-83"
-                      style={{ marginTop: "6px", marginRight: "8px" }}
-                    />
-                  }
-                />
-                <Tab
-                  label="Settings"
-                  icon={
-                    <i
-                      className="ni ni-settings-gear-65"
-                      style={{ marginTop: "6px", marginRight: "8px" }}
-                    />
-                  }
-                />
-              </Tabs>
-            </AppBar>
           </Grid>
         </Grid>
       </Card>

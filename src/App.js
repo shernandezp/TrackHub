@@ -54,7 +54,7 @@ import useUserService from "services/users";
 
 export default function App() {
   const [controller, dispatch] = useArgonController();
-  const { miniSidenav, direction, layout, openConfigurator, sidenavColor, darkSidenav, darkMode } =
+  const { miniSidenav, direction, layout, openConfigurator, darkMode } =
     controller;
   const [onMouseEnter, setOnMouseEnter] = useState(false);
   const { isAuthenticated, login, isLoggingIn } = useAuth();
@@ -158,8 +158,7 @@ export default function App() {
         {layout === "dashboard" && (
           <>
             <Sidenav
-              color={sidenavColor}
-              brand={darkSidenav || darkMode ? brand : brandDark}
+              brand={darkMode ? brand : brandDark}
               brandName="Track Hub"
               routes={routes}
               onMouseEnter={handleOnMouseEnter}

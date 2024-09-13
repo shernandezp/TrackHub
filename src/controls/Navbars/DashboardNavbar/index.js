@@ -17,12 +17,9 @@ import { useState, useEffect } from "react";
 
 // react-router components
 import { useLocation, Link } from "react-router-dom";
-
 import { useAuth } from "AuthContext";
-
 // prop-types is a library for typechecking of props.
 import PropTypes from "prop-types";
-
 // @mui core components
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
@@ -53,8 +50,7 @@ import {
 import {
   useArgonController,
   setTransparentNavbar,
-  setMiniSidenav,
-  setOpenConfigurator,
+  setMiniSidenav
 } from "context";
 
 // Images
@@ -64,7 +60,7 @@ import logoSpotify from "assets/images/small-logos/logo-spotify.svg";
 function DashboardNavbar({ absolute = false, light = true, isMini = false }) {
   const [navbarType, setNavbarType] = useState();
   const [controller, dispatch] = useArgonController();
-  const { miniSidenav, transparentNavbar, fixedNavbar, openConfigurator } = controller;
+  const { miniSidenav, transparentNavbar, fixedNavbar } = controller;
   const [openMenu, setOpenMenu] = useState(false);
   const route = useLocation().pathname.split("/").slice(1);
   const { logoff } = useAuth();
@@ -96,7 +92,6 @@ function DashboardNavbar({ absolute = false, light = true, isMini = false }) {
   }, [dispatch, fixedNavbar]);
 
   const handleMiniSidenav = () => setMiniSidenav(dispatch, !miniSidenav);
-  const handleConfiguratorOpen = () => setOpenConfigurator(dispatch, !openConfigurator);
   const handleOpenMenu = (event) => setOpenMenu(event.currentTarget);
   const handleCloseMenu = () => setOpenMenu(false);
 
@@ -199,14 +194,7 @@ function DashboardNavbar({ absolute = false, light = true, isMini = false }) {
               >
                 <Icon>{miniSidenav ? "menu_open" : "menu"}</Icon>
               </IconButton>
-              <IconButton
-                size="small"
-                color={light && transparentNavbar ? "white" : "dark"}
-                sx={navbarIconButton}
-                onClick={handleConfiguratorOpen}
-              >
-                <Icon>settings</Icon>
-              </IconButton>
+              
               <IconButton
                 size="small"
                 color={light && transparentNavbar ? "white" : "dark"}

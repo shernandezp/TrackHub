@@ -13,6 +13,7 @@ function UserAllocatorDialog({ open, setOpen, groupId }) {
   const { getUsersByAccount } = useUserService();
   const { createUserGroup, deleteUserGroup, getUsersByGroup } = useGroupService();
   const [data, setData] = useState([]);
+  const [accountUsers, setAccountUsers] = useState([]);
   const [users, setUsers] = useState([]);
   const [userId, setUserId] = useState('');
 
@@ -21,9 +22,8 @@ function UserAllocatorDialog({ open, setOpen, groupId }) {
   ];
 
   const reloadData = async () => {
-    const users = await getUsersByAccount();
     const assignedUsers = await getUsersByGroup(groupId);
-    const unassignedUsers = users.filter(user => !assignedUsers.some(assignedUser => assignedUser.userId === user.userId));
+    const unassignedUsers = accountUsers.filter(user => !assignedUsers.some(assignedUser => assignedUser.userId === user.userId));
     setUsers(unassignedUsers.map(user => ({
         value: user.userId,
         label: user.username
@@ -34,9 +34,11 @@ function UserAllocatorDialog({ open, setOpen, groupId }) {
 
   useEffect(() => {
     const fetchData = async () => {
-        setLoading(true);
-        await reloadData();
-        setLoading(false);
+      setLoading(true);
+      const users = await getUsersByAccount();
+      setAccountUsers(users);
+      await reloadData();
+      setLoading(false);
     };
     if (open)
         fetchData();
@@ -57,9 +59,8 @@ function UserAllocatorDialog({ open, setOpen, groupId }) {
 
   const handleDelete = async (selectedRows) => {
     setLoading(true);
-    selectedRows.forEach(async(index) => {
-      await deleteUserGroup(data[index].userId, groupId);
-    });
+    const deletePromises = selectedRows.map(index => deleteUserGroup(data[index].userId, groupId));
+    await Promise.all(deletePromises);
     await reloadData();
     setLoading(false);
   };

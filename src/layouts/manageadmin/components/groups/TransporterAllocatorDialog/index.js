@@ -13,6 +13,7 @@ function TransporterAllocatorDialog({ open, setOpen, groupId }) {
   const { getTransporterByAccount, getTransportersByGroup } = useTransporterService();
   const { createTransporterGroup, deleteTransporterGroup } = useGroupService();
   const [data, setData] = useState([]);
+  const [accountTransporters, setAccountTrasporters] = useState([]);
   const [transporters, setTrasporters] = useState([]);
   const [transporterId, setTransporterId] = useState('');
 
@@ -21,22 +22,23 @@ function TransporterAllocatorDialog({ open, setOpen, groupId }) {
   ];
 
   const reloadData = async () => {
-    const transporters = await getTransporterByAccount();
     const assignedTransporters = await getTransportersByGroup(groupId);
-    const unassignedTransporters = transporters.filter(transporter => !assignedTransporters.some(assignedTransporter => assignedTransporter.transporterId === transporter.transporterId));
+    const unassignedTransporters = accountTransporters.filter(transporter => !assignedTransporters.some(assignedTransporter => assignedTransporter.transporterId === transporter.transporterId));
+    setTransporterId('');
     setTrasporters(unassignedTransporters.map(transporter => ({
-        value: transporter.transporterId,
-        label: transporter.name
+      value: transporter.transporterId,
+      label: transporter.name
     })));
     setData(assignedTransporters);
-    setTransporterId('');
   };
 
   useEffect(() => {
     const fetchData = async () => {
-        setLoading(true);
-        await reloadData();
-        setLoading(false);
+      setLoading(true);
+      const transporters = await getTransporterByAccount();
+      setAccountTrasporters(transporters);
+      await reloadData();
+      setLoading(false);
     };
     if (open)
         fetchData();
@@ -57,9 +59,8 @@ function TransporterAllocatorDialog({ open, setOpen, groupId }) {
 
   const handleDelete = async (selectedRows) => {
     setLoading(true);
-    selectedRows.forEach(async(index) => {
-      await deleteTransporterGroup(data[index].transporterId, groupId);
-    });
+    const deletePromises = selectedRows.map(index => deleteTransporterGroup(data[index].transporterId, groupId));
+    await Promise.all(deletePromises);
     await reloadData();
     setLoading(false);
   };

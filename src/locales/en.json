@@ -120,6 +120,13 @@
         "user": "User",
         "administrator": "Administrator"
     },
+    "settings": {
+        "title":"Settings",
+        "detail":"Account Settings",
+        "style": "Light/Dark Mode",
+        "sidenav": "Sidenav Mini",
+        "language": "Language"
+    },
     "screen": {
         "dashboard": "Dashboard",
         "superManager": "System Admin",

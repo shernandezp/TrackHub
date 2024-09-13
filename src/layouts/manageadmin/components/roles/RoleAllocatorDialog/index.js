@@ -14,6 +14,7 @@ function RoleAllocatorDialog({ open, setOpen, roleId }) {
   const { getUsersByRole, createUserRole, deleteUserRole } = useRoleService();
   const [data, setData] = useState([]);
   const [users, setUsers] = useState([]);
+  const [accountUsers, setAccountUsers] = useState([]);
   const [userId, setUserId] = useState('');
 
   const columns = [
@@ -21,12 +22,11 @@ function RoleAllocatorDialog({ open, setOpen, roleId }) {
   ];
 
   const reloadData = async () => {
-    const users = await getUsersByAccount();
     const assignedUsers = await getUsersByRole(roleId);
-    const unassignedUsers = users.filter(user => !assignedUsers.some(assignedUser => assignedUser.userId === user.userId));
+    const unassignedUsers = accountUsers.filter(user => !assignedUsers.some(assignedUser => assignedUser.userId === user.userId));
     setUsers(unassignedUsers.map(user => ({
-        value: user.userId,
-        label: user.username
+      value: user.userId,
+      label: user.username
     })));
     setData(assignedUsers);
     setUserId('');
@@ -34,9 +34,11 @@ function RoleAllocatorDialog({ open, setOpen, roleId }) {
 
   useEffect(() => {
     const fetchData = async () => {
-        setLoading(true);
-        await reloadData();
-        setLoading(false);
+      setLoading(true);
+      const users = await getUsersByAccount();
+      setAccountUsers(users);
+      await reloadData();
+      setLoading(false);
     };
     if (open)
         fetchData();
@@ -57,9 +59,8 @@ function RoleAllocatorDialog({ open, setOpen, roleId }) {
 
   const handleDelete = async (selectedRows) => {
     setLoading(true);
-    selectedRows.forEach(async(index) => {
-      await deleteUserRole(data[index].userId, roleId);
-    });
+    const deletePromises = selectedRows.map(index => deleteUserRole(data[index].userId, roleId));
+    await Promise.all(deletePromises);
     await reloadData();
     setLoading(false);
   };

@@ -38,9 +38,6 @@ function reducer(state, action) {
     case "DARK_SIDENAV": {
       return { ...state, darkSidenav: action.value };
     }
-    case "SIDENAV_COLOR": {
-      return { ...state, sidenavColor: action.value };
-    }
     case "TRANSPARENT_NAVBAR": {
       return { ...state, transparentNavbar: action.value };
     }
@@ -49,9 +46,6 @@ function reducer(state, action) {
     }
     case "OPEN_CONFIGURATOR": {
       return { ...state, openConfigurator: action.value };
-    }
-    case "DIRECTION": {
-      return { ...state, direction: action.value };
     }
     case "LAYOUT": {
       return { ...state, layout: action.value };
@@ -70,11 +64,9 @@ function ArgonControllerProvider({ children }) {
   const initialState = {
     miniSidenav: false,
     darkSidenav: false,
-    sidenavColor: null,
     transparentNavbar: true,
     fixedNavbar: false,
     openConfigurator: false,
-    direction: "ltr",
     layout: "dashboard",
     darkMode: false,
   };
@@ -105,11 +97,9 @@ ArgonControllerProvider.propTypes = {
 // Context module functions
 const setMiniSidenav = (dispatch, value) => dispatch({ type: "MINI_SIDENAV", value });
 const setDarkSidenav = (dispatch, value) => dispatch({ type: "DARK_SIDENAV", value });
-const setSidenavColor = (dispatch, value) => dispatch({ type: "SIDENAV_COLOR", value });
 const setTransparentNavbar = (dispatch, value) => dispatch({ type: "TRANSPARENT_NAVBAR", value });
 const setFixedNavbar = (dispatch, value) => dispatch({ type: "FIXED_NAVBAR", value });
 const setOpenConfigurator = (dispatch, value) => dispatch({ type: "OPEN_CONFIGURATOR", value });
-const setDirection = (dispatch, value) => dispatch({ type: "DIRECTION", value });
 const setLayout = (dispatch, value) => dispatch({ type: "LAYOUT", value });
 const setDarkMode = (dispatch, value) => dispatch({ type: "DARK_MODE", value });
 
@@ -118,11 +108,9 @@ export {
   useArgonController,
   setMiniSidenav,
   setDarkSidenav,
-  setSidenavColor,
   setTransparentNavbar,
   setFixedNavbar,
   setOpenConfigurator,
-  setDirection,
   setLayout,
   setDarkMode,
 };
