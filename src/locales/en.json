@@ -98,16 +98,17 @@
     },
     "resources": {
         "accounts": "Accounts",
-        "positions": "Positions",
-        "permissions": "Permissions",
-        "settingsScreen": "Settings Screen",
-        "users": "Users",
+        "administrative": "Administrative",
         "credentials": "Credentials",
         "devices": "Devices",
+        "groups": "Groups",
         "operators": "Operators",
+        "permissions": "Permissions",
+        "positions": "Positions",
+        "profile": "Profile",
+        "settingsScreen": "Settings Screen",
         "transporters": "Transporters",
-        "administrative": "Administrative",
-        "groups": "Groups"
+        "users": "Users"        
     },
     "role": {
         "title":"Roles",
@@ -161,6 +162,13 @@
         "deleteTitle": "Delete User",
         "deleteMessage": "Are you sure you want to delete this user?",
         "updatePassword": "Update Password"
+    },
+    "userprofile":{
+        "title":"User Profile",
+        "account":"Account",
+        "style": "Light/Dark Mode",
+        "sidenav": "Sidenav Mini",
+        "language":"Language"
     },
     "validation": {
         "selectValue": "Please select a value for the {{field}} field",

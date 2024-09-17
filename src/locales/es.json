@@ -98,16 +98,17 @@
     },
     "resources": {
         "accounts": "Cuentas",
-        "positions": "Posiciones",
-        "permissions": "Permisos",
-        "settingsScreen": "Configuración",
-        "users": "Usuarios",
+        "administrative": "Administración",
         "credentials": "Credenciales",
         "devices": "Dispositivos",
+        "groups": "Grupos",
         "operators": "Operadores",
-        "transporters": "Unidades",
-        "administrative": "Administración",
-        "groups": "Grupos"
+        "positions": "Posiciones",
+        "permissions": "Permisos",
+        "profile": "Perfil",
+        "settingsScreen": "Configuración",
+        "users": "Usuarios",
+        "transporters": "Unidades"
     },
     "role": {
         "title":"Roles",
@@ -161,6 +162,13 @@
         "deleteTitle": "Eliminar Usuario",
         "deleteMessage": "¿Está seguro de que desea eliminar este usuario?",
         "updatePassword": "Actualizar Contraseña"
+    },
+    "userprofile":{
+        "title":"Perfil de Usuario",
+        "account": "Cuenta",
+        "style": "Modo Claro/Oscuro",
+        "sidenav": "Collapsar Barra Lateral",
+        "language": "Idioma"
     },
     "validation": {
         "selectValue": "Por favor seleccione un valor para el campo {{field}}",

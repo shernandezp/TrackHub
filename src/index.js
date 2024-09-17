@@ -34,6 +34,7 @@ i18n
       }
     },
     fallbackLng: 'en', // use 'en' as the fallback language
+    supportedLngs: ['en', 'es'],
     interpolation: {
       escapeValue: false
     }

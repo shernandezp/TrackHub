@@ -13,105 +13,144 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
-import { useState } from "react";
+import { useState, useEffect, useContext } from "react";
 
 // @mui material components
 import Card from "@mui/material/Card";
 import Switch from "@mui/material/Switch";
+import ArgonButton from "components/ArgonButton";
+import Icon from "@mui/material/Icon";
 
 // Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
 import ArgonTypography from "components/ArgonTypography";
+import { useTranslation } from 'react-i18next';
+import CustomSelect from 'controls/Dialogs/CustomSelect';
+import useSettignsService from 'services/settings';
+import { LoadingContext } from 'LoadingContext';
+import {
+  useArgonController,
+  setDarkSidenav,
+  setMiniSidenav,
+  setDarkMode,
+} from "context";
 
 function PlatformSettings() {
-  const [followsMe, setFollowsMe] = useState(true);
-  const [answersPost, setAnswersPost] = useState(false);
-  const [mentionsMe, setMentionsMe] = useState(true);
-  const [newLaunches, setNewLaunches] = useState(false);
-  const [productUpdate, setProductUpdate] = useState(true);
-  const [newsletter, setNewsletter] = useState(true);
+  const [controller, dispatch] = useArgonController();
+  const { miniSidenav, darkMode } =
+    controller;
+  const { setLoading } = useContext(LoadingContext);
+  const { t, i18n } = useTranslation();
+  const languages = i18n.options.supportedLngs
+    .filter(lang => lang !== 'cimode')
+    .map(lang => ({ value: lang, label: lang }));
+  const [style, setStyle] = useState(false);
+  const [sideNav, setSideNav] = useState(false);
+  const [userSettings, setUserSettings] = useState({language: 'en'});
+  const { getUserSettings, updateUserSettings } = useSettignsService();
+
+  const handleMiniSidenav = () => setMiniSidenav(dispatch, !miniSidenav);
+  const handleDarkMode = () => {
+    setDarkSidenav(dispatch, !darkMode);
+    setDarkMode(dispatch, !darkMode);
+  };
+
+  useEffect(() => {
+    const fetchUserSettings = async () => {
+      setLoading(true);
+      const userSettings = await getUserSettings();
+      setStyle(userSettings.style !== 'light');
+      setSideNav(userSettings.navbar !== 'none');
+      setUserSettings(userSettings);
+      setLoading(false);
+    };
+  
+    fetchUserSettings();
+  }, []);
+  
+  async function onSaveSettings() {
+    setLoading(true);
+    await updateUserSettings(userSettings.userId, userSettings);
+    setLoading(false);
+  }
+
+  function handleLanguageChange(e) {
+    setUserSettings(prevSettings => ({
+      ...prevSettings,
+      language: e.target.value
+    }));
+    i18n.changeLanguage(e.target.value);
+  }
+
+  function handleStyleChange() {
+    setStyle(!style);
+    setUserSettings(prevSettings => ({
+      ...prevSettings,
+      style: !style ? 'dark' : 'light'
+    }));
+    handleDarkMode();
+  }
+
+  function handleNavbarChange() {
+    setSideNav(!sideNav);
+    setUserSettings(prevSettings => ({
+      ...prevSettings,
+      navbar: !sideNav ? 'collapsed' : 'none'
+    }));
+    handleMiniSidenav();
+  }
 
   return (
     <Card>
       <ArgonBox pt={2} px={2}>
         <ArgonTypography variant="h6" fontWeight="medium" textTransform="capitalize">
-          platform settings
+          {t('userprofile.title')}
         </ArgonTypography>
       </ArgonBox>
       <ArgonBox pt={1.5} pb={2} px={2} lineHeight={1.25}>
         <ArgonTypography variant="caption" fontWeight="bold" color="text" textTransform="uppercase">
-          account
+          {t('userprofile.account')}
         </ArgonTypography>
         <ArgonBox display="flex" py={1} mb={0.25}>
           <ArgonBox mt={0.25}>
-            <Switch checked={followsMe} onChange={() => setFollowsMe(!followsMe)} />
+            <Switch checked={style} onChange={handleStyleChange} />
           </ArgonBox>
           <ArgonBox width="80%" ml={2}>
             <ArgonTypography variant="button" fontWeight="regular" color="text">
-              Email me when someone follows me
+              {t('userprofile.style')}
             </ArgonTypography>
           </ArgonBox>
         </ArgonBox>
         <ArgonBox display="flex" py={1} mb={0.25}>
           <ArgonBox mt={0.25}>
-            <Switch checked={answersPost} onChange={() => setAnswersPost(!answersPost)} />
+            <Switch checked={sideNav} onChange={handleNavbarChange} />
           </ArgonBox>
           <ArgonBox width="80%" ml={2}>
             <ArgonTypography variant="button" fontWeight="regular" color="text">
-              Email me when someone answers on my post
+              {t('userprofile.sidenav')}
             </ArgonTypography>
           </ArgonBox>
         </ArgonBox>
         <ArgonBox display="flex" py={1} mb={0.25}>
-          <ArgonBox mt={0.25}>
-            <Switch checked={mentionsMe} onChange={() => setMentionsMe(!mentionsMe)} />
-          </ArgonBox>
-          <ArgonBox width="80%" ml={2}>
-            <ArgonTypography variant="button" fontWeight="regular" color="text">
-              Email me when someone mentions me
-            </ArgonTypography>
-          </ArgonBox>
+          <CustomSelect
+              list={languages}
+              handleChange={handleLanguageChange}
+              name="language"
+              id="language"
+              label={t('userprofile.language')}
+              value={userSettings.language}
+              numericValue={false}
+              required
+            />
         </ArgonBox>
-        <ArgonBox mt={3}>
-          <ArgonTypography
-            variant="caption"
-            fontWeight="bold"
-            color="text"
-            textTransform="uppercase"
-          >
-            application
-          </ArgonTypography>
-        </ArgonBox>
-        <ArgonBox display="flex" py={1} mb={0.25}>
-          <ArgonBox mt={0.25}>
-            <Switch checked={newLaunches} onChange={() => setNewLaunches(!newLaunches)} />
-          </ArgonBox>
-          <ArgonBox width="80%" ml={2}>
-            <ArgonTypography variant="button" fontWeight="regular" color="text">
-              New launches and projects
-            </ArgonTypography>
-          </ArgonBox>
-        </ArgonBox>
-        <ArgonBox display="flex" py={1} mb={0.25}>
-          <ArgonBox mt={0.25}>
-            <Switch checked={productUpdate} onChange={() => setProductUpdate(!productUpdate)} />
-          </ArgonBox>
-          <ArgonBox width="80%" ml={2}>
-            <ArgonTypography variant="button" fontWeight="regular" color="text">
-              Monthly product updates
-            </ArgonTypography>
-          </ArgonBox>
-        </ArgonBox>
-        <ArgonBox display="flex" py={1} mb={0.25}>
-          <ArgonBox mt={0.25}>
-            <Switch checked={newsletter} onChange={() => setNewsletter(!newsletter)} />
-          </ArgonBox>
-          <ArgonBox width="80%" ml={2}>
-            <ArgonTypography variant="button" fontWeight="regular" color="text">
-              Subscribe to newsletter
-            </ArgonTypography>
-          </ArgonBox>
-        </ArgonBox>
+
+        <ArgonButton 
+          variant="gradient" 
+          onClick={onSaveSettings}
+          color="dark">
+          <Icon sx={{ fontWeight: "bold" }}>save</Icon>
+          &nbsp;Save
+        </ArgonButton>
       </ArgonBox>
     </Card>
   );

@@ -47,6 +47,47 @@ const useUserService = () => {
     }
   };
 
+   /**
+   * Retrieves the current user.
+   * @async
+   * @returns {Promise<Object>} A promise that resolves to the user object.
+   */
+   const getCurrentUser = async () => {
+    try {
+      const data = {
+        query: `
+          query {
+            currentUser {
+              username
+              userId
+              secondSurname
+              secondName
+              roles {
+                name
+                roleId
+              }
+              profiles {
+                name
+                policyId
+              }
+              loginAttempts
+              lastName
+              firstName
+              emailAddress
+              dob
+              active
+              accountId
+            }
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.currentUser;
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
   /**
    * Retrieves all users associated with an account.
    * @async
@@ -207,6 +248,39 @@ const useUserService = () => {
     }
   };
 
+    /**
+   * Updates an existing user.
+   * @async
+   * @param {Object} userData - The updated data of the user.
+   * @returns {Promise<Object>} A promise that resolves to the updated user object.
+   */
+    const updateCurrentUser = async (userData) => {
+      try {
+        const data = {
+          query: `
+            mutation {
+              updateCurrentUser(
+                command: {
+                  user: {
+                    secondSurname: ${formatValue(userData.secondSurname)}
+                    secondName: ${formatValue(userData.secondName)}
+                    lastName: ${formatValue(userData.lastName)}
+                    firstName: ${formatValue(userData.firstName)}
+                    dob: ${formatValue(userData.dob)}
+                  }
+                }
+              )
+            }
+          `
+        };
+        const response = await post(data);
+        return response.data.updateCurrentUser;
+      } catch (error) {
+        handleError(error);
+        return false;
+      }
+    };
+
   /**
    * Updates the password of a user.
    * @async
@@ -302,10 +376,12 @@ const useUserService = () => {
 
   return {
     getUser,
+    getCurrentUser,
     getUsersByAccount,
     createUser,
     createManager,
     updateUser,
+    updateCurrentUser,
     updatePassword,
     deleteUser,
     isAdmin,
