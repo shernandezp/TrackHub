@@ -168,7 +168,9 @@
         "account": "Cuenta",
         "style": "Modo Claro/Oscuro",
         "sidenav": "Collapsar Barra Lateral",
-        "language": "Idioma"
+        "language": "Idioma",
+        "info": "Información del Perfil",
+        "partOf": "Parte de"
     },
     "validation": {
         "selectValue": "Por favor seleccione un valor para el campo {{field}}",

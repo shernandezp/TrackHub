@@ -13,6 +13,8 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
+import { useState, useEffect, useContext } from "react";
+
 // @mui material components
 import Grid from "@mui/material/Grid";
 
@@ -27,7 +29,7 @@ import ArgonBox from "components/ArgonBox";
 // Argon Dashboard 2 MUI example components
 import DashboardLayout from "controls/LayoutContainers/DashboardLayout";
 import Footer from "controls/Footer";
-import ProfileInfoCard from "controls/Cards/InfoCards/ProfileInfoCard";
+import ProfileInfoCard from "layouts/profile/components/ProfileInfoCard";
 import ProfilesList from "controls/Lists/ProfilesList";
 
 // Overview page components
@@ -36,11 +38,28 @@ import PlatformSettings from "layouts/profile/components/PlatformSettings";
 
 // Data
 import profilesListData from "layouts/profile/data/profilesListData";
+import useUserService from "services/users";
+import { LoadingContext } from 'LoadingContext';
 
 const bgImage =
   "https://raw.githubusercontent.com/creativetimofficial/public-assets/master/argon-dashboard-pro/assets/img/profile-layout-header.jpg";
 
 function Overview() {
+  const { getCurrentUser } = useUserService();
+  const { setLoading } = useContext(LoadingContext);
+  const [user, setUser] = useState({});
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      setLoading(true);
+      const user = await getCurrentUser();
+      setUser(user);
+      setLoading(false);
+    };
+  
+    fetchUser();
+  }, []);
+
   return (
     <DashboardLayout
       sx={{
@@ -60,32 +79,7 @@ function Overview() {
           </Grid>
           <Grid item xs={12} md={6} xl={4}>
             <ProfileInfoCard
-              title="profile information"
-              description="Hi, I'm Alec Thompson, Decisions: If you can't decide, the answer is no. If two equally difficult paths, choose the one more painful in the short term (pain avoidance is creating an illusion of equality)."
-              info={{
-                fullName: "Alec M. Thompson",
-                mobile: "(44) 123 1234 123",
-                email: "alecthompson@mail.com",
-                location: "USA",
-              }}
-              social={[
-                {
-                  link: "https://www.facebook.com/CreativeTim/",
-                  icon: <FacebookIcon />,
-                  color: "facebook",
-                },
-                {
-                  link: "https://twitter.com/creativetim",
-                  icon: <TwitterIcon />,
-                  color: "twitter",
-                },
-                {
-                  link: "https://www.instagram.com/creativetimofficial/",
-                  icon: <InstagramIcon />,
-                  color: "instagram",
-                },
-              ]}
-              action={{ route: "", tooltip: "Edit Profile" }}
+              user={user}
             />
           </Grid>
           <Grid item xs={12} xl={4}>

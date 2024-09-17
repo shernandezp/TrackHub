@@ -168,7 +168,9 @@
         "account":"Account",
         "style": "Light/Dark Mode",
         "sidenav": "Sidenav Mini",
-        "language":"Language"
+        "language" :"Language",
+        "info": "Profile Information",
+        "partOf": "Part of"
     },
     "validation": {
         "selectValue": "Please select a value for the {{field}} field",

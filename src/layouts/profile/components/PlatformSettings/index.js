@@ -149,7 +149,7 @@ function PlatformSettings() {
           onClick={onSaveSettings}
           color="dark">
           <Icon sx={{ fontWeight: "bold" }}>save</Icon>
-          &nbsp;Save
+          &nbsp;{t('generic.save')}
         </ArgonButton>
       </ArgonBox>
     </Card>
