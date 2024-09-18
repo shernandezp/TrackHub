@@ -33,8 +33,22 @@ import breakpoints from "assets/theme/base/breakpoints";
 // Images
 import profileImage from "assets/images/profile.jpeg";
 
-function Header() {
+import PropTypes from "prop-types";
+
+function Header({ user }) {
   const [tabsOrientation, setTabsOrientation] = useState("horizontal");
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+
+  useEffect(() => {
+    const fetchData= async () => {
+      if (user && Object.keys(user).length > 0) {
+        setName(`${user.firstName} ${user.lastName}`);
+        setEmail(user.emailAddress);
+      }
+    }; 
+    fetchData();
+  }, [user]);
 
   useEffect(() => {
     // A function that sets the orientation state of the tabs.
@@ -80,10 +94,10 @@ function Header() {
           <Grid item>
             <ArgonBox height="100%" mt={0.5} lineHeight={1}>
               <ArgonTypography variant="h5" fontWeight="medium">
-                Alex Thompson
+                {name}
               </ArgonTypography>
               <ArgonTypography variant="button" color="text" fontWeight="medium">
-                CEO / Co-Founder
+                {email}
               </ArgonTypography>
             </ArgonBox>
           </Grid>
@@ -92,5 +106,10 @@ function Header() {
     </ArgonBox>
   );
 }
+
+Header.propTypes = {
+  user: PropTypes.any
+};
+
 
 export default Header;
