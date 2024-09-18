@@ -37,7 +37,13 @@ import themeDark from "assets/theme-dark";
 import routes from "routes";
 
 // Argon Dashboard 2 MUI contexts
-import { useArgonController, setMiniSidenav, setOpenConfigurator } from "context";
+import { 
+  useArgonController, 
+  setOpenConfigurator,
+  setDarkSidenav,
+  setMiniSidenav,
+  setDarkMode,
+ } from "context";
 
 // Images
 import brand from "assets/images/logo-th.svg";
@@ -51,6 +57,8 @@ import { useAuth } from "AuthContext";
 import { LoadingContext } from 'LoadingContext';
 import { ClipLoader } from 'react-spinners';
 import useUserService from "services/users";
+import useSettignsService from 'services/settings';
+import { useTranslation } from 'react-i18next';
 
 export default function App() {
   const [controller, dispatch] = useArgonController();
@@ -61,8 +69,10 @@ export default function App() {
   const { pathname } = useLocation();
   const [loading, setLoading] = useState(false);
   const { isAdmin, isManager } = useUserService();
+  const { getUserSettings } = useSettignsService();
   const [userIsAdmin, setUserIsAdmin] = useState(true);
   const [userIsManager, setUserIsManager] = useState(true);
+  const { i18n } = useTranslation();
 
   useEffect(() => {
     // Redirect to login page if not authenticated
@@ -77,8 +87,16 @@ export default function App() {
       if (isAuthenticated) {
         const admin = await isAdmin();
         const manager = await isManager();
+        const userSettings = await getUserSettings();
         setUserIsAdmin(admin);
         setUserIsManager(manager);
+        /* Initialize settings */
+        setDarkMode(dispatch, userSettings.style !== 'light');
+        setDarkSidenav(dispatch, userSettings.style !== 'light');
+        setMiniSidenav(dispatch, userSettings.navbar !== 'none');
+        if (userSettings.language) {
+          i18n.changeLanguage(userSettings.language);
+        }
       }
     };
     fetchPermissions();
@@ -167,7 +185,7 @@ export default function App() {
               isManager={userIsManager}
             />
             <Configurator />
-            {configsButton}
+            {userIsManager && configsButton}
           </>
         )}
         <Routes>
