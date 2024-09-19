@@ -126,7 +126,9 @@
         "details": "Detalle de la Configuración",
         "style": "Modo Claro/Oscuro",
         "sidenav": "Collapsar Barra Lateral",
-        "language": "Idioma"
+        "language": "Idioma",
+        "maps": "Mapas",
+        "storePosition": "Almacenar Posición"
     },
     "screen": {
         "dashboard": "Tablero",

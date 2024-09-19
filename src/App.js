@@ -67,12 +67,14 @@ export default function App() {
   const [onMouseEnter, setOnMouseEnter] = useState(false);
   const { isAuthenticated, login, isLoggingIn } = useAuth();
   const { pathname } = useLocation();
-  const [loading, setLoading] = useState(false);
   const { isAdmin, isManager } = useUserService();
-  const { getUserSettings } = useSettignsService();
+  const { getUserSettings, getAccountSettings, updateAccountSettings } = useSettignsService();
+  const { i18n } = useTranslation();
+
+  const [loading, setLoading] = useState(false);
   const [userIsAdmin, setUserIsAdmin] = useState(true);
   const [userIsManager, setUserIsManager] = useState(true);
-  const { i18n } = useTranslation();
+  const [accountSettings, setAccountSettings] = useState({});
 
   useEffect(() => {
     // Redirect to login page if not authenticated
@@ -97,6 +99,8 @@ export default function App() {
         if (userSettings.language) {
           i18n.changeLanguage(userSettings.language);
         }
+        const settings = await getAccountSettings();
+        setAccountSettings(settings);
       }
     };
     fetchPermissions();
@@ -184,7 +188,10 @@ export default function App() {
               isAdmin={userIsAdmin}
               isManager={userIsManager}
             />
-            <Configurator />
+            <Configurator 
+              settings={accountSettings}
+              updateSettings={updateAccountSettings}
+               />
             {userIsManager && configsButton}
           </>
         )}

@@ -13,6 +13,8 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
+import { useContext, useState, useEffect } from "react";
+
 // @mui material components
 import Divider from "@mui/material/Divider";
 import Switch from "@mui/material/Switch";
@@ -20,35 +22,63 @@ import Icon from "@mui/material/Icon";
 
 // Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
+import ArgonButton from "components/ArgonButton";
 import ArgonTypography from "components/ArgonTypography";
 
 // Custom styles for the Configurator
 import ConfiguratorRoot from "controls/Configurator/ConfiguratorRoot";
 import { useTranslation } from 'react-i18next';
+import CustomSelect from 'controls/Dialogs/CustomSelect';
+import { LoadingContext } from 'LoadingContext';
+import maps from 'controls/data/maps';
+import PropTypes from "prop-types";
 
 // Argon Dashboard 2 MUI context
 import {
   useArgonController,
-  setOpenConfigurator,
-  setDarkSidenav,
-  setMiniSidenav,
-  setFixedNavbar,
-  setDarkMode,
+  setOpenConfigurator
 } from "context";
 
-function Configurator() {
+function Configurator({ settings, updateSettings }) {
+  const { setLoading } = useContext(LoadingContext);
   const [controller, dispatch] = useArgonController();
-  const { openConfigurator, miniSidenav, fixedNavbar, darkMode } =
+  const { openConfigurator, darkMode } =
     controller;
   const { t } = useTranslation();
+  const mapOptions = maps
+    .map(type => ({ value: type, label: type }));
 
+  const [accountSettings, setAccountSettings] = useState({maps: 'OSM', storeLastPosition: false});
   const handleCloseConfigurator = () => setOpenConfigurator(dispatch, false);
-  const handleMiniSidenav = () => setMiniSidenav(dispatch, !miniSidenav);
-  const handleFixedNavbar = () => setFixedNavbar(dispatch, !fixedNavbar);
-  const handleDarkMode = () => {
-    setDarkSidenav(dispatch, !darkMode);
-    setDarkMode(dispatch, !darkMode);
-  };
+
+  useEffect(() => {
+    const fetchAccountSettings = async () => {
+      if (settings && settings.maps)
+      setAccountSettings(settings);
+    };
+  
+    fetchAccountSettings();
+  }, [settings]);
+
+  function handleStorePositionChange() {
+    setAccountSettings(prevSettings => ({
+      ...prevSettings,
+      storeLastPosition: !settings.storeLastPosition
+    }));
+  }
+
+  function handleMapsChange(e) {
+    setAccountSettings(prevSettings => ({
+      ...prevSettings,
+      maps: e.target.value
+    }));
+  }
+
+  async function onSaveSettings() {
+    setLoading(true);
+    updateSettings(accountSettings.accountId, accountSettings);
+    setLoading(false);
+  }
 
   return (
     <ConfiguratorRoot variant="permanent" ownerState={{ openConfigurator }}>
@@ -88,30 +118,44 @@ function Configurator() {
       <ArgonBox pt={1.25} pb={3} px={3}>
 
         <ArgonBox display="flex" justifyContent="space-between" mt={3} lineHeight={1}>
-          <ArgonTypography variant="h6">Navbar Fixed</ArgonTypography>
+          <ArgonTypography variant="h6">Almacenar Posición</ArgonTypography>
 
-          <Switch checked={fixedNavbar} onChange={handleFixedNavbar} />
+          <Switch checked={accountSettings.storeLastPosition} onChange={handleStorePositionChange} />
         </ArgonBox>
 
         <Divider />
 
         <ArgonBox display="flex" justifyContent="space-between" lineHeight={1}>
-          <ArgonTypography variant="h6">{t('settings.sidenav')}</ArgonTypography>
-
-          <Switch checked={miniSidenav} onChange={handleMiniSidenav} />
+          <CustomSelect
+              list={mapOptions}
+              handleChange={handleMapsChange}
+              name="map"
+              id="map"
+              label={t('settings.maps')}
+              value={accountSettings.maps}
+              numericValue={false}
+              required
+            />
         </ArgonBox>
 
         <Divider />
 
-        <ArgonBox display="flex" justifyContent="space-between" lineHeight={1}>
-          <ArgonTypography variant="h6">{t('settings.style')}</ArgonTypography>
-
-          <Switch checked={darkMode} onChange={handleDarkMode} />
-        </ArgonBox>
-
+        <ArgonButton 
+          variant="gradient" 
+          onClick={onSaveSettings}
+          color="dark">
+          <Icon sx={{ fontWeight: "bold" }}>save</Icon>
+          &nbsp;{t('generic.save')}
+        </ArgonButton>
+        
       </ArgonBox>
     </ConfiguratorRoot>
   );
 }
+
+Configurator.propTypes = {
+  settings: PropTypes.object.isRequired,
+  updateSettings: PropTypes.func.isRequired
+};
 
 export default Configurator;

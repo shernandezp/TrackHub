@@ -126,7 +126,9 @@
         "detail":"Account Settings",
         "style": "Light/Dark Mode",
         "sidenav": "Sidenav Mini",
-        "language": "Language"
+        "language": "Language",
+        "maps": "Maps",
+        "storePosition": "Store Position"
     },
     "screen": {
         "dashboard": "Dashboard",
