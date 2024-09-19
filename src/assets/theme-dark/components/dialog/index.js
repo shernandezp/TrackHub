@@ -14,15 +14,18 @@ Coded by www.creative-tim.com
 */
 
 // Argon Dashboard 2 MUI base styles
+import colors from "assets/theme-dark/base/colors";
 import borders from "assets/theme-dark/base/borders";
 import boxShadows from "assets/theme-dark/base/boxShadows";
 
 const { borderRadius } = borders;
 const { xxl } = boxShadows;
+const { background } = colors;
 
 const dialog = {
   styleOverrides: {
     paper: {
+      backgroundColor: background.default,
       borderRadius: borderRadius.lg,
       boxShadow: xxl,
     },

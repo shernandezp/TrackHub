@@ -81,8 +81,8 @@ const colors = {
   },
 
   dark: {
-    main: "#344767",
-    focus: "#344767",
+    main: "#dee2e7",
+    focus: "#aeb7c3",
   },
 
   grey: {

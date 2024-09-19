@@ -20,7 +20,7 @@ import borders from "assets/theme-dark/base/borders";
 // Soft UI Dashboard PRO helper functions
 import pxToRem from "assets/theme-dark/functions/pxToRem";
 
-const { inputColors } = colors;
+const { inputColors, white } = colors;
 const { borderWidth, borderRadius } = borders;
 
 const input = {
@@ -37,6 +37,7 @@ const input = {
     },
 
     input: {
+      color: white.main,
       height: pxToRem(22),
       width: "max-content !important",
     },

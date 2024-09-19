@@ -33,6 +33,7 @@ import pxToRem from "assets/theme-dark/functions/pxToRem";
 import rgba from "assets/theme-dark/functions/rgba";
 
 // Argon Dashboard 2 MUI components base styles for @mui material components
+import accordion from "assets/theme-dark/components/accordion";
 import sidenav from "assets/theme-dark/components/sidenav";
 import list from "assets/theme-dark/components/list";
 import listItem from "assets/theme-dark/components/list/listItem";
@@ -84,7 +85,10 @@ import dialogActions from "assets/theme-dark/components/dialog/dialogActions";
 
 export default createTheme({
   breakpoints: { ...breakpoints },
-  palette: { ...colors },
+  palette: { 
+    ...colors,
+    mode: 'dark'
+   },
   typography: { ...typography },
   boxShadows: { ...boxShadows },
   borders: { ...borders },
@@ -103,6 +107,7 @@ export default createTheme({
         ...container,
       },
     },
+    MuiAccordion: { ...accordion},
     MuiDrawer: { ...sidenav },
     MuiList: { ...list },
     MuiListItem: { ...listItem },
