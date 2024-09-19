@@ -41,9 +41,6 @@ function reducer(state, action) {
     case "TRANSPARENT_NAVBAR": {
       return { ...state, transparentNavbar: action.value };
     }
-    case "FIXED_NAVBAR": {
-      return { ...state, fixedNavbar: action.value };
-    }
     case "OPEN_CONFIGURATOR": {
       return { ...state, openConfigurator: action.value };
     }
@@ -65,7 +62,6 @@ function ArgonControllerProvider({ children }) {
     miniSidenav: false,
     darkSidenav: false,
     transparentNavbar: true,
-    fixedNavbar: false,
     openConfigurator: false,
     layout: "dashboard",
     darkMode: false,
@@ -98,7 +94,6 @@ ArgonControllerProvider.propTypes = {
 const setMiniSidenav = (dispatch, value) => dispatch({ type: "MINI_SIDENAV", value });
 const setDarkSidenav = (dispatch, value) => dispatch({ type: "DARK_SIDENAV", value });
 const setTransparentNavbar = (dispatch, value) => dispatch({ type: "TRANSPARENT_NAVBAR", value });
-const setFixedNavbar = (dispatch, value) => dispatch({ type: "FIXED_NAVBAR", value });
 const setOpenConfigurator = (dispatch, value) => dispatch({ type: "OPEN_CONFIGURATOR", value });
 const setLayout = (dispatch, value) => dispatch({ type: "LAYOUT", value });
 const setDarkMode = (dispatch, value) => dispatch({ type: "DARK_MODE", value });
@@ -109,7 +104,6 @@ export {
   setMiniSidenav,
   setDarkSidenav,
   setTransparentNavbar,
-  setFixedNavbar,
   setOpenConfigurator,
   setLayout,
   setDarkMode,
