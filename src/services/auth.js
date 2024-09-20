@@ -71,14 +71,12 @@ export async function revokeAccessToken(accessToken) {
   });
 
   try {
-    console.log(`Token: ${accessToken}`);
-    console.log(`Refresh Token: ${refreshToken}`);
     await axios.post(process.env.REACT_APP_REVOKE_TOKEN_ENDPOINT, revokeBody.toString(), {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
       }
     }).then(response => {
-      console.log(response);
+      console.log('Revoking token', response);
     });
   } catch (error) {
     console.error('Error revoking token:', error.message);
@@ -94,9 +92,10 @@ export async function logout() {
       const response = await axios.post(process.env.REACT_APP_LOGOUT_ENDPOINT, {}, {
           headers: {
               'Content-Type': 'application/x-www-form-urlencoded'
-          }
+          },
+          withCredentials: true
       });
-      console.log(response);
+      console.log('login out', response);
   } catch (error) {
       console.error('Error during logout:', error.message);
   }

@@ -39,7 +39,7 @@ const bgImage =
   "https://raw.githubusercontent.com/creativetimofficial/public-assets/master/argon-dashboard-pro/assets/img/profile-layout-header.jpg";
 
 function Overview() {
-  const { getCurrentUser } = useUserService();
+  const { getCurrentUser, updateCurrentUser } = useUserService();
   const { setLoading } = useContext(LoadingContext);
   const [user, setUser] = useState({});
 
@@ -74,6 +74,7 @@ function Overview() {
           <Grid item xs={12} md={6} xl={4}>
             <ProfileInfoCard
               user={user}
+              updateCurrentUser={updateCurrentUser}
             />
           </Grid>
           <Grid item xs={12} xl={4}>

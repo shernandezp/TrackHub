@@ -6,13 +6,11 @@ import Icon from "@mui/material/Icon";
 import CustomTextField from 'controls/Dialogs/CustomTextField';
 import ArgonBox from "components/ArgonBox";
 import ArgonTypography from "components/ArgonTypography";
-import useUserService from "services/users";
 import { LoadingContext } from 'LoadingContext';
 import { useTranslation } from 'react-i18next';
 import useForm from 'controls/Dialogs/useForm';
 
-function ProfileInfoCard({ user }) {
-  const { updateCurrentUser } = useUserService();
+function ProfileInfoCard({ user, updateCurrentUser }) {
   const { setLoading } = useContext(LoadingContext);
   const { t } = useTranslation();
   const [values, handleChange, setValues, setErrors, validate, errors] = useForm({});
@@ -129,7 +127,8 @@ function ProfileInfoCard({ user }) {
 }
 
 ProfileInfoCard.propTypes = {
-  user: PropTypes.any
+  user: PropTypes.object.isRequired,
+  updateCurrentUser: PropTypes.func.isRequired
 };
 
 export default ProfileInfoCard;
