@@ -1,16 +1,18 @@
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
+import { formatDateTime } from "utils/dateUtils";
 
 import { useEffect } from 'react';
 import { useMap } from 'react-leaflet';
 import PropTypes from 'prop-types';
 import L from 'leaflet';
 import 'leaflet.markercluster';
+import { useTranslation } from 'react-i18next';
 import { createSvgIcon } from 'controls/Maps/utils/imageUtils';
 
 const MarkerCluster = ({ markers, icon }) => {
+    const { t } = useTranslation();
     const map = useMap();
-    
         useEffect(() => {
             const markerGroup = L.markerClusterGroup();
             markers.forEach((marker) => {
@@ -23,7 +25,8 @@ const MarkerCluster = ({ markers, icon }) => {
                 });
     
                 const leafletMarker = L.marker([marker.lat, marker.lng], { icon: myIcon });
-                leafletMarker.bindPopup('A pretty CSS3 popup. <br /> Easily customizable.');
+                leafletMarker.bindPopup(`${t('transporterMap.name')}: ${marker.name}
+                    <br>${t('transporterMap.dateTime')}: ${formatDateTime(marker.dateTime)}`);
                 markerGroup.addLayer(leafletMarker);
             });
             map.addLayer(markerGroup);

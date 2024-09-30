@@ -1,12 +1,10 @@
-
-
 /**
  * Module for handling connectivity related operations.
  * @module connectivity
  */
 
 import useApiService from './apiService';
-import { handleSilentError } from 'utils/errorHandler';
+import { handleSilentError, handleError } from 'utils/errorHandler';
 
 /**
  * Custom hook for handling router service operations.
@@ -64,9 +62,48 @@ const useRouterService = () => {
         }
       };
 
+    const getPositions = async () => {
+        try {
+          const data = {
+            query: `
+                query {
+                    positions {
+                        attributes {
+                            temperature
+                            satellites
+                            mileage
+                            ignition
+                            hobbsMeter
+                        }
+                        altitude
+                        address
+                        deviceName
+                        state
+                        speed
+                        serverDateTime
+                        longitude
+                        latitude
+                        eventId
+                        deviceId
+                        deviceDateTime
+                        course
+                        country
+                        city
+                    }
+                }
+            `
+          };
+          const response = await post(data);
+          return response.data.positions;
+        } catch (error) {
+          handleError(error);
+        }
+      };
+
     return {
         testConnectivity,
-        getDevicesByOperator
+        getDevicesByOperator,
+        getPositions
     };
 };
 

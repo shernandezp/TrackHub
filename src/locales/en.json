@@ -147,6 +147,13 @@
         "deleteTitle": "Delete Transporter",
         "deleteMessage": "Are you sure you want to delete this transporter?"
     },
+    "transporterMap": {
+        "name": "Name",
+        "dateTime": "Date Time",
+        "speed": "Speed (Km/Hr)",
+        "address": "Address",
+        "status": "Status"
+    },
     "user": {
         "title":"Users",
         "singleTitle":"User",

@@ -64,6 +64,7 @@ export const AuthProvider = ({ children, navigate }) => {
       alert('Refreshed token');
     } catch (refreshError) {
       // Refresh token is also expired or invalid, redirect to login page
+      console.error('Error refreshing token:', refreshError);
       login();
     }
   };

@@ -147,6 +147,13 @@
         "deleteTitle": "Eliminar Unidad",
         "deleteMessage": "¿Está seguro de que desea eliminar esta unidad?"
     },
+    "transporterMap": {
+        "name": "Nombre",
+        "dateTime": "Fecha Hora",
+        "speed": "Velocidad (Km/Hr)",
+        "address": "Dirección",
+        "status": "Estado"
+    },
     "user": {
         "title":"Usuarios",
         "singleTitle":"Usuario",

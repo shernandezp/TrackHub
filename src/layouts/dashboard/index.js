@@ -14,6 +14,7 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
+import React, { useState, useEffect, useContext } from 'react';
 // @mui material components
 import Grid from "@mui/material/Grid";
 
@@ -27,9 +28,8 @@ import Footer from "controls/Footer";
 import DetailedStatisticsCard from "controls/Cards/StatisticsCards/DetailedStatisticsCard";
 import SalesTable from "controls/Tables/SalesTable";
 import CategoriesList from "controls/Lists/CategoriesList";
-
-// Argon Dashboard 2 MUI base styles
-import typography from "assets/theme/base/typography";
+import useRouterService from "services/router";
+import { LoadingContext } from 'LoadingContext';
 
 // Dashboard layout components
 import GeneralMap from "controls/Maps/GeneralMap";
@@ -39,7 +39,20 @@ import salesTableData from "layouts/dashboard/data/salesTableData";
 import categoriesListData from "layouts/dashboard/data/categoriesListData";
 
 function Default() {
-  const { size } = typography;
+  const { getPositions } = useRouterService();
+  const { setLoading } = useContext(LoadingContext);
+  const [positions, setPositions] = useState([]);
+
+  useEffect(() => {
+    const fetchPositions = async () => {
+      setLoading(true);
+      var result = await getPositions();
+      setPositions(result);
+      setLoading(false);
+    };
+    fetchPositions();
+  }, []);
+
   return (
     <DashboardLayout>
       <DashboardNavbar />
@@ -80,7 +93,7 @@ function Default() {
         </Grid>
         <Grid container spacing={3} mb={3}>
           <Grid item xs={12} lg={12}>
-            <GeneralMap mapType="OSM" />
+            <GeneralMap mapType="OSM" positions={positions} />
           </Grid>
         </Grid>
         <Grid container spacing={3}>
