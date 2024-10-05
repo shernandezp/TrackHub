@@ -13,22 +13,27 @@ function ManageDevices() {
     setToDelete(deviceId);
   };
 
+  const handleAddClick = async () => {
+    await refreshData();
+  };
+
   const [expanded, setExpanded] = useState(false);
   const [openAssignment, setOpenAssignment] = useState(false);
   const { 
     data, 
     confirmOpen, 
     onDelete, 
-    setConfirmOpen } = useDeviceTableData(expanded, handleDeleteClick);
+    setConfirmOpen,
+    refreshData } = useDeviceTableData(expanded, handleDeleteClick);
   const [toDelete, setToDelete] = useState(null);
   const { columns, rows } = data;
 
   return (
     <>
-      <TableAccordion 
+      <TableAccordion
         title={t('device.title')}
         showAddIcon={true}
-        expanded={expanded} 
+        expanded={expanded}
         setOpen={setOpenAssignment} 
         setExpanded={setExpanded}>
         <Table columns={columns} rows={rows} />
@@ -37,6 +42,7 @@ function ManageDevices() {
       <DeviceAllocatorDialog
         open={openAssignment}
         setOpen={setOpenAssignment}
+        handleAddClick={handleAddClick}
       />
 
       <ConfirmDialog 

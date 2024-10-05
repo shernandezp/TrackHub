@@ -8,7 +8,7 @@ import useRouterService from 'services/router';
 import useOperatorService from 'services/operator';
 import { LoadingContext } from 'LoadingContext';
 
-function DeviceAllocatorDialog({ open, setOpen }) {
+function DeviceAllocatorDialog({ open, setOpen, handleAddClick }) {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
   const { processDevice, wipeDevices } = useDeviceService();
@@ -55,6 +55,7 @@ function DeviceAllocatorDialog({ open, setOpen }) {
     selectedRows.forEach(async(index) => {
       await processDevice(data[index], operator);
     });
+    await handleAddClick();
     setLoading(false);
     setOperator(0);
     setData([]);
@@ -85,7 +86,8 @@ function DeviceAllocatorDialog({ open, setOpen }) {
 
 DeviceAllocatorDialog.propTypes = {
     open: PropTypes.bool.isRequired,
-    setOpen: PropTypes.func.isRequired
+    setOpen: PropTypes.func.isRequired,
+    handleAddClick: PropTypes.func.isRequired
 };
 
 export default DeviceAllocatorDialog;

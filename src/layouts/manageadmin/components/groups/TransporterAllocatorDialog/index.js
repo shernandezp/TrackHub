@@ -34,14 +34,20 @@ function TransporterAllocatorDialog({ open, setOpen, groupId }) {
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
       const transporters = await getTransporterByAccount();
       setAccountTrasporters(transporters);
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
       await reloadData();
       setLoading(false);
     };
     if (open)
-        fetchData();
+      fetchData();
   }, [open]);
 
   const handleChange = (event) => {

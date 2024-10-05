@@ -39,6 +39,12 @@ function useDeviceTableData(fetchData, handleDeleteClick) {
     setConfirmOpen(true);
   };
 
+  const refreshData = async () => {
+    const devices = await getDevicesByAccount();
+    setDevices(devices);
+    setData(buildTableData(devices));
+  }
+
   const buildTableData = (devices) => ({
     columns: [
       { name: "name", title:t('device.name'), align: "left" },
@@ -71,9 +77,7 @@ function useDeviceTableData(fetchData, handleDeleteClick) {
     if (fetchData && !hasLoaded.current) {
       async function fetchData() {
         setLoading(true);
-        const devices = await getDevicesByAccount();
-        setDevices(devices);
-        setData(buildTableData(devices));
+        await refreshData();
         hasLoaded.current = true;
         setLoading(false);
       }
@@ -85,7 +89,8 @@ function useDeviceTableData(fetchData, handleDeleteClick) {
     data, 
     confirmOpen,
     onDelete, 
-    setConfirmOpen
+    setConfirmOpen,
+    refreshData
   };
 }
 
