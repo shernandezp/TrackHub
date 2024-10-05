@@ -34,13 +34,14 @@ const useApiService = (endpoint) => {
    * @returns {Promise<object>} - A promise that resolves to the response data.
    */
   const post = async (data) => {
+    let token = accessToken;
     if (!isTokenValid(accessToken)) {
-      await handleRefreshToken();
+      token = await handleRefreshToken();
     }
     
     const response = await axios.post(endpoint, data, {
       headers: {
-        'Authorization': `Bearer ${accessToken}`
+        'Authorization': `Bearer ${token}`
       }
     });
     return response.data;
