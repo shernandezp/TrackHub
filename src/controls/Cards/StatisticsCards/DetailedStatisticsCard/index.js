@@ -133,6 +133,7 @@ function DetailedStaticsCard({
               </Grid>
             ) : null}
           </Grid>
+          {percentage.count && (
           <ArgonTypography
             display="flex"
             alignItems="center"
@@ -148,9 +149,8 @@ function DetailedStaticsCard({
               ml={0.5}
               mt={-0.125}
             >
-              {percentage.text}
             </ArgonTypography>
-          </ArgonTypography>
+          </ArgonTypography>)}
         </ArgonBox>
       </ArgonBox>
     </Card>

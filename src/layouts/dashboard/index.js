@@ -30,6 +30,7 @@ import SalesTable from "controls/Tables/SalesTable";
 import CategoriesList from "controls/Lists/CategoriesList";
 import useRouterService from "services/router";
 import { LoadingContext } from 'LoadingContext';
+import { useTranslation } from 'react-i18next';
 
 // Dashboard layout components
 import GeneralMap from "controls/Maps/GeneralMap";
@@ -42,52 +43,71 @@ function Default() {
   const { getPositions } = useRouterService();
   const { setLoading } = useContext(LoadingContext);
   const [positions, setPositions] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [active, setActive] = useState(0);
+  const [movement, setMovement] = useState(0);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const fetchPositions = async () => {
       setLoading(true);
       var result = await getPositions();
       setPositions(result);
+      setTotal(result.length);
+      setActive(countRecentDevices(result));
+      setMovement(countDevicesInMovement(result));
       setLoading(false);
     };
     fetchPositions();
   }, []);
+
+  function countRecentDevices(devices) {
+    const now = new Date();
+    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000); // time one hour ago - get this from the account settings
+    const recentDevices = devices.filter(device => {
+        const deviceDateTime = new Date(device.deviceDateTime);
+        return deviceDateTime > oneHourAgo && deviceDateTime <= now;
+    });
+    return recentDevices.length;
+  }
+
+  function countDevicesInMovement(devices) {
+    const movingDevices = devices.filter(device => device.speed > 0);
+    return movingDevices.length;
+  }
+
+  function getPercentage(count) {
+    const percentage = total > 0 ? (count / total) * 100 : 0;
+    return percentage.toFixed(2);
+  }
 
   return (
     <DashboardLayout>
       <DashboardNavbar />
       <ArgonBox py={3}>
         <Grid container spacing={3} mb={3}>
-          <Grid item xs={12} md={6} lg={3}>
+          <Grid item xs={12} md={6} lg={4}>
             <DetailedStatisticsCard
-              title="today's money"
-              count="$53,000"
-              icon={{ color: "info", component: <i className="ni ni-money-coins" /> }}
-              percentage={{ color: "success", count: "+55%", text: "since yesterday" }}
+              title={t("dashboard.totalTitle")}
+              count={total}
+              icon={{ color: "info", component: <i className="ni ni-map-big" /> }}
+              percentage={{ color: "success"}}
             />
           </Grid>
-          <Grid item xs={12} md={6} lg={3}>
+          <Grid item xs={12} md={6} lg={4}>
             <DetailedStatisticsCard
-              title="today's users"
-              count="2,300"
-              icon={{ color: "error", component: <i className="ni ni-world" /> }}
-              percentage={{ color: "success", count: "+3%", text: "since last week" }}
+              title={t("dashboard.activeTitle")}
+              count={active}
+              icon={{ color: "error", component: <i className="ni ni-watch-time" /> }}
+              percentage={{ color: "success", count: `${getPercentage(active)}%` }}
             />
           </Grid>
-          <Grid item xs={12} md={6} lg={3}>
+          <Grid item xs={12} md={6} lg={4}>
             <DetailedStatisticsCard
-              title="new clients"
-              count="+3,462"
-              icon={{ color: "success", component: <i className="ni ni-paper-diploma" /> }}
-              percentage={{ color: "error", count: "-2%", text: "since last quarter" }}
-            />
-          </Grid>
-          <Grid item xs={12} md={6} lg={3}>
-            <DetailedStatisticsCard
-              title="sales"
-              count="$103,430"
-              icon={{ color: "warning", component: <i className="ni ni-cart" /> }}
-              percentage={{ color: "success", count: "+5%", text: "than last month" }}
+              title={t("dashboard.movementTitle")}
+              count={movement}
+              icon={{ color: "success", component: <i className="ni ni-button-play" /> }}
+              percentage={{ color: "error", count: `${getPercentage(movement)}%` }}
             />
           </Grid>
         </Grid>

@@ -31,6 +31,11 @@
         "testSuccess": "The credential was successfully tested",
         "testError": "An error occurred while testing the credential"
     },
+    "dashboard": {
+        "totalTitle": "Total Units",
+        "activeTitle": "Active Units",
+        "movementTitle": "Moving Units"
+    },
     "device": {
         "title":"Devices",
         "singleTitle":"Device",
@@ -69,7 +74,7 @@
         "active": "Active",
         "deleteTitle": "Delete Group",
         "deleteMessage": "Are you sure you want to delete this group?",
-        "assignTransporter": "Assign Transporter",
+        "assignTransporter": "Assign Unit",
         "assignUser": "Assign User"
     },
     "operator": {
@@ -107,7 +112,7 @@
         "positions": "Positions",
         "profile": "Profile",
         "settingsScreen": "Settings Screen",
-        "transporters": "Transporters",
+        "transporters": "Units",
         "users": "Users"        
     },
     "role": {
@@ -139,13 +144,13 @@
         "profile": "Profile"
     },
     "transporter": {
-        "title":"Transporters",
-        "singleTitle":"Transporter",
-        "details":"Transporter Details",
+        "title":"Units",
+        "singleTitle":"Unit",
+        "details":"Unit Details",
         "name": "Name",
         "type": "Type",
-        "deleteTitle": "Delete Transporter",
-        "deleteMessage": "Are you sure you want to delete this transporter?"
+        "deleteTitle": "Delete Unit",
+        "deleteMessage": "Are you sure you want to delete this unit?"
     },
     "transporterMap": {
         "name": "Name",
