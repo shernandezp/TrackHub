@@ -26,7 +26,7 @@ import DashboardLayout from "controls/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "controls/Navbars/DashboardNavbar";
 import Footer from "controls/Footer";
 import DetailedStatisticsCard from "controls/Cards/StatisticsCards/DetailedStatisticsCard";
-import SalesTable from "controls/Tables/SalesTable";
+import TransportersTable from "layouts/dashboard/components/TransportersTable";
 import CategoriesList from "controls/Lists/CategoriesList";
 import useRouterService from "services/router";
 import { LoadingContext } from 'LoadingContext';
@@ -36,7 +36,6 @@ import { useTranslation } from 'react-i18next';
 import GeneralMap from "controls/Maps/GeneralMap";
 
 // Data
-import salesTableData from "layouts/dashboard/data/salesTableData";
 import categoriesListData from "layouts/dashboard/data/categoriesListData";
 
 function Default() {
@@ -77,7 +76,7 @@ function Default() {
   }
 
   function getPercentage(count) {
-    const percentage = total > 0 ? (count / total) * 100 : 0;
+    const percentage = total && total > 0 ? (count / total) * 100 : 0;
     return percentage.toFixed(2);
   }
 
@@ -91,7 +90,7 @@ function Default() {
               title={t("dashboard.totalTitle")}
               count={total}
               icon={{ color: "info", component: <i className="ni ni-map-big" /> }}
-              percentage={{ color: "success"}}
+              percentage={{ color: "success", hide: true }}
             />
           </Grid>
           <Grid item xs={12} md={6} lg={4}>
@@ -118,7 +117,7 @@ function Default() {
         </Grid>
         <Grid container spacing={3}>
           <Grid item xs={12} md={8}>
-            <SalesTable title="Sales by Country" rows={salesTableData} />
+            <TransportersTable transporters={positions} />
           </Grid>
           <Grid item xs={12} md={4}>
             <CategoriesList title="categories" categories={categoriesListData} />

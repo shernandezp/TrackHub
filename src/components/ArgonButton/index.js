@@ -45,7 +45,7 @@ const ArgonButton = forwardRef(
 
 // Typechecking props for the ArgonButton
 ArgonButton.propTypes = {
-  size: PropTypes.oneOf(["small", "medium", "large"]),
+  size: PropTypes.oneOf(["xsmall", "small", "medium", "large"]),
   variant: PropTypes.oneOf(["text", "contained", "outlined", "gradient"]),
   color: PropTypes.oneOf([
     "white",

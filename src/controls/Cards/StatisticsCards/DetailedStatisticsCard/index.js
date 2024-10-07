@@ -34,10 +34,13 @@ function DetailedStaticsCard({
   count, 
   percentage = {
       color: "success",
-      count: 0,
-      text: "",
+      count: '',
+      hide: false
     },
-  icon, 
+  icon = {
+    color: "primary",
+    component: <i className="default-icon" />
+  }, 
   direction = "right" 
   }) {
   const [controller] = useArgonController();
@@ -133,7 +136,7 @@ function DetailedStaticsCard({
               </Grid>
             ) : null}
           </Grid>
-          {percentage.count && (
+          {!percentage.hide && (
           <ArgonTypography
             display="flex"
             alignItems="center"
@@ -142,14 +145,6 @@ function DetailedStaticsCard({
             color={percentage.color}
           >
             {percentage.count}
-            <ArgonTypography
-              variant="body2"
-              fontWeight="regular"
-              color={bgColor === "white" ? "text" : "white"}
-              ml={0.5}
-              mt={-0.125}
-            >
-            </ArgonTypography>
           </ArgonTypography>)}
         </ArgonBox>
       </ArgonBox>
@@ -173,18 +168,9 @@ DetailedStaticsCard.propTypes = {
   title: PropTypes.string.isRequired,
   count: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
   percentage: PropTypes.shape({
-    color: PropTypes.oneOf([
-      "primary",
-      "secondary",
-      "info",
-      "success",
-      "warning",
-      "error",
-      "dark",
-      "white",
-    ]),
-    count: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-    text: PropTypes.string,
+    color: PropTypes.string,
+    count: PropTypes.string,
+    hide: PropTypes.bool
   }),
   icon: PropTypes.shape({
     color: PropTypes.oneOf(["primary", "secondary", "info", "success", "warning", "error", "dark"]),
