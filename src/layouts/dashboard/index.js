@@ -34,6 +34,7 @@ import { useTranslation } from 'react-i18next';
 
 // Dashboard layout components
 import GeneralMap from "controls/Maps/GeneralMap";
+import { useAuth } from "AuthContext";
 
 // Data
 import categoriesListData from "layouts/dashboard/data/categoriesListData";
@@ -46,6 +47,7 @@ function Default() {
   const [active, setActive] = useState(0);
   const [movement, setMovement] = useState(0);
   const { t } = useTranslation();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     const fetchPositions = async () => {
@@ -57,8 +59,9 @@ function Default() {
       setMovement(countDevicesInMovement(result));
       setLoading(false);
     };
-    fetchPositions();
-  }, []);
+    if (isAuthenticated)
+      fetchPositions();
+  }, [isAuthenticated]);
 
   function countRecentDevices(devices) {
     const now = new Date();
