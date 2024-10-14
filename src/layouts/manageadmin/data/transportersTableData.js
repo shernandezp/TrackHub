@@ -72,7 +72,9 @@ function useTransporterTableData(fetchData, handleEditClick, handleDeleteClick) 
     rows: transporters.map(transporter => ({
       name: <Name name={transporter.name} />,
       transporterType: (
-        <ArgonBadge variant="gradient" badgeContent={transporter.transporterType} color="success" size="xs" container />
+        <ArgonBadge variant="gradient" 
+          badgeContent={t(`transporterTypes.${transporter.transporterType.toLowerCase()}`)} 
+          color="success" size="xs" container />
       ),
       action: (
         <>

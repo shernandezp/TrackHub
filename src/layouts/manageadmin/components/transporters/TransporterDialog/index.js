@@ -8,6 +8,11 @@ import transporterTypes from 'data/transporterTypes';
 
 function TransporterFormDialog({ open, setOpen, handleSubmit, values, handleChange, errors }) {
   const { t } = useTranslation();
+  const translatedTypes = transporterTypes.map(type => ({
+    ...type,
+    label: t(`transporterTypes.${type.label.toLowerCase()}`)
+  }));
+
   return (
     <FormDialog 
           title={t('transporter.details')}
@@ -31,7 +36,7 @@ function TransporterFormDialog({ open, setOpen, handleSubmit, values, handleChan
           />
 
           <CustomSelect
-            list={transporterTypes}
+            list={translatedTypes}
             handleChange={handleChange}
             name="transporterTypeId"
             id="transporterTypeId"
