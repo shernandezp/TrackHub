@@ -1,7 +1,7 @@
 {
-  "name": "argon-dashboard-mui",
-  "version": "3.0.1",
-  "author": "Creative Tim",
+  "name": "TrackHub",
+  "version": "1.0.0",
+  "author": "Sergio Hernandez <",
   "license": "SEE LICENSE IN <https://www.creative-tim.com/license>",
   "description": "React version of Argon Dashboard 2 by Creative Tim",
   "bugs": {

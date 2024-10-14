@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { Name, Description } from "controls/Tables/components/tableComponents";
+import ArgonTypography from "components/ArgonTypography";
 import Icon from "@mui/material/Icon";
 import ArgonButton from "components/ArgonButton";
+import { formatDateTime } from "utils/dateUtils";
 
 function useTransportersTableData(transporters) {
   const { t } = useTranslation();
@@ -22,7 +24,11 @@ function useTransportersTableData(transporters) {
         </ArgonButton>
         ),
       name: <Name name={transporter.deviceName} />,
-      datetime: <Name name={transporter.deviceDateTime} />,
+      datetime: (
+        <ArgonTypography variant="caption" color="secondary" fontWeight="medium">
+          {formatDateTime(transporter.deviceDateTime)}
+        </ArgonTypography>
+      ),
       location: <Description description={transporter.address} />
     })),
   });

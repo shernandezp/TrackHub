@@ -27,7 +27,7 @@ import DashboardNavbar from "controls/Navbars/DashboardNavbar";
 import Footer from "controls/Footer";
 import DetailedStatisticsCard from "controls/Cards/StatisticsCards/DetailedStatisticsCard";
 import TransportersTable from "layouts/dashboard/components/TransportersTable";
-import CategoriesList from "controls/Lists/CategoriesList";
+import TransporterList from "layouts/dashboard/components/TransporterList";
 import useRouterService from "services/router";
 import { LoadingContext } from 'LoadingContext';
 import { useTranslation } from 'react-i18next';
@@ -35,9 +35,6 @@ import { useTranslation } from 'react-i18next';
 // Dashboard layout components
 import GeneralMap from "controls/Maps/GeneralMap";
 import { useAuth } from "AuthContext";
-
-// Data
-import categoriesListData from "layouts/dashboard/data/categoriesListData";
 
 function Default() {
   const { getPositions } = useRouterService();
@@ -123,7 +120,7 @@ function Default() {
             <TransportersTable transporters={positions} />
           </Grid>
           <Grid item xs={12} md={4}>
-            <CategoriesList title="categories" categories={categoriesListData} />
+            <TransporterList title={t("dashboard.typesTitle")} positions={positions} />
           </Grid>
         </Grid>
       </ArgonBox>

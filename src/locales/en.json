@@ -34,7 +34,8 @@
     "dashboard": {
         "totalTitle": "Total Units",
         "activeTitle": "Active Units",
-        "movementTitle": "Moving Units"
+        "movementTitle": "Moving Units",
+        "typesTitle": "Unit Types"
     },
     "device": {
         "title":"Devices",
@@ -158,6 +159,33 @@
         "speed": "Speed (Km/Hr)",
         "address": "Address",
         "status": "Status"
+    },
+    "transporterTypes": {
+        "unknown": "Unknown",
+        "aircraft": "Aircraft",
+        "asset": "Asset",
+        "bicycle": "Bicycle",
+        "boat": "Boat",
+        "car": "Car",
+        "cargocontainer": "Cargo Container",
+        "constructionvehicle": "Construction Vehicle",
+        "child": "Child",
+        "deliveryvan": "Delivery Van",
+        "drone": "Drone",
+        "elderlyperson": "Elderly Person",
+        "fleetvehicle": "Fleet Vehicle",
+        "heavyequipment": "Heavy Equipment",
+        "livestock": "Live Stock",
+        "motorcycle": "Motorcycle",
+        "package": "Package",
+        "person": "Person",
+        "pet": "Pet",
+        "schoolbus": "School Bus",
+        "scooter": "Scooter",
+        "taxi": "Taxi",
+        "tool": "Tools",
+        "truck": "Truck",
+        "tractor": "Tractor"
     },
     "user": {
         "title":"Users",

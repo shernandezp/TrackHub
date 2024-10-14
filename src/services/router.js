@@ -78,6 +78,7 @@ const useRouterService = () => {
                         altitude
                         address
                         deviceName
+                        deviceType
                         state
                         speed
                         serverDateTime

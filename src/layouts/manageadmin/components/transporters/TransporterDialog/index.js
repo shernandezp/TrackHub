@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import FormDialog from "controls/Dialogs/FormDialog";
 import CustomTextField from 'controls/Dialogs/CustomTextField';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
-import transporterTypes from 'layouts/manageadmin/data/transporterTypes';
+import transporterTypes from 'data/transporterTypes';
 
 function TransporterFormDialog({ open, setOpen, handleSubmit, values, handleChange, errors }) {
   const { t } = useTranslation();

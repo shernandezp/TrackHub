@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useContext } from "react";
 import { useTranslation } from 'react-i18next';
 import { Name } from "controls/Tables/components/tableComponents";
 import Icon from "@mui/material/Icon";
-import transporterTypes from 'layouts/manageadmin/data/transporterTypes';
+import transporterTypes from 'data/transporterTypes';
 import ArgonBadge from "components/ArgonBadge";
 import ArgonButton from "components/ArgonButton";
 import useTransporterService from "services/transporter";
