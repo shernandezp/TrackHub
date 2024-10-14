@@ -134,7 +134,10 @@
         "sidenav": "Sidenav Mini",
         "language": "Language",
         "maps": "Maps",
-        "storePosition": "Store Position"
+        "mapsKey": "Maps Key",
+        "onlineTimeLapse": "Online Time Lapse (Min.)",
+        "storePosition": "Store Position",
+        "storingTimeLapse": "Storing Time Lapse (Seconds)"
     },
     "screen": {
         "dashboard": "Dashboard",

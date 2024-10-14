@@ -27,9 +27,12 @@ const useSettignsService = () => {
             query {
                 accountSettings 
                 {
-                    storeLastPosition
-                    maps
-                    accountId
+                  accountId,
+                  maps,
+                  mapsKey,
+                  onlineTimeLapse,
+                  storeLastPosition,
+                  storingTimeLapse
                 }
             }
         `
@@ -83,9 +86,12 @@ const useSettignsService = () => {
                 updateAccountSettings(
                 command: { accountSettings: 
                     { 
-                        storeLastPosition: ${accountSettingsData.storeLastPosition}, 
-                        maps: ${formatValue(accountSettingsData.maps)}, 
-                        accountId: "${accountSettingsData.accountId}" 
+                      accountId: "${accountSettingsData.accountId}" ,
+                      maps: ${formatValue(accountSettingsData.maps)},
+                      mapsKey: ${formatValue(accountSettingsData.mapsKey)},
+                      onlineTimeLapse: ${accountSettingsData.onlineTimeLapse},
+                      storeLastPosition: ${accountSettingsData.storeLastPosition},
+                      storingTimeLapse: ${accountSettingsData.storingTimeLapse}
                     } 
                 }
                 id: "${accountId}"

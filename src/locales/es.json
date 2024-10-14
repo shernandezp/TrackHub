@@ -134,7 +134,10 @@
         "sidenav": "Collapsar Barra Lateral",
         "language": "Idioma",
         "maps": "Mapas",
-        "storePosition": "Almacenar Posición"
+        "mapsKey": "Clave de Mapas",
+        "onlineTimeLapse": "Lapso de Tiempo en Línea (Min.)",
+        "storePosition": "Almacenar Posición",
+        "storingTimeLapse": "Lapso de Tiempo de Almacenamiento (Segundos)"
     },
     "screen": {
         "dashboard": "Tablero",

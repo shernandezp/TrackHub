@@ -29,6 +29,7 @@ import DetailedStatisticsCard from "controls/Cards/StatisticsCards/DetailedStati
 import TransportersTable from "layouts/dashboard/components/TransportersTable";
 import TransporterList from "layouts/dashboard/components/TransporterList";
 import useRouterService from "services/router";
+import useSettignsService from 'services/settings';
 import { LoadingContext } from 'LoadingContext';
 import { useTranslation } from 'react-i18next';
 
@@ -38,11 +39,14 @@ import { useAuth } from "AuthContext";
 
 function Default() {
   const { getPositions } = useRouterService();
+  const { getAccountSettings } = useSettignsService();
   const { setLoading } = useContext(LoadingContext);
   const [positions, setPositions] = useState([]);
   const [total, setTotal] = useState(0);
   const [active, setActive] = useState(0);
   const [movement, setMovement] = useState(0);
+  const [mapKey, setMapKey] = useState('');
+  const [mapType, setMapType] = useState('OSM');
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
 
@@ -50,9 +54,12 @@ function Default() {
     const fetchPositions = async () => {
       setLoading(true);
       var result = await getPositions();
+      var settings = await getAccountSettings();
+      setMapKey(settings.mapsKey);
+      setMapType(settings.maps);
       setPositions(result);
       setTotal(result.length);
-      setActive(countRecentDevices(result));
+      setActive(countRecentDevices(result, settings.onlineTimeLapse));
       setMovement(countDevicesInMovement(result));
       setLoading(false);
     };
@@ -60,9 +67,9 @@ function Default() {
       fetchPositions();
   }, [isAuthenticated]);
 
-  function countRecentDevices(devices) {
+  function countRecentDevices(devices, timelapse) {
     const now = new Date();
-    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000); // time one hour ago - get this from the account settings
+    const oneHourAgo = new Date(now.getTime() - 60 * timelapse * 1000);
     const recentDevices = devices.filter(device => {
         const deviceDateTime = new Date(device.deviceDateTime);
         return deviceDateTime > oneHourAgo && deviceDateTime <= now;
@@ -112,7 +119,7 @@ function Default() {
         </Grid>
         <Grid container spacing={3} mb={3}>
           <Grid item xs={12} lg={12}>
-            <GeneralMap mapType="OSM" positions={positions} />
+            <GeneralMap mapType={mapType} positions={positions} mapKey={mapKey}/>
           </Grid>
         </Grid>
         <Grid container spacing={3}>

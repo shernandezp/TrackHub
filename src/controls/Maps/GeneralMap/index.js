@@ -4,9 +4,7 @@ import GoogleClusteredMap from '../Google/GoogleClusteredMap';
 import PropTypes from 'prop-types';
 import '../css/map.css';
 
-const positionGoogle = { lat: 51.505, lng: -0.09 } // for Google Maps
-
-function GeneralMap({ mapType, positions }) {
+function GeneralMap({ mapType, positions, mapKey }) {
     const [markers, setMarkers] = useState([]);
 
     useEffect(() => {
@@ -28,7 +26,7 @@ function GeneralMap({ mapType, positions }) {
             {mapType === 'OSM' ? (
                 <OSMClusteredMap markers={markers}/>
             ) : (
-                mapType === 'Google' && <GoogleClusteredMap markers={markers} center={positionGoogle} />
+                mapType === 'Google' && <GoogleClusteredMap markers={markers} mapKey={mapKey} />
             )}
         </div>
     );
@@ -36,7 +34,8 @@ function GeneralMap({ mapType, positions }) {
 
 GeneralMap.propTypes = {
     mapType: PropTypes.oneOf(['OSM', 'Google']).isRequired,
-    positions: PropTypes.array.isRequired
+    positions: PropTypes.array.isRequired,
+    mapKey: PropTypes.string
 };
 
 export default GeneralMap;

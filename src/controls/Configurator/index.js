@@ -24,6 +24,7 @@ import Icon from "@mui/material/Icon";
 import ArgonBox from "components/ArgonBox";
 import ArgonButton from "components/ArgonButton";
 import ArgonTypography from "components/ArgonTypography";
+import CustomTextField from 'controls/Dialogs/CustomTextField';
 
 // Custom styles for the Configurator
 import ConfiguratorRoot from "controls/Configurator/ConfiguratorRoot";
@@ -74,6 +75,27 @@ function Configurator({ settings, updateSettings }) {
     }));
   }
 
+  const handleOnlineTimeLapseChange = (event) => {
+    setAccountSettings(prevSettings => ({
+      ...prevSettings,
+      onlineTimeLapse: event.target.value
+    }));
+  };
+
+  const handleStoringTimeLapseChange = (event) => {
+    setAccountSettings(prevSettings => ({
+      ...prevSettings,
+      storingTimeLapse: event.target.value
+    }));
+  };
+
+  const handleMapsKeyChange = (event) => {
+    setAccountSettings(prevSettings => ({
+      ...prevSettings,
+      mapsKey: event.target.value
+    }));
+  };
+
   async function onSaveSettings() {
     setLoading(true);
     updateSettings(accountSettings.accountId, accountSettings);
@@ -116,14 +138,10 @@ function Configurator({ settings, updateSettings }) {
       <Divider />
 
       <ArgonBox pt={1.25} pb={3} px={3}>
-
         <ArgonBox display="flex" justifyContent="space-between" mt={3} lineHeight={1}>
           <ArgonTypography variant="h6">Almacenar Posición</ArgonTypography>
-
           <Switch checked={accountSettings.storeLastPosition} onChange={handleStorePositionChange} />
         </ArgonBox>
-
-        <Divider />
 
         <ArgonBox display="flex" justifyContent="space-between" lineHeight={1}>
           <CustomSelect
@@ -136,6 +154,46 @@ function Configurator({ settings, updateSettings }) {
               numericValue={false}
               required
             />
+        </ArgonBox>
+
+        {(accountSettings.maps !== 'OSM' && 
+          <ArgonBox display="flex" justifyContent="space-between" lineHeight={1}>
+            <CustomTextField
+              margin="dense"
+              name="mapsKey"
+              id="mapsKey"
+              label={t('settings.mapsKey')}
+              type="text"
+              fullWidth
+              value={accountSettings.mapsKey || ''}
+              onChange={handleMapsKeyChange}
+              />
+          </ArgonBox>)}
+
+        <ArgonBox display="flex" justifyContent="space-between" lineHeight={1}>
+          <CustomTextField
+            margin="dense"
+            name="onlineTimeLapse"
+            id="onlineTimeLapse"
+            label={t('settings.onlineTimeLapse')}
+            type="number"
+            fullWidth
+            value={accountSettings.onlineTimeLapse || 60}
+            onChange={handleOnlineTimeLapseChange}
+            />
+        </ArgonBox>
+
+        <ArgonBox display="flex" justifyContent="space-between" lineHeight={1}>
+          <CustomTextField
+            margin="dense"
+            name="storingTimeLapse"
+            id="storingTimeLapse"
+            label={t('settings.storingTimeLapse')}
+            type="number"
+            fullWidth
+            value={accountSettings.storingTimeLapse || 360}
+            onChange={handleStoringTimeLapseChange}
+          />
         </ArgonBox>
 
         <Divider />
