@@ -14,7 +14,9 @@ function GeneralMap({ mapType, positions, mapKey }) {
                 lng: item.longitude,
                 rotation: item.course,
                 name: item.deviceName,
-                dateTime: item.deviceDateTime
+                dateTime: item.deviceDateTime,
+                speed: item.speed,
+                text: item.speed > 0 ? 'M' : 'D',
             }));
             setMarkers(markers);
         };

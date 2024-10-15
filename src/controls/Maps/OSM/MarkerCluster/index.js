@@ -18,15 +18,17 @@ const MarkerCluster = ({ markers, icon }) => {
             markers.forEach((marker) => {
                 const myIcon = L.divIcon({
                     className: 'my-icon',
-                    html: createSvgIcon(marker.rotation),
+                    html: createSvgIcon(marker.rotation, marker.text),
                     iconSize: [28, 30],
                     iconAnchor: [22, 44],
                     popupAnchor: [-3, -76],
                 });
     
                 const leafletMarker = L.marker([marker.lat, marker.lng], { icon: myIcon });
-                leafletMarker.bindPopup(`${t('transporterMap.name')}: ${marker.name}
-                    <br>${t('transporterMap.dateTime')}: ${formatDateTime(marker.dateTime)}`);
+                leafletMarker.bindPopup(
+                    `${t('transporterMap.name')}: ${marker.name}
+                    <br>${t('transporterMap.dateTime')}: ${formatDateTime(marker.dateTime)}
+                    <br>${t('transporterMap.speed')}: ${marker.speed}`);
                 markerGroup.addLayer(leafletMarker);
             });
             map.addLayer(markerGroup);

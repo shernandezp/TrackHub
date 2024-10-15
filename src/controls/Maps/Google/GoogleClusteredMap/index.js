@@ -33,7 +33,7 @@ const GoogleClusteredMap = ({markers, mapKey}) => {
                                     setSelectedMarker({ lat: marker.lat, lng: marker.lng });
                                 }}
                                 icon={{
-                                    url: createSvgIcon(marker.rotation, 'dataURL'),
+                                    url: createSvgIcon(marker.rotation, marker.text, 'dataURL'),
                                     scaledSize: new window.google.maps.Size(50, 50),
                                 }}
                             >
@@ -47,6 +47,7 @@ const GoogleClusteredMap = ({markers, mapKey}) => {
                                         <div>
                                             <div>{`${t('transporterMap.name')}: ${marker.name}`}</div>
                                             <div>{`${t('transporterMap.dateTime')}: ${formatDateTime(marker.dateTime)}`}</div>
+                                            <div>{`${t('transporterMap.speed')}: ${marker.speed}`}</div>
                                         </div>
                                     </InfoWindow>
                                 )}

@@ -1,7 +1,6 @@
-const createSvgIcon = (rotation, format = 'svg') => {
+const createSvgIcon = (rotation, text, format = 'svg') => {
     const scaledWidth = 40;
     const scaledHeight = 40;
-    let text = "AB";
     let circleColor = "#1E90FF";
 
     // Calculate darker gradient color

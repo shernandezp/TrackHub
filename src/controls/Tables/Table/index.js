@@ -13,7 +13,7 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 // prop-types is a library for typechecking of props
 import PropTypes from "prop-types";
@@ -26,6 +26,8 @@ import { Table as MuiTable } from "@mui/material";
 import TableBody from "@mui/material/TableBody";
 import TableContainer from "@mui/material/TableContainer";
 import TableRow from "@mui/material/TableRow";
+import TablePagination from '@mui/material/TablePagination';
+import Box from '@mui/material/Box';
 
 // Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
@@ -35,6 +37,17 @@ import ArgonTypography from "components/ArgonTypography";
 // Argon Dashboard 2 MUI base styles
 import typography from "assets/theme/base/typography";
 import borders from "assets/theme/base/borders";
+import { styled } from '@mui/system';
+
+const StyledTablePagination = styled(TablePagination)({
+  '& .MuiInputBase-root': {
+    width: 'auto !important',
+  },
+  '& .MuiTablePagination-select': {
+    width: 'auto !important',
+    minWidth: 'auto !important'
+  },
+});
 
 function Table({ 
   columns = [],
@@ -42,6 +55,18 @@ function Table({
   }) {
   const { size, fontWeightBold } = typography;
   const { borderWidth } = borders;
+
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
 
   const renderColumns = columns.map(({ name, title, align, width }, key) => {
     let pl;
@@ -79,7 +104,7 @@ function Table({
     );
   });
 
-  const renderRows = rows.map((row, key) => {
+  const renderRows = rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row, key) => {
     const rowKey = `row-${key}`;
 
     const tableRow = columns.map(({ name, align }) => {
@@ -145,9 +170,19 @@ function Table({
           </ArgonBox>
           <TableBody>{renderRows}</TableBody>
         </MuiTable>
+        <Box sx={{ width: 'fit-content', margin: 'auto' }}>
+          <StyledTablePagination
+            component="div"
+            count={rows.length}
+            page={page}
+            onPageChange={handleChangePage}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+          />
+        </Box>
       </TableContainer>
     ),
-    [columns, rows]
+    [columns, rows, page, rowsPerPage]
   );
 }
 
