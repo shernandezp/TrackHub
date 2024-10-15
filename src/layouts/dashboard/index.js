@@ -14,7 +14,7 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext  } from 'react';
 // @mui material components
 import Grid from "@mui/material/Grid";
 
@@ -28,6 +28,7 @@ import Footer from "controls/Footer";
 import DetailedStatisticsCard from "controls/Cards/StatisticsCards/DetailedStatisticsCard";
 import TransportersTable from "layouts/dashboard/components/TransportersTable";
 import TransporterList from "layouts/dashboard/components/TransporterList";
+import RefreshCounter from 'layouts/dashboard/components/RefreshCounter';
 import useRouterService from "services/router";
 import useSettignsService from 'services/settings';
 import { LoadingContext } from 'LoadingContext';
@@ -37,6 +38,7 @@ import { useTranslation } from 'react-i18next';
 import GeneralMap from "controls/Maps/GeneralMap";
 import { useAuth } from "AuthContext";
 import RefreshLabelStyle from 'layouts/dashboard/styles/RefreshLabel';
+import {countRecentDevices, countDevicesInMovement, getPercentage} from 'layouts/dashboard/utils/dashboard';
 
 function Default() {
   const { t } = useTranslation();
@@ -48,7 +50,7 @@ function Default() {
   const [movement, setMovement] = useState(0);
   const { isAuthenticated } = useAuth();
   const [settings, setSettings] = useState({maps:'OSM', mapsKey:'', refreshMapTimer: 60});
-  const [counter, setCounter] = useState(60);
+  const [selectedTransporter, setSelectedTransporter] = useState('');
 
   const fetchPositions = async () => {
     setLoading(true);
@@ -62,47 +64,14 @@ function Default() {
   };
 
   useEffect(() => {
-    if (settings) {
-      setCounter(settings.refreshMapTimer);
-    }
-  }, [settings]);
-
-  useEffect(() => {
     if (isAuthenticated) {
       fetchPositions();
     }
   }, [isAuthenticated]);
 
-  useEffect(() => {
-    if (counter === 0) {
-      fetchPositions();
-      setCounter(settings.refreshMap ? settings.refreshMapTimer : 60);
-    } else if (settings.refreshMap) { 
-      const timer = setInterval(() => setCounter(counter - 1), 1000);
-      return () => clearInterval(timer);
-    }
-  }, [counter, settings.refreshMap]);
-
-  function countRecentDevices(devices, timelapse) {
-    const now = new Date();
-    const timeAgo = new Date(now.getTime() - 60 * timelapse * 1000);
-    const recentDevices = devices.filter(device => {
-      const deviceDateTime = new Date(device.deviceDateTime);
-      return deviceDateTime > timeAgo && deviceDateTime <= now;
-    });
-    return recentDevices.length;
-  }
-
-  function countDevicesInMovement(devices) {
-    const movingDevices = devices.filter(device => device.speed > 0);
-    return movingDevices.length;
-  }
-
-  function getPercentage(count) {
-    const total = positions.length;
-    const percentage = total && total > 0 ? (count / total) * 100 : 0;
-    return percentage.toFixed(2);
-  }
+  const handleSelected = (selected) => {
+    setSelectedTransporter(selected.name.props.name);
+  };
 
   return (
     <DashboardLayout>
@@ -122,7 +91,7 @@ function Default() {
               title={t("dashboard.activeTitle")}
               count={active}
               icon={{ color: "error", component: <i className="ni ni-watch-time" /> }}
-              percentage={{ color: "success", count: `${getPercentage(active)}%` }}
+              percentage={{ color: "success", count: `${getPercentage(active, positions.length)}%` }}
             />
           </Grid>
           <Grid item xs={12} md={6} lg={4}>
@@ -137,14 +106,19 @@ function Default() {
         <Grid container spacing={3} mb={3}>
         <Grid item xs={12} lg={12}>
           <RefreshLabelStyle>
-            <GeneralMap mapType={settings.maps} positions={positions} mapKey={settings.mapsKey}/>
-            {settings.refreshMap && <div className="label">{counter} s.</div>}
+            <GeneralMap 
+              mapType={settings.maps} 
+              positions={positions} 
+              mapKey={settings.mapsKey}
+              selectedMarker={selectedTransporter}
+               />
+            <RefreshCounter settings={settings} fetchPositions={fetchPositions} />
           </RefreshLabelStyle>
         </Grid>
         </Grid>
         <Grid container spacing={3}>
           <Grid item xs={12} md={8}>
-            <TransportersTable transporters={positions} />
+            <TransportersTable transporters={positions} handleSelected={handleSelected} />
           </Grid>
           <Grid item xs={12} md={4}>
             <TransporterList title={t("dashboard.typesTitle")} positions={positions} />

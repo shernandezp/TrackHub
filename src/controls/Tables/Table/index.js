@@ -38,7 +38,7 @@ import typography from "assets/theme/base/typography";
 import borders from "assets/theme/base/borders";
 import TablePaginationStyle from 'controls/Tables/styles/TablePagination';
 
-function Table({ columns = [], rows = [{}] }) {
+function Table({ columns = [], rows = [{}], handleSelected = () => {} }) {
   const { size, fontWeightBold } = typography;
   const { borderWidth } = borders;
 
@@ -58,7 +58,7 @@ function Table({ columns = [], rows = [{}] }) {
   const handleSelect = (event, name) => {
     setSelected(name);
     const selectedRow = rows.find((row, index) => `row-${index}` === name);
-    console.log(selectedRow.name.props.name);
+    handleSelected(selectedRow);
   };
 
   return useMemo(() => {
@@ -191,6 +191,7 @@ function Table({ columns = [], rows = [{}] }) {
 Table.propTypes = {
   columns: PropTypes.arrayOf(PropTypes.object),
   rows: PropTypes.arrayOf(PropTypes.object),
+  handleSelected: PropTypes.func
 };
 
 export default Table;
