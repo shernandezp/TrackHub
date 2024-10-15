@@ -31,7 +31,7 @@ import ConfiguratorRoot from "controls/Configurator/ConfiguratorRoot";
 import { useTranslation } from 'react-i18next';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
 import { LoadingContext } from 'LoadingContext';
-import maps from 'controls/data/maps';
+import maps from 'data/maps';
 import PropTypes from "prop-types";
 
 // Argon Dashboard 2 MUI context

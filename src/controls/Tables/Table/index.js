@@ -26,7 +26,6 @@ import { Table as MuiTable } from "@mui/material";
 import TableBody from "@mui/material/TableBody";
 import TableContainer from "@mui/material/TableContainer";
 import TableRow from "@mui/material/TableRow";
-import TablePagination from '@mui/material/TablePagination';
 import Box from '@mui/material/Box';
 
 // Argon Dashboard 2 MUI components
@@ -37,17 +36,7 @@ import ArgonTypography from "components/ArgonTypography";
 // Argon Dashboard 2 MUI base styles
 import typography from "assets/theme/base/typography";
 import borders from "assets/theme/base/borders";
-import { styled } from '@mui/system';
-
-const StyledTablePagination = styled(TablePagination)({
-  '& .MuiInputBase-root': {
-    width: 'auto !important',
-  },
-  '& .MuiTablePagination-select': {
-    width: 'auto !important',
-    minWidth: 'auto !important'
-  },
-});
+import TablePaginationStyle from 'controls/Tables/styles/TablePagination';
 
 function Table({ 
   columns = [],
@@ -171,7 +160,7 @@ function Table({
           <TableBody>{renderRows}</TableBody>
         </MuiTable>
         <Box sx={{ width: 'fit-content', margin: 'auto' }}>
-          <StyledTablePagination
+          <TablePaginationStyle
             component="div"
             count={rows.length}
             page={page}
