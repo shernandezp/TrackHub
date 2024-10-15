@@ -32,7 +32,9 @@ const useSettignsService = () => {
                   mapsKey,
                   onlineTimeLapse,
                   storeLastPosition,
-                  storingTimeLapse
+                  storingTimeLapse,
+                  refreshMap,
+                  refreshMapTimer
                 }
             }
         `
@@ -91,7 +93,9 @@ const useSettignsService = () => {
                       mapsKey: ${formatValue(accountSettingsData.mapsKey)},
                       onlineTimeLapse: ${accountSettingsData.onlineTimeLapse},
                       storeLastPosition: ${accountSettingsData.storeLastPosition},
-                      storingTimeLapse: ${accountSettingsData.storingTimeLapse}
+                      storingTimeLapse: ${accountSettingsData.storingTimeLapse},
+                      refreshMap: ${accountSettingsData.refreshMap},
+                      refreshMapTimer: ${accountSettingsData.refreshMapTimer}
                     } 
                 }
                 id: "${accountId}"

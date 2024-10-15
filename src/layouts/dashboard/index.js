@@ -36,43 +36,59 @@ import { useTranslation } from 'react-i18next';
 // Dashboard layout components
 import GeneralMap from "controls/Maps/GeneralMap";
 import { useAuth } from "AuthContext";
+import RefreshLabelStyle from 'layouts/dashboard/styles/RefreshLabel';
 
 function Default() {
+  const { t } = useTranslation();
   const { getPositions } = useRouterService();
   const { getAccountSettings } = useSettignsService();
   const { setLoading } = useContext(LoadingContext);
   const [positions, setPositions] = useState([]);
-  const [total, setTotal] = useState(0);
   const [active, setActive] = useState(0);
   const [movement, setMovement] = useState(0);
-  const [mapKey, setMapKey] = useState('');
-  const [mapType, setMapType] = useState('OSM');
-  const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
+  const [settings, setSettings] = useState({maps:'OSM', mapsKey:'', refreshMapTimer: 60});
+  const [counter, setCounter] = useState(60);
+
+  const fetchPositions = async () => {
+    setLoading(true);
+    var result = await getPositions();
+    var settings = await getAccountSettings();
+    setSettings(settings);
+    setPositions(result);
+    setActive(countRecentDevices(result, settings.onlineTimeLapse));
+    setMovement(countDevicesInMovement(result));
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const fetchPositions = async () => {
-      setLoading(true);
-      var result = await getPositions();
-      var settings = await getAccountSettings();
-      setMapKey(settings.mapsKey);
-      setMapType(settings.maps);
-      setPositions(result);
-      setTotal(result.length);
-      setActive(countRecentDevices(result, settings.onlineTimeLapse));
-      setMovement(countDevicesInMovement(result));
-      setLoading(false);
-    };
-    if (isAuthenticated)
+    if (settings) {
+      setCounter(settings.refreshMapTimer);
+    }
+  }, [settings]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
       fetchPositions();
+    }
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (counter === 0) {
+      fetchPositions();
+      setCounter(settings.refreshMap ? settings.refreshMapTimer : 60);
+    } else if (settings.refreshMap) { 
+      const timer = setInterval(() => setCounter(counter - 1), 1000);
+      return () => clearInterval(timer);
+    }
+  }, [counter, settings.refreshMap]);
 
   function countRecentDevices(devices, timelapse) {
     const now = new Date();
-    const oneHourAgo = new Date(now.getTime() - 60 * timelapse * 1000);
+    const timeAgo = new Date(now.getTime() - 60 * timelapse * 1000);
     const recentDevices = devices.filter(device => {
-        const deviceDateTime = new Date(device.deviceDateTime);
-        return deviceDateTime > oneHourAgo && deviceDateTime <= now;
+      const deviceDateTime = new Date(device.deviceDateTime);
+      return deviceDateTime > timeAgo && deviceDateTime <= now;
     });
     return recentDevices.length;
   }
@@ -83,6 +99,7 @@ function Default() {
   }
 
   function getPercentage(count) {
+    const total = positions.length;
     const percentage = total && total > 0 ? (count / total) * 100 : 0;
     return percentage.toFixed(2);
   }
@@ -95,7 +112,7 @@ function Default() {
           <Grid item xs={12} md={6} lg={4}>
             <DetailedStatisticsCard
               title={t("dashboard.totalTitle")}
-              count={total}
+              count={positions.length}
               icon={{ color: "info", component: <i className="ni ni-map-big" /> }}
               percentage={{ color: "success", hide: true }}
             />
@@ -118,9 +135,12 @@ function Default() {
           </Grid>
         </Grid>
         <Grid container spacing={3} mb={3}>
-          <Grid item xs={12} lg={12}>
-            <GeneralMap mapType={mapType} positions={positions} mapKey={mapKey}/>
-          </Grid>
+        <Grid item xs={12} lg={12}>
+          <RefreshLabelStyle>
+            <GeneralMap mapType={settings.maps} positions={positions} mapKey={settings.mapsKey}/>
+            {settings.refreshMap && <div className="label">{counter} s.</div>}
+          </RefreshLabelStyle>
+        </Grid>
         </Grid>
         <Grid container spacing={3}>
           <Grid item xs={12} md={8}>

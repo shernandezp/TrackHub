@@ -137,7 +137,10 @@
         "mapsKey": "Maps Key",
         "onlineTimeLapse": "Online Time Lapse (Min.)",
         "storePosition": "Store Position",
-        "storingTimeLapse": "Storing Time Lapse (Seconds)"
+        "storingTimeLapse": "Storing Time Lapse (Seconds)",
+        "refreshMap": "Refresh Map",
+        "refreshMapTimer": "Refresh Map Timer (Seconds)",
+        "saveMessage": "Some settings may require a page refresh to take effect"
     },
     "screen": {
         "dashboard": "Dashboard",

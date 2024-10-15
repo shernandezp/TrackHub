@@ -137,7 +137,10 @@
         "mapsKey": "Clave de Mapas",
         "onlineTimeLapse": "Lapso de Tiempo en Línea (Min.)",
         "storePosition": "Almacenar Posición",
-        "storingTimeLapse": "Lapso de Tiempo de Almacenamiento (Segundos)"
+        "storingTimeLapse": "Lapso de Tiempo de Almacenamiento (Segundos)",
+        "refreshMap": "Actualizar Mapa",
+        "refreshMapTimer": "Temporizador de Actualización de Mapa (Segundos)",
+        "saveMessage": "Algunas configuraciones requieren reiniciar sesión para que los cambios surtan efecto"
     },
     "screen": {
         "dashboard": "Tablero",

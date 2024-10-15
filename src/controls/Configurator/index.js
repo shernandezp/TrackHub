@@ -49,7 +49,7 @@ function Configurator({ settings, updateSettings }) {
   const mapOptions = maps
     .map(type => ({ value: type, label: type }));
 
-  const [accountSettings, setAccountSettings] = useState({maps: 'OSM', storeLastPosition: false});
+  const [accountSettings, setAccountSettings] = useState({maps: 'OSM', storeLastPosition: false, refreshMap: false});
   const handleCloseConfigurator = () => setOpenConfigurator(dispatch, false);
 
   useEffect(() => {
@@ -61,33 +61,12 @@ function Configurator({ settings, updateSettings }) {
     fetchAccountSettings();
   }, [settings]);
 
-  function handleStorePositionChange() {
-    setAccountSettings(prevSettings => ({
-      ...prevSettings,
-      storeLastPosition: !settings.storeLastPosition
-    }));
-  }
-
   function handleMapsChange(e) {
     setAccountSettings(prevSettings => ({
       ...prevSettings,
       maps: e.target.value
     }));
   }
-
-  const handleOnlineTimeLapseChange = (event) => {
-    setAccountSettings(prevSettings => ({
-      ...prevSettings,
-      onlineTimeLapse: event.target.value
-    }));
-  };
-
-  const handleStoringTimeLapseChange = (event) => {
-    setAccountSettings(prevSettings => ({
-      ...prevSettings,
-      storingTimeLapse: event.target.value
-    }));
-  };
 
   const handleMapsKeyChange = (event) => {
     setAccountSettings(prevSettings => ({
@@ -96,10 +75,46 @@ function Configurator({ settings, updateSettings }) {
     }));
   };
 
+  const handleOnlineTimeLapseChange = (event) => {
+    setAccountSettings(prevSettings => ({
+      ...prevSettings,
+      onlineTimeLapse: event.target.value
+    }));
+  };
+
+  function handleStorePositionChange() {
+    setAccountSettings(prevSettings => ({
+      ...prevSettings,
+      storeLastPosition: !settings.storeLastPosition
+    }));
+  }
+
+  const handleStoringTimeLapseChange = (event) => {
+    setAccountSettings(prevSettings => ({
+      ...prevSettings,
+      storingTimeLapse: event.target.value
+    }));
+  };
+
+  function handleRefreshMapChange() {
+    setAccountSettings(prevSettings => ({
+      ...prevSettings,
+      refreshMap: !settings.refreshMap
+    }));
+  }
+
+  const handleRefreshMapTimerChange = (event) => {
+    setAccountSettings(prevSettings => ({
+      ...prevSettings,
+      refreshMapTimer: event.target.value
+    }));
+  };
+
   async function onSaveSettings() {
     setLoading(true);
     updateSettings(accountSettings.accountId, accountSettings);
     setLoading(false);
+    alert(t('settings.saveMessage'));
   }
 
   return (
@@ -138,11 +153,6 @@ function Configurator({ settings, updateSettings }) {
       <Divider />
 
       <ArgonBox pt={1.25} pb={3} px={3}>
-        <ArgonBox display="flex" justifyContent="space-between" mt={3} lineHeight={1}>
-          <ArgonTypography variant="h6">Almacenar Posición</ArgonTypography>
-          <Switch checked={accountSettings.storeLastPosition} onChange={handleStorePositionChange} />
-        </ArgonBox>
-
         <ArgonBox display="flex" justifyContent="space-between" lineHeight={1}>
           <CustomSelect
               list={mapOptions}
@@ -181,6 +191,29 @@ function Configurator({ settings, updateSettings }) {
             value={accountSettings.onlineTimeLapse || 60}
             onChange={handleOnlineTimeLapseChange}
             />
+        </ArgonBox>
+
+        <ArgonBox display="flex" justifyContent="space-between" mt={3} lineHeight={1}>
+          <ArgonTypography variant="h6">{t('settings.refreshMap')}</ArgonTypography>
+          <Switch checked={accountSettings.refreshMap} onChange={handleRefreshMapChange} />
+        </ArgonBox>
+        
+        <ArgonBox display="flex" justifyContent="space-between" lineHeight={1}>
+          <CustomTextField
+            margin="dense"
+            name="refreshMapTimer"
+            id="refreshMapTimer"
+            label={t('settings.refreshMapTimer')}
+            type="number"
+            fullWidth
+            value={accountSettings.refreshMapTimer || 60}
+            onChange={handleRefreshMapTimerChange}
+          />
+        </ArgonBox>
+
+        <ArgonBox display="flex" justifyContent="space-between" mt={3} lineHeight={1}>
+          <ArgonTypography variant="h6">{t('settings.storePosition')}</ArgonTypography>
+          <Switch checked={accountSettings.storeLastPosition} onChange={handleStorePositionChange} />
         </ArgonBox>
 
         <ArgonBox display="flex" justifyContent="space-between" lineHeight={1}>
