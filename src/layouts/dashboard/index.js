@@ -70,7 +70,6 @@ function Default() {
   }, [isAuthenticated]);
 
   const handleSelected = (selected) => {
-    console.log(selected);
     setSelectedTransporter(selected);
   };
 

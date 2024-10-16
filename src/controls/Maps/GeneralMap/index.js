@@ -30,7 +30,11 @@ function GeneralMap({ mapType, positions, mapKey, selectedMarker }) {
                     selectedMarker={selectedMarker}
                     />
             ) : (
-                mapType === 'Google' && <GoogleClusteredMap markers={markers} mapKey={mapKey} />
+                mapType === 'Google' && 
+                    <GoogleClusteredMap 
+                        markers={markers} 
+                        mapKey={mapKey}
+                        selectedMarker={selectedMarker} />
             )}
         </div>
     );

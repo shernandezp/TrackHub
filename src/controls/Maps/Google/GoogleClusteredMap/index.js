@@ -1,12 +1,13 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { GoogleMap, LoadScript, Marker as GoogleMarker, MarkerClusterer, InfoWindow } from '@react-google-maps/api';
 import PropTypes from 'prop-types';
 import { createSvgIcon } from 'controls/Maps/utils/imageUtils';
 import { formatDateTime } from "utils/dateUtils";
 import { useTranslation } from 'react-i18next';
+import 'controls/Maps/css/googleMap.css';
 
-const GoogleClusteredMap = ({markers, mapKey}) => {
-    const [selectedMarker, setSelectedMarker] = useState(null);
+const GoogleClusteredMap = ({ markers, mapKey, selectedMarker }) => {
+    const [internalSelectedMarker, setInternalSelectedMarker] = useState(null);
     const { t } = useTranslation();
     const mapRef = useRef();
 
@@ -19,6 +20,19 @@ const GoogleClusteredMap = ({markers, mapKey}) => {
         map.fitBounds(bounds);
     };
 
+    useEffect(() => {
+        if (selectedMarker) {
+            const marker = markers.find(m => m.name === selectedMarker);
+            if (marker) {
+                setInternalSelectedMarker(marker);
+                if (mapRef.current) {
+                    mapRef.current.setCenter({ lat: marker.lat, lng: marker.lng });
+                    mapRef.current.setZoom(15);
+                }
+            }
+        }
+    }, [selectedMarker, markers]);
+
     return (
         <LoadScript googleMapsApiKey={mapKey}>
             <GoogleMap mapContainerStyle={{ height: "100vh", width: "100%" }} onLoad={handleMapLoad}>
@@ -30,18 +44,22 @@ const GoogleClusteredMap = ({markers, mapKey}) => {
                                 position={{ lat: marker.lat, lng: marker.lng }}
                                 clusterer={clusterer}
                                 onClick={() => {
-                                    setSelectedMarker({ lat: marker.lat, lng: marker.lng });
+                                    setInternalSelectedMarker(marker);
+                                    if (mapRef.current) {
+                                        mapRef.current.setCenter({ lat: marker.lat, lng: marker.lng });
+                                        mapRef.current.setZoom(15);
+                                    }
                                 }}
                                 icon={{
                                     url: createSvgIcon(marker.rotation, marker.text, 'dataURL'),
                                     scaledSize: new window.google.maps.Size(50, 50),
                                 }}
                             >
-                                {selectedMarker && selectedMarker.lat === marker.lat && selectedMarker.lng === marker.lng && (
+                                {internalSelectedMarker && internalSelectedMarker.name === marker.name && (
                                     <InfoWindow
                                         position={{ lat: marker.lat, lng: marker.lng }}
                                         onCloseClick={() => {
-                                            setSelectedMarker(null);
+                                            setInternalSelectedMarker(null);
                                         }}
                                     >
                                         <div>
@@ -56,12 +74,14 @@ const GoogleClusteredMap = ({markers, mapKey}) => {
                     }
                 </MarkerClusterer>
             </GoogleMap>
-        </LoadScript>);
+        </LoadScript>
+    );
 };
 
 GoogleClusteredMap.propTypes = {
     markers: PropTypes.array.isRequired,
-    mapKey: PropTypes.string
+    mapKey: PropTypes.string,
+    selectedMarker: PropTypes.string
 };
 
 export default GoogleClusteredMap;
