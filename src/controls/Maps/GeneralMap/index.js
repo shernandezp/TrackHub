@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import OSMClusteredMap from 'controls/Maps/OSM/OSMClusteredMap';
 import GoogleClusteredMap from '../Google/GoogleClusteredMap';
 import PropTypes from 'prop-types';
@@ -25,7 +25,10 @@ function GeneralMap({ mapType, positions, mapKey, selectedMarker }) {
     return (
         <div className="map-container">
             {mapType === 'OSM' ? (
-                <OSMClusteredMap markers={markers} selectedMarker={selectedMarker}/>
+                <OSMClusteredMap 
+                    markers={markers} 
+                    selectedMarker={selectedMarker}
+                    />
             ) : (
                 mapType === 'Google' && <GoogleClusteredMap markers={markers} mapKey={mapKey} />
             )}

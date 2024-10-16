@@ -50,8 +50,8 @@ function Default() {
   const [movement, setMovement] = useState(0);
   const { isAuthenticated } = useAuth();
   const [settings, setSettings] = useState({maps:'OSM', mapsKey:'', refreshMapTimer: 60});
-  const [selectedTransporter, setSelectedTransporter] = useState('');
-
+  const [selectedTransporter, setSelectedTransporter] = useState(null);
+  
   const fetchPositions = async () => {
     setLoading(true);
     var result = await getPositions();
@@ -70,7 +70,8 @@ function Default() {
   }, [isAuthenticated]);
 
   const handleSelected = (selected) => {
-    setSelectedTransporter(selected.name.props.name);
+    console.log(selected);
+    setSelectedTransporter(selected);
   };
 
   return (
@@ -111,14 +112,17 @@ function Default() {
               positions={positions} 
               mapKey={settings.mapsKey}
               selectedMarker={selectedTransporter}
-               />
+              handleSelected={handleSelected}/>
             <RefreshCounter settings={settings} fetchPositions={fetchPositions} />
           </RefreshLabelStyle>
         </Grid>
         </Grid>
         <Grid container spacing={3}>
           <Grid item xs={12} md={8}>
-            <TransportersTable transporters={positions} handleSelected={handleSelected} />
+            <TransportersTable 
+              transporters={positions} 
+              selected={selectedTransporter}
+              handleSelected={handleSelected} />
           </Grid>
           <Grid item xs={12} md={4}>
             <TransporterList title={t("dashboard.typesTitle")} positions={positions} />

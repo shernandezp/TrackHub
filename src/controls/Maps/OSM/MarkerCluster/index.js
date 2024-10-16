@@ -11,9 +11,9 @@ import { useTranslation } from 'react-i18next';
 import { createSvgIcon } from 'controls/Maps/utils/imageUtils';
 
 const MarkerCluster = ({ markers, selectedMarker }) => {
-    const markerGroupRef = useRef();
     const { t } = useTranslation();
     const map = useMap();
+    const markerGroupRef = useRef();
     const [leafletMarkers, setLeafletMarkers] = useState({});
 
     useEffect(() => {
@@ -52,7 +52,6 @@ const MarkerCluster = ({ markers, selectedMarker }) => {
         if (selectedMarker) {
             const leafletMarker = leafletMarkers[selectedMarker];
             if (leafletMarker && markerGroupRef.current) {
-                console.log(selectedMarker);
                 markerGroupRef.current.zoomToShowLayer(leafletMarker, () => {
                     map.setView(leafletMarker.getLatLng());
                     leafletMarker.openPopup();
@@ -66,7 +65,7 @@ const MarkerCluster = ({ markers, selectedMarker }) => {
 
 MarkerCluster.propTypes = {
     markers: PropTypes.array.isRequired,
-    selectedMarker: PropTypes.string
+    selectedMarker: PropTypes.string,
 };
 
 export default MarkerCluster;

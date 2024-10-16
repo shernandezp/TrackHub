@@ -38,13 +38,12 @@ import typography from "assets/theme/base/typography";
 import borders from "assets/theme/base/borders";
 import TablePaginationStyle from 'controls/Tables/styles/TablePagination';
 
-function Table({ columns = [], rows = [{}], handleSelected = () => {} }) {
+function Table({ columns = [], rows = [{}], selected = null, handleSelected = () => {} }) {
   const { size, fontWeightBold } = typography;
   const { borderWidth } = borders;
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [selected, setSelected] = useState(null);
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -55,10 +54,9 @@ function Table({ columns = [], rows = [{}], handleSelected = () => {} }) {
     setPage(0);
   };
 
-  const handleSelect = (event, name) => {
-    setSelected(name);
-    const selectedRow = rows.find((row, index) => `row-${index}` === name);
-    handleSelected(selectedRow);
+  const handleRowSelection = (rowKey) => {
+    const selectedRow = rows.find((row, index) => `row-${index}` === rowKey);
+    handleSelected(selectedRow.name.props.name);
   };
 
   return useMemo(() => {
@@ -157,8 +155,8 @@ function Table({ columns = [], rows = [{}], handleSelected = () => {} }) {
         return (
           <TableRow
             key={rowKey}
-            onClick={(event) => handleSelect(event, rowKey)}
-            selected={selected === rowKey}
+            onClick={() => handleRowSelection(rowKey)}
+            selected={selected === row.name.props.name}
           >
             {tableRow}
           </TableRow>
@@ -191,7 +189,8 @@ function Table({ columns = [], rows = [{}], handleSelected = () => {} }) {
 Table.propTypes = {
   columns: PropTypes.arrayOf(PropTypes.object),
   rows: PropTypes.arrayOf(PropTypes.object),
-  handleSelected: PropTypes.func
+  selected: PropTypes.string,
+  handleSelected: PropTypes.func,
 };
 
 export default Table;
