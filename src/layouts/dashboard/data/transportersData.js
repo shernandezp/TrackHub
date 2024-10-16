@@ -15,7 +15,8 @@ function useTransportersTableData(transporters) {
       { name: "status", title:t('transporterMap.status'), align: "center" },
       { name: "name", title:t('transporterMap.name'), align: "left" },
       { name: "datetime", title:t('transporterMap.dateTime'), align: "left" },
-      { name: "location", title:t('transporterMap.address'), align: "left" }
+      { name: "location", title:t('transporterMap.address'), align: "left" },
+      { name: "id" }
     ],
     rows: transporters.map(transporter => ({
       status: (
@@ -29,7 +30,8 @@ function useTransportersTableData(transporters) {
           {formatDateTime(transporter.deviceDateTime)}
         </ArgonTypography>
       ),
-      location: <Description description={transporter.address} />
+      location: <Description description={transporter.address} />,
+      id: transporter.deviceId
     })),
   });
 

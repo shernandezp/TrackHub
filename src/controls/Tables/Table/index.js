@@ -55,102 +55,106 @@ function Table({ columns = [], rows = [{}], selected = null, handleSelected = ()
   };
 
   const handleRowSelection = (rowKey) => {
-    const selectedRow = rows.find((row, index) => `row-${index}` === rowKey);
+    const selectedRow = rows.find((row) => row.id === rowKey);
     handleSelected(selectedRow.name.props.name);
   };
 
   return useMemo(() => {
-    const renderColumns = columns.map(({ name, title, align, width }, key) => {
-      let pl;
-      let pr;
+    const renderColumns = columns
+      .filter(({ name }) => name !== 'id') // Hide the id column
+      .map(({ name, title, align, width }, key) => {
+        let pl;
+        let pr;
 
-      if (key === 0) {
-        pl = 3;
-        pr = 3;
-      } else if (key === columns.length - 1) {
-        pl = 3;
-        pr = 3;
-      } else {
-        pl = 1;
-        pr = 1;
-      }
+        if (key === 0) {
+          pl = 3;
+          pr = 3;
+        } else if (key === columns.length - 1) {
+          pl = 3;
+          pr = 3;
+        } else {
+          pl = 1;
+          pr = 1;
+        }
 
-      return (
-        <ArgonBox
-          key={name}
-          component="th"
-          width={width || 'auto'}
-          pt={1.5}
-          pb={1.25}
-          pl={align === 'left' ? pl : 3}
-          pr={align === 'right' ? pr : 3}
-          textAlign={align}
-          fontSize={size.xxs}
-          fontWeight={fontWeightBold}
-          color="secondary"
-          opacity={0.7}
-          sx={({ palette: { light } }) => ({ borderBottom: `${borderWidth[1]} solid ${light.main}` })}
-        >
-          {(title || name).toUpperCase()}
-        </ArgonBox>
-      );
-    });
+        return (
+          <ArgonBox
+            key={name}
+            component="th"
+            width={width || 'auto'}
+            pt={1.5}
+            pb={1.25}
+            pl={align === 'left' ? pl : 3}
+            pr={align === 'right' ? pr : 3}
+            textAlign={align}
+            fontSize={size.xxs}
+            fontWeight={fontWeightBold}
+            color="secondary"
+            opacity={0.7}
+            sx={({ palette: { light } }) => ({ borderBottom: `${borderWidth[1]} solid ${light.main}` })}
+          >
+            {(title || name).toUpperCase()}
+          </ArgonBox>
+        );
+      });
 
     const renderRows = rows
       .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-      .map((row, key) => {
-        const rowKey = `row-${key}`;
+      .map((row, index) => {
+        const rowKey = row.id || uuidv4();
 
-        const tableRow = columns.map(({ name, align }) => {
-          let template;
+        const tableRow = columns
+          .filter(({ name }) => name !== 'id')
+          .map(({ name, align }) => {
+            let template;
 
-          if (Array.isArray(row[name])) {
-            template = (
-              <ArgonBox
-                key={uuidv4()}
-                component="td"
-                p={1}
-                sx={({ palette: { light } }) => ({
-                  borderBottom: row.hasBorder ? `${borderWidth[1]} solid ${light.main}` : null,
-                })}
-              >
-                <ArgonBox display="flex" alignItems="center" py={0.5} px={1}>
-                  <ArgonBox mr={2}>
-                    <ArgonAvatar src={row[name][0]} name={row[name][1]} variant="rounded" size="sm" />
+            if (Array.isArray(row[name])) {
+              template = (
+                <ArgonBox
+                  key={uuidv4()}
+                  component="td"
+                  p={1}
+                  sx={({ palette: { light } }) => ({
+                    borderBottom: row.hasBorder ? `${borderWidth[1]} solid ${light.main}` : null,
+                  })}
+                >
+                  <ArgonBox display="flex" alignItems="center" py={0.5} px={1}>
+                    <ArgonBox mr={2}>
+                      <ArgonAvatar src={row[name][0]} name={row[name][1]} variant="rounded" size="sm" />
+                    </ArgonBox>
+                    <ArgonTypography variant="button" fontWeight="medium" sx={{ width: 'max-content' }}>
+                      {row[name][1]}
+                    </ArgonTypography>
                   </ArgonBox>
-                  <ArgonTypography variant="button" fontWeight="medium" sx={{ width: 'max-content' }}>
-                    {row[name][1]}
+                </ArgonBox>
+              );
+            } else {
+              template = (
+                <ArgonBox
+                  key={uuidv4()}
+                  component="td"
+                  p={1}
+                  textAlign={align}
+                  verticalalign="middle"
+                  lineHeight={0.65}
+                  sx={({ palette: { light } }) => ({
+                    borderBottom: row.hasBorder ? `${borderWidth[1]} solid ${light.main}` : null,
+                  })}
+                >
+                  <ArgonTypography
+                    variant="button"
+                    fontWeight="regular"
+                    color="secondary"
+                    sx={{ display: 'inline-block', width: 'max-content' }}
+                  >
+                    {row[name]}
                   </ArgonTypography>
                 </ArgonBox>
-              </ArgonBox>
-            );
-          } else {
-            template = (
-              <ArgonBox
-                key={uuidv4()}
-                component="td"
-                p={1}
-                textAlign={align}
-                verticalalign="middle"
-                lineHeight={0.65}
-                sx={({ palette: { light } }) => ({
-                  borderBottom: row.hasBorder ? `${borderWidth[1]} solid ${light.main}` : null,
-                })}
-              >
-                <ArgonTypography
-                  variant="button"
-                  fontWeight="regular"
-                  color="secondary"
-                  sx={{ display: 'inline-block', width: 'max-content' }}
-                >
-                  {row[name]}
-                </ArgonTypography>
-              </ArgonBox>
-            );
-          }
+              );
+            }
 
-          return template;
-        });
+            return template;
+          });
 
         return (
           <TableRow

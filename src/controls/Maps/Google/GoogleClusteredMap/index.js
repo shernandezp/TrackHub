@@ -6,7 +6,7 @@ import { formatDateTime } from "utils/dateUtils";
 import { useTranslation } from 'react-i18next';
 import 'controls/Maps/css/googleMap.css';
 
-const GoogleClusteredMap = ({ markers, mapKey, selectedMarker }) => {
+const GoogleClusteredMap = ({ markers, mapKey, selectedMarker, handleSelected }) => {
     const [internalSelectedMarker, setInternalSelectedMarker] = useState(null);
     const { t } = useTranslation();
     const mapRef = useRef();
@@ -27,7 +27,7 @@ const GoogleClusteredMap = ({ markers, mapKey, selectedMarker }) => {
                 setInternalSelectedMarker(marker);
                 if (mapRef.current) {
                     mapRef.current.setCenter({ lat: marker.lat, lng: marker.lng });
-                    mapRef.current.setZoom(15);
+                    mapRef.current.setZoom(16);
                 }
             }
         }
@@ -47,8 +47,9 @@ const GoogleClusteredMap = ({ markers, mapKey, selectedMarker }) => {
                                     setInternalSelectedMarker(marker);
                                     if (mapRef.current) {
                                         mapRef.current.setCenter({ lat: marker.lat, lng: marker.lng });
-                                        mapRef.current.setZoom(15);
+                                        mapRef.current.setZoom(16);
                                     }
+                                    handleSelected(marker.name);
                                 }}
                                 icon={{
                                     url: createSvgIcon(marker.rotation, marker.text, 'dataURL'),
@@ -81,7 +82,8 @@ const GoogleClusteredMap = ({ markers, mapKey, selectedMarker }) => {
 GoogleClusteredMap.propTypes = {
     markers: PropTypes.array.isRequired,
     mapKey: PropTypes.string,
-    selectedMarker: PropTypes.string
+    selectedMarker: PropTypes.string,
+    handleSelected: PropTypes.func
 };
 
 export default GoogleClusteredMap;

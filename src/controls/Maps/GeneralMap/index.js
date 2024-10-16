@@ -4,7 +4,7 @@ import GoogleClusteredMap from '../Google/GoogleClusteredMap';
 import PropTypes from 'prop-types';
 import '../css/map.css';
 
-function GeneralMap({ mapType, positions, mapKey, selectedMarker }) {
+function GeneralMap({ mapType, positions, mapKey, selectedMarker, handleSelected }) {
     const [markers, setMarkers] = useState([]);
     useEffect(() => {
         const fetchMarkers = async () => {
@@ -34,7 +34,8 @@ function GeneralMap({ mapType, positions, mapKey, selectedMarker }) {
                     <GoogleClusteredMap 
                         markers={markers} 
                         mapKey={mapKey}
-                        selectedMarker={selectedMarker} />
+                        selectedMarker={selectedMarker} 
+                        handleSelected={handleSelected} />
             )}
         </div>
     );
@@ -44,7 +45,8 @@ GeneralMap.propTypes = {
     mapType: PropTypes.oneOf(['OSM', 'Google']).isRequired,
     positions: PropTypes.array.isRequired,
     mapKey: PropTypes.string,
-    selectedMarker: PropTypes.string
+    selectedMarker: PropTypes.string,
+    handleSelected: PropTypes.func,
 };
 
 export default GeneralMap;
