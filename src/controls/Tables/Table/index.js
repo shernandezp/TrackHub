@@ -64,7 +64,12 @@ function Table({ columns = [], rows = [{}], selected = null, selectedField, hand
 
   const handleRowSelection = (rowKey) => {
     const selectedRow = rows.find((row) => row.id === rowKey);
-    handleSelected(extractValue(selectedRow[selectedField]));
+    const selectedValue = extractValue(selectedRow[selectedField]);
+    if (selected === selectedValue) {
+      handleSelected(null);
+    } else {
+      handleSelected(selectedValue);
+    }
   };
 
   const handleSort = (columnName) => {
