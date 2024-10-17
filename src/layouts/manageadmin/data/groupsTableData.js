@@ -75,7 +75,8 @@ function useGroupTableData(fetchData, handleEditClick, handleDeleteClick, handle
       { name: "description", title:t('group.description'), align: "left" },
       { name: "action", title:t('generic.action'), align: "center" },
       { name: "user", title:t('user.title'), align: "center" },
-      { name: "transporter", title:t('transporter.title'), align: "center" }
+      { name: "transporter", title:t('transporter.title'), align: "center" },
+      { name: "id" }
     ],
     rows: groups.map(group => ({
       group: <Name name={group.name} />,
@@ -111,7 +112,8 @@ function useGroupTableData(fetchData, handleEditClick, handleDeleteClick, handle
             onClick={() => handleOpenTransporter(group.groupId)}>
           <Icon>assignment</Icon>&nbsp;{t('generic.assign')}
         </ArgonButton>
-      )
+      ),
+      id: group.groupId
     })),
   });
 

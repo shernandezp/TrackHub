@@ -22,11 +22,13 @@ import PropTypes from "prop-types";
 import { v4 as uuidv4 } from "uuid";
 
 // @mui material components
-import { Table as MuiTable } from "@mui/material";
-import TableBody from "@mui/material/TableBody";
-import TableContainer from "@mui/material/TableContainer";
-import TableRow from "@mui/material/TableRow";
-import Box from '@mui/material/Box';
+import {
+  Table as MuiTable,
+  TableBody,
+  TableRow,
+  TableContainer,
+  Box,
+} from '@mui/material';
 
 // Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
@@ -38,12 +40,14 @@ import typography from "assets/theme/base/typography";
 import borders from "assets/theme/base/borders";
 import TablePaginationStyle from 'controls/Tables/styles/TablePagination';
 
-function Table({ columns = [], rows = [{}], selected = null, handleSelected = () => {} }) {
+function Table({ columns = [], rows = [{}], selected = null, selectedField, handleSelected = () => {} }) {
   const { size, fontWeightBold } = typography;
   const { borderWidth } = borders;
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [order, setOrder] = useState('asc');
+  const [orderBy, setOrderBy] = useState('');
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -54,10 +58,37 @@ function Table({ columns = [], rows = [{}], selected = null, handleSelected = ()
     setPage(0);
   };
 
+  const extractValue = (obj) => {
+    return obj?.props?.children || obj?.props?.name || obj?.props?.description || '';
+  };
+
   const handleRowSelection = (rowKey) => {
     const selectedRow = rows.find((row) => row.id === rowKey);
-    handleSelected(selectedRow.name.props.name);
+    handleSelected(extractValue(selectedRow[selectedField]));
   };
+
+  const handleSort = (columnName) => {
+    const isAsc = orderBy === columnName && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
+    setOrderBy(columnName);
+  };
+
+  const sortedRows = useMemo(() => {
+    if (orderBy) {
+      return [...rows].sort((a, b) => {
+        const aValue = extractValue(a[orderBy]);
+        const bValue = extractValue(b[orderBy]);
+        if (aValue < bValue) {
+          return order === 'asc' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return order === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return rows;
+  }, [rows, order, orderBy]);
 
   return useMemo(() => {
     const renderColumns = columns
@@ -92,13 +123,15 @@ function Table({ columns = [], rows = [{}], selected = null, handleSelected = ()
             color="secondary"
             opacity={0.7}
             sx={({ palette: { light } }) => ({ borderBottom: `${borderWidth[1]} solid ${light.main}` })}
+            onClick={() => handleSort(name)}
+            style={{ cursor: 'pointer' }}
           >
             {(title || name).toUpperCase()}
           </ArgonBox>
         );
       });
 
-    const renderRows = rows
+    const renderRows = sortedRows
       .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
       .map((row, index) => {
         const rowKey = row.id || uuidv4();
@@ -147,7 +180,7 @@ function Table({ columns = [], rows = [{}], selected = null, handleSelected = ()
                     color="secondary"
                     sx={{ display: 'inline-block', width: 'max-content' }}
                   >
-                    {row[name]}
+                    {extractValue(row[name])}
                   </ArgonTypography>
                 </ArgonBox>
               );
@@ -160,7 +193,7 @@ function Table({ columns = [], rows = [{}], selected = null, handleSelected = ()
           <TableRow
             key={rowKey}
             onClick={() => handleRowSelection(rowKey)}
-            selected={selected === row.name.props.name}
+            selected={selected === extractValue(row[selectedField])}
           >
             {tableRow}
           </TableRow>
@@ -187,13 +220,14 @@ function Table({ columns = [], rows = [{}], selected = null, handleSelected = ()
         </Box>
       </TableContainer>
     );
-  }, [columns, rows, page, rowsPerPage, selected]);
+  }, [columns, sortedRows, page, rowsPerPage, selected, selectedField, order, orderBy]);
 }
 
 Table.propTypes = {
   columns: PropTypes.arrayOf(PropTypes.object),
   rows: PropTypes.arrayOf(PropTypes.object),
   selected: PropTypes.string,
+  selectedField: PropTypes.string.isRequired,
   handleSelected: PropTypes.func,
 };
 

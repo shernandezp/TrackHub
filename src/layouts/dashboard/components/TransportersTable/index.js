@@ -12,6 +12,7 @@ function TransportersTable({transporters, selected, handleSelected}) {
           columns={columns} 
           rows={rows} 
           selected={selected}
+          selectedField="name"
           handleSelected={handleSelected} />
     </>
   );

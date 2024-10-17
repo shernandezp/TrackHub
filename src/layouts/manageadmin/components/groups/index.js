@@ -69,7 +69,7 @@ function ManageGroups() {
         setOpen={setOpen} 
         handleAddClick={handleAddClick}
         setExpanded={setExpanded}>
-        <Table columns={columns} rows={rows} />
+        <Table columns={columns} rows={rows} selectedField='group' />
       </TableAccordion>
 
       <GroupFormDialog 
