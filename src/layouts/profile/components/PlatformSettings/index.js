@@ -28,6 +28,7 @@ import { useTranslation } from 'react-i18next';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
 import useSettignsService from 'services/settings';
 import { LoadingContext } from 'LoadingContext';
+import { useAuth } from "AuthContext";
 import {
   useArgonController,
   setDarkSidenav,
@@ -40,6 +41,7 @@ function PlatformSettings() {
   const { miniSidenav, darkMode } =
     controller;
   const { setLoading } = useContext(LoadingContext);
+  const { isAuthenticated } = useAuth();
   const { t, i18n } = useTranslation();
   const languages = i18n.options.supportedLngs
     .filter(lang => lang !== 'cimode')
@@ -64,9 +66,9 @@ function PlatformSettings() {
       setUserSettings(userSettings);
       setLoading(false);
     };
-  
-    fetchUserSettings();
-  }, []);
+    if(isAuthenticated)
+      fetchUserSettings();
+  }, [isAuthenticated]);
   
   async function onSaveSettings() {
     setLoading(true);

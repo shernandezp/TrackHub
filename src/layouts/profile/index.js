@@ -34,6 +34,7 @@ import PlatformSettings from "layouts/profile/components/PlatformSettings";
 // Data
 import useUserService from "services/users";
 import { LoadingContext } from 'LoadingContext';
+import { useAuth } from "AuthContext";
 
 const bgImage =
   "https://raw.githubusercontent.com/creativetimofficial/public-assets/master/argon-dashboard-pro/assets/img/profile-layout-header.jpg";
@@ -41,6 +42,7 @@ const bgImage =
 function Overview() {
   const { getCurrentUser, updateCurrentUser } = useUserService();
   const { setLoading } = useContext(LoadingContext);
+  const { isAuthenticated } = useAuth();
   const [user, setUser] = useState({});
 
   useEffect(() => {
@@ -50,9 +52,9 @@ function Overview() {
       setUser(user);
       setLoading(false);
     };
-  
-    fetchUser();
-  }, []);
+    if(isAuthenticated)
+      fetchUser();
+  }, [isAuthenticated]);
 
   return (
     <DashboardLayout
