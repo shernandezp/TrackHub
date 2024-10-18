@@ -7,6 +7,7 @@ import ArgonButton from "components/ArgonButton";
 import useUserService from "services/users";
 import { handleDelete, handleSave, handleUpdatePassword } from "layouts/manageadmin/actions/usersActions";
 import { LoadingContext } from 'LoadingContext';
+import { useAuth } from "AuthContext";
 
 function useUserTableData(fetchData, handleEditClick, handleUpdatePasswordClick, handleDeleteClick) {
   const { t } = useTranslation();
@@ -16,6 +17,7 @@ function useUserTableData(fetchData, handleEditClick, handleUpdatePasswordClick,
   const [openPassword, setOpenPassword] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const { setLoading } = useContext(LoadingContext);
+  const { isAuthenticated } = useAuth();
 
   const hasLoaded = useRef(false);
   const { getUsersByAccount, createUser, updateUser, deleteUser, updatePassword } = useUserService();
@@ -88,6 +90,7 @@ function useUserTableData(fetchData, handleEditClick, handleUpdatePasswordClick,
       { name: "lastName", title:t('user.lastName'), align: "left" },
       { name: "action", title:t('generic.action'), align: "center" },
       { name: "password", title:t('user.password'), align: "center" },
+      { name: "id" }
     ],
     rows: users.map(user => ({
       user: <NameDetail name={user.emailAddress} detail={user.username} />,
@@ -120,12 +123,13 @@ function useUserTableData(fetchData, handleEditClick, handleUpdatePasswordClick,
         >
           {t('user.password')}
         </ArgonTypography>
-      )
+      ),
+      id: user.userId
     })),
   });
 
   useEffect(() => {
-    if (fetchData && !hasLoaded.current) {
+    if (fetchData && !hasLoaded.current && isAuthenticated) {
       async function fetchData() {
         setLoading(true);
         const users = await getUsersByAccount();
@@ -136,7 +140,7 @@ function useUserTableData(fetchData, handleEditClick, handleUpdatePasswordClick,
       }
       fetchData();
     }
-  }, [fetchData]);
+  }, [fetchData, isAuthenticated]);
 
   return { 
     data, 

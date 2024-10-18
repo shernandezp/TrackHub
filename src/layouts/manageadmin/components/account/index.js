@@ -31,7 +31,7 @@ function ManageAccount() {
         title={t('account.title')}
         expanded={expanded} 
         setExpanded={setExpanded}>
-        <Table columns={columns} rows={rows} />
+        <Table columns={columns} rows={rows} selectedField='name' />
       </TableAccordion>
 
       <AccountFormDialog 

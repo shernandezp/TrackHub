@@ -33,10 +33,10 @@ import useRouterService from "services/router";
 import useSettignsService from 'services/settings';
 import { LoadingContext } from 'LoadingContext';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from "AuthContext";
 
 // Dashboard layout components
 import GeneralMap from "controls/Maps/GeneralMap";
-import { useAuth } from "AuthContext";
 import RefreshLabelStyle from 'layouts/dashboard/styles/RefreshLabel';
 import {countRecentDevices, countDevicesInMovement, getPercentage} from 'layouts/dashboard/utils/dashboard';
 
@@ -45,10 +45,10 @@ function Default() {
   const { getPositions } = useRouterService();
   const { getAccountSettings } = useSettignsService();
   const { setLoading } = useContext(LoadingContext);
+  const { isAuthenticated } = useAuth();
   const [positions, setPositions] = useState([]);
   const [active, setActive] = useState(0);
   const [movement, setMovement] = useState(0);
-  const { isAuthenticated } = useAuth();
   const [settings, setSettings] = useState({maps:'OSM', mapsKey:'', refreshMapTimer: 60});
   const [selectedTransporter, setSelectedTransporter] = useState(null);
   

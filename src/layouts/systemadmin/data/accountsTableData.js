@@ -10,7 +10,7 @@ import useUserService from "services/users";
 import { handleSave } from "layouts/systemadmin/actions/accountsActions";
 import { formatDateTime } from "utils/dateUtils";
 import { LoadingContext } from 'LoadingContext';
-import accountTypes from "layouts/systemadmin/data/accountTypes";
+import accountTypes from "data/accountTypes";
 
 function useAccountsTableData(fetchData, handleEditClick, handleAddManagerClick) {
   const { t } = useTranslation();
@@ -70,6 +70,7 @@ function useAccountsTableData(fetchData, handleEditClick, handleAddManagerClick)
       { name: "modified", title:t('generic.modified'), align: "center" },
       { name: "action", title:t('generic.action'), align: "center" },
       { name: "user", title:t('account.addUser'), align: "center" },
+      { name: "id" }
     ],
     rows: accounts.map(account => ({
       name: <Name name={account.name} />,
@@ -97,7 +98,8 @@ function useAccountsTableData(fetchData, handleEditClick, handleAddManagerClick)
             onClick={() => handleOpenUser(account.accountId)}>
           <Icon>add</Icon>&nbsp;{t('generic.add')}
         </ArgonButton>
-      )
+      ),
+      id: account.accountId
     })),
   });
 

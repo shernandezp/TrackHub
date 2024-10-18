@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import FormDialog from "controls/Dialogs/FormDialog";
 import CustomTextField from 'controls/Dialogs/CustomTextField';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
-import protocolTypes from 'layouts/manageadmin/data/protocolTypes';
+import protocolTypes from 'data/protocolTypes';
 
 function OperatorFormDialog({ open, setOpen, handleSubmit, values, handleChange, errors }) {
   const { t } = useTranslation();

@@ -36,7 +36,7 @@ function ManageDevices() {
         expanded={expanded}
         setOpen={setOpenAssignment} 
         setExpanded={setExpanded}>
-        <Table columns={columns} rows={rows} />
+        <Table columns={columns} rows={rows} selectedField='name'/>
       </TableAccordion>
 
       <DeviceAllocatorDialog

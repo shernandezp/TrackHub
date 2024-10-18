@@ -6,11 +6,13 @@ import ArgonButton from "components/ArgonButton";
 import useRoleService from "services/roles";
 import { LoadingContext } from 'LoadingContext';
 import { toCamelCase } from 'utils/stringUtils';
+import { useAuth } from "AuthContext";
 
 function useRoleTableData(fetchData, handleOpenClick) {
   const { t } = useTranslation();
   const [data, setData] = useState({ columns: [], rows: [] });
   const { setLoading } = useContext(LoadingContext);
+  const { isAuthenticated } = useAuth();
 
   const hasLoaded = useRef(false);
   const { getRoles } = useRoleService();
@@ -22,7 +24,8 @@ function useRoleTableData(fetchData, handleOpenClick) {
   const buildTableData = (roles) => ({
     columns: [
       { name: "name", title:t('role.title'), align: "left" },
-      { name: "action", title:t('generic.action'), align: "center" }
+      { name: "action", title:t('generic.action'), align: "center" },
+      { name: "id" }
     ],
     rows: roles.map(role => ({
       name: <Name name={t(`roles.${toCamelCase(role.name)}`, { defaultValue: role.name })} />,
@@ -33,12 +36,13 @@ function useRoleTableData(fetchData, handleOpenClick) {
             onClick={() => handleOpen(role.roleId)}>
           <Icon>assignment</Icon>&nbsp;{t('generic.assign')}
         </ArgonButton>
-      )
+      ),
+      id: role.roleId
     })),
   });
 
   useEffect(() => {
-    if (fetchData && !hasLoaded.current) {
+    if (fetchData && !hasLoaded.current && isAuthenticated) {
       async function fetchData() {
         setLoading(true);
         const roles = await getRoles();
@@ -48,7 +52,7 @@ function useRoleTableData(fetchData, handleOpenClick) {
       }
       fetchData();
     }
-  }, [fetchData]);
+  }, [fetchData, isAuthenticated]);
 
   return { 
     data

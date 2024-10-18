@@ -7,6 +7,7 @@ import ArgonButton from "components/ArgonButton";
 import useDeviceService from "services/device";
 import { handleDelete } from "layouts/manageadmin/actions/deviceActions";
 import { LoadingContext } from 'LoadingContext';
+import { useAuth } from "AuthContext";
 
 function useDeviceTableData(fetchData, handleDeleteClick) {
   const { t } = useTranslation();
@@ -14,6 +15,7 @@ function useDeviceTableData(fetchData, handleDeleteClick) {
   const [devices, setDevices] = useState([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const { setLoading } = useContext(LoadingContext);
+  const { isAuthenticated } = useAuth();
 
   const hasLoaded = useRef(false);
   const { getDevicesByAccount, deleteDevice } = useDeviceService();
@@ -51,7 +53,8 @@ function useDeviceTableData(fetchData, handleDeleteClick) {
       { name: "serial", title:t('device.serial'), align: "left" },
       { name: "description", title:t('device.description'), align: "left" },
       { name: "devicetype", title:t('device.type'), align: "center" },
-      { name: "action", title:t('generic.action'), align: "center" }
+      { name: "action", title:t('generic.action'), align: "center" },
+      { name: "id" }
     ],
     rows: devices.map(device => ({
       name: <NameDetail name={device.name} detail={device.identifier} />,
@@ -69,12 +72,13 @@ function useDeviceTableData(fetchData, handleDeleteClick) {
               <Icon>delete</Icon>&nbsp;{t('generic.delete')}
             </ArgonButton>
         </>
-      )
+      ),
+      id: device.deviceId
     })),
   });
 
   useEffect(() => {
-    if (fetchData && !hasLoaded.current) {
+    if (fetchData && !hasLoaded.current && isAuthenticated) {
       async function fetchData() {
         setLoading(true);
         await refreshData();
@@ -83,7 +87,7 @@ function useDeviceTableData(fetchData, handleDeleteClick) {
       }
       fetchData();
     }
-  }, [fetchData]);
+  }, [fetchData, isAuthenticated]);
 
   return { 
     data, 

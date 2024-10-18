@@ -6,6 +6,7 @@ import ArgonButton from "components/ArgonButton";
 import useGroupService from "services/groups";
 import { handleDelete, handleSave } from "layouts/manageadmin/actions/groupsActions";
 import { LoadingContext } from 'LoadingContext';
+import { useAuth } from "AuthContext";
 
 function useGroupTableData(fetchData, handleEditClick, handleDeleteClick, handleUserClick, handleTransporterClick) {
   const { t } = useTranslation();
@@ -14,6 +15,7 @@ function useGroupTableData(fetchData, handleEditClick, handleDeleteClick, handle
   const [open, setOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const { setLoading } = useContext(LoadingContext);
+  const { isAuthenticated } = useAuth();
 
   const hasLoaded = useRef(false);
   const { getGroups, createGroup, updateGroup, deleteGroup } = useGroupService();
@@ -83,18 +85,18 @@ function useGroupTableData(fetchData, handleEditClick, handleDeleteClick, handle
       description: <Description description={group.description} />,
       action: (
         <>
-            <ArgonButton 
-                variant="text" 
-                color="dark" 
-                onClick={() => handleOpen(group)}>
-              <Icon>edit</Icon>&nbsp;{t('generic.edit')}
-            </ArgonButton>
-            <ArgonButton 
+          <ArgonButton 
               variant="text" 
-              color="error"
-              onClick={() => handleOpenDelete(group.groupId)}>
-              <Icon>delete</Icon>&nbsp;{t('generic.delete')}
-            </ArgonButton>
+              color="dark" 
+              onClick={() => handleOpen(group)}>
+            <Icon>edit</Icon>&nbsp;{t('generic.edit')}
+          </ArgonButton>
+          <ArgonButton 
+            variant="text" 
+            color="error"
+            onClick={() => handleOpenDelete(group.groupId)}>
+            <Icon>delete</Icon>&nbsp;{t('generic.delete')}
+          </ArgonButton>
         </>
       ),
       user: (
@@ -118,7 +120,7 @@ function useGroupTableData(fetchData, handleEditClick, handleDeleteClick, handle
   });
 
   useEffect(() => {
-    if (fetchData && !hasLoaded.current) {
+    if (fetchData && !hasLoaded.current && isAuthenticated) {
       async function fetchData() {
         setLoading(true);
         const groups = await getGroups();
@@ -129,7 +131,7 @@ function useGroupTableData(fetchData, handleEditClick, handleDeleteClick, handle
       }
       fetchData();
     }
-  }, [fetchData]);
+  }, [fetchData, isAuthenticated]);
 
   return { 
     data, 

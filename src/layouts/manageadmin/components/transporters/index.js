@@ -45,7 +45,7 @@ function ManageTransporters() {
         expanded={expanded} 
         setOpen={setOpen} 
         setExpanded={setExpanded}>
-        <Table columns={columns} rows={rows} />
+        <Table columns={columns} rows={rows} selectedField='name' />
       </TableAccordion>
 
       <TransporterFormDialog 

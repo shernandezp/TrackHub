@@ -8,6 +8,7 @@ import ArgonButton from "components/ArgonButton";
 import useTransporterService from "services/transporter";
 import { handleEdit, handleDelete } from "layouts/manageadmin/actions/transportersActions";
 import { LoadingContext } from 'LoadingContext';
+import { useAuth } from "AuthContext";
 
 function useTransporterTableData(fetchData, handleEditClick, handleDeleteClick) {
   const { t } = useTranslation();
@@ -16,6 +17,7 @@ function useTransporterTableData(fetchData, handleEditClick, handleDeleteClick) 
   const [open, setOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const { setLoading } = useContext(LoadingContext);
+  const { isAuthenticated } = useAuth();
 
   const hasLoaded = useRef(false);
   const { getTransporterByAccount, updateTransporter, deleteTransporter } = useTransporterService();
@@ -67,7 +69,8 @@ function useTransporterTableData(fetchData, handleEditClick, handleDeleteClick) 
     columns: [
       { name: "name", title:t('transporter.name'), align: "left" },
       { name: "transporterType", title:t('transporter.type'), align: "center" },
-      { name: "action", title:t('generic.action'), align: "center" }
+      { name: "action", title:t('generic.action'), align: "center" },
+      { name: "id" }
     ],
     rows: transporters.map(transporter => ({
       name: <Name name={transporter.name} />,
@@ -91,12 +94,13 @@ function useTransporterTableData(fetchData, handleEditClick, handleDeleteClick) 
             <Icon>delete</Icon>&nbsp;{t('generic.delete')}
           </ArgonButton>
         </>
-      )
+      ),
+      id: transporter.transporterId
     })),
   });
 
   useEffect(() => {
-    if (fetchData && !hasLoaded.current) {
+    if (fetchData && !hasLoaded.current && isAuthenticated) {
       async function fetchData() {
         setLoading(true);
         const transporters = await getTransporterByAccount();
@@ -107,7 +111,7 @@ function useTransporterTableData(fetchData, handleEditClick, handleDeleteClick) 
       }
       fetchData();
     }
-  }, [fetchData]);
+  }, [fetchData, isAuthenticated]);
 
   return { 
     data, 

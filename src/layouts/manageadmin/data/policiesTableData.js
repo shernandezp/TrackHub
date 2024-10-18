@@ -6,11 +6,13 @@ import ArgonButton from "components/ArgonButton";
 import usePolicyService from "services/policies";
 import { LoadingContext } from 'LoadingContext';
 import { toCamelCase } from 'utils/stringUtils';
+import { useAuth } from "AuthContext";
 
 function usePolicyTableData(fetchData, handleOpenClick) {
   const { t } = useTranslation();
   const [data, setData] = useState({ columns: [], rows: [] });
   const { setLoading } = useContext(LoadingContext);
+  const { isAuthenticated } = useAuth();
 
   const hasLoaded = useRef(false);
   const { getPolicies } = usePolicyService();
@@ -22,7 +24,8 @@ function usePolicyTableData(fetchData, handleOpenClick) {
   const buildTableData = (policies) => ({
     columns: [
       { name: "name", title:t('policy.title'), align: "left" },
-      { name: "action", title:t('generic.action'), align: "center" }
+      { name: "action", title:t('generic.action'), align: "center" },
+      { name: "id" }
     ],
     rows: policies.map(policy => ({
       name: <Name name={t(`policies.${toCamelCase(policy.name)}`, { defaultValue: policy.name })} />,
@@ -33,12 +36,13 @@ function usePolicyTableData(fetchData, handleOpenClick) {
             onClick={() => handleOpen(policy.policyId)}>
           <Icon>assignment</Icon>&nbsp;{t('generic.assign')}
         </ArgonButton>
-      )
+      ),
+      id: policy.policyId
     })),
   });
 
   useEffect(() => {
-    if (fetchData && !hasLoaded.current) {
+    if (fetchData && !hasLoaded.current && isAuthenticated) {
       async function fetchData() {
         setLoading(true);
         const policies = await getPolicies();
@@ -48,7 +52,7 @@ function usePolicyTableData(fetchData, handleOpenClick) {
       }
       fetchData();
     }
-  }, [fetchData]);
+  }, [fetchData, isAuthenticated]);
 
   return { 
     data

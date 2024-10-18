@@ -6,7 +6,7 @@ import CustomSelect from 'controls/Dialogs/CustomSelect';
 import CustomTextField from 'controls/Dialogs/CustomTextField';
 import CustomCheckbox from 'controls/Dialogs/CustomCheckbox';
 import CustomPasswordField from 'controls/Dialogs/CustomPasswordField';
-import accountTypes from 'layouts/systemadmin/data/accountTypes';
+import accountTypes from 'data/accountTypes';
 
 function AccountsFormDialog({ open, setOpen, handleSubmit, values, handleChange, errors }) {
   const { t } = useTranslation();

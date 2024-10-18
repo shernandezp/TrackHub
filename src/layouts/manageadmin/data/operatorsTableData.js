@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { NameDetail, Description, DescriptionDetail } from "controls/Tables/components/tableComponents";
 import Icon from "@mui/material/Icon";
 import logoJira from "assets/images/small-logos/logo-jira.svg";
-import protocolTypes from 'layouts/manageadmin/data/protocolTypes';
+import protocolTypes from 'data/protocolTypes';
 import ArgonTypography from "components/ArgonTypography";
 import ArgonBadge from "components/ArgonBadge";
 import ArgonButton from "components/ArgonButton";
@@ -14,6 +14,7 @@ import { formatDateTime } from "utils/dateUtils";
 import { handleDelete, handleSave } from "layouts/manageadmin/actions/operatorsActions";
 import { handleSaveCredential, handleTestCredential } from "layouts/manageadmin/actions/credentialActions";
 import { LoadingContext } from 'LoadingContext';
+import { useAuth } from "AuthContext";
 
 function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialClick, handleDeleteClick) {
   const { t } = useTranslation();
@@ -25,6 +26,7 @@ function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialCl
   const [testOpen, setTestOpen] = useState(false);
   const [testMessage, setTestMessage] = useState("");
   const { setLoading } = useContext(LoadingContext);
+  const { isAuthenticated } = useAuth();
 
   const hasLoaded = useRef(false);
   const { getOperatorsByCurrentAccount, updateOperator, createOperator, deleteOperator } = useOperatorService();
@@ -117,7 +119,8 @@ function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialCl
       { name: "modified", title:t('generic.modified'), align: "center" },
       { name: "action", title:t('generic.action'), align: "center" },
       { name: "credential", title:t('credential.title'), align: "center" },
-      { name: "testcredential", title:t('credential.testCredential'), align: "center" }
+      { name: "testcredential", title:t('credential.testCredential'), align: "center" },
+      { name: "id" }
     ],
     rows: operators.map(operator => ({
       name: <NameDetail name={operator.name} detail={operator.emailAddress} image={logoJira} />,
@@ -167,12 +170,13 @@ function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialCl
             onClick={async() => await onTestCredential(operator.operatorId)}>
           <Icon>check</Icon>
         </ArgonButton>
-      )
+      ),
+      id: operator.operatorId
     })),
   });
 
   useEffect(() => {
-    if (fetchData && !hasLoaded.current) {
+    if (fetchData && !hasLoaded.current && isAuthenticated) {
       async function fetchData() {
         setLoading(true);
         const operators = await getOperatorsByCurrentAccount();
@@ -183,7 +187,7 @@ function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialCl
       }
       fetchData();
     }
-  }, [fetchData]);
+  }, [fetchData, isAuthenticated]);
 
   return { 
     data, 

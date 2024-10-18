@@ -59,7 +59,7 @@ function ManageAccounts() {
         setOpen={setOpen} 
         handleAddClick={handleAddClick}
         setExpanded={setExpanded}>
-        <Table columns={columns} rows={rows} />
+        <Table columns={columns} rows={rows} selectedField='name'/>
       </TableAccordion>
 
       <AccountFormDialog 

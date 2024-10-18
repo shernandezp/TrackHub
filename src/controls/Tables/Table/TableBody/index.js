@@ -46,6 +46,22 @@ const TableBody = ({ columns, rows, sortedRows, selected, selectedField, handleR
                     </ArgonBox>
                   </ArgonBox>
                 );
+              } else if (React.isValidElement(row[name])) {
+                template = (
+                  <ArgonBox
+                    key={uuidv4()}
+                    component="td"
+                    p={1}
+                    textAlign={align}
+                    verticalalign="middle"
+                    lineHeight={0.65}
+                    sx={({ palette: { light } }) => ({
+                      borderBottom: row.hasBorder ? `${borderWidth[1]} solid ${light.main}` : null,
+                    })}
+                  >
+                    {row[name]}
+                  </ArgonBox>
+                );
               } else {
                 template = (
                   <ArgonBox

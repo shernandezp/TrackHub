@@ -9,6 +9,7 @@ import { formatDateTime } from "utils/dateUtils";
 import { handleSave } from "layouts/manageadmin/actions/accountActions";
 import { LoadingContext } from 'LoadingContext';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from "AuthContext";
 
 function useAccountTableData(fetchData, handleEditClick) {
   const { t } = useTranslation();
@@ -18,6 +19,7 @@ function useAccountTableData(fetchData, handleEditClick) {
   const hasLoaded = useRef(false);
   const { getAccountByUser, updateAccount } = useAccountService();
   const { setLoading } = useContext(LoadingContext);
+  const { isAuthenticated } = useAuth();
 
   const onSave = (account) => {
     setLoading(true);
@@ -46,6 +48,7 @@ function useAccountTableData(fetchData, handleEditClick) {
       { name: "type", title:t('account.type'), align: "center" },
       { name: "modified", title:t('generic.modified'), align: "center" },
       { name: "action", title:t('generic.action'), align: "center" },
+      { name: "id" }
     ],
     rows: accounts.map(account => ({
       name: <Name name={account.name} />,
@@ -66,11 +69,12 @@ function useAccountTableData(fetchData, handleEditClick) {
           <Icon>edit</Icon>&nbsp;{t('generic.edit')}
         </ArgonButton>
       ),
+      id: account.accountId
     })),
   });
 
   useEffect(() => {
-    if (fetchData && !hasLoaded.current) {
+    if (fetchData && !hasLoaded.current && isAuthenticated) {
       async function fetchData() {
         setLoading(true);
         const account = await getAccountByUser();
@@ -82,7 +86,7 @@ function useAccountTableData(fetchData, handleEditClick) {
       }
       fetchData();
     }
-  }, [fetchData]);
+  }, [fetchData, isAuthenticated]);
 
   return { data, open, onSave, setOpen };
 }

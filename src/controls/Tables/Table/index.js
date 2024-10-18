@@ -72,13 +72,15 @@ function Table({ columns = [], rows = [{}], selected = null, selectedField = 'na
           rowsPerPage={rowsPerPage}
         />
       </MuiTable>
-      <TablePagination
-        count={rows.length}
-        page={page}
-        rowsPerPage={rowsPerPage}
-        handleChangePage={handleChangePage}
-        handleChangeRowsPerPage={handleChangeRowsPerPage}
-      />
+      {rows.length > 10 && (
+        <TablePagination
+          count={rows.length}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          handleChangePage={handleChangePage}
+          handleChangeRowsPerPage={handleChangeRowsPerPage}
+        />
+      )}
     </TableContainer>
   );
 }

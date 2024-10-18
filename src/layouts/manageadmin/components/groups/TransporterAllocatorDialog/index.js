@@ -6,10 +6,12 @@ import CustomSelect from 'controls/Dialogs/CustomSelect';
 import useTransporterService from 'services/transporter';
 import useGroupService from 'services/groups';
 import { LoadingContext } from 'LoadingContext';
+import { useAuth } from "AuthContext";
 
 function TransporterAllocatorDialog({ open, setOpen, groupId }) {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
+  const { isAuthenticated } = useAuth();
   const { getTransporterByAccount, getTransportersByGroup } = useTransporterService();
   const { createTransporterGroup, deleteTransporterGroup } = useGroupService();
   const [data, setData] = useState([]);
@@ -37,8 +39,9 @@ function TransporterAllocatorDialog({ open, setOpen, groupId }) {
       const transporters = await getTransporterByAccount();
       setAccountTrasporters(transporters);
     };
-    fetchData();
-  }, [open]);
+    if (isAuthenticated)
+      fetchData();
+  }, [open, isAuthenticated]);
 
   useEffect(() => {
     const fetchData = async () => {
