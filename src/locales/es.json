@@ -78,6 +78,10 @@
         "assignTransporter": "Asignar Unidad",
         "assignUser": "Asignar Usuario"
     },
+    "navbar": {
+        "searchText": "Escribe aquí...",
+        "signOff": "Cerrar Sesión"
+    },
     "operator": {
         "title":"Operadores",
         "singleTitle":"Operador",

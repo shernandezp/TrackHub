@@ -51,6 +51,7 @@ function Default() {
   const [movement, setMovement] = useState(0);
   const [settings, setSettings] = useState({maps:'OSM', mapsKey:'', refreshMapTimer: 60});
   const [selectedTransporter, setSelectedTransporter] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
   
   const fetchPositions = async () => {
     setLoading(true);
@@ -61,6 +62,10 @@ function Default() {
     setActive(countRecentDevices(result, settings.onlineTimeLapse));
     setMovement(countDevicesInMovement(result));
     setLoading(false);
+  };
+
+  const handleSearchChange = (event) => {
+    setSearchQuery(event.target.value);
   };
 
   useEffect(() => {
@@ -75,7 +80,7 @@ function Default() {
 
   return (
     <DashboardLayout>
-      <DashboardNavbar />
+      <DashboardNavbar searchQuery={searchQuery} handleSearch={handleSearchChange} searchVisibility={true}/>
       <ArgonBox py={3}>
         <Grid container spacing={3} mb={3}>
           <Grid item xs={12} md={6} lg={4}>
@@ -121,7 +126,8 @@ function Default() {
             <TransportersTable 
               transporters={positions} 
               selected={selectedTransporter}
-              handleSelected={handleSelected} />
+              handleSelected={handleSelected} 
+              searchQuery={searchQuery}/>
           </Grid>
           <Grid item xs={12} md={4}>
             <TransporterList title={t("dashboard.typesTitle")} positions={positions} />

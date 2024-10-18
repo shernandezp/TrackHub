@@ -2,7 +2,11 @@ import PropTypes from 'prop-types';
 import Table from "controls/Tables/Table";
 import useTransportersTableData from "layouts/dashboard/data/transportersData";
 
-function TransportersTable({transporters, selected, handleSelected}) {
+function TransportersTable({
+    transporters, 
+    selected, 
+    handleSelected,
+    searchQuery = ''}) {
   const { data } = useTransportersTableData(transporters);
   const { columns, rows } = data;
 
@@ -13,7 +17,8 @@ function TransportersTable({transporters, selected, handleSelected}) {
           rows={rows} 
           selected={selected}
           selectedField="name"
-          handleSelected={handleSelected} />
+          handleSelected={handleSelected} 
+          searchQuery={searchQuery}/>
     </>
   );
 }
@@ -21,7 +26,8 @@ function TransportersTable({transporters, selected, handleSelected}) {
 TransportersTable.propTypes = {
     transporters: PropTypes.array,
     selected: PropTypes.string,
-    handleSelected: PropTypes.func.isRequired
+    handleSelected: PropTypes.func.isRequired,
+    searchQuery: PropTypes.string
 };
 
 export default TransportersTable;

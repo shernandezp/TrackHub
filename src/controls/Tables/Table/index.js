@@ -9,7 +9,13 @@ const extractValue = (obj) => {
   return obj?.props?.children || obj?.props?.name || obj?.props?.description || '';
 };
 
-function Table({ columns = [], rows = [{}], selected = null, selectedField = 'name', handleSelected = () => {} }) {
+function Table({ 
+    columns = [], 
+    rows = [{}], 
+    selected = null, 
+    selectedField = 'name', 
+    handleSelected = () => {}, 
+    searchQuery = '' }) {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [order, setOrder] = useState('asc');
@@ -40,9 +46,20 @@ function Table({ columns = [], rows = [{}], selected = null, selectedField = 'na
     setOrderBy(columnName);
   };
 
+  const filteredRows = useMemo(() => {
+    if (searchQuery) {
+      return rows.filter(row => 
+        columns.some(column => 
+          extractValue(row[column.name]).toString().toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      );
+    }
+    return rows;
+  }, [rows, columns, searchQuery]);
+
   const sortedRows = useMemo(() => {
     if (orderBy) {
-      return [...rows].sort((a, b) => {
+      return [...filteredRows].sort((a, b) => {
         const aValue = extractValue(a[orderBy]);
         const bValue = extractValue(b[orderBy]);
         if (aValue < bValue) {
@@ -54,8 +71,8 @@ function Table({ columns = [], rows = [{}], selected = null, selectedField = 'na
         return 0;
       });
     }
-    return rows;
-  }, [rows, order, orderBy]);
+    return filteredRows;
+  }, [filteredRows, order, orderBy]);
 
   return (
     <TableContainer>
@@ -72,9 +89,9 @@ function Table({ columns = [], rows = [{}], selected = null, selectedField = 'na
           rowsPerPage={rowsPerPage}
         />
       </MuiTable>
-      {rows.length > 10 && (
+      {filteredRows.length > 10 && (
         <TablePagination
-          count={rows.length}
+          count={filteredRows.length}
           page={page}
           rowsPerPage={rowsPerPage}
           handleChangePage={handleChangePage}
@@ -91,6 +108,7 @@ Table.propTypes = {
   selected: PropTypes.string,
   selectedField: PropTypes.string,
   handleSelected: PropTypes.func,
+  searchQuery: PropTypes.string,
 };
 
 export default Table;

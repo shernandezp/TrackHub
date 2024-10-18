@@ -78,6 +78,10 @@
         "assignTransporter": "Assign Unit",
         "assignUser": "Assign User"
     },
+    "navbar": {
+        "searchText": "Type here...",
+        "signOff": "Sign off"
+    },
     "operator": {
         "title":"Operators",
         "singleTitle":"Operator",
