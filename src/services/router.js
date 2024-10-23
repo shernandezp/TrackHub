@@ -78,14 +78,14 @@ const useRouterService = () => {
                         altitude
                         address
                         deviceName
-                        deviceType
+                        transporterType
                         state
                         speed
                         serverDateTime
                         longitude
                         latitude
                         eventId
-                        deviceId
+                        transporterId
                         deviceDateTime
                         course
                         country

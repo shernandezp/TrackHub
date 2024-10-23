@@ -31,7 +31,7 @@ function useTransportersTableData(transporters) {
         </ArgonTypography>
       ),
       location: <Description description={transporter.address} />,
-      id: transporter.deviceId
+      id: transporter.transporterId
     })),
   });
 

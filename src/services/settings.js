@@ -25,7 +25,7 @@ const useSettignsService = () => {
       const data = {
         query: `
             query {
-                accountSettings 
+                accountSettingsByUser 
                 {
                   accountId,
                   maps,
@@ -40,7 +40,7 @@ const useSettignsService = () => {
         `
       };
       const response = await post(data);
-      return response.data.accountSettings;
+      return response.data.accountSettingsByUser;
     } catch (error) {
       handleError(error);
     }

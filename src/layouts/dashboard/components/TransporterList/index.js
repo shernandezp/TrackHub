@@ -14,14 +14,14 @@ function TransporterList({ title, positions }) {
   useEffect(() => {
     function fetchData() {
       const typesObject = positions.reduce((acc, position) => {
-        if (!acc[position.deviceType]) {
-          const transporterType = transporterTypes.find(t => t.label === position.deviceType);
+        if (!acc[position.transporterType]) {
+          const transporterType = transporterTypes.find(t => t.label === position.transporterType);
           const icon = transporterType ? transporterType.icon : 'unknown_5';
-          acc[position.deviceType] = { name: position.deviceType, total: 0, moving: 0, icon };
+          acc[position.transporterType] = { name: position.transporterType, total: 0, moving: 0, icon };
         }
-        acc[position.deviceType].total += 1;
+        acc[position.transporterType].total += 1;
         if (position.speed > 0) {
-          acc[position.deviceType].moving += 1;
+          acc[position.transporterType].moving += 1;
         }
         return acc;
       }, {});
