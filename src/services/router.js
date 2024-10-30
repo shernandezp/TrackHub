@@ -67,7 +67,7 @@ const useRouterService = () => {
           const data = {
             query: `
                 query {
-                    positions {
+                    positionsByUser {
                         attributes {
                             temperature
                             satellites
@@ -95,7 +95,7 @@ const useRouterService = () => {
             `
           };
           const response = await post(data);
-          return response.data.positions;
+          return response.data.positionsByUser;
         } catch (error) {
           handleError(error);
         }

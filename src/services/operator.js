@@ -101,38 +101,6 @@ const useOperatorService = () => {
   };
 
   /**
-   * Retrieves operators by account ID.
-   * @param {string} accountId - The ID of the account.
-   * @returns {Promise<Array>} A promise that resolves to an array of operators.
-   */
-  const getOperatorByAccount = async (accountId) => {
-    try {
-      const data = {
-        query: `
-        query {
-            operatorsByAccount(query: "${accountId}") {
-              address
-              contactName
-              description
-              emailAddress
-              lastModified
-              name
-              operatorId
-              phoneNumber
-              protocolType
-              protocolTypeId
-            }
-          }
-        `
-      };
-      const response = await post(data);
-      return response.data.operatorsByAccount;
-    } catch (error) {
-      handleError(error);
-    }
-  };
-
-  /**
    * Creates a new operator.
    * @param {Object} operatorData - The data of the operator to create.
    * @returns {Promise<Object>} A promise that resolves to the created operator object.
@@ -238,7 +206,6 @@ const useOperatorService = () => {
   return {
     getOperator,
     getOperatorsByCurrentAccount,
-    getOperatorByAccount,
     getOperators,
     createOperator,
     updateOperator,

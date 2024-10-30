@@ -49,7 +49,7 @@ function Default() {
   const [positions, setPositions] = useState([]);
   const [active, setActive] = useState(0);
   const [movement, setMovement] = useState(0);
-  const [settings, setSettings] = useState({maps:'OSM', mapsKey:'', refreshMapTimer: 60});
+  const [settings, setSettings] = useState({maps:'OSM', mapsKey:'', refreshMapInterval: 60});
   const [selectedTransporter, setSelectedTransporter] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -59,7 +59,7 @@ function Default() {
     var settings = await getAccountSettings();
     setSettings(settings);
     setPositions(result);
-    setActive(countRecentDevices(result, settings.onlineTimeLapse));
+    setActive(countRecentDevices(result, settings.onlineInterval));
     setMovement(countDevicesInMovement(result));
     setLoading(false);
   };

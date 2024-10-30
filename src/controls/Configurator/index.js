@@ -75,10 +75,10 @@ function Configurator({ settings, updateSettings }) {
     }));
   };
 
-  const handleOnlineTimeLapseChange = (event) => {
+  const handleOnlineIntervalChange = (event) => {
     setAccountSettings(prevSettings => ({
       ...prevSettings,
-      onlineTimeLapse: event.target.value
+      onlineInterval: event.target.value
     }));
   };
 
@@ -89,10 +89,10 @@ function Configurator({ settings, updateSettings }) {
     }));
   }
 
-  const handleStoringTimeLapseChange = (event) => {
+  const handleStoringIntervalChange = (event) => {
     setAccountSettings(prevSettings => ({
       ...prevSettings,
-      storingTimeLapse: event.target.value
+      storingInterval: event.target.value
     }));
   };
 
@@ -103,10 +103,10 @@ function Configurator({ settings, updateSettings }) {
     }));
   }
 
-  const handleRefreshMapTimerChange = (event) => {
+  const handleRefreshMapIntervalChange = (event) => {
     setAccountSettings(prevSettings => ({
       ...prevSettings,
-      refreshMapTimer: event.target.value
+      refreshMapInterval: event.target.value
     }));
   };
 
@@ -183,13 +183,13 @@ function Configurator({ settings, updateSettings }) {
         <ArgonBox display="flex" justifyContent="space-between" lineHeight={1}>
           <CustomTextField
             margin="dense"
-            name="onlineTimeLapse"
-            id="onlineTimeLapse"
-            label={t('settings.onlineTimeLapse')}
+            name="onlineInterval"
+            id="onlineInterval"
+            label={t('settings.onlineInterval')}
             type="number"
             fullWidth
-            value={accountSettings.onlineTimeLapse || 60}
-            onChange={handleOnlineTimeLapseChange}
+            value={accountSettings.onlineInterval || 60}
+            onChange={handleOnlineIntervalChange}
             />
         </ArgonBox>
 
@@ -201,13 +201,13 @@ function Configurator({ settings, updateSettings }) {
         <ArgonBox display="flex" justifyContent="space-between" lineHeight={1}>
           <CustomTextField
             margin="dense"
-            name="refreshMapTimer"
-            id="refreshMapTimer"
-            label={t('settings.refreshMapTimer')}
+            name="refreshMapInterval"
+            id="refreshMapInterval"
+            label={t('settings.refreshMapInterval')}
             type="number"
             fullWidth
-            value={accountSettings.refreshMapTimer || 60}
-            onChange={handleRefreshMapTimerChange}
+            value={accountSettings.refreshMapInterval || 60}
+            onChange={handleRefreshMapIntervalChange}
           />
         </ArgonBox>
 
@@ -219,13 +219,13 @@ function Configurator({ settings, updateSettings }) {
         <ArgonBox display="flex" justifyContent="space-between" lineHeight={1}>
           <CustomTextField
             margin="dense"
-            name="storingTimeLapse"
-            id="storingTimeLapse"
-            label={t('settings.storingTimeLapse')}
+            name="storingInterval"
+            id="storingInterval"
+            label={t('settings.storingInterval')}
             type="number"
             fullWidth
-            value={accountSettings.storingTimeLapse || 360}
-            onChange={handleStoringTimeLapseChange}
+            value={accountSettings.storingInterval || 360}
+            onChange={handleStoringIntervalChange}
           />
         </ArgonBox>
 

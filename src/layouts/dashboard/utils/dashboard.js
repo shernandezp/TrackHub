@@ -1,6 +1,6 @@
-export function countRecentDevices(devices, timelapse) {
+export function countRecentDevices(devices, interval) {
     const now = new Date();
-    const timeAgo = new Date(now.getTime() - 60 * timelapse * 1000);
+    const timeAgo = new Date(now.getTime() - 60 * interval * 1000);
     const recentDevices = devices.filter(device => {
       const deviceDateTime = new Date(device.deviceDateTime);
       return deviceDateTime > timeAgo && deviceDateTime <= now;

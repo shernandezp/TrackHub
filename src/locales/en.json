@@ -139,11 +139,11 @@
         "language": "Language",
         "maps": "Maps",
         "mapsKey": "Maps Key",
-        "onlineTimeLapse": "Online Time Lapse (Min.)",
+        "onlineInterval": "Online Interval (Min.)",
         "storePosition": "Store Position",
-        "storingTimeLapse": "Storing Time Lapse (Seconds)",
+        "storingInterval": "Storing Interval (Seconds)",
         "refreshMap": "Refresh Map",
-        "refreshMapTimer": "Refresh Map Timer (Seconds)",
+        "refreshMapInterval": "Refresh Map Interval (Seconds)",
         "saveMessage": "Some settings may require a page refresh to take effect"
     },
     "screen": {
