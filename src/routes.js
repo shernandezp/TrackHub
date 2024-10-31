@@ -37,7 +37,7 @@ Coded by www.creative-tim.com
 import Dashboard from "layouts/dashboard";
 import ManageAdmin from "layouts/manageadmin";
 import SystemAdmin from "layouts/systemadmin";
-import Billing from "layouts/billing";
+import Billing from "layouts/reports";
 import Profile from "layouts/profile";
 import Callback from "layouts/authentication/callback";
 import AuthorizeRedirect from "layouts/authentication/authorizeredirect";
@@ -74,14 +74,14 @@ const routes = [
     ),
     component: <ManageAdmin />,
   },
-  {
+  /*{
     type: "route",
     name: "screen.reports",
     key: "billing",
     route: "/billing",
     icon: <ArgonBox component="i" color="success" fontSize="14px" className="ni ni-credit-card" />,
     component: <Billing />,
-  },
+  },*/
   { type: "title", title: "Account Pages", key: "account-pages" },
   {
     type: "route",

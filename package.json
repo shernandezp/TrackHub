@@ -2,14 +2,14 @@
   "name": "TrackHub",
   "version": "1.0.0",
   "author": "Sergio Hernandez <",
-  "license": "SEE LICENSE IN <https://www.creative-tim.com/license>",
+  "license": "SEE LICENSE IN <http://www.apache.org/licenses/>",
   "description": "React version of Argon Dashboard 2 by Creative Tim",
   "bugs": {
-    "url": "https://github.com/creativetimofficial/argon-dashboard-material-ui/issues"
+    "url": "https://github.com/shernandezp"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/creativetimofficial/argon-dashboard-material-ui.git"
+    "url": "git+https://github.com/shernandezp/TrackHub.git"
   },
   "dependencies": {
     "@emotion/cache": "11.11.0",

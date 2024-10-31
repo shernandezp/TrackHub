@@ -2,7 +2,6 @@ import { useEffect, useState, useRef, useContext } from "react";
 import { useTranslation } from 'react-i18next';
 import { NameDetail, Description, DescriptionDetail } from "controls/Tables/components/tableComponents";
 import Icon from "@mui/material/Icon";
-import logoJira from "assets/images/small-logos/logo-jira.svg";
 import protocolTypes from 'data/protocolTypes';
 import ArgonTypography from "components/ArgonTypography";
 import ArgonBadge from "components/ArgonBadge";
@@ -123,7 +122,7 @@ function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialCl
       { name: "id" }
     ],
     rows: operators.map(operator => ({
-      name: <NameDetail name={operator.name} detail={operator.emailAddress} image={logoJira} />,
+      name: <NameDetail name={operator.name} detail={operator.emailAddress} />,
       description: <Description description={operator.description} />,
       address: <DescriptionDetail description={operator.address} detail={operator.phoneNumber} />,
       contactname: <Description description={operator.contactName} />,

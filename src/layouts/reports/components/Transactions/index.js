@@ -21,10 +21,9 @@ import Icon from "@mui/material/Icon";
 // Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
 import ArgonTypography from "components/ArgonTypography";
-// import ArgonButton from "components/ArgonButton";
 
 // Billing page components
-import Transaction from "layouts/billing/components/Transaction";
+import Transaction from "layouts/reports/components/Transaction";
 
 function Transactions() {
   return (

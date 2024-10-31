@@ -19,33 +19,43 @@ import Card from "@mui/material/Card";
 // Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
 import ArgonTypography from "components/ArgonTypography";
-import ArgonButton from "components/ArgonButton";
 
 // Billing page components
-import Invoice from "layouts/billing/components/Invoice";
+import Bill from "layouts/reports/components/Bill";
 
-function Invoices() {
+function BillingInformation() {
   return (
-    <Card sx={{ height: "100%" }}>
-      <ArgonBox pt={2} px={2} display="flex" justifyContent="space-between" alignItems="center">
+    <Card id="delete-account">
+      <ArgonBox pt={3} px={2}>
         <ArgonTypography variant="h6" fontWeight="medium">
-          Invoices
+          Billing Information
         </ArgonTypography>
-        <ArgonButton variant="outlined" color="info" size="small">
-          View All
-        </ArgonButton>
       </ArgonBox>
-      <ArgonBox p={2}>
+      <ArgonBox pt={1} pb={2} px={2}>
         <ArgonBox component="ul" display="flex" flexDirection="column" p={0} m={0}>
-          <Invoice date="March, 01, 2020" id="#MS-415646" price="$180" />
-          <Invoice date="February, 10, 2021" id="#RV-126749" price="$250" />
-          <Invoice date="April, 05, 2020" id="#QW-103578" price="$120" />
-          <Invoice date="June, 25, 2019" id="#MS-415646" price="$180" />
-          <Invoice date="March, 01, 2019" id="#AR-803481" price="$300" noGutter />
+          <Bill
+            name="oliver liam"
+            company="viking burrito"
+            email="oliver@burrito.com"
+            vat="FRB1235476"
+          />
+          <Bill
+            name="lucas harper"
+            company="stone tech zone"
+            email="lucas@stone-tech.com"
+            vat="FRB1235476"
+          />
+          <Bill
+            name="ethan james"
+            company="fiber notion"
+            email="ethan@fiber.com"
+            vat="FRB1235476"
+            noGutter
+          />
         </ArgonBox>
       </ArgonBox>
     </Card>
   );
 }
 
-export default Invoices;
+export default BillingInformation;
