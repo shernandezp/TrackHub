@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "author": "Sergio Hernandez <",
   "license": "SEE LICENSE IN <http://www.apache.org/licenses/>",
-  "description": "React version of Argon Dashboard 2 by Creative Tim",
+  "description": "React Client for TrackHub",
   "bugs": {
     "url": "https://github.com/shernandezp"
   },
