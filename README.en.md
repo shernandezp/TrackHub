@@ -7,7 +7,7 @@
 
 # TrackHub Application Overview
 
-TrackHub Application is a web client developed with React, based on the Argon template by [Tim Creative](https://www.creative-tim.com/). This client serves as the user interface for TrackHub Services, allowing users to manage various system aspects such as accounts, operators, devices, carriers, users, and permissions. Additionally, it provides tools for real-time geographical data visualization, such as the location of GPS devices, with corresponding labeling.
+TrackHub Application is a web client developed with React, based on the Argon template by [Creative Tim](https://www.creative-tim.com/). This client serves as the user interface for TrackHub Services, allowing users to manage various system aspects such as accounts, operators, devices, carriers, users, and permissions. Additionally, it provides tools for real-time geographical data visualization, such as the location of GPS devices, with corresponding labeling.
 
 ---
 
