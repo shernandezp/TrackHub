@@ -27,15 +27,13 @@ function TransportersTable({
   const { columns, rows } = data;
 
   return (
-    <>
-        <Table 
-          columns={columns} 
-          rows={rows} 
-          selected={selected}
-          selectedField="name"
-          handleSelected={handleSelected} 
-          searchQuery={searchQuery}/>
-    </>
+      <Table 
+        columns={columns} 
+        rows={rows} 
+        selected={selected}
+        selectedField="name"
+        handleSelected={handleSelected} 
+        searchQuery={searchQuery}/>
   );
 }
 
