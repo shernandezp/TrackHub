@@ -1,6 +1,14 @@
+## Componentes y Recursos Utilizados
+
+| Componente                | Descripción                                             | Documentación                                                                 |
+|---------------------------|---------------------------------------------------------|-------------------------------------------------------------------------------|
+| Argon Dashboard 2 MUI - v3.0.1             | Plantilla basada en React JS y MUI        | [Documentación Creative Tim](https://www.creative-tim.com/product/argon-dashboard-material-ui)                           |
+| React JS 18.3.1               | Biblioteca para interfaces de usuario nativas y web     | [Documentación React JS](https://react.dev/) |
+
+
 # Descripción general de la aplicación TrackHub
 
-La aplicación TrackHub es un cliente web desarrollado con React, basado en la plantilla Argon de Tim Creative. Este cliente sirve como la interfaz de usuario para los servicios de TrackHub, permitiendo a los usuarios gestionar varios aspectos del sistema, como cuentas, operadores, dispositivos, transportistas, usuarios y permisos. Además, proporciona herramientas para la visualización de datos geográficos en tiempo real, como la ubicación de dispositivos GPS, con las etiquetas correspondientes.
+La aplicación TrackHub es un cliente web desarrollado con React, basado en la plantilla Argon de [Creative Tim](https://www.creative-tim.com/). Este cliente sirve como la interfaz de usuario para los servicios de TrackHub, permitiendo a los usuarios gestionar varios aspectos del sistema, como cuentas, operadores, dispositivos, transportistas, usuarios y permisos. Además, proporciona herramientas para la visualización de datos geográficos en tiempo real, como la ubicación de dispositivos GPS, con las etiquetas correspondientes.
 
 ---
 
@@ -116,3 +124,7 @@ No solo para esta aplicación, sino para todos los servicios en general, el cód
 - **Gestión de geocercas**: La aplicación incluirá funcionalidad para definir límites virtuales (geocercas) alrededor de ubicaciones específicas. Se pueden activar alertas o acciones cuando los dispositivos entran o salen de estas geocercas, lo que permite respuestas automatizadas basadas en datos de ubicación en tiempo real.
 
 - **Integración adicional de operadores**: Ampliación de la capacidad para integrar más operadores o proveedores de servicios de monitoreo.
+
+## Licencia
+
+Este proyecto está bajo la Licencia Apache 2.0. Consulta el archivo [LICENSE](https://www.apache.org/licenses/LICENSE-2.0) para más información.

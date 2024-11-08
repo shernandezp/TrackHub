@@ -1,6 +1,13 @@
+## Components and Resources
+
+| Component                | Description                                           | Documentation                                                                 |
+|--------------------------|-------------------------------------------------------|-------------------------------------------------------------------------------|
+| Argon Dashboard 2 MUI - v3.0.1             | Plantilla basada en React JS y MUI        | [Creative Tim Documentation](https://www.creative-tim.com/product/argon-dashboard-material-ui)                           |
+| React JS 18.3.1               | Library for web and native user interfaces     | [React JS Documentation](https://react.dev/) |
+
 # TrackHub Application Overview
 
-TrackHub Application is a web client developed with React, based on the Argon template by Tim Creative. This client serves as the user interface for TrackHub Services, allowing users to manage various system aspects such as accounts, operators, devices, carriers, users, and permissions. Additionally, it provides tools for real-time geographical data visualization, such as the location of GPS devices, with corresponding labeling.
+TrackHub Application is a web client developed with React, based on the Argon template by [Tim Creative](https://www.creative-tim.com/). This client serves as the user interface for TrackHub Services, allowing users to manage various system aspects such as accounts, operators, devices, carriers, users, and permissions. Additionally, it provides tools for real-time geographical data visualization, such as the location of GPS devices, with corresponding labeling.
 
 ---
 
@@ -114,3 +121,8 @@ Not only for this application but for all services in general, the code includes
 - **Geofence Management**: The application will include functionality to define virtual boundaries (geofences) around specific locations. Alerts or actions can be triggered when devices enter or exit these geofences, enabling automated responses based on real-time location data.
 
 - **Additional Operator Integration**: Expanding the capability to integrate more operators or monitoring service providers.
+
+
+## License
+
+This project is licensed under the Apache 2.0 License. See the [LICENSE file](https://www.apache.org/licenses/LICENSE-2.0) for more information.
