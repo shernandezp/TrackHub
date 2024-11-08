@@ -14,21 +14,21 @@ TrackHub Application is a web client developed with React, based on the Argon te
 ## Login Page
 *The authentication flow is initiated by the login page, which points to the Authority Server of TrackHub as the authentication method for the web client.* 
 
-![Image](https://github.com/shernandezp/TrackHub/tree/main/src/assets/images/login.png)
+![Image](https://github.com/shernandezp/TrackHub/blob/main/src/assets/images/login.png?raw=true)
 
 ---
 
 ## Main Dashboard
 *Once logged in, users are presented with the main dashboard, which includes a map displaying real-time data related to device locations and other geographical information. This web client communicates with TrackHub services using GraphQL endpoints for efficient querying and manipulation of data*
 
-![Image](https://github.com/shernandezp/TrackHub/tree/main/src/assets/images/dashboard.png)
+![Image](https://github.com/shernandezp/TrackHub/blob/main/src/assets/images/dashboard.png?raw=true)
 
 ---
 
 ## Settings Management Screen
 *The settings screen allows administrators to manage system data, such as user accounts, permissions, and operator settings.*
 
-![Image](https://github.com/shernandezp/TrackHub/tree/main/src/assets/images/manage.png)
+![Image](https://github.com/shernandezp/TrackHub/blob/main/src/assets/images/manage.png?raw=true)
 
 ---
 

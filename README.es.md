@@ -15,21 +15,21 @@ La aplicación TrackHub es un cliente web desarrollado con React, basado en la p
 ## Página de inicio de sesión
 *El flujo de autenticación se inicia en la página de inicio de sesión, que apunta al Servidor de Autoridad de TrackHub como el método de autenticación para el cliente web.* 
 
-![Image](https://github.com/shernandezp/TrackHub/tree/main/src/assets/images/login.png)
+![Image](https://github.com/shernandezp/TrackHub/blob/main/src/assets/images/login.png?raw=true)
 
 ---
 
 ## Panel principal
 *Una vez iniciada la sesión, los usuarios se presentan con el panel principal, que incluye un mapa que muestra datos en tiempo real relacionados con la ubicación de los dispositivos y otra información geográfica. Este cliente web se comunica con los servicios de TrackHub utilizando endpoints de GraphQL para realizar consultas y manipular datos de manera eficiente.*
 
-![Image](https://github.com/shernandezp/TrackHub/tree/main/src/assets/images/dashboard.png)
+![Image](https://github.com/shernandezp/TrackHub/blob/main/src/assets/images/dashboard.png?raw=true)
 
 ---
 
 ## Pantalla de gestión de configuración
 *La pantalla de configuración permite a los administradores gestionar los datos del sistema, como cuentas de usuario, permisos y configuraciones de operadores.*
 
-![Image](https://github.com/shernandezp/TrackHub/tree/main/src/assets/images/manage.png)
+![Image](https://github.com/shernandezp/TrackHub/blob/main/src/assets/images/manage.png?raw=true)
 
 ---
 
