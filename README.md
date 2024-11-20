@@ -1,4 +1,4 @@
-# TrackHub Management API
+# TrackHub Web
 
 [English](README.en.md) | [Español](README.es.md)
 

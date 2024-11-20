@@ -14,7 +14,6 @@
 *  limitations under the License.
 */
 
-/* eslint-disable no-unused-vars */
 /**
 =========================================================
 * Argon Dashboard 2 MUI - v3.0.1

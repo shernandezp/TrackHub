@@ -1,0 +1,34 @@
+/**
+* Copyright (c) 2024 Sergio Hernandez. All rights reserved.
+*
+*  Licensed under the Apache License, Version 2.0 (the "License").
+*  You may not use this file except in compliance with the License.
+*  You may obtain a copy of the License at
+*
+*      http://www.apache.org/licenses/LICENSE-2.0
+*
+*  Unless required by applicable law or agreed to in writing, software
+*  distributed under the License is distributed on an "AS IS" BASIS,
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+*  See the License for the specific language governing permissions and
+*  limitations under the License.
+*/
+
+const geofenceTypes = [
+    { value: 1, label: 'Client Location' },
+    { value: 2, label: 'Construction Site' },
+    { value: 3, label: 'Danger Zone' },
+    { value: 4, label: 'Fuel Station' },
+    { value: 5, label: 'Garage' },
+    { value: 6, label: 'Hospital' },
+    { value: 7, label: 'Hotel' },
+    { value: 8, label: 'Office' },
+    { value: 9, label: 'Park' },
+    { value: 10, label: 'Parking Lot' },
+    { value: 11, label: 'Restricted Area' },
+    { value: 12, label: 'Retail Store' },
+    { value: 13, label: 'School' },
+    { value: 14, label: 'Warehouse' }
+  ];
+  
+  export default geofenceTypes;
