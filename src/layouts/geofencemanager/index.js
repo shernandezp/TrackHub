@@ -31,9 +31,6 @@ import { LoadingContext } from 'LoadingContext';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "AuthContext";
 
-// Dashboard layout components
-import GeneralMap from "controls/Maps/GeneralMap";
-
 function GeofenceManager() {
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
@@ -84,13 +81,34 @@ function GeofenceManager() {
     }
   };
 
+  const existingGeofences = [
+    {
+      id: "e53fcf0a-e6c6-44b8-b7a6-db20e695d4e9",
+      name: "Geofence 1",
+      latlngs: [
+        [51.505, -0.09],
+        [51.51, -0.1],
+        [51.51, -0.08],
+      ],
+    },
+    {
+      id: "aa475051-cef6-4e1f-90c0-bd9eb33355e2",
+      name: "Geofence 2",
+      latlngs: [
+        [51.51, -0.11],
+        [51.52, -0.12],
+        [51.52, -0.1],
+      ],
+    },
+  ];
+
   return (
     <DashboardLayout>
       {/* <DashboardNavbar searchQuery={searchQuery} handleSearch={handleSearchChange} searchVisibility={true}/> */}
       <ArgonBox py={3}>
         <Grid container spacing={3} mb={3}>
           <Grid item xs={12} lg={12}>
-            <GeofenceEditor />
+            <GeofenceEditor initialPolygons={existingGeofences} />
           </Grid>
         </Grid>
         <Grid container spacing={3}>

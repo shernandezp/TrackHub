@@ -3,8 +3,10 @@ import { MapContainer, TileLayer, Polygon } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-editable";
+import { v4 as uuidv4 } from "uuid";
+import PropTypes from "prop-types";
 
-const GeofenceEditor = () => {
+const GeofenceEditor = ({ initialPolygons }) => {
   const mapRef = useRef(null);
   const [geofences, setGeofences] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
@@ -23,13 +25,12 @@ const GeofenceEditor = () => {
         console.log("Polygon coordinates:", latlngs);
         const name = prompt("Enter a name for the geofence:");
         if (name) {
-          const id = layer._leaflet_id;
-          setGeofences((prev) => [...prev, { id, name, latlngs }]);
-          layer.disableEdit();
+          const id = uuidv4();
+          setGeofences((prev) => [...prev, { id, name, latlngs, layer }]);
+          map.editTools.stopDrawing();
         } else {
           map.removeLayer(layer);
         }
-        map.editTools.stopDrawing();
         setIsEditing(false);
       });
     }
@@ -41,9 +42,20 @@ const GeofenceEditor = () => {
     };
   }, [mapRef.current]);
 
+  useEffect(() => {
+    if (initialPolygons && initialPolygons.length > 0 && geofences.length === 0) {
+      if (mapRef.current) {
+        initialPolygons.forEach((polygon) => {
+          const id = uuidv4();
+          const newPolygon = L.polygon(polygon.latlngs).addTo(mapRef.current);
+          setGeofences((prev) => [...prev, { id, ...polygon, layer: newPolygon }]);
+        });
+      }
+    }
+  }, [initialPolygons, geofences.length]);
+
   const handlePolygonClick = (id) => {
-    const map = mapRef.current;
-    const polygonLayer = map._layers[id];
+    const polygonLayer = geofences.find((geofence) => geofence.id === id)?.layer;
 
     if (polygonLayer) {
       if (polygonLayer.editEnabled()) {
@@ -70,30 +82,23 @@ const GeofenceEditor = () => {
 
     if (!map) return;
 
-    const updatedGeofences = geofences.map((geofence) => {
-      if (!editedGeofences.has(geofence.id)) return geofence;
+    editedGeofences.forEach((id) => {
+      const geofence = geofences.find((geofence) => geofence.id === id);
+      if (geofence) {
+        const polygonLayer = geofence.layer;
+        if (polygonLayer) {
+          const coordinates = polygonLayer.getLatLngs()[0];
+          console.log(`Edited polygon coordinates for geofence ${geofence.id}:`, coordinates);
 
-      const polygonLayer = map._layers[geofence.id];
-      if (polygonLayer) {
-        const coordinates = polygonLayer.getLatLngs()[0];
-        console.log(`Edited polygon coordinates for geofence ${geofence.id}:`, coordinates);
+          polygonLayer.disableEdit();
+          polygonLayer.setLatLngs([coordinates]);
 
-        map.removeLayer(polygonLayer);
-        const newPolygon = L.polygon(coordinates);
-        newPolygon.addTo(map);
-        newPolygon.disableEdit();
-
-        return {
-          ...geofence,
-          latlngs: coordinates,
-          id: newPolygon._leaflet_id,
-        };
+          geofence.latlngs = coordinates;
+        }
       }
-
-      return geofence;
     });
 
-    setGeofences(updatedGeofences);
+    map.editTools.stopDrawing();
     setEditedGeofences(new Set());
     setIsEditing(false);
   };
@@ -148,6 +153,10 @@ const GeofenceEditor = () => {
       </button>
     </div>
   );
+};
+
+GeofenceEditor.propTypes = {
+  initialPolygons: PropTypes.array,
 };
 
 export default GeofenceEditor;
