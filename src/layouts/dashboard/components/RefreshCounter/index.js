@@ -30,7 +30,7 @@ function RefreshCounter({ settings, fetchPositions }) {
       }
     }, [counter, settings.refreshMap]);
   
-    return settings.refreshMap && <div className="label">{counter} s.</div>;
+    return settings.refreshMap && <div className="mapcontrol">{counter} s.</div>;
   }
   
   RefreshCounter.propTypes = {

@@ -15,18 +15,18 @@
 */
 
 const geofenceTypes = [
-    { value: 1, label: 'Client Location' },
-    { value: 2, label: 'Construction Site' },
-    { value: 3, label: 'Danger Zone' },
-    { value: 4, label: 'Fuel Station' },
+    { value: 1, label: 'ClientLocation' },
+    { value: 2, label: 'ConstructionSite' },
+    { value: 3, label: 'DangerZone' },
+    { value: 4, label: 'FuelStation' },
     { value: 5, label: 'Garage' },
     { value: 6, label: 'Hospital' },
     { value: 7, label: 'Hotel' },
     { value: 8, label: 'Office' },
     { value: 9, label: 'Park' },
-    { value: 10, label: 'Parking Lot' },
-    { value: 11, label: 'Restricted Area' },
-    { value: 12, label: 'Retail Store' },
+    { value: 10, label: 'ParkingLot' },
+    { value: 11, label: 'RestrictedArea' },
+    { value: 12, label: 'RetailStore' },
     { value: 13, label: 'School' },
     { value: 14, label: 'Warehouse' }
   ];

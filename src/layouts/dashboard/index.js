@@ -52,7 +52,7 @@ import { useAuth } from "AuthContext";
 
 // Dashboard layout components
 import GeneralMap from "controls/Maps/GeneralMap";
-import RefreshLabelStyle from 'layouts/dashboard/styles/RefreshLabel';
+import MapControlStyle from 'controls/Maps/styles/MapControl';
 import {countRecentDevices, countDevicesInMovement, getPercentage} from 'layouts/dashboard/utils/dashboard';
 
 function Default() {
@@ -125,7 +125,7 @@ function Default() {
         </Grid>
         <Grid container spacing={3} mb={3}>
         <Grid item xs={12} lg={12}>
-          <RefreshLabelStyle>
+          <MapControlStyle>
             <GeneralMap 
               mapType={settings.maps} 
               positions={positions} 
@@ -133,7 +133,7 @@ function Default() {
               selectedMarker={selectedTransporter}
               handleSelected={handleSelected}/>
             <RefreshCounter settings={settings} fetchPositions={fetchPositions} />
-          </RefreshLabelStyle>
+          </MapControlStyle>
         </Grid>
         </Grid>
         <Grid container spacing={3}>

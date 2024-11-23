@@ -14,12 +14,13 @@
 *  limitations under the License.
 */
 
-import React, { useState, useEffect, useContext  } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import Grid from "@mui/material/Grid";
 import ArgonBox from "components/ArgonBox";
 import DashboardLayout from "controls/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "controls/Navbars/DashboardNavbar";
 import GeofenceEditor from 'controls/Maps/GeofenceEditor';
+import MapControlStyle from 'controls/Maps/styles/MapControl';
 import Footer from "controls/Footer";
 import Table from "controls/Tables/Table";
 import useForm from 'controls/Dialogs/useForm';
@@ -58,7 +59,7 @@ function GeofenceManager() {
 
   const [values, handleChange, setValues, setErrors, validate, errors] = useForm({});
   const [toDelete, setToDelete] = useState(null);
-  const { columns, rows } = data;
+  const { geofences, columns, rows } = data;
   
   const fetchSettings = async () => {
     setLoading(true);
@@ -73,34 +74,38 @@ function GeofenceManager() {
     }
   }, [isAuthenticated]);
 
-  const handleSubmit = async () => {
-    let requiredFields = ['name'];
+  const addRef = useRef(null);
+  const saveRef = useRef(null);
+  const cancelRef = useRef(null);
 
-    if (validate(requiredFields)) {
-      onSave(values);
+  const handleSave = () => {
+    if (saveRef.current) {
+      let result = saveRef.current();
+      let requiredFields = ['name'];
+      if (validate(requiredFields)) {
+        let coordinates = result.latlngs.map(coord => ({latitude: coord.lat, longitude: coord.lng}));
+        let geom = {srid: 4326, coordinates: coordinates};
+        values.geom = geom;
+        values.geofenceId = result.id;
+        values.new = true;
+        onSave(values);
+      }
     }
   };
 
-  const existingGeofences = [
-    {
-      id: "e53fcf0a-e6c6-44b8-b7a6-db20e695d4e9",
-      name: "Geofence 1",
-      latlngs: [
-        [51.505, -0.09],
-        [51.51, -0.1],
-        [51.51, -0.08],
-      ],
-    },
-    {
-      id: "aa475051-cef6-4e1f-90c0-bd9eb33355e2",
-      name: "Geofence 2",
-      latlngs: [
-        [51.51, -0.11],
-        [51.52, -0.12],
-        [51.52, -0.1],
-      ],
-    },
-  ];
+  const handleCancel = () => {
+    if (cancelRef.current) {
+      cancelRef.current();
+    }
+  };
+
+  const handleAdd = () => {
+    if (addRef.current) {
+      setValues({color: 2, type:1, active: true});
+      setErrors({});
+      addRef.current();
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -108,23 +113,35 @@ function GeofenceManager() {
       <ArgonBox py={3}>
         <Grid container spacing={3} mb={3}>
           <Grid item xs={12} lg={12}>
-            <GeofenceEditor initialPolygons={existingGeofences} />
+            <MapControlStyle>
+              <GeofenceEditor 
+                initialPolygons={geofences}
+                setOpen={setOpen}
+                addRef={addRef}
+                saveRef={saveRef}
+                cancelRef={cancelRef}
+              />
+              <div className="mapcontrol">
+                <label onClick={handleAdd}>&nbsp;+&nbsp;</label>
+              </div>
+            </MapControlStyle>
           </Grid>
         </Grid>
         <Grid container spacing={3}>
-          <Grid item xs={12} md={8}>
+          <Grid item xs={12} md={12}>
             <Table columns={columns} rows={rows} selectedField='name' />
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <GeofenceFormDialog 
-              handleSubmit={handleSubmit}
-              values={values}
-              handleChange={handleChange}
-              errors={errors}
-            />
           </Grid>
         </Grid>
       </ArgonBox>
+      <GeofenceFormDialog 
+        open={open}
+        setOpen={setOpen}
+        handleSubmit={handleSave}
+        handleCancel={handleCancel}
+        values={values}
+        handleChange={handleChange}
+        errors={errors}
+      />
       <ConfirmDialog 
         title={t('geofence.deleteTitle')}
         message={t('geofence.deleteMessage')}

@@ -35,7 +35,7 @@ async function handleEdit(geofence, geofences, setGeofences, setData, buildTable
 }
 
 export async function handleSave(geofence, geofences, setGeofences, setData, buildTableData, createGeofence, updateGeofence) {
-    if (!geofence.geofenceId) {
+    if (geofence.new) {
         await handleAdd(geofence, geofences, setGeofences, setData, buildTableData, createGeofence);
     } else {
         await handleEdit(geofence, geofences, setGeofences, setData, buildTableData, updateGeofence);

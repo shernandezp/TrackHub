@@ -85,6 +85,7 @@
         "name": "Nombre",
         "description": "Descripción",
         "color": "Color",
+        "type": "Tipo",
         "active": "Activa",
         "deleteTitle": "Eliminar Geocerca",
         "deleteMessage": "¿Está seguro de que desea eliminar esta geocerca?"

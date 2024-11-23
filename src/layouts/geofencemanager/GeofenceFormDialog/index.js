@@ -20,80 +20,94 @@ import { useTranslation } from 'react-i18next';
 import CustomCheckbox from 'controls/Dialogs/CustomCheckbox';
 import CustomTextField from 'controls/Dialogs/CustomTextField';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
-import Card from "@mui/material/Card";
-import ArgonBox from "components/ArgonBox";
-import ArgonButton from "components/ArgonButton";
-import Icon from "@mui/material/Icon";
+import FormDialog from "controls/Dialogs/FormDialog";
+import geofenceTypes from 'data/geofenceTypes';
 import colors from 'data/colors';
+import { toCamelCase } from 'utils/stringUtils';
 
-function GeofenceFormDialog({ handleSubmit, values, handleChange, errors }) {
+function GeofenceFormDialog({ open, setOpen, handleSubmit, handleCancel, values, handleChange, errors }) {
   const { t } = useTranslation();
   const translatedColors = colors.map(type => ({
     ...type,
     label: t(`colors.${type.label.toLowerCase()}`)
   }));
+  const translatedTypes = geofenceTypes.map(type => ({
+    ...type,
+    label: t(`geofenceTypes.${toCamelCase(type.label)}`)
+  }));
   return (
-    <Card sx={{ height: "100%" }}>
-        <ArgonBox p={2}>
-            <form>
-                <CustomTextField
-                    autoFocus
-                    margin="dense"
-                    name="name"
-                    id="name"
-                    label={t('geofence.name')}
-                    type="text"
-                    fullWidth
-                    value={values.name || ''}
-                    onChange={handleChange}
-                    required
-                    errorMsg={errors.name}
-                />
+    <FormDialog 
+      title={t('user.details')}
+      handleSave={handleSubmit}
+      handleCancel={handleCancel}
+      open={open}
+      setOpen={setOpen}
+      maxWidth="md">
+        <form>
+            <CustomTextField
+              autoFocus
+              margin="dense"
+              name="name"
+              id="name"
+              label={t('geofence.name')}
+              type="text"
+              fullWidth
+              value={values.name || ''}
+              onChange={handleChange}
+              required
+              errorMsg={errors.name}
+            />
 
-                <CustomTextField
-                    margin="normal"
-                    name="description"
-                    id="description"
-                    label={t('geofence.description')}
-                    type="text"
-                    fullWidth
-                    value={values.description || ''}
-                    onChange={handleChange}
-                />
+            <CustomTextField
+              margin="normal"
+              name="description"
+              id="description"
+              label={t('geofence.description')}
+              type="text"
+              fullWidth
+              value={values.description || ''}
+              onChange={handleChange}
+            />
 
-                <CustomSelect
-                    list={translatedColors}
-                    handleChange={handleChange}
-                    name="color"
-                    id="color"
-                    label={t('geofence.color')}
-                    value={values.color}
-                    required
-                />
-                
-                <CustomCheckbox 
-                name="active" 
-                id="active" 
-                value={values.active} 
-                handleChange={handleChange} 
-                label={t('geofence.active')} />
-            </form>
-        </ArgonBox>
-        <ArgonButton 
-          variant="gradient" 
-          onClick={handleSubmit}>
-          <Icon sx={{ fontWeight: "bold" }}>save</Icon>
-          &nbsp;{t('generic.save')}
-        </ArgonButton>
-    </Card>
+            <CustomSelect
+              list={translatedTypes}
+              handleChange={handleChange}
+              name="type"
+              id="type"
+              label={t('geofence.type')}
+              value={values.type}
+              required
+            />
+
+            <CustomSelect
+              list={translatedColors}
+              handleChange={handleChange}
+              name="color"
+              id="color"
+              label={t('geofence.color')}
+              value={values.color}
+              required
+            />
+            
+            <CustomCheckbox 
+            name="active" 
+            id="active" 
+            value={values.active} 
+            handleChange={handleChange} 
+            label={t('geofence.active')} />
+        </form>
+      </FormDialog>
   );
 }
 
 GeofenceFormDialog.propTypes = {
-    handleSubmit: PropTypes.func.isRequired,
-    values: PropTypes.object.isRequired,
-    handleChange: PropTypes.func.isRequired,
-    errors: PropTypes.object.isRequired,
+  open: PropTypes.bool.isRequired,
+  setOpen: PropTypes.func.isRequired,
+  handleSubmit: PropTypes.func.isRequired,
+  handleCancel: PropTypes.func.isRequired,
+  values: PropTypes.object.isRequired,
+  handleChange: PropTypes.func.isRequired,
+  errors: PropTypes.object.isRequired
 };
 
 export default GeofenceFormDialog;

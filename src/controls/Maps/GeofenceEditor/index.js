@@ -6,10 +6,10 @@ import "leaflet-editable";
 import { v4 as uuidv4 } from "uuid";
 import PropTypes from "prop-types";
 
-const GeofenceEditor = ({ initialPolygons }) => {
+const GeofenceEditor = ({ initialPolygons, setOpen, addRef, saveRef, cancelRef }) => {
   const mapRef = useRef(null);
+  const layerRef = useRef(null);
   const [geofences, setGeofences] = useState([]);
-  const [isEditing, setIsEditing] = useState(false);
   const [editedGeofences, setEditedGeofences] = useState(new Set());
 
   useEffect(() => {
@@ -21,17 +21,8 @@ const GeofenceEditor = ({ initialPolygons }) => {
 
       map.on("editable:drawing:commit", (e) => {
         const { layer } = e;
-        const latlngs = layer.getLatLngs()[0];
-        console.log("Polygon coordinates:", latlngs);
-        const name = prompt("Enter a name for the geofence:");
-        if (name) {
-          const id = uuidv4();
-          setGeofences((prev) => [...prev, { id, name, latlngs, layer }]);
-          map.editTools.stopDrawing();
-        } else {
-          map.removeLayer(layer);
-        }
-        setIsEditing(false);
+        layerRef.current = layer;
+        setOpen(true);
       });
     }
 
@@ -67,16 +58,6 @@ const GeofenceEditor = ({ initialPolygons }) => {
     }
   };
 
-  const toggleEditing = () => {
-    const map = mapRef.current;
-    if (isEditing) {
-      map.editTools.stopDrawing();
-    } else {
-      map.editTools.startPolygon();
-    }
-    setIsEditing(!isEditing);
-  };
-
   const endEditing = () => {
     const map = mapRef.current;
 
@@ -100,21 +81,59 @@ const GeofenceEditor = ({ initialPolygons }) => {
 
     map.editTools.stopDrawing();
     setEditedGeofences(new Set());
-    setIsEditing(false);
   };
+
+  const add = () => {
+    const map = mapRef.current;
+    map.editTools.startPolygon();
+  };
+
+  const save = () => {
+    const map = mapRef.current;
+    const latlngs = layerRef.current.getLatLngs()[0];
+    // Ensure the polygon is closed
+    if (latlngs.length > 0 && !latlngs[0].equals(latlngs[latlngs.length - 1])) {
+      latlngs.push(latlngs[0]);
+    }
+    const id = uuidv4();
+    setGeofences((prev) => [...prev, { id, latlngs, layer: layerRef.current } ]);
+    map.editTools.stopDrawing();
+    setOpen(false);
+    layerRef.current = null;
+    return { id, latlngs };
+  };
+
+  const cancel = () => {
+    const map = mapRef.current;
+    if (layerRef.current) {
+      map.removeLayer(layerRef.current);
+    }
+    layerRef.current = null;
+  };
+
+  useEffect(() => {
+    if (addRef) {
+      addRef.current = add;
+    }
+    if (saveRef) {
+      saveRef.current = save;
+    }
+    if (cancelRef) {
+      cancelRef.current = cancel;
+    }
+  }, [addRef, saveRef, cancelRef]);
 
   return (
     <div>
       <MapContainer
         center={[51.505, -0.09]}
         zoom={13}
-        style={{ height: "100vh", width: "100%" }}
+        style={{ height: "70vh", width: "100%" }}
         ref={mapRef}
         doubleClickZoom={false}
         whenCreated={(mapInstance) => {
           mapRef.current = mapInstance;
-        }}
-      >
+        }}>
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -123,23 +142,10 @@ const GeofenceEditor = ({ initialPolygons }) => {
           <Polygon
             key={geofence.id}
             positions={geofence.latlngs}
-            eventHandlers={{
-              click: () => handlePolygonClick(geofence.id),
-            }}
+            eventHandlers={{ click: () => handlePolygonClick(geofence.id) }}
           />
         ))}
       </MapContainer>
-      <button
-        onClick={toggleEditing}
-        style={{
-          position: "absolute",
-          top: "10px",
-          right: "10px",
-          zIndex: 1000,
-        }}
-      >
-        {isEditing ? "Stop Editing" : "Start Editing"}
-      </button>
       <button
         onClick={endEditing}
         style={{
@@ -157,6 +163,10 @@ const GeofenceEditor = ({ initialPolygons }) => {
 
 GeofenceEditor.propTypes = {
   initialPolygons: PropTypes.array,
+  setOpen: PropTypes.func,
+  addRef: PropTypes.object,
+  saveRef: PropTypes.object,
+  cancelRef: PropTypes.object,
 };
 
 export default GeofenceEditor;

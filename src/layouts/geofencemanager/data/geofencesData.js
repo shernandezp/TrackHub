@@ -80,6 +80,10 @@ function useGeofencesTableData(handleEditClick, handleDeleteClick) {
   };
 
   const buildTableData = (geofences) => ({
+    geofences: geofences.map(item => ({
+      id: item.geofenceId,
+      latlngs: item.geom.coordinates.map(coord => [coord.longitude, coord.latitude])
+    })),
     columns: [
       { name: "name", title:t('geofence.name'), align: "left" },
       { name: "description", title:t('geofence.description'), align: "left" },
@@ -89,7 +93,7 @@ function useGeofencesTableData(handleEditClick, handleDeleteClick) {
     ],
     rows: geofences.map(geofence => ({
       name: <Name name={geofence.name} />,
-      description: <Name name={geofence.description} />,
+      description: <Name name={geofence.description || ''} />,
       color: <Name name={geofence.color} />,
       action: (
         <>

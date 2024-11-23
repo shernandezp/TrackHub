@@ -52,8 +52,8 @@ const TableAccordion = ({
                 <Icon 
                     style={{ marginRight: '1rem' }}
                     onClick={(event) => {
-                    event.stopPropagation();
-                    handleOpen();
+                        event.stopPropagation();
+                        handleOpen();
                     }}
                 >add</Icon>
                 )}

@@ -16,9 +16,9 @@
 
 import { styled } from '@mui/system';
 
-const RefreshLabelStyle = styled('div')({
+const MapControlStyle = styled('div')({
   position: 'relative',
-  '& .label': {
+  '& .mapcontrol': {
     position: 'absolute',
     top: 8,
     right: 8,
@@ -30,4 +30,4 @@ const RefreshLabelStyle = styled('div')({
   },
 });
 
-export default RefreshLabelStyle;
+export default MapControlStyle;

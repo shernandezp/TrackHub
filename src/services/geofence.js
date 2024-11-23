@@ -70,6 +70,7 @@ const useGeofenceService = () => {
         `
       };
       const response = await post(data);
+      console.log(response.data.geofencesByAccount);
       return response.data.geofencesByAccount;
     } catch (error) {
       handleError(error);
@@ -77,37 +78,50 @@ const useGeofenceService = () => {
   };
 
   const createGeofence = async (geofenceData) => {
-    try {
-      const data = {
-        query: `
-          mutation {
-            createGeofence(
-              command: {
-                geofence: {
-                  geom: { coordinates: [${geofenceData.geom.coordinates.map(coord => `[${coord.longitude}, ${coord.latitude}]`).join(', ')}], srid: ${geofenceData.geom.srid} }
-                  type: ${geofenceData.type}
-                  name: ${formatValue(geofenceData.name)}
-                  description: ${formatValue(geofenceData.description)}
-                  color: ${formatValue(geofenceData.color)}
-                  active: ${geofenceData.active}
-                }
+    const data = {
+      query: `
+        mutation {
+          createGeofence(
+            command: {
+              geofence: {
+                geofenceId: "${geofenceData.geofenceId}",
+                type: ${geofenceData.type},
+                name: ${formatValue(geofenceData.name)},
+                geom: {
+                    srid: ${geofenceData.geom.srid},
+                    coordinates: [
+                        ${geofenceData.geom.coordinates.map(coord => `{
+                            longitude: ${coord.longitude},
+                            latitude: ${coord.latitude}
+                        }`).join(',')}
+                    ]
+                },
+                description: ${formatValue(geofenceData.description)},
+                color: ${geofenceData.color},
+                active: ${geofenceData.active}
               }
-            ) {
-              active
+            }
+          ) {
               type
               name
               geom {
                 srid
-                coordinates
+                coordinates {
+                  longitude
+                  latitude
+                }
               }
               geofenceId
               description
               color
+              active
               accountId
-            }
           }
-        `
-      };
+        }
+      `
+    };
+
+    try {
       const response = await post(data);
       return response.data.createGeofence;
     } catch (error) {
