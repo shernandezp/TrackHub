@@ -14,14 +14,26 @@
 *  limitations under the License.
 */
 
-
 import useApiService from './apiService';
 import { handleError } from 'utils/errorHandler';
 import { formatValue } from 'utils/dataUtils';
 
+/**
+ * Custom hook to interact with the geofencing service.
+ * 
+ * @module useGeofenceService
+ */
 const useGeofenceService = () => {
   const { post } = useApiService(process.env.REACT_APP_GEOFENCING_ENDPOINT);
 
+   /**
+  * Fetches a geofence by its ID.
+  * 
+  * @function getGeofence
+  * @param {string} geofenceId - The ID of the geofence to fetch.
+  * @returns {Promise<Object>} The geofence data.
+  * @throws Will throw an error if the request fails.
+  */
   const getGeofence = async (geofenceId) => {
     try {
       const data = {
@@ -49,6 +61,13 @@ const useGeofenceService = () => {
     }
   };
 
+   /**
+  * Fetches all geofences associated with the current account.
+  * 
+  * @function getGeofencesByAccount
+  * @returns {Promise<Array<Object>>} An array of geofence data.
+  * @throws Will throw an error if the request fails.
+  */
   const getGeofencesByAccount = async () => {
     try {
       const data = {
@@ -76,6 +95,25 @@ const useGeofenceService = () => {
     }
   };
 
+   /**
+  * Creates a new geofence.
+  * 
+  * @function createGeofence
+  * @param {Object} geofenceData - The data for the new geofence.
+  * @param {string} geofenceData.geofenceId - The ID of the geofence.
+  * @param {string} geofenceData.type - The type of the geofence.
+  * @param {string} geofenceData.name - The name of the geofence.
+  * @param {Object} geofenceData.geom - The geometry of the geofence.
+  * @param {number} geofenceData.geom.srid - The SRID of the geofence.
+  * @param {Array<Object>} geofenceData.geom.coordinates - The coordinates of the geofence.
+  * @param {number} geofenceData.geom.coordinates.latitude - The latitude of the coordinate.
+  * @param {number} geofenceData.geom.coordinates.longitude - The longitude of the coordinate.
+  * @param {string} geofenceData.description - The description of the geofence.
+  * @param {string} geofenceData.color - The color of the geofence.
+  * @param {boolean} geofenceData.active - The active status of the geofence.
+  * @returns {Promise<Object>} The created geofence data.
+  * @throws Will throw an error if the request fails.
+  */
   const createGeofence = async (geofenceData) => {
     const data = {
       query: `
@@ -128,6 +166,25 @@ const useGeofenceService = () => {
     }
   };
 
+   /**
+  * Updates an existing geofence.
+  * 
+  * @function updateGeofence
+  * @param {string} geofenceId - The ID of the geofence to update.
+  * @param {Object} geofenceData - The updated data for the geofence.
+  * @param {string} geofenceData.type - The type of the geofence.
+  * @param {string} geofenceData.name - The name of the geofence.
+  * @param {Object} geofenceData.geom - The geometry of the geofence.
+  * @param {number} geofenceData.geom.srid - The SRID of the geofence.
+  * @param {Array<Object>} geofenceData.geom.coordinates - The coordinates of the geofence.
+  * @param {number} geofenceData.geom.coordinates.latitude - The latitude of the coordinate.
+  * @param {number} geofenceData.geom.coordinates.longitude - The longitude of the coordinate.
+  * @param {string} geofenceData.description - The description of the geofence.
+  * @param {string} geofenceData.color - The color of the geofence.
+  * @param {boolean} geofenceData.active - The active status of the geofence.
+  * @returns {Promise<Object>} The updated geofence data.
+  * @throws Will throw an error if the request fails.
+  */
   const updateGeofence = async (geofenceId, geofenceData) => {
     try {
       const data = {
@@ -166,6 +223,14 @@ const useGeofenceService = () => {
     }
   };
 
+   /**
+  * Deletes a geofence by its ID.
+  * 
+  * @function deleteGeofence
+  * @param {string} geofenceId - The ID of the geofence to delete.
+  * @returns {Promise<boolean>} True if the geofence was deleted successfully, false otherwise.
+  * @throws Will throw an error if the request fails.
+  */
   const deleteGeofence = async (geofenceId) => {
     try {
       const data = {

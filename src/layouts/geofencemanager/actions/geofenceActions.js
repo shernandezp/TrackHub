@@ -14,6 +14,17 @@
 *  limitations under the License.
 */
 
+/**
+ * Handles adding a new geofence.
+ * 
+ * @param {Object} geofence - The geofence object to add.
+ * @param {Array} geofences - The current list of geofences.
+ * @param {Function} setGeofences - Function to update the list of geofences.
+ * @param {Function} setData - Function to update the table data.
+ * @param {Function} buildTableData - Function to build the table data from the geofences.
+ * @param {Function} createGeofence - Function to create a new geofence.
+ * @returns {Promise<void>}
+ */
 async function handleAdd(geofence, geofences, setGeofences, setData, buildTableData, createGeofence) {
     let response = await createGeofence(geofence);
     if (response) {
@@ -23,6 +34,17 @@ async function handleAdd(geofence, geofences, setGeofences, setData, buildTableD
     }
 }
 
+/**
+ * Handles editing an existing geofence.
+ * 
+ * @param {Object} geofence - The geofence object to edit.
+ * @param {Array} geofences - The current list of geofences.
+ * @param {Function} setGeofences - Function to update the list of geofences.
+ * @param {Function} setData - Function to update the table data.
+ * @param {Function} buildTableData - Function to build the table data from the geofences.
+ * @param {Function} updateGeofence - Function to update an existing geofence.
+ * @returns {Promise<void>}
+ */
 async function handleEdit(geofence, geofences, setGeofences, setData, buildTableData, updateGeofence) {
     let response = await updateGeofence(geofence.geofenceId, geofence);
     if (response) {
@@ -34,6 +56,18 @@ async function handleEdit(geofence, geofences, setGeofences, setData, buildTable
     }
 }
 
+/**
+ * Handles saving a geofence, either by adding a new one or editing an existing one.
+ * 
+ * @param {Object} geofence - The geofence object to save.
+ * @param {Array} geofences - The current list of geofences.
+ * @param {Function} setGeofences - Function to update the list of geofences.
+ * @param {Function} setData - Function to update the table data.
+ * @param {Function} buildTableData - Function to build the table data from the geofences.
+ * @param {Function} createGeofence - Function to create a new geofence.
+ * @param {Function} updateGeofence - Function to update an existing geofence.
+ * @returns {Promise<void>}
+ */
 export async function handleSave(geofence, geofences, setGeofences, setData, buildTableData, createGeofence, updateGeofence) {
     if (geofence.new) {
         await handleAdd(geofence, geofences, setGeofences, setData, buildTableData, createGeofence);
@@ -42,6 +76,17 @@ export async function handleSave(geofence, geofences, setGeofences, setData, bui
     }
 }
 
+/**
+ * Handles deleting a geofence.
+ * 
+ * @param {string} geofenceId - The ID of the geofence to delete.
+ * @param {Array} geofences - The current list of geofences.
+ * @param {Function} setGeofences - Function to update the list of geofences.
+ * @param {Function} setData - Function to update the table data.
+ * @param {Function} buildTableData - Function to build the table data from the geofences.
+ * @param {Function} deleteGeofence - Function to delete a geofence.
+ * @returns {Promise<void>}
+ */
 export async function handleDelete(geofenceId, geofences, setGeofences, setData, buildTableData, deleteGeofence) {
     let response = await deleteGeofence(geofenceId);
     if (response) {

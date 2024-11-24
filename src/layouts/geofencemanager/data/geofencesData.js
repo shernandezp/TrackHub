@@ -27,6 +27,22 @@ import { handleDelete, handleSave } from "layouts/geofencemanager/actions/geofen
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
 
+/**
+ * Custom hook to manage geofences table data.
+ *
+ * @param {Function} handleEditClick - Function to handle edit click event.
+ * @param {Function} handleDeleteClick - Function to handle delete click event.
+ * @returns {Object} - Returns an object containing table data, modal states, and CRUD operations.
+ * @property {Object} data - Table data including columns and rows.
+ * @property {boolean} open - State to control the open state of the edit modal.
+ * @property {boolean} confirmOpen - State to control the open state of the delete confirmation modal.
+ * @property {Function} onGet - Function to get a geofence by ID.
+ * @property {Function} onSave - Function to save a geofence.
+ * @property {Function} onDelete - Function to delete a geofence.
+ * @property {Function} setOpen - Function to set the open state of the edit modal.
+ * @property {Function} setConfirmOpen - Function to set the open state of the delete confirmation modal.
+ */
+
 function useGeofencesTableData(handleEditClick, handleDeleteClick) {
   const { t } = useTranslation();
   const [data, setData] = useState({ columns: [], rows: [] });
@@ -89,6 +105,7 @@ function useGeofencesTableData(handleEditClick, handleDeleteClick) {
   const buildTableData = (geofences) => ({
     geofences: geofences.map(item => ({
       id: item.geofenceId,
+      name: item.name,
       latlngs: item.geom.coordinates.map(coord => [coord.longitude, coord.latitude])
     })),
     columns: [

@@ -61,7 +61,9 @@ function GeofenceManager() {
   const [values, handleChange, setValues, setErrors, validate, errors] = useForm({});
   const [toDelete, setToDelete] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [selectedGeofence, setSelectedGeofence] = useState(null);
   const { geofences, columns, rows } = data;
+  const [searchQuery, setSearchQuery] = useState('');
   
   const fetchSettings = async () => {
     setLoading(true);
@@ -86,7 +88,7 @@ function GeofenceManager() {
     let requiredFields = ['name'];
     if (validate(requiredFields)) {
       if (values.new) {
-        let result = saveRef.current();
+        let result = saveRef.current(values.name);
         let coordinates = result.latlngs.map(coord => ({latitude: coord.lat, longitude: coord.lng}));
         let geom = {srid: 4326, coordinates: coordinates};
         values.geom = geom;
@@ -133,15 +135,21 @@ function GeofenceManager() {
     }
   };
 
+  const handleSearchChange = (event) => {
+    setSearchQuery(event.target.value);
+  };
+
   return (
     <DashboardLayout>
-      {/* <DashboardNavbar searchQuery={searchQuery} handleSearch={handleSearchChange} searchVisibility={true}/> */}
+      <DashboardNavbar searchQuery={searchQuery} handleSearch={handleSearchChange} searchVisibility={true}/>
       <ArgonBox py={3}>
         <Grid container spacing={3} mb={3}>
           <Grid item xs={12} lg={12}>
             <MapControlStyle>
               <GeofenceEditor 
                 initialPolygons={geofences}
+                selectedPolygon={selectedGeofence}
+                handleSelected={setSelectedGeofence}
                 setOpen={setOpen}
                 setIsEditing={setIsEditing}
                 addRef={addRef}
@@ -159,7 +167,13 @@ function GeofenceManager() {
         </Grid>
         <Grid container spacing={3}>
           <Grid item xs={12} md={12}>
-            <Table columns={columns} rows={rows} selectedField='name' />
+            <Table 
+              columns={columns} 
+              rows={rows} 
+              selectedField="name"
+              selected={selectedGeofence}
+              handleSelected={setSelectedGeofence}
+              searchQuery={searchQuery} />
           </Grid>
         </Grid>
       </ArgonBox>
