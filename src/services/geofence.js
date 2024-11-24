@@ -27,17 +27,17 @@ const useGeofenceService = () => {
       const data = {
         query: `
           query {
-            geofence(query: { id: ${geofenceId} }) {
-              type
+            geofence(query: { id: "${geofenceId}" }) {
+              active
+              color
+              description
+              geofenceId
               name
+              type
               geom {
                 srid
-                coordinates
+                coordinates { latitude, longitude }
               }
-              geofenceId
-              color
-              active
-              description
             }
           }
         `
@@ -70,7 +70,6 @@ const useGeofenceService = () => {
         `
       };
       const response = await post(data);
-      console.log(response.data.geofencesByAccount);
       return response.data.geofencesByAccount;
     } catch (error) {
       handleError(error);
@@ -139,14 +138,22 @@ const useGeofenceService = () => {
                 geofence: {
                   type: ${geofenceData.type}
                   name: ${formatValue(geofenceData.name)}
-                  geom: { coordinates: [${geofenceData.geom.coordinates.map(coord => `[${coord.longitude}, ${coord.latitude}]`).join(', ')}], srid: ${geofenceData.geom.srid} }
-                  geofenceId: ${geofenceData.geofenceId}
+                  geom: {
+                    srid: ${geofenceData.geom.srid},
+                    coordinates: [
+                      ${geofenceData.geom.coordinates.map(coord => `{
+                          longitude: ${coord.longitude},
+                          latitude: ${coord.latitude}
+                      }`).join(',')}
+                    ]
+                  },
+                  geofenceId: "${geofenceData.geofenceId}"
                   description: ${formatValue(geofenceData.description)}
-                  color: ${formatValue(geofenceData.color)}
+                  color: ${geofenceData.color}
                   active: ${geofenceData.active}
                 }
               }
-              id: ${geofenceId}
+              id: "${geofenceId}"
             ) 
           }
         `
@@ -164,7 +171,7 @@ const useGeofenceService = () => {
       const data = {
         query: `
           mutation {
-            deleteGeofence(id: ${geofenceId}) 
+            deleteGeofence(id: "${geofenceId}") 
           }
         `
       };

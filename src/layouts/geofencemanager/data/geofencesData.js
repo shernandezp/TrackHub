@@ -16,10 +16,13 @@
 
 import { useEffect, useState, useRef, useContext } from "react";
 import { useTranslation } from 'react-i18next';
-import { Name } from "controls/Tables/components/tableComponents";
+import { Name, Description } from "controls/Tables/components/tableComponents";
 import Icon from "@mui/material/Icon";
 import ArgonButton from "components/ArgonButton";
 import useGeofenceService from "services/geofence";
+import { getGeofenceType } from 'data/geofenceTypes';
+import { getColor } from 'data/colors';
+import { toCamelCase } from 'utils/stringUtils';
 import { handleDelete, handleSave } from "layouts/geofencemanager/actions/geofenceActions";
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
@@ -34,7 +37,7 @@ function useGeofencesTableData(handleEditClick, handleDeleteClick) {
   const { isAuthenticated } = useAuth();
 
   const hasLoaded = useRef(false);
-  const { getGeofencesByAccount, createGeofence, updateGeofence, deleteGeofence } = useGeofenceService();
+  const { getGeofencesByAccount, getGeofence, createGeofence, updateGeofence, deleteGeofence } = useGeofenceService();
 
   const onSave = async (geofence) => {
     setLoading(true);
@@ -79,6 +82,10 @@ function useGeofencesTableData(handleEditClick, handleDeleteClick) {
     setConfirmOpen(true);
   };
 
+  const onGet = async (geofenceId) => {
+    return await getGeofence(geofenceId);
+  }
+
   const buildTableData = (geofences) => ({
     geofences: geofences.map(item => ({
       id: item.geofenceId,
@@ -87,14 +94,16 @@ function useGeofencesTableData(handleEditClick, handleDeleteClick) {
     columns: [
       { name: "name", title:t('geofence.name'), align: "left" },
       { name: "description", title:t('geofence.description'), align: "left" },
+      { name: "type", title:t('geofence.type'), align: "left" },
       { name: "color", title:t('geofence.color'), align: "left" },
       { name: "action", title:t('generic.action'), align: "center" },
       { name: "id" }
     ],
     rows: geofences.map(geofence => ({
       name: <Name name={geofence.name} />,
-      description: <Name name={geofence.description || ''} />,
-      color: <Name name={geofence.color} />,
+      description: <Description description={geofence.description || ''} />,
+      type: <Name name={t(`geofenceTypes.${toCamelCase(getGeofenceType(geofence.type))}`)} />,
+      color: <Name name={t(`colors.${getColor(geofence.color).toLowerCase()}`)} />,
       action: (
         <>
             <ArgonButton 
@@ -133,6 +142,7 @@ function useGeofencesTableData(handleEditClick, handleDeleteClick) {
     data, 
     open, 
     confirmOpen,
+    onGet,
     onSave, 
     onDelete, 
     setOpen, 

@@ -26,5 +26,13 @@ const colors = [
     { value: 9, label: 'Black' },
     { value: 10, label: 'White' }
   ];
+
+  const getColor = (value) => {
+    const color = colors.find(type => type.value === value);
+    return color ? color.label : '';
+  };
   
-  export default colors;
+  export { 
+    colors, 
+    getColor 
+  };

@@ -30,5 +30,13 @@ const geofenceTypes = [
     { value: 13, label: 'School' },
     { value: 14, label: 'Warehouse' }
   ];
-  
-  export default geofenceTypes;
+
+const getGeofenceType = (value) => {
+  const geofence = geofenceTypes.find(type => type.value === value);
+  return geofence ? geofence.label : '';
+};
+
+export { 
+  geofenceTypes, 
+  getGeofenceType 
+};

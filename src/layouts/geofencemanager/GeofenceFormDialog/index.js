@@ -21,15 +21,15 @@ import CustomCheckbox from 'controls/Dialogs/CustomCheckbox';
 import CustomTextField from 'controls/Dialogs/CustomTextField';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
 import FormDialog from "controls/Dialogs/FormDialog";
-import geofenceTypes from 'data/geofenceTypes';
-import colors from 'data/colors';
+import { geofenceTypes } from 'data/geofenceTypes';
+import { colors } from 'data/colors';
 import { toCamelCase } from 'utils/stringUtils';
 
 function GeofenceFormDialog({ open, setOpen, handleSubmit, handleCancel, values, handleChange, errors }) {
   const { t } = useTranslation();
-  const translatedColors = colors.map(type => ({
-    ...type,
-    label: t(`colors.${type.label.toLowerCase()}`)
+  const translatedColors = colors.map(color => ({
+    ...color,
+    label: t(`colors.${color.label.toLowerCase()}`)
   }));
   const translatedTypes = geofenceTypes.map(type => ({
     ...type,

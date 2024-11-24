@@ -52,6 +52,7 @@ function GeofenceManager() {
     data, 
     open, 
     confirmOpen,
+    onGet,
     onSave, 
     onDelete, 
     setOpen, 
@@ -59,6 +60,7 @@ function GeofenceManager() {
 
   const [values, handleChange, setValues, setErrors, validate, errors] = useForm({});
   const [toDelete, setToDelete] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
   const { geofences, columns, rows } = data;
   
   const fetchSettings = async () => {
@@ -77,19 +79,31 @@ function GeofenceManager() {
   const addRef = useRef(null);
   const saveRef = useRef(null);
   const cancelRef = useRef(null);
+  const editingRef = useRef(null);
+  const removeRef = useRef(null);
 
   const handleSave = () => {
-    if (saveRef.current) {
-      let result = saveRef.current();
-      let requiredFields = ['name'];
-      if (validate(requiredFields)) {
+    let requiredFields = ['name'];
+    if (validate(requiredFields)) {
+      if (values.new) {
+        let result = saveRef.current();
         let coordinates = result.latlngs.map(coord => ({latitude: coord.lat, longitude: coord.lng}));
         let geom = {srid: 4326, coordinates: coordinates};
         values.geom = geom;
         values.geofenceId = result.id;
-        values.new = true;
-        onSave(values);
+      } else {
+        let coordinates = values.coordinates.map(coord => ({latitude: coord.lat, longitude: coord.lng}));
+        values.geom = {srid: 4326, coordinates: coordinates};
       }
+      onSave(values);
+    }
+  };
+
+  const handleAdd = () => {
+    if (addRef.current) {
+      setValues({color: 2, type:1, active: true, new: true});
+      setErrors({});
+      addRef.current();
     }
   };
 
@@ -99,11 +113,23 @@ function GeofenceManager() {
     }
   };
 
-  const handleAdd = () => {
-    if (addRef.current) {
-      setValues({color: 2, type:1, active: true});
-      setErrors({});
-      addRef.current();
+  const handleDelete = async () => {
+    if (removeRef.current) {
+      await onDelete(toDelete)
+      removeRef.current(toDelete);
+    }
+  };
+
+  const handleEdit = async () => {
+    if (editingRef.current) {
+      setLoading(true);
+      const newGeofence = editingRef.current();
+      const geofence = await onGet(newGeofence.id);
+      geofence.new = false;
+      geofence.coordinates = newGeofence.latlngs;
+      handleEditClick(geofence);
+      setLoading(false);
+      setOpen(true);
     }
   };
 
@@ -117,12 +143,16 @@ function GeofenceManager() {
               <GeofenceEditor 
                 initialPolygons={geofences}
                 setOpen={setOpen}
+                setIsEditing={setIsEditing}
                 addRef={addRef}
                 saveRef={saveRef}
                 cancelRef={cancelRef}
+                editingRef={editingRef}
+                removeRef={removeRef}
               />
               <div className="mapcontrol">
-                <label onClick={handleAdd}>&nbsp;+&nbsp;</label>
+                <label className="mapcontrol-label" onClick={handleAdd}>&nbsp;+&nbsp;</label>
+                {isEditing && <label className="mapcontrol-label" onClick={handleEdit}>&nbsp;💾&nbsp;</label>}
               </div>
             </MapControlStyle>
           </Grid>
@@ -147,7 +177,7 @@ function GeofenceManager() {
         message={t('geofence.deleteMessage')}
         open={confirmOpen} 
         setOpen={setConfirmOpen} 
-        onConfirm={async() => await onDelete(toDelete)} />
+        onConfirm={async() => await handleDelete()} />
       <Footer />
     </DashboardLayout>
   );
