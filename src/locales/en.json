@@ -47,7 +47,8 @@
         "totalTitle": "Total Units",
         "activeTitle": "Active Units",
         "movementTitle": "Moving Units",
-        "typesTitle": "Unit Types"
+        "typesTitle": "Unit Types",
+        "inGeofence": "In Geofence"
     },
     "device": {
         "title":"Devices",
@@ -152,6 +153,7 @@
         "credentials": "Credentials",
         "devices": "Devices",
         "geofences": "Geofences",
+        "geofencing": "Geofencing",
         "groups": "Groups",
         "operators": "Operators",
         "permissions": "Permissions",

@@ -47,7 +47,8 @@
         "totalTitle": "Total de Unidades",
         "activeTitle": "Unidades Activas",
         "movementTitle": "Unidades en Movimiento",
-        "typesTitle": "Tipos de Unidades"
+        "typesTitle": "Tipos de Unidades",
+        "inGeofence": "En Geocerca"
     },
     "device": {
         "title":"Dispositivos",
@@ -152,6 +153,7 @@
         "credentials": "Credenciales",
         "devices": "Dispositivos",
         "geofences": "Geocercas",
+        "geofencing": "Geocercado",
         "groups": "Grupos",
         "operators": "Operadores",
         "positions": "Posiciones",
