@@ -17,12 +17,13 @@
 import React, { useState, useEffect  } from 'react';
 import PropTypes from 'prop-types';
 
-function RefreshCounter({ settings, fetchPositions }) {
+function RefreshCounter({ settings, fetchPositions, calculateReference }) {
     const [counter, setCounter] = useState(settings.refreshMapInterval || 60);
   
     useEffect(() => {
       if (counter === 0) {
         fetchPositions();
+        calculateReference();
         setCounter(settings.refreshMap ? settings.refreshMapInterval : 60);
       } else if (settings.refreshMap) { 
         const timer = setInterval(() => setCounter(counter - 1), 1000);
@@ -30,12 +31,13 @@ function RefreshCounter({ settings, fetchPositions }) {
       }
     }, [counter, settings.refreshMap]);
   
-    return settings.refreshMap && <div className="label">{counter} s.</div>;
+    return settings.refreshMap && <div className="mapcontrol">{counter} s.</div>;
   }
   
   RefreshCounter.propTypes = {
     settings: PropTypes.object.isRequired,
-    fetchPositions: PropTypes.func.isRequired
+    fetchPositions: PropTypes.func.isRequired,
+    calculateReference: PropTypes.func.isRequired,
   };
 
   export default RefreshCounter;

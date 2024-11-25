@@ -16,9 +16,9 @@
 
 import { styled } from '@mui/system';
 
-const RefreshLabelStyle = styled('div')({
+const MapControlStyle = styled('div')({
   position: 'relative',
-  '& .label': {
+  '& .mapcontrol': {
     position: 'absolute',
     top: 8,
     right: 8,
@@ -28,6 +28,19 @@ const RefreshLabelStyle = styled('div')({
     border: '1px solid #ccc',
     zIndex: 1000
   },
+  '& .mapcontrol .mapcontrol-label': {
+    padding: '3px 6px',
+    border: '1px solid #ccc',
+    borderRadius: '5px',
+    background: '#f0f0f0',
+    cursor: 'pointer',
+    transition: 'background 0.3s',
+    fontSize: '14px',
+    color: '#333',
+  },
+  '& .mapcontrol .mapcontrol-label:hover': {
+    background: '#e0e0e0',
+  },
 });
 
-export default RefreshLabelStyle;
+export default MapControlStyle;

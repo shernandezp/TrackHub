@@ -19,6 +19,18 @@
         "refreshToken":"Actualizar Token",
         "connectivityTest":"Prueba de Conectividad"
     },
+    "colors": {
+        "red": "Rojo",
+        "blue": "Azul",
+        "green": "Verde",
+        "yellow": "Amarillo",
+        "orange": "Naranja",
+        "purple": "Púrpura",
+        "pink": "Rosado",
+        "brown": "Marrón",
+        "black": "Negro",
+        "white": "Blanco"
+    },
     "credential": {
         "title":"Credencial",
         "details":"Detalle de la Credencial",
@@ -35,7 +47,8 @@
         "totalTitle": "Total de Unidades",
         "activeTitle": "Unidades Activas",
         "movementTitle": "Unidades en Movimiento",
-        "typesTitle": "Tipos de Unidades"
+        "typesTitle": "Tipos de Unidades",
+        "inGeofence": "En Geocerca"
     },
     "device": {
         "title":"Dispositivos",
@@ -65,6 +78,34 @@
         "emailAddress": "Correo Electrónico",
         "phoneNumber": "Número de Teléfono",
         "address": "Dirección"
+    },
+    "geofence": {
+        "title":"Geocercas",
+        "singleTitle":"Geocerca",
+        "details":"Detalle de la Geocerca",
+        "name": "Nombre",
+        "description": "Descripción",
+        "color": "Color",
+        "type": "Tipo",
+        "active": "Activa",
+        "deleteTitle": "Eliminar Geocerca",
+        "deleteMessage": "¿Está seguro de que desea eliminar esta geocerca?"
+    },
+    "geofenceTypes": {
+        "clientLocation": "Cliente",
+        "constructionSite": "Construcción",
+        "dangerZone": "Zona de Peligro",
+        "fuelStation": "Estación de Combustible",
+        "garage": "Taller",
+        "hospital": "Hospital",
+        "hotel": "Hotel",
+        "office": "Oficina",
+        "park": "Parque",
+        "parkingLot": "Parqueadero",
+        "restrictedArea": "Área Restringida",
+        "retailStore": "Tienda",
+        "school": "Escuela",
+        "warehouse": "Bodega"
     },
     "group": {
         "title":"Grupos",
@@ -111,6 +152,8 @@
         "administrative": "Administración",
         "credentials": "Credenciales",
         "devices": "Dispositivos",
+        "geofences": "Geocercas",
+        "geofencing": "Geocercado",
         "groups": "Grupos",
         "operators": "Operadores",
         "positions": "Posiciones",
@@ -151,6 +194,7 @@
         "superManager": "Administrador del Sistema",
         "manager": "Administración de Cuentas",
         "userManager": "Panel de Control",
+        "geofence": "Geocercas",
         "reports": "Reportes",
         "profile": "Perfil"
     },

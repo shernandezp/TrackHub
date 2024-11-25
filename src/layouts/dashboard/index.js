@@ -14,7 +14,6 @@
 *  limitations under the License.
 */
 
-/* eslint-disable no-unused-vars */
 /**
 =========================================================
 * Argon Dashboard 2 MUI - v3.0.1
@@ -46,6 +45,7 @@ import TransportersTable from "layouts/dashboard/components/TransportersTable";
 import TransporterList from "layouts/dashboard/components/TransporterList";
 import RefreshCounter from 'layouts/dashboard/components/RefreshCounter';
 import useRouterService from "services/router";
+import useGeofencingService from "services/geofencing";
 import useSettignsService from 'services/settings';
 import { LoadingContext } from 'LoadingContext';
 import { useTranslation } from 'react-i18next';
@@ -53,18 +53,20 @@ import { useAuth } from "AuthContext";
 
 // Dashboard layout components
 import GeneralMap from "controls/Maps/GeneralMap";
-import RefreshLabelStyle from 'layouts/dashboard/styles/RefreshLabel';
+import MapControlStyle from 'controls/Maps/styles/MapControl';
 import {countRecentDevices, countDevicesInMovement, getPercentage} from 'layouts/dashboard/utils/dashboard';
 
 function Default() {
   const { t } = useTranslation();
   const { getPositions } = useRouterService();
   const { getAccountSettings } = useSettignsService();
+  const { getTransportersInGeofence } = useGeofencingService();
   const { setLoading } = useContext(LoadingContext);
   const { isAuthenticated } = useAuth();
   const [positions, setPositions] = useState([]);
   const [active, setActive] = useState(0);
   const [movement, setMovement] = useState(0);
+  const [inGeofence, setInGeofence] = useState(0);
   const [settings, setSettings] = useState({maps:'OSM', mapsKey:'', refreshMapInterval: 60});
   const [selectedTransporter, setSelectedTransporter] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -80,12 +82,22 @@ function Default() {
     setLoading(false);
   };
 
+  const calculateReference = async () => {
+    try {
+      var result = await getTransportersInGeofence();
+      setInGeofence(result.length);
+    } catch(e) {
+      console.error(e);
+    }
+  };
+
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
   };
 
   useEffect(() => {
     if (isAuthenticated) {
+      calculateReference();
       fetchPositions();
     }
   }, [isAuthenticated]);
@@ -99,7 +111,7 @@ function Default() {
       <DashboardNavbar searchQuery={searchQuery} handleSearch={handleSearchChange} searchVisibility={true}/>
       <ArgonBox py={3}>
         <Grid container spacing={3} mb={3}>
-          <Grid item xs={12} md={6} lg={4}>
+          <Grid item xs={12} md={6} lg={3}>
             <DetailedStatisticsCard
               title={t("dashboard.totalTitle")}
               count={positions.length}
@@ -107,7 +119,7 @@ function Default() {
               percentage={{ color: "success", hide: true }}
             />
           </Grid>
-          <Grid item xs={12} md={6} lg={4}>
+          <Grid item xs={12} md={6} lg={3}>
             <DetailedStatisticsCard
               title={t("dashboard.activeTitle")}
               count={active}
@@ -115,26 +127,37 @@ function Default() {
               percentage={{ color: "success", count: `${getPercentage(active, positions.length)}%` }}
             />
           </Grid>
-          <Grid item xs={12} md={6} lg={4}>
+          <Grid item xs={12} md={6} lg={3}>
             <DetailedStatisticsCard
               title={t("dashboard.movementTitle")}
               count={movement}
               icon={{ color: "success", component: <i className="ni ni-button-play" /> }}
-              percentage={{ color: "error", count: `${getPercentage(movement)}%` }}
+              percentage={{ color: "error", count: `${getPercentage(movement, positions.length)}%` }}
+            />
+          </Grid>
+          <Grid item xs={12} md={6} lg={3}>
+            <DetailedStatisticsCard
+              title={t("dashboard.inGeofence")}
+              count={inGeofence}
+              icon={{ color: "warning", component: <i className="ni ni-pin-3" /> }}
+              percentage={{ color: "success", count: `${getPercentage(inGeofence, positions.length)}%` }}
             />
           </Grid>
         </Grid>
         <Grid container spacing={3} mb={3}>
         <Grid item xs={12} lg={12}>
-          <RefreshLabelStyle>
+          <MapControlStyle>
             <GeneralMap 
               mapType={settings.maps} 
               positions={positions} 
               mapKey={settings.mapsKey}
               selectedMarker={selectedTransporter}
               handleSelected={handleSelected}/>
-            <RefreshCounter settings={settings} fetchPositions={fetchPositions} />
-          </RefreshLabelStyle>
+            <RefreshCounter 
+              settings={settings} 
+              fetchPositions={fetchPositions}
+              calculateReference={calculateReference} />
+          </MapControlStyle>
         </Grid>
         </Grid>
         <Grid container spacing={3}>

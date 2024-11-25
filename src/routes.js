@@ -54,6 +54,7 @@ import Dashboard from "layouts/dashboard";
 import ManageAdmin from "layouts/manageadmin";
 import SystemAdmin from "layouts/systemadmin";
 import Billing from "layouts/reports";
+import GeofenceManager from "layouts/geofencemanager";
 import Profile from "layouts/profile";
 import Callback from "layouts/authentication/callback";
 import AuthorizeRedirect from "layouts/authentication/authorizeredirect";
@@ -89,6 +90,16 @@ const routes = [
       <ArgonBox component="i" color="warning" fontSize="14px" className="ni ni-settings" />
     ),
     component: <ManageAdmin />,
+  },
+  {
+    type: "route",
+    name: "screen.geofence",
+    key: "geofenceManager",
+    route: "/geofenceManager",
+    icon: (
+      <ArgonBox component="i" color="warning" fontSize="14px" className="ni ni-square-pin" />
+    ),
+    component: <GeofenceManager />,
   },
   /*{
     type: "route",

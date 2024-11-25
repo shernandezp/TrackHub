@@ -19,9 +19,17 @@ import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 
-const FormDialog = ({ title, children, handleSave, open, setOpen }) => {
+const FormDialog = ({ 
+        title, 
+        children, 
+        handleSave, 
+        open, 
+        setOpen,
+        handleCancel = () => {},
+    }) => {
     const { t } = useTranslation();
     const handleClose = () => {
+        handleCancel();
         setOpen(false);
     };
 
@@ -43,6 +51,7 @@ FormDialog.propTypes = {
     title: PropTypes.string.isRequired,
     children: PropTypes.node.isRequired,
     handleSave: PropTypes.func.isRequired,
+    handleCancel: PropTypes.func,
     open: PropTypes.bool.isRequired,
     setOpen: PropTypes.func.isRequired,
 };
