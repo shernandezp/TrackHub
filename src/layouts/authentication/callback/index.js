@@ -50,7 +50,6 @@ const CallbackPage = () => {
 
   return (
     <div>
-      <p>Redirecting...</p>
     </div>
   );
 };

@@ -116,12 +116,11 @@ Not only for this application but for all services in general, the code includes
   
 - **Position Report**: A tool to generate detailed reports of device locations and history in real-time.
 
-- **Basic Report Export**: Functionality to export data and reports in formats like CSV or PDF.
-
-- **Geofence Management**: The application will include functionality to define virtual boundaries (geofences) around specific locations. Alerts or actions can be triggered when devices enter or exit these geofences, enabling automated responses based on real-time location data.
+- **Exporting Basic Reports**: Functionality to export data and reports in formats like CSV or PDF.
 
 - **Additional Operator Integration**: Expanding the capability to integrate more operators or monitoring service providers.
 
+- **Routing REST API**: Provide REST endpoints for the Routing API to streamline system integration with third-party services.
 
 ## License
 

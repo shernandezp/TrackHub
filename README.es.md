@@ -115,15 +115,13 @@ No solo para esta aplicación, sino para todos los servicios en general, el cód
 
 ## Funciones próximas:
 
-- **Configuración de Docker**: La aplicación incluirá soporte para Docker, lo que permitirá entornos consistentes a través del desarrollo, pruebas y producción. Esto se logrará a través de un Dockerfile para contenerizar la aplicación y Docker Compose para orquestar entornos multi-contenedor, lo que simplifica el despliegue y escalabilidad.
-  
 - **Informe de posición**: Una herramienta para generar informes detallados sobre la ubicación de los dispositivos y su historial en tiempo real.
 
-- **Exportación básica de informes**: Funcionalidad para exportar datos e informes en formatos como CSV o PDF.
-
-- **Gestión de geocercas**: La aplicación incluirá funcionalidad para definir límites virtuales (geocercas) alrededor de ubicaciones específicas. Se pueden activar alertas o acciones cuando los dispositivos entran o salen de estas geocercas, lo que permite respuestas automatizadas basadas en datos de ubicación en tiempo real.
+- **Exportación de informes básicos**: Funcionalidad para exportar datos e informes en formatos como CSV o PDF.
 
 - **Integración adicional de operadores**: Ampliación de la capacidad para integrar más operadores o proveedores de servicios de monitoreo.
+
+- **API REST de Enrutamiento**: Proporcionar endpoints REST para la API de Enrutamiento, simplificando la integración del sistema con servicios de terceros.
 
 ## Licencia
 

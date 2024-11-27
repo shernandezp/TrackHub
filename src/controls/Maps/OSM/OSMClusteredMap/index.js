@@ -21,8 +21,24 @@ import PropTypes from 'prop-types';
 
 const OSMClusteredMap = ({ markers, selectedMarker }) => {
     const [bounds, setBounds] = useState(null);
+    const [userLocation, setUserLocation] = useState([4.624335, -74.063644]);
     const mapRef = useRef();
     const boundsSetRef = useRef(false);
+
+    //User Location
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setUserLocation([latitude, longitude]);
+        },
+        (error) => {
+          console.error("Error getting user's location:", error);
+        }
+      );
+    }
+  }, []);
 
     useEffect(() => {
         if (markers.length > 0) {
@@ -62,7 +78,7 @@ const OSMClusteredMap = ({ markers, selectedMarker }) => {
 
     return (
         <MapContainer
-            center={[51.505, -0.09]}
+            center={userLocation}
             zoom={13}
             style={{ height: "100vh", width: "100%" }}
             whenCreated={mapInstance => { mapRef.current = mapInstance; }}
