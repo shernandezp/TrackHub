@@ -77,7 +77,6 @@ export const AuthProvider = ({ children, navigate }) => {
       const data = await refreshAccessToken(refreshToken);
       setAccessToken(data.access_token);
       setRefreshToken(data.refresh_token);
-      alert('Refreshed token');
       return data.access_token;
     } catch (refreshError) {
       // Refresh token is also expired or invalid, redirect to login page
