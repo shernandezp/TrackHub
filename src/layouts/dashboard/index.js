@@ -52,7 +52,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from "AuthContext";
 
 // Dashboard layout components
-import GeneralMap from "controls/Maps/GeneralMap";
+import GeneralMap from "layouts/dashboard/components/GeneralMap";
 import MapControlStyle from 'controls/Maps/styles/MapControl';
 import {countRecentDevices, countDevicesInMovement, getPercentage} from 'layouts/dashboard/utils/dashboard';
 

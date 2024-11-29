@@ -126,7 +126,7 @@ function Sidenav({ color = "info", brand = "", isAdmin = false, isManager = fals
           mb={1}
           ml={1}
         >
-          {title}
+          {t(title)}
         </ArgonTypography>
       );
     } else if (type === "divider") {

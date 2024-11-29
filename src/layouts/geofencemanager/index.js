@@ -19,8 +19,7 @@ import Grid from "@mui/material/Grid";
 import ArgonBox from "components/ArgonBox";
 import DashboardLayout from "controls/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "controls/Navbars/DashboardNavbar";
-import GeofenceEditor from 'controls/Maps/GeofenceEditor';
-import MapControlStyle from 'controls/Maps/styles/MapControl';
+import GeofenceEditor from 'layouts/geofencemanager/components/GeofenceEditor';
 import Footer from "controls/Footer";
 import Table from "controls/Tables/Table";
 import useForm from 'controls/Dialogs/useForm';
@@ -60,7 +59,6 @@ function GeofenceManager() {
 
   const [values, handleChange, setValues, setErrors, validate, errors] = useForm({});
   const [toDelete, setToDelete] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
   const [selectedGeofence, setSelectedGeofence] = useState(null);
   const { geofences, columns, rows } = data;
   const [searchQuery, setSearchQuery] = useState('');
@@ -145,24 +143,21 @@ function GeofenceManager() {
       <ArgonBox py={3}>
         <Grid container spacing={3} mb={3}>
           <Grid item xs={12} lg={12}>
-            <MapControlStyle>
-              <GeofenceEditor 
-                initialPolygons={geofences}
-                selectedPolygon={selectedGeofence}
-                handleSelected={setSelectedGeofence}
-                setOpen={setOpen}
-                setIsEditing={setIsEditing}
-                addRef={addRef}
-                saveRef={saveRef}
-                cancelRef={cancelRef}
-                editingRef={editingRef}
-                removeRef={removeRef}
-              />
-              <div className="mapcontrol">
-                <label className="mapcontrol-label" onClick={handleAdd}>&nbsp;+&nbsp;</label>
-                {isEditing && <label className="mapcontrol-label" onClick={handleEdit}>&nbsp;💾&nbsp;</label>}
-              </div>
-            </MapControlStyle>
+            <GeofenceEditor 
+               mapType={settings.maps}
+               mapKey={settings.mapsKey}
+               geofences={geofences}
+               selectedGeofence={selectedGeofence}
+               handleSelected={setSelectedGeofence}
+               setOpen={setOpen}
+               addRef={addRef}
+               saveRef={saveRef}
+               cancelRef={cancelRef}
+               editingRef={editingRef}
+               removeRef={removeRef}
+               handleAdd={handleAdd}
+               handleEdit={handleEdit}
+            />
           </Grid>
         </Grid>
         <Grid container spacing={3}>

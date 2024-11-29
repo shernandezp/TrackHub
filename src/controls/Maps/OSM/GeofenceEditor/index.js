@@ -16,13 +16,14 @@
 
 import React, { useRef, useState, useEffect } from "react";
 import { MapContainer, TileLayer, Polygon } from "react-leaflet";
+import UserLocation from "controls/Maps/UserLocation";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-editable";
 import { v4 as uuidv4 } from "uuid";
 import PropTypes from "prop-types";
 
-const GeofenceEditor = ({ 
+const OSMGeofenceEditor = ({ 
     initialPolygons,
     selectedPolygon,
     handleSelected,
@@ -37,22 +38,7 @@ const GeofenceEditor = ({
   const layerRef = useRef(null);
   const editedGeofenceRef = useRef(null);
   const [geofences, setGeofences] = useState([]);
-  const [userLocation, setUserLocation] = useState([4.624335, -74.063644]);
-
-  //User Location
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setUserLocation([latitude, longitude]);
-        },
-        (error) => {
-          console.error("Error getting user's location:", error);
-        }
-      );
-    }
-  }, []);
+  const [userLocation, setUserLocation] = useState({ lat: 4.624335, lng: -74.063644 });
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -102,8 +88,8 @@ const GeofenceEditor = ({
     if (geofence) {
       const polygonLayer = geofence.layer;
       if (polygonLayer.editEnabled()) {
-        polygonLayer.disableEdit();
         setIsEditing(false);
+        polygonLayer.disableEdit();
         editedGeofenceRef.current = null;
       } else {
         disableEditing();
@@ -200,6 +186,7 @@ const GeofenceEditor = ({
 
   return (
     <div>
+      <UserLocation setUserLocation={setUserLocation} />
       <MapContainer
         center={userLocation}
         zoom={7}
@@ -225,7 +212,7 @@ const GeofenceEditor = ({
   );
 };
 
-GeofenceEditor.propTypes = {
+OSMGeofenceEditor.propTypes = {
   initialPolygons: PropTypes.array,
   selectedPolygon: PropTypes.string,
   handleSelected: PropTypes.func,
@@ -238,4 +225,4 @@ GeofenceEditor.propTypes = {
   removeRef: PropTypes.object,
 };
 
-export default GeofenceEditor;
+export default OSMGeofenceEditor;

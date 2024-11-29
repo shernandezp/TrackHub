@@ -190,13 +190,14 @@
         "saveMessage": "Some settings may require a page refresh to take effect"
     },
     "screen": {
+        "account": "Account",
         "dashboard": "Dashboard",
-        "superManager": "System Admin",
-        "manager": "Account Management",
-        "userManager": "Control Panel",
         "geofence": "Geofences",
+        "manager": "Account Management",
+        "profile": "Profile",
         "reports": "Reports",
-        "profile": "Profile"
+        "superManager": "System Admin",
+        "userManager": "Control Panel"
     },
     "transporter": {
         "title":"Units",
