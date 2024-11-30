@@ -190,13 +190,14 @@
         "saveMessage": "Algunas configuraciones requieren reiniciar sesión para que los cambios surtan efecto"
     },
     "screen": {
+        "account": "Cuenta",
         "dashboard": "Tablero",
-        "superManager": "Administrador del Sistema",
-        "manager": "Administración de Cuentas",
-        "userManager": "Panel de Control",
         "geofence": "Geocercas",
+        "manager": "Administración de Cuentas",
+        "profile": "Perfil",
         "reports": "Reportes",
-        "profile": "Perfil"
+        "superManager": "Administrador del Sistema",
+        "userManager": "Panel de Control"
     },
     "transporter": {
         "title":"Unidades",

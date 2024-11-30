@@ -16,9 +16,9 @@
 
 import React, { useState, useEffect } from 'react';
 import OSMClusteredMap from 'controls/Maps/OSM/OSMClusteredMap';
-import GoogleClusteredMap from '../Google/GoogleClusteredMap';
+import GoogleClusteredMap from 'controls/Maps/Google/GoogleClusteredMap';
 import PropTypes from 'prop-types';
-import '../css/map.css';
+import 'controls/Maps/css/map.css';
 
 function GeneralMap({ mapType, positions, mapKey, selectedMarker, handleSelected }) {
     const [markers, setMarkers] = useState([]);

@@ -109,7 +109,7 @@ const routes = [
     icon: <ArgonBox component="i" color="success" fontSize="14px" className="ni ni-credit-card" />,
     component: <Billing />,
   },*/
-  { type: "title", title: "Account Pages", key: "account-pages" },
+  { type: "title", title: "screen.account", key: "account-pages" },
   {
     type: "route",
     name: "screen.profile",

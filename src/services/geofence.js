@@ -143,10 +143,7 @@ const useGeofenceService = () => {
               name
               geom {
                 srid
-                coordinates {
-                  longitude
-                  latitude
-                }
+                coordinates { latitude, longitude }
               }
               geofenceId
               description
