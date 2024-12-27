@@ -48,7 +48,9 @@
         "activeTitle": "Unidades Activas",
         "movementTitle": "Unidades en Movimiento",
         "typesTitle": "Tipos de Unidades",
-        "inGeofence": "En Geocerca"
+        "inGeofence": "En Geocerca",
+        "transportersTitle": "Unidades",
+        "positionsTitle": "Posiciones"
     },
     "device": {
         "title":"Dispositivos",

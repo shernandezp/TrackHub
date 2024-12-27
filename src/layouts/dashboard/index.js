@@ -14,167 +14,48 @@
 *  limitations under the License.
 */
 
-/**
-=========================================================
-* Argon Dashboard 2 MUI - v3.0.1
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/argon-dashboard-material-ui
-* Copyright 2023 Creative Tim (https://www.creative-tim.com)
-
-Coded by www.creative-tim.com
-
- =========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*/
-
-import React, { useState, useEffect, useContext  } from 'react';
-// @mui material components
-import Grid from "@mui/material/Grid";
-
-// Argon Dashboard 2 MUI components
-import ArgonBox from "components/ArgonBox";
-
-// Argon Dashboard 2 MUI example components
-import DashboardLayout from "controls/LayoutContainers/DashboardLayout";
-import DashboardNavbar from "controls/Navbars/DashboardNavbar";
-import Footer from "controls/Footer";
-import DetailedStatisticsCard from "controls/Cards/StatisticsCards/DetailedStatisticsCard";
-import TransportersTable from "layouts/dashboard/components/TransportersTable";
-import TransporterList from "layouts/dashboard/components/TransporterList";
-import RefreshCounter from 'layouts/dashboard/components/RefreshCounter';
-import useRouterService from "services/router";
-import useGeofencingService from "services/geofencing";
-import useSettignsService from 'services/settings';
-import { LoadingContext } from 'LoadingContext';
+import React, { useState } from 'react';
+import DashboardTabbar from "controls/Navbars/DashboardTabbar";
+import Transporters from "layouts/dashboard/components/Transporters";
+import Positions from  "layouts/dashboard/components/Positions";
 import { useTranslation } from 'react-i18next';
-import { useAuth } from "AuthContext";
-
-// Dashboard layout components
-import GeneralMap from "layouts/dashboard/components/GeneralMap";
-import MapControlStyle from 'controls/Maps/styles/MapControl';
-import {countRecentDevices, countDevicesInMovement, getPercentage} from 'layouts/dashboard/utils/dashboard';
 
 function Default() {
   const { t } = useTranslation();
-  const { getPositions } = useRouterService();
-  const { getAccountSettings } = useSettignsService();
-  const { getTransportersInGeofence } = useGeofencingService();
-  const { setLoading } = useContext(LoadingContext);
-  const { isAuthenticated } = useAuth();
-  const [positions, setPositions] = useState([]);
-  const [active, setActive] = useState(0);
-  const [movement, setMovement] = useState(0);
-  const [inGeofence, setInGeofence] = useState(0);
-  const [settings, setSettings] = useState({maps:'OSM', mapsKey:'', refreshMapInterval: 60});
-  const [selectedTransporter, setSelectedTransporter] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTab, setSelectedTab] = useState(0);
+  const [searchVisibility, setSearchVisibility] = useState(true);
   
-  const fetchPositions = async () => {
-    setLoading(true);
-    var result = await getPositions();
-    var settings = await getAccountSettings();
-    setSettings(settings);
-    setPositions(result);
-    setActive(countRecentDevices(result, settings.onlineInterval));
-    setMovement(countDevicesInMovement(result));
-    setLoading(false);
-  };
-
-  const calculateReference = async () => {
-    try {
-      var result = await getTransportersInGeofence();
-      setInGeofence(result.length);
-    } catch(e) {
-      console.error(e);
-    }
-  };
-
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
   };
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      calculateReference();
-      fetchPositions();
-    }
-  }, [isAuthenticated]);
+  const handleTabChange = (newValue) => {
+    setSelectedTab(newValue);
+    setSearchVisibility(newValue === 0);
+  };
 
-  const handleSelected = (selected) => {
-    setSelectedTransporter(selected);
+  const renderContent = () => {
+    switch (selectedTab) {
+      case 0:
+        return <Transporters searchQuery={searchQuery} />;
+      case 1:
+        return <Positions searchQuery={searchQuery}/>;
+      default:
+        return null;
+    }
   };
 
   return (
-    <DashboardLayout>
-      <DashboardNavbar searchQuery={searchQuery} handleSearch={handleSearchChange} searchVisibility={true}/>
-      <ArgonBox py={3}>
-        <Grid container spacing={3} mb={3}>
-          <Grid item xs={12} md={6} lg={3}>
-            <DetailedStatisticsCard
-              title={t("dashboard.totalTitle")}
-              count={positions.length}
-              icon={{ color: "info", component: <i className="ni ni-map-big" /> }}
-              percentage={{ color: "success", hide: true }}
-            />
-          </Grid>
-          <Grid item xs={12} md={6} lg={3}>
-            <DetailedStatisticsCard
-              title={t("dashboard.activeTitle")}
-              count={active}
-              icon={{ color: "error", component: <i className="ni ni-watch-time" /> }}
-              percentage={{ color: "success", count: `${getPercentage(active, positions.length)}%` }}
-            />
-          </Grid>
-          <Grid item xs={12} md={6} lg={3}>
-            <DetailedStatisticsCard
-              title={t("dashboard.movementTitle")}
-              count={movement}
-              icon={{ color: "success", component: <i className="ni ni-button-play" /> }}
-              percentage={{ color: "error", count: `${getPercentage(movement, positions.length)}%` }}
-            />
-          </Grid>
-          <Grid item xs={12} md={6} lg={3}>
-            <DetailedStatisticsCard
-              title={t("dashboard.inGeofence")}
-              count={inGeofence}
-              icon={{ color: "warning", component: <i className="ni ni-pin-3" /> }}
-              percentage={{ color: "success", count: `${getPercentage(inGeofence, positions.length)}%` }}
-            />
-          </Grid>
-        </Grid>
-        <Grid container spacing={3} mb={3}>
-        <Grid item xs={12} lg={12}>
-          <MapControlStyle>
-            <GeneralMap 
-              mapType={settings.maps} 
-              positions={positions} 
-              mapKey={settings.mapsKey}
-              selectedMarker={selectedTransporter}
-              handleSelected={handleSelected}/>
-            <RefreshCounter 
-              settings={settings} 
-              fetchPositions={fetchPositions}
-              calculateReference={calculateReference} />
-          </MapControlStyle>
-        </Grid>
-        </Grid>
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={8}>
-            <TransportersTable 
-              transporters={positions} 
-              selected={selectedTransporter}
-              handleSelected={handleSelected} 
-              searchQuery={searchQuery}/>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <TransporterList title={t("dashboard.typesTitle")} positions={positions} />
-          </Grid>
-        </Grid>
-      </ArgonBox>
-      <Footer />
-    </DashboardLayout>
+    <DashboardTabbar 
+      stickyNavbar 
+      searchQuery={searchQuery} 
+      handleSearch={handleSearchChange} 
+      searchVisibility={searchVisibility}
+      tabs={[t("dashboard.transportersTitle"), t("dashboard.positionsTitle")]}
+      onTabChange={handleTabChange}>
+      {renderContent()}
+    </DashboardTabbar>
   );
 }
 

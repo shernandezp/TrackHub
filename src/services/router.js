@@ -38,9 +38,9 @@ const useRouterService = () => {
         try {
             const data = {
                 query: `
-                    query {
-                        pingOperator(query: { operatorId: "${operatorId}" }) 
-                    }
+                  query {
+                    pingOperator(query: { operatorId: "${operatorId}" }) 
+                  }
                 `
             };
             const response = await post(data);
@@ -60,15 +60,15 @@ const useRouterService = () => {
         try {
           const data = {
             query: `
-                query {
-                    devicesByOperator(query: { operatorId: "${operatorId}" }) {
-                        identifier
-                        name
-                        serial
-                        deviceTypeId
-                        transporterTypeId
-                    }
+              query {
+                devicesByOperator(query: { operatorId: "${operatorId}" }) {
+                  identifier
+                  name
+                  serial
+                  deviceTypeId
+                  transporterTypeId
                 }
+              }
             `
           };
           const response = await post(data);
@@ -78,49 +78,91 @@ const useRouterService = () => {
         }
       };
 
-    const getPositions = async () => {
-        try {
-          const data = {
-            query: `
-                query {
-                    positionsByUser {
-                        attributes {
-                            temperature
-                            satellites
-                            mileage
-                            ignition
-                            hobbsMeter
-                        }
-                        altitude
-                        address
-                        deviceName
-                        transporterType
-                        state
-                        speed
-                        serverDateTime
-                        longitude
-                        latitude
-                        eventId
-                        transporterId
-                        deviceDateTime
-                        course
-                        country
-                        city
-                    }
+    /**
+     * Retrieves position of devices associated with the current user.
+     * @returns {Array} Array of devices associated with the operator.
+     */
+    const getDevicePositions = async () => {
+      try {
+        const data = {
+          query: `
+            query {
+              devicePositionsByUser {
+                attributes {
+                  temperature
+                  satellites
+                  mileage
+                  ignition
+                  hobbsMeter
                 }
-            `
-          };
-          const response = await post(data);
-          return response.data.positionsByUser;
-        } catch (error) {
-          handleError(error);
-        }
-      };
+                altitude
+                address
+                deviceName
+                transporterType
+                state
+                speed
+                serverDateTime
+                longitude
+                latitude
+                eventId
+                transporterId
+                deviceDateTime
+                course
+                country
+                city
+              }
+            }
+          `
+        };
+        const response = await post(data);
+        return response.data.devicePositionsByUser;
+      } catch (error) {
+        handleError(error);
+      }
+    };
+
+    /**
+     * Retrieves trips associated with the specified transporter and date range.
+     * @param {string} transporterId - The ID of the transporte to retrieve trips for.
+     * @param {string} from - The start of the range.
+     * @param {string} to - The end of the range.
+     * @returns {Array} Array of trips associated with the transporter and date range.
+     */
+    const getTripsByTransporter = async (transporterId, from, to) => {
+      try {
+        const data = {
+          query: `
+            query {
+              tripsByTransporter(query: { transporterId: "${transporterId}", to: "${to}", from: "${from}" }) {
+                averageSpeed
+                duration
+                totalDistance
+                tripId
+                points {
+                  altitude
+                  course
+                  deviceDateTime
+                  eventId
+                  latitude
+                  longitude
+                  speed
+                }
+              }
+            }
+          `
+        };
+        const response = await post(data);
+        return response.data.tripsByTransporter;
+      } catch (error) {
+        handleError(error);
+      }
+    };
 
     return {
         testConnectivity,
         getDevicesByOperator,
-        getPositions
+        getDevicePositions,
+        getTripsByTransporter
     };
 };
 

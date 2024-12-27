@@ -48,7 +48,9 @@
         "activeTitle": "Active Units",
         "movementTitle": "Moving Units",
         "typesTitle": "Unit Types",
-        "inGeofence": "In Geofence"
+        "inGeofence": "In Geofence",
+        "transportersTitle": "Units",
+        "positionsTitle": "Positions"
     },
     "device": {
         "title":"Devices",
