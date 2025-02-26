@@ -65,6 +65,11 @@
         "deleteMessage": "¿Está seguro de que desea eliminar este dispositivo?",
         "overwrite": "Sobrescribir"
     },
+    "filters": {
+        "search": "Buscar",
+        "startDate": "Fecha Inicio",
+        "endDate": "Fecha Fin"
+    },
     "generic": {
         "modified":"Modificado",
         "action":"Acción",
@@ -243,6 +248,13 @@
         "tool": "Herramientas",
         "truck": "Camión",
         "tractor": "Tractor"
+    },
+    "tripPanel": {
+        "fromLabel": "Desde",
+        "toLabel": "Hasta",
+        "stopLabel": "Detenido",
+        "transitLabel": "En Tránsito",
+        "totalDistance": "Distancia Total"
     },
     "user": {
         "title":"Usuarios",

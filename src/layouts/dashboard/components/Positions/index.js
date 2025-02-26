@@ -18,37 +18,53 @@ import React, { useState, useEffect, useContext  } from 'react';
 import PropTypes from "prop-types";
 import Grid from "@mui/material/Grid";
 import ArgonBox from "components/ArgonBox";
-import TransportersTable from "layouts/dashboard/components/TransportersTable";
-import TransporterList from "layouts/dashboard/components/TransporterList";
+import FilterNavbar from 'controls/Navbars/FilterNavbar';
+import Trips from "layouts/dashboard/components/Trips";
 import useRouterService from "services/router";
-import useSettignsService from 'services/settings';
+import useTransporterService from "services/transporter";
+import useForm from 'controls/Dialogs/useForm';
+import { toISOStringWithTimezone } from "utils/dateUtils";
 import { LoadingContext } from 'LoadingContext';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "AuthContext";
 import GeneralMap from "layouts/dashboard/components/GeneralMap";
 
-function Positions({searchQuery}) {
+function Positions({searchQuery, settings}) {
   const { t } = useTranslation();
-  const { getDevicePositions } = useRouterService();
-  const { getAccountSettings } = useSettignsService();
+  const { getTripsByTransporter } = useRouterService();
+  const { getTransportersByUser } = useTransporterService();
   const { setLoading } = useContext(LoadingContext);
   const { isAuthenticated } = useAuth();
   const [positions, setPositions] = useState([]);
-  const [settings, setSettings] = useState({maps:'OSM', mapsKey:'', refreshMapInterval: 60});
+  const [transporters, setTransporters] = useState([]);
   const [selectedTransporter, setSelectedTransporter] = useState(null);
-  
+  const [values, handleChange, setValues, setErrors, validate, errors] = useForm({});
+
   const fetchPositions = async () => {
     setLoading(true);
-    var result = await getDevicePositions();
-    var settings = await getAccountSettings();
-    setSettings(settings);
+    var result = await getTripsByTransporter(
+      values.selectedItem, 
+      toISOStringWithTimezone(new Date(values.startDate)),
+      toISOStringWithTimezone(new Date(values.endDate)));
     setPositions(result);
+    setErrors({});
+    setLoading(false);
+  };
+
+  const fetchTransporters = async () => {
+    setLoading(true);
+    var result = await getTransportersByUser();
+    setTransporters(result.map(transporter => ({
+      value: transporter.transporterId,
+      label: transporter.name
+    })));
+    setValues({selectedItem: ''});
     setLoading(false);
   };
 
   useEffect(() => {
     if (isAuthenticated) {
-      fetchPositions();
+      fetchTransporters();
     }
   }, [isAuthenticated]);
 
@@ -56,28 +72,39 @@ function Positions({searchQuery}) {
     setSelectedTransporter(selected);
   };
 
+  const handleSearch = async () => {
+    if (validate(['startDate', 'endDate', 'selectedItem'])) {
+      await fetchPositions();
+    }
+  };
+
   return (
     <ArgonBox py={3}>
         <Grid container spacing={3} mb={3}>
             <Grid item xs={12} lg={12}>
-            <GeneralMap 
-                mapType={settings.maps} 
-                positions={positions} 
-                mapKey={settings.mapsKey}
-                selectedMarker={selectedTransporter}
-                handleSelected={handleSelected}/>
+                <FilterNavbar 
+                  list={transporters}
+                  values={values}
+                  handleChange={handleChange}
+                  errors={errors}
+                  handleSearch={handleSearch}
+                />
             </Grid>
         </Grid>
-        <Grid container spacing={3}>
-            <Grid item xs={12} md={8}>
-                <TransportersTable 
-                    transporters={positions} 
-                    selected={selectedTransporter}
-                    handleSelected={handleSelected} 
-                    searchQuery={searchQuery}/>
+        <Grid container spacing={3} mb={3}>
+            <Grid item xs={12} lg={9}>
+                <GeneralMap 
+                    mapType={settings.maps} 
+                    positions={[]} 
+                    mapKey={settings.mapsKey}
+                    selectedMarker={selectedTransporter}
+                    handleSelected={handleSelected}/>
             </Grid>
-            <Grid item xs={12} md={4}>
-                <TransporterList title={t("dashboard.typesTitle")} positions={positions} />
+            <Grid item xs={12} lg={3}>
+              <Trips 
+                trips={positions}
+                filters={values}
+                />
             </Grid>
         </Grid>
     </ArgonBox>
@@ -85,7 +112,8 @@ function Positions({searchQuery}) {
 }
 
 Positions.propTypes = {
-    searchQuery: PropTypes.string
+    searchQuery: PropTypes.string,
+    settings: PropTypes.object
 };
 
 export default Positions;

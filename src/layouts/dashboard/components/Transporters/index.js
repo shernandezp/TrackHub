@@ -24,7 +24,6 @@ import TransporterList from "layouts/dashboard/components/TransporterList";
 import RefreshCounter from 'layouts/dashboard/components/RefreshCounter';
 import useRouterService from "services/router";
 import useGeofencingService from "services/geofencing";
-import useSettignsService from 'services/settings';
 import { LoadingContext } from 'LoadingContext';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "AuthContext";
@@ -34,10 +33,9 @@ import GeneralMap from "layouts/dashboard/components/GeneralMap";
 import MapControlStyle from 'controls/Maps/styles/MapControl';
 import {countRecentDevices, countDevicesInMovement, getPercentage} from 'layouts/dashboard/utils/dashboard';
 
-function Transporters({searchQuery}) {
+function Transporters({searchQuery, settings}) {
   const { t } = useTranslation();
   const { getDevicePositions } = useRouterService();
-  const { getAccountSettings } = useSettignsService();
   const { getTransportersInGeofence } = useGeofencingService();
   const { setLoading } = useContext(LoadingContext);
   const { isAuthenticated } = useAuth();
@@ -45,14 +43,11 @@ function Transporters({searchQuery}) {
   const [active, setActive] = useState(0);
   const [movement, setMovement] = useState(0);
   const [inGeofence, setInGeofence] = useState(0);
-  const [settings, setSettings] = useState({maps:'OSM', mapsKey:'', refreshMapInterval: 60});
   const [selectedTransporter, setSelectedTransporter] = useState(null);
   
   const fetchPositions = async () => {
     setLoading(true);
     var result = await getDevicePositions();
-    var settings = await getAccountSettings();
-    setSettings(settings);
     setPositions(result);
     setActive(countRecentDevices(result, settings.onlineInterval));
     setMovement(countDevicesInMovement(result));
@@ -148,7 +143,8 @@ function Transporters({searchQuery}) {
 }
 
 Transporters.propTypes = {
-    searchQuery: PropTypes.string
+    searchQuery: PropTypes.string,
+    settings: PropTypes.object
 };
 
 export default Transporters;

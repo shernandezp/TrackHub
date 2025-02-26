@@ -50,7 +50,7 @@ function ManageAccounts() {
     setOpen,
     setOpenUser} = useAccountsTableData(expanded, handleEditClick, handleAddManagerClick);
 
-    const [accountValues, handleAccountChange, setAccountValues, setAccountErrors, validateAccount, accountErrors] = useForm({});
+  const [accountValues, handleAccountChange, setAccountValues, setAccountErrors, validateAccount, accountErrors] = useForm({});
   const [userValues, handleUserChange, setUserValues, setUserErrors, validateUser, userErrors] = useForm({});
   const { columns, rows } = data;
 

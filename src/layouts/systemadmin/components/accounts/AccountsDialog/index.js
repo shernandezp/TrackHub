@@ -96,7 +96,7 @@ function AccountsFormDialog({ open, setOpen, handleSubmit, values, handleChange,
                 fullWidth
                 value={values.firstName || ''}
                 onChange={handleChange}
-                errorMsg={errors.password}
+                errorMsg={errors.firstName}
                 required
             />
           )}
@@ -110,7 +110,7 @@ function AccountsFormDialog({ open, setOpen, handleSubmit, values, handleChange,
                 fullWidth
                 value={values.lastName || ''}
                 onChange={handleChange}
-                errorMsg={errors.password}
+                errorMsg={errors.lastName}
                 required
             />
           )}

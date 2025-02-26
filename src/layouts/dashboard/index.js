@@ -14,17 +14,37 @@
 *  limitations under the License.
 */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import DashboardTabbar from "controls/Navbars/DashboardTabbar";
 import Transporters from "layouts/dashboard/components/Transporters";
 import Positions from  "layouts/dashboard/components/Positions";
+import useSettignsService from 'services/settings';
+import { LoadingContext } from 'LoadingContext';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from "AuthContext";
 
 function Default() {
   const { t } = useTranslation();
+  const { isAuthenticated } = useAuth();
+  const { setLoading } = useContext(LoadingContext);
+  const { getAccountSettings } = useSettignsService();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTab, setSelectedTab] = useState(0);
   const [searchVisibility, setSearchVisibility] = useState(true);
+  const [settings, setSettings] = useState({maps:'OSM', mapsKey:'', refreshMapInterval: 60});
+
+  const fetchSettings = async () => {
+    setLoading(true);
+    var settings = await getAccountSettings();
+    setSettings(settings);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchSettings();
+    }
+  }, [isAuthenticated]);
   
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
@@ -38,9 +58,9 @@ function Default() {
   const renderContent = () => {
     switch (selectedTab) {
       case 0:
-        return <Transporters searchQuery={searchQuery} />;
+        return <Transporters searchQuery={searchQuery} settings={settings} />;
       case 1:
-        return <Positions searchQuery={searchQuery}/>;
+        return <Positions searchQuery={searchQuery} settings={settings}/>;
       default:
         return null;
     }

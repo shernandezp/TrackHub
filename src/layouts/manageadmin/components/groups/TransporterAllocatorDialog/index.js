@@ -32,7 +32,7 @@ function TransporterAllocatorDialog({ open, setOpen, groupId }) {
   const { createTransporterGroup, deleteTransporterGroup } = useGroupService();
   const [data, setData] = useState([]);
   const [accountTransporters, setAccountTrasporters] = useState([]);
-  const [transporters, setTrasporters] = useState([]);
+  const [transporters, setTransporters] = useState([]);
   const [transporterId, setTransporterId] = useState('');
 
   const columns = [
@@ -43,7 +43,7 @@ function TransporterAllocatorDialog({ open, setOpen, groupId }) {
     const assignedTransporters = await getTransportersByGroup(groupId);
     const unassignedTransporters = accountTransporters.filter(transporter => !assignedTransporters.some(assignedTransporter => assignedTransporter.transporterId === transporter.transporterId));
     setTransporterId('');
-    setTrasporters(unassignedTransporters.map(transporter => ({
+    setTransporters(unassignedTransporters.map(transporter => ({
       value: transporter.transporterId,
       label: transporter.name
     })));

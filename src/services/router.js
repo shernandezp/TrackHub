@@ -138,8 +138,10 @@ const useRouterService = () => {
                 duration
                 totalDistance
                 tripId
+                type
+                from
+                to
                 points {
-                  altitude
                   course
                   deviceDateTime
                   eventId

@@ -82,6 +82,31 @@ const useTransporterService = () => {
   };
 
   /**
+   * Retrieves transporters associated with the current user.
+   * @returns {Promise<Array>} A promise that resolves to an array of transporters.
+   */
+  const getTransportersByUser = async () => {
+    try {
+      const data = {
+        query: `
+          query {
+            transportersByUser {
+              name
+              transporterId
+              transporterType
+              transporterTypeId
+            }
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.transportersByUser;
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+  /**
    * Retrieves transporters associated with a specific group.
    * @param {string} groupId - The ID of the group.
    * @returns {Promise<Array>} A promise that resolves to an array of transporters.
@@ -195,6 +220,7 @@ const useTransporterService = () => {
   return {
     getTransporter,
     getTransporterByAccount,
+    getTransportersByUser,
     getTransportersByGroup,
     createTransporter,
     updateTransporter,
