@@ -1,5 +1,5 @@
 /**
-* Copyright (c) 2024 Sergio Hernandez. All rights reserved.
+* Copyright (c) 2025 Sergio Hernandez. All rights reserved.
 *
 *  Licensed under the Apache License, Version 2.0 (the "License").
 *  You may not use this file except in compliance with the License.
@@ -14,27 +14,23 @@
 *  limitations under the License.
 */
 
+import PropTypes from 'prop-types';
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleMap, LoadScript, Marker as GoogleMarker, MarkerClusterer, InfoWindow } from '@react-google-maps/api';
-import PropTypes from 'prop-types';
+import UserLocation from "controls/Maps/UserLocation";
 import { createSvgIcon } from 'controls/Maps/utils/imageUtils';
 import { formatDateTime } from "utils/dateUtils";
 import { useTranslation } from 'react-i18next';
 import 'controls/Maps/css/googleMap.css';
 
-const GoogleClusteredMap = ({ markers, mapKey, selectedMarker, handleSelected }) => {
+const GoogleClusteredMap = ({ mapKey, markers, selectedMarker, handleSelected }) => {
     const [internalSelectedMarker, setInternalSelectedMarker] = useState(null);
+    const [userLocation, setUserLocation] = useState({
+        lat: parseFloat(process.env.REACT_APP_DEFAULT_LAT),
+        lng: parseFloat(process.env.REACT_APP_DEFAULT_LNG)
+    });
     const { t } = useTranslation();
     const mapRef = useRef();
-
-    const handleMapLoad = (map) => {
-        mapRef.current = map;
-        const bounds = new window.google.maps.LatLngBounds();
-        markers.forEach(marker => {
-            bounds.extend({ lat: marker.lat, lng: marker.lng });
-        });
-        map.fitBounds(bounds);
-    };
 
     useEffect(() => {
         if (selectedMarker) {
@@ -49,9 +45,23 @@ const GoogleClusteredMap = ({ markers, mapKey, selectedMarker, handleSelected })
         }
     }, [selectedMarker, markers]);
 
+    useEffect(() => {
+        if (mapRef.current && markers.length > 0) {
+            const bounds = new window.google.maps.LatLngBounds();
+            markers.forEach(marker => {
+                bounds.extend({ lat: marker.lat, lng: marker.lng });
+            });
+            mapRef.current.fitBounds(bounds);
+        }
+      }, [markers]);
+
     return (
         <LoadScript googleMapsApiKey={mapKey}>
-            <GoogleMap mapContainerStyle={{ height: "100vh", width: "100%" }} onLoad={handleMapLoad}>
+            <UserLocation setUserLocation={setUserLocation} />
+            <GoogleMap mapContainerStyle={{ height: "70vh", width: "100%" }} 
+                zoom={6}
+                center={userLocation}
+                onLoad={map => (mapRef.current = map)}>
                 <MarkerClusterer>
                     {(clusterer) =>
                         markers.map((marker, index) => (
@@ -96,8 +106,8 @@ const GoogleClusteredMap = ({ markers, mapKey, selectedMarker, handleSelected })
 };
 
 GoogleClusteredMap.propTypes = {
-    markers: PropTypes.array.isRequired,
     mapKey: PropTypes.string,
+    markers: PropTypes.array.isRequired,
     selectedMarker: PropTypes.string,
     handleSelected: PropTypes.func
 };

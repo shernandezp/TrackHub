@@ -1,5 +1,5 @@
 /**
-* Copyright (c) 2024 Sergio Hernandez. All rights reserved.
+* Copyright (c) 2025 Sergio Hernandez. All rights reserved.
 *
 *  Licensed under the Apache License, Version 2.0 (the "License").
 *  You may not use this file except in compliance with the License.
@@ -17,28 +17,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import MarkerCluster from 'controls/Maps/OSM/MarkerCluster';
+import UserLocation from "controls/Maps/UserLocation";
 import PropTypes from 'prop-types';
 
 const OSMClusteredMap = ({ markers, selectedMarker }) => {
     const [bounds, setBounds] = useState(null);
-    const [userLocation, setUserLocation] = useState([4.624335, -74.063644]);
+    const [userLocation, setUserLocation] = useState({
+        lat: parseFloat(process.env.REACT_APP_DEFAULT_LAT),
+        lng: parseFloat(process.env.REACT_APP_DEFAULT_LNG)
+    });
     const mapRef = useRef();
     const boundsSetRef = useRef(false);
-
-    //User Location
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setUserLocation([latitude, longitude]);
-        },
-        (error) => {
-          console.error("Error getting user's location:", error);
-        }
-      );
-    }
-  }, []);
 
     useEffect(() => {
         if (markers.length > 0) {
@@ -77,21 +66,23 @@ const OSMClusteredMap = ({ markers, selectedMarker }) => {
     };
 
     return (
-        <MapContainer
-            center={userLocation}
-            zoom={13}
-            style={{ height: "100vh", width: "100%" }}
-            whenCreated={mapInstance => { mapRef.current = mapInstance; }}
-        >
-            <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-            />
-            <MarkerCluster 
-                markers={markers} 
-                selectedMarker={selectedMarker} />
-            {bounds && <ChangeView bounds={bounds} />}
-        </MapContainer>
+        <div>
+            <UserLocation setUserLocation={setUserLocation} />
+            <MapContainer
+                center={userLocation}
+                zoom={13}
+                style={{ height: "70vh", width: "100%" }}
+                whenCreated={mapInstance => { mapRef.current = mapInstance; }}>
+                <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+                />
+                <MarkerCluster 
+                    markers={markers} 
+                    selectedMarker={selectedMarker} />
+                {bounds && <ChangeView bounds={bounds} />}
+            </MapContainer>
+        </div>
     );
 };
 

@@ -1,5 +1,5 @@
 /**
-* Copyright (c) 2024 Sergio Hernandez. All rights reserved.
+* Copyright (c) 2025 Sergio Hernandez. All rights reserved.
 *
 *  Licensed under the Apache License, Version 2.0 (the "License").
 *  You may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ function ManageAccounts() {
     setOpen,
     setOpenUser} = useAccountsTableData(expanded, handleEditClick, handleAddManagerClick);
 
-    const [accountValues, handleAccountChange, setAccountValues, setAccountErrors, validateAccount, accountErrors] = useForm({});
+  const [accountValues, handleAccountChange, setAccountValues, setAccountErrors, validateAccount, accountErrors] = useForm({});
   const [userValues, handleUserChange, setUserValues, setUserErrors, validateUser, userErrors] = useForm({});
   const { columns, rows } = data;
 

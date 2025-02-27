@@ -1,5 +1,5 @@
 /**
-* Copyright (c) 2024 Sergio Hernandez. All rights reserved.
+* Copyright (c) 2025 Sergio Hernandez. All rights reserved.
 *
 *  Licensed under the Apache License, Version 2.0 (the "License").
 *  You may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ function TransporterAllocatorDialog({ open, setOpen, groupId }) {
   const { createTransporterGroup, deleteTransporterGroup } = useGroupService();
   const [data, setData] = useState([]);
   const [accountTransporters, setAccountTrasporters] = useState([]);
-  const [transporters, setTrasporters] = useState([]);
+  const [transporters, setTransporters] = useState([]);
   const [transporterId, setTransporterId] = useState('');
 
   const columns = [
@@ -43,7 +43,7 @@ function TransporterAllocatorDialog({ open, setOpen, groupId }) {
     const assignedTransporters = await getTransportersByGroup(groupId);
     const unassignedTransporters = accountTransporters.filter(transporter => !assignedTransporters.some(assignedTransporter => assignedTransporter.transporterId === transporter.transporterId));
     setTransporterId('');
-    setTrasporters(unassignedTransporters.map(transporter => ({
+    setTransporters(unassignedTransporters.map(transporter => ({
       value: transporter.transporterId,
       label: transporter.name
     })));

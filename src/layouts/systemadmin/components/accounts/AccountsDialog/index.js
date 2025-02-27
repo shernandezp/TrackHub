@@ -1,5 +1,5 @@
 /**
-* Copyright (c) 2024 Sergio Hernandez. All rights reserved.
+* Copyright (c) 2025 Sergio Hernandez. All rights reserved.
 *
 *  Licensed under the Apache License, Version 2.0 (the "License").
 *  You may not use this file except in compliance with the License.
@@ -96,7 +96,7 @@ function AccountsFormDialog({ open, setOpen, handleSubmit, values, handleChange,
                 fullWidth
                 value={values.firstName || ''}
                 onChange={handleChange}
-                errorMsg={errors.password}
+                errorMsg={errors.firstName}
                 required
             />
           )}
@@ -110,7 +110,7 @@ function AccountsFormDialog({ open, setOpen, handleSubmit, values, handleChange,
                 fullWidth
                 value={values.lastName || ''}
                 onChange={handleChange}
-                errorMsg={errors.password}
+                errorMsg={errors.lastName}
                 required
             />
           )}

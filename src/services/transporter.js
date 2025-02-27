@@ -1,5 +1,5 @@
 /**
-* Copyright (c) 2024 Sergio Hernandez. All rights reserved.
+* Copyright (c) 2025 Sergio Hernandez. All rights reserved.
 *
 *  Licensed under the Apache License, Version 2.0 (the "License").
 *  You may not use this file except in compliance with the License.
@@ -76,6 +76,31 @@ const useTransporterService = () => {
       };
       const response = await post(data);
       return response.data.transportersByAccount;
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+  /**
+   * Retrieves transporters associated with the current user.
+   * @returns {Promise<Array>} A promise that resolves to an array of transporters.
+   */
+  const getTransportersByUser = async () => {
+    try {
+      const data = {
+        query: `
+          query {
+            transportersByUser {
+              name
+              transporterId
+              transporterType
+              transporterTypeId
+            }
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.transportersByUser;
     } catch (error) {
       handleError(error);
     }
@@ -195,6 +220,7 @@ const useTransporterService = () => {
   return {
     getTransporter,
     getTransporterByAccount,
+    getTransportersByUser,
     getTransportersByGroup,
     createTransporter,
     updateTransporter,

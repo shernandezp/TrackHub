@@ -1,5 +1,5 @@
 /**
-* Copyright (c) 2024 Sergio Hernandez. All rights reserved.
+* Copyright (c) 2025 Sergio Hernandez. All rights reserved.
 *
 *  Licensed under the Apache License, Version 2.0 (the "License").
 *  You may not use this file except in compliance with the License.
@@ -38,7 +38,10 @@ const OSMGeofenceEditor = ({
   const layerRef = useRef(null);
   const editedGeofenceRef = useRef(null);
   const [geofences, setGeofences] = useState([]);
-  const [userLocation, setUserLocation] = useState({ lat: 4.624335, lng: -74.063644 });
+  const [userLocation, setUserLocation] = useState({
+    lat: parseFloat(process.env.REACT_APP_DEFAULT_LAT),
+    lng: parseFloat(process.env.REACT_APP_DEFAULT_LNG)
+  });
 
   useEffect(() => {
     if (!mapRef.current) return;

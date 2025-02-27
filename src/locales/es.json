@@ -48,7 +48,9 @@
         "activeTitle": "Unidades Activas",
         "movementTitle": "Unidades en Movimiento",
         "typesTitle": "Tipos de Unidades",
-        "inGeofence": "En Geocerca"
+        "inGeofence": "En Geocerca",
+        "transportersTitle": "Unidades",
+        "positionsTitle": "Posiciones"
     },
     "device": {
         "title":"Dispositivos",
@@ -62,6 +64,12 @@
         "deleteTitle": "Eliminar Dispositivo",
         "deleteMessage": "¿Está seguro de que desea eliminar este dispositivo?",
         "overwrite": "Sobrescribir"
+    },
+    "filters": {
+        "search": "Buscar",
+        "startDate": "Fecha Inicio",
+        "endDate": "Fecha Fin",
+        "transporter": "Unidad"
     },
     "generic": {
         "modified":"Modificado",
@@ -241,6 +249,13 @@
         "tool": "Herramientas",
         "truck": "Camión",
         "tractor": "Tractor"
+    },
+    "tripPanel": {
+        "fromLabel": "Desde",
+        "toLabel": "Hasta",
+        "stopLabel": "Detenido",
+        "transitLabel": "En Tránsito",
+        "totalDistance": "Distancia Total"
     },
     "user": {
         "title":"Usuarios",
