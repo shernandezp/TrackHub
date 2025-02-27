@@ -19,15 +19,17 @@ import Card from "@mui/material/Card";
 import Icon from "@mui/material/Icon";
 import ArgonBox from "components/ArgonBox";
 import ArgonTypography from "components/ArgonTypography";
-import SingleTrip from "layouts/dashboard/components/Trips/SingleTrip";
+import SingleTrip from "layouts/dashboard/components/TripList/SingleTrip";
 import { formatDateTime } from "utils/dateUtils";
 import { calculateTotalDistance } from "utils/distanceUtils";
 import { useTranslation } from 'react-i18next';
+import { useTheme } from '@mui/material/styles';
 
-function Trips({filters, trips=[]}) {
+function TripList({filters, trips=[], selectedTrip, handleSelected}) {
   const { t } = useTranslation();
+  const theme = useTheme();
   return (
-    <Card sx={{ height: "100%" }}>
+    <Card sx={{ height: "70vh" }}>
       <ArgonBox display="flex" justifyContent="space-between" alignItems="center" pt={3} px={2}>
         <ArgonBox display="flex" alignItems="flex-start">
           <ArgonBox color="text" mr={0.5} lineHeight={0}>
@@ -41,14 +43,12 @@ function Trips({filters, trips=[]}) {
         </ArgonBox>
       </ArgonBox>
       <ArgonBox pt={3} pb={2} px={2}>
-
         <ArgonBox mt={1} mb={2}>
           <ArgonTypography
             variant="caption"
             color="text"
             fontWeight="bold"
-            textTransform="uppercase"
-          >
+            textTransform="uppercase">
             {t("tripPanel.totalDistance")} {calculateTotalDistance(trips, "totalDistance")}
           </ArgonTypography>
         </ArgonBox>
@@ -58,18 +58,29 @@ function Trips({filters, trips=[]}) {
           flexDirection="column"
           p={0}
           m={0}
-          sx={{ listStyle: "none" }}
+          sx={{ listStyle: "none", height: 'calc(100vh - 200px)', overflowY: 'auto' }}
         >
           {trips.map((trip) => (
-            <SingleTrip
-              key={trip.tripId}
-              id={trip.tripId}
-              from={trip.from}
-              to={trip.to}
-              event={trip.type}
-              duration={trip.duration}
-              distance={trip.totalDistance}
-            />
+            <ArgonBox 
+              key={`p-${trip.tripId}`}
+              onClick={() => handleSelected(trip.tripId)}
+              sx={{
+                cursor: 'pointer',
+                backgroundColor: selectedTrip === trip.tripId
+                  ? theme.palette.mode === 'dark'
+                    ? theme.palette.primary.dark
+                    : theme.palette.primary.light
+                  : 'inherit',
+              }}>
+              <SingleTrip
+                id={trip.tripId}
+                from={trip.from}
+                to={trip.to}
+                event={trip.type}
+                duration={trip.duration}
+                distance={trip.totalDistance}
+              />
+            </ArgonBox>
           ))}
         </ArgonBox>
       </ArgonBox>
@@ -77,9 +88,11 @@ function Trips({filters, trips=[]}) {
   );
 }
 
-Trips.propTypes = {
-    filters: PropTypes.any,
-    trips: PropTypes.array.isRequired,
+TripList.propTypes = {
+  selectedTrip: PropTypes.string,
+  handleSelected: PropTypes.func,
+  filters: PropTypes.any.isRequired,
+  trips: PropTypes.array.isRequired,
 };
 
-export default Trips;
+export default TripList;

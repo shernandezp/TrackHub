@@ -17,28 +17,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import MarkerCluster from 'controls/Maps/OSM/MarkerCluster';
+import UserLocation from "controls/Maps/UserLocation";
 import PropTypes from 'prop-types';
 
 const OSMClusteredMap = ({ markers, selectedMarker }) => {
     const [bounds, setBounds] = useState(null);
-    const [userLocation, setUserLocation] = useState([4.624335, -74.063644]);
+    const [userLocation, setUserLocation] = useState({ lat: 4.624335, lng: -74.063644 });
     const mapRef = useRef();
     const boundsSetRef = useRef(false);
-
-    //User Location
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setUserLocation([latitude, longitude]);
-        },
-        (error) => {
-          console.error("Error getting user's location:", error);
-        }
-      );
-    }
-  }, []);
 
     useEffect(() => {
         if (markers.length > 0) {
@@ -77,21 +63,23 @@ const OSMClusteredMap = ({ markers, selectedMarker }) => {
     };
 
     return (
-        <MapContainer
-            center={userLocation}
-            zoom={13}
-            style={{ height: "100vh", width: "100%" }}
-            whenCreated={mapInstance => { mapRef.current = mapInstance; }}
-        >
-            <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-            />
-            <MarkerCluster 
-                markers={markers} 
-                selectedMarker={selectedMarker} />
-            {bounds && <ChangeView bounds={bounds} />}
-        </MapContainer>
+        <div>
+            <UserLocation setUserLocation={setUserLocation} />
+            <MapContainer
+                center={userLocation}
+                zoom={13}
+                style={{ height: "100vh", width: "100%" }}
+                whenCreated={mapInstance => { mapRef.current = mapInstance; }}>
+                <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+                />
+                <MarkerCluster 
+                    markers={markers} 
+                    selectedMarker={selectedMarker} />
+                {bounds && <ChangeView bounds={bounds} />}
+            </MapContainer>
+        </div>
     );
 };
 

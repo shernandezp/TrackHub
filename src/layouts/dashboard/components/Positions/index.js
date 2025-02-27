@@ -19,25 +19,23 @@ import PropTypes from "prop-types";
 import Grid from "@mui/material/Grid";
 import ArgonBox from "components/ArgonBox";
 import FilterNavbar from 'controls/Navbars/FilterNavbar';
-import Trips from "layouts/dashboard/components/Trips";
+import TripList from "layouts/dashboard/components/TripList";
+import TripsMap from "layouts/dashboard/components/TripsMap";
 import useRouterService from "services/router";
 import useTransporterService from "services/transporter";
 import useForm from 'controls/Dialogs/useForm';
 import { toISOStringWithTimezone } from "utils/dateUtils";
 import { LoadingContext } from 'LoadingContext';
-import { useTranslation } from 'react-i18next';
 import { useAuth } from "AuthContext";
-import GeneralMap from "layouts/dashboard/components/GeneralMap";
 
-function Positions({searchQuery, settings}) {
-  const { t } = useTranslation();
+function Positions({settings}) {
   const { getTripsByTransporter } = useRouterService();
   const { getTransportersByUser } = useTransporterService();
   const { setLoading } = useContext(LoadingContext);
   const { isAuthenticated } = useAuth();
-  const [positions, setPositions] = useState([]);
+  const [trips, setTrips] = useState([]);
   const [transporters, setTransporters] = useState([]);
-  const [selectedTransporter, setSelectedTransporter] = useState(null);
+  const [selectedTrip, setSelectedTrip] = useState(null);
   const [values, handleChange, setValues, setErrors, validate, errors] = useForm({});
 
   const fetchPositions = async () => {
@@ -46,7 +44,7 @@ function Positions({searchQuery, settings}) {
       values.selectedItem, 
       toISOStringWithTimezone(new Date(values.startDate)),
       toISOStringWithTimezone(new Date(values.endDate)));
-    setPositions(result);
+    setTrips(result);
     setErrors({});
     setLoading(false);
   };
@@ -58,7 +56,7 @@ function Positions({searchQuery, settings}) {
       value: transporter.transporterId,
       label: transporter.name
     })));
-    setValues({selectedItem: ''});
+    setValues({selectedItem: result.length > 0 ? result[0].transporterId : ''});
     setLoading(false);
   };
 
@@ -69,7 +67,8 @@ function Positions({searchQuery, settings}) {
   }, [isAuthenticated]);
 
   const handleSelected = (selected) => {
-    setSelectedTransporter(selected);
+    setSelectedTrip(selected);
+    console.log(selected);
   };
 
   const handleSearch = async () => {
@@ -80,39 +79,39 @@ function Positions({searchQuery, settings}) {
 
   return (
     <ArgonBox py={3}>
-        <Grid container spacing={3} mb={3}>
-            <Grid item xs={12} lg={12}>
-                <FilterNavbar 
-                  list={transporters}
-                  values={values}
-                  handleChange={handleChange}
-                  errors={errors}
-                  handleSearch={handleSearch}
-                />
-            </Grid>
+      <Grid container spacing={3} mb={3}>
+        <Grid item xs={12} lg={12}>
+          <FilterNavbar 
+            list={transporters}
+            values={values}
+            handleChange={handleChange}
+            errors={errors}
+            handleSearch={handleSearch}
+          />
         </Grid>
-        <Grid container spacing={3} mb={3}>
-            <Grid item xs={12} lg={9}>
-                <GeneralMap 
-                    mapType={settings.maps} 
-                    positions={[]} 
-                    mapKey={settings.mapsKey}
-                    selectedMarker={selectedTransporter}
-                    handleSelected={handleSelected}/>
-            </Grid>
-            <Grid item xs={12} lg={3}>
-              <Trips 
-                trips={positions}
-                filters={values}
-                />
-            </Grid>
+      </Grid>
+      <Grid container spacing={3} mb={3}>
+        <Grid item xs={12} lg={9}>
+          <TripsMap 
+            mapType={settings.maps} 
+            mapKey={settings.mapsKey}
+            trips={trips} 
+            selectedTrip={selectedTrip}
+            handleSelected={handleSelected}/>
         </Grid>
+        <Grid item xs={12} lg={3}>
+          <TripList 
+            trips={trips}
+            filters={values} 
+            selectedTrip={selectedTrip}
+            handleSelected={handleSelected}/>
+        </Grid>
+      </Grid>
     </ArgonBox>
   );
 }
 
 Positions.propTypes = {
-    searchQuery: PropTypes.string,
     settings: PropTypes.object
 };
 

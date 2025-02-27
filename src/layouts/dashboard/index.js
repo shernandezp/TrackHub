@@ -60,7 +60,7 @@ function Default() {
       case 0:
         return <Transporters searchQuery={searchQuery} settings={settings} />;
       case 1:
-        return <Positions searchQuery={searchQuery} settings={settings}/>;
+        return <Positions settings={settings}/>;
       default:
         return null;
     }

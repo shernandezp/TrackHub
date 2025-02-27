@@ -45,7 +45,7 @@ function FilterNavbar({ list = [], values, handleChange, errors, handleSearch })
             handleChange={handleChange}
             name="selectedItem"
             id="selectedItem"
-            label={t('filters.endDate')}
+            label={t('filters.transporter')}
             value={values.selectedItem || ''}
             required
           />

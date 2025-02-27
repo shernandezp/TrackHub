@@ -68,7 +68,8 @@
     "filters": {
         "search": "Buscar",
         "startDate": "Fecha Inicio",
-        "endDate": "Fecha Fin"
+        "endDate": "Fecha Fin",
+        "transporter": "Unidad"
     },
     "generic": {
         "modified":"Modificado",
