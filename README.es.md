@@ -23,6 +23,7 @@ La aplicación TrackHub es un cliente web desarrollado con React, basado en la p
 *Una vez iniciada la sesión, los usuarios se presentan con el panel principal, que incluye un mapa que muestra datos en tiempo real relacionados con la ubicación de los dispositivos y otra información geográfica. Este cliente web se comunica con los servicios de TrackHub utilizando endpoints de GraphQL para realizar consultas y manipular datos de manera eficiente.*
 
 ![Image](https://github.com/shernandezp/TrackHub/blob/main/src/assets/images/dashboard.png?raw=true)
+![Image](https://github.com/shernandezp/TrackHub/blob/main/src/assets/images/trips.png?raw=true)
 
 ---
 

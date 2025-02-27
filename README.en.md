@@ -22,6 +22,7 @@ TrackHub Application is a web client developed with React, based on the Argon te
 *Once logged in, users are presented with the main dashboard, which includes a map displaying real-time data related to device locations and other geographical information. This web client communicates with TrackHub services using GraphQL endpoints for efficient querying and manipulation of data*
 
 ![Image](https://github.com/shernandezp/TrackHub/blob/main/src/assets/images/dashboard.png?raw=true)
+![Image](https://github.com/shernandezp/TrackHub/blob/main/src/assets/images/trips.png?raw=true)
 
 ---
 
