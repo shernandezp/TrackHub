@@ -16,7 +16,7 @@
 
 import React, { useState, useEffect } from 'react';
 import OSMTripsMap from 'controls/Maps/OSM/OSMTripsMap';
-import GoogleClusteredMap from 'controls/Maps/Google/GoogleClusteredMap';
+import GoogleTripsMap from 'controls/Maps/Google/GoogleTripsMap';
 import { getRandomColor } from "utils/colorUtils";
 import PropTypes from 'prop-types';
 import 'controls/Maps/css/map.css';
@@ -44,10 +44,10 @@ function TripsMap({ mapType, mapKey, trips, selectedTrip, handleSelected }) {
                     handleSelected={handleSelected}/>
             ) : (
                 mapType === 'Google' && 
-                    <GoogleClusteredMap 
-                        markers={polygons} 
+                    <GoogleTripsMap 
                         mapKey={mapKey}
-                        selectedMarker={selectedTrip} 
+                        trips={polygons} 
+                        selectedTrip={selectedTrip} 
                         handleSelected={handleSelected} />
             )}
         </div>

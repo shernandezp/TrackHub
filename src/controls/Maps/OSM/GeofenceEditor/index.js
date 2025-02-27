@@ -38,7 +38,10 @@ const OSMGeofenceEditor = ({
   const layerRef = useRef(null);
   const editedGeofenceRef = useRef(null);
   const [geofences, setGeofences] = useState([]);
-  const [userLocation, setUserLocation] = useState({ lat: 4.624335, lng: -74.063644 });
+  const [userLocation, setUserLocation] = useState({
+    lat: parseFloat(process.env.REACT_APP_DEFAULT_LAT),
+    lng: parseFloat(process.env.REACT_APP_DEFAULT_LNG)
+  });
 
   useEffect(() => {
     if (!mapRef.current) return;

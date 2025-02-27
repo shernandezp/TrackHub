@@ -22,7 +22,10 @@ import PropTypes from 'prop-types';
 
 const OSMClusteredMap = ({ markers, selectedMarker }) => {
     const [bounds, setBounds] = useState(null);
-    const [userLocation, setUserLocation] = useState({ lat: 4.624335, lng: -74.063644 });
+    const [userLocation, setUserLocation] = useState({
+        lat: parseFloat(process.env.REACT_APP_DEFAULT_LAT),
+        lng: parseFloat(process.env.REACT_APP_DEFAULT_LNG)
+    });
     const mapRef = useRef();
     const boundsSetRef = useRef(false);
 
@@ -68,7 +71,7 @@ const OSMClusteredMap = ({ markers, selectedMarker }) => {
             <MapContainer
                 center={userLocation}
                 zoom={13}
-                style={{ height: "100vh", width: "100%" }}
+                style={{ height: "70vh", width: "100%" }}
                 whenCreated={mapInstance => { mapRef.current = mapInstance; }}>
                 <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

@@ -29,7 +29,7 @@ function TripList({filters, trips=[], selectedTrip, handleSelected}) {
   const { t } = useTranslation();
   const theme = useTheme();
   return (
-    <Card sx={{ height: "70vh" }}>
+    <Card sx={{ height: "70vh", overflow: "auto" }}>
       <ArgonBox display="flex" justifyContent="space-between" alignItems="center" pt={3} px={2}>
         <ArgonBox display="flex" alignItems="flex-start">
           <ArgonBox color="text" mr={0.5} lineHeight={0}>
@@ -58,7 +58,7 @@ function TripList({filters, trips=[], selectedTrip, handleSelected}) {
           flexDirection="column"
           p={0}
           m={0}
-          sx={{ listStyle: "none", height: 'calc(100vh - 200px)', overflowY: 'auto' }}
+          sx={{ listStyle: "none", height: '100%', overflowY: 'auto' }}
         >
           {trips.map((trip) => (
             <ArgonBox 

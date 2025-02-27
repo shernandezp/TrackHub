@@ -68,7 +68,6 @@ function Positions({settings}) {
 
   const handleSelected = (selected) => {
     setSelectedTrip(selected);
-    console.log(selected);
   };
 
   const handleSearch = async () => {

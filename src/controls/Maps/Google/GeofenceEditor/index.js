@@ -36,7 +36,10 @@ const GoogleGeofenceEditor = ({
   editingRef, 
   removeRef }) => {
   const polygons = useRef(initialPolygons);
-  const [userLocation, setUserLocation] = useState({ lat: 4.624335, lng: -74.063644 });
+  const [userLocation, setUserLocation] = useState({
+    lat: parseFloat(process.env.REACT_APP_DEFAULT_LAT),
+    lng: parseFloat(process.env.REACT_APP_DEFAULT_LNG)
+  });
   const [drawingMode, setDrawingMode] = useState(null);
   const mapRef = useRef(null);
   const polygonRef = useRef(null);

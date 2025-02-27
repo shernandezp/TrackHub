@@ -3,19 +3,19 @@ import { MapContainer, TileLayer, Polyline, Marker, useMap } from 'react-leaflet
 import UserLocation from "controls/Maps/UserLocation";
 import 'leaflet/dist/leaflet.css';
 import PropTypes from 'prop-types';
-//import startIconUrl from 'assets/images/markers/start_marker.svg';
-//import endIconUrl from 'assets/images/markers/end_marker.svg';
-//import singleIconUrl from 'assets/images/markers/single_marker.svg';
-import startIconUrl from 'assets/images/markers/start_marker.png';
-import endIconUrl from 'assets/images/markers/end_marker.png';
-import singleIconUrl from 'assets/images/markers/single_marker.png';
+import startIconUrl from 'assets/images/markers/start_marker.svg';
+import endIconUrl from 'assets/images/markers/end_marker.svg';
+import singleIconUrl from 'assets/images/markers/single_marker.svg';
 
 const startIcon = new L.Icon({ iconUrl: startIconUrl, iconSize: [20, 20] });
 const endIcon = new L.Icon({ iconUrl: endIconUrl, iconSize: [20, 20] });
 
 const OSMTripsMap = ({ trips = [], selectedTrip, handleSelected }) => {
   const mapRef = useRef();
-  const [userLocation, setUserLocation] = useState({ lat: 4.624335, lng: -74.063644 });
+  const [userLocation, setUserLocation] = useState({
+    lat: parseFloat(process.env.REACT_APP_DEFAULT_LAT),
+    lng: parseFloat(process.env.REACT_APP_DEFAULT_LNG)
+  });
 
   const handleClick = (tripId) => {
     if (selectedTrip !== tripId) {
