@@ -155,6 +155,15 @@
         "resources": "Resources",
         "assignPolicy": "Assign Policy"
     },
+    "reports": {
+        "title":"Reports",
+        "select": "Select Report",
+        "search": "Search",
+        "generate": "Generate Report",
+        "from": "From",
+        "to": "To",
+        "transporter": "Unit"
+    },
     "resources": {
         "accounts": "Accounts",
         "administrative": "Administrative",
@@ -167,6 +176,7 @@
         "permissions": "Permissions",
         "positions": "Positions",
         "profile": "Profile",
+        "reports": "Reports",
         "settingsScreen": "Settings Screen",
         "transporters": "Units",
         "users": "Users"        

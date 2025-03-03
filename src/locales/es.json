@@ -155,6 +155,15 @@
         "resources": "Resources",
         "assignPolicy": "Asignar Política"
     },
+    "reports": {
+        "title":"Reportes",
+        "select": "Seleccionar Reporte",
+        "search": "Buscar Reporte",
+        "generate": "Generar Reporte",
+        "from": "Desde",
+        "to": "Hasta",
+        "transporter": "Unidad"
+    },
     "resources": {
         "accounts": "Cuentas",
         "administrative": "Administración",
@@ -167,6 +176,7 @@
         "positions": "Posiciones",
         "permissions": "Permisos",
         "profile": "Perfil",
+        "reports": "Reportes",
         "settingsScreen": "Configuración",
         "users": "Usuarios",
         "transporters": "Unidades"

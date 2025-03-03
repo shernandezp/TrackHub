@@ -64,7 +64,39 @@ const useApiService = (endpoint) => {
     
   };
 
-  return { post };
+  /**
+   * Makes a POST request to the API endpoint and downloads the file.
+   * @param {object} data - The data to send in the request body.
+   * @param {string} filename - The name of the file to download.
+   * @returns {Promise<object>} - A promise that resolves to the response data.
+   */
+  const postFile = async (data, filename) => {
+    let token = accessToken;
+    if (!isTokenValid(accessToken)) {
+      token = await handleRefreshToken();
+    }
+  
+    const response = await axios.post(endpoint, data, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      responseType: 'blob'
+    });
+  
+    // Create a URL for the Blob and open it in a new tab
+    const url = window.URL.createObjectURL(response.data);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `${filename}.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  };
+
+  return { 
+    post, 
+    postFile 
+  };
 };
 
 export default useApiService;
