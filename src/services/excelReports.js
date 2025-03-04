@@ -16,7 +16,7 @@
 
 import useApiService from './apiService';
 import { handleError } from 'utils/errorHandler';
-import { formatValue } from 'utils/dataUtils';
+import { formatRESTValue, formatDateTimeOffSet } from 'utils/dataUtils';
 
 const useExcelReportService = () => {
   const { postFile } = useApiService(`${process.env.REACT_APP_REPORTING_ENDPOINT}api/BasicReports/GetReport`);
@@ -46,15 +46,15 @@ const useExcelReportService = () => {
         reportCode: reportCode,
         filters: {
           name: reportName,
-          stringFilter1: formatValue(reportFilters.stringFilter1),
-          stringFilter2: formatValue(reportFilters.stringFilter2),
-          stringFilter3: formatValue(reportFilters.stringFilter3),
-          dateTimeFilter1: formatValue(reportFilters.dateTimeFilter1),
-          dateTimeFilter2: formatValue(reportFilters.dateTimeFilter2),
-          dateTimeFilter3: formatValue(reportFilters.dateTimeFilter3),
-          numericFilter1: formatValue(reportFilters.numericFilter1),
-          numericFilter2: formatValue(reportFilters.numericFilter2),
-          numericFilter3: formatValue(reportFilters.numericFilter3)
+          stringFilter1: formatRESTValue(reportFilters.selectedItem1),
+          stringFilter2: formatRESTValue(reportFilters.selectedItem2),
+          stringFilter3: formatRESTValue(reportFilters.selectedItem3),
+          dateTimeFilter1: formatDateTimeOffSet(reportFilters.selectedDate1),
+          dateTimeFilter2: formatDateTimeOffSet(reportFilters.selectedDate2),
+          dateTimeFilter3: formatDateTimeOffSet(reportFilters.selectedDate3),
+          numericFilter1: formatRESTValue(reportFilters.selectedNumber1),
+          numericFilter2: formatRESTValue(reportFilters.selectedNumber1),
+          numericFilter3: formatRESTValue(reportFilters.selectedNumber1)
         }
       };
       const response = await postFile(requestBody, reportName);

@@ -24,7 +24,6 @@ import TripsMap from "layouts/dashboard/components/TripsMap";
 import useRouterService from "services/router";
 import useTransporterService from "services/transporter";
 import useForm from 'controls/Dialogs/useForm';
-import { toISOStringWithTimezone } from "utils/dateUtils";
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
 
@@ -42,8 +41,8 @@ function Positions({settings}) {
     setLoading(true);
     var result = await getTripsByTransporter(
       values.selectedItem, 
-      toISOStringWithTimezone(new Date(values.startDate)),
-      toISOStringWithTimezone(new Date(values.endDate)));
+      values.startDate,
+      values.endDate);
     setTrips(result);
     setErrors({});
     setLoading(false);
