@@ -32,7 +32,7 @@ export function formatValue(value) {
  * @param {any} value - The value to format.
  * @returns {string|null} The formatted value or null if the input is falsy.
  */
-export function formatRESTValue(value) {
+export function formatJSONValue(value) {
   return value ? `${value}` : null;
 }
 

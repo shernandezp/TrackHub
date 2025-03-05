@@ -164,6 +164,11 @@
         "to": "Hasta",
         "transporter": "Unidad"
     },
+    "reportList": {
+        "liveReport": "Reporte de Unidades",
+        "positionRecord": "Reporte de Posiciones",
+        "transportersInGeofence": "Unidades en Geocerca"
+    },
     "resources": {
         "accounts": "Cuentas",
         "administrative": "Administración",

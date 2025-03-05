@@ -164,6 +164,11 @@
         "to": "To",
         "transporter": "Unit"
     },
+    "reportList": {
+        "liveReport":"Units Report",
+        "positionRecord": "Position Record",
+        "transportersInGeofence": "Units in Geofence"
+    },
     "resources": {
         "accounts": "Accounts",
         "administrative": "Administrative",

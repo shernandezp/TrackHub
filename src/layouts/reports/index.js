@@ -26,6 +26,7 @@ import useExcelReportService from "services/excelReports";
 import { useTranslation } from 'react-i18next';
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
+import { toCamelCase } from 'utils/stringUtils';
 
 function Reports() {
   const { t } = useTranslation();
@@ -42,7 +43,7 @@ function Reports() {
     var result = await getReports();
     setReports(result.map(report => ({
       value: report.code,
-      label: report.name
+      label: t(`reportList.${toCamelCase(report.code)}`)
     })));
     setSelectedReport(result.length > 0 ? result[0].code : '');
     setLoading(false);

@@ -14,9 +14,10 @@
 *  limitations under the License.
 */
 
+import i18n from 'i18next';
 import useApiService from './apiService';
 import { handleError } from 'utils/errorHandler';
-import { formatRESTValue, formatDateTimeOffSet } from 'utils/dataUtils';
+import { formatJSONValue, formatDateTimeOffSet } from 'utils/dataUtils';
 
 const useExcelReportService = () => {
   const { postFile } = useApiService(`${process.env.REACT_APP_REPORTING_ENDPOINT}api/BasicReports/GetReport`);
@@ -42,19 +43,21 @@ const useExcelReportService = () => {
   */
   const getReport = async (reportCode, reportName, reportFilters) => {
     try {
+      const language = i18n.language || 'en';
       const requestBody = {
         reportCode: reportCode,
         filters: {
           name: reportName,
-          stringFilter1: formatRESTValue(reportFilters.selectedItem1),
-          stringFilter2: formatRESTValue(reportFilters.selectedItem2),
-          stringFilter3: formatRESTValue(reportFilters.selectedItem3),
+          stringFilter1: formatJSONValue(reportFilters.selectedItem1),
+          stringFilter2: formatJSONValue(reportFilters.selectedItem2),
+          stringFilter3: formatJSONValue(reportFilters.selectedItem3),
           dateTimeFilter1: formatDateTimeOffSet(reportFilters.selectedDate1),
           dateTimeFilter2: formatDateTimeOffSet(reportFilters.selectedDate2),
           dateTimeFilter3: formatDateTimeOffSet(reportFilters.selectedDate3),
-          numericFilter1: formatRESTValue(reportFilters.selectedNumber1),
-          numericFilter2: formatRESTValue(reportFilters.selectedNumber1),
-          numericFilter3: formatRESTValue(reportFilters.selectedNumber1)
+          numericFilter1: formatJSONValue(reportFilters.selectedNumber1),
+          numericFilter2: formatJSONValue(reportFilters.selectedNumber1),
+          numericFilter3: formatJSONValue(reportFilters.selectedNumber1),
+          language: language
         }
       };
       const response = await postFile(requestBody, reportName);

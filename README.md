@@ -20,4 +20,5 @@ We believe in the strength of community collaboration to create effective and ac
 | **Management API**          | [https://github.com/shernandezp/TrackHub.Manager](https://github.com/shernandezp/TrackHub.Manager)  |
 | **Router API**              | [https://github.com/shernandezp/TrackHubRouter](https://github.com/shernandezp/TrackHubRouter)    |
 | **Geofencing API**          | [https://github.com/shernandezp/TrackHub.Geofencing](https://github.com/shernandezp/TrackHub.Geofencing)    |
+| **Reporting API**           | [https://github.com/shernandezp/TrackHub.Reporting](https://github.com/shernandezp/TrackHub.Reporting)    |
 | **TrackHub Web**            | [https://github.com/shernandezp/TrackHub](https://github.com/shernandezp/TrackHub)          |

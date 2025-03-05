@@ -37,7 +37,6 @@ const useReportService = () => {
               active
               code
               description
-              name
               reportId
               type
               typeId
@@ -69,7 +68,6 @@ const useReportService = () => {
                 report: { 
                   typeId: ${reportData.typeId}, 
                   reportId: "${reportData.reportId}", 
-                  name: ${formatValue(reportData.name)}, 
                   description: ${formatValue(reportData.description)}, 
                   active: ${reportData.active}
                 }
