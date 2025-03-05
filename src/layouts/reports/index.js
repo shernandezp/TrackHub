@@ -14,63 +14,89 @@
 *  limitations under the License.
 */
 
-/**
-=========================================================
-* Argon Dashboard 2 MUI - v3.0.1
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/argon-dashboard-material-ui
-* Copyright 2023 Creative Tim (https://www.creative-tim.com)
-
-Coded by www.creative-tim.com
-
- =========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*/
-
-// @mui material components
+import React, { useState, useEffect, useContext } from 'react';
 import Grid from "@mui/material/Grid";
-
-// Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
+import DashboardLayout from "controls/LayoutContainers/DashboardLayout";
+import DashboardNavbar from "controls/Navbars/DashboardNavbar";
+import CustomSelect from 'controls/Dialogs/CustomSelect';
+import useReportService from "services/reports";
+import ReportFilters from "layouts/reports/components/Filters";
+import useExcelReportService from "services/excelReports";
+import { useTranslation } from 'react-i18next';
+import { LoadingContext } from 'LoadingContext';
+import { useAuth } from "AuthContext";
+import { toCamelCase } from 'utils/stringUtils';
 
-// Billing page components
-import BaseLayout from "layouts/reports/components/BaseLayout";
-import Invoices from "layouts/reports/components/Invoices";
-import BillingInformation from "layouts/reports/components/BillingInformation";
-import Transactions from "layouts/reports/components/Transactions";
+function Reports() {
+  const { t } = useTranslation();
+  const { isAuthenticated } = useAuth();
+  const { getReports } = useReportService();
+  const { setLoading } = useContext(LoadingContext);
+  const { getReport } = useExcelReportService();
 
-function Billing() {
+  const [reports, setReports] = useState([]);
+  const [selectedReport, setSelectedReport] = useState('');
+
+  const fetchReports = async () => {
+    setLoading(true);
+    var result = await getReports();
+    setReports(result.map(report => ({
+      value: report.code,
+      label: t(`reportList.${toCamelCase(report.code)}`)
+    })));
+    setSelectedReport(result.length > 0 ? result[0].code : '');
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchReports();
+    }
+  }, [isAuthenticated]);
+
+  const handleSearch = async (values) => {
+    var reportName = reports.find(report => report.value === selectedReport).label;
+    await getReport(selectedReport, reportName, values);
+  };
+
+  const handleChange = (event) => {
+    setSelectedReport(event.target.value);
+  };
+
   return (
-    <BaseLayout stickyNavbar>
-      <ArgonBox mt={4}>
-        <ArgonBox mb={3}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} lg={8}>
-              <Grid container spacing={3}>
-
-
+    <DashboardLayout>
+      <DashboardNavbar />
+      <ArgonBox py={3}>
+        <Grid container spacing={3} mb={3}>
+          <Grid item xs={12} lg={12}>
+            <ArgonBox py={3}>
+              <Grid container spacing={3} alignItems="center">
+                <Grid item xs={12} sm={3}>
+                  <CustomSelect
+                    list={reports}
+                    handleChange={handleChange}
+                    name="selectedReport"
+                    id="selectedReport"
+                    label={t('reports.select')}
+                    value={selectedReport}
+                    required
+                  />
+                </Grid>
               </Grid>
-            </Grid>
-            <Grid item xs={12} lg={4}>
-              <Invoices />
-            </Grid>
+            </ArgonBox>
           </Grid>
-        </ArgonBox>
-        <ArgonBox mb={3}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={7}>
-              <BillingInformation />
-            </Grid>
-            <Grid item xs={12} md={5}>
-              <Transactions />
-            </Grid>
+        </Grid>
+        <Grid container spacing={3} mb={3}>
+          <Grid item xs={12} lg={6}>
+            <ReportFilters 
+              selectedReport={selectedReport} 
+              generateReport={handleSearch} />
           </Grid>
-        </ArgonBox>
+        </Grid>
       </ArgonBox>
-    </BaseLayout>
+    </DashboardLayout>
   );
-}
+};
 
-export default Billing;
+export default Reports;

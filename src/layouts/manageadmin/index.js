@@ -32,16 +32,16 @@ function ManageAdmin() {
   return (
     <DashboardLayout>
       <DashboardNavbar />
-      <ArgonBox py={3}>
-        <ManageAccount/>
-        <ManageOperators/>
-        <ManageDevices/>
-        <ManageTransporters/>
-        <ManageUsers/>
-        <ManageRoles/>
-        <ManagePolicies/>
-        <ManageGroups/>
-      </ArgonBox>
+        <ArgonBox py={3}>
+          <ManageAccount/>
+          <ManageOperators/>
+          <ManageDevices/>
+          <ManageTransporters/>
+          <ManageUsers/>
+          <ManageRoles/>
+          <ManagePolicies/>
+          <ManageGroups/>
+        </ArgonBox>
       <Footer />
     </DashboardLayout>
   );

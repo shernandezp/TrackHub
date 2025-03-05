@@ -21,6 +21,7 @@
 
 import useApiService from './apiService';
 import { handleSilentError, handleError } from 'utils/errorHandler';
+import { formatDateTimeOffSet } from "utils/dataUtils";
 
 /**
  * Custom hook for handling router service operations.
@@ -133,7 +134,7 @@ const useRouterService = () => {
         const data = {
           query: `
             query {
-              tripsByTransporter(query: { transporterId: "${transporterId}", to: "${to}", from: "${from}" }) {
+              tripsByTransporter(query: { transporterId: "${transporterId}", to: "${formatDateTimeOffSet(to)}", from: "${formatDateTimeOffSet(from)}" }) {
                 averageSpeed
                 duration
                 totalDistance

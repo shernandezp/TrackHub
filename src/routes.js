@@ -53,7 +53,7 @@ Coded by www.creative-tim.com
 import Dashboard from "layouts/dashboard";
 import ManageAdmin from "layouts/manageadmin";
 import SystemAdmin from "layouts/systemadmin";
-import Billing from "layouts/reports";
+import Reports from "layouts/reports";
 import GeofenceManager from "layouts/geofencemanager";
 import Profile from "layouts/profile";
 import Callback from "layouts/authentication/callback";
@@ -101,14 +101,14 @@ const routes = [
     ),
     component: <GeofenceManager />,
   },
-  /*{
+  {
     type: "route",
     name: "screen.reports",
-    key: "billing",
-    route: "/billing",
+    key: "reports",
+    route: "/reports",
     icon: <ArgonBox component="i" color="success" fontSize="14px" className="ni ni-credit-card" />,
-    component: <Billing />,
-  },*/
+    component: <Reports />,
+  },
   { type: "title", title: "screen.account", key: "account-pages" },
   {
     type: "route",

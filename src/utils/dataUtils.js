@@ -14,6 +14,34 @@
 *  limitations under the License.
 */
 
+import { toISOStringWithTimezone } from "utils/dateUtils";
+
+/**
+ * Formats the given value by wrapping it in double quotes.
+ *
+ * @param {any} value - The value to format.
+ * @returns {string|null} The formatted value or null if the input is falsy.
+ */
 export function formatValue(value) {
-    return value ? `"${value}"` : null;
-  }
+  return value ? `"${value}"` : null;
+}
+
+/**
+ * Formats the given value as a string.
+ *
+ * @param {any} value - The value to format.
+ * @returns {string|null} The formatted value or null if the input is falsy.
+ */
+export function formatJSONValue(value) {
+  return value ? `${value}` : null;
+}
+
+/**
+ * Formats the given date value to an ISO string with timezone offset.
+ *
+ * @param {string|Date} value - The date value to format.
+ * @returns {string|null} The formatted date string or null if the input is falsy.
+ */
+export function formatDateTimeOffSet(value) {
+  return value ? `${toISOStringWithTimezone(new Date(value))}` : null;
+}
