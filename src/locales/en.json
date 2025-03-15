@@ -233,10 +233,18 @@
     },
     "transporterMap": {
         "name": "Name",
+        "details":"Unit Details",
         "dateTime": "Date Time",
         "speed": "Speed (Km/Hr)",
         "address": "Address",
-        "status": "Status"
+        "status": "Status",
+        "state": "State",
+        "city": "City",
+        "accStatus": "ACC Status",
+        "accOn": "ACC On",
+        "accOff": "ACC Off",
+        "mileage": "Mileage",
+        "temperature": "Temperature"
     },
     "transporterTypes": {
         "unknown": "Unknown",

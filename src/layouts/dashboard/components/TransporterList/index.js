@@ -23,7 +23,7 @@ import ArgonTypography from "components/ArgonTypography";
 import transporterTypes from 'data/transporterTypes';
 import { useTranslation } from 'react-i18next';
 
-function TransporterList({ title, positions }) {
+function TransporterList({ positions }) {
   const [types, setTypes] = useState([]);
   const { t } = useTranslation();
 
@@ -56,8 +56,7 @@ function TransporterList({ title, positions }) {
       borderRadius="lg"
       py={1}
       pr={2}
-      mb={types.length - 1 === key ? 0 : 1}
-    >
+      mb={types.length - 1 === key ? 0 : 1}>
       <ArgonBox display="flex" alignItems="center">
         <ArgonBox
           display="grid"
@@ -70,14 +69,12 @@ function TransporterList({ title, positions }) {
           width="2rem"
           height="2rem"
           mr={2}
-          variant="gradient"
-        >
+          variant="gradient">
           <Icon
             sx={{
               display: "grid",
               placeItems: "center",
-            }}
-          >
+            }}>
             {icon}
           </Icon>
         </ArgonBox>
@@ -100,7 +97,7 @@ function TransporterList({ title, positions }) {
     <Card>
       <ArgonBox pt={2} px={2}>
         <ArgonTypography variant="h6" fontWeight="medium" textTransform="capitalize">
-          {title}
+          {t("dashboard.typesTitle")}
         </ArgonTypography>
       </ArgonBox>
       <ArgonBox p={2}>
@@ -114,8 +111,7 @@ function TransporterList({ title, positions }) {
 
 // Typechecking props for the CategoriesList
 TransporterList.propTypes = {
-  title: PropTypes.string.isRequired,
-  positions: PropTypes.arrayOf(PropTypes.object).isRequired,
+  positions: PropTypes.arrayOf(PropTypes.object).isRequired
 };
 
 export default TransporterList;

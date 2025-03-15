@@ -233,10 +233,18 @@
     },
     "transporterMap": {
         "name": "Nombre",
+        "details":"Detalle de la Unidad",
         "dateTime": "Fecha Hora",
         "speed": "Velocidad (Km/Hr)",
         "address": "Dirección",
-        "status": "Estado"
+        "status": "Estado",
+        "state": "Estado",
+        "city": "Ciudad",
+        "accStatus": "Ignición",
+        "accOn": "Encendido",
+        "accOff": "Apagado",
+        "mileage": "Kilometraje",
+        "temperature": "Temperatura"
     },
     "transporterTypes": {
         "unknown": "Desconocido",

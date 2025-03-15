@@ -21,6 +21,7 @@ import ArgonBox from "components/ArgonBox";
 import DetailedStatisticsCard from "controls/Cards/StatisticsCards/DetailedStatisticsCard";
 import TransportersTable from "layouts/dashboard/components/TransportersTable";
 import TransporterList from "layouts/dashboard/components/TransporterList";
+import TransporterDetail from "layouts/dashboard/components/TransporterDetail";
 import RefreshCounter from 'layouts/dashboard/components/RefreshCounter';
 import useRouterService from "services/router";
 import useGeofencingService from "services/geofencing";
@@ -135,7 +136,11 @@ function Transporters({searchQuery, settings}) {
                     searchQuery={searchQuery}/>
             </Grid>
             <Grid item xs={12} md={4}>
-                <TransporterList title={t("dashboard.typesTitle")} positions={positions} />
+            {selectedTransporter ? (
+              <TransporterDetail positions={positions} selectedTransporter={selectedTransporter} />
+                ) : (
+                  <TransporterList positions={positions} />
+              )}
             </Grid>
         </Grid>
     </ArgonBox>
