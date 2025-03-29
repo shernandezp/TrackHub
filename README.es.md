@@ -108,17 +108,13 @@ openssl req -nodes -new -x509 -keyout server.key -out server.cert
 ```
 
 ## Notas  
-Aunque el objetivo de TrackHub es estandarizar y simplificar el código para unificar diferentes proveedores de monitoreo (operadores), su configuración, despliegue y mantenimiento requieren conocimientos intermedios a avanzados de .NET Core y React. Idealmente, en el futuro se incluirán instrucciones detalladas de despliegue y configuración, pero este no es el caso en este momento.
+Aunque el objetivo de TrackHub es estandarizar y simplificar el código para unificar diferentes proveedores de monitoreo (operadores), su configuración, despliegue y mantenimiento requieren conocimientos intermedios a avanzados de .NET Core y React.
 
 No solo para esta aplicación, sino para todos los servicios en general, el código incluye contraseñas, certificados, variables de entorno y algunos secretos. Esta información se proporciona para facilitar y acelerar la configuración de un nuevo entorno de desarrollo. Sin embargo, todas estas configuraciones y secretos deben ser gestionados adecuadamente en los entornos de producción.
 
 ---
 
 ## Funciones próximas:
-
-- **Informe de posición**: Una herramienta para generar informes detallados sobre la ubicación de los dispositivos y su historial en tiempo real.
-
-- **Exportación de informes básicos**: Funcionalidad para exportar datos e informes en formatos como CSV o PDF.
 
 - **Integración adicional de operadores**: Ampliación de la capacidad para integrar más operadores o proveedores de servicios de monitoreo.
 

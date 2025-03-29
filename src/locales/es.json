@@ -15,9 +15,7 @@
         "execute":"Ejecutar",
         "write":"Escribir",
         "delete":"Eliminar",
-        "updatePassword":"Actualizar Contraseña",
-        "refreshToken":"Actualizar Token",
-        "connectivityTest":"Prueba de Conectividad"
+        "custom":"Personalizado"
     },
     "colors": {
         "red": "Rojo",

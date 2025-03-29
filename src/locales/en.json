@@ -15,9 +15,7 @@
         "execute":"Execute",
         "write":"Write",
         "delete":"Delete",
-        "updatePassword":"UpdatePassword",
-        "refreshToken":"RefreshToken",
-        "connectivityTest":"ConnectivityTest"
+        "custom":"Custom"
     },
     "colors": {
         "red": "Red",

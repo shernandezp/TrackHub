@@ -107,17 +107,11 @@ openssl req -nodes -new -x509 -keyout server.key -out server.cert
 ```
 
 ## Notes  
-While TrackHub's goal is to standardize and simplify the code to unify different monitoring providers (operators), its setup, deployment, and maintenance require an intermediate to advanced knowledge of .NET Core and React. Ideally, in the future, detailed deployment and configuration instructions will be included, but this is not the case at the moment.
+While TrackHub's goal is to standardize and simplify the code to unify different monitoring providers (operators), its setup, deployment, and maintenance require an intermediate to advanced knowledge of .NET Core and React.
 
 Not only for this application but for all services in general, the code includes passwords, certificates, environment variables, and some secrets. This information is provided to facilitate and speed up the setup of a new development environment. However, all these configurations and secrets must be properly managed in production environments.
 
 ## Upcoming Features:
-
-- **Docker Setup**: The application will include Docker support, allowing for consistent environments across development, testing, and production. This will be achieved through a Dockerfile to containerize the app and Docker Compose for orchestrating multi-container environments, which simplifies deployment and scalability.
-  
-- **Position Report**: A tool to generate detailed reports of device locations and history in real-time.
-
-- **Exporting Basic Reports**: Functionality to export data and reports in formats like CSV or PDF.
 
 - **Additional Operator Integration**: Expanding the capability to integrate more operators or monitoring service providers.
 
