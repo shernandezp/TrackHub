@@ -14,8 +14,22 @@
 *  limitations under the License.
 */
 
+/**
+ * Converts a string to camel case.
+ * @param {string} str - The input string to convert.
+ * @returns {string} - The converted camel case string.
+ */
 export function toCamelCase(str) {
     return str.replace(/([-_][a-z])/gi, ($1) => {
         return $1.toUpperCase().replace('-', '').replace('_', '');
     }).replace(/(^[A-Z])/g, $1 => $1.toLowerCase());
+}
+
+/**
+ * Removes all non-alphanumeric characters from a string.
+ * @param {string} str - The input string to process.
+ * @returns {string} - The string with only alphanumeric characters.
+ */
+export function cleanString(str) {
+    return str.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
 }
