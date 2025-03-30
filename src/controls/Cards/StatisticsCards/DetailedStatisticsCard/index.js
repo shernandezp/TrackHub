@@ -106,17 +106,23 @@ function DetailedStaticsCard({
                   variant="button"
                   color={bgColor === "white" ? "text" : "white"}
                   textTransform="uppercase"
-                  fontWeight="medium"
-                >
+                  fontWeight="medium">
                   {title}
                 </ArgonTypography>
                 <ArgonTypography
                   variant="h5"
                   fontWeight="bold"
                   color={bgColor === "white" ? "dark" : "white"}
-                  mb={1}
-                >
-                  {count}
+                  mb={1}>
+                  {`${count} `}
+                  {!percentage.hide && (
+                    <ArgonTypography
+                      variant="button"
+                      fontWeight="bold"
+                      color={percentage.color}>
+                      ({percentage.count})
+                    </ArgonTypography>
+                  )}
                 </ArgonTypography>
               </ArgonBox>
             </Grid>
@@ -152,16 +158,6 @@ function DetailedStaticsCard({
               </Grid>
             ) : null}
           </Grid>
-          {!percentage.hide && (
-          <ArgonTypography
-            display="flex"
-            alignItems="center"
-            variant="button"
-            fontWeight="bold"
-            color={percentage.color}
-          >
-            {percentage.count}
-          </ArgonTypography>)}
         </ArgonBox>
       </ArgonBox>
     </Card>

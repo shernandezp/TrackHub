@@ -26,10 +26,31 @@ TrackHub Application is a web client developed with React, based on the Argon te
 
 ---
 
+## Geofences
+*TrackHub allows users to create, update, and delete geofences, enabling real-time monitoring of units based on their geographical location.*
+
+![Image](https://github.com/shernandezp/TrackHub/blob/main/src/assets/images/geofence.png?raw=true)
+
+---
+
 ## Settings Management Screen
 *The settings screen allows administrators to manage system data, such as user accounts, permissions, and operator settings.*
 
 ![Image](https://github.com/shernandezp/TrackHub/blob/main/src/assets/images/manage.png?raw=true)
+
+---
+
+## Reports
+*Export available unit data in Excel format.*
+
+![Image](https://github.com/shernandezp/TrackHub/blob/main/src/assets/images/reports.png?raw=true)
+
+---
+
+## REST API
+*To facilitate integration with third parties, TrackHub provides a REST API with methods to retrieve unit information. This API leverages the Router API as middleware to access GPS location data for all units.*
+
+![Image](https://github.com/shernandezp/TrackHub/blob/main/src/assets/images/api.png?raw=true)
 
 ---
 
@@ -68,6 +89,10 @@ The `.env` file contains the following environment variables used in the applica
 - **`GENERATE_SOURCEMAP=false`**  
   Disables the generation of source maps in the production build. Source maps are typically used for debugging, but disabling them can improve performance in production environments.
 
+- **`REACT_APP_DEFAULT_LAT=4.624335`**
+- **`REACT_APP_DEFAULT_LNG=-74.063644`**
+  These two variables define the default map center when the user denies location permissions in the browser.
+
 - **`REACT_APP_CLIENT_ID=web_client`**  
   Defines the client ID for the web client application. This value is used for authentication and identification during API calls and user login.
 
@@ -95,6 +120,12 @@ The `.env` file contains the following environment variables used in the applica
 - **`REACT_APP_SECURITY_ENDPOINT=https://localhost/Security/graphql`**  
   Defines the GraphQL endpoint for security-related operations, such as authentication, access control, and securing resources within the application.
 
+- **`REACT_APP_GEOFENCING_ENDPOINT=https://localhost/Geofence/graphql`**
+  Specifies the GraphQL endpoint for geofencing-related operations. This endpoint is used to manage geofences in the system.
+
+- **`REACT_APP_REPORTING_ENDPOINT=https://localhost/Reporting/`**
+  Defines the REST endpoint for reporting-related operations. This endpoint retrieves Excel files in binary format based on user requests.
+
 These environment variables are critical for configuring various aspects of the application, including authentication, API calls, and system management.
 
 ---
@@ -113,9 +144,9 @@ Not only for this application but for all services in general, the code includes
 
 ## Upcoming Features:
 
-- **Additional Operator Integration**: Expanding the capability to integrate more operators or monitoring service providers.
+- **Alamrs Report**: Include a method in the Router component to retrieve standard alarms.
 
-- **Routing REST API**: Provide REST endpoints for the Routing API to streamline system integration with third-party services.
+- **Additional Operator Integration**: Expanding the capability to integrate more operators or monitoring service providers.
 
 ## License
 

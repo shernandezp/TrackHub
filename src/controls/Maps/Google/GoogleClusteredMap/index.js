@@ -61,7 +61,8 @@ const GoogleClusteredMap = ({ mapKey, markers, selectedMarker, handleSelected })
             <GoogleMap mapContainerStyle={{ height: "70vh", width: "100%" }} 
                 zoom={6}
                 center={userLocation}
-                onLoad={map => (mapRef.current = map)}>
+                onLoad={map => (mapRef.current = map)}
+                options={{ gestureHandling: "greedy" }}>
                 <MarkerClusterer>
                     {(clusterer) =>
                         markers.map((marker, index) => (

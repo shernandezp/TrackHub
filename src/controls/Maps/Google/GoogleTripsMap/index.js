@@ -75,7 +75,7 @@ const GoogleTripsMap = ({ mapKey = [], trips, selectedTrip, handleSelected }) =>
         zoom={6}
         center={userLocation}
         onLoad={map => (mapRef.current = map)}
-      >
+        options={{ gestureHandling: "greedy" }}>
         {trips.map((trip, index) => (
           trip.coordinates.length === 1 ? (
             <Marker

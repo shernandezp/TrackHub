@@ -20,7 +20,7 @@ import { handleError } from 'utils/errorHandler';
 import { formatJSONValue, formatDateTimeOffSet } from 'utils/dataUtils';
 
 const useExcelReportService = () => {
-  const { postFile } = useApiService(`${process.env.REACT_APP_REPORTING_ENDPOINT}api/BasicReports/GetReport`);
+  const { postFile } = useApiService(`${process.env.REACT_APP_REPORTING_ENDPOINT}api/BasicReports`);
 
   /**
   * Fetches an Excel report based on the provided report code, name, and filters.
