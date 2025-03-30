@@ -14,11 +14,11 @@
 *  limitations under the License.
 */
 
-const protocolTypes = [
-    { value: 1, label: 'COMMAND_TRACK' },
-    { value: 2, label: 'TRACCAR' },
-    { value: 3, label: 'GEOTAB' },
-    { value: 4, label: 'GPS_GATE' },
-  ];
-  
-  export default protocolTypes;
+/**
+ * Converts a boolean value to a string representation.
+ * @param {boolean} value - The boolean value to convert.
+ * @returns {string} - Returns "yes" if the value is true, otherwise returns "no".
+ */
+export function getStringValue(value) {
+    return value ? "yes" : "no";
+}

@@ -15,9 +15,7 @@
         "execute":"Execute",
         "write":"Write",
         "delete":"Delete",
-        "updatePassword":"UpdatePassword",
-        "refreshToken":"RefreshToken",
-        "connectivityTest":"ConnectivityTest"
+        "custom":"Custom"
     },
     "colors": {
         "red": "Red",
@@ -85,7 +83,9 @@
         "selectItem": "Select an Item",
         "emailAddress": "Email Address",
         "phoneNumber": "Phone Number",
-        "address": "Address"
+        "address": "Address",
+        "yes": "Yes",
+        "no": "No"
     },
     "geofence": {
         "title":"Geofences",
@@ -184,6 +184,7 @@
         "reports": "Reports",
         "settingsScreen": "Settings Screen",
         "transporters": "Units",
+        "transporterType": "Unit Types",
         "users": "Users"        
     },
     "role": {
@@ -233,10 +234,28 @@
     },
     "transporterMap": {
         "name": "Name",
+        "details":"Unit Details",
         "dateTime": "Date Time",
         "speed": "Speed (Km/Hr)",
         "address": "Address",
-        "status": "Status"
+        "status": "Status",
+        "state": "State",
+        "city": "City",
+        "accStatus": "ACC Status",
+        "accOn": "ACC On",
+        "accOff": "ACC Off",
+        "mileage": "Mileage",
+        "temperature": "Temperature"
+    },
+    "transporterType": {
+        "title":"Unit Types",
+        "singleTitle":"Unit Type",
+        "details":"Unit Type Details",
+        "name": "Name",
+        "accBased": "ACC Based",
+        "stoppedGap": "Stopped Gap (Minutes)",
+        "maxTimeGap": "Max Time Gap (Minutes)",
+        "maxDistance": "Max Distance (Km)"
     },
     "transporterTypes": {
         "unknown": "Unknown",

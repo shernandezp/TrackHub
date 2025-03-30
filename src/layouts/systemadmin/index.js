@@ -15,6 +15,7 @@
 */
 
 import ManageAccounts from "layouts/systemadmin/components/accounts";
+import ManageTransporterTypes from "layouts/systemadmin/components/transporterTypes";
 import ManageRoles from "layouts/systemadmin/components/roles";
 import ManagePolicies from "layouts/systemadmin/components/policies";
 import ArgonBox from "components/ArgonBox";
@@ -29,6 +30,7 @@ function SystemAdmin() {
       <DashboardNavbar />
       <ArgonBox py={3}>
         <ManageAccounts/>
+        <ManageTransporterTypes/>
         <ManageRoles/>
         <ManagePolicies/>
       </ArgonBox>

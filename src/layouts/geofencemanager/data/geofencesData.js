@@ -88,11 +88,6 @@ function useGeofencesTableData(handleEditClick, handleDeleteClick) {
       }
   }
 
-  const handleOpen = (geofence) => {
-    handleEditClick(geofence);
-    setOpen(true);
-  };
-
   const handleOpenDelete = (geofenceId) => {
     handleDeleteClick(geofenceId);
     setConfirmOpen(true);

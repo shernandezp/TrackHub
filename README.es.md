@@ -27,10 +27,31 @@ La aplicación TrackHub es un cliente web desarrollado con React, basado en la p
 
 ---
 
+## Geocercas
+*TrackHub permite crear, actualizar y eliminar geocercas para monitorear las unidades en función de su ubicación geográfica.*
+
+![Image](https://github.com/shernandezp/TrackHub/blob/main/src/assets/images/geofence.png?raw=true)
+
+---
+
 ## Pantalla de gestión de configuración
 *La pantalla de configuración permite a los administradores gestionar los datos del sistema, como cuentas de usuario, permisos y configuraciones de operadores.*
 
 ![Image](https://github.com/shernandezp/TrackHub/blob/main/src/assets/images/manage.png?raw=true)
+
+---
+
+## Informes
+*Exportación de datos de unidades en formato Excel.*
+
+![Image](https://github.com/shernandezp/TrackHub/blob/main/src/assets/images/reports.png?raw=true)
+
+---
+
+## REST API
+*Para facilitar la integración con terceros, TrackHub proporciona una API REST con métodos para recuperar información de las unidades. Esta API utiliza el Router API como middleware para acceder a los datos de ubicación GPS de todas las unidades.*
+
+![Image](https://github.com/shernandezp/TrackHub/blob/main/src/assets/images/api.png?raw=true)
 
 ---
 
@@ -69,6 +90,10 @@ El archivo `.env` contiene las siguientes variables de entorno utilizadas en la 
 - **`GENERATE_SOURCEMAP=false`**  
   Desactiva la generación de mapas de origen en la compilación de producción. Los mapas de origen se utilizan normalmente para depurar, pero desactivarlos puede mejorar el rendimiento en entornos de producción.
 
+- **`REACT_APP_DEFAULT_LAT=4.624335`**  
+- **`REACT_APP_DEFAULT_LNG=-74.063644`**  
+  Estas dos variables definen el centro predeterminado del mapa en caso de que el usuario deniegue los permisos de ubicación en el navegador.
+
 - **`REACT_APP_CLIENT_ID=web_client`**  
   Define el ID de cliente para la aplicación web. Este valor se utiliza para la autenticación e identificación durante las llamadas a la API y el inicio de sesión del usuario.
 
@@ -96,6 +121,12 @@ El archivo `.env` contiene las siguientes variables de entorno utilizadas en la 
 - **`REACT_APP_SECURITY_ENDPOINT=https://localhost/Security/graphql`**  
   Define el punto final de GraphQL para operaciones relacionadas con la seguridad, como la autenticación, el control de acceso y la protección de recursos dentro de la aplicación.
 
+- **`REACT_APP_GEOFENCING_ENDPOINT=https://localhost/Geofence/graphql`**  
+  Especifica el endpoint GraphQL para operaciones de geocercas. Se usa para gestionar geocercas dentro del sistema.
+
+- **`REACT_APP_REPORTING_ENDPOINT=https://localhost/Reporting/`**  
+  Define el endpoint REST para operaciones de generación de informes. Este endpoint recupera archivos de Excel en formato binario según la solicitud del usuario.
+
 Estas variables de entorno son críticas para configurar varios aspectos de la aplicación, incluyendo la autenticación, las llamadas a la API y la gestión del sistema.
 
 ---
@@ -108,7 +139,7 @@ openssl req -nodes -new -x509 -keyout server.key -out server.cert
 ```
 
 ## Notas  
-Aunque el objetivo de TrackHub es estandarizar y simplificar el código para unificar diferentes proveedores de monitoreo (operadores), su configuración, despliegue y mantenimiento requieren conocimientos intermedios a avanzados de .NET Core y React. Idealmente, en el futuro se incluirán instrucciones detalladas de despliegue y configuración, pero este no es el caso en este momento.
+Aunque el objetivo de TrackHub es estandarizar y simplificar el código para unificar diferentes proveedores de monitoreo (operadores), su configuración, despliegue y mantenimiento requieren conocimientos intermedios a avanzados de .NET Core y React.
 
 No solo para esta aplicación, sino para todos los servicios en general, el código incluye contraseñas, certificados, variables de entorno y algunos secretos. Esta información se proporciona para facilitar y acelerar la configuración de un nuevo entorno de desarrollo. Sin embargo, todas estas configuraciones y secretos deben ser gestionados adecuadamente en los entornos de producción.
 
@@ -116,13 +147,9 @@ No solo para esta aplicación, sino para todos los servicios en general, el cód
 
 ## Funciones próximas:
 
-- **Informe de posición**: Una herramienta para generar informes detallados sobre la ubicación de los dispositivos y su historial en tiempo real.
-
-- **Exportación de informes básicos**: Funcionalidad para exportar datos e informes en formatos como CSV o PDF.
+- **Reporte de Alarmas**: Incluir un método en el componente Router para consulta de alarmas estándar. 
 
 - **Integración adicional de operadores**: Ampliación de la capacidad para integrar más operadores o proveedores de servicios de monitoreo.
-
-- **API REST de Enrutamiento**: Proporcionar endpoints REST para la API de Enrutamiento, simplificando la integración del sistema con servicios de terceros.
 
 ## Licencia
 

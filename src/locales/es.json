@@ -15,9 +15,7 @@
         "execute":"Ejecutar",
         "write":"Escribir",
         "delete":"Eliminar",
-        "updatePassword":"Actualizar Contraseña",
-        "refreshToken":"Actualizar Token",
-        "connectivityTest":"Prueba de Conectividad"
+        "custom":"Personalizado"
     },
     "colors": {
         "red": "Rojo",
@@ -85,7 +83,9 @@
         "selectItem": "Seleccionar un Elemento",
         "emailAddress": "Correo Electrónico",
         "phoneNumber": "Número de Teléfono",
-        "address": "Dirección"
+        "address": "Dirección",
+        "yes": "Sí",
+        "no": "No"
     },
     "geofence": {
         "title":"Geocercas",
@@ -184,7 +184,8 @@
         "reports": "Reportes",
         "settingsScreen": "Configuración",
         "users": "Usuarios",
-        "transporters": "Unidades"
+        "transporters": "Unidades",
+        "transporterType": "Tipos de Unidades"
     },
     "role": {
         "title":"Roles",
@@ -199,7 +200,7 @@
     },
     "settings": {
         "title": "Configuración",
-        "details": "Detalle de la Configuración",
+        "detail": "Detalle de la Configuración",
         "style": "Modo Claro/Oscuro",
         "sidenav": "Collapsar Barra Lateral",
         "language": "Idioma",
@@ -233,10 +234,28 @@
     },
     "transporterMap": {
         "name": "Nombre",
+        "details":"Detalle de la Unidad",
         "dateTime": "Fecha Hora",
         "speed": "Velocidad (Km/Hr)",
         "address": "Dirección",
-        "status": "Estado"
+        "status": "Estado",
+        "state": "Estado",
+        "city": "Ciudad",
+        "accStatus": "Ignición",
+        "accOn": "Encendido",
+        "accOff": "Apagado",
+        "mileage": "Kilometraje",
+        "temperature": "Temperatura"
+    },
+    "transporterType": {
+        "title":"Tipos de Unidades",
+        "singleTitle":"Tipo de Unidad",
+        "details":"Detalle del Tipo de Unidad",
+        "name": "Nombre",
+        "accBased": "Basado en Ignición",
+        "stoppedGap": "Detenido (Minutos)",
+        "maxTimeGap": "Tiempo Máximo (Minutos)",
+        "maxDistance": "Máxima Distancia (Km)"
     },
     "transporterTypes": {
         "unknown": "Desconocido",

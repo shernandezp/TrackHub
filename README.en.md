@@ -26,10 +26,31 @@ TrackHub Application is a web client developed with React, based on the Argon te
 
 ---
 
+## Geofences
+*TrackHub allows users to create, update, and delete geofences, enabling real-time monitoring of units based on their geographical location.*
+
+![Image](https://github.com/shernandezp/TrackHub/blob/main/src/assets/images/geofence.png?raw=true)
+
+---
+
 ## Settings Management Screen
 *The settings screen allows administrators to manage system data, such as user accounts, permissions, and operator settings.*
 
 ![Image](https://github.com/shernandezp/TrackHub/blob/main/src/assets/images/manage.png?raw=true)
+
+---
+
+## Reports
+*Export available unit data in Excel format.*
+
+![Image](https://github.com/shernandezp/TrackHub/blob/main/src/assets/images/reports.png?raw=true)
+
+---
+
+## REST API
+*To facilitate integration with third parties, TrackHub provides a REST API with methods to retrieve unit information. This API leverages the Router API as middleware to access GPS location data for all units.*
+
+![Image](https://github.com/shernandezp/TrackHub/blob/main/src/assets/images/api.png?raw=true)
 
 ---
 
@@ -68,6 +89,10 @@ The `.env` file contains the following environment variables used in the applica
 - **`GENERATE_SOURCEMAP=false`**  
   Disables the generation of source maps in the production build. Source maps are typically used for debugging, but disabling them can improve performance in production environments.
 
+- **`REACT_APP_DEFAULT_LAT=4.624335`**
+- **`REACT_APP_DEFAULT_LNG=-74.063644`**
+  These two variables define the default map center when the user denies location permissions in the browser.
+
 - **`REACT_APP_CLIENT_ID=web_client`**  
   Defines the client ID for the web client application. This value is used for authentication and identification during API calls and user login.
 
@@ -95,6 +120,12 @@ The `.env` file contains the following environment variables used in the applica
 - **`REACT_APP_SECURITY_ENDPOINT=https://localhost/Security/graphql`**  
   Defines the GraphQL endpoint for security-related operations, such as authentication, access control, and securing resources within the application.
 
+- **`REACT_APP_GEOFENCING_ENDPOINT=https://localhost/Geofence/graphql`**
+  Specifies the GraphQL endpoint for geofencing-related operations. This endpoint is used to manage geofences in the system.
+
+- **`REACT_APP_REPORTING_ENDPOINT=https://localhost/Reporting/`**
+  Defines the REST endpoint for reporting-related operations. This endpoint retrieves Excel files in binary format based on user requests.
+
 These environment variables are critical for configuring various aspects of the application, including authentication, API calls, and system management.
 
 ---
@@ -107,21 +138,15 @@ openssl req -nodes -new -x509 -keyout server.key -out server.cert
 ```
 
 ## Notes  
-While TrackHub's goal is to standardize and simplify the code to unify different monitoring providers (operators), its setup, deployment, and maintenance require an intermediate to advanced knowledge of .NET Core and React. Ideally, in the future, detailed deployment and configuration instructions will be included, but this is not the case at the moment.
+While TrackHub's goal is to standardize and simplify the code to unify different monitoring providers (operators), its setup, deployment, and maintenance require an intermediate to advanced knowledge of .NET Core and React.
 
 Not only for this application but for all services in general, the code includes passwords, certificates, environment variables, and some secrets. This information is provided to facilitate and speed up the setup of a new development environment. However, all these configurations and secrets must be properly managed in production environments.
 
 ## Upcoming Features:
 
-- **Docker Setup**: The application will include Docker support, allowing for consistent environments across development, testing, and production. This will be achieved through a Dockerfile to containerize the app and Docker Compose for orchestrating multi-container environments, which simplifies deployment and scalability.
-  
-- **Position Report**: A tool to generate detailed reports of device locations and history in real-time.
-
-- **Exporting Basic Reports**: Functionality to export data and reports in formats like CSV or PDF.
+- **Alamrs Report**: Include a method in the Router component to retrieve standard alarms.
 
 - **Additional Operator Integration**: Expanding the capability to integrate more operators or monitoring service providers.
-
-- **Routing REST API**: Provide REST endpoints for the Routing API to streamline system integration with third-party services.
 
 ## License
 
