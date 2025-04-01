@@ -27,7 +27,7 @@ import useForm from 'controls/Dialogs/useForm';
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
 
-function Positions({settings}) {
+function Positions({settings, showGeofence, geofences}) {
   const { getTripsByTransporter } = useRouterService();
   const { getTransportersByUser } = useTransporterService();
   const { setLoading } = useContext(LoadingContext);
@@ -95,6 +95,8 @@ function Positions({settings}) {
             mapKey={settings.mapsKey}
             trips={trips} 
             selectedTrip={selectedTrip}
+            geofences={geofences}
+            showGeofence={showGeofence}
             handleSelected={handleSelected}/>
         </Grid>
         <Grid item xs={12} lg={3}>
@@ -110,7 +112,9 @@ function Positions({settings}) {
 }
 
 Positions.propTypes = {
-    settings: PropTypes.object
+    settings: PropTypes.object,
+    showGeofence: PropTypes.bool,
+    geofences: PropTypes.array
 };
 
 export default Positions;

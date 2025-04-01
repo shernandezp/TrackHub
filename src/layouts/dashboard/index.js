@@ -19,6 +19,7 @@ import DashboardTabbar from "controls/Navbars/DashboardTabbar";
 import Transporters from "layouts/dashboard/components/Transporters";
 import Positions from  "layouts/dashboard/components/Positions";
 import useSettignsService from 'services/settings';
+import useGeofenceService from 'services/geofence';
 import { LoadingContext } from 'LoadingContext';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "AuthContext";
@@ -28,8 +29,11 @@ function Default() {
   const { isAuthenticated } = useAuth();
   const { setLoading } = useContext(LoadingContext);
   const { getAccountSettings } = useSettignsService();
+  const { getGeofencesByAccount } = useGeofenceService();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTab, setSelectedTab] = useState(0);
+  const [showGeofence, setShowGeofence] = useState(false);
+  const [geofences, setGeofences] = useState([]);
   const [searchVisibility, setSearchVisibility] = useState(true);
   const [settings, setSettings] = useState({maps:'OSM', mapsKey:'', refreshMapInterval: 60});
 
@@ -40,11 +44,24 @@ function Default() {
     setLoading(false);
   };
 
+  const fetchGeofences = async () => {
+    setLoading(true);
+    var geofences = await getGeofencesByAccount();
+    setGeofences(geofences);
+    setLoading(false);
+  };
+
   useEffect(() => {
     if (isAuthenticated) {
       fetchSettings();
     }
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (isAuthenticated && showGeofence) {
+      fetchGeofences();
+    }
+  }, [isAuthenticated, showGeofence]);
   
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
@@ -58,9 +75,17 @@ function Default() {
   const renderContent = () => {
     switch (selectedTab) {
       case 0:
-        return <Transporters searchQuery={searchQuery} settings={settings} />;
+        return <Transporters 
+          searchQuery={searchQuery} 
+          settings={settings}
+          geofences={geofences}
+          setShowGeofence={setShowGeofence}
+          showGeofence={showGeofence} />;
       case 1:
-        return <Positions settings={settings}/>;
+        return <Positions 
+          settings={settings}
+          geofences={geofences}
+          showGeofence={showGeofence}/>;
       default:
         return null;
     }

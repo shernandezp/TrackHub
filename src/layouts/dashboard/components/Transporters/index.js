@@ -34,7 +34,7 @@ import GeneralMap from "layouts/dashboard/components/GeneralMap";
 import MapControlStyle from 'controls/Maps/styles/MapControl';
 import {countRecentDevices, countDevicesInMovement, getPercentage} from 'layouts/dashboard/utils/dashboard';
 
-function Transporters({searchQuery, settings}) {
+function Transporters({searchQuery, settings, setShowGeofence, showGeofence, geofences}) {
   const { t } = useTranslation();
   const { getDevicePositions } = useRouterService();
   const { getTransportersInGeofence } = useGeofencingService();
@@ -106,7 +106,10 @@ function Transporters({searchQuery, settings}) {
                 <DetailedStatisticsCard
                     title={t("dashboard.inGeofence")}
                     count={inGeofence}
-                    icon={{ color: "warning", component: <i className="ni ni-pin-3" /> }}
+                    icon={{
+                      color: "warning", 
+                      onClick: () => setShowGeofence(!showGeofence),
+                      component: <i className="ni ni-pin-3" /> }}
                     percentage={{ color: "success", count: `${getPercentage(inGeofence, positions.length)}%` }}
                 />
             </Grid>
@@ -119,6 +122,8 @@ function Transporters({searchQuery, settings}) {
                     positions={positions} 
                     mapKey={settings.mapsKey}
                     selectedMarker={selectedTransporter}
+                    geofences={geofences}
+                    showGeofence={showGeofence}
                     handleSelected={handleSelected}/>
                 <RefreshCounter 
                     settings={settings} 
@@ -149,7 +154,10 @@ function Transporters({searchQuery, settings}) {
 
 Transporters.propTypes = {
     searchQuery: PropTypes.string,
-    settings: PropTypes.object
+    settings: PropTypes.object,
+    geofences: PropTypes.array,
+    setShowGeofence: PropTypes.func,
+    showGeofence: PropTypes.bool
 };
 
 export default Transporters;
