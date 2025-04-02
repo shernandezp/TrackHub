@@ -301,6 +301,7 @@
         "secondSurname": "Segundo Apellido",
         "username": "Nombre de Usuario",
         "password": "Contraseña",
+        "confirmPassword": "Confirmar Contraseña",
         "emailAddress": "Correo Electrónico",
         "phone": "Número de Teléfono",
         "dob": "Fecha de Nacimiento",
@@ -322,6 +323,7 @@
         "selectValue": "Por favor seleccione un valor para el campo {{field}}",
         "required": "Por favor llene el campo {{field}}",
         "invalidEmail": "Por favor ingrese un correo electrónico válido",
-        "passwordComplexity": "La contraseña debe tener al menos 8 caracteres, una letra mayúscula, una letra minúscula, un número y un carácter especial"
+        "passwordComplexity": "La contraseña debe tener al menos 8 caracteres, una letra mayúscula, una letra minúscula, un número y un carácter especial",
+        "fieldsMustMatch": "Los campos deben coincidir"
     }
 }

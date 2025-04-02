@@ -46,7 +46,7 @@ function Default() {
 
   const fetchGeofences = async () => {
     setLoading(true);
-    var geofences = await getGeofencesByAccount();
+    var geofences = await getGeofencesByAccount(true);
     setGeofences(geofences);
     setLoading(false);
   };

@@ -301,6 +301,7 @@
         "secondSurname": "Second Surname",
         "username": "Username",
         "password": "Password",
+        "confirmPassword": "Confirm Password",
         "emailAddress": "Email Address",
         "phone": "Phone",
         "dob": "Date of Birth",
@@ -322,6 +323,7 @@
         "selectValue": "Please select a value for the {{field}} field",
         "required": "Please fill the {{field}} field",
         "invalidEmail": "Please enter a valid email address",
-        "passwordComplexity": "Password must contain at least 6 characters, one uppercase letter, one lowercase letter, one number and one special character"
+        "passwordComplexity": "Password must contain at least 6 characters, one uppercase letter, one lowercase letter, one number and one special character",
+        "fieldsMustMatch": "Fields must match"
     }
 }

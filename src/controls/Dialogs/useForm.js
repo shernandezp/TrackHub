@@ -85,7 +85,28 @@ function useForm(initialValues) {
     return Object.keys(newErrors).length === 0;
   };
 
-  return [values, handleChange, setValues, setErrors, validate, errors];
+  /**
+ * Validates whether two fields have matching values.
+ *
+ * @param {string} field1 - The name of the first field.
+ * @param {string} field2 - The name of the second field.
+ * @returns {boolean} - Whether the two fields match.
+ */
+  const validateMatch = (field1, field2) => {
+    let newErrors = { ...errors };
+
+    if (values[field1] !== values[field2]) {
+      newErrors[field2] = t('validation.fieldsMustMatch', { field1, field2 });
+    } else {
+      delete newErrors[field1];
+      delete newErrors[field2];
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  return [values, handleChange, setValues, setErrors, validate, errors, validateMatch];
 }
 
 export default useForm;

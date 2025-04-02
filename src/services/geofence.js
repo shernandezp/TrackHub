@@ -65,15 +65,16 @@ const useGeofenceService = () => {
   * Fetches all geofences associated with the current account.
   * 
   * @function getGeofencesByAccount
+  * @param {boolean} [enableCaching=false] - Whether to enable caching for the request.
   * @returns {Promise<Array<Object>>} An array of geofence data.
   * @throws Will throw an error if the request fails.
   */
-  const getGeofencesByAccount = async () => {
+  const getGeofencesByAccount = async (enableCaching=false) => {
     try {
       const data = {
         query: `
           query {
-            geofencesByAccount {
+            geofencesByAccount (query: { enableCaching: ${enableCaching} }) {
               active
               color
               description
