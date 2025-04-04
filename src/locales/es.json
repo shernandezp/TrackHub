@@ -17,6 +17,18 @@
         "delete":"Eliminar",
         "custom":"Personalizado"
     },
+    "clients": {
+        "title":"Clientes",
+        "singleTitle":"Cliente",
+        "details":"Detalle del Cliente",
+        "name": "Nombre",
+        "description": "Descripción",
+        "secret": "Clave Secreta",
+        "processed": "Procesado",
+        "linkedUser": "Usuario Vinculado",
+        "deleteTitle": "Eliminar Cliente",
+        "deleteMessage": "¿Está seguro de que desea eliminar este cliente?"
+    },
     "colors": {
         "red": "Rojo",
         "blue": "Azul",
@@ -306,6 +318,7 @@
         "phone": "Número de Teléfono",
         "dob": "Fecha de Nacimiento",
         "active": "Activo",
+        "integrationUser": "Usuario de Integración",
         "deleteTitle": "Eliminar Usuario",
         "deleteMessage": "¿Está seguro de que desea eliminar este usuario?",
         "updatePassword": "Actualizar Contraseña"

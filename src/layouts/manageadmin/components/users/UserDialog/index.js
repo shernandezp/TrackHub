@@ -135,6 +135,13 @@ function UserFormDialog({ open, setOpen, handleSubmit, values, handleChange, err
             handleChange={handleChange} 
             label={t('user.active')} />
 
+          <CustomCheckbox 
+            name="integrationUser" 
+            id="integrationUser" 
+            value={values.integrationUser} 
+            handleChange={handleChange} 
+            label={t('user.integrationUser')} />
+
         </form>
       </FormDialog>
   );

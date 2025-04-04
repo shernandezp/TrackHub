@@ -17,6 +17,18 @@
         "delete":"Delete",
         "custom":"Custom"
     },
+    "clients": {
+        "title":"Clients",
+        "singleTitle":"Client",
+        "details":"Client Details",
+        "name": "Name",
+        "description": "Description",
+        "secret": "Secret",
+        "processed": "Processed",
+        "linkedUser": "Linked User",
+        "deleteTitle": "Delete Client",
+        "deleteMessage": "Are you sure you want to delete this client?"
+    },
     "colors": {
         "red": "Red",
         "blue": "Blue",
@@ -306,6 +318,7 @@
         "phone": "Phone",
         "dob": "Date of Birth",
         "active": "Active",
+        "integrationUser": "Integration User",
         "deleteTitle": "Delete User",
         "deleteMessage": "Are you sure you want to delete this user?",
         "updatePassword": "Update Password"
