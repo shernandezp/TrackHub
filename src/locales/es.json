@@ -17,6 +17,18 @@
         "delete":"Eliminar",
         "custom":"Personalizado"
     },
+    "clients": {
+        "title":"Clientes API",
+        "singleTitle":"Cliente API",
+        "details":"Detalle del Cliente API",
+        "name": "Nombre",
+        "description": "Descripción",
+        "secret": "Clave Secreta",
+        "processed": "Procesado",
+        "linkedUser": "Usuario Vinculado",
+        "deleteTitle": "Eliminar Cliente",
+        "deleteMessage": "¿Está seguro de que desea eliminar este cliente?"
+    },
     "colors": {
         "red": "Rojo",
         "blue": "Azul",
@@ -301,10 +313,12 @@
         "secondSurname": "Segundo Apellido",
         "username": "Nombre de Usuario",
         "password": "Contraseña",
+        "confirmPassword": "Confirmar Contraseña",
         "emailAddress": "Correo Electrónico",
         "phone": "Número de Teléfono",
         "dob": "Fecha de Nacimiento",
         "active": "Activo",
+        "integrationUser": "Usuario de Integración",
         "deleteTitle": "Eliminar Usuario",
         "deleteMessage": "¿Está seguro de que desea eliminar este usuario?",
         "updatePassword": "Actualizar Contraseña"
@@ -322,6 +336,7 @@
         "selectValue": "Por favor seleccione un valor para el campo {{field}}",
         "required": "Por favor llene el campo {{field}}",
         "invalidEmail": "Por favor ingrese un correo electrónico válido",
-        "passwordComplexity": "La contraseña debe tener al menos 8 caracteres, una letra mayúscula, una letra minúscula, un número y un carácter especial"
+        "passwordComplexity": "La contraseña debe tener al menos 8 caracteres, una letra mayúscula, una letra minúscula, un número y un carácter especial",
+        "fieldsMustMatch": "Los campos deben coincidir"
     }
 }

@@ -21,7 +21,14 @@ import { getRandomColor } from "utils/colorUtils";
 import PropTypes from 'prop-types';
 import 'controls/Maps/css/map.css';
 
-function TripsMap({ mapType, mapKey, trips, selectedTrip, handleSelected }) {
+function TripsMap({ 
+    mapType, 
+    mapKey, 
+    trips, 
+    selectedTrip, 
+    showGeofence,
+    geofences,
+    handleSelected }) {
     const [polygons, setPolygons] = useState([]);
     useEffect(() => {
         const fetchTrips = async () => {
@@ -40,7 +47,9 @@ function TripsMap({ mapType, mapKey, trips, selectedTrip, handleSelected }) {
             {mapType === 'OSM' ? (
                 <OSMTripsMap 
                     trips={polygons} 
-                    selectedTrip={selectedTrip} 
+                    selectedTrip={selectedTrip}
+                    showGeofence={showGeofence}
+                    geofences={geofences}
                     handleSelected={handleSelected}/>
             ) : (
                 mapType === 'Google' && 
@@ -48,6 +57,8 @@ function TripsMap({ mapType, mapKey, trips, selectedTrip, handleSelected }) {
                         mapKey={mapKey}
                         trips={polygons} 
                         selectedTrip={selectedTrip} 
+                        showGeofence={showGeofence}
+                        geofences={geofences}
                         handleSelected={handleSelected} />
             )}
         </div>
@@ -59,6 +70,8 @@ TripsMap.propTypes = {
     trips: PropTypes.array,
     mapKey: PropTypes.string,
     selectedTrip: PropTypes.string,
+    showGeofence: PropTypes.bool,
+    geofences: PropTypes.array,
     handleSelected: PropTypes.func,
 };
 

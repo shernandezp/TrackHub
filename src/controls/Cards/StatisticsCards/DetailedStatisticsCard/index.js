@@ -35,7 +35,6 @@ import PropTypes from "prop-types";
 // @mui material components
 import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
-import Icon from "@mui/material/Icon";
 
 // Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
@@ -55,6 +54,7 @@ function DetailedStaticsCard({
     },
   icon = {
     color: "primary",
+    onClick: null,
     component: <i className="default-icon" />
   }, 
   direction = "right" 
@@ -66,8 +66,7 @@ function DetailedStaticsCard({
     <Card>
       <ArgonBox
         bgColor={bgColor === "white" && darkMode ? "transparent" : bgColor}
-        variant={bgColor === "white" && darkMode ? "contained" : "gradient"}
-      >
+        variant={bgColor === "white" && darkMode ? "contained" : "gradient"}>
         <ArgonBox p={2}>
           <Grid container>
             {direction === "left" ? (
@@ -81,22 +80,16 @@ function DetailedStaticsCard({
                   borderRadius="section"
                   display="flex"
                   justifyContent="center"
-                  alignItems="center"
-                >
-                  {typeof icon.component === "string" ? (
-                    <Icon fontSize="small" color="inherit">
-                      {icon.component}
-                    </Icon>
-                  ) : (
-                    <ArgonBox
-                      fontSize="1.125rem"
-                      display="grid"
-                      placeitems="center"
-                      color="inherit"
-                    >
-                      {icon.component}
-                    </ArgonBox>
-                  )}
+                  alignItems="center">
+                  <ArgonBox
+                    onClick={icon.onClick} 
+                    disabled={!icon.onClick}
+                    fontSize="1.125rem"
+                    display="grid"
+                    placeitems="center"
+                    color="inherit">
+                    {icon.component}
+                  </ArgonBox>
                 </ArgonBox>
               </Grid>
             ) : null}
@@ -138,22 +131,16 @@ function DetailedStaticsCard({
                   display="flex"
                   justifyContent="center"
                   alignItems="center"
-                  ml="auto"
-                >
-                  {typeof icon.component === "string" ? (
-                    <Icon fontSize="small" color="inherit">
-                      {icon.component}
-                    </Icon>
-                  ) : (
-                    <ArgonBox
-                      fontSize="1.125rem"
-                      display="grid"
-                      placeitems="center"
-                      color="inherit"
-                    >
-                      {icon.component}
-                    </ArgonBox>
-                  )}
+                  ml="auto">
+                  <ArgonBox
+                    onClick={icon.onClick} 
+                    disabled={!icon.onClick}
+                    fontSize="1.125rem"
+                    display="grid"
+                    placeitems="center"
+                    color="inherit">
+                    {icon.component}
+                  </ArgonBox>
                 </ArgonBox>
               </Grid>
             ) : null}

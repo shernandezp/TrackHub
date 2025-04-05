@@ -29,7 +29,7 @@ const colors = [
 
   const getColor = (value) => {
     const color = colors.find(type => type.value === value);
-    return color ? color.label : '';
+    return color ? color.label : 'Black';
   };
   
   export { 

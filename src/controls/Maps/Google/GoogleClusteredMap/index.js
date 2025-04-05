@@ -17,13 +17,20 @@
 import PropTypes from 'prop-types';
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleMap, LoadScript, Marker as GoogleMarker, MarkerClusterer, InfoWindow } from '@react-google-maps/api';
-import UserLocation from "controls/Maps/UserLocation";
 import { createSvgIcon } from 'controls/Maps/utils/imageUtils';
 import { formatDateTime } from "utils/dateUtils";
 import { useTranslation } from 'react-i18next';
+import UserLocation from "controls/Maps/UserLocation";
+import GeofencePolygon from 'controls/Maps/Google/GeofencePolygon';
 import 'controls/Maps/css/googleMap.css';
 
-const GoogleClusteredMap = ({ mapKey, markers, selectedMarker, handleSelected }) => {
+const GoogleClusteredMap = ({ 
+    mapKey, 
+    markers, 
+    selectedMarker, 
+    handleSelected,
+    showGeofence,
+    geofences }) => {
     const [internalSelectedMarker, setInternalSelectedMarker] = useState(null);
     const [userLocation, setUserLocation] = useState({
         lat: parseFloat(process.env.REACT_APP_DEFAULT_LAT),
@@ -81,8 +88,7 @@ const GoogleClusteredMap = ({ mapKey, markers, selectedMarker, handleSelected })
                                 icon={{
                                     url: createSvgIcon(marker.rotation, marker.text, 'dataURL'),
                                     scaledSize: new window.google.maps.Size(50, 50),
-                                }}
-                            >
+                                }}>
                                 {internalSelectedMarker && internalSelectedMarker.name === marker.name && (
                                     <InfoWindow
                                         position={{ lat: marker.lat, lng: marker.lng }}
@@ -101,6 +107,9 @@ const GoogleClusteredMap = ({ mapKey, markers, selectedMarker, handleSelected })
                         ))
                     }
                 </MarkerClusterer>
+                {showGeofence && geofences.map((geofence, index) => (
+                    <GeofencePolygon key={index} geofence={geofence} />
+                ))}
             </GoogleMap>
         </LoadScript>
     );
@@ -110,6 +119,8 @@ GoogleClusteredMap.propTypes = {
     mapKey: PropTypes.string,
     markers: PropTypes.array.isRequired,
     selectedMarker: PropTypes.string,
+    geofences: PropTypes.array,
+    showGeofence: PropTypes.bool,
     handleSelected: PropTypes.func
 };
 

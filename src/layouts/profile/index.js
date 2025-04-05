@@ -56,7 +56,7 @@ const bgImage = "assets/images/vr-bg.jpg";
 
 
 function Overview() {
-  const { getCurrentUser, updateCurrentUser } = useUserService();
+  const { getCurrentUser, updateCurrentUser, updatePassword } = useUserService();
   const { setLoading } = useContext(LoadingContext);
   const { isAuthenticated } = useAuth();
   const [user, setUser] = useState({});
@@ -93,6 +93,7 @@ function Overview() {
             <ProfileInfoCard
               user={user}
               updateCurrentUser={updateCurrentUser}
+              updatePassword={updatePassword}
             />
           </Grid>
           <Grid item xs={12} xl={4}>

@@ -17,6 +17,18 @@
         "delete":"Delete",
         "custom":"Custom"
     },
+    "clients": {
+        "title":"API Clients",
+        "singleTitle":"API Client",
+        "details":"API Client Details",
+        "name": "Name",
+        "description": "Description",
+        "secret": "Secret",
+        "processed": "Processed",
+        "linkedUser": "Linked User",
+        "deleteTitle": "Delete Client",
+        "deleteMessage": "Are you sure you want to delete this client?"
+    },
     "colors": {
         "red": "Red",
         "blue": "Blue",
@@ -301,10 +313,12 @@
         "secondSurname": "Second Surname",
         "username": "Username",
         "password": "Password",
+        "confirmPassword": "Confirm Password",
         "emailAddress": "Email Address",
         "phone": "Phone",
         "dob": "Date of Birth",
         "active": "Active",
+        "integrationUser": "Integration User",
         "deleteTitle": "Delete User",
         "deleteMessage": "Are you sure you want to delete this user?",
         "updatePassword": "Update Password"
@@ -322,6 +336,7 @@
         "selectValue": "Please select a value for the {{field}} field",
         "required": "Please fill the {{field}} field",
         "invalidEmail": "Please enter a valid email address",
-        "passwordComplexity": "Password must contain at least 6 characters, one uppercase letter, one lowercase letter, one number and one special character"
+        "passwordComplexity": "Password must contain at least 6 characters, one uppercase letter, one lowercase letter, one number and one special character",
+        "fieldsMustMatch": "Fields must match"
     }
 }

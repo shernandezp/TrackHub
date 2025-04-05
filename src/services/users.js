@@ -52,6 +52,7 @@ const useUserService = () => {
               dob
               accountId
               active
+              integrationUser
             }
           }
         `
@@ -104,6 +105,26 @@ const useUserService = () => {
     }
   };
 
+  const getUsers = async () => {
+    try {
+      const data = {
+        query: `
+          query {
+            users(query: { filter: { filters: { key: "IntegrationUser", value: true } } }) {
+              username
+              userId
+              emailAddress
+            }
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.users;
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
   /**
    * Retrieves all users associated with an account.
    * @async
@@ -126,6 +147,7 @@ const useUserService = () => {
               emailAddress
               dob
               active
+              integrationUser
             }
           }
         `
@@ -160,6 +182,7 @@ const useUserService = () => {
                 emailAddress: ${formatValue(userData.emailAddress)}
                 dob: ${formatValue(userData.dob)}
                 active: ${userData.active ?? true}
+                integrationUser: ${userData.integrationUser ?? false}
               }
             }
             ) {
@@ -174,6 +197,7 @@ const useUserService = () => {
                 dob
                 accountId
                 active
+                integrationUser
             }
           }
         `
@@ -249,6 +273,7 @@ const useUserService = () => {
                   emailAddress: ${formatValue(userData.emailAddress)}
                   dob: ${formatValue(userData.dob)}
                   active: ${userData.active}
+                  integrationUser: ${userData.integrationUser}
                 }
               }
               id: "${userId}"
@@ -392,6 +417,7 @@ const useUserService = () => {
 
   return {
     getUser,
+    getUsers,
     getCurrentUser,
     getUsersByAccount,
     createUser,

@@ -48,13 +48,6 @@ La aplicación TrackHub es un cliente web desarrollado con React, basado en la p
 
 ---
 
-## REST API
-*Para facilitar la integración con terceros, TrackHub proporciona una API REST con métodos para recuperar información de las unidades. Esta API utiliza el Router API como middleware para acceder a los datos de ubicación GPS de todas las unidades.*
-
-![Image](https://github.com/shernandezp/TrackHub/blob/main/src/assets/images/api.png?raw=true)
-
----
-
 ## Capas principales:
 
 1. **Componentes reutilizables de UI (components)**  

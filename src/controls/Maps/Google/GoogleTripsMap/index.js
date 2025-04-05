@@ -1,9 +1,16 @@
 import React, { useRef, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import UserLocation from "controls/Maps/UserLocation";
+import GeofencePolygon from 'controls/Maps/Google/GeofencePolygon';
 import { GoogleMap, LoadScript, Polyline, Marker } from '@react-google-maps/api';
 
-const GoogleTripsMap = ({ mapKey = [], trips, selectedTrip, handleSelected }) => {
+const GoogleTripsMap = ({ 
+  mapKey = [], 
+  trips, 
+  selectedTrip, 
+  showGeofence,
+  geofences,
+  handleSelected }) => {
   const mapRef = useRef(null);
   const [userLocation, setUserLocation] = useState({
     lat: parseFloat(process.env.REACT_APP_DEFAULT_LAT),
@@ -100,6 +107,9 @@ const GoogleTripsMap = ({ mapKey = [], trips, selectedTrip, handleSelected }) =>
             </React.Fragment>
           )
         ))}
+        {showGeofence && geofences.map((geofence, index) => (
+          <GeofencePolygon key={index} geofence={geofence} />
+        ))}
       </GoogleMap>
     </LoadScript>
   );
@@ -109,6 +119,8 @@ GoogleTripsMap.propTypes = {
     mapKey: PropTypes.string,
     selectedTrip: PropTypes.string,
     handleSelected: PropTypes.func.isRequired,
+    showGeofence: PropTypes.bool,
+    geofences: PropTypes.array,
     trips: PropTypes.arrayOf(
       PropTypes.shape({
         id: PropTypes.string.isRequired,

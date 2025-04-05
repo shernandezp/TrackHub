@@ -16,11 +16,12 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
+import GeofencePolygon from 'controls/Maps/OSM/GeofencePolygon';
 import MarkerCluster from 'controls/Maps/OSM/MarkerCluster';
 import UserLocation from "controls/Maps/UserLocation";
 import PropTypes from 'prop-types';
 
-const OSMClusteredMap = ({ markers, selectedMarker }) => {
+const OSMClusteredMap = ({ markers, selectedMarker, geofences, showGeofence }) => {
     const [bounds, setBounds] = useState(null);
     const [userLocation, setUserLocation] = useState({
         lat: parseFloat(process.env.REACT_APP_DEFAULT_LAT),
@@ -80,7 +81,10 @@ const OSMClusteredMap = ({ markers, selectedMarker }) => {
                 <MarkerCluster 
                     markers={markers} 
                     selectedMarker={selectedMarker} />
-                {bounds && <ChangeView bounds={bounds} />}
+                    {bounds && <ChangeView bounds={bounds} />}
+                    {showGeofence && geofences.map((geofence, index) => (
+                        <GeofencePolygon key={index} geofence={geofence} />
+                ))}
             </MapContainer>
         </div>
     );
@@ -88,7 +92,9 @@ const OSMClusteredMap = ({ markers, selectedMarker }) => {
 
 OSMClusteredMap.propTypes = {
     markers: PropTypes.array.isRequired,
-    selectedMarker: PropTypes.string
+    selectedMarker: PropTypes.string,
+    geofences: PropTypes.array,
+    showGeofence: PropTypes.bool
 };
 
 export default OSMClusteredMap;

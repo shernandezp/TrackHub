@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MapContainer, TileLayer, Polyline, Marker, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Polyline, Marker } from 'react-leaflet';
 import UserLocation from "controls/Maps/UserLocation";
+import GeofencePolygon from 'controls/Maps/OSM/GeofencePolygon';
 import 'leaflet/dist/leaflet.css';
 import PropTypes from 'prop-types';
 import startIconUrl from 'assets/images/markers/start_marker.svg';
@@ -10,7 +11,12 @@ import singleIconUrl from 'assets/images/markers/single_marker.svg';
 const startIcon = new L.Icon({ iconUrl: startIconUrl, iconSize: [20, 20] });
 const endIcon = new L.Icon({ iconUrl: endIconUrl, iconSize: [20, 20] });
 
-const OSMTripsMap = ({ trips = [], selectedTrip, handleSelected }) => {
+const OSMTripsMap = ({ 
+  trips = [], 
+  selectedTrip, 
+  showGeofence,
+  geofences,
+  handleSelected }) => {
   const mapRef = useRef();
   const [userLocation, setUserLocation] = useState({
     lat: parseFloat(process.env.REACT_APP_DEFAULT_LAT),
@@ -117,6 +123,9 @@ const OSMTripsMap = ({ trips = [], selectedTrip, handleSelected }) => {
             </React.Fragment>
           );
         })}
+        {showGeofence && geofences.map((geofence, index) => (
+          <GeofencePolygon key={index} geofence={geofence} />
+        ))}
       </MapContainer>
     </div>
   );
@@ -125,6 +134,8 @@ const OSMTripsMap = ({ trips = [], selectedTrip, handleSelected }) => {
 OSMTripsMap.propTypes = {
   selectedTrip: PropTypes.string,
   handleSelected: PropTypes.func.isRequired,
+  showGeofence: PropTypes.bool,
+  geofences: PropTypes.array,
   trips: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.string.isRequired,
