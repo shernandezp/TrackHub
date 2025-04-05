@@ -18,9 +18,9 @@
         "custom":"Custom"
     },
     "clients": {
-        "title":"Clients",
-        "singleTitle":"Client",
-        "details":"Client Details",
+        "title":"API Clients",
+        "singleTitle":"API Client",
+        "details":"API Client Details",
         "name": "Name",
         "description": "Description",
         "secret": "Secret",

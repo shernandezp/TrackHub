@@ -18,9 +18,9 @@
         "custom":"Personalizado"
     },
     "clients": {
-        "title":"Clientes",
-        "singleTitle":"Cliente",
-        "details":"Detalle del Cliente",
+        "title":"Clientes API",
+        "singleTitle":"Cliente API",
+        "details":"Detalle del Cliente API",
         "name": "Nombre",
         "description": "Descripción",
         "secret": "Clave Secreta",

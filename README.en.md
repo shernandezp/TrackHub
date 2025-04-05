@@ -47,13 +47,6 @@ TrackHub Application is a web client developed with React, based on the Argon te
 
 ---
 
-## REST API
-*To facilitate integration with third parties, TrackHub provides a REST API with methods to retrieve unit information. This API leverages the Router API as middleware to access GPS location data for all units.*
-
-![Image](https://github.com/shernandezp/TrackHub/blob/main/src/assets/images/api.png?raw=true)
-
----
-
 ## Main Layers:
 
 1. **Reusable UI Components (components)**  
