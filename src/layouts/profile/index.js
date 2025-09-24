@@ -86,17 +86,17 @@ function Overview() {
       <Header user= {user}/>
       <ArgonBox mt={5} mb={3}>
         <Grid container spacing={3}>
-          <Grid item xs={12} md={6} xl={4}>
+          <Grid item size={{xs: 12, md: 6, xl:4}}>
             <PlatformSettings />
           </Grid>
-          <Grid item xs={12} md={6} xl={4}>
+          <Grid item size={{xs: 12, md: 6, xl:4}}>
             <ProfileInfoCard
               user={user}
               updateCurrentUser={updateCurrentUser}
               updatePassword={updatePassword}
             />
           </Grid>
-          <Grid item xs={12} xl={4}>
+          <Grid item size={{xs: 12, xl:4}}>
             <UserPartOf user={user} />
           </Grid>
         </Grid>

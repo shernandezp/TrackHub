@@ -93,7 +93,7 @@ function DetailedStaticsCard({
                 </ArgonBox>
               </Grid>
             ) : null}
-            <Grid item xs={8}>
+            <Grid item size={{xs: 8}}>
               <ArgonBox ml={direction === "left" ? 2 : 0} lineHeight={1}>
                 <ArgonTypography
                   variant="button"
@@ -120,7 +120,7 @@ function DetailedStaticsCard({
               </ArgonBox>
             </Grid>
             {direction === "right" ? (
-              <Grid item xs={4}>
+              <Grid item size={{xs: 4}}>
                 <ArgonBox
                   variant="gradient"
                   bgColor={bgColor === "white" ? icon.color : "white"}

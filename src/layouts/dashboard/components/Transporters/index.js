@@ -78,7 +78,7 @@ function Transporters({searchQuery, settings, setShowGeofence, showGeofence, geo
   return (
     <ArgonBox py={3}>
         <Grid container spacing={3} mb={3}>
-            <Grid item xs={12} md={6} lg={3}>
+            <Grid item size={{xs: 12, md:6, lg:3}}>
                 <DetailedStatisticsCard
                     title={t("dashboard.totalTitle")}
                     count={positions.length}
@@ -86,7 +86,7 @@ function Transporters({searchQuery, settings, setShowGeofence, showGeofence, geo
                     percentage={{ color: "success", hide: true }}
                 />
             </Grid>
-            <Grid item xs={12} md={6} lg={3}>
+            <Grid item size={{xs: 12, md:6, lg:3}}>
                 <DetailedStatisticsCard
                     title={t("dashboard.activeTitle")}
                     count={active}
@@ -94,7 +94,7 @@ function Transporters({searchQuery, settings, setShowGeofence, showGeofence, geo
                     percentage={{ color: "success", count: `${getPercentage(active, positions.length)}%` }}
                 />
             </Grid>
-            <Grid item xs={12} md={6} lg={3}>
+            <Grid item size={{xs:12, md:6, lg:3}}>
                 <DetailedStatisticsCard
                     title={t("dashboard.movementTitle")}
                     count={movement}
@@ -102,7 +102,7 @@ function Transporters({searchQuery, settings, setShowGeofence, showGeofence, geo
                     percentage={{ color: "error", count: `${getPercentage(movement, positions.length)}%` }}
                 />
             </Grid>
-            <Grid item xs={12} md={6} lg={3}>
+            <Grid item size={{xs: 12, md:6, lg:3}}>
                 <DetailedStatisticsCard
                     title={t("dashboard.inGeofence")}
                     count={inGeofence}
@@ -115,7 +115,7 @@ function Transporters({searchQuery, settings, setShowGeofence, showGeofence, geo
             </Grid>
         </Grid>
         <Grid container spacing={3} mb={3}>
-            <Grid item xs={12} lg={12}>
+            <Grid item size={{xs: 12, lg:12}}>
             <MapControlStyle>
                 <GeneralMap 
                     mapType={settings.maps} 
@@ -133,14 +133,14 @@ function Transporters({searchQuery, settings, setShowGeofence, showGeofence, geo
             </Grid>
         </Grid>
         <Grid container spacing={3}>
-            <Grid item xs={12} md={8}>
+            <Grid item size={{xs: 12, md:8}}>
                 <TransportersTable 
                     transporters={positions} 
                     selected={selectedTransporter}
                     handleSelected={handleSelected} 
                     searchQuery={searchQuery}/>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid item size={{xs: 12, md: 4}}>
             {selectedTransporter ? (
               <TransporterDetail positions={positions} selectedTransporter={selectedTransporter} />
                 ) : (

@@ -142,7 +142,7 @@ function GeofenceManager() {
       <DashboardNavbar searchQuery={searchQuery} handleSearch={handleSearchChange} searchVisibility={true}/>
       <ArgonBox py={3}>
         <Grid container spacing={3} mb={3}>
-          <Grid item xs={12} lg={12}>
+          <Grid item size={{xs: 12, lg:12}}>
             <GeofenceEditor 
                mapType={settings.maps}
                mapKey={settings.mapsKey}
@@ -161,7 +161,7 @@ function GeofenceManager() {
           </Grid>
         </Grid>
         <Grid container spacing={3}>
-          <Grid item xs={12} md={12}>
+          <Grid item size={{xs: 12, md:12}}>
             <Table 
               columns={columns} 
               rows={rows} 
