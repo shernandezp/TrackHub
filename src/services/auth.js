@@ -111,7 +111,6 @@ export async function logout() {
           },
           withCredentials: true
       });
-      console.log('login out', response);
   } catch (error) {
       console.error('Error during logout:', error.message);
   }

@@ -72,7 +72,7 @@ function MiniStatisticsCard({ bgColor, title, count, percentage, icon, direction
                 </ArgonBox>
               </Grid>
             ) : null}
-            <Grid item xs={8}>
+            <Grid item size={{xs: 8}}>
               <ArgonBox ml={direction === "left" ? 2 : 0} lineHeight={1}>
                 <ArgonTypography
                   variant="button"
@@ -96,7 +96,7 @@ function MiniStatisticsCard({ bgColor, title, count, percentage, icon, direction
               </ArgonBox>
             </Grid>
             {direction === "right" ? (
-              <Grid item xs={4}>
+              <Grid item size={{xs: 4}}>
                 <ArgonBox
                   bgColor={bgColor === "white" ? icon.color : "white"}
                   color={bgColor === "white" ? "white" : "dark"}

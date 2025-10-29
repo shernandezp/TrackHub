@@ -86,7 +86,7 @@ return (
       />
     <ArgonBox mt={stickyNavbar ? 3 : 10}>
       <Grid container>
-        <Grid item xs={12} sm={8} lg={4}>
+        <Grid item size={{xs: 12, sm: 8, lg: 4}}>
           <AppBar position="static">
             <Tabs orientation={tabsOrientation} value={tabValue} onChange={handleSetTabValue}>
               {tabs.map((tab, index) => (

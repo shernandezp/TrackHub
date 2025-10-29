@@ -68,7 +68,7 @@ export const AuthProvider = ({ children, navigate }) => {
     setAccessToken('');
     setRefreshToken('');
   
-    // Create a logout page
+    // Redirect to the login page
     login();
   };
 

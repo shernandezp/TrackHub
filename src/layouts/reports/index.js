@@ -69,10 +69,10 @@ function Reports() {
       <DashboardNavbar />
       <ArgonBox py={3}>
         <Grid container spacing={3} mb={3}>
-          <Grid item xs={12} lg={12}>
+          <Grid item size={{xs:12, lg: 12}}>
             <ArgonBox py={3}>
               <Grid container spacing={3} alignItems="center">
-                <Grid item xs={12} sm={3}>
+                <Grid item size={{xs: 12, sm:3}}>
                   <CustomSelect
                     list={reports}
                     handleChange={handleChange}
@@ -88,7 +88,7 @@ function Reports() {
           </Grid>
         </Grid>
         <Grid container spacing={3} mb={3}>
-          <Grid item xs={12} lg={6}>
+          <Grid item size={{xs:12, lg:6}}>
             <ReportFilters 
               selectedReport={selectedReport} 
               generateReport={handleSearch} />
