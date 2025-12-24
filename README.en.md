@@ -123,12 +123,33 @@ These environment variables are critical for configuring various aspects of the 
 
 ---
 
-## Create Local Development Certificate  
-To allow a secure connection during local development, it is necessary to create an SSL certificate for the server. You can generate a self-signed certificate using OpenSSL with the following command.
+## HTTPS Setup for Local Development
 
+The React application is configured to run with HTTPS enabled. To set up SSL certificates for local development:
+
+### Step 1: Install mkcert via npm
 ```bash
-openssl req -nodes -new -x509 -keyout server.key -out server.cert
+npm install --save-dev mkcert
 ```
+
+### Step 2: Generate certificates
+```bash
+npx mkcert create-ca
+npx mkcert create-cert
+```
+
+This will create the following files in your project root:
+- `ca.key` and `ca.crt` (Certificate Authority)
+- `cert.key` and `cert.crt` (SSL certificate for localhost)
+
+### Step 3: Start the application
+```bash
+npm start
+```
+
+The application will run on `https://localhost:3000` using the generated certificates.
+
+**Note:** The certificate files are already configured in `.gitignore` and should not be committed to the repository. You may see browser warnings about self-signed certificates - you can safely proceed for local development.
 
 ## Notes  
 While TrackHub's goal is to standardize and simplify the code to unify different monitoring providers (operators), its setup, deployment, and maintenance require an intermediate to advanced knowledge of .NET Core and React.
