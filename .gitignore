@@ -27,3 +27,12 @@ yarn.lock
 commit.sh
 .vscode/launch.json
 .env
+
+# SSL certificates
+*.key
+*.crt
+*.pem
+ca.key
+ca.crt
+cert.key
+cert.crt
