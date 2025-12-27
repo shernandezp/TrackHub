@@ -257,7 +257,12 @@
         "accOn": "Encendido",
         "accOff": "Apagado",
         "mileage": "Kilometraje",
-        "temperature": "Temperatura"
+        "temperature": "Temperatura",
+        "satellites": "Satélites",
+        "altitude": "Altitud",
+        "stopped": "Detenido",
+        "moving": "En Movimiento",
+        "hourmeter": "Horómetro"
     },
     "transporterType": {
         "title":"Tipos de Unidades",

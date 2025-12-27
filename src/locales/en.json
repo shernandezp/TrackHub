@@ -257,7 +257,12 @@
         "accOn": "ACC On",
         "accOff": "ACC Off",
         "mileage": "Mileage",
-        "temperature": "Temperature"
+        "temperature": "Temperature",
+        "satellites": "Satellites",
+        "altitude": "Altitude",
+        "stopped": "Stopped",
+        "moving": "Moving",
+        "hourmeter": "Hourmeter"
     },
     "transporterType": {
         "title":"Unit Types",

@@ -2,11 +2,15 @@ import React, { useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Polyline, Marker } from 'react-leaflet';
 import UserLocation from "controls/Maps/UserLocation";
 import GeofencePolygon from 'controls/Maps/OSM/GeofencePolygon';
+import { OSMScaleControl } from 'controls/Maps/shared/ScaleControl';
+import { OSMFullscreenControl } from 'controls/Maps/shared/FullscreenControl';
+import { OSMMeasurementTool } from 'controls/Maps/shared/MeasurementTool';
 import 'leaflet/dist/leaflet.css';
 import PropTypes from 'prop-types';
 import startIconUrl from 'assets/images/markers/start_marker.svg';
 import endIconUrl from 'assets/images/markers/end_marker.svg';
 import singleIconUrl from 'assets/images/markers/single_marker.svg';
+import L from 'leaflet';
 
 const startIcon = new L.Icon({ iconUrl: startIconUrl, iconSize: [20, 20] });
 const endIcon = new L.Icon({ iconUrl: endIconUrl, iconSize: [20, 20] });
@@ -16,7 +20,11 @@ const OSMTripsMap = ({
   selectedTrip, 
   showGeofence,
   geofences,
-  handleSelected }) => {
+  handleSelected,
+  enableScale = true,
+  enableFullscreen = true,
+  enableMeasurement = true
+}) => {
   const mapRef = useRef();
   const [userLocation, setUserLocation] = useState({
     lat: parseFloat(process.env.REACT_APP_DEFAULT_LAT),
@@ -126,6 +134,9 @@ const OSMTripsMap = ({
         {showGeofence && geofences.map((geofence, index) => (
           <GeofencePolygon key={index} geofence={geofence} />
         ))}
+        {enableScale && <OSMScaleControl position="bottomleft" imperial={false} />}
+        {enableFullscreen && <OSMFullscreenControl position="topleft" />}
+        {enableMeasurement && <OSMMeasurementTool position="topleft" unit="metric" enabled={true} />}
       </MapContainer>
     </div>
   );
@@ -142,6 +153,9 @@ OSMTripsMap.propTypes = {
       coordinates: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)).isRequired,
     })
   ),
+  enableScale: PropTypes.bool,
+  enableFullscreen: PropTypes.bool,
+  enableMeasurement: PropTypes.bool
 };
 
 export default OSMTripsMap;

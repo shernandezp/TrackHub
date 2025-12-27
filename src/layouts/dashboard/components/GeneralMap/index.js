@@ -40,6 +40,14 @@ function GeneralMap({
                 dateTime: item.deviceDateTime,
                 speed: item.speed,
                 text: item.speed > 0 ? 'M' : 'D',
+                // Additional attributes
+                attributes: item.attributes || {},
+                address: item.address,
+                altitude: item.altitude,
+                city: item.city,
+                country: item.country,
+                state: item.state,
+                transporterType: item.transporterType,
             }));
             setMarkers(markers);
         };
@@ -53,7 +61,8 @@ function GeneralMap({
                     markers={markers} 
                     selectedMarker={selectedMarker}
                     geofences={geofences}
-                    showGeofence={showGeofence} />
+                    showGeofence={showGeofence}
+                    handleSelected={handleSelected} />
             ) : (
                 mapType === 'Google' && 
                     <GoogleClusteredMap 

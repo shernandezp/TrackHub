@@ -17,6 +17,9 @@
 import React, { useRef, useState, useEffect } from "react";
 import { MapContainer, TileLayer, Polygon } from "react-leaflet";
 import UserLocation from "controls/Maps/UserLocation";
+import { OSMScaleControl } from 'controls/Maps/shared/ScaleControl';
+import { OSMFullscreenControl } from 'controls/Maps/shared/FullscreenControl';
+import { OSMMeasurementTool } from 'controls/Maps/shared/MeasurementTool';
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-editable";
@@ -33,7 +36,11 @@ const OSMGeofenceEditor = ({
     saveRef, 
     cancelRef, 
     editingRef, 
-    removeRef }) => {
+    removeRef,
+    enableScale = true,
+    enableFullscreen = true,
+    enableMeasurement = true
+}) => {
   const mapRef = useRef(null);
   const layerRef = useRef(null);
   const editedGeofenceRef = useRef(null);
@@ -210,6 +217,9 @@ const OSMGeofenceEditor = ({
             eventHandlers={{ click: () => handlePolygonClick(geofence.id) }}
           />
         ))}
+        {enableScale && <OSMScaleControl position="bottomleft" imperial={false} />}
+        {enableFullscreen && <OSMFullscreenControl position="topleft" />}
+        {enableMeasurement && <OSMMeasurementTool position="topleft" unit="metric" enabled={true} />}
       </MapContainer>
     </div>
   );
@@ -226,6 +236,9 @@ OSMGeofenceEditor.propTypes = {
   cancelRef: PropTypes.object,
   editingRef: PropTypes.object,
   removeRef: PropTypes.object,
+  enableScale: PropTypes.bool,
+  enableFullscreen: PropTypes.bool,
+  enableMeasurement: PropTypes.bool
 };
 
 export default OSMGeofenceEditor;

@@ -20,6 +20,9 @@ import { v4 as uuidv4 } from "uuid";
 import { GoogleMap, LoadScript, DrawingManager, Polygon } from '@react-google-maps/api';
 import UserLocation from "controls/Maps/UserLocation";
 import { closePolygon } from 'controls/Maps/utils/coordinateUtils';
+import { GoogleScaleControl } from 'controls/Maps/shared/ScaleControl';
+import { GoogleFullscreenControl } from 'controls/Maps/shared/FullscreenControl';
+import { GoogleMeasurementTool } from 'controls/Maps/shared/MeasurementTool';
 
 const libraries = ['drawing'];
 
@@ -34,7 +37,11 @@ const GoogleGeofenceEditor = ({
   saveRef, 
   cancelRef, 
   editingRef, 
-  removeRef }) => {
+  removeRef,
+  enableScale = true,
+  enableFullscreen = true,
+  enableMeasurement = true
+}) => {
   const polygons = useRef(initialPolygons);
   const [userLocation, setUserLocation] = useState({
     lat: parseFloat(process.env.REACT_APP_DEFAULT_LAT),
@@ -182,6 +189,9 @@ const GoogleGeofenceEditor = ({
             }}
           />
         ))}
+        {enableScale && <GoogleScaleControl mapRef={mapRef} position="BOTTOM_LEFT" />}
+        {enableFullscreen && <GoogleFullscreenControl mapRef={mapRef} position="TOP_LEFT" />}
+        {enableMeasurement && <GoogleMeasurementTool mapRef={mapRef} position="TOP_LEFT" unit="metric" enabled={true} />}
       </GoogleMap>
     </LoadScript>
   );
@@ -199,6 +209,9 @@ GoogleGeofenceEditor.propTypes = {
   cancelRef: PropTypes.object,
   editingRef: PropTypes.object,
   removeRef: PropTypes.object,
+  enableScale: PropTypes.bool,
+  enableFullscreen: PropTypes.bool,
+  enableMeasurement: PropTypes.bool
 };
 
 export default GoogleGeofenceEditor;

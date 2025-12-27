@@ -3,6 +3,9 @@ import PropTypes from 'prop-types';
 import UserLocation from "controls/Maps/UserLocation";
 import GeofencePolygon from 'controls/Maps/Google/GeofencePolygon';
 import { GoogleMap, LoadScript, Polyline, Marker } from '@react-google-maps/api';
+import { GoogleScaleControl } from 'controls/Maps/shared/ScaleControl';
+import { GoogleFullscreenControl } from 'controls/Maps/shared/FullscreenControl';
+import { GoogleMeasurementTool } from 'controls/Maps/shared/MeasurementTool';
 
 const GoogleTripsMap = ({ 
   mapKey = [], 
@@ -10,7 +13,11 @@ const GoogleTripsMap = ({
   selectedTrip, 
   showGeofence,
   geofences,
-  handleSelected }) => {
+  handleSelected,
+  enableScale = true,
+  enableFullscreen = true,
+  enableMeasurement = true
+}) => {
   const mapRef = useRef(null);
   const [userLocation, setUserLocation] = useState({
     lat: parseFloat(process.env.REACT_APP_DEFAULT_LAT),
@@ -110,6 +117,9 @@ const GoogleTripsMap = ({
         {showGeofence && geofences.map((geofence, index) => (
           <GeofencePolygon key={index} geofence={geofence} />
         ))}
+        {enableScale && <GoogleScaleControl mapRef={mapRef} position="BOTTOM_LEFT" />}
+        {enableFullscreen && <GoogleFullscreenControl mapRef={mapRef} position="TOP_LEFT" />}
+        {enableMeasurement && <GoogleMeasurementTool mapRef={mapRef} position="TOP_LEFT" unit="metric" enabled={true} />}
       </GoogleMap>
     </LoadScript>
   );
@@ -127,6 +137,9 @@ GoogleTripsMap.propTypes = {
         coordinates: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.number)).isRequired,
       })
     ),
+    enableScale: PropTypes.bool,
+    enableFullscreen: PropTypes.bool,
+    enableMeasurement: PropTypes.bool
   };
 
 export default GoogleTripsMap;
