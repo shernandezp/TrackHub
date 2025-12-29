@@ -19,8 +19,10 @@ import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { calculatePathDistance, formatDistance } from 'controls/Maps/utils/measurementUtils';
 import PropTypes from 'prop-types';
+import { useTranslation } from 'react-i18next';
 
 const MeasurementTool = ({ position = 'topright', unit = 'metric', enabled = true }) => {
+    const { t } = useTranslation();
     const map = useMap();
     const measureLayerRef = useRef(null);
     const pointsRef = useRef([]);
@@ -96,7 +98,7 @@ const MeasurementTool = ({ position = 'topright', unit = 'metric', enabled = tru
 
                 const button = L.DomUtil.create('a', '', container);
                 button.innerHTML = '📏';
-                button.title = 'Measure distance';
+                button.title = t('utilsmap.measureDistance');
                 button.style.display = 'flex';
                 button.style.alignItems = 'center';
                 button.style.justifyContent = 'center';

@@ -16,8 +16,10 @@
 
 import { useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
+import { useTranslation } from 'react-i18next';
 
 const FullscreenControl = ({ mapRef, position = 'TOP_RIGHT' }) => {
+    const { t } = useTranslation();
     const buttonRef = useRef(null);
 
     useEffect(() => {
@@ -28,7 +30,7 @@ const FullscreenControl = ({ mapRef, position = 'TOP_RIGHT' }) => {
         // Create fullscreen button
         const fullscreenButton = document.createElement('button');
         fullscreenButton.textContent = '⛶';
-        fullscreenButton.title = 'Toggle Fullscreen';
+        fullscreenButton.title = t('utilsmap.toogleFullScreen');
         fullscreenButton.style.cssText = `
             background: white;
             border: 2px solid rgba(0,0,0,.2);

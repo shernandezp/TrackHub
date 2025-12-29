@@ -6,6 +6,7 @@ import { GoogleMap, LoadScript, Polyline, Marker } from '@react-google-maps/api'
 import { GoogleScaleControl } from 'controls/Maps/shared/ScaleControl';
 import { GoogleFullscreenControl } from 'controls/Maps/shared/FullscreenControl';
 import { GoogleMeasurementTool } from 'controls/Maps/shared/MeasurementTool';
+import { GoogleStatsToggle } from 'controls/Maps/shared/StatsToggle';
 
 const GoogleTripsMap = ({ 
   mapKey = [], 
@@ -14,6 +15,8 @@ const GoogleTripsMap = ({
   showGeofence,
   geofences,
   handleSelected,
+  toggleStats,
+  showStats,
   enableScale = true,
   enableFullscreen = true,
   enableMeasurement = true
@@ -120,6 +123,7 @@ const GoogleTripsMap = ({
         {enableScale && <GoogleScaleControl mapRef={mapRef} position="BOTTOM_LEFT" />}
         {enableFullscreen && <GoogleFullscreenControl mapRef={mapRef} position="TOP_LEFT" />}
         {enableMeasurement && <GoogleMeasurementTool mapRef={mapRef} position="TOP_LEFT" unit="metric" enabled={true} />}
+        <GoogleStatsToggle position="TOP_LEFT" toggleStats={toggleStats} showStats={showStats} />
       </GoogleMap>
     </LoadScript>
   );
@@ -140,6 +144,9 @@ GoogleTripsMap.propTypes = {
     enableScale: PropTypes.bool,
     enableFullscreen: PropTypes.bool,
     enableMeasurement: PropTypes.bool
+    ,
+    toggleStats: PropTypes.func,
+    showStats: PropTypes.bool
   };
 
 export default GoogleTripsMap;

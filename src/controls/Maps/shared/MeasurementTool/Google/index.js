@@ -17,8 +17,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { calculatePathDistance, formatDistance } from 'controls/Maps/utils/measurementUtils';
 import PropTypes from 'prop-types';
+import { useTranslation } from 'react-i18next';
 
 const MeasurementTool = ({ mapRef, position = 'TOP_RIGHT', unit = 'metric', enabled = true }) => {
+    const { t } = useTranslation();
     const [isActive, setIsActive] = useState(false);
     const pointsRef = useRef([]);
     const markersRef = useRef([]);
@@ -35,7 +37,7 @@ const MeasurementTool = ({ mapRef, position = 'TOP_RIGHT', unit = 'metric', enab
         // Create measurement button
         const measureButton = document.createElement('button');
         measureButton.textContent = '📏';
-        measureButton.title = 'Measure distance';
+        measureButton.title = t('utilsmap.measureDistance');
         measureButton.style.cssText = `
             background: white;
             border: 2px solid rgba(0,0,0,.2);

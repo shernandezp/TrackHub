@@ -306,7 +306,13 @@
         "toLabel": "To",
         "stopLabel": "Stopped",
         "transitLabel": "Transit",
-        "totalDistance": "Total Distance"
+        "totalDistance": "Total Distance",
+        "duration": "Duration",
+        "maxSpeed": "Max Speed",
+        "avgSpeed": "Avg Speed",
+        "stops": "Stops",
+        "alarms": "Alarms",
+        "summaryLabel": "Summary"
     },
     "user": {
         "title":"Users",
@@ -336,6 +342,14 @@
         "language" :"Language",
         "info": "Profile Information",
         "partOf": "Part of"
+    },
+    "utilsmap": {
+        "hideStatistics":"Hide Statistics",
+        "showStatistics":"Show Statistics",
+        "measureDistance":"Measure Distance",
+        "toogleFullScreen":"Toggle Fullscreen",
+        "exitFullScreen":"Exit Fullscreen",
+        "viewFullScreen":"View Fullscreen"
     },
     "validation": {
         "selectValue": "Please select a value for the {{field}} field",

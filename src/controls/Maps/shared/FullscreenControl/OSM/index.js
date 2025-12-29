@@ -20,8 +20,10 @@ import L from 'leaflet';
 import 'leaflet-fullscreen/dist/Leaflet.fullscreen.js';
 import 'leaflet-fullscreen/dist/leaflet.fullscreen.css';
 import PropTypes from 'prop-types';
+import { useTranslation } from 'react-i18next';
 
 const FullscreenControl = ({ position = 'topleft' }) => {
+    const { t } = useTranslation();
     const map = useMap();
 
     useEffect(() => {
@@ -30,8 +32,8 @@ const FullscreenControl = ({ position = 'topleft' }) => {
         const fullscreenControl = L.control.fullscreen({
             position: position,
             title: {
-                'false': 'View Fullscreen',
-                'true': 'Exit Fullscreen'
+                'false': t('utilsmap.viewFullScreen'),
+                'true': t('utilsmap.exitFullScreen')
             },
             forceSeparateButton: true
         });
