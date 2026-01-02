@@ -27,7 +27,7 @@ const extractValue = (obj) => {
   return obj?.props?.children || obj?.props?.name || obj?.props?.description || '';
 };
 
-const TableBody = ({ columns, rows, sortedRows, selected, selectedField, handleRowSelection, page, rowsPerPage }) => {
+const TableBody = ({ columns, rows, sortedRows, selected, selectedField, handleRowSelection, page, rowsPerPage, compact = false }) => {
   const { borderWidth } = borders;
 
   return (
@@ -47,12 +47,12 @@ const TableBody = ({ columns, rows, sortedRows, selected, selectedField, handleR
                   <ArgonBox
                     key={uuidv4()}
                     component="td"
-                    p={1}
+                    p={compact ? 0.5 : 1}
                     sx={({ palette: { light } }) => ({
                       borderBottom: row.hasBorder ? `${borderWidth[1]} solid ${light.main}` : null,
                     })}
                   >
-                    <ArgonBox display="flex" alignItems="center" py={0.5} px={1}>
+                    <ArgonBox display="flex" alignItems="center" py={compact ? 0.25 : 0.5} px={compact ? 0.5 : 1}>
                       <ArgonBox mr={2}>
                         <ArgonAvatar src={row[name][0]} name={row[name][1]} variant="rounded" size="sm" />
                       </ArgonBox>
@@ -67,7 +67,7 @@ const TableBody = ({ columns, rows, sortedRows, selected, selectedField, handleR
                   <ArgonBox
                     key={uuidv4()}
                     component="td"
-                    p={1}
+                    p={compact ? 0.5 : 1}
                     textAlign={align}
                     verticalalign="middle"
                     lineHeight={0.65}
@@ -83,7 +83,7 @@ const TableBody = ({ columns, rows, sortedRows, selected, selectedField, handleR
                   <ArgonBox
                     key={uuidv4()}
                     component="td"
-                    p={1}
+                    p={compact ? 0.5 : 1}
                     textAlign={align}
                     verticalalign="middle"
                     lineHeight={0.65}
@@ -129,6 +129,7 @@ TableBody.propTypes = {
   handleRowSelection: PropTypes.func.isRequired,
   page: PropTypes.number.isRequired,
   rowsPerPage: PropTypes.number.isRequired,
+  compact: PropTypes.bool,
 };
 
 export default TableBody;

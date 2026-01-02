@@ -31,7 +31,8 @@ function Table({
     selected = null, 
     selectedField = 'name', 
     handleSelected = () => {}, 
-    searchQuery = '' }) {
+    searchQuery = '',
+    compact = false }) {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [order, setOrder] = useState('asc');
@@ -93,7 +94,7 @@ function Table({
   return (
     <TableContainer>
       <MuiTable>
-        <TableHeader columns={columns} orderBy={orderBy} order={order} handleSort={handleSort} />
+        <TableHeader columns={columns} orderBy={orderBy} order={order} handleSort={handleSort} compact={compact} />
         <TableBody
           columns={columns}
           rows={rows}
@@ -103,6 +104,7 @@ function Table({
           handleRowSelection={handleRowSelection}
           page={page}
           rowsPerPage={rowsPerPage}
+          compact={compact}
         />
       </MuiTable>
       {filteredRows.length > 10 && (
@@ -112,6 +114,7 @@ function Table({
           rowsPerPage={rowsPerPage}
           handleChangePage={handleChangePage}
           handleChangeRowsPerPage={handleChangeRowsPerPage}
+          compact={compact}
         />
       )}
     </TableContainer>
@@ -125,6 +128,7 @@ Table.propTypes = {
   selectedField: PropTypes.string,
   handleSelected: PropTypes.func,
   searchQuery: PropTypes.string,
+  compact: PropTypes.bool,
 };
 
 export default Table;

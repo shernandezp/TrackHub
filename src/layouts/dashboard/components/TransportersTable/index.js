@@ -33,7 +33,8 @@ function TransportersTable({
         selected={selected}
         selectedField="name"
         handleSelected={handleSelected} 
-        searchQuery={searchQuery}/>
+        searchQuery={searchQuery}
+        compact={false}/>
   );
 }
 

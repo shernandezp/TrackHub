@@ -23,11 +23,24 @@ import { useAuth } from "AuthContext";
 const CallbackPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { setIsAuthenticated, setAccessToken, setRefreshToken } = useAuth();
+  const { setIsAuthenticated, setAccessToken, setRefreshToken, resetAuthError, setIsLoggingIn } = useAuth();
 
   useEffect(() => {
+    // Clear any previous auth errors at the start of callback processing
+    sessionStorage.removeItem('auth_error');
+    
     const searchParams = new URLSearchParams(location.search);
     const authorizationCode = searchParams.get("code");
+    const error = searchParams.get("error");
+
+    if (error) {
+      // Auth server returned an error
+      console.error("Authentication error:", error, searchParams.get("error_description"));
+      setIsLoggingIn(false); // Reset logging in state
+      sessionStorage.setItem('auth_error', error);
+      navigate("/error", { replace: true });
+      return;
+    }
 
     if (authorizationCode) {
       // Exchange authorization code for access token
@@ -35,18 +48,27 @@ const CallbackPage = () => {
         setAccessToken(data.access_token);
         setRefreshToken(data.refresh_token);
         setIsAuthenticated(true);
+        setIsLoggingIn(false); // Reset logging in state
+        resetAuthError(); // Reset error state on successful auth
+        sessionStorage.removeItem('auth_error');
         // Redirect to dashboard
-        navigate("/dashboard");
+        navigate("/dashboard", { replace: true });
       })
       .catch((error) => {
         console.error("Error exchanging authorization code:", error);
-        navigate("/error");
+        setIsLoggingIn(false); // Reset logging in state on error
+        sessionStorage.setItem('auth_error', 'token_exchange_failed');
+        navigate("/error", { replace: true });
       });
     } else {
       // Handle error or unauthorized access
-      navigate("/error");
+      console.error("No authorization code received in callback");
+      setIsLoggingIn(false); // Reset logging in state
+      sessionStorage.setItem('auth_error', 'no_code');
+      navigate("/error", { replace: true });
     }
-  }, [location.search, navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div>
