@@ -14,7 +14,7 @@
 *  limitations under the License.
 */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Table as MuiTable, TableContainer } from '@mui/material';
 import TableHeader from './TableHeader';
@@ -32,11 +32,15 @@ function Table({
     selectedField = 'name', 
     handleSelected = () => {}, 
     searchQuery = '',
-    compact = false }) {
+    compact = false,
+    scrollable = false,
+    maxHeight = '600px',
+    defaultRowsPerPage = 10 }) {
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(defaultRowsPerPage);
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState('');
+  const rowRefs = useRef({});
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -91,23 +95,34 @@ function Table({
     return filteredRows;
   }, [filteredRows, order, orderBy]);
 
+  // Auto-scroll to selected row in scrollable mode
+  useEffect(() => {
+    if (scrollable && selected) {
+      const selectedRowRef = rowRefs.current[selected];
+      if (selectedRowRef) {
+        selectedRowRef.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+  }, [selected, scrollable]);
+
   return (
-    <TableContainer>
-      <MuiTable>
+    <TableContainer sx={scrollable ? { maxHeight: maxHeight, overflow: 'auto', overflowX: 'hidden' } : {}}>
+      <MuiTable sx={{ tableLayout: 'fixed', width: '100%' }}>
         <TableHeader columns={columns} orderBy={orderBy} order={order} handleSort={handleSort} compact={compact} />
         <TableBody
           columns={columns}
           rows={rows}
-          sortedRows={sortedRows}
+          sortedRows={scrollable ? sortedRows : sortedRows}
           selected={selected}
           selectedField={selectedField}
           handleRowSelection={handleRowSelection}
-          page={page}
-          rowsPerPage={rowsPerPage}
+          page={scrollable ? 0 : page}
+          rowsPerPage={scrollable ? sortedRows.length : rowsPerPage}
           compact={compact}
+          rowRefs={rowRefs}
         />
       </MuiTable>
-      {filteredRows.length > 10 && (
+      {!scrollable && filteredRows.length > 10 && (
         <TablePagination
           count={filteredRows.length}
           page={page}
@@ -129,6 +144,9 @@ Table.propTypes = {
   handleSelected: PropTypes.func,
   searchQuery: PropTypes.string,
   compact: PropTypes.bool,
+  scrollable: PropTypes.bool,
+  maxHeight: PropTypes.string,
+  defaultRowsPerPage: PropTypes.number,
 };
 
 export default Table;

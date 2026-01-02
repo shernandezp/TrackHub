@@ -19,7 +19,8 @@ const GoogleTripsMap = ({
   showStats,
   enableScale = true,
   enableFullscreen = true,
-  enableMeasurement = true
+  enableMeasurement = true,
+  height = "70vh"
 }) => {
   const mapRef = useRef(null);
   const [userLocation, setUserLocation] = useState({
@@ -88,7 +89,7 @@ const GoogleTripsMap = ({
     <LoadScript googleMapsApiKey={mapKey}>
       <UserLocation setUserLocation={setUserLocation} />
       <GoogleMap
-        mapContainerStyle={{ height: "70vh", width: "100%" }}
+        mapContainerStyle={{ height: height, width: "100%" }}
         zoom={6}
         center={userLocation}
         onLoad={map => (mapRef.current = map)}
@@ -143,10 +144,10 @@ GoogleTripsMap.propTypes = {
     ),
     enableScale: PropTypes.bool,
     enableFullscreen: PropTypes.bool,
-    enableMeasurement: PropTypes.bool
-    ,
+    enableMeasurement: PropTypes.bool,
     toggleStats: PropTypes.func,
-    showStats: PropTypes.bool
+    showStats: PropTypes.bool,
+    height: PropTypes.string
   };
 
 export default GoogleTripsMap;

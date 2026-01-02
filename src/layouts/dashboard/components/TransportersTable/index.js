@@ -22,7 +22,8 @@ function TransportersTable({
     transporters, 
     selected, 
     handleSelected,
-    searchQuery = ''}) {
+    searchQuery = '',
+    maxHeight = 'calc(100vh - 400px)'}) {
   const { data } = useTransportersTableData(transporters);
   const { columns, rows } = data;
 
@@ -34,7 +35,9 @@ function TransportersTable({
         selectedField="name"
         handleSelected={handleSelected} 
         searchQuery={searchQuery}
-        compact={false}/>
+        compact={true}
+        scrollable={true}
+        maxHeight={maxHeight}/>
   );
 }
 
@@ -42,7 +45,8 @@ TransportersTable.propTypes = {
     transporters: PropTypes.array,
     selected: PropTypes.string,
     handleSelected: PropTypes.func.isRequired,
-    searchQuery: PropTypes.string
+    searchQuery: PropTypes.string,
+    maxHeight: PropTypes.string
 };
 
 export default TransportersTable;

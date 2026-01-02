@@ -26,7 +26,8 @@ const OSMTripsMap = ({
   showStats,
   enableScale = true,
   enableFullscreen = true,
-  enableMeasurement = true
+  enableMeasurement = true,
+  height = "70vh"
 }) => {
   const mapRef = useRef();
   const [userLocation, setUserLocation] = useState({
@@ -99,7 +100,7 @@ const OSMTripsMap = ({
   return (
     <div>
       <UserLocation setUserLocation={setUserLocation} />
-      <MapContainer ref={mapRef} center={userLocation} zoom={13} style={{ height: '70vh', width: '100%' }}>
+      <MapContainer ref={mapRef} center={userLocation} zoom={13} style={{ height: height, width: '100%' }}>
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -162,6 +163,7 @@ OSMTripsMap.propTypes = {
   enableMeasurement: PropTypes.bool,
   toggleStats: PropTypes.func,
   showStats: PropTypes.bool,
+  height: PropTypes.string,
 };
 
 export default OSMTripsMap;

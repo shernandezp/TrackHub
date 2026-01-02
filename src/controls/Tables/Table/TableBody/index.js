@@ -27,7 +27,7 @@ const extractValue = (obj) => {
   return obj?.props?.children || obj?.props?.name || obj?.props?.description || '';
 };
 
-const TableBody = ({ columns, rows, sortedRows, selected, selectedField, handleRowSelection, page, rowsPerPage, compact = false }) => {
+const TableBody = ({ columns, rows, sortedRows, selected, selectedField, handleRowSelection, page, rowsPerPage, compact = false, rowRefs }) => {
   const { borderWidth } = borders;
 
   return (
@@ -36,6 +36,7 @@ const TableBody = ({ columns, rows, sortedRows, selected, selectedField, handleR
         .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
         .map((row, index) => {
           const rowKey = row.id || uuidv4();
+          const selectedValue = extractValue(row[selectedField]);
 
           const tableRow = columns
             .filter(({ name }) => name !== 'id')
@@ -110,7 +111,12 @@ const TableBody = ({ columns, rows, sortedRows, selected, selectedField, handleR
             <TableRow
               key={rowKey}
               onClick={() => handleRowSelection(rowKey)}
-              selected={selected === extractValue(row[selectedField])}
+              selected={selected === selectedValue}
+              ref={(el) => {
+                if (rowRefs && rowRefs.current) {
+                  rowRefs.current[selectedValue] = el;
+                }
+              }}
             >
               {tableRow}
             </TableRow>
@@ -130,6 +136,7 @@ TableBody.propTypes = {
   page: PropTypes.number.isRequired,
   rowsPerPage: PropTypes.number.isRequired,
   compact: PropTypes.bool,
+  rowRefs: PropTypes.object,
 };
 
 export default TableBody;

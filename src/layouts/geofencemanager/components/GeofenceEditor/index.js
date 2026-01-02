@@ -33,7 +33,8 @@ const GeofenceEditor = ({
     editingRef,
     removeRef,
     handleAdd,
-    handleEdit
+    handleEdit,
+    height = '70vh'
     }) => {
 
   const [isEditing, setIsEditing] = useState(false);
@@ -52,6 +53,7 @@ const GeofenceEditor = ({
                 cancelRef={cancelRef}
                 editingRef={editingRef}
                 removeRef={removeRef}
+                height={height}
             />
             ) : (
                 mapType === 'Google' && 
@@ -67,6 +69,7 @@ const GeofenceEditor = ({
                     cancelRef={cancelRef}
                     editingRef={editingRef}
                     removeRef={removeRef}
+                    height={height}
                 />
             )}
         <div className="mapcontrol">
@@ -91,6 +94,7 @@ GeofenceEditor.propTypes = {
     removeRef: PropTypes.object,
     handleAdd: PropTypes.func,
     handleEdit: PropTypes.func,
+    height: PropTypes.string,
 };
 
 export default GeofenceEditor;

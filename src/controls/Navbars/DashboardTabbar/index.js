@@ -84,7 +84,7 @@ return (
       handleSearch={handleSearch} 
       searchVisibility={searchVisibility}
       />
-    <ArgonBox mt={stickyNavbar ? 3 : 10}>
+    <ArgonBox mt={stickyNavbar ? 1 : 10}>
       <Grid container>
         <Grid item size={{xs: 12, sm: 8, lg: 4}}>
           <AppBar position="static">

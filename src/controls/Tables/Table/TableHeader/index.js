@@ -59,7 +59,13 @@ const TableHeader = ({ columns, orderBy, order, handleSort, compact = false }) =
                 fontWeight={fontWeightBold}
                 color="secondary"
                 opacity={0.7}
-                sx={({ palette: { light } }) => ({ borderBottom: `${borderWidth[1]} solid ${light.main}` })}
+                sx={({ palette: { light, background } }) => ({ 
+                  borderBottom: `${borderWidth[1]} solid ${light.main}`,
+                  position: 'sticky',
+                  top: 0,
+                  backgroundColor: background.card || background.default || '#fff',
+                  zIndex: 10
+                })}
                 onClick={() => handleSort(name)}
                 style={{ cursor: 'pointer' }}
               >

@@ -37,7 +37,8 @@ const GoogleClusteredMap = ({
     geofences,
     enableScale = true,
     enableFullscreen = true,
-    enableMeasurement = true
+    enableMeasurement = true,
+    height = "70vh"
 }) => {
     const [internalSelectedMarker, setInternalSelectedMarker] = useState(null);
     const [userLocation, setUserLocation] = useState({
@@ -73,7 +74,7 @@ const GoogleClusteredMap = ({
     return (
         <LoadScript googleMapsApiKey={mapKey}>
             <UserLocation setUserLocation={setUserLocation} />
-            <GoogleMap mapContainerStyle={{ height: "70vh", width: "100%" }} 
+            <GoogleMap mapContainerStyle={{ height: height, width: "100%" }} 
                 zoom={6}
                 center={userLocation}
                 onLoad={map => (mapRef.current = map)}
@@ -225,7 +226,8 @@ GoogleClusteredMap.propTypes = {
     handleSelected: PropTypes.func,
     enableScale: PropTypes.bool,
     enableFullscreen: PropTypes.bool,
-    enableMeasurement: PropTypes.bool
+    enableMeasurement: PropTypes.bool,
+    height: PropTypes.string
 };
 
 export default GoogleClusteredMap;

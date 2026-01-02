@@ -105,7 +105,6 @@ function useGeofencesTableData(handleEditClick, handleDeleteClick) {
     })),
     columns: [
       { name: "name", title:t('geofence.name'), align: "left" },
-      { name: "description", title:t('geofence.description'), align: "left" },
       { name: "type", title:t('geofence.type'), align: "left" },
       { name: "color", title:t('geofence.color'), align: "left" },
       { name: "action", title:t('generic.action'), align: "center" },
@@ -113,7 +112,6 @@ function useGeofencesTableData(handleEditClick, handleDeleteClick) {
     ],
     rows: geofences.map(geofence => ({
       name: <Name name={geofence.name} />,
-      description: <Description description={geofence.description || ''} />,
       type: <Name name={t(`geofenceTypes.${toCamelCase(getGeofenceType(geofence.type))}`)} />,
       color: <Name name={t(`colors.${getColor(geofence.color).toLowerCase()}`)} />,
       action: (
@@ -121,7 +119,7 @@ function useGeofencesTableData(handleEditClick, handleDeleteClick) {
           variant="text" 
           color="error"
           onClick={() => handleOpenDelete(geofence.geofenceId)}>
-          <Icon>delete</Icon>&nbsp;{t('generic.delete')}
+          <Icon>delete</Icon>
         </ArgonButton>
       ),
       id: geofence.geofenceId

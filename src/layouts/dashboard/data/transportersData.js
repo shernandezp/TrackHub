@@ -28,10 +28,10 @@ function useTransportersTableData(transporters) {
 
   const buildTableData = (transporters) => ({
     columns: [
-      { name: "status", title:t('transporterMap.status'), align: "center" },
-      { name: "name", title:t('transporterMap.name'), align: "left" },
-      { name: "datetime", title:t('transporterMap.dateTime'), align: "left" },
-      { name: "speed", title:t('transporterMap.speed'), align: "left" },
+      { name: "status", title:t('transporterMap.status'), align: "center", width: "10%" },
+      { name: "name", title:t('transporterMap.name'), align: "left", width: "35%" },
+      { name: "datetime", title:t('transporterMap.dateTime'), align: "left", width: "35%" },
+      { name: "speed", title:t('transporterMap.speed'), align: "left", width: "20%" },
       { name: "id" }
     ],
     rows: transporters.map(transporter => ({

@@ -27,7 +27,8 @@ function GeneralMap({
     selectedMarker, 
     geofences,
     showGeofence,
-    handleSelected }) {
+    handleSelected,
+    height = "70vh" }) {
 
     const [markers, setMarkers] = useState([]);
     useEffect(() => {
@@ -62,7 +63,8 @@ function GeneralMap({
                     selectedMarker={selectedMarker}
                     geofences={geofences}
                     showGeofence={showGeofence}
-                    handleSelected={handleSelected} />
+                    handleSelected={handleSelected}
+                    height={height} />
             ) : (
                 mapType === 'Google' && 
                     <GoogleClusteredMap 
@@ -71,7 +73,8 @@ function GeneralMap({
                         selectedMarker={selectedMarker}
                         geofences={geofences}
                         showGeofence={showGeofence} 
-                        handleSelected={handleSelected} />
+                        handleSelected={handleSelected}
+                        height={height} />
             )}
         </div>
     );
@@ -85,6 +88,7 @@ GeneralMap.propTypes = {
     geofences: PropTypes.array,
     showGeofence: PropTypes.bool,
     handleSelected: PropTypes.func,
+    height: PropTypes.string,
 };
 
 export default GeneralMap;
