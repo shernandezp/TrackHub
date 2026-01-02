@@ -88,7 +88,7 @@ function useClientsTableData(fetchData, handleEditClick, handleDeleteClick) {
     columns: [
       { name: "name", title:t('clients.name'), align: "left" },
       { name: "description", title:t('clients.description'), align: "left" },
-      { name: "secret", title:t('clients.type'), align: "center" },
+      { name: "secret", title:t('clients.secret'), align: "center" },
       { name: "processed", title:t('clients.processed'), align: "center" },
       { name: "modified", title:t('generic.modified'), align: "center" },
       { name: "action", title:t('generic.action'), align: "center" },

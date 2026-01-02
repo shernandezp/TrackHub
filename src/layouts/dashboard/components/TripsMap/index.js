@@ -36,6 +36,7 @@ function TripsMap({
         const fetchTrips = async () => {
             const transformedTrips = trips.map(trip => ({
                 id: trip.tripId,
+                type: trip.type,
                 color: getRandomColor(),
                 coordinates: trip.points.map(point => [point.latitude, point.longitude])
             }));

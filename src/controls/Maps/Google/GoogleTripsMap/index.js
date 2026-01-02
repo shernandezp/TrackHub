@@ -95,7 +95,7 @@ const GoogleTripsMap = ({
         onLoad={map => (mapRef.current = map)}
         options={{ gestureHandling: "greedy" }}>
         {trips.map((trip, index) => (
-          trip.coordinates.length === 1 ? (
+          trip.type === 1 ? (
             <Marker
               key={index}
               position={{ lat: trip.coordinates[0][0], lng: trip.coordinates[0][1] }}
@@ -103,21 +103,23 @@ const GoogleTripsMap = ({
               onClick={() => handleClick(trip)}
             />
           ) : (
-            <React.Fragment key={index}>
-                <Polyline
-                    key={index}
-                    path={trip.coordinates.map(coord => ({ lat: coord[0], lng: coord[1] }))}
-                    options={getPolylineOptions(trip)}
-                    onClick={() => handleClick(trip)}/>
-                <Marker
-                    position={{ lat: trip.coordinates[0][0], lng: trip.coordinates[0][1] }}
-                    icon={getIcon('start', trip.id)}/>
-                <Marker
-                    position={{ lat: trip.coordinates[trip.coordinates.length - 1][0], lng: trip.coordinates[trip.coordinates.length - 1][1] }}
-                    icon={getIcon('end', trip.id)}/>
-            </React.Fragment>
+            <Polyline
+              key={index}
+              path={trip.coordinates.map(coord => ({ lat: coord[0], lng: coord[1] }))}
+              options={getPolylineOptions(trip)}
+              onClick={() => handleClick(trip)}/>
           )
         ))}
+        {trips.length > 0 && trips.some(trip => trip.coordinates.length > 1) && (
+          <>
+            <Marker
+              position={{ lat: trips.find(trip => trip.coordinates.length > 1).coordinates[0][0], lng: trips.find(trip => trip.coordinates.length > 1).coordinates[0][1] }}
+              icon={getIcon('start')}/>
+            <Marker
+              position={{ lat: trips[trips.length - 1].coordinates[trips[trips.length - 1].coordinates.length - 1][0], lng: trips[trips.length - 1].coordinates[trips[trips.length - 1].coordinates.length - 1][1] }}
+              icon={getIcon('end')}/>
+          </>
+        )}
         {showGeofence && geofences.map((geofence, index) => (
           <GeofencePolygon key={index} geofence={geofence} />
         ))}
