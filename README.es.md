@@ -1,3 +1,61 @@
+# TrackHub Aplicación Web
+
+## Características Principales
+
+- **Seguimiento GPS en Tiempo Real**: Visualización en vivo de transportadores y dispositivos con actualizaciones automáticas de posición
+- **Integración Multi-Operador**: Interfaz unificada para gestionar múltiples proveedores de GPS (CommandTrack, Traccar, Flespi, GeoTab y más)
+- **Gestión de Geocercas**: Crear, editar y monitorear límites geográficos para activos con alertas en tiempo real
+- **Control de Acceso Basado en Roles**: Gestión granular de permisos con políticas personalizables y grupos de usuarios
+- **Gestión de Dispositivos y Transportadores**: Operaciones CRUD completas para dispositivos, transportadores y credenciales de operadores
+- **Reportes y Análisis**: Exportación de datos operacionales en formato Excel con filtros personalizables
+- **Soporte Multi-Idioma**: Internacionalización completa con interfaces en inglés y español
+- **Tema Oscuro/Claro**: Apariencia de interfaz personalizable para una experiencia de usuario óptima
+- **Autenticación Segura**: Integración OAuth 2.0/OpenID Connect con flujo PKCE mediante OpenIdDict
+
+---
+
+## Inicio Rápido
+
+### Requisitos Previos
+
+- Node.js 18+
+- npm o yarn
+- Acceso a los servicios backend de TrackHub (Authority Server, Manager, Router, Security, Geofencing, Reporting APIs)
+
+### Instalación
+
+1. **Clonar el repositorio**:
+   ```bash
+   git clone https://github.com/shernandezp/TrackHub.git
+   cd TrackHub
+   ```
+
+2. **Instalar dependencias**:
+   ```bash
+   npm install
+   ```
+
+3. **Configurar variables de entorno**:
+   ```bash
+   cp .env.example .env
+   ```
+
+4. **Configurar certificados HTTPS** (requerido para OAuth):
+   ```bash
+   npm install --save-dev mkcert
+   npx mkcert create-ca
+   npx mkcert create-cert
+   ```
+
+5. **Iniciar el servidor de desarrollo**:
+   ```bash
+   npm start
+   ```
+
+6. **Abrir el navegador** en `https://localhost:3000`
+
+---
+
 ## Componentes y Recursos Utilizados
 
 | Componente                | Descripción                                             | Documentación                                                                 |
@@ -5,8 +63,9 @@
 | Argon Dashboard 2 MUI - v3.0.1             | Plantilla basada en React JS y MUI        | [Documentación Creative Tim](https://www.creative-tim.com/product/argon-dashboard-material-ui)                           |
 | React JS 18.3.1               | Biblioteca para interfaces de usuario nativas y web     | [Documentación React JS](https://react.dev/) |
 
+---
 
-# Descripción general de la aplicación TrackHub
+## Descripción General de la Aplicación
 
 La aplicación TrackHub es un cliente web desarrollado con React, basado en la plantilla Argon de [Creative Tim](https://www.creative-tim.com/). Este cliente sirve como la interfaz de usuario para los servicios de TrackHub, permitiendo a los usuarios gestionar varios aspectos del sistema, como cuentas, operadores, dispositivos, transportistas, usuarios y permisos. Además, proporciona herramientas para la visualización de datos geográficos en tiempo real, como la ubicación de dispositivos GPS, con las etiquetas correspondientes.
 
@@ -156,14 +215,6 @@ La aplicación se ejecutará en `https://localhost:3000` utilizando los certific
 Aunque el objetivo de TrackHub es estandarizar y simplificar el código para unificar diferentes proveedores de monitoreo (operadores), su configuración, despliegue y mantenimiento requieren conocimientos intermedios a avanzados de .NET Core y React.
 
 No solo para esta aplicación, sino para todos los servicios en general, el código incluye contraseñas, certificados, variables de entorno y algunos secretos. Esta información se proporciona para facilitar y acelerar la configuración de un nuevo entorno de desarrollo. Sin embargo, todas estas configuraciones y secretos deben ser gestionados adecuadamente en los entornos de producción.
-
----
-
-## Funciones próximas:
-
-- **Reporte de Alarmas**: Incluir un método en el componente Router para consulta de alarmas estándar. 
-
-- **Integración adicional de operadores**: Ampliación de la capacidad para integrar más operadores o proveedores de servicios de monitoreo.
 
 ## Licencia
 
