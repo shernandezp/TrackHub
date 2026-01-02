@@ -19,9 +19,22 @@ import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import GeofencePolygon from 'controls/Maps/OSM/GeofencePolygon';
 import MarkerCluster from 'controls/Maps/OSM/MarkerCluster';
 import UserLocation from "controls/Maps/UserLocation";
+import { OSMScaleControl } from 'controls/Maps/shared/ScaleControl';
+import { OSMFullscreenControl } from 'controls/Maps/shared/FullscreenControl';
+import { OSMMeasurementTool } from 'controls/Maps/shared/MeasurementTool';
 import PropTypes from 'prop-types';
+import L from 'leaflet';
 
-const OSMClusteredMap = ({ markers, selectedMarker, geofences, showGeofence }) => {
+const OSMClusteredMap = ({ 
+    markers, 
+    selectedMarker, 
+    geofences, 
+    showGeofence,
+    handleSelected,
+    enableScale = true,
+    enableFullscreen = true,
+    enableMeasurement = true
+}) => {
     const [bounds, setBounds] = useState(null);
     const [userLocation, setUserLocation] = useState({
         lat: parseFloat(process.env.REACT_APP_DEFAULT_LAT),
@@ -80,11 +93,15 @@ const OSMClusteredMap = ({ markers, selectedMarker, geofences, showGeofence }) =
                 />
                 <MarkerCluster 
                     markers={markers} 
-                    selectedMarker={selectedMarker} />
-                    {bounds && <ChangeView bounds={bounds} />}
-                    {showGeofence && geofences.map((geofence, index) => (
-                        <GeofencePolygon key={index} geofence={geofence} />
+                    selectedMarker={selectedMarker}
+                    handleSelected={handleSelected} />
+                {bounds && <ChangeView bounds={bounds} />}
+                {showGeofence && geofences.map((geofence, index) => (
+                    <GeofencePolygon key={index} geofence={geofence} />
                 ))}
+                {enableScale && <OSMScaleControl position="bottomleft" imperial={false} />}
+                {enableFullscreen && <OSMFullscreenControl position="topleft" />}
+                {enableMeasurement && <OSMMeasurementTool position="topleft" unit="metric" enabled={true} />}
             </MapContainer>
         </div>
     );
@@ -94,7 +111,11 @@ OSMClusteredMap.propTypes = {
     markers: PropTypes.array.isRequired,
     selectedMarker: PropTypes.string,
     geofences: PropTypes.array,
-    showGeofence: PropTypes.bool
+    showGeofence: PropTypes.bool,
+    handleSelected: PropTypes.func,
+    enableScale: PropTypes.bool,
+    enableFullscreen: PropTypes.bool,
+    enableMeasurement: PropTypes.bool
 };
 
 export default OSMClusteredMap;

@@ -1,11 +1,71 @@
+# TrackHub Web Application
+
+## Key Features
+
+- **Real-Time GPS Tracking**: Live map visualization of transporters and devices with automatic position updates
+- **Multi-Operator Integration**: Unified interface to manage multiple GPS providers (CommandTrack, Traccar, Flespi, GeoTab, and more)
+- **Geofencing Management**: Create, edit, and monitor geographic boundaries for assets with real-time alerts
+- **Role-Based Access Control**: Granular permission management with customizable policies and user groups
+- **Device & Transporter Management**: Complete CRUD operations for devices, transporters, and operator credentials
+- **Reporting & Analytics**: Export operational data in Excel format with customizable filters
+- **Multi-Language Support**: Full internationalization with English and Spanish interfaces
+- **Dark/Light Theme**: Customizable UI appearance for optimal user experience
+- **Secure Authentication**: OAuth 2.0/OpenID Connect integration with PKCE flow via OpenIdDict
+
+---
+
+## Quick Start
+
+### Prerequisites
+
+- Node.js 18+
+- npm or yarn
+- Access to TrackHub backend services (Authority Server, Manager, Router, Security, Geofencing, Reporting APIs)
+
+### Installation
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/shernandezp/TrackHub.git
+   cd TrackHub
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Configure environment variables**:
+   ```bash
+   cp .env.example .env
+   ```
+
+4. **Set up HTTPS certificates** (required for OAuth):
+   ```bash
+   npm install --save-dev mkcert
+   npx mkcert create-ca
+   npx mkcert create-cert
+   ```
+
+5. **Start the development server**:
+   ```bash
+   npm start
+   ```
+
+6. **Open your browser** at `https://localhost:3000`
+
+---
+
 ## Components and Resources
 
 | Component                | Description                                           | Documentation                                                                 |
 |--------------------------|-------------------------------------------------------|-------------------------------------------------------------------------------|
-| Argon Dashboard 2 MUI - v3.0.1             | Plantilla basada en React JS y MUI        | [Creative Tim Documentation](https://www.creative-tim.com/product/argon-dashboard-material-ui)                           |
+| Argon Dashboard 2 MUI - v3.0.1             | React JS and MUI based template        | [Creative Tim Documentation](https://www.creative-tim.com/product/argon-dashboard-material-ui)                           |
 | React JS 18.3.1               | Library for web and native user interfaces     | [React JS Documentation](https://react.dev/) |
 
-# TrackHub Application Overview
+---
+
+## Application Overview
 
 TrackHub Application is a web client developed with React, based on the Argon template by [Creative Tim](https://www.creative-tim.com/). This client serves as the user interface for TrackHub Services, allowing users to manage various system aspects such as accounts, operators, devices, carriers, users, and permissions. Additionally, it provides tools for real-time geographical data visualization, such as the location of GPS devices, with corresponding labeling.
 
@@ -155,12 +215,6 @@ The application will run on `https://localhost:3000` using the generated certifi
 While TrackHub's goal is to standardize and simplify the code to unify different monitoring providers (operators), its setup, deployment, and maintenance require an intermediate to advanced knowledge of .NET Core and React.
 
 Not only for this application but for all services in general, the code includes passwords, certificates, environment variables, and some secrets. This information is provided to facilitate and speed up the setup of a new development environment. However, all these configurations and secrets must be properly managed in production environments.
-
-## Upcoming Features:
-
-- **Alamrs Report**: Include a method in the Router component to retrieve standard alarms.
-
-- **Additional Operator Integration**: Expanding the capability to integrate more operators or monitoring service providers.
 
 ## License
 

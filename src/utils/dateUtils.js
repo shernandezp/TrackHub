@@ -67,3 +67,16 @@ export function toISOStringWithTimezone(value) {
     ':' + pad(value.getSeconds()) +
     getTimezoneOffset(value);
 }
+
+/**
+ * Formats a duration given in seconds into a string like "1h 23m".
+ * Kept here for compatibility with older imports.
+ * @param {number} seconds
+ * @returns {string}
+ */
+export function formatDurationString(seconds) {
+    if (!seconds || seconds <= 0) return '0h 0m';
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    return `${hrs}h ${mins}m`;
+}

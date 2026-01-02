@@ -257,7 +257,12 @@
         "accOn": "Encendido",
         "accOff": "Apagado",
         "mileage": "Kilometraje",
-        "temperature": "Temperatura"
+        "temperature": "Temperatura",
+        "satellites": "Satélites",
+        "altitude": "Altitud",
+        "stopped": "Detenido",
+        "moving": "En Movimiento",
+        "hourmeter": "Horómetro"
     },
     "transporterType": {
         "title":"Tipos de Unidades",
@@ -301,7 +306,13 @@
         "toLabel": "Hasta",
         "stopLabel": "Detenido",
         "transitLabel": "En Tránsito",
-        "totalDistance": "Distancia Total"
+        "totalDistance": "Distancia Total",
+        "duration": "Duración",
+        "maxSpeed": "Vel. Máx",
+        "avgSpeed": "Vel. Prom",
+        "stops": "Paradas",
+        "alarms": "Alarmas",
+        "summaryLabel": "Resumen"
     },
     "user": {
         "title":"Usuarios",
@@ -331,6 +342,14 @@
         "language": "Idioma",
         "info": "Información del Perfil",
         "partOf": "Parte de"
+    },
+    "utilsmap": {
+        "hideStatistics":"Ocultar Estadísticas",
+        "showStatistics":"Mostrar Estadísticas",
+        "measureDistance":"Medir Distancia",
+        "toogleFullScreen":"Alternar Pantalla Completa",
+        "exitFullScreen":"Salir de Pantalla Completa",
+        "viewFullScreen":"Ver en Pantalla Completa"
     },
     "validation": {
         "selectValue": "Por favor seleccione un valor para el campo {{field}}",

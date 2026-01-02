@@ -21,12 +21,9 @@ import ArgonBox from "components/ArgonBox";
 import ArgonTypography from "components/ArgonTypography";
 import SingleTrip from "layouts/dashboard/components/TripList/SingleTrip";
 import { formatDateTime } from "utils/dateUtils";
-import { calculateTotalDistance } from "utils/distanceUtils";
-import { useTranslation } from 'react-i18next';
 import { useTheme } from '@mui/material/styles';
 
 function TripList({filters, trips=[], selectedTrip, handleSelected}) {
-  const { t } = useTranslation();
   const theme = useTheme();
   return (
     <Card sx={{ height: "70vh", overflow: "auto" }}>
@@ -43,15 +40,6 @@ function TripList({filters, trips=[], selectedTrip, handleSelected}) {
         </ArgonBox>
       </ArgonBox>
       <ArgonBox pt={3} pb={2} px={2}>
-        <ArgonBox mt={1} mb={2}>
-          <ArgonTypography
-            variant="caption"
-            color="text"
-            fontWeight="bold"
-            textTransform="uppercase">
-            {t("tripPanel.totalDistance")} {calculateTotalDistance(trips, "totalDistance")}
-          </ArgonTypography>
-        </ArgonBox>
         <ArgonBox
           component="ul"
           display="flex"

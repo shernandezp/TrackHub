@@ -17,6 +17,7 @@
 import React, { useState, useEffect } from 'react';
 import OSMTripsMap from 'controls/Maps/OSM/OSMTripsMap';
 import GoogleTripsMap from 'controls/Maps/Google/GoogleTripsMap';
+import TripStatsPanel from './TripStatsPanel';
 import { getRandomColor } from "utils/colorUtils";
 import PropTypes from 'prop-types';
 import 'controls/Maps/css/map.css';
@@ -42,15 +43,19 @@ function TripsMap({
         fetchTrips();
       }, [trips]);
 
+    const [showStats, setShowStats] = useState(true);
+
     return (
-        <div className="map-container">
+        <div className="map-container" style={{ position: 'relative' }}>
             {mapType === 'OSM' ? (
                 <OSMTripsMap 
                     trips={polygons} 
                     selectedTrip={selectedTrip}
                     showGeofence={showGeofence}
                     geofences={geofences}
-                    handleSelected={handleSelected}/>
+                    handleSelected={handleSelected}
+                    toggleStats={() => setShowStats(s => !s)}
+                    showStats={showStats} />
             ) : (
                 mapType === 'Google' && 
                     <GoogleTripsMap 
@@ -59,8 +64,11 @@ function TripsMap({
                         selectedTrip={selectedTrip} 
                         showGeofence={showGeofence}
                         geofences={geofences}
-                        handleSelected={handleSelected} />
+                        handleSelected={handleSelected}
+                        toggleStats={() => setShowStats(s => !s)}
+                        showStats={showStats} />
             )}
+            {showStats && <TripStatsPanel trips={trips} selectedTrip={selectedTrip} />}
         </div>
     );
 };

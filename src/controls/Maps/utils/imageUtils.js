@@ -14,10 +14,10 @@
 *  limitations under the License.
 */
 
-const createSvgIcon = (rotation, text, format = 'svg') => {
-    const scaledWidth = 40;
-    const scaledHeight = 40;
-    let circleColor = "#1E90FF";
+const createSvgIcon = (rotation, text, format = 'svg', options = {}) => {
+    const scaledWidth = options.width || 40;
+    const scaledHeight = options.height || 40;
+    let circleColor = options.color || "#1E90FF";
 
     // Calculate darker gradient color
     const gradientColor = darkenColor(circleColor, 0.7); // Darken by 30%
@@ -63,6 +63,34 @@ function darkenColor(hexColor, factor) {
     return darkenedHex;
 };
 
+/**
+ * Get color based on speed and status
+ * @param {number} speed - Current speed
+ * @param {boolean} isOnline - Device online status
+ * @returns {string} - Hex color code
+ */
+const getMarkerColor = (speed, isOnline = true) => {
+    if (!isOnline) return '#808080'; // Gray for offline
+    if (speed > 0) return '#00FF00'; // Green for moving
+    return '#FF0000'; // Red for stopped
+};
+
+/**
+ * Create marker icon with custom color based on status
+ * @param {number} rotation - Rotation angle
+ * @param {string} text - Label text
+ * @param {number} speed - Current speed
+ * @param {boolean} isOnline - Device online status
+ * @param {string} format - 'svg' or 'dataURL'
+ * @returns {string} - SVG icon
+ */
+const createMarkerIconWithStatus = (rotation, text, speed, isOnline = true, format = 'svg') => {
+    const color = getMarkerColor(speed, isOnline);
+    return createSvgIcon(rotation, text, format, { color });
+};
+
 export {
-    createSvgIcon
+    createSvgIcon,
+    createMarkerIconWithStatus,
+    getMarkerColor
 };

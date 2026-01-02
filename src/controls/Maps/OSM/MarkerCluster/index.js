@@ -25,8 +25,9 @@ import L from 'leaflet';
 import 'leaflet.markercluster';
 import { useTranslation } from 'react-i18next';
 import { createSvgIcon } from 'controls/Maps/utils/imageUtils';
+import { createEnhancedPopupContent } from 'controls/Maps/utils/popupUtils';
 
-const MarkerCluster = ({ markers, selectedMarker }) => {
+const MarkerCluster = ({ markers, selectedMarker, handleSelected }) => {
     const { t } = useTranslation();
     const map = useMap();
     const markerGroupRef = useRef();
@@ -42,15 +43,32 @@ const MarkerCluster = ({ markers, selectedMarker }) => {
                 className: 'my-icon',
                 html: createSvgIcon(marker.rotation, marker.text),
                 iconSize: [28, 30],
-                iconAnchor: [22, 44],
-                popupAnchor: [-3, -76],
+                iconAnchor: [14, 30],
+                popupAnchor: [0, -30],
             });
 
             const leafletMarker = L.marker([marker.lat, marker.lng], { icon: myIcon });
-            leafletMarker.bindPopup(
-                `${t('transporterMap.name')}: ${marker.name}
-                <br>${t('transporterMap.dateTime')}: ${formatDateTime(marker.dateTime)}
-                <br>${t('transporterMap.speed')}: ${marker.speed}`);
+            
+            // Create enhanced popup content
+            const popupContent = createEnhancedPopupContent(marker, t);
+            const popup = leafletMarker.bindPopup(popupContent, {
+                maxWidth: 260,
+                minWidth: 240
+            }).getPopup();
+            
+            // Handle popup close event
+            if (handleSelected) {
+                popup.on('remove', () => {
+                    handleSelected(null);
+                });
+            }
+            
+            if (handleSelected) {
+                leafletMarker.on('click', () => {
+                    handleSelected(marker.name);
+                });
+            }
+            
             markerGroup.addLayer(leafletMarker);
 
             newLeafletMarkers[marker.name] = leafletMarker;
@@ -82,6 +100,7 @@ const MarkerCluster = ({ markers, selectedMarker }) => {
 MarkerCluster.propTypes = {
     markers: PropTypes.array.isRequired,
     selectedMarker: PropTypes.string,
+    handleSelected: PropTypes.func,
 };
 
 export default MarkerCluster;
