@@ -179,7 +179,8 @@
     "reportList": {
         "liveReport": "Reporte de Unidades",
         "positionRecord": "Reporte de Posiciones",
-        "transportersInGeofence": "Unidades en Geocerca"
+        "transportersInGeofence": "Unidades en Geocerca",
+        "geofenceEvents": "Eventos de Geocerca"
     },
     "resources": {
         "accounts": "Cuentas",

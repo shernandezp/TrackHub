@@ -179,7 +179,8 @@
     "reportList": {
         "liveReport":"Units Report",
         "positionRecord": "Position Record",
-        "transportersInGeofence": "Units in Geofence"
+        "transportersInGeofence": "Units in Geofence",
+        "geofenceEvents": "Geofence Events"
     },
     "resources": {
         "accounts": "Accounts",

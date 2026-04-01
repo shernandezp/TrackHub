@@ -45,11 +45,24 @@ function useFiltersData(reportCode) {
     });
   };
 
+  const fetchGeofenceEvents = async () => {
+    const list1 = await fetchList(getTransportersByUser, transporter => ({
+      value: transporter.transporterId,
+      label: transporter.name
+    }));
+    return buildTableData({
+      list1,
+      visibility: [true, false, false, true, true, false, false, false, false],
+      labels: [t('reports.transporter'), '', '', t('reports.from'), t('reports.to'), '', '', '', '']
+    });
+  };
+
   // Map report codes to their respective functions
   const reportStrategies = {
     LiveReport: fetchLiveReport,
     PositionRecord: fetchPositionRecord,
-    TransportersInGeofence: fetchTransportersInGeofence
+    TransportersInGeofence: fetchTransportersInGeofence,
+    GeofenceEvents: fetchGeofenceEvents
   };
 
   useEffect(() => {
