@@ -39,7 +39,8 @@ const OSMGeofenceEditor = ({
     removeRef,
     enableScale = true,
     enableFullscreen = true,
-    enableMeasurement = true
+    enableMeasurement = true,
+    height = '70vh'
 }) => {
   const mapRef = useRef(null);
   const layerRef = useRef(null);
@@ -200,7 +201,7 @@ const OSMGeofenceEditor = ({
       <MapContainer
         center={userLocation}
         zoom={7}
-        style={{ height: "70vh", width: "100%" }}
+        style={{ height: height, width: "100%" }}
         ref={mapRef}
         doubleClickZoom={false}
         whenCreated={(mapInstance) => {
@@ -238,7 +239,8 @@ OSMGeofenceEditor.propTypes = {
   removeRef: PropTypes.object,
   enableScale: PropTypes.bool,
   enableFullscreen: PropTypes.bool,
-  enableMeasurement: PropTypes.bool
+  enableMeasurement: PropTypes.bool,
+  height: PropTypes.string
 };
 
 export default OSMGeofenceEditor;

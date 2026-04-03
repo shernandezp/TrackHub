@@ -19,6 +19,11 @@ import axios from 'axios';
 import { useAuth } from '../AuthContext';
 import { jwtDecode } from 'jwt-decode';
 
+const REQUEST_TIMEOUT_MS = 30000;
+
+// Module-level mutex for token refresh to prevent concurrent refresh calls
+let refreshPromise = null;
+
 /**
  * Custom hook for making API requests.
  * @param {string} endpoint - The API endpoint to make requests to.
@@ -36,12 +41,30 @@ const useApiService = (endpoint) => {
     try {
       const decoded = jwtDecode(token);
       const currentTime = Date.now() / 1000;
-      // Check if the token has expired
       return !(decoded.exp < currentTime);
-    } catch (error) {
-      console.error('Error decoding token:', error);
+    } catch {
       return false;
     }
+  };
+
+  /**
+   * Acquires a valid token, using a mutex to prevent concurrent refresh calls.
+   * @returns {Promise<string>} - A promise that resolves to a valid access token.
+   */
+  const acquireToken = async () => {
+    if (isTokenValid(accessToken)) {
+      return accessToken;
+    }
+
+    if (refreshPromise) {
+      return refreshPromise;
+    }
+
+    refreshPromise = handleRefreshToken().finally(() => {
+      refreshPromise = null;
+    });
+
+    return refreshPromise;
   };
 
   /**
@@ -50,18 +73,15 @@ const useApiService = (endpoint) => {
    * @returns {Promise<object>} - A promise that resolves to the response data.
    */
   const post = async (data) => {
-    let token = accessToken;
-    if (!isTokenValid(accessToken)) {
-      token = await handleRefreshToken();
-    }
+    const token = await acquireToken();
     
     const response = await axios.post(endpoint, data, {
       headers: {
         'Authorization': `Bearer ${token}`
-      }
+      },
+      timeout: REQUEST_TIMEOUT_MS
     });
     return response.data;
-    
   };
 
   /**
@@ -71,19 +91,16 @@ const useApiService = (endpoint) => {
    * @returns {Promise<object>} - A promise that resolves to the response data.
    */
   const postFile = async (data, filename) => {
-    let token = accessToken;
-    if (!isTokenValid(accessToken)) {
-      token = await handleRefreshToken();
-    }
+    const token = await acquireToken();
   
     const response = await axios.post(endpoint, data, {
       headers: {
         'Authorization': `Bearer ${token}`
       },
-      responseType: 'blob'
+      responseType: 'blob',
+      timeout: REQUEST_TIMEOUT_MS
     });
   
-    // Create a URL for the Blob and open it in a new tab
     const url = window.URL.createObjectURL(response.data);
     const link = document.createElement('a');
     link.href = url;

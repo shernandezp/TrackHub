@@ -40,7 +40,8 @@ const GoogleGeofenceEditor = ({
   removeRef,
   enableScale = true,
   enableFullscreen = true,
-  enableMeasurement = true
+  enableMeasurement = true,
+  height = '70vh'
 }) => {
   const polygons = useRef(initialPolygons);
   const [userLocation, setUserLocation] = useState({
@@ -157,7 +158,7 @@ const GoogleGeofenceEditor = ({
       <UserLocation setUserLocation={setUserLocation} />
       <GoogleMap
         onLoad={onLoad}
-        mapContainerStyle={{ height: "70vh", width: "100%" }}
+        mapContainerStyle={{ height: height, width: "100%" }}
         center={userLocation}
         zoom={6}
         options={{ gestureHandling: 'greedy' }}
@@ -211,7 +212,8 @@ GoogleGeofenceEditor.propTypes = {
   removeRef: PropTypes.object,
   enableScale: PropTypes.bool,
   enableFullscreen: PropTypes.bool,
-  enableMeasurement: PropTypes.bool
+  enableMeasurement: PropTypes.bool,
+  height: PropTypes.string
 };
 
 export default GoogleGeofenceEditor;

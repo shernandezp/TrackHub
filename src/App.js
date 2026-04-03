@@ -75,13 +75,14 @@ import { ClipLoader } from 'react-spinners';
 import useUserService from "services/users";
 import useSettignsService from 'services/settings';
 import { useTranslation } from 'react-i18next';
+import ErrorBoundary from "components/ErrorBoundary";
 
 export default function App() {
   const [controller, dispatch] = useArgonController();
   const { miniSidenav, direction, layout, openConfigurator, darkMode } =
     controller;
   const [onMouseEnter, setOnMouseEnter] = useState(false);
-  const { isAuthenticated, login, isLoggingIn } = useAuth();
+  const { isAuthenticated, login, isLoggingIn, authError } = useAuth();
   const { pathname } = useLocation();
   const { isAdmin, isManager } = useUserService();
   const { getUserSettings, getAccountSettings, updateAccountSettings } = useSettignsService();
@@ -94,11 +95,15 @@ export default function App() {
 
   useEffect(() => {
     // Redirect to login page if not authenticated
-    if (!isAuthenticated && !isLoggingIn && pathname != "/authentication/callback") {
+    // Skip redirect if: on callback page, already logging in, on error page, or auth error occurred
+    const isAuthRoute = pathname.startsWith("/authentication/");
+    const isErrorPage = pathname === "/error";
+    
+    if (!isAuthenticated && !isLoggingIn && !isAuthRoute && !isErrorPage && !authError) {
       login();
     }
   
-  }, [isAuthenticated, isLoggingIn, login, pathname]);
+  }, [isAuthenticated, isLoggingIn, login, pathname, authError]);
 
   useEffect(() => {
     const fetchPermissions = async () => {
@@ -193,7 +198,8 @@ export default function App() {
     <LoadingContext.Provider value={{ loading, setLoading }}>
       <ThemeProvider theme={darkMode ? themeDark : theme}>
         <CssBaseline />
-        {layout === "dashboard" && (
+        <ErrorBoundary>
+          {layout === "dashboard" && (
           <>
             <Sidenav
               brand={darkMode ? brand : brandDark}
@@ -213,8 +219,9 @@ export default function App() {
         )}
         <Routes>
           {getRoutes(routes)}
-          <Route path="*" element={<Navigate to="/dashboard" />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
+        </ErrorBoundary>
         {loading && (
           <div style={{
             position: 'fixed',

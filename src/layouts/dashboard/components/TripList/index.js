@@ -23,10 +23,10 @@ import SingleTrip from "layouts/dashboard/components/TripList/SingleTrip";
 import { formatDateTime } from "utils/dateUtils";
 import { useTheme } from '@mui/material/styles';
 
-function TripList({filters, trips=[], selectedTrip, handleSelected}) {
+function TripList({filters, trips=[], selectedTrip, handleSelected, maxHeight = "70vh"}) {
   const theme = useTheme();
   return (
-    <Card sx={{ height: "70vh", overflow: "auto" }}>
+    <Card sx={{ height: maxHeight, overflow: "auto" }}>
       <ArgonBox display="flex" justifyContent="space-between" alignItems="center" pt={3} px={2}>
         <ArgonBox display="flex" alignItems="flex-start">
           <ArgonBox color="text" mr={0.5} lineHeight={0}>
@@ -81,6 +81,7 @@ TripList.propTypes = {
   handleSelected: PropTypes.func,
   filters: PropTypes.any.isRequired,
   trips: PropTypes.array.isRequired,
+  maxHeight: PropTypes.string,
 };
 
 export default TripList;

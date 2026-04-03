@@ -26,7 +26,8 @@ const OSMTripsMap = ({
   showStats,
   enableScale = true,
   enableFullscreen = true,
-  enableMeasurement = true
+  enableMeasurement = true,
+  height = "70vh"
 }) => {
   const mapRef = useRef();
   const [userLocation, setUserLocation] = useState({
@@ -99,7 +100,7 @@ const OSMTripsMap = ({
   return (
     <div>
       <UserLocation setUserLocation={setUserLocation} />
-      <MapContainer ref={mapRef} center={userLocation} zoom={13} style={{ height: '70vh', width: '100%' }}>
+      <MapContainer ref={mapRef} center={userLocation} zoom={13} style={{ height: height, width: '100%' }}>
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -107,7 +108,7 @@ const OSMTripsMap = ({
         {trips.map((trip, index) => {
           return (
             <React.Fragment key={index}>
-              {trip.coordinates.length === 1 
+              {trip.type === 1 
                 ? (<Marker 
                     position={trip.coordinates[0]} 
                     icon={getMarkerStyle(trip.id)}
@@ -116,24 +117,22 @@ const OSMTripsMap = ({
                       mapRef.current.setView(trip.coordinates[0], 13);
                     }}}/>) 
                 : (
-                  <>
-                    <Polyline
-                      key={trip.id}
-                      positions={trip.coordinates}
-                      pathOptions={getPolylineStyle(trip.id, trip.color)}
-                      eventHandlers={{ click: () => handleClick(trip.id) }}
-                    />
-                    {trip.coordinates.length > 1 && (
-                      <>
-                        <Marker position={trip.coordinates[0]} icon={startIcon}/>
-                        <Marker position={trip.coordinates[trip.coordinates.length - 1]} icon={endIcon}/>
-                      </>
-                    )}
-                  </>
+                  <Polyline
+                    key={trip.id}
+                    positions={trip.coordinates}
+                    pathOptions={getPolylineStyle(trip.id, trip.color)}
+                    eventHandlers={{ click: () => handleClick(trip.id) }}
+                  />
               )}
             </React.Fragment>
           );
         })}
+        {trips.length > 0 && trips.some(trip => trip.coordinates.length > 1) && (
+          <>
+            <Marker position={trips.find(trip => trip.coordinates.length > 1).coordinates[0]} icon={startIcon}/>
+            <Marker position={trips[trips.length - 1].coordinates[trips[trips.length - 1].coordinates.length - 1]} icon={endIcon}/>
+          </>
+        )}
         {showGeofence && geofences.map((geofence, index) => (
           <GeofencePolygon key={index} geofence={geofence} />
         ))}
@@ -162,6 +161,7 @@ OSMTripsMap.propTypes = {
   enableMeasurement: PropTypes.bool,
   toggleStats: PropTypes.func,
   showStats: PropTypes.bool,
+  height: PropTypes.string,
 };
 
 export default OSMTripsMap;

@@ -140,9 +140,9 @@ function GeofenceManager() {
   return (
     <DashboardLayout>
       <DashboardNavbar searchQuery={searchQuery} handleSearch={handleSearchChange} searchVisibility={true}/>
-      <ArgonBox py={3}>
-        <Grid container spacing={3} mb={3}>
-          <Grid item size={{xs: 12, lg:12}}>
+      <ArgonBox py={1}>
+        <Grid container spacing={3}>
+          <Grid item size={{xs: 12, lg: 9}} sx={{ position: 'relative', zIndex: 1 }}>
             <GeofenceEditor 
                mapType={settings.maps}
                mapKey={settings.mapsKey}
@@ -157,18 +157,20 @@ function GeofenceManager() {
                removeRef={removeRef}
                handleAdd={handleAdd}
                handleEdit={handleEdit}
+               height="calc(100vh - 180px)"
             />
           </Grid>
-        </Grid>
-        <Grid container spacing={3}>
-          <Grid item size={{xs: 12, md:12}}>
+          <Grid item size={{xs: 12, lg: 3}} sx={{ position: 'relative', zIndex: 2 }}>
             <Table 
               columns={columns} 
               rows={rows} 
               selectedField="name"
               selected={selectedGeofence}
               handleSelected={setSelectedGeofence}
-              searchQuery={searchQuery} />
+              searchQuery={searchQuery}
+              scrollable={true}
+              maxHeight="calc(100vh - 180px)"
+              compact={true} />
           </Grid>
         </Grid>
       </ArgonBox>

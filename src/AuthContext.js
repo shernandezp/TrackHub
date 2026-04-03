@@ -32,11 +32,35 @@ export const AuthProvider = ({ children, navigate }) => {
   const [refreshToken, setRefreshToken] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [authError, setAuthError] = useState(false);
   const codeVerifierRef = useRef();
+  const loginAttemptsRef = useRef({ count: 0, lastAttempt: null });
+  const MAX_LOGIN_ATTEMPTS = 3;
+  const COOLDOWN_PERIOD = 30000; // 30 seconds
 
   const login = () => {
-    if (!isLoggingIn) {
+    // Check if we're in cooldown period
+    const now = Date.now();
+    if (loginAttemptsRef.current.lastAttempt) {
+      const timeSinceLastAttempt = now - loginAttemptsRef.current.lastAttempt;
+      if (loginAttemptsRef.current.count >= MAX_LOGIN_ATTEMPTS && timeSinceLastAttempt < COOLDOWN_PERIOD) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('Too many login attempts. Please wait before trying again.');
+        }
+        setAuthError(true);
+        return;
+      }
+      // Reset counter if cooldown period has passed
+      if (timeSinceLastAttempt >= COOLDOWN_PERIOD) {
+        loginAttemptsRef.current.count = 0;
+      }
+    }
+
+    if (!isLoggingIn && !authError) {
       setIsLoggingIn(true);
+      loginAttemptsRef.current.count += 1;
+      loginAttemptsRef.current.lastAttempt = now;
+
       if (!codeVerifierRef.current) {
         codeVerifierRef.current = generateCodeVerifier();
         sessionStorage.setItem('code_verifier', codeVerifierRef.current);
@@ -80,21 +104,33 @@ export const AuthProvider = ({ children, navigate }) => {
       return data.access_token;
     } catch (refreshError) {
       // Refresh token is also expired or invalid, redirect to login page
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Token refresh failed:', refreshError);
+      }
+      setAuthError(true);
       login();
     }
+  };
+
+  const resetAuthError = () => {
+    setAuthError(false);
+    loginAttemptsRef.current = { count: 0, lastAttempt: null };
   };
 
   return (
     <AuthContext.Provider value={{ 
         isAuthenticated, 
         isLoggingIn,
-        setIsAuthenticated, 
+        authError,
+        setIsAuthenticated,
+        setIsLoggingIn, 
         login, 
         logoff, 
         accessToken,
         setAccessToken, 
         setRefreshToken,
-        handleRefreshToken
+        handleRefreshToken,
+        resetAuthError
       }}>
       {children}
     </AuthContext.Provider>

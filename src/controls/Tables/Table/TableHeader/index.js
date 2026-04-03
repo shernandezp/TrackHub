@@ -21,7 +21,7 @@ import typography from 'assets/theme/base/typography';
 import borders from 'assets/theme/base/borders';
 import { TableRow } from '@mui/material';
 
-const TableHeader = ({ columns, orderBy, order, handleSort }) => {
+const TableHeader = ({ columns, orderBy, order, handleSort, compact = false }) => {
   const { size, fontWeightBold } = typography;
   const { borderWidth } = borders;
 
@@ -50,16 +50,22 @@ const TableHeader = ({ columns, orderBy, order, handleSort }) => {
                 key={name}
                 component="th"
                 width={width || 'auto'}
-                pt={1.5}
-                pb={1.25}
-                pl={align === 'left' ? pl : 3}
-                pr={align === 'right' ? pr : 3}
+                pt={compact ? 0.75 : 1.5}
+                pb={compact ? 0.5 : 1.25}
+                pl={compact ? (align === 'left' ? 1.5 : 1.5) : (align === 'left' ? pl : 3)}
+                pr={compact ? (align === 'right' ? 1.5 : 1.5) : (align === 'right' ? pr : 3)}
                 textAlign={align}
                 fontSize={size.xxs}
                 fontWeight={fontWeightBold}
                 color="secondary"
                 opacity={0.7}
-                sx={({ palette: { light } }) => ({ borderBottom: `${borderWidth[1]} solid ${light.main}` })}
+                sx={({ palette: { light, background } }) => ({ 
+                  borderBottom: `${borderWidth[1]} solid ${light.main}`,
+                  position: 'sticky',
+                  top: 0,
+                  backgroundColor: background.card || background.default || '#fff',
+                  zIndex: 10
+                })}
                 onClick={() => handleSort(name)}
                 style={{ cursor: 'pointer' }}
               >
@@ -77,6 +83,7 @@ TableHeader.propTypes = {
   orderBy: PropTypes.string.isRequired,
   order: PropTypes.string.isRequired,
   handleSort: PropTypes.func.isRequired,
+  compact: PropTypes.bool,
 };
 
 export default TableHeader;

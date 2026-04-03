@@ -179,7 +179,8 @@
     "reportList": {
         "liveReport":"Units Report",
         "positionRecord": "Position Record",
-        "transportersInGeofence": "Units in Geofence"
+        "transportersInGeofence": "Units in Geofence",
+        "geofenceEvents": "Geofence Events"
     },
     "resources": {
         "accounts": "Accounts",
@@ -250,7 +251,7 @@
         "dateTime": "Date Time",
         "speed": "Speed (Km/Hr)",
         "address": "Address",
-        "status": "Status",
+        "status": "St.",
         "state": "State",
         "city": "City",
         "accStatus": "ACC Status",

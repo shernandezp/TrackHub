@@ -19,9 +19,9 @@ import PropTypes from 'prop-types';
 import { Box } from '@mui/material';
 import TablePaginationStyle from 'controls/Tables/styles/TablePagination';
 
-const TablePagination = ({ count, page, rowsPerPage, handleChangePage, handleChangeRowsPerPage }) => {
+const TablePagination = ({ count, page, rowsPerPage, handleChangePage, handleChangeRowsPerPage, compact = false }) => {
   return (
-    <Box sx={{ width: 'fit-content', margin: 'auto' }}>
+    <Box sx={{ width: 'fit-content', margin: 'auto', py: compact ? 0.5 : 1 }}>
       <TablePaginationStyle
         component="div"
         count={count}
@@ -29,6 +29,28 @@ const TablePagination = ({ count, page, rowsPerPage, handleChangePage, handleCha
         onPageChange={handleChangePage}
         rowsPerPage={rowsPerPage}
         onRowsPerPageChange={handleChangeRowsPerPage}
+        sx={{
+          '& .MuiTablePagination-toolbar': {
+            minHeight: compact ? '40px' : '52px',
+            paddingLeft: compact ? '8px' : '16px',
+            paddingRight: compact ? '8px' : '16px',
+          },
+          '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
+            fontSize: compact ? '0.75rem' : '0.875rem',
+          },
+          '& .MuiTablePagination-select': {
+            fontSize: compact ? '0.75rem' : '0.875rem',
+            paddingTop: compact ? '4px' : '8px',
+            paddingBottom: compact ? '4px' : '8px',
+          },
+          '& .MuiTablePagination-input': {
+            marginRight: compact ? '16px' : '24px',
+            marginLeft: compact ? '4px' : '8px',
+          },
+          '& .MuiIconButton-root': {
+            padding: compact ? '4px' : '8px',
+          },
+        }}
       />
     </Box>
   );
@@ -40,6 +62,7 @@ TablePagination.propTypes = {
   rowsPerPage: PropTypes.number.isRequired,
   handleChangePage: PropTypes.func.isRequired,
   handleChangeRowsPerPage: PropTypes.func.isRequired,
+  compact: PropTypes.bool,
 };
 
 export default TablePagination;

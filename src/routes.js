@@ -58,6 +58,7 @@ import GeofenceManager from "layouts/geofencemanager";
 import Profile from "layouts/profile";
 import Callback from "layouts/authentication/callback";
 import AuthorizeRedirect from "layouts/authentication/authorizeredirect";
+import ErrorPage from "layouts/authentication/error";
 
 // Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
@@ -119,19 +120,25 @@ const routes = [
     component: <Profile />,
   },
   {
-    type: "route",
+    type: "hidden",
     name: "Callback",
     key: "callback",
     route: "/authentication/callback",
-    icon: <ArgonBox component="i" color="info" fontSize="14px" className="ni ni-collection" />,
     component: <Callback />,
   },
   {
-    type: "route",
+    type: "hidden",
     name: "Authorize Redirect",
     key: "authorize-redirect",
     route: "/authentication/authorize",
     component: <AuthorizeRedirect />,
+  },
+  {
+    type: "hidden",
+    name: "Error",
+    key: "error",
+    route: "/error",
+    component: <ErrorPage />,
   }
 ];
 

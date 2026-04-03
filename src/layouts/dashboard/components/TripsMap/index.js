@@ -29,12 +29,14 @@ function TripsMap({
     selectedTrip, 
     showGeofence,
     geofences,
-    handleSelected }) {
+    handleSelected,
+    height = "70vh" }) {
     const [polygons, setPolygons] = useState([]);
     useEffect(() => {
         const fetchTrips = async () => {
             const transformedTrips = trips.map(trip => ({
                 id: trip.tripId,
+                type: trip.type,
                 color: getRandomColor(),
                 coordinates: trip.points.map(point => [point.latitude, point.longitude])
             }));
@@ -55,7 +57,8 @@ function TripsMap({
                     geofences={geofences}
                     handleSelected={handleSelected}
                     toggleStats={() => setShowStats(s => !s)}
-                    showStats={showStats} />
+                    showStats={showStats}
+                    height={height} />
             ) : (
                 mapType === 'Google' && 
                     <GoogleTripsMap 
@@ -66,7 +69,8 @@ function TripsMap({
                         geofences={geofences}
                         handleSelected={handleSelected}
                         toggleStats={() => setShowStats(s => !s)}
-                        showStats={showStats} />
+                        showStats={showStats}
+                        height={height} />
             )}
             {showStats && <TripStatsPanel trips={trips} selectedTrip={selectedTrip} />}
         </div>
@@ -81,6 +85,7 @@ TripsMap.propTypes = {
     showGeofence: PropTypes.bool,
     geofences: PropTypes.array,
     handleSelected: PropTypes.func,
+    height: PropTypes.string,
 };
 
 export default TripsMap;

@@ -14,17 +14,17 @@
 *  limitations under the License.
 */
 
-import React, { useState, useEffect, useContext  } from 'react';
+import React, { useState, useEffect, useContext, useRef  } from 'react';
 import PropTypes from "prop-types";
 import Grid from "@mui/material/Grid";
+import Chip from "@mui/material/Chip";
 import ArgonBox from "components/ArgonBox";
 import DetailedStatisticsCard from "controls/Cards/StatisticsCards/DetailedStatisticsCard";
 import TransportersTable from "layouts/dashboard/components/TransportersTable";
-import TransporterList from "layouts/dashboard/components/TransporterList";
-import TransporterDetail from "layouts/dashboard/components/TransporterDetail";
 import RefreshCounter from 'layouts/dashboard/components/RefreshCounter';
 import useRouterService from "services/router";
 import useGeofencingService from "services/geofencing";
+import { cleanString } from 'utils/stringUtils';
 import { LoadingContext } from 'LoadingContext';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "AuthContext";
@@ -45,7 +45,28 @@ function Transporters({searchQuery, settings, setShowGeofence, showGeofence, geo
   const [movement, setMovement] = useState(0);
   const [inGeofence, setInGeofence] = useState(0);
   const [selectedTransporter, setSelectedTransporter] = useState(null);
+  const [typeSummary, setTypeSummary] = useState([]);
+  const [tableHeight, setTableHeight] = useState('calc(100vh - 280px)');
+  const chipContainerRef = useRef(null);
   
+  useEffect(() => {
+    const typesObject = positions.reduce((acc, position) => {
+      if (!acc[position.transporterType]) {
+        acc[position.transporterType] = { name: position.transporterType, total: 0 };
+      }
+      acc[position.transporterType].total += 1;
+      return acc;
+    }, {});
+    setTypeSummary(Object.values(typesObject));
+  }, [positions]);
+
+  useEffect(() => {
+    if (chipContainerRef.current) {
+      const chipHeight = chipContainerRef.current.offsetHeight;
+      setTableHeight(`calc(100vh - ${chipHeight + 280}px)`); // Viewport height minus stats cards, navbar, and spacing
+    }
+  }, [typeSummary]);
+
   const fetchPositions = async () => {
     setLoading(true);
     var result = await getDevicePositions();
@@ -76,8 +97,8 @@ function Transporters({searchQuery, settings, setShowGeofence, showGeofence, geo
   };
 
   return (
-    <ArgonBox py={3}>
-        <Grid container spacing={3} mb={3}>
+    <ArgonBox py={1}>
+        <Grid container spacing={3} mb={1}>
             <Grid item size={{xs: 12, md:6, lg:3}}>
                 <DetailedStatisticsCard
                     title={t("dashboard.totalTitle")}
@@ -114,8 +135,8 @@ function Transporters({searchQuery, settings, setShowGeofence, showGeofence, geo
                 />
             </Grid>
         </Grid>
-        <Grid container spacing={3} mb={3}>
-            <Grid item size={{xs: 12, lg:12}}>
+        <Grid container spacing={3}>
+            <Grid item size={{xs: 12, lg:9}}>
             <MapControlStyle>
                 <GeneralMap 
                     mapType={settings.maps} 
@@ -124,28 +145,32 @@ function Transporters({searchQuery, settings, setShowGeofence, showGeofence, geo
                     selectedMarker={selectedTransporter}
                     geofences={geofences}
                     showGeofence={showGeofence}
-                    handleSelected={handleSelected}/>
+                    handleSelected={handleSelected}
+                    height="calc(100vh - 280px)"/>
                 <RefreshCounter 
                     settings={settings} 
                     fetchPositions={fetchPositions}
                     calculateReference={calculateReference} />
             </MapControlStyle>
             </Grid>
-        </Grid>
-        <Grid container spacing={3}>
-            <Grid item size={{xs: 12, md:8}}>
+            <Grid item size={{xs: 12, lg:3}}>
+                <ArgonBox ref={chipContainerRef} mb={2} display="flex" flexWrap="wrap" gap={1}>
+                    {typeSummary.map(({ name, total }) => (
+                        <Chip 
+                            key={name}
+                            label={`${t(`transporterTypes.${cleanString(name)}`)}: ${total}`}
+                            size="small"
+                            color="primary"
+                            variant="outlined"
+                        />
+                    ))}
+                </ArgonBox>
                 <TransportersTable 
                     transporters={positions} 
                     selected={selectedTransporter}
                     handleSelected={handleSelected} 
-                    searchQuery={searchQuery}/>
-            </Grid>
-            <Grid item size={{xs: 12, md: 4}}>
-            {selectedTransporter ? (
-              <TransporterDetail positions={positions} selectedTransporter={selectedTransporter} />
-                ) : (
-                  <TransporterList positions={positions} />
-              )}
+                    searchQuery={searchQuery}
+                    maxHeight={tableHeight}/>
             </Grid>
         </Grid>
     </ArgonBox>

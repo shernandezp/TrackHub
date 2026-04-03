@@ -76,8 +76,8 @@ function Positions({settings, showGeofence, geofences}) {
   };
 
   return (
-    <ArgonBox py={3}>
-      <Grid container spacing={3} mb={3}>
+    <ArgonBox py={1}>
+      <Grid container spacing={3} mb={1}>
         <Grid item size={{xs:12, lg:12}}>
           <FilterNavbar 
             list={transporters}
@@ -88,7 +88,7 @@ function Positions({settings, showGeofence, geofences}) {
           />
         </Grid>
       </Grid>
-      <Grid container spacing={3} mb={3}>
+      <Grid container spacing={3}>
         <Grid item size={{xs: 12, lg:9}}>
           <TripsMap 
             mapType={settings.maps} 
@@ -97,14 +97,16 @@ function Positions({settings, showGeofence, geofences}) {
             selectedTrip={selectedTrip}
             geofences={geofences}
             showGeofence={showGeofence}
-            handleSelected={handleSelected}/>
+            handleSelected={handleSelected}
+            height="calc(100vh - 280px)"/>
         </Grid>
         <Grid item size={{xs:12, lg:3}}>
           <TripList 
             trips={trips}
             filters={values} 
             selectedTrip={selectedTrip}
-            handleSelected={handleSelected}/>
+            handleSelected={handleSelected}
+            maxHeight="calc(100vh - 280px)"/>
         </Grid>
       </Grid>
     </ArgonBox>

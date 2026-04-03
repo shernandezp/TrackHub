@@ -17,13 +17,28 @@
 import { toISOStringWithTimezone } from "utils/dateUtils";
 
 /**
- * Formats the given value by wrapping it in double quotes.
+ * Escapes special characters in a string for safe use inside a GraphQL quoted string.
+ *
+ * @param {string} str - The string to escape.
+ * @returns {string} The escaped string.
+ */
+function escapeGraphQLString(str) {
+  return String(str)
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r')
+    .replace(/\t/g, '\\t');
+}
+
+/**
+ * Formats the given value by wrapping it in double quotes with proper escaping.
  *
  * @param {any} value - The value to format.
  * @returns {string|null} The formatted value or null if the input is falsy.
  */
 export function formatValue(value) {
-  return value ? `"${value}"` : null;
+  return value ? `"${escapeGraphQLString(value)}"` : null;
 }
 
 /**

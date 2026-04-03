@@ -33,7 +33,8 @@ const OSMClusteredMap = ({
     handleSelected,
     enableScale = true,
     enableFullscreen = true,
-    enableMeasurement = true
+    enableMeasurement = true,
+    height = "70vh"
 }) => {
     const [bounds, setBounds] = useState(null);
     const [userLocation, setUserLocation] = useState({
@@ -85,7 +86,7 @@ const OSMClusteredMap = ({
             <MapContainer
                 center={userLocation}
                 zoom={13}
-                style={{ height: "70vh", width: "100%" }}
+                style={{ height: height, width: "100%" }}
                 whenCreated={mapInstance => { mapRef.current = mapInstance; }}>
                 <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -115,7 +116,8 @@ OSMClusteredMap.propTypes = {
     handleSelected: PropTypes.func,
     enableScale: PropTypes.bool,
     enableFullscreen: PropTypes.bool,
-    enableMeasurement: PropTypes.bool
+    enableMeasurement: PropTypes.bool,
+    height: PropTypes.string
 };
 
 export default OSMClusteredMap;

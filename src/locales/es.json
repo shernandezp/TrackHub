@@ -179,7 +179,8 @@
     "reportList": {
         "liveReport": "Reporte de Unidades",
         "positionRecord": "Reporte de Posiciones",
-        "transportersInGeofence": "Unidades en Geocerca"
+        "transportersInGeofence": "Unidades en Geocerca",
+        "geofenceEvents": "Eventos de Geocerca"
     },
     "resources": {
         "accounts": "Cuentas",
@@ -250,7 +251,7 @@
         "dateTime": "Fecha Hora",
         "speed": "Velocidad (Km/Hr)",
         "address": "Dirección",
-        "status": "Estado",
+        "status": "Est.",
         "state": "Estado",
         "city": "Ciudad",
         "accStatus": "Ignición",
