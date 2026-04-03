@@ -63,6 +63,7 @@ import AuthWrapper from 'AuthWrapper';
 
 // Soft UI Context Provider
 import { ArgonControllerProvider } from "context";
+import { NotificationProvider } from "context/NotificationContext";
 
 // react-perfect-scrollbar component
 import PerfectScrollbar from "react-perfect-scrollbar";
@@ -76,11 +77,13 @@ const root = createRoot(container);
 root.render(
   <BrowserRouter>
     <ArgonControllerProvider>
-      <PerfectScrollbar>
-        <AuthWrapper>
-          <App />
-        </AuthWrapper>
-      </PerfectScrollbar>
+      <NotificationProvider>
+        <PerfectScrollbar>
+          <AuthWrapper>
+            <App />
+          </AuthWrapper>
+        </PerfectScrollbar>
+      </NotificationProvider>
     </ArgonControllerProvider>
   </BrowserRouter>
 );

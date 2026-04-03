@@ -17,20 +17,20 @@
 import { handleError, handleSilentError } from 'utils/errorHandler';
 
 describe('handleError', () => {
-  let alertSpy;
+  let dispatchSpy;
   let consoleSpy;
 
   beforeEach(() => {
-    alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => {});
+    dispatchSpy = jest.spyOn(window, 'dispatchEvent').mockImplementation(() => {});
     consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
-    alertSpy.mockRestore();
+    dispatchSpy.mockRestore();
     consoleSpy.mockRestore();
   });
 
-  test('shows alert with error messages from response', () => {
+  test('dispatches app-error event with error messages from response', () => {
     const error = {
       response: {
         data: {
@@ -42,10 +42,13 @@ describe('handleError', () => {
       },
     };
     handleError(error);
-    expect(alertSpy).toHaveBeenCalledWith('Field is required\nInvalid format');
+    expect(dispatchSpy).toHaveBeenCalledTimes(1);
+    const event = dispatchSpy.mock.calls[0][0];
+    expect(event.type).toBe('app-error');
+    expect(event.detail.message).toBe('Field is required\nInvalid format');
   });
 
-  test('shows alert with single error message', () => {
+  test('dispatches app-error event with single error message', () => {
     const error = {
       response: {
         data: {
@@ -54,31 +57,46 @@ describe('handleError', () => {
       },
     };
     handleError(error);
-    expect(alertSpy).toHaveBeenCalledWith('Something went wrong');
+    expect(dispatchSpy).toHaveBeenCalledTimes(1);
+    const event = dispatchSpy.mock.calls[0][0];
+    expect(event.type).toBe('app-error');
+    expect(event.detail.message).toBe('Something went wrong');
   });
 
-  test('logs to console when no response errors structure', () => {
+  test('does not dispatch event when no response errors structure', () => {
     const error = new Error('Network failed');
     handleError(error);
-    expect(consoleSpy).toHaveBeenCalledWith('Unexpected error:', error);
-    expect(alertSpy).not.toHaveBeenCalled();
+    expect(dispatchSpy).not.toHaveBeenCalled();
   });
 
-  test('logs to console for null error', () => {
+  test('does not dispatch event for null error', () => {
     handleError(null);
-    expect(consoleSpy).toHaveBeenCalledWith('Unexpected error:', null);
+    expect(dispatchSpy).not.toHaveBeenCalled();
   });
 
-  test('logs to console when response has no data', () => {
+  test('does not dispatch event when response has no data', () => {
     const error = { response: {} };
     handleError(error);
-    expect(consoleSpy).toHaveBeenCalledWith('Unexpected error:', error);
+    expect(dispatchSpy).not.toHaveBeenCalled();
   });
 
-  test('logs to console when response.data has no errors', () => {
+  test('does not dispatch event when response.data has no errors', () => {
     const error = { response: { data: { message: 'fail' } } };
     handleError(error);
-    expect(consoleSpy).toHaveBeenCalledWith('Unexpected error:', error);
+    expect(dispatchSpy).not.toHaveBeenCalled();
+  });
+
+  test('dispatches event with escaped special characters in messages', () => {
+    const error = {
+      response: {
+        data: {
+          errors: [{ message: 'Error with "quotes" & <tags>' }],
+        },
+      },
+    };
+    handleError(error);
+    const event = dispatchSpy.mock.calls[0][0];
+    expect(event.detail.message).toBe('Error with "quotes" & <tags>');
   });
 });
 
@@ -93,18 +111,18 @@ describe('handleSilentError', () => {
     consoleSpy.mockRestore();
   });
 
-  test('logs error to console', () => {
+  test('logs error to console in non-production', () => {
     const error = new Error('silent failure');
     handleSilentError(error);
     expect(consoleSpy).toHaveBeenCalledWith(error);
   });
 
-  test('logs string to console', () => {
+  test('logs string to console in non-production', () => {
     handleSilentError('something broke');
     expect(consoleSpy).toHaveBeenCalledWith('something broke');
   });
 
-  test('logs null to console', () => {
+  test('logs null to console in non-production', () => {
     handleSilentError(null);
     expect(consoleSpy).toHaveBeenCalledWith(null);
   });

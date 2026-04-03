@@ -75,6 +75,7 @@ import { ClipLoader } from 'react-spinners';
 import useUserService from "services/users";
 import useSettignsService from 'services/settings';
 import { useTranslation } from 'react-i18next';
+import ErrorBoundary from "components/ErrorBoundary";
 
 export default function App() {
   const [controller, dispatch] = useArgonController();
@@ -197,7 +198,8 @@ export default function App() {
     <LoadingContext.Provider value={{ loading, setLoading }}>
       <ThemeProvider theme={darkMode ? themeDark : theme}>
         <CssBaseline />
-        {layout === "dashboard" && (
+        <ErrorBoundary>
+          {layout === "dashboard" && (
           <>
             <Sidenav
               brand={darkMode ? brand : brandDark}
@@ -219,6 +221,7 @@ export default function App() {
           {getRoutes(routes)}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
+        </ErrorBoundary>
         {loading && (
           <div style={{
             position: 'fixed',

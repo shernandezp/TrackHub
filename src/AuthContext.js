@@ -44,7 +44,9 @@ export const AuthProvider = ({ children, navigate }) => {
     if (loginAttemptsRef.current.lastAttempt) {
       const timeSinceLastAttempt = now - loginAttemptsRef.current.lastAttempt;
       if (loginAttemptsRef.current.count >= MAX_LOGIN_ATTEMPTS && timeSinceLastAttempt < COOLDOWN_PERIOD) {
-        console.warn('Too many login attempts. Please wait before trying again.');
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('Too many login attempts. Please wait before trying again.');
+        }
         setAuthError(true);
         return;
       }
@@ -102,7 +104,9 @@ export const AuthProvider = ({ children, navigate }) => {
       return data.access_token;
     } catch (refreshError) {
       // Refresh token is also expired or invalid, redirect to login page
-      console.error('Token refresh failed:', refreshError);
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Token refresh failed:', refreshError);
+      }
       setAuthError(true);
       login();
     }

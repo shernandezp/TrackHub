@@ -46,7 +46,9 @@ export const exchangeAuthorizationCode = async (authorizationCode) => {
 
     return await response.data;
   } catch (error) {
-    console.error("Error exchanging authorization code:", error.message);
+    if (process.env.NODE_ENV !== 'production') {
+      console.error("Error exchanging authorization code:", error.message);
+    }
     throw error;
   }
 };
@@ -91,11 +93,13 @@ export async function revokeAccessToken(accessToken) {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
       }
-    }).then(response => {
-      console.log('Revoking token', response);
+    }).then(() => {
+      // Token revoked successfully
     });
   } catch (error) {
-    console.error('Error revoking token:', error.message);
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Error revoking token:', error.message);
+    }
   }
 }
 
@@ -112,6 +116,8 @@ export async function logout() {
           withCredentials: true
       });
   } catch (error) {
-      console.error('Error during logout:', error.message);
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Error during logout:', error.message);
+      }
   }
 }

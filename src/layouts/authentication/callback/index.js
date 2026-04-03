@@ -34,8 +34,9 @@ const CallbackPage = () => {
     const error = searchParams.get("error");
 
     if (error) {
-      // Auth server returned an error
-      console.error("Authentication error:", error, searchParams.get("error_description"));
+      if (process.env.NODE_ENV !== 'production') {
+        console.error("Authentication error:", error, searchParams.get("error_description"));
+      }
       setIsLoggingIn(false); // Reset logging in state
       sessionStorage.setItem('auth_error', error);
       navigate("/error", { replace: true });
@@ -55,14 +56,17 @@ const CallbackPage = () => {
         navigate("/dashboard", { replace: true });
       })
       .catch((error) => {
-        console.error("Error exchanging authorization code:", error);
+        if (process.env.NODE_ENV !== 'production') {
+          console.error("Error exchanging authorization code:", error);
+        }
         setIsLoggingIn(false); // Reset logging in state on error
         sessionStorage.setItem('auth_error', 'token_exchange_failed');
         navigate("/error", { replace: true });
       });
     } else {
-      // Handle error or unauthorized access
-      console.error("No authorization code received in callback");
+      if (process.env.NODE_ENV !== 'production') {
+        console.error("No authorization code received in callback");
+      }
       setIsLoggingIn(false); // Reset logging in state
       sessionStorage.setItem('auth_error', 'no_code');
       navigate("/error", { replace: true });
