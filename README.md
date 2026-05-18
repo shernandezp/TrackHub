@@ -10,6 +10,15 @@ We believe in the strength of community collaboration to create effective and ac
 
 ![Image](https://github.com/shernandezp/TrackHub.AuthorityServer/blob/master/src/Web/wwwroot/images/logo.png)
 
+
+## Platform Foundation Enhancements
+
+- The portal uses OAuth Authorization Code + PKCE and consumes the Manager foundation GraphQL API for the current principal and account features.
+- Route and menu visibility are driven by backend-backed account features and GraphQL principal-type values; UI visibility is not treated as authorization.
+- Foundation panels expose account features, drivers, audit, notifications, alerts, public links, and background jobs for administrator workflows.
+
+---
+
 ## Project Repositories
 
 | Service Name       | Repository Link                                             |
@@ -22,3 +31,5 @@ We believe in the strength of community collaboration to create effective and ac
 | **Geofencing API**          | [https://github.com/shernandezp/TrackHub.Geofencing](https://github.com/shernandezp/TrackHub.Geofencing)    |
 | **Reporting API**           | [https://github.com/shernandezp/TrackHub.Reporting](https://github.com/shernandezp/TrackHub.Reporting)    |
 | **TrackHub Web**            | [https://github.com/shernandezp/TrackHub](https://github.com/shernandezp/TrackHub)          |
+| **TrackHub Mobile**         | [https://github.com/shernandezp/TrackHubMobile](https://github.com/shernandezp/TrackHubMobile)   |
+

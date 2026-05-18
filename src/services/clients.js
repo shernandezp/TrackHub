@@ -43,7 +43,6 @@ const useClientService = () => {
               clientId
               description
               name
-              secret
               userId
               lastModified
             }

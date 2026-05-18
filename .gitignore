@@ -36,3 +36,5 @@ ca.key
 ca.crt
 cert.key
 cert.crt
+
+/.github/copilot

@@ -74,8 +74,11 @@ import { LoadingContext } from 'LoadingContext';
 import { ClipLoader } from 'react-spinners';
 import useUserService from "services/users";
 import useSettignsService from 'services/settings';
+import useAccountService from "services/account";
+import useFoundationService from "services/foundation";
 import { useTranslation } from 'react-i18next';
 import ErrorBoundary from "components/ErrorBoundary";
+import PrincipalTypes from "constants/principalTypes";
 
 export default function App() {
   const [controller, dispatch] = useArgonController();
@@ -86,12 +89,16 @@ export default function App() {
   const { pathname } = useLocation();
   const { isAdmin, isManager } = useUserService();
   const { getUserSettings, getAccountSettings, updateAccountSettings } = useSettignsService();
+  const { getAccountByUser } = useAccountService();
+  const { getAccountFeatures, getCurrentPrincipal } = useFoundationService();
   const { i18n } = useTranslation();
 
   const [loading, setLoading] = useState(false);
   const [userIsAdmin, setUserIsAdmin] = useState(true);
   const [userIsManager, setUserIsManager] = useState(true);
   const [accountSettings, setAccountSettings] = useState({});
+  const [accountFeatures, setAccountFeatures] = useState([]);
+  const [currentPrincipal, setCurrentPrincipal] = useState(null);
 
   useEffect(() => {
     // Redirect to login page if not authenticated
@@ -108,6 +115,8 @@ export default function App() {
   useEffect(() => {
     const fetchPermissions = async () => {
       if (isAuthenticated) {
+        const principal = await getCurrentPrincipal();
+        setCurrentPrincipal(principal);
         const admin = await isAdmin();
         const manager = await isManager();
         const userSettings = await getUserSettings();
@@ -122,6 +131,11 @@ export default function App() {
         }
         const settings = await getAccountSettings();
         setAccountSettings(settings);
+        const account = await getAccountByUser();
+        if (account?.accountId) {
+          const features = await getAccountFeatures(account.accountId);
+          setAccountFeatures(features || []);
+        }
       }
     };
     fetchPermissions();
@@ -157,6 +171,29 @@ export default function App() {
     document.scrollingElement.scrollTop = 0;
   }, [pathname]);
 
+  const featureEnabled = (featureKey) => {
+    if (!featureKey) return true;
+    const feature = accountFeatures.find(item => item.featureKey === featureKey);
+    return feature ? feature.enabled : false;
+  };
+
+  const filterRoutesByFeatures = (allRoutes) =>
+    allRoutes
+      .filter(route => featureEnabled(route.featureKey))
+      .map(route => route.collapse ? { ...route, collapse: filterRoutesByFeatures(route.collapse) } : route);
+
+  const enabledRoutes = filterRoutesByFeatures(routes);
+
+  const routeAllowed = (route) => {
+    if (route.key === 'systemAdmin' && !userIsAdmin) return false;
+    if (route.key === 'manageAdmin' && !userIsManager) return false;
+    if (currentPrincipal?.principalType) {
+      const allowedPrincipalTypes = route.principalTypes || [PrincipalTypes.User];
+      if (!allowedPrincipalTypes.includes(currentPrincipal.principalType)) return false;
+    }
+    return true;
+  };
+
   const getRoutes = (allRoutes) =>
     allRoutes.map((route) => {
       if (route.collapse) {
@@ -164,7 +201,7 @@ export default function App() {
       }
 
       if (route.route) {
-        return <Route exact path={route.route} element={route.component} key={route.key} />;
+        return <Route exact path={route.route} element={routeAllowed(route) ? route.component : <Navigate to="/dashboard" replace />} key={route.key} />;
       }
 
       return null;
@@ -204,11 +241,12 @@ export default function App() {
             <Sidenav
               brand={darkMode ? brand : brandDark}
               brandName="Track Hub"
-              routes={routes}
+              routes={enabledRoutes}
               onMouseEnter={handleOnMouseEnter}
               onMouseLeave={handleOnMouseLeave}
               isAdmin={userIsAdmin}
               isManager={userIsManager}
+              currentPrincipal={currentPrincipal}
             />
             <Configurator 
               settings={accountSettings}
@@ -218,7 +256,7 @@ export default function App() {
           </>
         )}
         <Routes>
-          {getRoutes(routes)}
+          {getRoutes(enabledRoutes)}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
         </ErrorBoundary>

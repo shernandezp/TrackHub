@@ -88,7 +88,6 @@ function useClientsTableData(fetchData, handleEditClick, handleDeleteClick) {
     columns: [
       { name: "name", title:t('clients.name'), align: "left" },
       { name: "description", title:t('clients.description'), align: "left" },
-      { name: "secret", title:t('clients.secret'), align: "center" },
       { name: "processed", title:t('clients.processed'), align: "center" },
       { name: "modified", title:t('generic.modified'), align: "center" },
       { name: "action", title:t('generic.action'), align: "center" },
@@ -97,7 +96,6 @@ function useClientsTableData(fetchData, handleEditClick, handleDeleteClick) {
     rows: clients.map(client => ({
       name: <Name name={client.name} />,
       description: <Description description={client.description} />,
-      secret: <Description description={client.secret} />,
       processed: <Description description={t(`generic.${getStringValue(client.processed)}`)} />,
       modified: (
         <ArgonTypography variant="caption" color="secondary" fontWeight="medium">

@@ -7,10 +7,21 @@
 - **Gestión de Geocercas**: Crear, editar y monitorear límites geográficos para activos con alertas en tiempo real
 - **Control de Acceso Basado en Roles**: Gestión granular de permisos con políticas personalizables y grupos de usuarios
 - **Gestión de Dispositivos y Transportadores**: Operaciones CRUD completas para dispositivos, transportadores y credenciales de operadores
-- **Reportes y Análisis**: Exportación de datos operacionales en formato Excel con filtros personalizables
+- **Reportes y Análisis**: Exportación de datos operacionales en formato Excel con filtros personalizables, incluyendo posiciones en vivo, historial de posiciones, estado de geocercas y historial de eventos de geocercas
 - **Soporte Multi-Idioma**: Internacionalización completa con interfaces en inglés y español
 - **Tema Oscuro/Claro**: Apariencia de interfaz personalizable para una experiencia de usuario óptima
 - **Autenticación Segura**: Integración OAuth 2.0/OpenID Connect con flujo PKCE mediante OpenIdDict
+- **Manejo de Errores**: React Error Boundary para recuperación de fallos con notificaciones toast MUI Snackbar
+- **Endurecimiento de Seguridad**: Protección contra inyección GraphQL, tiempos de espera de solicitudes, manejo de condición de carrera en renovación de tokens y encabezados meta de seguridad
+
+---
+
+
+## Mejoras de Plataforma Base
+
+- El portal usa OAuth Authorization Code + PKCE y consume la API GraphQL base de Manager para el principal actual y las caracteristicas de cuenta.
+- La visibilidad de rutas y menu depende de caracteristicas de cuenta respaldadas por backend y valores de tipo de principal de GraphQL; la visibilidad de UI no se trata como autorizacion.
+- Los paneles base exponen caracteristicas de cuenta, conductores, auditoria, notificaciones, alertas, enlaces publicos y trabajos en segundo plano para flujos administrativos.
 
 ---
 
@@ -219,3 +230,4 @@ No solo para esta aplicación, sino para todos los servicios en general, el cód
 ## Licencia
 
 Este proyecto está bajo la Licencia Apache 2.0. Consulta el archivo [LICENSE](https://www.apache.org/licenses/LICENSE-2.0) para más información.
+

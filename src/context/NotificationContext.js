@@ -18,6 +18,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 import PropTypes from "prop-types";
+import { useTranslation } from "react-i18next";
 
 const NotificationContext = createContext();
 
@@ -26,6 +27,7 @@ export const useNotification = () => useContext(NotificationContext);
 const AUTO_HIDE_DURATION = 6000;
 
 export const NotificationProvider = ({ children }) => {
+  const { t } = useTranslation();
   const [notification, setNotification] = useState({
     open: false,
     message: "",
@@ -51,10 +53,10 @@ export const NotificationProvider = ({ children }) => {
 
   // Listen for custom error events dispatched from non-React code (e.g., errorHandler.js)
   useEffect(() => {
-    const handler = (e) => showError(e.detail.message);
+    const handler = (e) => showError(e.detail.i18nKey ? t(e.detail.i18nKey) : e.detail.message);
     window.addEventListener("app-error", handler);
     return () => window.removeEventListener("app-error", handler);
-  }, [showError]);
+  }, [showError, t]);
 
   return (
     <NotificationContext.Provider value={{ showError, showSuccess, showWarning }}>

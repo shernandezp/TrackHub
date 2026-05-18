@@ -55,7 +55,7 @@ function ManageClients() {
   const { columns, rows } = data;
 
   const handleSubmit = async () => {
-    if (validate(['name', 'secret'])) {
+    if (validate(values.clientId ? ['name'] : ['name', 'secret'])) {
       onSave(values);
     }
   };

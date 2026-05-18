@@ -98,6 +98,21 @@ describe('handleError', () => {
     const event = dispatchSpy.mock.calls[0][0];
     expect(event.detail.message).toBe('Error with "quotes" & <tags>');
   });
+
+  test('dispatches feature-disabled error type when GraphQL code matches', () => {
+    const error = {
+      response: {
+        data: {
+          errors: [{ message: 'Forbidden', extensions: { code: 'FEATURE_DISABLED' } }],
+        },
+      },
+    };
+    handleError(error);
+    const event = dispatchSpy.mock.calls[0][0];
+    expect(event.detail.type).toBe('feature-disabled');
+    expect(event.detail.code).toBe('FEATURE_DISABLED');
+    expect(event.detail.i18nKey).toBe('errors.featureDisabled');
+  });
 });
 
 describe('handleSilentError', () => {

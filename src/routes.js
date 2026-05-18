@@ -59,6 +59,7 @@ import Profile from "layouts/profile";
 import Callback from "layouts/authentication/callback";
 import AuthorizeRedirect from "layouts/authentication/authorizeredirect";
 import ErrorPage from "layouts/authentication/error";
+import PrincipalTypes from "constants/principalTypes";
 
 // Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
@@ -69,6 +70,7 @@ const routes = [
     name: "screen.dashboard",
     key: "dashboard",
     route: "/dashboard",
+    principalTypes: [PrincipalTypes.User],
     icon: <ArgonBox component="i" color="primary" fontSize="14px" className="ni ni-tv-2" />,
     component: <Dashboard />,
   },
@@ -77,6 +79,7 @@ const routes = [
     name: "screen.superManager",
     key: "systemAdmin",
     route: "/systemAdmin",
+    principalTypes: [PrincipalTypes.User],
     icon: (
       <ArgonBox component="i" color="warning" fontSize="14px" className="ni ni-key-25" />
     ),
@@ -87,6 +90,7 @@ const routes = [
     name: "screen.manager",
     key: "manageAdmin",
     route: "/manageAdmin",
+    principalTypes: [PrincipalTypes.User],
     icon: (
       <ArgonBox component="i" color="warning" fontSize="14px" className="ni ni-settings" />
     ),
@@ -97,6 +101,8 @@ const routes = [
     name: "screen.geofence",
     key: "geofenceManager",
     route: "/geofenceManager",
+    principalTypes: [PrincipalTypes.User],
+    featureKey: "geofencing",
     icon: (
       <ArgonBox component="i" color="warning" fontSize="14px" className="ni ni-square-pin" />
     ),
@@ -107,6 +113,8 @@ const routes = [
     name: "screen.reports",
     key: "reports",
     route: "/reports",
+    principalTypes: [PrincipalTypes.User],
+    featureKey: "reports",
     icon: <ArgonBox component="i" color="success" fontSize="14px" className="ni ni-credit-card" />,
     component: <Reports />,
   },
@@ -116,6 +124,7 @@ const routes = [
     name: "screen.profile",
     key: "profile",
     route: "/profile",
+    principalTypes: [PrincipalTypes.User],
     icon: <ArgonBox component="i" color="dark" fontSize="14px" className="ni ni-single-02" />,
     component: <Profile />,
   },

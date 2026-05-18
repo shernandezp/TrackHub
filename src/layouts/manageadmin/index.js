@@ -22,6 +22,7 @@ import ManageUsers from "layouts/manageadmin/components/users";
 import ManageRoles from "layouts/manageadmin/components/roles";
 import ManagePolicies from "layouts/manageadmin/components/policies";
 import ManageGroups from "layouts/manageadmin/components/groups";
+import ManageFoundation from "layouts/manageadmin/components/foundation";
 import ArgonBox from "components/ArgonBox";
 import DashboardLayout from "controls/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "controls/Navbars/DashboardNavbar";
@@ -41,6 +42,7 @@ function ManageAdmin() {
           <ManageRoles/>
           <ManagePolicies/>
           <ManageGroups/>
+          <ManageFoundation/>
         </ArgonBox>
       <Footer />
     </DashboardLayout>
