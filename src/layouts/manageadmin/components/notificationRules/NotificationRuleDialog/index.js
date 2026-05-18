@@ -21,12 +21,12 @@ import FormDialog from "controls/Dialogs/FormDialog";
 import CustomCheckbox from 'controls/Dialogs/CustomCheckbox';
 import CustomTextField from 'controls/Dialogs/CustomTextField';
 
-function DriverDialog({ open, setOpen, handleSubmit, values, handleChange, errors }) {
+function NotificationRuleDialog({ open, setOpen, handleSubmit, values, handleChange, errors }) {
   const { t } = useTranslation();
 
   return (
     <FormDialog
-      title={values.driverId ? t('foundation.updateDriver') : t('foundation.createDriver')}
+      title={values.notificationRuleId ? t('administration.updateNotificationRule') : t('administration.createNotificationRule')}
       handleSave={handleSubmit}
       open={open}
       setOpen={setOpen}
@@ -35,98 +35,98 @@ function DriverDialog({ open, setOpen, handleSubmit, values, handleChange, error
         <CustomTextField
           autoFocus
           margin="dense"
-          name="name"
-          id="name"
-          label={t('driver.name')}
+          name="ruleKey"
+          id="ruleKey"
+          label={t('administration.key')}
           type="text"
           fullWidth
-          value={values.name || ''}
+          value={values.ruleKey || ''}
           onChange={handleChange}
           required
-          errorMsg={errors.name}
+          errorMsg={errors.ruleKey}
         />
         <CustomTextField
           margin="normal"
-          name="phone"
-          id="phone"
-          label={t('driver.phone')}
+          name="ruleType"
+          id="ruleType"
+          label={t('administration.type')}
           type="text"
           fullWidth
-          value={values.phone || ''}
+          value={values.ruleType || ''}
+          onChange={handleChange}
+          required
+          errorMsg={errors.ruleType}
+        />
+        <CustomTextField
+          margin="normal"
+          name="triggerEvent"
+          id="triggerEvent"
+          label={t('administration.triggerEvent')}
+          type="text"
+          fullWidth
+          value={values.triggerEvent || ''}
+          onChange={handleChange}
+          required
+          errorMsg={errors.triggerEvent}
+        />
+        <CustomTextField
+          margin="normal"
+          name="recipientSelector"
+          id="recipientSelector"
+          label={t('administration.recipientSelector')}
+          type="text"
+          fullWidth
+          value={values.recipientSelector || ''}
           onChange={handleChange}
         />
         <CustomTextField
           margin="normal"
-          name="documentType"
-          id="documentType"
-          label={t('foundation.documentType')}
+          name="channelsJson"
+          id="channelsJson"
+          label={t('administration.channelsJson')}
           type="text"
           fullWidth
-          value={values.documentType || ''}
+          multiline
+          minRows={2}
+          value={values.channelsJson || ''}
           onChange={handleChange}
         />
         <CustomTextField
           margin="normal"
-          name="documentNumber"
-          id="documentNumber"
-          label={t('foundation.documentNumber')}
+          name="throttlingJson"
+          id="throttlingJson"
+          label={t('administration.throttlingJson')}
           type="text"
           fullWidth
-          value={values.documentNumber || ''}
+          multiline
+          minRows={2}
+          value={values.throttlingJson || ''}
           onChange={handleChange}
         />
         <CustomTextField
           margin="normal"
-          name="employeeCode"
-          id="employeeCode"
-          label={t('foundation.employeeCode')}
+          name="configurationJson"
+          id="configurationJson"
+          label={t('administration.configurationJson')}
           type="text"
           fullWidth
-          value={values.employeeCode || ''}
-          onChange={handleChange}
-        />
-        <CustomTextField
-          margin="normal"
-          name="licenseNumber"
-          id="licenseNumber"
-          label={t('foundation.licenseNumber')}
-          type="text"
-          fullWidth
-          value={values.licenseNumber || ''}
-          onChange={handleChange}
-        />
-        <CustomTextField
-          margin="normal"
-          name="licenseExpiresAt"
-          id="licenseExpiresAt"
-          label={t('foundation.licenseExpiresAt')}
-          type="date"
-          fullWidth
-          value={values.licenseExpiresAt ? values.licenseExpiresAt.substring(0, 10) : ''}
-          onChange={handleChange}
-        />
-        <CustomTextField
-          margin="normal"
-          name="defaultTransporterId"
-          id="defaultTransporterId"
-          label={t('foundation.defaultTransporter')}
-          type="text"
-          fullWidth
-          value={values.defaultTransporterId || ''}
+          multiline
+          minRows={2}
+          value={values.configurationJson || ''}
           onChange={handleChange}
         />
         <CustomCheckbox
-          name="active"
-          id="active"
-          value={values.active}
+          name="enabled"
+          id="enabled"
+          value={values.enabled}
           handleChange={handleChange}
-          label={t('generic.active')} />
+          label={t('administration.enabled')} />
       </form>
     </FormDialog>
   );
 }
 
-DriverDialog.propTypes = {
+NotificationRuleDialog.propTypes = {
   open: PropTypes.bool.isRequired,
   setOpen: PropTypes.func.isRequired,
   handleSubmit: PropTypes.func.isRequired,
@@ -135,4 +135,5 @@ DriverDialog.propTypes = {
   errors: PropTypes.object.isRequired,
 };
 
-export default DriverDialog;
+export default NotificationRuleDialog;
+

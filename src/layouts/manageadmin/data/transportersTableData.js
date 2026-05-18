@@ -23,6 +23,7 @@ import ArgonBadge from "components/ArgonBadge";
 import ArgonButton from "components/ArgonButton";
 import useTransporterService from "services/transporter";
 import { handleEdit, handleDelete } from "layouts/manageadmin/actions/transportersActions";
+import { cleanString } from 'utils/stringUtils';
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
 
@@ -92,7 +93,7 @@ function useTransporterTableData(fetchData, handleEditClick, handleDeleteClick) 
       name: <Name name={transporter.name} />,
       transporterType: (
         <ArgonBadge variant="gradient" 
-          badgeContent={t(`transporterTypes.${transporter.transporterType.toLowerCase()}`)} 
+          badgeContent={t(`transporterTypes.${cleanString(transporter.transporterType)}`)}
           color="success" size="xs" container />
       ),
       action: (

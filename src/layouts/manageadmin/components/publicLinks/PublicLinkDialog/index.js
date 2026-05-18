@@ -27,7 +27,7 @@ function PublicLinkDialog({ open, setOpen, handleSubmit, values, handleChange, e
 
   return (
     <FormDialog
-      title={t('foundation.createPublicLinkGrant')}
+      title={t('administration.createPublicLinkGrant')}
       handleSave={mintedToken ? () => setOpen(false) : handleSubmit}
       open={open}
       setOpen={setOpen}
@@ -35,14 +35,14 @@ function PublicLinkDialog({ open, setOpen, handleSubmit, values, handleChange, e
       {mintedToken ? (
         <ArgonBox p={2}>
           <ArgonTypography variant="caption" color="error" fontWeight="medium">
-            {t('foundation.publicLinkTokenWarning')}
+            {t('administration.publicLinkTokenWarning')}
           </ArgonTypography>
           <ArgonBox mt={2}>
             <CustomTextField
               margin="normal"
               name="mintedToken"
               id="mintedToken"
-              label={t('foundation.publicLinkToken')}
+              label={t('administration.publicLinkToken')}
               type="text"
               fullWidth
               multiline
@@ -60,7 +60,7 @@ function PublicLinkDialog({ open, setOpen, handleSubmit, values, handleChange, e
             margin="dense"
             name="resourceType"
             id="resourceType"
-            label={t('foundation.resourceType')}
+            label={t('administration.resourceType')}
             type="text"
             fullWidth
             value={values.resourceType || ''}
@@ -72,7 +72,7 @@ function PublicLinkDialog({ open, setOpen, handleSubmit, values, handleChange, e
             margin="normal"
             name="resourceId"
             id="resourceId"
-            label={t('foundation.resourceIdLabel')}
+            label={t('administration.resourceIdLabel')}
             type="text"
             fullWidth
             value={values.resourceId || ''}
@@ -84,7 +84,7 @@ function PublicLinkDialog({ open, setOpen, handleSubmit, values, handleChange, e
             margin="normal"
             name="scopes"
             id="scopes"
-            label={t('foundation.scopes')}
+            label={t('administration.scopes')}
             type="text"
             fullWidth
             value={values.scopes || ''}
@@ -96,7 +96,7 @@ function PublicLinkDialog({ open, setOpen, handleSubmit, values, handleChange, e
             margin="normal"
             name="purpose"
             id="purpose"
-            label={t('foundation.purpose')}
+            label={t('administration.purpose')}
             type="text"
             fullWidth
             value={values.purpose || ''}
@@ -106,7 +106,7 @@ function PublicLinkDialog({ open, setOpen, handleSubmit, values, handleChange, e
             margin="normal"
             name="expiresAt"
             id="expiresAt"
-            label={t('foundation.expiresAt')}
+            label={t('administration.expiresAt')}
             type="datetime-local"
             fullWidth
             InputLabelProps={{ shrink: true }}
@@ -136,3 +136,4 @@ PublicLinkDialog.defaultProps = {
 };
 
 export default PublicLinkDialog;
+

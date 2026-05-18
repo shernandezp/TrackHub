@@ -100,9 +100,7 @@
         "yes": "Yes",
         "no": "No"
     },
-    "foundation": {
-        "title": "Platform Foundation",
-        "systemTitle": "Platform Feature Matrix",
+    "administration": {
         "features": "Account Features",
         "feature": "Feature",
         "enabled": "Enabled",
@@ -116,7 +114,8 @@
         "resource": "Resource",
         "result": "Result",
         "occurredAt": "Occurred At",
-        "notificationsAndAlerts": "Notifications and Alerts",
+        "notificationRules": "Notification Rules",
+        "alertEvents": "Alert Events",
         "notificationRule": "Notification Rule",
         "alert": "Alert",
         "type": "Type",
@@ -282,7 +281,21 @@
         "settingsScreen": "Settings Screen",
         "transporters": "Units",
         "transporterType": "Unit Types",
-        "users": "Users"        
+        "users": "Users",
+        "accountsMaster": "Accounts (Master)",
+        "accountFeatures": "Account Features",
+        "alerts": "Alerts",
+        "audit": "Audit Trail",
+        "backgroundJobs": "Background Jobs",
+        "devicesMaster": "Devices (Master)",
+        "documents": "Documents",
+        "drivers": "Drivers",
+        "manageDevices": "Manage Devices",
+        "notifications": "Notifications",
+        "operatorsMaster": "Operators (Master)",
+        "publicLinks": "Public Links",
+        "serviceClients": "Service Clients",
+        "supportGrants": "Support Grants"
     },
     "role": {
         "title":"Roles",
@@ -444,3 +457,4 @@
         "fieldsMustMatch": "Fields must match"
     }
 }
+

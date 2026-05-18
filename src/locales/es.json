@@ -100,9 +100,7 @@
         "yes": "Sí",
         "no": "No"
     },
-    "foundation": {
-        "title": "Base de Plataforma",
-        "systemTitle": "Matriz de Funcionalidades",
+    "administration": {
         "features": "Funcionalidades de Cuenta",
         "feature": "Funcionalidad",
         "enabled": "Habilitada",
@@ -116,7 +114,8 @@
         "resource": "Recurso",
         "result": "Resultado",
         "occurredAt": "Ocurrió En",
-        "notificationsAndAlerts": "Notificaciones y Alertas",
+        "notificationRules": "Reglas de Notificación",
+        "alertEvents": "Eventos de Alerta",
         "notificationRule": "Regla de Notificación",
         "alert": "Alerta",
         "type": "Tipo",
@@ -282,7 +281,21 @@
         "settingsScreen": "Configuración",
         "users": "Usuarios",
         "transporters": "Unidades",
-        "transporterType": "Tipos de Unidades"
+        "transporterType": "Tipos de Unidades",
+        "accountsMaster": "Cuentas (Master)",
+        "accountFeatures": "Funciones de la Cuenta",
+        "alerts": "Alertas",
+        "audit": "Registro de Auditoría",
+        "backgroundJobs": "Trabajos en Segundo Plano",
+        "devicesMaster": "Dispositivos (Master)",
+        "documents": "Documentos",
+        "drivers": "Conductores",
+        "manageDevices": "Administrar Dispositivos",
+        "notifications": "Notificaciones",
+        "operatorsMaster": "Operadores (Master)",
+        "publicLinks": "Enlaces Públicos",
+        "serviceClients": "Clientes de Servicio",
+        "supportGrants": "Concesiones de Soporte"
     },
     "role": {
         "title":"Roles",
@@ -444,3 +457,4 @@
         "fieldsMustMatch": "Los campos deben coincidir"
     }
 }
+

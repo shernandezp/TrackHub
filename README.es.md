@@ -16,15 +16,6 @@
 
 ---
 
-
-## Mejoras de Plataforma Base
-
-- El portal usa OAuth Authorization Code + PKCE y consume la API GraphQL base de Manager para el principal actual y las caracteristicas de cuenta.
-- La visibilidad de rutas y menu depende de caracteristicas de cuenta respaldadas por backend y valores de tipo de principal de GraphQL; la visibilidad de UI no se trata como autorizacion.
-- Los paneles base exponen caracteristicas de cuenta, conductores, auditoria, notificaciones, alertas, enlaces publicos y trabajos en segundo plano para flujos administrativos.
-
----
-
 ## Inicio Rápido
 
 ### Requisitos Previos

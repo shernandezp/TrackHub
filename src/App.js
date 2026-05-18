@@ -75,7 +75,8 @@ import { ClipLoader } from 'react-spinners';
 import useUserService from "services/users";
 import useSettignsService from 'services/settings';
 import useAccountService from "services/account";
-import useFoundationService from "services/foundation";
+import useAccountFeatureService from "services/accountFeatures";
+import usePrincipalService from "services/principals";
 import { useTranslation } from 'react-i18next';
 import ErrorBoundary from "components/ErrorBoundary";
 import PrincipalTypes from "constants/principalTypes";
@@ -90,7 +91,8 @@ export default function App() {
   const { isAdmin, isManager } = useUserService();
   const { getUserSettings, getAccountSettings, updateAccountSettings } = useSettignsService();
   const { getAccountByUser } = useAccountService();
-  const { getAccountFeatures, getCurrentPrincipal } = useFoundationService();
+  const { getAccountFeatures } = useAccountFeatureService();
+  const { getCurrentPrincipal } = usePrincipalService();
   const { i18n } = useTranslation();
 
   const [loading, setLoading] = useState(false);
@@ -280,3 +282,4 @@ export default function App() {
     </LoadingContext.Provider>
   );
 }
+

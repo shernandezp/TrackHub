@@ -25,7 +25,7 @@ function SupportGrantDialog({ open, setOpen, handleSubmit, values, handleChange,
 
   return (
     <FormDialog
-      title={t('foundation.supportGrantRequest')}
+      title={t('administration.supportGrantRequest')}
       handleSave={handleSubmit}
       open={open}
       setOpen={setOpen}
@@ -48,7 +48,7 @@ function SupportGrantDialog({ open, setOpen, handleSubmit, values, handleChange,
           margin="normal"
           name="supportUserId"
           id="supportUserId"
-          label={t('foundation.supportUserId')}
+          label={t('administration.supportUserId')}
           type="text"
           fullWidth
           value={values.supportUserId || ''}
@@ -60,7 +60,7 @@ function SupportGrantDialog({ open, setOpen, handleSubmit, values, handleChange,
           margin="normal"
           name="reason"
           id="reason"
-          label={t('foundation.reason')}
+          label={t('administration.reason')}
           type="text"
           fullWidth
           multiline
@@ -74,7 +74,7 @@ function SupportGrantDialog({ open, setOpen, handleSubmit, values, handleChange,
           margin="normal"
           name="ticketReference"
           id="ticketReference"
-          label={t('foundation.ticketReference')}
+          label={t('administration.ticketReference')}
           type="text"
           fullWidth
           value={values.ticketReference || ''}
@@ -86,7 +86,7 @@ function SupportGrantDialog({ open, setOpen, handleSubmit, values, handleChange,
           margin="normal"
           name="accessLevel"
           id="accessLevel"
-          label={t('foundation.accessLevel')}
+          label={t('administration.accessLevel')}
           type="text"
           fullWidth
           value={values.accessLevel || 'read'}
@@ -96,7 +96,7 @@ function SupportGrantDialog({ open, setOpen, handleSubmit, values, handleChange,
           margin="normal"
           name="startsAt"
           id="startsAt"
-          label={t('foundation.startsAt')}
+          label={t('administration.startsAt')}
           type="datetime-local"
           fullWidth
           InputLabelProps={{ shrink: true }}
@@ -109,7 +109,7 @@ function SupportGrantDialog({ open, setOpen, handleSubmit, values, handleChange,
           margin="normal"
           name="endsAt"
           id="endsAt"
-          label={t('foundation.endsAt')}
+          label={t('administration.endsAt')}
           type="datetime-local"
           fullWidth
           InputLabelProps={{ shrink: true }}
@@ -133,3 +133,4 @@ SupportGrantDialog.propTypes = {
 };
 
 export default SupportGrantDialog;
+

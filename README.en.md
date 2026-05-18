@@ -16,15 +16,6 @@
 
 ---
 
-
-## Platform Foundation Enhancements
-
-- The portal uses OAuth Authorization Code + PKCE and consumes the Manager foundation GraphQL API for the current principal and account features.
-- Route and menu visibility are driven by backend-backed account features and GraphQL principal-type values; UI visibility is not treated as authorization.
-- Foundation panels expose account features, drivers, audit, notifications, alerts, public links, and background jobs for administrator workflows.
-
----
-
 ## Quick Start
 
 ### Prerequisites
@@ -230,5 +221,6 @@ Not only for this application but for all services in general, the code includes
 ## License
 
 This project is licensed under the Apache 2.0 License. See the [LICENSE file](https://www.apache.org/licenses/LICENSE-2.0) for more information.
+
 
 
