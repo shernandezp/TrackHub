@@ -19,6 +19,8 @@ import ManageClients from "layouts/systemadmin/components/clients";
 import ManageTransporterTypes from "layouts/systemadmin/components/transporterTypes";
 import ManageRoles from "layouts/systemadmin/components/roles";
 import ManagePolicies from "layouts/systemadmin/components/policies";
+import SystemAccountFeatures from "layouts/systemadmin/components/accountFeatures";
+import ManageAccountSupportGrants from "layouts/systemadmin/components/accountSupportGrants";
 import ArgonBox from "components/ArgonBox";
 import DashboardLayout from "controls/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "controls/Navbars/DashboardNavbar";
@@ -35,6 +37,8 @@ function SystemAdmin() {
         <ManageTransporterTypes/>
         <ManageRoles/>
         <ManagePolicies/>
+        <SystemAccountFeatures/>
+        <ManageAccountSupportGrants/>
       </ArgonBox>
       <Footer />
     </DashboardLayout>
@@ -42,3 +46,4 @@ function SystemAdmin() {
 }
 
 export default SystemAdmin;
+

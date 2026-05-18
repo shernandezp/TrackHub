@@ -7,10 +7,12 @@
 - **Geofencing Management**: Create, edit, and monitor geographic boundaries for assets with real-time alerts
 - **Role-Based Access Control**: Granular permission management with customizable policies and user groups
 - **Device & Transporter Management**: Complete CRUD operations for devices, transporters, and operator credentials
-- **Reporting & Analytics**: Export operational data in Excel format with customizable filters
+- **Reporting & Analytics**: Export operational data in Excel format with customizable filters, including live positions, position history, geofence status, and geofence event history
 - **Multi-Language Support**: Full internationalization with English and Spanish interfaces
 - **Dark/Light Theme**: Customizable UI appearance for optimal user experience
 - **Secure Authentication**: OAuth 2.0/OpenID Connect integration with PKCE flow via OpenIdDict
+- **Error Handling**: React Error Boundary for crash recovery with MUI Snackbar toast notifications
+- **Security Hardening**: GraphQL injection protection, request timeouts, token refresh race condition handling, and security meta headers
 
 ---
 
@@ -219,3 +221,6 @@ Not only for this application but for all services in general, the code includes
 ## License
 
 This project is licensed under the Apache 2.0 License. See the [LICENSE file](https://www.apache.org/licenses/LICENSE-2.0) for more information.
+
+
+

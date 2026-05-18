@@ -57,8 +57,9 @@ import sidenavLogoLabel from "controls/Sidenav/styles/sidenav";
 // Argon Dashboard 2 MUI context
 import { useArgonController, setMiniSidenav } from "context";
 import { useTranslation } from 'react-i18next';
+import PrincipalTypes from "constants/principalTypes";
 
-function Sidenav({ color = "info", brand = "", isAdmin = false, isManager = false, brandName, routes, ...rest }) {
+function Sidenav({ color = "info", brand = "", isAdmin = false, isManager = false, currentPrincipal = null, brandName, routes, ...rest }) {
   const [controller, dispatch] = useArgonController();
   const { miniSidenav, darkSidenav, layout } = controller;
   const location = useLocation();
@@ -89,6 +90,11 @@ function Sidenav({ color = "info", brand = "", isAdmin = false, isManager = fals
   // Render all the routes (except keysToFilterOut) from the routes.js
   const renderRoutes = routes
     .filter(({ key }) => !keysToFilterOut.includes(key))
+    .filter((route) => {
+      if (!currentPrincipal?.principalType) return true;
+      const allowedPrincipalTypes = route.principalTypes || [PrincipalTypes.User];
+      return allowedPrincipalTypes.includes(currentPrincipal.principalType);
+    })
     .map(({ type, name, icon, title, key, href, route }) => {
     let returnValue;
 
@@ -192,6 +198,9 @@ Sidenav.propTypes = {
   brand: PropTypes.string,
   isAdmin: PropTypes.bool,
   isManager: PropTypes.bool,
+  currentPrincipal: PropTypes.shape({
+    principalType: PropTypes.string,
+  }),
   brandName: PropTypes.string.isRequired,
   routes: PropTypes.arrayOf(PropTypes.object).isRequired,
 };

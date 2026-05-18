@@ -23,11 +23,25 @@
 export function handleError(error) {
   if (error && error.response && error.response.data && error.response.data.errors) {
     var errors = error.response.data.errors;
-    var errorMessage = errors.map(error => error.message).join('\n');
-    window.dispatchEvent(new CustomEvent('app-error', { detail: { message: errorMessage } }));
+    var featureDisabled = errors.some(error => getErrorCode(error) === 'FEATURE_DISABLED');
+    var errorMessage = featureDisabled
+      ? 'This feature is not enabled for your account.'
+      : errors.map(error => error.message).join('\n');
+    window.dispatchEvent(new CustomEvent('app-error', {
+      detail: {
+        message: errorMessage,
+        type: featureDisabled ? 'feature-disabled' : 'graphql',
+        code: featureDisabled ? 'FEATURE_DISABLED' : getErrorCode(errors[0]),
+        i18nKey: featureDisabled ? 'errors.featureDisabled' : undefined
+      }
+    }));
   } else if (process.env.NODE_ENV !== 'production') {
     console.error('Unexpected error:', error);
   }
+}
+
+function getErrorCode(error) {
+  return error?.extensions?.code || error?.code;
 }
 
 /**

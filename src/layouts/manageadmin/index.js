@@ -22,6 +22,13 @@ import ManageUsers from "layouts/manageadmin/components/users";
 import ManageRoles from "layouts/manageadmin/components/roles";
 import ManagePolicies from "layouts/manageadmin/components/policies";
 import ManageGroups from "layouts/manageadmin/components/groups";
+import ManageAccountFeatures from "layouts/manageadmin/components/accountFeatures";
+import ManageDrivers from "layouts/manageadmin/components/drivers";
+import ManageAuditTrail from "layouts/manageadmin/components/auditTrail";
+import ManageNotificationRules from "layouts/manageadmin/components/notificationRules";
+import ManageAlertEvents from "layouts/manageadmin/components/alertEvents";
+import ManagePublicLinks from "layouts/manageadmin/components/publicLinks";
+import ManageBackgroundJobs from "layouts/manageadmin/components/backgroundJobs";
 import ArgonBox from "components/ArgonBox";
 import DashboardLayout from "controls/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "controls/Navbars/DashboardNavbar";
@@ -41,6 +48,13 @@ function ManageAdmin() {
           <ManageRoles/>
           <ManagePolicies/>
           <ManageGroups/>
+          <ManageAccountFeatures/>
+          <ManageDrivers/>
+          <ManageAuditTrail/>
+          <ManageNotificationRules/>
+          <ManageAlertEvents/>
+          <ManagePublicLinks/>
+          <ManageBackgroundJobs/>
         </ArgonBox>
       <Footer />
     </DashboardLayout>
@@ -48,3 +62,4 @@ function ManageAdmin() {
 }
 
 export default ManageAdmin;
+
