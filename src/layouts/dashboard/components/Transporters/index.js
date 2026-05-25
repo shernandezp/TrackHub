@@ -69,7 +69,7 @@ function Transporters({searchQuery, settings, setShowGeofence, showGeofence, geo
 
   const fetchPositions = async () => {
     setLoading(true);
-    var result = await getDevicePositions();
+    var result = await getDevicePositions() || [];
     setPositions(result);
     setActive(countRecentDevices(result, settings.onlineInterval));
     setMovement(countDevicesInMovement(result));

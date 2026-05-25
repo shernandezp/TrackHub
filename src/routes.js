@@ -54,6 +54,7 @@ import Dashboard from "layouts/dashboard";
 import ManageAdmin from "layouts/manageadmin";
 import SystemAdmin from "layouts/systemadmin";
 import Reports from "layouts/reports";
+import GpsIntegration from "layouts/gpsintegration";
 import GeofenceManager from "layouts/geofencemanager";
 import Profile from "layouts/profile";
 import Callback from "layouts/authentication/callback";
@@ -117,6 +118,17 @@ const routes = [
     featureKey: "reports",
     icon: <ArgonBox component="i" color="success" fontSize="14px" className="ni ni-credit-card" />,
     component: <Reports />,
+  },
+  {
+    type: "route",
+    name: "screen.gpsIntegration",
+    key: "gpsIntegration",
+    route: "/manage-admin/gps-integration",
+    principalTypes: [PrincipalTypes.User],
+    icon: (
+      <ArgonBox component="i" color="info" fontSize="14px" className="ni ni-satisfied" />
+    ),
+    component: <GpsIntegration />,
   },
   { type: "title", title: "screen.account", key: "account-pages" },
   {

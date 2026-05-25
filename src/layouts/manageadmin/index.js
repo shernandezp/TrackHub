@@ -15,7 +15,6 @@
 */
 
 import ManageAccount from "layouts/manageadmin/components/account";
-import ManageOperators from "layouts/manageadmin/components/operators";
 import ManageDevices from "layouts/manageadmin/components/devices";
 import ManageTransporters from "layouts/manageadmin/components/transporters";
 import ManageUsers from "layouts/manageadmin/components/users";
@@ -29,19 +28,18 @@ import ManageNotificationRules from "layouts/manageadmin/components/notification
 import ManageAlertEvents from "layouts/manageadmin/components/alertEvents";
 import ManagePublicLinks from "layouts/manageadmin/components/publicLinks";
 import ManageBackgroundJobs from "layouts/manageadmin/components/backgroundJobs";
+import RetentionSettings from "layouts/gpsintegration/components/RetentionSettings";
 import ArgonBox from "components/ArgonBox";
 import DashboardLayout from "controls/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "controls/Navbars/DashboardNavbar";
 import Footer from "controls/Footer";
 
 function ManageAdmin() {
-
   return (
     <DashboardLayout>
       <DashboardNavbar />
         <ArgonBox py={3}>
           <ManageAccount/>
-          <ManageOperators/>
           <ManageDevices/>
           <ManageTransporters/>
           <ManageUsers/>
@@ -49,6 +47,7 @@ function ManageAdmin() {
           <ManagePolicies/>
           <ManageGroups/>
           <ManageAccountFeatures/>
+          <RetentionSettings/>
           <ManageDrivers/>
           <ManageAuditTrail/>
           <ManageNotificationRules/>
@@ -62,4 +61,3 @@ function ManageAdmin() {
 }
 
 export default ManageAdmin;
-

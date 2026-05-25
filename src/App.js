@@ -189,6 +189,7 @@ export default function App() {
   const routeAllowed = (route) => {
     if (route.key === 'systemAdmin' && !userIsAdmin) return false;
     if (route.key === 'manageAdmin' && !userIsManager) return false;
+    if (route.key === 'gpsIntegration' && !userIsManager) return false;
     if (currentPrincipal?.principalType) {
       const allowedPrincipalTypes = route.principalTypes || [PrincipalTypes.User];
       if (!allowedPrincipalTypes.includes(currentPrincipal.principalType)) return false;
@@ -282,4 +283,3 @@ export default function App() {
     </LoadingContext.Provider>
   );
 }
-

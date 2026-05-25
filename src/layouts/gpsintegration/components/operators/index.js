@@ -18,17 +18,18 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Table from "controls/Tables/Table";
 import TableAccordion from "controls/Accordions/TableAccordion";
-import OperatorFormDialog from 'layouts/manageadmin/components/operators/OperatorDialog';
-import CredentialFormDialog from 'layouts/manageadmin/components/operators/CredentialDialog';
+import OperatorFormDialog from 'layouts/gpsintegration/components/operators/OperatorDialog';
+import CredentialFormDialog from 'layouts/gpsintegration/components/operators/CredentialDialog';
+import CredentialRotateDialog from 'layouts/gpsintegration/components/CredentialRotateDialog';
 import useForm from 'controls/Dialogs/useForm';
 import ConfirmDialog from 'controls/Dialogs/ConfirmDialog';
 import MessageDialog from 'controls/Dialogs/MessageDialog';
-import useOperatorTableData from "layouts/manageadmin/data/operatorsTableData";
+import useOperatorTableData from "layouts/gpsintegration/data/operatorsTableData";
 
 function ManageOperators() {
   const { t } = useTranslation();
   const handleAddClick = () => {
-    setOperatorValues({protocolTypeId: 0});
+    setOperatorValues({ protocolTypeId: 0, syncIntervalMinutes: 30 });
     setOperatorErrors({});
   };
 
@@ -47,20 +48,25 @@ function ManageOperators() {
   };
 
   const [expanded, setExpanded] = useState(false);
-  const { 
-    data, 
-    open, 
-    openCredential, 
-    confirmOpen, 
+  const {
+    data,
+    open,
+    openCredential,
+    confirmOpen,
     testOpen,
     testMessage,
-    onSave, 
-    onSaveCredential, 
-    onDelete, 
-    setOpen, 
-    setOpenCredential, 
+    rotateOpen,
+    rotateOperator,
+    onSave,
+    onSaveCredential,
+    onDelete,
+    onRotateSaved,
+    setOpen,
+    setOpenCredential,
     setConfirmOpen,
-    setTestOpen } = useOperatorTableData(expanded, handleEditClick, handleEditCredentialClick, handleDeleteClick);
+    setRotateOpen,
+    setTestOpen
+  } = useOperatorTableData(expanded, handleEditClick, handleEditCredentialClick, handleDeleteClick);
   const [operatorValues, handleOperatorChange, setOperatorValues, setOperatorErrors, validateOperator, operatorErrors] = useForm({});
   const [credentialValues, handleCredentialChange, setCredentialValues, setCredentialErrors, validateCredential, credentialErrors] = useForm({});
   const [toDelete, setToDelete] = useState(null);
@@ -80,17 +86,17 @@ function ManageOperators() {
 
   return (
     <>
-      <TableAccordion 
-        title={t('operator.title')}
+      <TableAccordion
+        title={t('gpsIntegration.sections.operators')}
         showAddIcon={true}
-        expanded={expanded} 
-        setOpen={setOpen} 
+        expanded={expanded}
+        setOpen={setOpen}
         handleAddClick={handleAddClick}
         setExpanded={setExpanded}>
         <Table columns={columns} rows={rows} selectedField='name' />
       </TableAccordion>
 
-      <OperatorFormDialog 
+      <OperatorFormDialog
         open={open}
         setOpen={setOpen}
         handleSubmit={handleSubmit}
@@ -99,7 +105,7 @@ function ManageOperators() {
         errors={operatorErrors}
       />
 
-      <CredentialFormDialog 
+      <CredentialFormDialog
         open={openCredential}
         setOpen={setOpenCredential}
         handleSubmit={handleSubmitCredential}
@@ -108,18 +114,25 @@ function ManageOperators() {
         errors={credentialErrors}
       />
 
-      <ConfirmDialog 
+      <ConfirmDialog
         title={t('operator.deleteTitle')}
         message={t('operator.deleteMessage')}
-        open={confirmOpen} 
-        setOpen={setConfirmOpen} 
+        open={confirmOpen}
+        setOpen={setConfirmOpen}
         onConfirm={async() => await onDelete(toDelete)} />
 
-      <MessageDialog 
+      <MessageDialog
         title={t('credential.connectivityTest')}
         message={testMessage}
-        open={testOpen} 
+        open={testOpen}
         setOpen={setTestOpen} />
+
+      <CredentialRotateDialog
+        open={rotateOpen}
+        setOpen={setRotateOpen}
+        operator={rotateOperator}
+        onSaved={onRotateSaved}
+      />
     </>
   );
 }

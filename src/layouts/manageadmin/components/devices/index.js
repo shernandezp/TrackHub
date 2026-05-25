@@ -18,7 +18,6 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Table from "controls/Tables/Table";
 import TableAccordion from "controls/Accordions/TableAccordion";
-import DeviceAllocatorDialog from 'layouts/manageadmin/components/devices/DeviceAllocatorDialog';
 import ConfirmDialog from 'controls/Dialogs/ConfirmDialog';
 import useDeviceTableData from "layouts/manageadmin/data/devicesTableData";
 
@@ -29,18 +28,12 @@ function ManageDevices() {
     setToDelete(deviceId);
   };
 
-  const handleAddClick = async () => {
-    await refreshData();
-  };
-
   const [expanded, setExpanded] = useState(false);
-  const [openAssignment, setOpenAssignment] = useState(false);
   const { 
     data, 
     confirmOpen, 
     onDelete, 
-    setConfirmOpen,
-    refreshData } = useDeviceTableData(expanded, handleDeleteClick);
+    setConfirmOpen } = useDeviceTableData(expanded, handleDeleteClick);
   const [toDelete, setToDelete] = useState(null);
   const { columns, rows } = data;
 
@@ -48,18 +41,10 @@ function ManageDevices() {
     <>
       <TableAccordion
         title={t('device.title')}
-        showAddIcon={true}
         expanded={expanded}
-        setOpen={setOpenAssignment} 
         setExpanded={setExpanded}>
         <Table columns={columns} rows={rows} selectedField='name'/>
       </TableAccordion>
-
-      <DeviceAllocatorDialog
-        open={openAssignment}
-        setOpen={setOpenAssignment}
-        handleAddClick={handleAddClick}
-      />
 
       <ConfirmDialog 
         title={t('device.deleteTitle')}

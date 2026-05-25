@@ -103,7 +103,7 @@ function ManageAccountFeatures() {
       modified: <TextCell>{formatDateTime(feature.lastModified)}</TextCell>,
       action: (
         <ArgonButton variant="text" color="dark" onClick={() => handleToggleFeature(feature)}>
-          <Icon>{feature.enabled ? 'toggle_off' : 'toggle_on'}</Icon>&nbsp;{feature.enabled ? t('administration.disable') : t('administration.enable')}
+          <Icon>{feature.enabled ? 'toggle_off' : 'toggle_on'}</Icon>&nbsp;{feature.enabled ? t('accountFeatures.disable') : t('accountFeatures.enable')}
         </ArgonButton>
       ),
       id: feature.featureKey
@@ -111,13 +111,13 @@ function ManageAccountFeatures() {
   });
 
   return (
-    <TableAccordion title={t('administration.features')} expanded={expanded} setExpanded={setExpanded}>
+    <TableAccordion title={t('accountFeatures.title')} expanded={expanded} setExpanded={setExpanded}>
       <Table
         columns={[
-          { name: 'feature', title: t('administration.feature'), align: 'left' },
-          { name: 'enabled', title: t('administration.enabled'), align: 'center' },
-          { name: 'tier', title: t('administration.tier'), align: 'center' },
-          { name: 'source', title: t('administration.source'), align: 'center' },
+          { name: 'feature', title: t('accountFeatures.feature'), align: 'left' },
+          { name: 'enabled', title: t('accountFeatures.enabled'), align: 'center' },
+          { name: 'tier', title: t('accountFeatures.tier'), align: 'center' },
+          { name: 'source', title: t('accountFeatures.source'), align: 'center' },
           { name: 'modified', title: t('generic.modified'), align: 'center' },
           { name: 'action', title: t('generic.action'), align: 'center' },
           { name: 'id' }

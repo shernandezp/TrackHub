@@ -76,6 +76,7 @@ const useRouterService = () => {
           return response.data.devicesByOperator;
         } catch (error) {
           handleError(error);
+          return [];
         }
       };
 
@@ -119,6 +120,7 @@ const useRouterService = () => {
         return response.data.devicePositionsByUser;
       } catch (error) {
         handleError(error);
+        return [];
       }
     };
 
@@ -158,6 +160,7 @@ const useRouterService = () => {
         return response.data.tripsByTransporter;
       } catch (error) {
         handleError(error);
+        return [];
       }
     };
 

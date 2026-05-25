@@ -21,6 +21,7 @@
 
 import useApiService from './apiService';
 import { handleError, handleSilentError } from 'utils/errorHandler';
+import { formatValue } from 'utils/dataUtils';
 
 /**
  * A custom hook that provides functions for interacting with credentials.
@@ -131,10 +132,58 @@ const useCredentialService = () => {
         }
     };
 
+    const getOperatorCredentialMetadata = async (operatorId) => {
+        try {
+            const data = {
+                query: `
+                    query {
+                        operatorCredentialMetadata(query: { operatorId: ${formatValue(operatorId)} }) {
+                            credentialId operatorId uri usernameMask
+                            hasPassword hasKey hasKey2 hasToken hasRefreshToken
+                            tokenExpiration refreshTokenExpiration
+                            credentialVersion rotatedAt rotatedByPrincipalType rotatedByPrincipalId
+                        }
+                    }
+                `
+            };
+            const response = await post(data);
+            return response.data.operatorCredentialMetadata;
+        } catch (error) {
+            handleError(error);
+        }
+    };
+
+    const rotateOperatorCredential = async (credential) => {
+        try {
+            const fields = [
+                `operatorId: ${formatValue(credential.operatorId)}`,
+                `uri: ${formatValue(credential.uri)}`,
+                `username: ${formatValue(credential.username)}`,
+                `password: ${formatValue(credential.password)}`,
+                `key: ${formatValue(credential.key)}`,
+                `key2: ${formatValue(credential.key2)}`
+            ].join(' ');
+            const data = {
+                query: `
+                    mutation {
+                        rotateOperatorCredential(command: { credential: { ${fields} } })
+                    }
+                `
+            };
+            const response = await post(data);
+            return response.data.rotateOperatorCredential;
+        } catch (error) {
+            handleError(error);
+            return false;
+        }
+    };
+
     return {
         getCredentialByOperator,
         createCredential,
-        updateCredential
+        updateCredential,
+        getOperatorCredentialMetadata,
+        rotateOperatorCredential
     };
 };
 

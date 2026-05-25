@@ -50,13 +50,13 @@ function ManageBackgroundJobs() {
   }, [expanded]);
 
   return (
-    <TableAccordion title={t('administration.backgroundJobs')} expanded={expanded} setExpanded={setExpanded}>
+    <TableAccordion title={t('backgroundJobs.title')} expanded={expanded} setExpanded={setExpanded}>
       <Table
         columns={[
-          { name: 'job', title: t('administration.job'), align: 'left' },
-          { name: 'status', title: t('administration.status'), align: 'center' },
-          { name: 'attempts', title: t('administration.attempts'), align: 'center' },
-          { name: 'started', title: t('administration.startedAt'), align: 'center' },
+          { name: 'job', title: t('backgroundJobs.job'), align: 'left' },
+          { name: 'status', title: t('backgroundJobs.status'), align: 'center' },
+          { name: 'attempts', title: t('backgroundJobs.attempts'), align: 'center' },
+          { name: 'started', title: t('backgroundJobs.startedAt'), align: 'center' },
           { name: 'id' }
         ]}
         rows={jobs.map(item => ({

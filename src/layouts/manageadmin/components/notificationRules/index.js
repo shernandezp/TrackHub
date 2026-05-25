@@ -99,7 +99,7 @@ function ManageNotificationRules() {
   return (
     <>
       <TableAccordion
-        title={t('administration.notificationRules')}
+        title={t('notificationRules.title')}
         showAddIcon={true}
         expanded={expanded}
         setOpen={setOpen}
@@ -107,9 +107,9 @@ function ManageNotificationRules() {
         setExpanded={setExpanded}>
         <Table
           columns={[
-            { name: 'key', title: t('administration.key'), align: 'left' },
-            { name: 'type', title: t('administration.type'), align: 'center' },
-            { name: 'status', title: t('administration.status'), align: 'center' },
+            { name: 'key', title: t('notificationRules.key'), align: 'left' },
+            { name: 'type', title: t('notificationRules.type'), align: 'center' },
+            { name: 'status', title: t('notificationRules.status'), align: 'center' },
             { name: 'modified', title: t('generic.modified'), align: 'center' },
             { name: 'action', title: t('generic.action'), align: 'center' },
             { name: 'id' }
@@ -126,7 +126,7 @@ function ManageNotificationRules() {
                 </ArgonButton>
                 {rule.enabled && (
                   <ArgonButton variant="text" color="error" onClick={() => handleDisable(rule)}>
-                    <Icon>block</Icon>&nbsp;{t('administration.disable')}
+                    <Icon>block</Icon>&nbsp;{t('notificationRules.disable')}
                   </ArgonButton>
                 )}
               </>

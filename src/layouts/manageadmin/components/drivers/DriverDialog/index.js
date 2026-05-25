@@ -26,7 +26,7 @@ function DriverDialog({ open, setOpen, handleSubmit, values, handleChange, error
 
   return (
     <FormDialog
-      title={values.driverId ? t('administration.updateDriver') : t('administration.createDriver')}
+      title={values.driverId ? t('driver.update') : t('driver.create')}
       handleSave={handleSubmit}
       open={open}
       setOpen={setOpen}
@@ -59,7 +59,7 @@ function DriverDialog({ open, setOpen, handleSubmit, values, handleChange, error
           margin="normal"
           name="documentType"
           id="documentType"
-          label={t('administration.documentType')}
+          label={t('driver.documentType')}
           type="text"
           fullWidth
           value={values.documentType || ''}
@@ -69,7 +69,7 @@ function DriverDialog({ open, setOpen, handleSubmit, values, handleChange, error
           margin="normal"
           name="documentNumber"
           id="documentNumber"
-          label={t('administration.documentNumber')}
+          label={t('driver.documentNumber')}
           type="text"
           fullWidth
           value={values.documentNumber || ''}
@@ -79,7 +79,7 @@ function DriverDialog({ open, setOpen, handleSubmit, values, handleChange, error
           margin="normal"
           name="employeeCode"
           id="employeeCode"
-          label={t('administration.employeeCode')}
+          label={t('driver.employeeCode')}
           type="text"
           fullWidth
           value={values.employeeCode || ''}
@@ -89,7 +89,7 @@ function DriverDialog({ open, setOpen, handleSubmit, values, handleChange, error
           margin="normal"
           name="licenseNumber"
           id="licenseNumber"
-          label={t('administration.licenseNumber')}
+          label={t('driver.licenseNumber')}
           type="text"
           fullWidth
           value={values.licenseNumber || ''}
@@ -99,7 +99,7 @@ function DriverDialog({ open, setOpen, handleSubmit, values, handleChange, error
           margin="normal"
           name="licenseExpiresAt"
           id="licenseExpiresAt"
-          label={t('administration.licenseExpiresAt')}
+          label={t('driver.licenseExpiresAt')}
           type="date"
           fullWidth
           value={values.licenseExpiresAt ? values.licenseExpiresAt.substring(0, 10) : ''}
@@ -109,7 +109,7 @@ function DriverDialog({ open, setOpen, handleSubmit, values, handleChange, error
           margin="normal"
           name="defaultTransporterId"
           id="defaultTransporterId"
-          label={t('administration.defaultTransporter')}
+          label={t('driver.defaultTransporter')}
           type="text"
           fullWidth
           value={values.defaultTransporterId || ''}
@@ -136,4 +136,3 @@ DriverDialog.propTypes = {
 };
 
 export default DriverDialog;
-

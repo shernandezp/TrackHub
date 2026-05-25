@@ -24,6 +24,19 @@ const REQUEST_TIMEOUT_MS = 30000;
 // Module-level mutex for token refresh to prevent concurrent refresh calls
 let refreshPromise = null;
 
+const createGraphQLError = (payload) => {
+  const error = new Error('GraphQL response contains errors');
+  error.response = { data: payload };
+  return error;
+};
+
+const ensureNoGraphQLErrors = (payload) => {
+  if (payload && Array.isArray(payload.errors) && payload.errors.length > 0) {
+    throw createGraphQLError(payload);
+  }
+  return payload;
+};
+
 /**
  * Custom hook for making API requests.
  * @param {string} endpoint - The API endpoint to make requests to.
@@ -81,7 +94,7 @@ const useApiService = (endpoint) => {
       },
       timeout: REQUEST_TIMEOUT_MS
     });
-    return response.data;
+    return ensureNoGraphQLErrors(response.data);
   };
 
   /**
