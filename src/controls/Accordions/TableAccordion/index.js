@@ -19,63 +19,91 @@ import PropTypes from 'prop-types';
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
-import Icon from "@mui/material/Icon";
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import AddIcon from '@mui/icons-material/Add';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { useTranslation } from 'react-i18next';
 import ArgonTypography from "components/ArgonTypography";
-import Card from "@mui/material/Card";
 import ArgonBox from "components/ArgonBox";
 
-const TableAccordion = ({ 
-        title, 
-        expanded, 
-        showAddIcon=false, 
-        setOpen, 
-        setExpanded, 
-        handleAddClick = () => {}, 
-        children 
+const accordionSx = {
+    boxShadow: 'none',
+    border: ({ borders: { borderWidth, borderColor } }) => `${borderWidth[1]} solid ${borderColor}`,
+    borderRadius: ({ borders: { borderRadius } }) => `${borderRadius.md} !important`,
+    overflow: 'hidden',
+    mb: 1.5,
+    '&:before': { display: 'none' },
+    '&.Mui-expanded': { margin: 0, mb: 1.5 },
+};
+
+const summarySx = {
+    px: 2,
+    minHeight: 56,
+    '& .MuiAccordionSummary-content': { my: 1.5 },
+    '&.Mui-expanded': {
+        minHeight: 56,
+        borderBottom: ({ borders: { borderWidth, borderColor } }) => `${borderWidth[1]} solid ${borderColor}`,
+    },
+    '&.Mui-expanded .MuiAccordionSummary-content': { my: 1.5 },
+};
+
+const TableAccordion = ({
+        title,
+        expanded,
+        showAddIcon = false,
+        setOpen,
+        setExpanded,
+        handleAddClick = () => {},
+        children
     }) => {
-    
-    const handleOpen = () => {
+    const { t } = useTranslation();
+
+    const handleOpen = (event) => {
+        event.stopPropagation();
         handleAddClick();
         setOpen(true);
-      };
+    };
 
     return (
-        <Accordion expanded={expanded} onChange={() => setExpanded(!expanded)}>
+        <Accordion expanded={expanded} onChange={() => setExpanded(!expanded)} sx={accordionSx}>
             <AccordionSummary
                 expandIcon={<ExpandMoreIcon />}
-                aria-controls="panel1a-content"
-                id="panel1a-header">
-            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-                <ArgonTypography variant="h6">{title}</ArgonTypography>
-                {expanded && showAddIcon && (
-                <Icon 
-                    style={{ marginRight: '1rem' }}
-                    onClick={(event) => {
-                        event.stopPropagation();
-                        handleOpen();
-                    }}
-                >add</Icon>
-                )}
-            </div>
+                aria-controls={`${title}-content`}
+                id={`${title}-header`}
+                sx={summarySx}>
+                <ArgonBox display="flex" alignItems="center" justifyContent="space-between" width="100%">
+                    <ArgonTypography variant="h6" fontWeight="medium">{title}</ArgonTypography>
+                    {expanded && showAddIcon && (
+                        <Tooltip title={t('generic.add', { defaultValue: 'Add' })}>
+                            <IconButton
+                                size="small"
+                                color="primary"
+                                onClick={handleOpen}
+                                aria-label={t('generic.add', { defaultValue: 'Add' })}
+                                sx={{ mr: 1 }}
+                            >
+                                <AddIcon fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
+                    )}
+                </ArgonBox>
             </AccordionSummary>
-            <AccordionDetails>
-            <Card>
+            <AccordionDetails sx={{ p: 2 }}>
                 <ArgonBox
-                sx={{
-                    "& .MuiTableRow-root:not(:last-child)": {
-                    "& td": {
-                        borderBottom: ({ borders: { borderWidth, borderColor } }) =>
-                        `${borderWidth[1]} solid ${borderColor}`,
-                    },
-                    },
-                }}
+                    sx={{
+                        "& .MuiTableRow-root:not(:last-child)": {
+                            "& td": {
+                                borderBottom: ({ borders: { borderWidth, borderColor } }) =>
+                                    `${borderWidth[1]} solid ${borderColor}`,
+                            },
+                        },
+                    }}
                 >
                     {children}
                 </ArgonBox>
-            </Card>
             </AccordionDetails>
-      </Accordion>
+        </Accordion>
     );
 };
 

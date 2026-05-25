@@ -15,61 +15,80 @@
 */
 
 import React from 'react';
-import InputLabel from '@mui/material/InputLabel';
-import MenuItem from '@mui/material/MenuItem';
-import Select from '@mui/material/Select';
 import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
+import FormControl from '@mui/material/FormControl';
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import ArgonBox from 'components/ArgonBox';
+import FieldLabel from 'controls/Dialogs/FieldLabel';
 
-function CustomSelect({ 
-        list, 
-        handleChange = () => {},
-        name, 
-        id, 
-        label, 
-        value,
-        numericValue = true
-    }) {
+// Make the chevron visible (the theme hides it globally) and reserve space for it
+// so the displayed value never overlaps the icon and the whole control area is clickable.
+const selectSx = {
+    width: '100%',
+    cursor: 'pointer',
+    '& .MuiSelect-icon': {
+        display: 'inline-block !important',
+        right: 10,
+        color: 'inherit',
+        pointerEvents: 'none',
+    },
+    '& .MuiSelect-select': {
+        width: '100% !important',
+        paddingRight: '32px !important',
+        cursor: 'pointer',
+    },
+};
+
+function CustomSelect({
+    list,
+    handleChange = () => {},
+    name,
+    id,
+    label,
+    value,
+    numericValue = true,
+    required = false,
+    fullWidth = true,
+    placeholder,
+}) {
     const { t } = useTranslation();
-    const handleSelectChange = (event) => {
-        handleChange({
-          target: {
-            name: name,
-            value: event.target.value,
-          },
-        });
-      };
+    const emptyValue = numericValue ? 0 : '';
+    const currentValue = value ?? emptyValue;
+
+    const onChange = (event) => {
+        handleChange({ target: { name, value: event.target.value } });
+    };
 
     return (
-        <div>
-            <InputLabel id={`${id}-label`} shrink={true}>{label}</InputLabel>
-            <Select
-                margin="dense"
-                labelId={`${id}-label`}
-                id={id}
-                value={value}
-                label={label}
-                onChange={handleSelectChange}
-                name={name}
-                displayEmpty
-            >
-                {numericValue ? (
-                    <MenuItem value={0} disabled>
-                        {t('generic.selectItem')}
+        <ArgonBox mt={1} mb={1} width={fullWidth ? '100%' : 'auto'}>
+            {label && (
+                <FieldLabel htmlFor={id} required={required}>{label}</FieldLabel>
+            )}
+            <FormControl fullWidth={fullWidth} variant="outlined">
+                <Select
+                    id={id}
+                    name={name}
+                    value={currentValue}
+                    onChange={onChange}
+                    displayEmpty
+                    IconComponent={KeyboardArrowDownIcon}
+                    inputProps={{ 'aria-label': typeof label === 'string' ? label : id }}
+                    sx={selectSx}
+                >
+                    <MenuItem value={emptyValue} disabled>
+                        {placeholder || t('generic.selectItem')}
                     </MenuItem>
-                ) : (
-                    <MenuItem value={''} disabled>
-                        {t('generic.selectItem')}
-                    </MenuItem>
-                )}
-                
-                {list.map((item, index) => (
-                    <MenuItem key={index} value={item.value}>
-                        {item.label}
-                    </MenuItem>
-                ))}
-            </Select>
-        </div>
+                    {list.map((item, index) => (
+                        <MenuItem key={index} value={item.value}>
+                            {item.label}
+                        </MenuItem>
+                    ))}
+                </Select>
+            </FormControl>
+        </ArgonBox>
     );
 }
 
@@ -78,9 +97,12 @@ CustomSelect.propTypes = {
     handleChange: PropTypes.func,
     name: PropTypes.string.isRequired,
     id: PropTypes.string.isRequired,
-    label: PropTypes.string.isRequired,
+    label: PropTypes.node,
     value: PropTypes.any,
-    numericValue: PropTypes.bool
+    numericValue: PropTypes.bool,
+    required: PropTypes.bool,
+    fullWidth: PropTypes.bool,
+    placeholder: PropTypes.string,
 };
 
 export default CustomSelect;

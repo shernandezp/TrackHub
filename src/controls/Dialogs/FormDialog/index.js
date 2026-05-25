@@ -19,13 +19,15 @@ import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 
-const FormDialog = ({ 
-        title, 
-        children, 
-        handleSave, 
-        open, 
+const FormDialog = ({
+        title,
+        children,
+        handleSave,
+        open,
         setOpen,
         handleCancel = () => {},
+        maxWidth = 'sm',
+        fullWidth = true,
     }) => {
     const { t } = useTranslation();
     const handleClose = () => {
@@ -34,7 +36,7 @@ const FormDialog = ({
     };
 
     return (
-        <Dialog open={open} onClose={handleClose}>
+        <Dialog open={open} onClose={handleClose} maxWidth={maxWidth} fullWidth={fullWidth}>
             <DialogTitle>{title}</DialogTitle>
             <DialogContent>
                 {children}
@@ -54,6 +56,8 @@ FormDialog.propTypes = {
     handleCancel: PropTypes.func,
     open: PropTypes.bool.isRequired,
     setOpen: PropTypes.func.isRequired,
+    maxWidth: PropTypes.oneOf(['xs', 'sm', 'md', 'lg', 'xl', false]),
+    fullWidth: PropTypes.bool,
 };
 
 export default FormDialog;

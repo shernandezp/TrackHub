@@ -14,54 +14,76 @@
 *  limitations under the License.
 */
 
+import { useState } from 'react';
+import PropTypes from 'prop-types';
 import TextField from '@mui/material/TextField';
-import { styled } from '@mui/system';
 import InputAdornment from '@mui/material/InputAdornment';
 import IconButton from '@mui/material/IconButton';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import { useState } from 'react';
+import ArgonBox from 'components/ArgonBox';
+import FieldLabel from 'controls/Dialogs/FieldLabel';
+import { textFieldSx } from 'controls/Dialogs/fieldStyles';
 
-const CustomPasswordField = styled(({ errorMsg, ...props }) => {
+const marginMap = { none: 0, dense: 1, normal: 2 };
+
+const CustomPasswordField = ({
+  errorMsg,
+  label,
+  id,
+  name,
+  required = false,
+  fullWidth = true,
+  margin = 'dense',
+  ...props
+}) => {
   const [showPassword, setShowPassword] = useState(false);
-
-  const handleClickShowPassword = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const handleMouseDownPassword = (event) => {
-    event.preventDefault();
-  };
+  const top = marginMap[margin] ?? 1;
 
   return (
-    <TextField
-      type={showPassword ? 'text' : 'password'}
-      error={!!errorMsg}
-      helperText={errorMsg}
-      InputProps={{
-        endAdornment: (
-          <InputAdornment position="end">
-            <IconButton
-              aria-label="toggle password visibility"
-              onClick={handleClickShowPassword}
-              onMouseDown={handleMouseDownPassword}
-            >
-              {showPassword ? <Visibility /> : <VisibilityOff />}
-            </IconButton>
-          </InputAdornment>
-        ),
-      }}
-      {...props}
-    />
+    <ArgonBox mt={top} mb={1} width={fullWidth ? '100%' : 'auto'}>
+      {label && (
+        <FieldLabel htmlFor={id || name} required={required}>
+          {label}
+        </FieldLabel>
+      )}
+      <TextField
+        id={id}
+        name={name}
+        type={showPassword ? 'text' : 'password'}
+        fullWidth={fullWidth}
+        error={!!errorMsg}
+        helperText={errorMsg}
+        required={required}
+        sx={textFieldSx}
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position="end">
+              <IconButton
+                aria-label="toggle password visibility"
+                size="small"
+                onClick={() => setShowPassword((s) => !s)}
+                onMouseDown={(e) => e.preventDefault()}
+              >
+                {showPassword ? <Visibility fontSize="small" /> : <VisibilityOff fontSize="small" />}
+              </IconButton>
+            </InputAdornment>
+          ),
+        }}
+        {...props}
+      />
+    </ArgonBox>
   );
-})({
-  '& .MuiInputBase-input': {
-    width: '100% !important',
-  },
-  '& .MuiFormLabel-root': {
-    position: 'relative !important',
-    top: '10px',
-  },
-});
+};
+
+CustomPasswordField.propTypes = {
+  errorMsg: PropTypes.string,
+  label: PropTypes.node,
+  id: PropTypes.string,
+  name: PropTypes.string,
+  required: PropTypes.bool,
+  fullWidth: PropTypes.bool,
+  margin: PropTypes.oneOf(['none', 'dense', 'normal']),
+};
 
 export default CustomPasswordField;

@@ -510,7 +510,8 @@
       "lastAutoSync": "Last Automatic Sync",
       "lastManualSync": "Last Manual Sync",
       "averageSyncDuration": "Average Sync Duration",
-      "deviceCountsByProviderStatus": "Devices by Provider/Status"
+      "deviceCountsByProviderStatus": "Devices by Provider/Status",
+      "providerBreakdownHint": "Per operator totals"
     },
     "columns": {
       "health": "Health",

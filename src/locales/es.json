@@ -510,7 +510,8 @@
       "lastAutoSync": "Última Sincronización Automática",
       "lastManualSync": "Última Sincronización Manual",
       "averageSyncDuration": "Duración Promedio de Sincronización",
-      "deviceCountsByProviderStatus": "Dispositivos por Proveedor/Estado"
+      "deviceCountsByProviderStatus": "Dispositivos por Proveedor/Estado",
+      "providerBreakdownHint": "Totales por operador"
     },
     "columns": {
       "health": "Estado",

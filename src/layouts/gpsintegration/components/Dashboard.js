@@ -17,25 +17,15 @@
 import { useContext, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Grid from '@mui/material/Grid';
+import Card from '@mui/material/Card';
 import ArgonBox from 'components/ArgonBox';
 import ArgonTypography from 'components/ArgonTypography';
-import Card from '@mui/material/Card';
-import PropTypes from 'prop-types';
+import StatCard from 'layouts/gpsintegration/components/dashboard/StatCard';
+import ProviderStatusBreakdown from 'layouts/gpsintegration/components/dashboard/ProviderStatusBreakdown';
 import useGpsDashboardService from 'services/gpsDashboard';
 import useAccountService from 'services/account';
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from 'utils/dateUtils';
-
-function StatCard({ label, value, compact }) {
-  return (
-    <Card sx={{ height: '100%' }}>
-      <ArgonBox p={2}>
-        <ArgonTypography variant="caption" color="secondary" fontWeight="medium">{label}</ArgonTypography>
-        <ArgonTypography variant={compact ? 'button' : 'h4'} fontWeight="bold">{value ?? '-'}</ArgonTypography>
-      </ArgonBox>
-    </Card>
-  );
-}
 
 function GpsDashboard() {
   const { t } = useTranslation();
@@ -85,24 +75,7 @@ function GpsDashboard() {
     );
   }
 
-  const statusLabel = (status) => {
-    const key = (status || '').toLowerCase();
-    return t(`gpsIntegration.status.${key}`, { defaultValue: status || '-' });
-  };
-
-  const deviceStatusSummary = () => {
-    const totals = (dashboard.deviceCountsByProviderStatus || []).reduce((acc, item) => {
-      const status = item.detectedStatus || 'unknown';
-      acc[status] = (acc[status] || 0) + (item.count || 0);
-      return acc;
-    }, {});
-    const parts = Object.entries(totals)
-      .filter(([, count]) => count > 0)
-      .map(([status, count]) => `${statusLabel(status)}: ${count}`);
-    return parts.length ? parts.join(' · ') : '-';
-  };
-
-  const cells = [
+  const stats = [
     [t('gpsIntegration.dashboard.operatorsEnabled'), `${dashboard.operatorsEnabled}/${dashboard.operatorsTotal}`],
     [t('gpsIntegration.dashboard.operatorsHealthy'), dashboard.operatorsHealthy],
     [t('gpsIntegration.dashboard.operatorsDegraded'), dashboard.operatorsDegraded],
@@ -114,24 +87,26 @@ function GpsDashboard() {
     [t('gpsIntegration.dashboard.recentlyAdded24h'), dashboard.recentlyAddedDevicesLast24h],
     [t('gpsIntegration.dashboard.syncsOk24h'), dashboard.syncRunsSucceededLast24h],
     [t('gpsIntegration.dashboard.syncsFailed24h'), dashboard.syncRunsFailedLast24h],
+    [t('gpsIntegration.dashboard.averageSyncDuration'),
+      dashboard.averageSyncDurationSeconds == null ? '-' : `${Math.round(dashboard.averageSyncDurationSeconds)} s`],
     [t('gpsIntegration.dashboard.lastAutoSync'), formatDateTime(dashboard.lastAutomaticSyncAt)],
     [t('gpsIntegration.dashboard.lastManualSync'), formatDateTime(dashboard.lastManualSyncAt)],
-    [t('gpsIntegration.dashboard.averageSyncDuration'), dashboard.averageSyncDurationSeconds == null ? '-' : `${Math.round(dashboard.averageSyncDurationSeconds)} s`],
-    [t('gpsIntegration.dashboard.deviceCountsByProviderStatus'), deviceStatusSummary(), true]
   ];
 
   return (
-    <Grid container spacing={2}>
-      {cells.map(([label, value, compact]) => (
-        <Grid item xs={6} sm={4} md={3} key={label}>
-          <StatCard label={label} value={value} compact={!!compact} />
-        </Grid>
-      ))}
-    </Grid>
+    <ArgonBox>
+      <Grid container spacing={2}>
+        {stats.map(([label, value]) => (
+          <Grid item xs={6} sm={4} md={3} key={label}>
+            <StatCard label={label} value={value} />
+          </Grid>
+        ))}
+      </Grid>
+      <ArgonBox mt={2}>
+        <ProviderStatusBreakdown items={dashboard.deviceCountsByProviderStatus} />
+      </ArgonBox>
+    </ArgonBox>
   );
 }
-
-GpsDashboard.propTypes = {};
-StatCard.propTypes = { label: PropTypes.string.isRequired, value: PropTypes.node, compact: PropTypes.bool };
 
 export default GpsDashboard;
