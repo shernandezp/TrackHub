@@ -74,11 +74,11 @@ function ManageAlertEvents() {
   };
 
   return (
-    <TableAccordion title={t('administration.alertEvents')} expanded={expanded} setExpanded={setExpanded}>
+    <TableAccordion title={t('alertEvents.title')} expanded={expanded} setExpanded={setExpanded}>
       <Table
         columns={[
-          { name: 'type', title: t('administration.type'), align: 'left' },
-          { name: 'status', title: t('administration.status'), align: 'center' },
+          { name: 'type', title: t('alertEvents.type'), align: 'left' },
+          { name: 'status', title: t('alertEvents.status'), align: 'center' },
           { name: 'modified', title: t('generic.modified'), align: 'center' },
           { name: 'action', title: t('generic.action'), align: 'center' },
           { name: 'id' }
@@ -91,12 +91,12 @@ function ManageAlertEvents() {
             <>
               {alert.status !== 'acknowledged' && alert.status !== 'resolved' && (
                 <ArgonButton variant="text" color="dark" onClick={() => handleAcknowledge(alert)}>
-                  <Icon>done</Icon>&nbsp;{t('administration.acknowledgeAlert')}
+                  <Icon>done</Icon>&nbsp;{t('alertEvents.acknowledge')}
                 </ArgonButton>
               )}
               {alert.status !== 'resolved' && (
                 <ArgonButton variant="text" color="success" onClick={() => handleResolve(alert)}>
-                  <Icon>done_all</Icon>&nbsp;{t('administration.resolveAlert')}
+                  <Icon>done_all</Icon>&nbsp;{t('alertEvents.resolve')}
                 </ArgonButton>
               )}
             </>

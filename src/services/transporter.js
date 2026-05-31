@@ -22,6 +22,7 @@
 
 import useApiService from './apiService';
 import { handleError } from 'utils/errorHandler';
+import { formatValue } from 'utils/dataUtils';
 
 /**
  * Creates a new instance of the transporter service.
@@ -217,6 +218,91 @@ const useTransporterService = () => {
     }
   };
 
+  const getTransporterDeviceAssignmentsByAccount = async (accountId, activeOnly = false) => {
+    try {
+      const data = {
+        query: `
+          query {
+            transporterDeviceAssignmentsByAccount(query: { accountId: ${formatValue(accountId)}, activeOnly: ${!!activeOnly} }) {
+              transporterDeviceAssignmentId accountId transporterId deviceId
+              effectiveFrom effectiveTo priority isPrimary status assignmentReason
+              createdByPrincipalType createdByPrincipalId
+            }
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.transporterDeviceAssignmentsByAccount ?? [];
+    } catch (error) {
+      handleError(error);
+      return [];
+    }
+  };
+
+  const getTransporterDeviceAssignmentsByTransporter = async (transporterId, activeOnly = false) => {
+    try {
+      const data = {
+        query: `
+          query {
+            transporterDeviceAssignmentsByTransporter(query: { transporterId: ${formatValue(transporterId)}, activeOnly: ${!!activeOnly} }) {
+              transporterDeviceAssignmentId accountId transporterId deviceId
+              effectiveFrom effectiveTo priority isPrimary status assignmentReason
+            }
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.transporterDeviceAssignmentsByTransporter ?? [];
+    } catch (error) {
+      handleError(error);
+      return [];
+    }
+  };
+
+  const assignDeviceToTransporter = async (assignment) => {
+    try {
+      const fields = [
+        `accountId: ${formatValue(assignment.accountId)}`,
+        `transporterId: ${formatValue(assignment.transporterId)}`,
+        `deviceId: ${formatValue(assignment.deviceId)}`,
+        `priority: ${assignment.priority ?? 0}`,
+        `isPrimary: ${assignment.isPrimary ?? true}`,
+        `assignmentReason: ${formatValue(assignment.assignmentReason)}`
+      ].join(' ');
+      const data = {
+        query: `
+          mutation {
+            assignDeviceToTransporter(command: { assignment: { ${fields} } }) {
+              transporterDeviceAssignmentId deviceId transporterId
+              effectiveFrom isPrimary status
+            }
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.assignDeviceToTransporter;
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+  const endDeviceTransporterAssignment = async (assignmentId, reason = null) => {
+    try {
+      const data = {
+        query: `
+          mutation {
+            endDeviceTransporterAssignment(command: { assignmentId: ${formatValue(assignmentId)}, reason: ${formatValue(reason)} })
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.endDeviceTransporterAssignment;
+    } catch (error) {
+      handleError(error);
+      return false;
+    }
+  };
+
   return {
     getTransporter,
     getTransporterByAccount,
@@ -224,7 +310,11 @@ const useTransporterService = () => {
     getTransportersByGroup,
     createTransporter,
     updateTransporter,
-    deleteTransporter
+    deleteTransporter,
+    getTransporterDeviceAssignmentsByAccount,
+    getTransporterDeviceAssignmentsByTransporter,
+    assignDeviceToTransporter,
+    endDeviceTransporterAssignment
   };
 };
 

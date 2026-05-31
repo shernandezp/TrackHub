@@ -85,7 +85,7 @@ function ManageDrivers() {
   };
 
   const handleDeactivate = async (driver) => {
-    if (!driver?.driverId || !window.confirm(t('administration.deactivateDriverConfirmation'))) return;
+    if (!driver?.driverId || !window.confirm(t('driver.deactivateConfirmation'))) return;
     setLoading(true);
     try {
       await deactivateDriver(driver.driverId);
@@ -98,7 +98,7 @@ function ManageDrivers() {
   return (
     <>
       <TableAccordion
-        title={t('administration.drivers')}
+        title={t('driver.title')}
         showAddIcon={true}
         expanded={expanded}
         setOpen={setOpen}
@@ -125,7 +125,7 @@ function ManageDrivers() {
                 </ArgonButton>
                 {driver.active && (
                   <ArgonButton variant="text" color="error" onClick={() => handleDeactivate(driver)}>
-                    <Icon>block</Icon>&nbsp;{t('administration.deactivateDriver')}
+                    <Icon>block</Icon>&nbsp;{t('driver.deactivate')}
                   </ArgonButton>
                 )}
               </>

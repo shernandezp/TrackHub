@@ -109,7 +109,7 @@ function ManageAccountSupportGrants() {
   return (
     <>
       <TableAccordion
-        title={t('administration.supportGrants')}
+        title={t('supportGrants.title')}
         showAddIcon={true}
         expanded={expanded}
         setOpen={setOpen}
@@ -118,19 +118,19 @@ function ManageAccountSupportGrants() {
         <Table
           columns={[
             { name: 'account', title: t('account.title'), align: 'left' },
-            { name: 'supportUser', title: t('administration.supportUserId'), align: 'center' },
-            { name: 'reason', title: t('administration.reason'), align: 'left' },
-            { name: 'ticket', title: t('administration.ticketReference'), align: 'center' },
-            { name: 'accessLevel', title: t('administration.accessLevel'), align: 'center' },
-            { name: 'window', title: t('administration.startsAt'), align: 'center' },
-            { name: 'status', title: t('administration.status'), align: 'center' },
+            { name: 'supportUser', title: t('supportGrants.supportUserId'), align: 'center' },
+            { name: 'reason', title: t('supportGrants.reason'), align: 'left' },
+            { name: 'ticket', title: t('supportGrants.ticketReference'), align: 'center' },
+            { name: 'accessLevel', title: t('supportGrants.accessLevel'), align: 'center' },
+            { name: 'window', title: t('supportGrants.startsAt'), align: 'center' },
+            { name: 'status', title: t('supportGrants.status'), align: 'center' },
             { name: 'action', title: t('generic.action'), align: 'center' },
             { name: 'id' }
           ]}
           rows={grants.map(grant => {
             const status = grant.revokedAt
-              ? t('administration.revokedAt')
-              : (grant.approvedAt ? t('administration.approvedAt') : t('administration.supportGrantRequest'));
+              ? t('supportGrants.revokedAt')
+              : (grant.approvedAt ? t('supportGrants.approvedAt') : t('supportGrants.request'));
             return {
               account: <TextCell>{grant.accountId}</TextCell>,
               supportUser: <TextCell>{grant.supportUserId}</TextCell>,
@@ -143,12 +143,12 @@ function ManageAccountSupportGrants() {
                 <>
                   {!grant.approvedAt && !grant.revokedAt && (
                     <ArgonButton variant="text" color="success" onClick={() => handleApprove(grant)}>
-                      <Icon>verified</Icon>&nbsp;{t('administration.approveSupportGrant')}
+                      <Icon>verified</Icon>&nbsp;{t('supportGrants.approve')}
                     </ArgonButton>
                   )}
                   {!grant.revokedAt && (
                     <ArgonButton variant="text" color="error" onClick={() => handleRevoke(grant)}>
-                      <Icon>block</Icon>&nbsp;{t('administration.revokeSupportGrant')}
+                      <Icon>block</Icon>&nbsp;{t('supportGrants.revoke')}
                     </ArgonButton>
                   )}
                 </>

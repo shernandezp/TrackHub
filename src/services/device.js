@@ -21,7 +21,8 @@
  */
 
 import useApiService from './apiService';
-import { handleError, handleSilentError } from 'utils/errorHandler';
+import { handleError } from 'utils/errorHandler';
+import { formatValue } from 'utils/dataUtils';
 
 /**
  * Creates a device service object.
@@ -29,6 +30,7 @@ import { handleError, handleSilentError } from 'utils/errorHandler';
  */
 const useDeviceService = () => {
   const { post } = useApiService(process.env.REACT_APP_MANAGER_ENDPOINT);
+  const formatEnum = (value) => (/^[A-Za-z_][A-Za-z0-9_]*$/).test(String(value)) ? value : null;
 
   /**
    * Retrieves a device by its ID.
@@ -48,7 +50,6 @@ const useDeviceService = () => {
               name
               operatorId
               serial
-              transporterId
             }
           }
         `
@@ -78,7 +79,6 @@ const useDeviceService = () => {
               name
               operatorId
               serial
-              transporterId
             }
           }
         `
@@ -118,41 +118,6 @@ const useDeviceService = () => {
   };
 
   /**
-   * Processes a device.
-   * @param {Object} deviceData - The data of the device to be processed.
-   * @param {string} operatorId - The ID of the operator.
-   * @returns {Promise<boolean>} A promise that resolves to a boolean indicating the success of the operation.
-   */
-  const processDevice = async (deviceData, operatorId) => {
-    try {
-      const data = {
-        query: `
-          mutation {
-            processDevice(
-              command: {
-                processDevice: {
-                  transporterTypeId: ${deviceData.transporterTypeId}
-                  serial: "${deviceData.serial}"
-                  name: "${deviceData.name}"
-                  identifier: ${deviceData.identifier}
-                  deviceTypeId: ${deviceData.deviceTypeId}
-                  description: "${deviceData.description || ''}"
-                }
-                operatorId: "${operatorId}"
-              }
-            ) 
-          }
-        `
-      };
-      const response = await post(data);
-      return response.data.processDevice;
-    } catch (error) {
-      handleSilentError(error);
-      return false;
-    }
-  };
-
-  /**
    * Deletes a device by its ID.
    * @param {string} deviceId - The ID of the device to be deleted.
    * @returns {Promise<boolean>} A promise that resolves to a boolean indicating the success of the operation.
@@ -166,6 +131,7 @@ const useDeviceService = () => {
           }
         `
       };
+
       const response = await post(data);
       return response.data.deleteDevice;
     } catch (error) {
@@ -174,17 +140,12 @@ const useDeviceService = () => {
     }
   };
 
-  /**
-   * Wipes all devices associated with an operator.
-   * @param {string} operatorId - The ID of the operator.
-   * @returns {Promise<boolean>} A promise that resolves to a boolean indicating the success of the operation.
-   */
   const wipeDevices = async (operatorId) => {
     try {
       const data = {
         query: `
           mutation {
-            wipeDevices(operatorId: "${operatorId}") 
+            wipeDevices(operatorId: ${formatValue(operatorId)})
           }
         `
       };
@@ -196,13 +157,77 @@ const useDeviceService = () => {
     }
   };
 
+  const getSynchronizedDevices = async (accountId, detectedStatus = null, operatorId = null) => {
+    try {
+      const args = [`accountId: ${formatValue(accountId)}`];
+      const detectedStatusValue = detectedStatus ? formatEnum(detectedStatus) : null;
+      if (detectedStatusValue) args.push(`detectedStatus: ${detectedStatusValue}`);
+      if (operatorId) args.push(`operatorId: ${formatValue(operatorId)}`);
+      const data = {
+        query: `
+          query {
+            synchronizedDevices(query: { ${args.join(', ')} }) {
+              deviceId accountId operatorId serial name identifier
+              providerDisplayName providerStatus detectedStatus
+              firstSeenAt lastSeenAt lastSyncedAt lastAssignedAt ignoredAt
+            }
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.synchronizedDevices ?? [];
+    } catch (error) {
+      handleError(error);
+      return [];
+    }
+  };
+
+  const getUnassignedSynchronizedDevices = async (accountId) => {
+    try {
+      const data = {
+        query: `
+          query {
+            unassignedSynchronizedDevices(query: { accountId: ${formatValue(accountId)} }) {
+              deviceId operatorId serial name identifier providerDisplayName
+              providerStatus detectedStatus firstSeenAt lastSeenAt
+            }
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.unassignedSynchronizedDevices ?? [];
+    } catch (error) {
+      handleError(error);
+      return [];
+    }
+  };
+
+  const setSynchronizedDeviceIgnored = async (deviceId, ignored) => {
+    try {
+      const data = {
+        query: `
+          mutation {
+            setSynchronizedDeviceIgnored(command: { deviceId: ${formatValue(deviceId)}, ignored: ${!!ignored} })
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.setSynchronizedDeviceIgnored;
+    } catch (error) {
+      handleError(error);
+      return false;
+    }
+  };
+
   return {
     getDevice,
     getDevicesByAccount,
     getDevicesByGroup,
-    processDevice,
     deleteDevice,
-    wipeDevices
+    wipeDevices,
+    getSynchronizedDevices,
+    getUnassignedSynchronizedDevices,
+    setSynchronizedDeviceIgnored
   };
 };
 

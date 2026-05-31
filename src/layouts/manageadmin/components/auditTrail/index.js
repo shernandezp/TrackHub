@@ -50,14 +50,14 @@ function ManageAuditTrail() {
   }, [expanded]);
 
   return (
-    <TableAccordion title={t('administration.auditTrail')} expanded={expanded} setExpanded={setExpanded}>
+    <TableAccordion title={t('auditTrail.title')} expanded={expanded} setExpanded={setExpanded}>
       <Table
         columns={[
           { name: 'action', title: t('generic.action'), align: 'left' },
-          { name: 'actor', title: t('administration.actor'), align: 'center' },
-          { name: 'resource', title: t('administration.resource'), align: 'center' },
-          { name: 'result', title: t('administration.result'), align: 'center' },
-          { name: 'occurredAt', title: t('administration.occurredAt'), align: 'center' },
+          { name: 'actor', title: t('auditTrail.actor'), align: 'center' },
+          { name: 'resource', title: t('auditTrail.resource'), align: 'center' },
+          { name: 'result', title: t('auditTrail.result'), align: 'center' },
+          { name: 'occurredAt', title: t('auditTrail.occurredAt'), align: 'center' },
           { name: 'id' }
         ]}
         rows={auditTrail.map(item => ({

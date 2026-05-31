@@ -102,7 +102,7 @@ function ManagePublicLinks() {
   return (
     <>
       <TableAccordion
-        title={t('administration.publicLinks')}
+        title={t('publicLinks.title')}
         showAddIcon={true}
         expanded={expanded}
         setOpen={setOpen}
@@ -110,11 +110,11 @@ function ManagePublicLinks() {
         setExpanded={setExpanded}>
         <Table
           columns={[
-            { name: 'resource', title: t('administration.resource'), align: 'left' },
-            { name: 'scopes', title: t('administration.scopes'), align: 'center' },
-            { name: 'expires', title: t('administration.expiresAt'), align: 'center' },
-            { name: 'accessCount', title: t('administration.accessCount'), align: 'center' },
-            { name: 'status', title: t('administration.status'), align: 'center' },
+            { name: 'resource', title: t('publicLinks.resource'), align: 'left' },
+            { name: 'scopes', title: t('publicLinks.scopes'), align: 'center' },
+            { name: 'expires', title: t('publicLinks.expiresAt'), align: 'center' },
+            { name: 'accessCount', title: t('publicLinks.accessCount'), align: 'center' },
+            { name: 'status', title: t('publicLinks.status'), align: 'center' },
             { name: 'action', title: t('generic.action'), align: 'center' },
             { name: 'id' }
           ]}
@@ -123,11 +123,11 @@ function ManagePublicLinks() {
             scopes: <TextCell>{link.scopes}</TextCell>,
             expires: <TextCell>{formatDateTime(link.expiresAt)}</TextCell>,
             accessCount: <TextCell>{link.accessCount}</TextCell>,
-            status: <TextCell>{link.revokedAt ? t('administration.revokedAt') : t('generic.active')}</TextCell>,
+            status: <TextCell>{link.revokedAt ? t('publicLinks.revokedAt') : t('generic.active')}</TextCell>,
             action: (
               !link.revokedAt && (
                 <ArgonButton variant="text" color="error" onClick={() => handleRevoke(link)}>
-                  <Icon>block</Icon>&nbsp;{t('administration.revokePublicLinkGrant')}
+                  <Icon>block</Icon>&nbsp;{t('publicLinks.revoke')}
                 </ArgonButton>
               )
             ),

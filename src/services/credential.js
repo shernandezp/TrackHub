@@ -66,18 +66,9 @@ const useCredentialService = () => {
         try {
             const data = {
                 query: `
-                    mutation {
+                    mutation($command: CreateCredentialCommandInput!) {
                         createCredential(
-                        command: {
-                            credential: {
-                                key: "${credentialData.key ?? ''}",
-                                key2: "${credentialData.key2 ?? ''}",
-                                operatorId: "${credentialData.operatorId}",
-                                password: "${credentialData.password ?? ''}",
-                                uri: "${credentialData.uri}",
-                                username: "${credentialData.username ?? ''}"
-                            }
-                        }) 
+                        command: $command) 
                         {
                             username
                             uri
@@ -87,10 +78,22 @@ const useCredentialService = () => {
                             credentialId
                         }
                     }
-                `
+                `,
+                variables: {
+                    command: {
+                        credential: {
+                            key: credentialData.key ?? '',
+                            key2: credentialData.key2 ?? '',
+                            operatorId: credentialData.operatorId,
+                            password: credentialData.password ?? '',
+                            uri: credentialData.uri,
+                            username: credentialData.username ?? ''
+                        }
+                    }
+                }
             };
             const response = await post(data);
-            return response.data.createAccount;
+            return response.data.createCredential;
         } catch (error) {
             handleError(error);
         }
@@ -106,22 +109,26 @@ const useCredentialService = () => {
         try {
             const data = {
                 query: `
-                mutation {
+                mutation($id: UUID!, $command: UpdateCredentialCommandInput!) {
                         updateCredential(
-                            id: "${credentialId}",
-                            command: {
-                                credential: {
-                                    credentialId: "${credentialData.credentialId}"
-                                    key2: "${credentialData.key2}"
-                                    key: "${credentialData.key}"
-                                    password: "${credentialData.password}"
-                                    uri: "${credentialData.uri}"
-                                    username: "${credentialData.username}"
-                                }
-                            }
+                            id: $id,
+                            command: $command
                         ) 
                     }
-                `
+                `,
+                variables: {
+                    id: credentialId,
+                    command: {
+                        credential: {
+                            credentialId: credentialData.credentialId,
+                            key2: credentialData.key2 ?? '',
+                            key: credentialData.key ?? '',
+                            password: credentialData.password ?? '',
+                            uri: credentialData.uri,
+                            username: credentialData.username ?? ''
+                        }
+                    }
+                }
             };
             const response = await post(data);
             return response.data.updateCredential;

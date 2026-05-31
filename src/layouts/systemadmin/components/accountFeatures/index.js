@@ -62,14 +62,14 @@ function SystemAccountFeatures() {
   }, [expanded]);
 
   return (
-    <TableAccordion title={t('administration.features')} expanded={expanded} setExpanded={setExpanded}>
+    <TableAccordion title={t('accountFeatures.title')} expanded={expanded} setExpanded={setExpanded}>
       <Table
         columns={[
           { name: 'account', title: t('account.title'), align: 'left' },
-          { name: 'feature', title: t('administration.feature'), align: 'left' },
-          { name: 'enabled', title: t('administration.enabled'), align: 'center' },
-          { name: 'tier', title: t('administration.tier'), align: 'center' },
-          { name: 'source', title: t('administration.source'), align: 'center' },
+          { name: 'feature', title: t('accountFeatures.feature'), align: 'left' },
+          { name: 'enabled', title: t('accountFeatures.enabled'), align: 'center' },
+          { name: 'tier', title: t('accountFeatures.tier'), align: 'center' },
+          { name: 'source', title: t('accountFeatures.source'), align: 'center' },
           { name: 'id' }
         ]}
         rows={rows}

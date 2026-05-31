@@ -142,7 +142,7 @@ function Sidenav({ color = "info", brand = "", isAdmin = false, isManager = fals
     if (key === 'systemAdmin' && !isAdmin) {
       return null;
     }
-    else if (key === 'manageAdmin' && !isManager) {
+    else if ((key === 'manageAdmin' || key === 'gpsIntegration') && !isManager) {
       return null;
     }
     else {

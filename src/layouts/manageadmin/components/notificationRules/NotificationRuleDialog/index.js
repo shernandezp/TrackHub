@@ -26,7 +26,7 @@ function NotificationRuleDialog({ open, setOpen, handleSubmit, values, handleCha
 
   return (
     <FormDialog
-      title={values.notificationRuleId ? t('administration.updateNotificationRule') : t('administration.createNotificationRule')}
+      title={values.notificationRuleId ? t('notificationRules.update') : t('notificationRules.create')}
       handleSave={handleSubmit}
       open={open}
       setOpen={setOpen}
@@ -37,7 +37,7 @@ function NotificationRuleDialog({ open, setOpen, handleSubmit, values, handleCha
           margin="dense"
           name="ruleKey"
           id="ruleKey"
-          label={t('administration.key')}
+          label={t('notificationRules.key')}
           type="text"
           fullWidth
           value={values.ruleKey || ''}
@@ -49,7 +49,7 @@ function NotificationRuleDialog({ open, setOpen, handleSubmit, values, handleCha
           margin="normal"
           name="ruleType"
           id="ruleType"
-          label={t('administration.type')}
+          label={t('notificationRules.type')}
           type="text"
           fullWidth
           value={values.ruleType || ''}
@@ -61,7 +61,7 @@ function NotificationRuleDialog({ open, setOpen, handleSubmit, values, handleCha
           margin="normal"
           name="triggerEvent"
           id="triggerEvent"
-          label={t('administration.triggerEvent')}
+          label={t('notificationRules.triggerEvent')}
           type="text"
           fullWidth
           value={values.triggerEvent || ''}
@@ -73,7 +73,7 @@ function NotificationRuleDialog({ open, setOpen, handleSubmit, values, handleCha
           margin="normal"
           name="recipientSelector"
           id="recipientSelector"
-          label={t('administration.recipientSelector')}
+          label={t('notificationRules.recipientSelector')}
           type="text"
           fullWidth
           value={values.recipientSelector || ''}
@@ -83,7 +83,7 @@ function NotificationRuleDialog({ open, setOpen, handleSubmit, values, handleCha
           margin="normal"
           name="channelsJson"
           id="channelsJson"
-          label={t('administration.channelsJson')}
+          label={t('notificationRules.channelsJson')}
           type="text"
           fullWidth
           multiline
@@ -95,7 +95,7 @@ function NotificationRuleDialog({ open, setOpen, handleSubmit, values, handleCha
           margin="normal"
           name="throttlingJson"
           id="throttlingJson"
-          label={t('administration.throttlingJson')}
+          label={t('notificationRules.throttlingJson')}
           type="text"
           fullWidth
           multiline
@@ -107,7 +107,7 @@ function NotificationRuleDialog({ open, setOpen, handleSubmit, values, handleCha
           margin="normal"
           name="configurationJson"
           id="configurationJson"
-          label={t('administration.configurationJson')}
+          label={t('notificationRules.configurationJson')}
           type="text"
           fullWidth
           multiline
@@ -120,7 +120,7 @@ function NotificationRuleDialog({ open, setOpen, handleSubmit, values, handleCha
           id="enabled"
           value={values.enabled}
           handleChange={handleChange}
-          label={t('administration.enabled')} />
+          label={t('notificationRules.enabled')} />
       </form>
     </FormDialog>
   );
@@ -136,4 +136,3 @@ NotificationRuleDialog.propTypes = {
 };
 
 export default NotificationRuleDialog;
-

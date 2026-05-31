@@ -14,23 +14,54 @@
 *  limitations under the License.
 */
 
+import PropTypes from 'prop-types';
 import TextField from '@mui/material/TextField';
-import { styled } from '@mui/system';
+import ArgonBox from 'components/ArgonBox';
+import FieldLabel from 'controls/Dialogs/FieldLabel';
+import { textFieldSx } from 'controls/Dialogs/fieldStyles';
 
-const CustomTextField = styled(({ errorMsg, ...props }) => (
-  <TextField
-    error={!!errorMsg}
-    helperText={errorMsg}
-    {...props}
-  />
-))({
-  '& .MuiInputBase-input': {
-    width: '100% !important',
-  },
-  '& .MuiFormLabel-root': {
-    position: 'relative !important',
-    top: '10px',
-  },
-});
+const marginMap = { none: 0, dense: 1, normal: 2 };
+
+const CustomTextField = ({
+  errorMsg,
+  label,
+  id,
+  name,
+  required = false,
+  fullWidth = true,
+  margin = 'dense',
+  ...props
+}) => {
+  const top = marginMap[margin] ?? 1;
+  return (
+    <ArgonBox mt={top} mb={1} width={fullWidth ? '100%' : 'auto'}>
+      {label && (
+        <FieldLabel htmlFor={id || name} required={required}>
+          {label}
+        </FieldLabel>
+      )}
+      <TextField
+        id={id}
+        name={name}
+        fullWidth={fullWidth}
+        error={!!errorMsg}
+        helperText={errorMsg}
+        required={required}
+        sx={textFieldSx}
+        {...props}
+      />
+    </ArgonBox>
+  );
+};
+
+CustomTextField.propTypes = {
+  errorMsg: PropTypes.string,
+  label: PropTypes.node,
+  id: PropTypes.string,
+  name: PropTypes.string,
+  required: PropTypes.bool,
+  fullWidth: PropTypes.bool,
+  margin: PropTypes.oneOf(['none', 'dense', 'normal']),
+};
 
 export default CustomTextField;

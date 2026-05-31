@@ -29,6 +29,10 @@ import { formatValue } from 'utils/dataUtils';
  */
 const useOperatorService = () => {
   const { post } = useApiService(process.env.REACT_APP_MANAGER_ENDPOINT);
+  const formatPositiveInteger = (value, fallback) => {
+    const parsed = Number.parseInt(value, 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+  };
 
   /**
    * Retrieves an operator by ID.
@@ -40,7 +44,7 @@ const useOperatorService = () => {
       const data = {
         query: `
             query {
-                operator(query: "${operatorId}") {
+                operator(query: {id: "${operatorId}"}) {
                 address
                 contactName
                 description
@@ -51,6 +55,15 @@ const useOperatorService = () => {
                 phoneNumber
                 protocolType
                 protocolTypeId
+                enabled
+                healthStatus
+                lastSuccessfulSyncAt
+                lastFailedSyncAt
+                lastFailureCode
+                lastLatencyMs
+                lastDeviceSyncAt
+                lastPositionSyncAt
+                syncIntervalMinutes
                 }
             }
         `
@@ -82,6 +95,15 @@ const useOperatorService = () => {
               phoneNumber
               protocolType
               protocolTypeId
+              enabled
+              healthStatus
+              lastSuccessfulSyncAt
+              lastFailedSyncAt
+              lastFailureCode
+              lastLatencyMs
+              lastDeviceSyncAt
+              lastPositionSyncAt
+              syncIntervalMinutes
             }
           }
         `
@@ -136,6 +158,7 @@ const useOperatorService = () => {
                     name: ${formatValue(operatorData.name)}
                     emailAddress: ${formatValue(operatorData.emailAddress)}
                     description: ${formatValue(operatorData.description)}
+                    syncIntervalMinutes: ${formatPositiveInteger(operatorData.syncIntervalMinutes, 30)}
                     }
                 }
                 ) {
@@ -149,6 +172,15 @@ const useOperatorService = () => {
                 phoneNumber
                 protocolType
                 protocolTypeId
+                enabled
+                healthStatus
+                lastSuccessfulSyncAt
+                lastFailedSyncAt
+                lastFailureCode
+                lastLatencyMs
+                lastDeviceSyncAt
+                lastPositionSyncAt
+                syncIntervalMinutes
                 }
             }
         `
@@ -183,6 +215,7 @@ const useOperatorService = () => {
                     description: ${formatValue(operatorData.description)}
                     address: ${formatValue(operatorData.address)}
                     contactName: ${formatValue(operatorData.contactName)}
+                    syncIntervalMinutes: ${formatPositiveInteger(operatorData.syncIntervalMinutes, 30)}
                     }
                 }
                 ) 
@@ -219,6 +252,154 @@ const useOperatorService = () => {
     }
   };
 
+  const getGpsOperators = async () => {
+    try {
+      const data = {
+        query: `
+          query {
+            operatorsByCurrentAccount {
+              operatorId name protocolType enabled
+              lastDeviceSyncAt lastPositionSyncAt syncIntervalMinutes
+            }
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.operatorsByCurrentAccount ?? [];
+    } catch (error) {
+      handleError(error);
+      return [];
+    }
+  };
+
+  const getGpsOperatorsWithHealth = async () => {
+    try {
+      const data = {
+        query: `
+          query {
+            operatorsByCurrentAccount {
+              operatorId name protocolType enabled
+              healthStatus lastSuccessfulSyncAt lastFailedSyncAt lastFailureCode lastLatencyMs
+              lastDeviceSyncAt lastPositionSyncAt syncIntervalMinutes
+            }
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.operatorsByCurrentAccount ?? [];
+    } catch (error) {
+      handleError(error);
+      return [];
+    }
+  };
+
+  const getOperatorSyncRuns = async (accountId, operatorId = null, take = 20) => {
+    try {
+      const args = [`take: ${formatPositiveInteger(take, 20)}`];
+      if (accountId) args.push(`accountId: ${formatValue(accountId)}`);
+      if (operatorId) args.push(`operatorId: ${formatValue(operatorId)}`);
+      const data = {
+        query: `
+          query {
+            operatorSyncRuns(query: { ${args.join(', ')} }) {
+              operatorSyncRunId accountId operatorId triggerType result
+              startedAt completedAt
+              devicesSeen devicesAdded devicesUpdated devicesRemoved devicesIgnored
+              positionsRead positionsAccepted positionsRejected
+              errorCode errorMessage correlationId
+            }
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.operatorSyncRuns ?? [];
+    } catch (error) {
+      handleError(error);
+      return [];
+    }
+  };
+
+  const getOperatorHealth = async (operatorId) => {
+    try {
+      const data = {
+        query: `
+          query {
+            operatorHealth(query: { operatorId: ${formatValue(operatorId)} }) {
+              operatorId healthStatus
+              lastSuccessfulSyncAt lastFailedSyncAt lastDeviceSyncAt lastPositionSyncAt
+              lastFailureCode lastFailureMessage lastLatencyMs
+            }
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.operatorHealth;
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+  const getOperatorHealthHistory = async (operatorId, take = 50) => {
+    try {
+      const data = {
+        query: `
+          query {
+            operatorHealthHistory(query: { operatorId: ${formatValue(operatorId)}, take: ${formatPositiveInteger(take, 50)} }) {
+              operatorHealthCheckId operatorId checkType status latencyMs
+              startedAt completedAt errorCode errorMessage retryCount correlationId
+            }
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.operatorHealthHistory ?? [];
+    } catch (error) {
+      handleError(error);
+      return [];
+    }
+  };
+
+  const setOperatorEnabled = async (operatorId, enabled) => {
+    try {
+      const data = {
+        query: `
+          mutation {
+            setOperatorEnabled(command: { operatorId: "${operatorId}", enabled: ${enabled} })
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.setOperatorEnabled;
+    } catch (error) {
+      handleError(error);
+      return false;
+    }
+  };
+
+  const triggerOperatorDeviceSync = async (operatorId, resetDeviceCatalog = false, autoAssignNewDevices = true) => {
+    try {
+      const data = {
+        query: `
+          mutation($command: TriggerOperatorDeviceSyncCommandInput!) {
+            triggerOperatorDeviceSync(command: $command)
+          }
+        `,
+        variables: {
+          command: {
+            operatorId,
+            resetDeviceCatalog: !!resetDeviceCatalog,
+            autoAssignNewDevices: !!autoAssignNewDevices
+          }
+        }
+      };
+      const response = await post(data);
+      return response.data.triggerOperatorDeviceSync;
+    } catch (error) {
+      handleError(error);
+      return false;
+    }
+  };
+
   return {
     getOperator,
     getOperatorsByCurrentAccount,
@@ -226,6 +407,13 @@ const useOperatorService = () => {
     createOperator,
     updateOperator,
     deleteOperator,
+    getGpsOperators,
+    getGpsOperatorsWithHealth,
+    getOperatorSyncRuns,
+    getOperatorHealth,
+    getOperatorHealthHistory,
+    setOperatorEnabled,
+    triggerOperatorDeviceSync
   };
 };
 

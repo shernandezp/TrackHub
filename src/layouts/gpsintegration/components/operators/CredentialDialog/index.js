@@ -19,14 +19,13 @@ import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 import FormDialog from "controls/Dialogs/FormDialog";
 import CustomTextField from 'controls/Dialogs/CustomTextField';
-import CustomSelect from 'controls/Dialogs/CustomSelect';
-import protocolTypes from 'data/protocolTypes';
+import CustomPasswordField from 'controls/Dialogs/CustomPasswordField';
 
-function OperatorFormDialog({ open, setOpen, handleSubmit, values, handleChange, errors }) {
+function CredentialFormDialog({ open, setOpen, handleSubmit, values, handleChange, errors }) {
   const { t } = useTranslation();
   return (
-    <FormDialog 
-          title={t('operator.details')}
+    <FormDialog
+          title={t('credential.title')}
           handleSave={handleSubmit}
           open={open}
           setOpen={setOpen}
@@ -35,88 +34,62 @@ function OperatorFormDialog({ open, setOpen, handleSubmit, values, handleChange,
           <CustomTextField
             autoFocus
             margin="dense"
-            name="name"
-            id="name"
-            label={t('operator.name')}
+            name="uri"
+            id="uri"
+            label="URL"
             type="text"
             fullWidth
-            value={values.name || ''}
+            value={values.uri || ''}
             onChange={handleChange}
             required
-            errorMsg={errors.name}
+            errorMsg={errors.uri}
           />
           <CustomTextField
             margin="normal"
-            name="description"
-            id="description"
-            label={t('operator.description')}
+            name="username"
+            id="username"
+            label={t('credential.username')}
             type="text"
             fullWidth
-            value={values.description || ''}
+            value={values.username || ''}
             onChange={handleChange}
           />
 
-          <CustomTextField
+          <CustomPasswordField
             margin="normal"
-            name="phoneNumber"
-            id="phoneNumber"
-            label={t('generic.phoneNumber')}
-            type="text"
+            name="password"
+            id="password"
+            label={t('credential.password')}
             fullWidth
-            value={values.phoneNumber || ''}
+            value={values.password || ''}
             onChange={handleChange}
           />
 
-          <CustomTextField
+          <CustomPasswordField
             margin="normal"
-            name="emailAddress"
-            id="emailAddress"
-            label={t('generic.emailAddress')}
-            type="email"
+            name="key"
+            id="key"
+            label={t('credential.key')}
             fullWidth
-            value={values.emailAddress || ''}
+            value={values.key || ''}
             onChange={handleChange}
           />
 
-          <CustomTextField
+          <CustomPasswordField
             margin="normal"
-            name="address"
-            id="address"
-            label={t('generic.address')}
-            type="text"
+            name="key2"
+            id="key2"
+            label={t('credential.key2')}
             fullWidth
-            value={values.address || ''}
+            value={values.key2 || ''}
             onChange={handleChange}
           />
-
-          <CustomTextField
-            margin="normal"
-            name="contactName"
-            id="contactName"
-            label={t('operator.contactName')}
-            type="text"
-            fullWidth
-            value={values.contactName || ''}
-            onChange={handleChange}
-          />
-
-          <CustomSelect
-            list={protocolTypes}
-            handleChange={handleChange}
-            name="protocolTypeId"
-            id="protocolTypeId"
-            label={t('operator.type')}
-            value={values.protocolTypeId}
-            required
-          />
-          {errors.protocolTypeId && <p>{errors.protocolTypeId}</p>}
-          
         </form>
       </FormDialog>
   );
 }
 
-OperatorFormDialog.propTypes = {
+CredentialFormDialog.propTypes = {
     open: PropTypes.bool.isRequired,
     setOpen: PropTypes.func.isRequired,
     handleSubmit: PropTypes.func.isRequired,
@@ -125,4 +98,4 @@ OperatorFormDialog.propTypes = {
     errors: PropTypes.object.isRequired,
 };
 
-export default OperatorFormDialog;
+export default CredentialFormDialog;

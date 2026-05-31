@@ -21,6 +21,9 @@
 * @returns {string} The formatted date string or an empty string if the input is invalid.
 */
 export function formatDate(value) {
+    if (value === null || value === undefined || value === '') {
+        return '';
+    }
     const date = new Date(value);
     if (!(date instanceof Date) || isNaN(date)) {
         return '';
@@ -35,6 +38,9 @@ export function formatDate(value) {
 * @returns {string} The formatted date-time string or an empty string if the input is invalid.
 */
 export function formatDateTime(value) {
+    if (value === null || value === undefined || value === '') {
+        return '';
+    }
     const date = new Date(value);
     if (!(date instanceof Date) || isNaN(date)) {
         return '';
