@@ -24,11 +24,11 @@ import ArgonTypography from 'components/ArgonTypography';
 
 function statusColor(status) {
   switch ((status || '').toUpperCase()) {
-    case 'NEW': return 'info';
-    case 'AVAILABLE': return 'success';
+    case 'NEW':
+    case 'AVAILABLE': return 'warning';
     case 'ASSIGNED': return 'info';
     case 'IGNORED': return 'secondary';
-    case 'MISSING': return 'error';
+    case 'REMOVED': return 'error';
     default: return 'secondary';
   }
 }

@@ -14,7 +14,7 @@
 *  limitations under the License.
 */
 
-import useApiService from './apiService';
+import useApiService from 'services/apiService';
 import { handleError } from 'utils/errorHandler';
 import { formatValue } from 'utils/dataUtils';
 

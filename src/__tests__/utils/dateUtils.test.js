@@ -45,10 +45,8 @@ describe('formatDate', () => {
     expect(result).toMatch(/^\d{2}\/\d{2}\/2025$/);
   });
 
-  test('handles null as epoch (Date(null) is valid)', () => {
-    // new Date(null) => epoch 0, which is a valid date
-    const result = formatDate(null);
-    expect(result).toMatch(/^\d{2}\/\d{2}\/\d{4}$/);
+  test('returns empty string for null', () => {
+    expect(formatDate(null)).toBe('');
   });
 
   test('handles epoch timestamp', () => {
@@ -78,10 +76,8 @@ describe('formatDateTime', () => {
     expect(formatDateTime('garbage')).toBe('');
   });
 
-  test('handles null as epoch (Date(null) is valid)', () => {
-    // new Date(null) => epoch 0, which is a valid date
-    const result = formatDateTime(null);
-    expect(result).toMatch(/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2}$/);
+  test('returns empty string for null', () => {
+    expect(formatDateTime(null)).toBe('');
   });
 });
 

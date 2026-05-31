@@ -34,6 +34,7 @@ import useDeviceService from 'services/device';
 import useOperatorService from 'services/operator';
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from 'utils/dateUtils';
+import { GPS_INTEGRATION_REFRESH_EVENT } from 'layouts/gpsintegration/gpsIntegrationEvents';
 
 function TextCell({ children }) {
   return (
@@ -46,11 +47,11 @@ TextCell.propTypes = { children: PropTypes.node };
 
 function statusColor(status) {
   switch ((status || '').toUpperCase()) {
-    case 'NEW': return 'info';
-    case 'AVAILABLE': return 'success';
+    case 'NEW':
+    case 'AVAILABLE': return 'warning';
     case 'ASSIGNED': return 'info';
     case 'IGNORED': return 'secondary';
-    case 'MISSING': return 'error';
+    case 'REMOVED': return 'error';
     default: return 'secondary';
   }
 }
@@ -105,6 +106,14 @@ function ManageSynchronizedDevices() {
     }
   }, [expanded]);
 
+  useEffect(() => {
+    const handleRefresh = () => {
+      if (loaded.current) refresh();
+    };
+    window.addEventListener(GPS_INTEGRATION_REFRESH_EVENT, handleRefresh);
+    return () => window.removeEventListener(GPS_INTEGRATION_REFRESH_EVENT, handleRefresh);
+  }, [accountId]);
+
   const handleIgnore = async (device, ignore) => {
     setLoading(true);
     try {
@@ -156,7 +165,7 @@ function ManageSynchronizedDevices() {
     id: d.deviceId
   }));
 
-  const statuses = ['NEW', 'AVAILABLE', 'ASSIGNED', 'IGNORED', 'MISSING'];
+  const statuses = ['AVAILABLE', 'ASSIGNED', 'IGNORED', 'REMOVED'];
   const filterOperators = Array.from(new Set(devices.map(d => d.operatorId).filter(Boolean)));
 
   const filteredRows = rows.filter(r => {
@@ -164,7 +173,7 @@ function ManageSynchronizedDevices() {
     if (!raw) return false;
     if (statusFilter && (raw.detectedStatus || '').toUpperCase() !== statusFilter) return false;
     if (operatorFilter && raw.operatorId !== operatorFilter) return false;
-    if (unassignedOnly && !!raw.lastAssignedAt) return false;
+    if (unassignedOnly && (raw.detectedStatus || '').toUpperCase() === 'ASSIGNED') return false;
     if (recentOnly) {
       const ts = raw.firstSeenAt ? new Date(raw.firstSeenAt).getTime() : 0;
       if (!ts || (Date.now() - ts) > 24 * 60 * 60 * 1000) return false;

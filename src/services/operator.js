@@ -44,7 +44,7 @@ const useOperatorService = () => {
       const data = {
         query: `
             query {
-                operator(query: "${operatorId}") {
+                operator(query: {id: "${operatorId}"}) {
                 address
                 contactName
                 description
@@ -95,6 +95,15 @@ const useOperatorService = () => {
               phoneNumber
               protocolType
               protocolTypeId
+              enabled
+              healthStatus
+              lastSuccessfulSyncAt
+              lastFailedSyncAt
+              lastFailureCode
+              lastLatencyMs
+              lastDeviceSyncAt
+              lastPositionSyncAt
+              syncIntervalMinutes
             }
           }
         `
@@ -355,7 +364,7 @@ const useOperatorService = () => {
       const data = {
         query: `
           mutation {
-            setOperatorEnabled(command: { operatorId: ${formatValue(operatorId)}, enabled: ${!!enabled} })
+            setOperatorEnabled(command: { operatorId: "${operatorId}", enabled: ${enabled} })
           }
         `
       };
@@ -367,14 +376,21 @@ const useOperatorService = () => {
     }
   };
 
-  const triggerOperatorDeviceSync = async (operatorId) => {
+  const triggerOperatorDeviceSync = async (operatorId, resetDeviceCatalog = false, autoAssignNewDevices = true) => {
     try {
       const data = {
         query: `
-          mutation {
-            triggerOperatorDeviceSync(command: { operatorId: ${formatValue(operatorId)} })
+          mutation($command: TriggerOperatorDeviceSyncCommandInput!) {
+            triggerOperatorDeviceSync(command: $command)
           }
-        `
+        `,
+        variables: {
+          command: {
+            operatorId,
+            resetDeviceCatalog: !!resetDeviceCatalog,
+            autoAssignNewDevices: !!autoAssignNewDevices
+          }
+        }
       };
       const response = await post(data);
       return response.data.triggerOperatorDeviceSync;

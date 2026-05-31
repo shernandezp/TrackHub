@@ -540,7 +540,7 @@
     },
     "actions": {
       "sync": "Trigger Sync",
-      "rotate": "Rotate Credential",
+      "syncNotCompleted": "Sync did not complete. Check provider connectivity and try again.",
       "ignore": "Ignore",
       "unignore": "Unignore",
       "endAssignment": "End Assignment",
@@ -559,13 +559,18 @@
       "assignDevice": "Assign Device"
     },
     "health": {
-      "unknown": "UNKNOWN"
+      "unknown": "Unknown",
+      "healthy": "Healthy",
+      "degraded": "Degraded",
+      "offline": "Offline",
+      "disabled": "Disabled"
     },
     "status": {
-      "new": "New - review",
-      "available": "Available",
+      "new": "Unassigned",
+      "available": "Unassigned",
       "assigned": "Assigned",
       "ignored": "Ignored",
+      "removed": "Removed",
       "missing": "Missing"
     },
     "assignmentStatus": {
@@ -576,8 +581,10 @@
     "assignmentForm": {
       "transporter": "Unit to receive the device",
       "transporterHelp": "Select the unit/asset that should use this GPS device.",
+      "selectTransporter": "Select a unit",
       "device": "Unassigned GPS device",
-      "deviceHelp": "Only devices not currently assigned to a unit are listed."
+      "deviceHelp": "Only devices not currently assigned to a unit are listed.",
+      "selectDevice": "Select an unassigned GPS device"
     },
     "filters": {
       "statusHelp": "Filter by synchronized-device state.",
@@ -612,6 +619,7 @@
       "dashboard": "No data available.",
       "operators": "No GPS operators configured.",
       "devices": "No synchronized devices.",
+      "unassignedDevices": "No unassigned GPS devices are available to assign.",
       "assignments": "No device assignments.",
       "syncRuns": "No sync runs in the selected window.",
       "alerts": "No open GPS alerts.",

@@ -20,7 +20,6 @@ import Table from "controls/Tables/Table";
 import TableAccordion from "controls/Accordions/TableAccordion";
 import OperatorFormDialog from 'layouts/gpsintegration/components/operators/OperatorDialog';
 import CredentialFormDialog from 'layouts/gpsintegration/components/operators/CredentialDialog';
-import CredentialRotateDialog from 'layouts/gpsintegration/components/CredentialRotateDialog';
 import useForm from 'controls/Dialogs/useForm';
 import ConfirmDialog from 'controls/Dialogs/ConfirmDialog';
 import MessageDialog from 'controls/Dialogs/MessageDialog';
@@ -54,17 +53,14 @@ function ManageOperators() {
     openCredential,
     confirmOpen,
     testOpen,
+    testTitle,
     testMessage,
-    rotateOpen,
-    rotateOperator,
     onSave,
     onSaveCredential,
     onDelete,
-    onRotateSaved,
     setOpen,
     setOpenCredential,
     setConfirmOpen,
-    setRotateOpen,
     setTestOpen
   } = useOperatorTableData(expanded, handleEditClick, handleEditCredentialClick, handleDeleteClick);
   const [operatorValues, handleOperatorChange, setOperatorValues, setOperatorErrors, validateOperator, operatorErrors] = useForm({});
@@ -122,17 +118,11 @@ function ManageOperators() {
         onConfirm={async() => await onDelete(toDelete)} />
 
       <MessageDialog
-        title={t('credential.connectivityTest')}
+        title={testTitle}
         message={testMessage}
         open={testOpen}
         setOpen={setTestOpen} />
 
-      <CredentialRotateDialog
-        open={rotateOpen}
-        setOpen={setRotateOpen}
-        operator={rotateOperator}
-        onSaved={onRotateSaved}
-      />
     </>
   );
 }

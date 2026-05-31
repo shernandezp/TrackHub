@@ -21,7 +21,6 @@
 
 import useApiService from './apiService';
 import { handleError, handleSilentError } from 'utils/errorHandler';
-import { formatValue } from 'utils/dataUtils';
 
 /**
  * A custom hook that provides functions for interacting with credentials.
@@ -67,18 +66,9 @@ const useCredentialService = () => {
         try {
             const data = {
                 query: `
-                    mutation {
+                    mutation($command: CreateCredentialCommandInput!) {
                         createCredential(
-                        command: {
-                            credential: {
-                                key: "${credentialData.key ?? ''}",
-                                key2: "${credentialData.key2 ?? ''}",
-                                operatorId: "${credentialData.operatorId}",
-                                password: "${credentialData.password ?? ''}",
-                                uri: "${credentialData.uri}",
-                                username: "${credentialData.username ?? ''}"
-                            }
-                        }) 
+                        command: $command) 
                         {
                             username
                             uri
@@ -88,10 +78,22 @@ const useCredentialService = () => {
                             credentialId
                         }
                     }
-                `
+                `,
+                variables: {
+                    command: {
+                        credential: {
+                            key: credentialData.key ?? '',
+                            key2: credentialData.key2 ?? '',
+                            operatorId: credentialData.operatorId,
+                            password: credentialData.password ?? '',
+                            uri: credentialData.uri,
+                            username: credentialData.username ?? ''
+                        }
+                    }
+                }
             };
             const response = await post(data);
-            return response.data.createAccount;
+            return response.data.createCredential;
         } catch (error) {
             handleError(error);
         }
@@ -107,22 +109,26 @@ const useCredentialService = () => {
         try {
             const data = {
                 query: `
-                mutation {
+                mutation($id: UUID!, $command: UpdateCredentialCommandInput!) {
                         updateCredential(
-                            id: "${credentialId}",
-                            command: {
-                                credential: {
-                                    credentialId: "${credentialData.credentialId}"
-                                    key2: "${credentialData.key2}"
-                                    key: "${credentialData.key}"
-                                    password: "${credentialData.password}"
-                                    uri: "${credentialData.uri}"
-                                    username: "${credentialData.username}"
-                                }
-                            }
+                            id: $id,
+                            command: $command
                         ) 
                     }
-                `
+                `,
+                variables: {
+                    id: credentialId,
+                    command: {
+                        credential: {
+                            credentialId: credentialData.credentialId,
+                            key2: credentialData.key2 ?? '',
+                            key: credentialData.key ?? '',
+                            password: credentialData.password ?? '',
+                            uri: credentialData.uri,
+                            username: credentialData.username ?? ''
+                        }
+                    }
+                }
             };
             const response = await post(data);
             return response.data.updateCredential;
@@ -132,58 +138,10 @@ const useCredentialService = () => {
         }
     };
 
-    const getOperatorCredentialMetadata = async (operatorId) => {
-        try {
-            const data = {
-                query: `
-                    query {
-                        operatorCredentialMetadata(query: { operatorId: ${formatValue(operatorId)} }) {
-                            credentialId operatorId uri usernameMask
-                            hasPassword hasKey hasKey2 hasToken hasRefreshToken
-                            tokenExpiration refreshTokenExpiration
-                            credentialVersion rotatedAt rotatedByPrincipalType rotatedByPrincipalId
-                        }
-                    }
-                `
-            };
-            const response = await post(data);
-            return response.data.operatorCredentialMetadata;
-        } catch (error) {
-            handleError(error);
-        }
-    };
-
-    const rotateOperatorCredential = async (credential) => {
-        try {
-            const fields = [
-                `operatorId: ${formatValue(credential.operatorId)}`,
-                `uri: ${formatValue(credential.uri)}`,
-                `username: ${formatValue(credential.username)}`,
-                `password: ${formatValue(credential.password)}`,
-                `key: ${formatValue(credential.key)}`,
-                `key2: ${formatValue(credential.key2)}`
-            ].join(' ');
-            const data = {
-                query: `
-                    mutation {
-                        rotateOperatorCredential(command: { credential: { ${fields} } })
-                    }
-                `
-            };
-            const response = await post(data);
-            return response.data.rotateOperatorCredential;
-        } catch (error) {
-            handleError(error);
-            return false;
-        }
-    };
-
     return {
         getCredentialByOperator,
         createCredential,
-        updateCredential,
-        getOperatorCredentialMetadata,
-        rotateOperatorCredential
+        updateCredential
     };
 };
 

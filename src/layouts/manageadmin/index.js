@@ -28,7 +28,6 @@ import ManageNotificationRules from "layouts/manageadmin/components/notification
 import ManageAlertEvents from "layouts/manageadmin/components/alertEvents";
 import ManagePublicLinks from "layouts/manageadmin/components/publicLinks";
 import ManageBackgroundJobs from "layouts/manageadmin/components/backgroundJobs";
-import RetentionSettings from "layouts/gpsintegration/components/RetentionSettings";
 import ArgonBox from "components/ArgonBox";
 import DashboardLayout from "controls/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "controls/Navbars/DashboardNavbar";
@@ -47,7 +46,6 @@ function ManageAdmin() {
           <ManagePolicies/>
           <ManageGroups/>
           <ManageAccountFeatures/>
-          <RetentionSettings/>
           <ManageDrivers/>
           <ManageAuditTrail/>
           <ManageNotificationRules/>

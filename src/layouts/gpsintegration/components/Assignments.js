@@ -19,10 +19,9 @@ import { useTranslation } from 'react-i18next';
 import PropTypes from 'prop-types';
 import Icon from '@mui/material/Icon';
 import Grid from '@mui/material/Grid';
-import TextField from '@mui/material/TextField';
-import MenuItem from '@mui/material/MenuItem';
 import Table from 'controls/Tables/Table';
 import TableAccordion from 'controls/Accordions/TableAccordion';
+import CustomSelect from 'controls/Dialogs/CustomSelect';
 import ArgonBadge from 'components/ArgonBadge';
 import ArgonBox from 'components/ArgonBox';
 import ArgonButton from 'components/ArgonButton';
@@ -32,6 +31,7 @@ import useTransporterService from 'services/transporter';
 import useDeviceService from 'services/device';
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from 'utils/dateUtils';
+import { GPS_INTEGRATION_REFRESH_EVENT } from 'layouts/gpsintegration/gpsIntegrationEvents';
 
 function TextCell({ children }) {
   return (
@@ -147,6 +147,14 @@ function ManageDeviceAssignments() {
     return acc;
   }, {});
 
+  useEffect(() => {
+    const handleRefresh = () => {
+      if (loaded.current) load();
+    };
+    window.addEventListener(GPS_INTEGRATION_REFRESH_EVENT, handleRefresh);
+    return () => window.removeEventListener(GPS_INTEGRATION_REFRESH_EVENT, handleRefresh);
+  }, [accountId, activeOnly]);
+
   const statusLabel = (status) => {
     const key = (status || '').toLowerCase();
     return t(`gpsIntegration.assignmentStatus.${key}`, { defaultValue: status || '-' });
@@ -201,36 +209,39 @@ function ManageDeviceAssignments() {
             <ArgonBox mb={1}>
               <Grid container spacing={1} alignItems="center">
                 <Grid item xs={12} md={5}>
-                  <TextField
-                    fullWidth select size="small"
+                  <CustomSelect
+                    list={transporters.map(x => ({ value: x.transporterId, label: x.name }))}
+                    name="selectedTransporterId"
+                    id="selectedTransporterId"
                     label={t('gpsIntegration.assignmentForm.transporter')}
-                    helperText={t('gpsIntegration.assignmentForm.transporterHelp')}
                     value={selectedTransporterId}
-                    onChange={(e) => setSelectedTransporterId(e.target.value)}
-                  >
-                    <MenuItem value="">--</MenuItem>
-                    {transporters.map(x => (
-                      <MenuItem key={x.transporterId} value={x.transporterId}>
-                        {x.name}
-                      </MenuItem>
-                    ))}
-                  </TextField>
+                    handleChange={(e) => setSelectedTransporterId(e.target.value)}
+                    numericValue={false}
+                    placeholder={t('gpsIntegration.assignmentForm.selectTransporter')}
+                  />
+                  <ArgonTypography variant="caption" color="secondary">
+                    {t('gpsIntegration.assignmentForm.transporterHelp')}
+                  </ArgonTypography>
                 </Grid>
                 <Grid item xs={12} md={5}>
-                  <TextField
-                    fullWidth select size="small"
+                  <CustomSelect
+                    list={unassignedDevices.map(x => ({
+                      value: x.deviceId,
+                      label: x.name || x.providerDisplayName || x.serial || x.identifier
+                    }))}
+                    name="selectedDeviceId"
+                    id="selectedDeviceId"
                     label={t('gpsIntegration.assignmentForm.device')}
-                    helperText={t('gpsIntegration.assignmentForm.deviceHelp')}
                     value={selectedDeviceId}
-                    onChange={(e) => setSelectedDeviceId(e.target.value)}
-                  >
-                    <MenuItem value="">--</MenuItem>
-                    {unassignedDevices.map(x => (
-                      <MenuItem key={x.deviceId} value={x.deviceId}>
-                        {x.name || x.providerDisplayName || x.serial || x.identifier}
-                      </MenuItem>
-                    ))}
-                  </TextField>
+                    handleChange={(e) => setSelectedDeviceId(e.target.value)}
+                    numericValue={false}
+                    placeholder={t('gpsIntegration.assignmentForm.selectDevice')}
+                  />
+                  <ArgonTypography variant="caption" color="secondary">
+                    {unassignedDevices.length > 0
+                      ? t('gpsIntegration.assignmentForm.deviceHelp')
+                      : t('gpsIntegration.empty.unassignedDevices')}
+                  </ArgonTypography>
                 </Grid>
                 <Grid item xs={12} md={2}>
                   <ArgonButton color="info" onClick={handleAssign} disabled={!selectedTransporterId || !selectedDeviceId}>

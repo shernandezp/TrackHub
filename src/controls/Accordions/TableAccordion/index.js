@@ -66,8 +66,14 @@ const TableAccordion = ({
     };
 
     return (
-        <Accordion expanded={expanded} onChange={() => setExpanded(!expanded)} sx={accordionSx}>
+        <Accordion
+            expanded={expanded}
+            onChange={() => setExpanded(!expanded)}
+            slots={{ heading: 'div' }}
+            sx={accordionSx}
+        >
             <AccordionSummary
+                component="div"
                 expandIcon={<ExpandMoreIcon />}
                 aria-controls={`${title}-content`}
                 id={`${title}-header`}

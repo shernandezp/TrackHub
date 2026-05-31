@@ -14,7 +14,7 @@
 *  limitations under the License.
 */
 
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Grid from '@mui/material/Grid';
 import Card from '@mui/material/Card';
@@ -26,6 +26,7 @@ import useGpsDashboardService from 'services/gpsDashboard';
 import useAccountService from 'services/account';
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from 'utils/dateUtils';
+import { GPS_INTEGRATION_REFRESH_EVENT } from 'layouts/gpsintegration/gpsIntegrationEvents';
 
 function GpsDashboard() {
   const { t } = useTranslation();
@@ -33,28 +34,43 @@ function GpsDashboard() {
   const { getDashboard } = useGpsDashboardService();
   const { getAccountByUser } = useAccountService();
   const [dashboard, setDashboard] = useState(null);
+  const [accountId, setAccountId] = useState(null);
   const [error, setError] = useState(null);
   const loaded = useRef(false);
+
+  const loadDashboard = useCallback(async (acct = accountId) => {
+    if (!acct) return;
+    setLoading(true);
+    try {
+      const result = await getDashboard(acct);
+      if (result) {
+        setDashboard(result);
+        setError(null);
+      } else setError(t('gpsIntegration.errors.dashboardLoad'));
+    } finally {
+      setLoading(false);
+    }
+  }, [accountId, getDashboard, setLoading, t]);
 
   useEffect(() => {
     if (loaded.current) return;
     loaded.current = true;
     (async () => {
-      setLoading(true);
-      try {
-        const acct = await getAccountByUser();
-        if (!acct?.accountId) {
-          setError(t('gpsIntegration.errors.dashboardLoad'));
-          return;
-        }
-        const result = await getDashboard(acct.accountId);
-        if (result) setDashboard(result);
-        else setError(t('gpsIntegration.errors.dashboardLoad'));
-      } finally {
-        setLoading(false);
+      const acct = await getAccountByUser();
+      if (!acct?.accountId) {
+        setError(t('gpsIntegration.errors.dashboardLoad'));
+        return;
       }
+      setAccountId(acct.accountId);
+      await loadDashboard(acct.accountId);
     })();
-  }, []);
+  }, [getAccountByUser, loadDashboard, t]);
+
+  useEffect(() => {
+    const handleRefresh = () => loadDashboard();
+    window.addEventListener(GPS_INTEGRATION_REFRESH_EVENT, handleRefresh);
+    return () => window.removeEventListener(GPS_INTEGRATION_REFRESH_EVENT, handleRefresh);
+  }, [loadDashboard]);
 
   if (error) {
     return (

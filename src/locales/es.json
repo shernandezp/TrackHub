@@ -540,7 +540,7 @@
     },
     "actions": {
       "sync": "Sincronizar",
-      "rotate": "Rotar Credencial",
+      "syncNotCompleted": "La sincronización no se completó. Verifique la conectividad del proveedor e intente nuevamente.",
       "ignore": "Ignorar",
       "unignore": "No Ignorar",
       "endAssignment": "Finalizar Asignación",
@@ -559,13 +559,18 @@
       "assignDevice": "Asignar Dispositivo"
     },
     "health": {
-      "unknown": "DESCONOCIDO"
+      "unknown": "Desconocido",
+      "healthy": "Saludable",
+      "degraded": "Degradado",
+      "offline": "Fuera de línea",
+      "disabled": "Deshabilitado"
     },
     "status": {
-      "new": "Nuevo - revisar",
-      "available": "Disponible",
+      "new": "Sin asignar",
+      "available": "Sin asignar",
       "assigned": "Asignado",
       "ignored": "Ignorado",
+      "removed": "Eliminado",
       "missing": "Faltante"
     },
     "assignmentStatus": {
@@ -576,8 +581,10 @@
     "assignmentForm": {
       "transporter": "Unidad que recibirá el dispositivo",
       "transporterHelp": "Seleccione la unidad/activo que debe usar este dispositivo GPS.",
+      "selectTransporter": "Seleccione una unidad",
       "device": "Dispositivo GPS sin asignar",
-      "deviceHelp": "Solo se muestran dispositivos que no están asignados actualmente a una unidad."
+      "deviceHelp": "Solo se muestran dispositivos que no están asignados actualmente a una unidad.",
+      "selectDevice": "Seleccione un dispositivo GPS sin asignar"
     },
     "filters": {
       "statusHelp": "Filtra por el estado del dispositivo sincronizado.",
@@ -612,6 +619,7 @@
       "dashboard": "Sin datos disponibles.",
       "operators": "No hay operadores GPS configurados.",
       "devices": "No hay dispositivos sincronizados.",
+      "unassignedDevices": "No hay dispositivos GPS sin asignar disponibles para asignar.",
       "assignments": "No hay asignaciones de dispositivos.",
       "syncRuns": "No hay sincronizaciones en la ventana seleccionada.",
       "alerts": "No hay alertas GPS abiertas.",

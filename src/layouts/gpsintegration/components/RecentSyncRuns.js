@@ -14,7 +14,7 @@
 *  limitations under the License.
 */
 
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import PropTypes from 'prop-types';
 import Table from 'controls/Tables/Table';
@@ -26,6 +26,7 @@ import useAccountService from 'services/account';
 import useOperatorService from 'services/operator';
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from 'utils/dateUtils';
+import { GPS_INTEGRATION_REFRESH_EVENT } from 'layouts/gpsintegration/gpsIntegrationEvents';
 
 function TextCell({ children }) {
   return (
@@ -52,10 +53,25 @@ function RecentSyncRuns() {
   const { setLoading } = useContext(LoadingContext);
   const [expanded, setExpanded] = useState(false);
   const [runs, setRuns] = useState([]);
+  const [operators, setOperators] = useState([]);
+  const [accountId, setAccountId] = useState(null);
   const [error, setError] = useState(null);
   const loaded = useRef(false);
   const { getAccountByUser } = useAccountService();
-  const { getOperatorSyncRuns } = useOperatorService();
+  const { getGpsOperators, getOperatorSyncRuns } = useOperatorService();
+
+  const load = useCallback(async (acct = accountId) => {
+    if (!acct) return;
+    setLoading(true);
+    try {
+      const result = await getOperatorSyncRuns(acct, null, 20);
+      if (!result) setError(t('gpsIntegration.errors.syncRunsLoad'));
+      else {
+        setRuns(result);
+        setError(null);
+      }
+    } finally { setLoading(false); }
+  }, [accountId, getOperatorSyncRuns, setLoading, t]);
 
   useEffect(() => {
     if (expanded && !loaded.current) {
@@ -68,16 +84,30 @@ function RecentSyncRuns() {
             setError(t('gpsIntegration.errors.syncRunsLoad'));
             return;
           }
-          const result = await getOperatorSyncRuns(acct.accountId, null, 20);
-          if (!result) setError(t('gpsIntegration.errors.syncRunsLoad'));
-          else setRuns(result);
+          setAccountId(acct.accountId);
+          const ops = await getGpsOperators();
+          setOperators(ops || []);
+          await load(acct.accountId);
         } finally { setLoading(false); }
       })();
     }
-  }, [expanded]);
+  }, [expanded, getAccountByUser, getGpsOperators, load, setLoading, t]);
+
+  useEffect(() => {
+    const handleRefresh = () => {
+      if (loaded.current) load();
+    };
+    window.addEventListener(GPS_INTEGRATION_REFRESH_EVENT, handleRefresh);
+    return () => window.removeEventListener(GPS_INTEGRATION_REFRESH_EVENT, handleRefresh);
+  }, [load]);
+
+  const operatorNames = operators.reduce((acc, operator) => {
+    acc[operator.operatorId] = operator.name;
+    return acc;
+  }, {});
 
   const rows = runs.map(r => ({
-    operator: <TextCell>{r.operatorId}</TextCell>,
+    operator: <TextCell>{operatorNames[r.operatorId] || r.operatorName || r.operatorId}</TextCell>,
     trigger: <TextCell>{r.triggerType}</TextCell>,
     result: (
       <ArgonBadge variant="gradient" badgeContent={r.result} color={resultColor(r.result)} size="xs" container />

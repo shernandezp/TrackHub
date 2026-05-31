@@ -17,15 +17,15 @@
 import { useContext, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Grid from '@mui/material/Grid';
-import TextField from '@mui/material/TextField';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Switch from '@mui/material/Switch';
 import TableAccordion from 'controls/Accordions/TableAccordion';
+import CustomTextField from 'controls/Dialogs/CustomTextField';
 import ArgonBox from 'components/ArgonBox';
 import ArgonButton from 'components/ArgonButton';
 import ArgonTypography from 'components/ArgonTypography';
 import useAccountService from 'services/account';
-import usePositionRetentionService from 'services/positionRetention';
+import usePositionRetentionService from 'layouts/gpsintegration/services/positionRetention';
 import { LoadingContext } from 'LoadingContext';
 
 function RetentionSettings() {
@@ -93,11 +93,15 @@ function RetentionSettings() {
                 />
               </Grid>
               <Grid item xs={12} sm={4}>
-                <TextField
-                  fullWidth type="number" label={t('gpsIntegration.retention.retentionDays')}
+                <CustomTextField
+                  type="number"
+                  name="retentionDays"
+                  id="retentionDays"
+                  label={t('gpsIntegration.retention.retentionDays')}
                   value={policy.retentionDays}
                   onChange={(e) => setPolicy(p => ({ ...p, retentionDays: parseInt(e.target.value, 10) || 0 }))}
                   inputProps={{ min: 0 }}
+                  margin="none"
                 />
               </Grid>
               <Grid item xs={12} sm={4}>
