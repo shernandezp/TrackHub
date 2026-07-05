@@ -1,22 +1,39 @@
+/**
+* Copyright (c) 2026 Sergio Hernandez. All rights reserved.
+*
+*  Licensed under the Apache License, Version 2.0 (the "License").
+*  You may not use this file except in compliance with the License.
+*  You may obtain a copy of the License at
+*
+*      http://www.apache.org/licenses/LICENSE-2.0
+*
+*  Unless required by applicable law or agreed to in writing, software
+*  distributed under the License is distributed on an "AS IS" BASIS,
+*  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+*  See the License for the specific language governing permissions and
+*  limitations under the License.
+*/
+
 import { useContext, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import PropTypes from 'prop-types';
-import Icon from '@mui/material/Icon';
 import Table from "controls/Tables/Table";
 import TableAccordion from "controls/Accordions/TableAccordion";
 import ArgonBadge from "components/ArgonBadge";
-import ArgonButton from "components/ArgonButton";
 import ArgonTypography from "components/ArgonTypography";
 import useAccountService from "services/account";
 import useAccountFeatureService from "services/accountFeatures";
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from "utils/dateUtils";
 
-const defaultFeatures = [
+// Managers only visualize their account features; enabling/disabling is a billing decision
+// owned by the SuperAdministrator.
+const displayFeatures = [
+  'gps.integration',
+  'gps.positionHistory',
   'geofencing',
   'trip-management',
   'driver-mobile',
-  'reports',
   'public-links',
   'documents',
   'notifications'
@@ -42,7 +59,7 @@ function ManageAccountFeatures() {
   const [features, setFeatures] = useState([]);
   const loaded = useRef(false);
   const { getAccountByUser } = useAccountService();
-  const { getAccountFeatures, setAccountFeature } = useAccountFeatureService();
+  const { getAccountFeatures } = useAccountFeatureService();
 
   const loadFeatures = async () => {
     setLoading(true);
@@ -64,48 +81,21 @@ function ManageAccountFeatures() {
     }
   }, [expanded]);
 
-  const handleToggleFeature = async (feature) => {
-    if (!account?.accountId) return;
-
-    setLoading(true);
-    try {
-      await setAccountFeature({
-        accountId: account.accountId,
-        featureKey: feature.featureKey,
-        enabled: !feature.enabled,
-        tier: feature.tier || 'default',
-        source: 'portal',
-        effectiveFrom: feature.effectiveFrom,
-        effectiveTo: feature.effectiveTo,
-        configurationJson: feature.configurationJson
-      });
-      const accountFeatures = await getAccountFeatures(account.accountId);
-      setFeatures(accountFeatures || []);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const rows = defaultFeatures.map(featureKey => {
+  const rows = displayFeatures.map(featureKey => {
     const feature = features.find(item => item.featureKey === featureKey) || {
       accountId: account?.accountId,
       featureKey,
       enabled: false,
       tier: 'default',
-      source: 'portal'
+      source: 'superadmin'
     };
 
     return {
       feature: <TextCell>{feature.featureKey}</TextCell>,
-      enabled: <ArgonBadge variant="gradient" color={feature.enabled ? 'success' : 'secondary'} size="xs" container>{feature.enabled ? t('generic.yes') : t('generic.no')}</ArgonBadge>,
+      enabled: <ArgonBadge variant="gradient" color={feature.enabled ? 'success' : 'secondary'} size="xs" container badgeContent={feature.enabled ? t('generic.yes') : t('generic.no')} />,
       tier: <TextCell>{feature.tier}</TextCell>,
       source: <TextCell>{feature.source}</TextCell>,
       modified: <TextCell>{formatDateTime(feature.lastModified)}</TextCell>,
-      action: (
-        <ArgonButton variant="text" color="dark" onClick={() => handleToggleFeature(feature)}>
-          <Icon>{feature.enabled ? 'toggle_off' : 'toggle_on'}</Icon>&nbsp;{feature.enabled ? t('accountFeatures.disable') : t('accountFeatures.enable')}
-        </ArgonButton>
-      ),
       id: feature.featureKey
     };
   });
@@ -119,7 +109,6 @@ function ManageAccountFeatures() {
           { name: 'tier', title: t('accountFeatures.tier'), align: 'center' },
           { name: 'source', title: t('accountFeatures.source'), align: 'center' },
           { name: 'modified', title: t('generic.modified'), align: 'center' },
-          { name: 'action', title: t('generic.action'), align: 'center' },
           { name: 'id' }
         ]}
         rows={rows}

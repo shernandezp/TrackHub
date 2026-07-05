@@ -65,7 +65,7 @@ function Configurator({ settings, updateSettings }) {
   const mapOptions = maps
     .map(type => ({ value: type, label: type }));
 
-  const [accountSettings, setAccountSettings] = useState({maps: 'OSM', storeLastPosition: false, refreshMap: false});
+  const [accountSettings, setAccountSettings] = useState({maps: 'OSM', refreshMap: false});
   const handleCloseConfigurator = () => setOpenConfigurator(dispatch, false);
 
   useEffect(() => {
@@ -95,20 +95,6 @@ function Configurator({ settings, updateSettings }) {
     setAccountSettings(prevSettings => ({
       ...prevSettings,
       onlineInterval: event.target.value
-    }));
-  };
-
-  function handleStorePositionChange() {
-    setAccountSettings(prevSettings => ({
-      ...prevSettings,
-      storeLastPosition: !settings.storeLastPosition
-    }));
-  }
-
-  const handleStoringIntervalChange = (event) => {
-    setAccountSettings(prevSettings => ({
-      ...prevSettings,
-      storingInterval: event.target.value
     }));
   };
 
@@ -224,24 +210,6 @@ function Configurator({ settings, updateSettings }) {
             fullWidth
             value={accountSettings.refreshMapInterval || 60}
             onChange={handleRefreshMapIntervalChange}
-          />
-        </ArgonBox>
-
-        <ArgonBox display="flex" justifyContent="space-between" mt={3} lineHeight={1}>
-          <ArgonTypography variant="h6">{t('settings.storePosition')}</ArgonTypography>
-          <Switch checked={accountSettings.storeLastPosition} onChange={handleStorePositionChange} />
-        </ArgonBox>
-
-        <ArgonBox display="flex" justifyContent="space-between" lineHeight={1}>
-          <CustomTextField
-            margin="dense"
-            name="storingInterval"
-            id="storingInterval"
-            label={t('settings.storingInterval')}
-            type="number"
-            fullWidth
-            value={accountSettings.storingInterval || 360}
-            onChange={handleStoringIntervalChange}
           />
         </ArgonBox>
 

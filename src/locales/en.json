@@ -105,12 +105,17 @@
   },
   "accountFeatures": {
     "title": "Account Features",
+    "addTitle": "Add Feature to Account",
     "feature": "Feature",
     "enabled": "Enabled",
     "tier": "Tier",
     "source": "Source",
     "enable": "Enable",
-    "disable": "Disable"
+    "disable": "Disable",
+    "config": {
+      "storingIntervalSeconds": "Storing Interval (Seconds)",
+      "retentionDays": "Retention Days"
+    }
   },
   "alertEvents": {
     "title": "Alert Events",
@@ -313,18 +318,24 @@
     "users": "Users",
     "accountsMaster": "Accounts (Master)",
     "accountFeatures": "Account Features",
+    "accountFeaturesMaster": "Account Features (Master)",
     "alerts": "Alerts",
     "audit": "Audit Trail",
     "backgroundJobs": "Background Jobs",
     "devicesMaster": "Devices (Master)",
     "documents": "Documents",
     "drivers": "Drivers",
+    "gpsIntegrationDashboard": "GPS Integration Dashboard",
     "manageDevices": "Manage Devices",
     "notifications": "Notifications",
+    "operatorHealth": "Operator Health",
+    "operatorSyncRuns": "Operator Sync Runs",
     "operatorsMaster": "Operators (Master)",
+    "positionHistory": "Position History",
     "publicLinks": "Public Links",
     "serviceClients": "Service Clients",
-    "supportGrants": "Support Grants"
+    "supportGrants": "Support Grants",
+    "synchronizedDevices": "Synchronized Devices"
   },
   "role": {
     "title": "Roles",
@@ -600,11 +611,10 @@
       "key2": "Secondary Key"
     },
     "retention": {
-      "historyEnabled": "Enable Position History",
+      "managedNote": "These storage settings depend on your subscription plan and are managed by the administrator.",
+      "historyStatus": "Position History",
       "retentionDays": "Retention Days",
-      "latestOnly": "Keep Latest Only",
-      "source": "Effective Source",
-      "default": "default"
+      "storingInterval": "Storing Interval (Seconds)"
     },
     "errors": {
       "dashboardLoad": "Failed to load GPS dashboard",

@@ -78,7 +78,52 @@ const useAccountFeatureService = () => {
     }
   `, data => data.setAccountFeature, null);
 
-  return { getAccountFeatures, setAccountFeature };
+  // Cross-account read for the SuperAdministrator (AccountFeaturesMaster resource).
+  const getAccountFeaturesMaster = async (accountId) => execute(`
+    query {
+      accountFeaturesMaster(query: { accountId: ${formatValue(accountId)} }) {
+        accountFeatureId
+        accountId
+        featureKey
+        enabled
+        tier
+        source
+        effectiveFrom
+        effectiveTo
+        configurationJson
+        lastModified
+      }
+    }
+  `, data => data.accountFeaturesMaster, []);
+
+  // Cross-account write for the SuperAdministrator (AccountFeaturesMaster resource).
+  const setAccountFeatureMaster = async (feature) => execute(`
+    mutation {
+      setAccountFeatureMaster(command: { feature: {
+        accountId: ${formatValue(feature.accountId)}
+        featureKey: ${formatValue(feature.featureKey)}
+        enabled: ${feature.enabled}
+        tier: ${formatValue(feature.tier || 'default')}
+        source: ${formatValue(feature.source || 'superadmin')}
+        effectiveFrom: ${formatValue(feature.effectiveFrom)}
+        effectiveTo: ${formatValue(feature.effectiveTo)}
+        configurationJson: ${formatValue(feature.configurationJson)}
+      }}) {
+        accountFeatureId
+        accountId
+        featureKey
+        enabled
+        tier
+        source
+        effectiveFrom
+        effectiveTo
+        configurationJson
+        lastModified
+      }
+    }
+  `, data => data.setAccountFeatureMaster, null);
+
+  return { getAccountFeatures, setAccountFeature, getAccountFeaturesMaster, setAccountFeatureMaster };
 };
 
 export default useAccountFeatureService;

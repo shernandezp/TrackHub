@@ -47,8 +47,6 @@ const useSettignsService = () => {
                   maps,
                   mapsKey,
                   onlineInterval,
-                  storeLastPosition,
-                  storingInterval,
                   refreshMap,
                   refreshMapInterval
                 }
@@ -108,8 +106,6 @@ const useSettignsService = () => {
                       maps: ${formatValue(accountSettingsData.maps)},
                       mapsKey: ${formatValue(accountSettingsData.mapsKey)},
                       onlineInterval: ${accountSettingsData.onlineInterval},
-                      storeLastPosition: ${accountSettingsData.storeLastPosition},
-                      storingInterval: ${accountSettingsData.storingInterval},
                       refreshMap: ${accountSettingsData.refreshMap},
                       refreshMapInterval: ${accountSettingsData.refreshMapInterval}
                     } 

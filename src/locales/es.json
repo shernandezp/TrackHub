@@ -105,12 +105,17 @@
   },
   "accountFeatures": {
     "title": "Funcionalidades de Cuenta",
+    "addTitle": "Agregar Funcionalidad a la Cuenta",
     "feature": "Funcionalidad",
     "enabled": "Habilitada",
     "tier": "Nivel",
     "source": "Origen",
     "enable": "Habilitar",
-    "disable": "Deshabilitar"
+    "disable": "Deshabilitar",
+    "config": {
+      "storingIntervalSeconds": "Intervalo de Almacenamiento (Segundos)",
+      "retentionDays": "Días de Retención"
+    }
   },
   "alertEvents": {
     "title": "Eventos de Alerta",
@@ -313,18 +318,24 @@
     "transporterType": "Tipos de Unidades",
     "accountsMaster": "Cuentas (Master)",
     "accountFeatures": "Funciones de la Cuenta",
+    "accountFeaturesMaster": "Funciones de la Cuenta (Master)",
     "alerts": "Alertas",
     "audit": "Registro de Auditoría",
     "backgroundJobs": "Trabajos en Segundo Plano",
     "devicesMaster": "Dispositivos (Master)",
     "documents": "Documentos",
     "drivers": "Conductores",
+    "gpsIntegrationDashboard": "Panel de Integración GPS",
     "manageDevices": "Administrar Dispositivos",
     "notifications": "Notificaciones",
+    "operatorHealth": "Estado del Operador",
+    "operatorSyncRuns": "Ejecuciones de Sincronización del Operador",
     "operatorsMaster": "Operadores (Master)",
+    "positionHistory": "Historial de Posiciones",
     "publicLinks": "Enlaces Públicos",
     "serviceClients": "Clientes de Servicio",
-    "supportGrants": "Concesiones de Soporte"
+    "supportGrants": "Concesiones de Soporte",
+    "synchronizedDevices": "Dispositivos Sincronizados"
   },
   "role": {
     "title": "Roles",
@@ -600,11 +611,10 @@
       "key2": "Clave Secundaria"
     },
     "retention": {
-      "historyEnabled": "Habilitar Historial de Posiciones",
+      "managedNote": "Estas configuraciones de almacenamiento dependen de su plan de suscripción y son gestionadas por el administrador.",
+      "historyStatus": "Historial de Posiciones",
       "retentionDays": "Días de Retención",
-      "latestOnly": "Solo la Última",
-      "source": "Origen Efectivo",
-      "default": "por defecto"
+      "storingInterval": "Intervalo de Almacenamiento (Segundos)"
     },
     "errors": {
       "dashboardLoad": "No se pudo cargar el panel GPS",

@@ -17,28 +17,26 @@
 import { useContext, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Grid from '@mui/material/Grid';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Switch from '@mui/material/Switch';
 import TableAccordion from 'controls/Accordions/TableAccordion';
-import CustomTextField from 'controls/Dialogs/CustomTextField';
+import CustomReadOnly from 'controls/Dialogs/CustomReadOnly';
 import ArgonBox from 'components/ArgonBox';
-import ArgonButton from 'components/ArgonButton';
 import ArgonTypography from 'components/ArgonTypography';
 import useAccountService from 'services/account';
-import usePositionRetentionService from 'layouts/gpsintegration/services/positionRetention';
+import useAccountFeatureService from 'services/accountFeatures';
+import { parseJson } from 'utils/jsonUtils';
 import { LoadingContext } from 'LoadingContext';
 
+// Read-only for managers. Position storage/retention is a billing/storage-cost decision owned by
+// the SuperAdministrator (gps.integration + gps.positionHistory feature configuration).
 function RetentionSettings() {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
   const [expanded, setExpanded] = useState(false);
-  const [accountId, setAccountId] = useState(null);
-  const [policy, setPolicy] = useState({ historyEnabled: false, retentionDays: 30, latestOnly: true });
-  const [source, setSource] = useState(null);
+  const [state, setState] = useState({ historyEnabled: false, retentionDays: null, storingIntervalSeconds: null });
   const [error, setError] = useState(null);
   const loaded = useRef(false);
   const { getAccountByUser } = useAccountService();
-  const { getPositionRetentionPolicy, setPositionRetentionPolicy } = usePositionRetentionService();
+  const { getAccountFeatures } = useAccountFeatureService();
 
   useEffect(() => {
     if (expanded && !loaded.current) {
@@ -51,28 +49,18 @@ function RetentionSettings() {
             setError(t('gpsIntegration.errors.retentionLoad'));
             return;
           }
-          setAccountId(acct.accountId);
-          const current = await getPositionRetentionPolicy(acct.accountId);
-          if (current) {
-            setPolicy({
-              historyEnabled: !!current.historyEnabled,
-              retentionDays: current.retentionDays ?? 30,
-              latestOnly: !!current.latestOnly
-            });
-            setSource(current.effectiveSource);
-          }
+          const features = await getAccountFeatures(acct.accountId) || [];
+          const history = features.find(f => f.featureKey === 'gps.positionHistory');
+          const integration = features.find(f => f.featureKey === 'gps.integration');
+          setState({
+            historyEnabled: !!history?.enabled,
+            retentionDays: history?.enabled ? (parseJson(history.configurationJson).retentionDays ?? null) : null,
+            storingIntervalSeconds: parseJson(integration?.configurationJson).storingIntervalSeconds ?? null
+          });
         } finally { setLoading(false); }
       })();
     }
   }, [expanded]);
-
-  const handleSave = async () => {
-    if (!accountId) return;
-    setLoading(true);
-    try {
-      await setPositionRetentionPolicy(accountId, policy);
-    } finally { setLoading(false); }
-  };
 
   return (
     <TableAccordion title={t('gpsIntegration.sections.retention')} expanded={expanded} setExpanded={setExpanded}>
@@ -80,50 +68,26 @@ function RetentionSettings() {
         ? <ArgonTypography variant="button" color="error">{error}</ArgonTypography>
         : (
           <ArgonBox p={1}>
-            <Grid container spacing={2} alignItems="center">
+            <ArgonBox mb={2}>
+              <ArgonTypography variant="caption" color="text">
+                {t('gpsIntegration.retention.managedNote')}
+              </ArgonTypography>
+            </ArgonBox>
+            <Grid container spacing={3}>
               <Grid item xs={12} sm={4}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={policy.historyEnabled}
-                      onChange={(e) => setPolicy(p => ({ ...p, historyEnabled: e.target.checked }))}
-                    />
-                  }
-                  label={t('gpsIntegration.retention.historyEnabled')}
-                />
+                <CustomReadOnly
+                  label={t('gpsIntegration.retention.historyStatus')}
+                  value={state.historyEnabled ? t('generic.yes') : t('generic.no')} />
               </Grid>
               <Grid item xs={12} sm={4}>
-                <CustomTextField
-                  type="number"
-                  name="retentionDays"
-                  id="retentionDays"
+                <CustomReadOnly
                   label={t('gpsIntegration.retention.retentionDays')}
-                  value={policy.retentionDays}
-                  onChange={(e) => setPolicy(p => ({ ...p, retentionDays: parseInt(e.target.value, 10) || 0 }))}
-                  inputProps={{ min: 0 }}
-                  margin="none"
-                />
+                  value={state.retentionDays ?? '-'} />
               </Grid>
               <Grid item xs={12} sm={4}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={policy.latestOnly}
-                      onChange={(e) => setPolicy(p => ({ ...p, latestOnly: e.target.checked }))}
-                    />
-                  }
-                  label={t('gpsIntegration.retention.latestOnly')}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <ArgonTypography variant="caption" color="secondary">
-                  {t('gpsIntegration.retention.source')}: {source || t('gpsIntegration.retention.default')}
-                </ArgonTypography>
-              </Grid>
-              <Grid item xs={12}>
-                <ArgonButton color="info" onClick={handleSave} disabled={!accountId}>
-                  {t('generic.save')}
-                </ArgonButton>
+                <CustomReadOnly
+                  label={t('gpsIntegration.retention.storingInterval')}
+                  value={state.storingIntervalSeconds ?? '-'} />
               </Grid>
             </Grid>
           </ArgonBox>

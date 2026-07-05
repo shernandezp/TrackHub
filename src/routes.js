@@ -115,7 +115,6 @@ const routes = [
     key: "reports",
     route: "/reports",
     principalTypes: [PrincipalTypes.User],
-    featureKey: "reports",
     icon: <ArgonBox component="i" color="success" fontSize="14px" className="ni ni-credit-card" />,
     component: <Reports />,
   },
