@@ -50,13 +50,33 @@ const formatWithUnit = (value, unit) => {
 };
 
 /**
+ * Returns a localized relative time text (e.g. "5 min ago") for a date value.
+ * @param {string|number|Date} value - The date value.
+ * @param {Object} t - Translation function.
+ * @returns {string} Relative time text or empty string.
+ */
+export const getRelativeTimeText = (value, t) => {
+    if (!value) return '';
+    const date = new Date(value);
+    if (isNaN(date)) return '';
+    const diffMs = Date.now() - date.getTime();
+    if (diffMs < 0) return '';
+    const minutes = Math.floor(diffMs / 60000);
+    if (minutes < 1) return t('transporterMap.justNow');
+    if (minutes < 60) return t('transporterMap.minutesAgo', { value: minutes });
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return t('transporterMap.hoursAgo', { value: hours });
+    return t('transporterMap.daysAgo', { value: Math.floor(hours / 24) });
+};
+
+/**
  * Generates HTML content for enhanced marker popup
  * @param {Object} marker - Marker data
  * @param {Object} t - Translation function
  * @returns {string} HTML string for popup content
  */
 export const createEnhancedPopupContent = (marker, t) => {
-    const { name, dateTime, speed, attributes, address, altitude, city, country, state, transporterType, lat, lng } = marker;
+    const { id, name, dateTime, speed, attributes, address, altitude, city, country, state, transporterType, lat, lng } = marker;
     
     // Build the popup content with available data
     let content = `
@@ -68,8 +88,9 @@ export const createEnhancedPopupContent = (marker, t) => {
             
             <div style="padding: 0;">
                 <div style="margin-bottom: 4px;">
-                    <strong style="color: #667eea; font-size: 12px;">⏱ ${t('transporterMap.dateTime')}:</strong> 
+                    <strong style="color: #667eea; font-size: 12px;">⏱ ${t('transporterMap.lastReport') || t('transporterMap.dateTime')}:</strong>
                     <span style="font-size: 12px;">${formatDateTime(dateTime)}</span>
+                    ${getRelativeTimeText(dateTime, t) ? `<span style="font-size: 11px; color: #888;"> (${getRelativeTimeText(dateTime, t)})</span>` : ''}
                 </div>
                 
                 <div style="margin-bottom: 4px;">
@@ -135,20 +156,33 @@ export const createEnhancedPopupContent = (marker, t) => {
             </div>`;
     }
 
-    // Add address if available
+    // Add address if available; otherwise show coordinates + on-demand resolve action
     if (address) {
         content += `
             <div style="margin-bottom: 4px;">
                 <strong style="color: #667eea; font-size: 12px;">📍 ${t('transporterMap.address') || 'Address'}:</strong><br/>
                 <span style="font-size: 11px;">${address}</span>
             </div>`;
-    } else if (city || state || country) {
-        const location = [city, state, country].filter(Boolean).join(', ');
-        content += `
+    } else {
+        if (city || state || country) {
+            const location = [city, state, country].filter(Boolean).join(', ');
+            content += `
             <div style="margin-bottom: 4px;">
                 <strong style="color: #667eea; font-size: 12px;">📍 ${t('transporterMap.location') || 'Location'}:</strong><br/>
                 <span style="font-size: 11px;">${location}</span>
             </div>`;
+        }
+        if (lat !== undefined && lat !== null && lng !== undefined && lng !== null) {
+            content += `
+            <div style="margin-bottom: 4px;">
+                <strong style="color: #667eea; font-size: 12px;">📍 ${t('transporterMap.coordinates') || 'Coordinates'}:</strong>
+                <span style="font-size: 11px;">${Number(lat).toFixed(6)}, ${Number(lng).toFixed(6)}</span><br/>
+                <button type="button" class="th-resolve-address" data-lat="${lat}" data-lng="${lng}" data-transporter-id="${id ?? ''}"
+                    style="margin-top: 4px; padding: 3px 8px; background: #667eea; color: white; border: none; border-radius: 4px; font-size: 11px; cursor: pointer;">
+                    ${t('transporterMap.resolveAddress') || 'Resolve address'}
+                </button>
+            </div>`;
+        }
     }
 
     // Add action buttons

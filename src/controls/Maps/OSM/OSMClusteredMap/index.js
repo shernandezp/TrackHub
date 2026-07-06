@@ -22,18 +22,60 @@ import UserLocation from "controls/Maps/UserLocation";
 import { OSMScaleControl } from 'controls/Maps/shared/ScaleControl';
 import { OSMFullscreenControl } from 'controls/Maps/shared/FullscreenControl';
 import { OSMMeasurementTool } from 'controls/Maps/shared/MeasurementTool';
+import MapProviderContext, { OSM_PROVIDER } from 'controls/Maps/core/MapProviderContext';
+import PoiLayer from 'controls/Maps/core/PoiLayer';
+import TrailLayer from 'controls/Maps/core/TrailLayer';
+import { OSM_LIGHT_TILE, OSM_DARK_TILE } from 'controls/Maps/utils/darkMapStyles';
 import PropTypes from 'prop-types';
 import L from 'leaflet';
 
-const OSMClusteredMap = ({ 
-    markers, 
-    selectedMarker, 
-    geofences, 
+// Keeps the selected unit centered across refreshes until the user pans.
+const FollowController = ({ followUnit, markers, onFollowDisengage }) => {
+    const map = useMap();
+
+    useEffect(() => {
+        if (!followUnit) return;
+        const marker = markers.find(m => m.name === followUnit);
+        if (marker) {
+            map.setView(L.latLng(marker.lat, marker.lng), map.getZoom(), { animate: true });
+        }
+    }, [followUnit, markers, map]);
+
+    useEffect(() => {
+        if (!followUnit || !onFollowDisengage) return undefined;
+        const handler = () => onFollowDisengage();
+        map.on('dragstart', handler);
+        return () => {
+            map.off('dragstart', handler);
+        };
+    }, [followUnit, onFollowDisengage, map]);
+
+    return null;
+};
+
+FollowController.propTypes = {
+    followUnit: PropTypes.string,
+    markers: PropTypes.array,
+    onFollowDisengage: PropTypes.func
+};
+
+const OSMClusteredMap = ({
+    markers,
+    selectedMarker,
+    geofences,
     showGeofence,
     handleSelected,
     enableScale = true,
     enableFullscreen = true,
     enableMeasurement = true,
+    pois = [],
+    showPois = false,
+    trail = [],
+    showTrail = false,
+    followUnit = null,
+    onFollowDisengage,
+    darkMode = false,
+    viewportThreshold = 1000,
     height = "70vh"
 }) => {
     const [bounds, setBounds] = useState(null);
@@ -60,7 +102,9 @@ const OSMClusteredMap = ({
                 map.setView(latLng, map.getZoom());
             }
         }
-    }, [selectedMarker, markers]);
+        // Center on selection change only; refresh cycles must not recenter.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedMarker]);
 
     const ChangeView = ({ bounds }) => {
         const map = useMap();
@@ -80,30 +124,44 @@ const OSMClusteredMap = ({
         bounds: PropTypes.array
     };
 
+    const tile = darkMode ? OSM_DARK_TILE : OSM_LIGHT_TILE;
+
     return (
         <div>
             <UserLocation setUserLocation={setUserLocation} />
-            <MapContainer
-                center={userLocation}
-                zoom={13}
-                style={{ height: height, width: "100%" }}
-                whenCreated={mapInstance => { mapRef.current = mapInstance; }}>
-                <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-                />
-                <MarkerCluster 
-                    markers={markers} 
-                    selectedMarker={selectedMarker}
-                    handleSelected={handleSelected} />
-                {bounds && <ChangeView bounds={bounds} />}
-                {showGeofence && geofences.map((geofence, index) => (
-                    <GeofencePolygon key={index} geofence={geofence} />
-                ))}
-                {enableScale && <OSMScaleControl position="bottomleft" imperial={false} />}
-                {enableFullscreen && <OSMFullscreenControl position="topleft" />}
-                {enableMeasurement && <OSMMeasurementTool position="topleft" unit="metric" enabled={true} />}
-            </MapContainer>
+            <MapProviderContext.Provider value={OSM_PROVIDER}>
+                <MapContainer
+                    center={userLocation}
+                    zoom={13}
+                    preferCanvas={true}
+                    style={{ height: height, width: "100%" }}
+                    ref={mapRef}>
+                    <TileLayer
+                        key={darkMode ? 'dark' : 'light'}
+                        url={tile.url}
+                        attribution={tile.attribution}
+                        className={tile.className}
+                    />
+                    <MarkerCluster
+                        markers={markers}
+                        selectedMarker={selectedMarker}
+                        handleSelected={handleSelected}
+                        viewportThreshold={viewportThreshold} />
+                    {bounds && <ChangeView bounds={bounds} />}
+                    {showGeofence && geofences.map((geofence, index) => (
+                        <GeofencePolygon key={index} geofence={geofence} />
+                    ))}
+                    {showPois && <PoiLayer pois={pois} />}
+                    {showTrail && trail.length > 1 && <TrailLayer points={trail} />}
+                    <FollowController
+                        followUnit={followUnit}
+                        markers={markers}
+                        onFollowDisengage={onFollowDisengage} />
+                    {enableScale && <OSMScaleControl position="bottomleft" imperial={false} />}
+                    {enableFullscreen && <OSMFullscreenControl position="topleft" />}
+                    {enableMeasurement && <OSMMeasurementTool position="topleft" unit="metric" enabled={true} />}
+                </MapContainer>
+            </MapProviderContext.Provider>
         </div>
     );
 };
@@ -117,6 +175,14 @@ OSMClusteredMap.propTypes = {
     enableScale: PropTypes.bool,
     enableFullscreen: PropTypes.bool,
     enableMeasurement: PropTypes.bool,
+    pois: PropTypes.array,
+    showPois: PropTypes.bool,
+    trail: PropTypes.array,
+    showTrail: PropTypes.bool,
+    followUnit: PropTypes.string,
+    onFollowDisengage: PropTypes.func,
+    darkMode: PropTypes.bool,
+    viewportThreshold: PropTypes.number,
     height: PropTypes.string
 };
 

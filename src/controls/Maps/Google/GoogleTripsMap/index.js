@@ -7,11 +7,14 @@ import { GoogleScaleControl } from 'controls/Maps/shared/ScaleControl';
 import { GoogleFullscreenControl } from 'controls/Maps/shared/FullscreenControl';
 import { GoogleMeasurementTool } from 'controls/Maps/shared/MeasurementTool';
 import { GoogleStatsToggle } from 'controls/Maps/shared/StatsToggle';
+import MapProviderContext, { GOOGLE_PROVIDER } from 'controls/Maps/core/MapProviderContext';
+import PlaybackMarker from 'controls/Maps/core/PlaybackMarker';
+import { GOOGLE_NIGHT_STYLES } from 'controls/Maps/utils/darkMapStyles';
 
-const GoogleTripsMap = ({ 
-  mapKey = [], 
-  trips, 
-  selectedTrip, 
+const GoogleTripsMap = ({
+  mapKey = [],
+  trips,
+  selectedTrip,
   showGeofence,
   geofences,
   handleSelected,
@@ -20,6 +23,8 @@ const GoogleTripsMap = ({
   enableScale = true,
   enableFullscreen = true,
   enableMeasurement = true,
+  playbackPosition = null,
+  darkMode = false,
   height = "70vh"
 }) => {
   const mapRef = useRef(null);
@@ -88,12 +93,13 @@ const GoogleTripsMap = ({
   return (
     <LoadScript googleMapsApiKey={mapKey}>
       <UserLocation setUserLocation={setUserLocation} />
+      <MapProviderContext.Provider value={GOOGLE_PROVIDER}>
       <GoogleMap
         mapContainerStyle={{ height: height, width: "100%" }}
         zoom={6}
         center={userLocation}
         onLoad={map => (mapRef.current = map)}
-        options={{ gestureHandling: "greedy" }}>
+        options={{ gestureHandling: "greedy", styles: darkMode ? GOOGLE_NIGHT_STYLES : null }}>
         {trips.map((trip, index) => (
           trip.type === 1 ? (
             <Marker
@@ -123,11 +129,13 @@ const GoogleTripsMap = ({
         {showGeofence && geofences.map((geofence, index) => (
           <GeofencePolygon key={index} geofence={geofence} />
         ))}
+        {playbackPosition && <PlaybackMarker position={playbackPosition} />}
         {enableScale && <GoogleScaleControl mapRef={mapRef} position="BOTTOM_LEFT" />}
         {enableFullscreen && <GoogleFullscreenControl mapRef={mapRef} position="TOP_LEFT" />}
         {enableMeasurement && <GoogleMeasurementTool mapRef={mapRef} position="TOP_LEFT" unit="metric" enabled={true} />}
         <GoogleStatsToggle position="TOP_LEFT" toggleStats={toggleStats} showStats={showStats} />
       </GoogleMap>
+      </MapProviderContext.Provider>
     </LoadScript>
   );
 };
@@ -149,6 +157,8 @@ GoogleTripsMap.propTypes = {
     enableMeasurement: PropTypes.bool,
     toggleStats: PropTypes.func,
     showStats: PropTypes.bool,
+    playbackPosition: PropTypes.object,
+    darkMode: PropTypes.bool,
     height: PropTypes.string
   };
 

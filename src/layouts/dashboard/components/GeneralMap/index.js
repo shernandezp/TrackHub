@@ -17,63 +17,96 @@
 import React, { useState, useEffect } from 'react';
 import OSMClusteredMap from 'controls/Maps/OSM/OSMClusteredMap';
 import GoogleClusteredMap from 'controls/Maps/Google/GoogleClusteredMap';
+import { getUnitStatus } from 'layouts/dashboard/utils/dashboard';
+import { getStatusMarkerColor, getStatusMarkerLabel } from 'controls/Maps/utils/markerUtils';
 import PropTypes from 'prop-types';
 import 'controls/Maps/css/map.css';
 
-function GeneralMap({ 
-    mapType, 
-    positions, 
-    mapKey, 
-    selectedMarker, 
+function GeneralMap({
+    mapType,
+    positions,
+    mapKey,
+    selectedMarker,
     geofences,
     showGeofence,
     handleSelected,
+    onlineInterval,
+    pois = [],
+    showPois = false,
+    trail = [],
+    showTrail = false,
+    followUnit = null,
+    onFollowDisengage,
+    darkMode = false,
+    viewportThreshold = 1000,
     height = "70vh" }) {
 
     const [markers, setMarkers] = useState([]);
     useEffect(() => {
         const fetchMarkers = async () => {
-            const markers = positions.map(item => ({
-                lat: item.latitude,
-                lng: item.longitude,
-                rotation: item.course,
-                name: item.deviceName,
-                dateTime: item.deviceDateTime,
-                speed: item.speed,
-                text: item.speed > 0 ? 'M' : 'D',
-                // Additional attributes
-                attributes: item.attributes || {},
-                address: item.address,
-                altitude: item.altitude,
-                city: item.city,
-                country: item.country,
-                state: item.state,
-                transporterType: item.transporterType,
-            }));
+            const markers = positions.map(item => {
+                const status = getUnitStatus(item, onlineInterval);
+                return {
+                    id: item.transporterId,
+                    lat: item.latitude,
+                    lng: item.longitude,
+                    rotation: item.course,
+                    name: item.deviceName,
+                    dateTime: item.deviceDateTime,
+                    speed: item.speed,
+                    status,
+                    color: getStatusMarkerColor(status),
+                    text: getStatusMarkerLabel(status),
+                    // Additional attributes
+                    attributes: item.attributes || {},
+                    address: item.address,
+                    altitude: item.altitude,
+                    city: item.city,
+                    country: item.country,
+                    state: item.state,
+                    transporterType: item.transporterType,
+                };
+            });
             setMarkers(markers);
         };
         fetchMarkers();
-      }, [positions]);
+      }, [positions, onlineInterval]);
 
     return (
         <div className="map-container">
             {mapType === 'OSM' ? (
-                <OSMClusteredMap 
-                    markers={markers} 
+                <OSMClusteredMap
+                    markers={markers}
                     selectedMarker={selectedMarker}
                     geofences={geofences}
                     showGeofence={showGeofence}
                     handleSelected={handleSelected}
+                    pois={pois}
+                    showPois={showPois}
+                    trail={trail}
+                    showTrail={showTrail}
+                    followUnit={followUnit}
+                    onFollowDisengage={onFollowDisengage}
+                    darkMode={darkMode}
+                    viewportThreshold={viewportThreshold}
                     height={height} />
             ) : (
-                mapType === 'Google' && 
-                    <GoogleClusteredMap 
-                        markers={markers} 
+                mapType === 'Google' &&
+                    <GoogleClusteredMap
+                        markers={markers}
                         mapKey={mapKey}
                         selectedMarker={selectedMarker}
                         geofences={geofences}
-                        showGeofence={showGeofence} 
+                        showGeofence={showGeofence}
                         handleSelected={handleSelected}
+                        pois={pois}
+                        showPois={showPois}
+                        trail={trail}
+                        showTrail={showTrail}
+                        followUnit={followUnit}
+                        onFollowDisengage={onFollowDisengage}
+                        darkMode={darkMode}
+                        viewportThreshold={viewportThreshold}
                         height={height} />
             )}
         </div>
@@ -88,6 +121,15 @@ GeneralMap.propTypes = {
     geofences: PropTypes.array,
     showGeofence: PropTypes.bool,
     handleSelected: PropTypes.func,
+    onlineInterval: PropTypes.number,
+    pois: PropTypes.array,
+    showPois: PropTypes.bool,
+    trail: PropTypes.array,
+    showTrail: PropTypes.bool,
+    followUnit: PropTypes.string,
+    onFollowDisengage: PropTypes.func,
+    darkMode: PropTypes.bool,
+    viewportThreshold: PropTypes.number,
     height: PropTypes.string,
 };
 

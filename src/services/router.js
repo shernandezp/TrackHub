@@ -62,7 +62,7 @@ const useRouterService = () => {
           const data = {
             query: `
               query {
-                devicesByOperator(query: { operatorId: "${operatorId}" }) {
+                providerDevicesByOperator(query: { operatorId: "${operatorId}" }) {
                   identifier
                   name
                   serial
@@ -73,7 +73,7 @@ const useRouterService = () => {
             `
           };
           const response = await post(data);
-          return response.data.devicesByOperator;
+          return response.data.providerDevicesByOperator;
         } catch (error) {
           handleError(error);
           return [];
@@ -125,18 +125,29 @@ const useRouterService = () => {
     };
 
     /**
+     * Builds the optional history source argument (PROVIDER | STORED).
+     * The argument is omitted entirely when no source is provided so the
+     * backend default behavior is preserved.
+     * @param {string} [source] - 'PROVIDER' or 'STORED'.
+     * @returns {string} GraphQL argument fragment or empty string.
+     */
+    const buildSourceArg = (source) =>
+      source === 'PROVIDER' || source === 'STORED' ? `, source: ${source}` : '';
+
+    /**
      * Retrieves trips associated with the specified transporter and date range.
      * @param {string} transporterId - The ID of the transporte to retrieve trips for.
      * @param {string} from - The start of the range.
      * @param {string} to - The end of the range.
+     * @param {string} [source] - Optional history source ('PROVIDER' | 'STORED').
      * @returns {Array} Array of trips associated with the transporter and date range.
      */
-    const getTripsByTransporter = async (transporterId, from, to) => {
+    const getTripsByTransporter = async (transporterId, from, to, source) => {
       try {
         const data = {
           query: `
             query {
-              tripsByTransporter(query: { transporterId: "${transporterId}", to: "${formatDateTimeOffSet(to)}", from: "${formatDateTimeOffSet(from)}" }) {
+              tripsByTransporter(query: { transporterId: "${transporterId}", to: "${formatDateTimeOffSet(to)}", from: "${formatDateTimeOffSet(from)}"${buildSourceArg(source)} }) {
                 averageSpeed
                 duration
                 totalDistance
@@ -164,11 +175,85 @@ const useRouterService = () => {
       }
     };
 
+    /**
+     * Retrieves raw positions for the specified transporter and date range.
+     * @param {string} transporterId - The ID of the transporter to retrieve positions for.
+     * @param {string} from - The start of the range.
+     * @param {string} to - The end of the range.
+     * @param {string} [source] - Optional history source ('PROVIDER' | 'STORED').
+     * @returns {Array} Array of positions for the transporter and date range.
+     */
+    const getPositionsByTransporter = async (transporterId, from, to, source) => {
+      try {
+        const data = {
+          query: `
+            query {
+              positionsByTransporter(query: { transporterId: "${transporterId}", to: "${formatDateTimeOffSet(to)}", from: "${formatDateTimeOffSet(from)}"${buildSourceArg(source)} }) {
+                deviceName
+                transporterId
+                latitude
+                longitude
+                altitude
+                speed
+                course
+                deviceDateTime
+                serverDateTime
+                eventId
+                address
+                city
+                state
+                country
+              }
+            }
+          `
+        };
+        const response = await post(data);
+        return response.data.positionsByTransporter;
+      } catch (error) {
+        handleError(error);
+        return [];
+      }
+    };
+
+    /**
+     * Resolves a human-readable address for a coordinate on demand.
+     * When a transporterId is provided the backend also persists the resolved
+     * address onto the transporter's latest-position row.
+     * @param {number} latitude - The latitude to resolve.
+     * @param {number} longitude - The longitude to resolve.
+     * @param {string} [transporterId] - Optional ID of the transporter the coordinate belongs to.
+     * @returns {Object|null} { address, city, state, country } or null when unavailable.
+     */
+    const reverseGeocode = async (latitude, longitude, transporterId) => {
+      try {
+        const transporterArg = transporterId ? `, transporterId: "${transporterId}"` : '';
+        const data = {
+          query: `
+            query {
+              reverseGeocode(query: { latitude: ${latitude}, longitude: ${longitude}${transporterArg} }) {
+                address
+                city
+                state
+                country
+              }
+            }
+          `
+        };
+        const response = await post(data);
+        return response.data.reverseGeocode;
+      } catch (error) {
+        handleSilentError(error);
+        return null;
+      }
+    };
+
     return {
         testConnectivity,
         getDevicesByOperator,
         getDevicePositions,
-        getTripsByTransporter
+        getTripsByTransporter,
+        getPositionsByTransporter,
+        reverseGeocode
     };
 };
 

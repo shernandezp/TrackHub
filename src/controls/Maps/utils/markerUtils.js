@@ -42,6 +42,31 @@ export const getStatusColor = (speed, isOnline = true) => {
 };
 
 /**
+ * Get marker hex color for a computed unit status
+ * ('moving' | 'stopped' | 'offline'), following the same color
+ * convention as getMarkerColor.
+ * @param {string} status - Unit status
+ * @returns {string} - Hex color code
+ */
+export const getStatusMarkerColor = (status) => {
+    if (status === 'offline') return '#808080'; // Gray for offline
+    if (status === 'moving') return '#00FF00'; // Green for moving
+    return '#FF0000'; // Red for stopped
+};
+
+/**
+ * Get marker label for a computed unit status
+ * ('moving' | 'stopped' | 'offline').
+ * @param {string} status - Unit status
+ * @returns {string} - Single character label
+ */
+export const getStatusMarkerLabel = (status) => {
+    if (status === 'offline') return 'O';
+    if (status === 'moving') return 'M';
+    return 'S';
+};
+
+/**
  * Get marker text/label based on status
  * @param {number} speed - Current speed
  * @param {boolean} isOnline - Device online status

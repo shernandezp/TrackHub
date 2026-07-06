@@ -30,8 +30,15 @@ const createGraphQLError = (payload) => {
   return error;
 };
 
+// A GraphQL response is a partial success when it carries errors alongside
+// usable data (e.g. the router falls back to cached positions after a
+// provider read fails). Only responses without any usable data are failures.
+const hasUsableData = (payload) =>
+  payload && payload.data != null &&
+  Object.values(payload.data).some((value) => value !== null && value !== undefined);
+
 const ensureNoGraphQLErrors = (payload) => {
-  if (payload && Array.isArray(payload.errors) && payload.errors.length > 0) {
+  if (payload && Array.isArray(payload.errors) && payload.errors.length > 0 && !hasUsableData(payload)) {
     throw createGraphQLError(payload);
   }
   return payload;

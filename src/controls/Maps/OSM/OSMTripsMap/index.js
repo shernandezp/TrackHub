@@ -6,6 +6,9 @@ import { OSMScaleControl } from 'controls/Maps/shared/ScaleControl';
 import { OSMFullscreenControl } from 'controls/Maps/shared/FullscreenControl';
 import { OSMMeasurementTool } from 'controls/Maps/shared/MeasurementTool';
 import { OSMStatsToggle } from 'controls/Maps/shared/StatsToggle';
+import MapProviderContext, { OSM_PROVIDER } from 'controls/Maps/core/MapProviderContext';
+import PlaybackMarker from 'controls/Maps/core/PlaybackMarker';
+import { OSM_LIGHT_TILE, OSM_DARK_TILE } from 'controls/Maps/utils/darkMapStyles';
 import 'leaflet/dist/leaflet.css';
 import PropTypes from 'prop-types';
 import startIconUrl from 'assets/images/markers/start_marker.svg';
@@ -27,6 +30,8 @@ const OSMTripsMap = ({
   enableScale = true,
   enableFullscreen = true,
   enableMeasurement = true,
+  playbackPosition = null,
+  darkMode = false,
   height = "70vh"
 }) => {
   const mapRef = useRef();
@@ -97,13 +102,18 @@ const OSMTripsMap = ({
     }
   }, [trips]);
 
+  const tile = darkMode ? OSM_DARK_TILE : OSM_LIGHT_TILE;
+
   return (
     <div>
       <UserLocation setUserLocation={setUserLocation} />
+      <MapProviderContext.Provider value={OSM_PROVIDER}>
       <MapContainer ref={mapRef} center={userLocation} zoom={13} style={{ height: height, width: '100%' }}>
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          key={darkMode ? 'dark' : 'light'}
+          url={tile.url}
+          attribution={tile.attribution}
+          className={tile.className}
         />
         {trips.map((trip, index) => {
           return (
@@ -136,11 +146,13 @@ const OSMTripsMap = ({
         {showGeofence && geofences.map((geofence, index) => (
           <GeofencePolygon key={index} geofence={geofence} />
         ))}
+        {playbackPosition && <PlaybackMarker position={playbackPosition} />}
         {enableScale && <OSMScaleControl position="bottomleft" imperial={false} />}
         {enableFullscreen && <OSMFullscreenControl position="topleft" />}
         {enableMeasurement && <OSMMeasurementTool position="topleft" unit="metric" enabled={true} />}
         <OSMStatsToggle position="topleft" toggleStats={toggleStats} showStats={showStats} />
       </MapContainer>
+      </MapProviderContext.Provider>
     </div>
   );
 };
@@ -161,6 +173,8 @@ OSMTripsMap.propTypes = {
   enableMeasurement: PropTypes.bool,
   toggleStats: PropTypes.func,
   showStats: PropTypes.bool,
+  playbackPosition: PropTypes.object,
+  darkMode: PropTypes.bool,
   height: PropTypes.string,
 };
 

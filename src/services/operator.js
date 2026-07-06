@@ -29,6 +29,8 @@ import { formatValue } from 'utils/dataUtils';
  */
 const useOperatorService = () => {
   const { post } = useApiService(process.env.REACT_APP_MANAGER_ENDPOINT);
+  // Health / sync-run reads moved to the TrackHub.Telemetry service (spec 01.3 §5.5).
+  const { post: postTelemetry } = useApiService(process.env.REACT_APP_TELEMETRY_ENDPOINT);
   const formatPositiveInteger = (value, fallback) => {
     const parsed = Number.parseInt(value, 10);
     return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
@@ -311,7 +313,7 @@ const useOperatorService = () => {
           }
         `
       };
-      const response = await post(data);
+      const response = await postTelemetry(data);
       return response.data.operatorSyncRuns ?? [];
     } catch (error) {
       handleError(error);
@@ -332,7 +334,7 @@ const useOperatorService = () => {
           }
         `
       };
-      const response = await post(data);
+      const response = await postTelemetry(data);
       return response.data.operatorHealth;
     } catch (error) {
       handleError(error);
@@ -351,7 +353,7 @@ const useOperatorService = () => {
           }
         `
       };
-      const response = await post(data);
+      const response = await postTelemetry(data);
       return response.data.operatorHealthHistory ?? [];
     } catch (error) {
       handleError(error);

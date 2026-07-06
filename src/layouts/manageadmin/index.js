@@ -21,6 +21,7 @@ import ManageUsers from "layouts/manageadmin/components/users";
 import ManageRoles from "layouts/manageadmin/components/roles";
 import ManagePolicies from "layouts/manageadmin/components/policies";
 import ManageGroups from "layouts/manageadmin/components/groups";
+import ManagePois from "layouts/manageadmin/components/pois";
 import ManageAccountFeatures from "layouts/manageadmin/components/accountFeatures";
 import ManageDrivers from "layouts/manageadmin/components/drivers";
 import ManageAuditTrail from "layouts/manageadmin/components/auditTrail";
@@ -45,6 +46,7 @@ function ManageAdmin() {
           <ManageRoles/>
           <ManagePolicies/>
           <ManageGroups/>
+          <ManagePois/>
           <ManageAccountFeatures/>
           <ManageDrivers/>
           <ManageAuditTrail/>

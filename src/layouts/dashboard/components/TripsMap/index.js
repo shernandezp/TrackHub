@@ -22,14 +22,16 @@ import { getRandomColor } from "utils/colorUtils";
 import PropTypes from 'prop-types';
 import 'controls/Maps/css/map.css';
 
-function TripsMap({ 
-    mapType, 
-    mapKey, 
-    trips, 
-    selectedTrip, 
+function TripsMap({
+    mapType,
+    mapKey,
+    trips,
+    selectedTrip,
     showGeofence,
     geofences,
     handleSelected,
+    playbackPosition = null,
+    darkMode = false,
     height = "70vh" }) {
     const [polygons, setPolygons] = useState([]);
     useEffect(() => {
@@ -50,26 +52,30 @@ function TripsMap({
     return (
         <div className="map-container" style={{ position: 'relative' }}>
             {mapType === 'OSM' ? (
-                <OSMTripsMap 
-                    trips={polygons} 
+                <OSMTripsMap
+                    trips={polygons}
                     selectedTrip={selectedTrip}
                     showGeofence={showGeofence}
                     geofences={geofences}
                     handleSelected={handleSelected}
                     toggleStats={() => setShowStats(s => !s)}
                     showStats={showStats}
+                    playbackPosition={playbackPosition}
+                    darkMode={darkMode}
                     height={height} />
             ) : (
-                mapType === 'Google' && 
-                    <GoogleTripsMap 
+                mapType === 'Google' &&
+                    <GoogleTripsMap
                         mapKey={mapKey}
-                        trips={polygons} 
-                        selectedTrip={selectedTrip} 
+                        trips={polygons}
+                        selectedTrip={selectedTrip}
                         showGeofence={showGeofence}
                         geofences={geofences}
                         handleSelected={handleSelected}
                         toggleStats={() => setShowStats(s => !s)}
                         showStats={showStats}
+                        playbackPosition={playbackPosition}
+                        darkMode={darkMode}
                         height={height} />
             )}
             {showStats && <TripStatsPanel trips={trips} selectedTrip={selectedTrip} />}
@@ -85,6 +91,8 @@ TripsMap.propTypes = {
     showGeofence: PropTypes.bool,
     geofences: PropTypes.array,
     handleSelected: PropTypes.func,
+    playbackPosition: PropTypes.object,
+    darkMode: PropTypes.bool,
     height: PropTypes.string,
 };
 

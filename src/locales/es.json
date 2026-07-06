@@ -60,7 +60,23 @@
     "typesTitle": "Tipos de Unidades",
     "inGeofence": "En Geocerca",
     "transportersTitle": "Unidades",
-    "positionsTitle": "Posiciones"
+    "positionsTitle": "Posiciones",
+    "filterType": "Tipo de Unidad",
+    "filterGroup": "Grupo",
+    "filterOperator": "Operador",
+    "filterStatus": "Estado",
+    "filterSearch": "Buscar unidades",
+    "allTypes": "Todos los tipos",
+    "allGroups": "Todos los grupos",
+    "allOperators": "Todos los operadores",
+    "allStatuses": "Todos los estados",
+    "statusMoving": "En Movimiento",
+    "statusStopped": "Detenida",
+    "statusOffline": "Sin Conexión",
+    "poiLayer": "Puntos de Interés",
+    "followMode": "Seguir",
+    "trail": "Recorrido",
+    "darkMap": "Mapa oscuro"
   },
   "device": {
     "title": "Dispositivos",
@@ -234,6 +250,27 @@
     "school": "Escuela",
     "warehouse": "Bodega"
   },
+  "geocodingProviders": {
+    "title": "Proveedores de Geocodificación",
+    "singleTitle": "Proveedor de Geocodificación",
+    "details": "Detalle del Proveedor de Geocodificación",
+    "name": "Nombre",
+    "type": "Tipo",
+    "endpointUri": "URI del Endpoint",
+    "apiKey": "Clave API",
+    "requestsPerSecond": "Solicitudes por Segundo",
+    "timeoutSeconds": "Tiempo de Espera (Segundos)",
+    "configurationJson": "Configuración (JSON)",
+    "active": "Activo",
+    "activate": "Activar",
+    "deleteTitle": "Eliminar Proveedor de Geocodificación",
+    "deleteMessage": "¿Está seguro de que desea eliminar este proveedor de geocodificación?",
+    "types": {
+      "nominatim": "Nominatim",
+      "openRouteService": "OpenRouteService",
+      "google": "Google"
+    }
+  },
   "group": {
     "title": "Grupos",
     "singleTitle": "Grupo",
@@ -273,6 +310,35 @@
     "singleTitle": "Política",
     "resources": "Resources",
     "assignPolicy": "Asignar Política"
+  },
+  "poi": {
+    "title": "Puntos de Interés",
+    "singleTitle": "Punto de Interés",
+    "details": "Detalle del Punto de Interés",
+    "name": "Nombre",
+    "description": "Descripción",
+    "type": "Tipo",
+    "latitude": "Latitud",
+    "longitude": "Longitud",
+    "coordinates": "Coordenadas",
+    "address": "Dirección",
+    "color": "Color",
+    "group": "Grupo",
+    "active": "Activo",
+    "deleteTitle": "Eliminar Punto de Interés",
+    "deleteMessage": "¿Está seguro de que desea eliminar este punto de interés?",
+    "invalidLatitude": "La latitud debe ser un número entre -90 y 90",
+    "invalidLongitude": "La longitud debe ser un número entre -180 y 180",
+    "types": {
+      "clientSite": "Sitio de Cliente",
+      "warehouse": "Bodega",
+      "fuelStation": "Estación de Combustible",
+      "tollBooth": "Peaje",
+      "restArea": "Área de Descanso",
+      "workshop": "Taller",
+      "port": "Puerto",
+      "other": "Otro"
+    }
   },
   "reports": {
     "title": "Reportes",
@@ -401,7 +467,20 @@
     "altitude": "Altitud",
     "stopped": "Detenido",
     "moving": "En Movimiento",
-    "hourmeter": "Horómetro"
+    "hourmeter": "Horómetro",
+    "offline": "Sin Conexión",
+    "lastReport": "Último Reporte",
+    "location": "Ubicación",
+    "coordinates": "Coordenadas",
+    "resolveAddress": "Obtener dirección",
+    "resolvingAddress": "Obteniendo...",
+    "addressUnavailable": "Dirección no disponible",
+    "justNow": "justo ahora",
+    "minutesAgo": "hace {{value}} min",
+    "hoursAgo": "hace {{value}} h",
+    "daysAgo": "hace {{value}} d",
+    "shareWhatsApp": "Compartir por WhatsApp",
+    "streetView": "Street View"
   },
   "transporterType": {
     "title": "Tipos de Unidades",
@@ -452,6 +531,24 @@
     "stops": "Paradas",
     "alarms": "Alarmas",
     "summaryLabel": "Resumen"
+  },
+  "replay": {
+    "source": "Fuente del historial",
+    "sourceProvider": "Proveedor GPS",
+    "sourceTrackHub": "TrackHub",
+    "export": "Exportar",
+    "exportTransporter": "Unidad",
+    "exportTrip": "Viaje",
+    "exportTimestamp": "Fecha y hora",
+    "exportLatitude": "Latitud",
+    "exportLongitude": "Longitud",
+    "exportSpeed": "Velocidad (km/h)",
+    "exportAddress": "Dirección",
+    "play": "Reproducir",
+    "pause": "Pausar",
+    "speed": "Velocidad",
+    "timeline": "Línea de tiempo",
+    "playback": "Reproducción"
   },
   "user": {
     "title": "Usuarios",

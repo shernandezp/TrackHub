@@ -60,7 +60,23 @@
     "typesTitle": "Unit Types",
     "inGeofence": "In Geofence",
     "transportersTitle": "Units",
-    "positionsTitle": "Positions"
+    "positionsTitle": "Positions",
+    "filterType": "Unit Type",
+    "filterGroup": "Group",
+    "filterOperator": "Operator",
+    "filterStatus": "Status",
+    "filterSearch": "Search units",
+    "allTypes": "All types",
+    "allGroups": "All groups",
+    "allOperators": "All operators",
+    "allStatuses": "All statuses",
+    "statusMoving": "Moving",
+    "statusStopped": "Stopped",
+    "statusOffline": "Offline",
+    "poiLayer": "Points of Interest",
+    "followMode": "Follow",
+    "trail": "Trail",
+    "darkMap": "Dark map"
   },
   "device": {
     "title": "Devices",
@@ -234,6 +250,27 @@
     "school": "School",
     "warehouse": "Warehouse"
   },
+  "geocodingProviders": {
+    "title": "Geocoding Providers",
+    "singleTitle": "Geocoding Provider",
+    "details": "Geocoding Provider Details",
+    "name": "Name",
+    "type": "Type",
+    "endpointUri": "Endpoint URI",
+    "apiKey": "API Key",
+    "requestsPerSecond": "Requests per Second",
+    "timeoutSeconds": "Timeout (Seconds)",
+    "configurationJson": "Configuration (JSON)",
+    "active": "Active",
+    "activate": "Activate",
+    "deleteTitle": "Delete Geocoding Provider",
+    "deleteMessage": "Are you sure you want to delete this geocoding provider?",
+    "types": {
+      "nominatim": "Nominatim",
+      "openRouteService": "OpenRouteService",
+      "google": "Google"
+    }
+  },
   "group": {
     "title": "Groups",
     "singleTitle": "Group",
@@ -273,6 +310,35 @@
     "singleTitle": "Policy",
     "resources": "Resources",
     "assignPolicy": "Assign Policy"
+  },
+  "poi": {
+    "title": "Points of Interest",
+    "singleTitle": "Point of Interest",
+    "details": "Point of Interest Details",
+    "name": "Name",
+    "description": "Description",
+    "type": "Type",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "coordinates": "Coordinates",
+    "address": "Address",
+    "color": "Color",
+    "group": "Group",
+    "active": "Active",
+    "deleteTitle": "Delete Point of Interest",
+    "deleteMessage": "Are you sure you want to delete this point of interest?",
+    "invalidLatitude": "Latitude must be a number between -90 and 90",
+    "invalidLongitude": "Longitude must be a number between -180 and 180",
+    "types": {
+      "clientSite": "Client Site",
+      "warehouse": "Warehouse",
+      "fuelStation": "Fuel Station",
+      "tollBooth": "Toll Booth",
+      "restArea": "Rest Area",
+      "workshop": "Workshop",
+      "port": "Port",
+      "other": "Other"
+    }
   },
   "reports": {
     "title": "Reports",
@@ -401,7 +467,20 @@
     "altitude": "Altitude",
     "stopped": "Stopped",
     "moving": "Moving",
-    "hourmeter": "Hourmeter"
+    "hourmeter": "Hourmeter",
+    "offline": "Offline",
+    "lastReport": "Last Report",
+    "location": "Location",
+    "coordinates": "Coordinates",
+    "resolveAddress": "Resolve address",
+    "resolvingAddress": "Resolving...",
+    "addressUnavailable": "Address unavailable",
+    "justNow": "just now",
+    "minutesAgo": "{{value}} min ago",
+    "hoursAgo": "{{value}} h ago",
+    "daysAgo": "{{value}} d ago",
+    "shareWhatsApp": "Share on WhatsApp",
+    "streetView": "Street View"
   },
   "transporterType": {
     "title": "Unit Types",
@@ -452,6 +531,24 @@
     "stops": "Stops",
     "alarms": "Alarms",
     "summaryLabel": "Summary"
+  },
+  "replay": {
+    "source": "History source",
+    "sourceProvider": "GPS provider",
+    "sourceTrackHub": "TrackHub",
+    "export": "Export",
+    "exportTransporter": "Transporter",
+    "exportTrip": "Trip",
+    "exportTimestamp": "Timestamp",
+    "exportLatitude": "Latitude",
+    "exportLongitude": "Longitude",
+    "exportSpeed": "Speed (km/h)",
+    "exportAddress": "Address",
+    "play": "Play",
+    "pause": "Pause",
+    "speed": "Speed",
+    "timeline": "Timeline",
+    "playback": "Playback"
   },
   "user": {
     "title": "Users",

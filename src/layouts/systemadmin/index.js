@@ -17,6 +17,7 @@
 import ManageAccounts from "layouts/systemadmin/components/accounts";
 import ManageClients from "layouts/systemadmin/components/clients";
 import ManageTransporterTypes from "layouts/systemadmin/components/transporterTypes";
+import ManageGeocodingProviders from "layouts/systemadmin/components/geocodingProviders";
 import ManageRoles from "layouts/systemadmin/components/roles";
 import ManagePolicies from "layouts/systemadmin/components/policies";
 import SystemAccountFeatures from "layouts/systemadmin/components/accountFeatures";
@@ -35,6 +36,7 @@ function SystemAdmin() {
         <ManageAccounts/>
         <ManageClients/>
         <ManageTransporterTypes/>
+        <ManageGeocodingProviders/>
         <ManageRoles/>
         <ManagePolicies/>
         <SystemAccountFeatures/>

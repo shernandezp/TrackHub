@@ -14,7 +14,7 @@
 *  limitations under the License.
 */
 
-import React, { useState, useEffect, useContext, useRef  } from 'react';
+import React, { useState, useEffect, useContext, useRef, useMemo, useCallback } from 'react';
 import PropTypes from "prop-types";
 import Grid from "@mui/material/Grid";
 import Chip from "@mui/material/Chip";
@@ -22,24 +22,40 @@ import ArgonBox from "components/ArgonBox";
 import DetailedStatisticsCard from "controls/Cards/StatisticsCards/DetailedStatisticsCard";
 import TransportersTable from "layouts/dashboard/components/TransportersTable";
 import RefreshCounter from 'layouts/dashboard/components/RefreshCounter';
+import FilterBar from 'layouts/dashboard/components/Transporters/FilterBar';
 import useRouterService from "services/router";
 import useGeofencingService from "services/geofencing";
+import usePointOfInterestService from 'services/pointsOfInterest';
+import useGroupService from "services/groups";
+import useOperatorService from "services/operator";
+import useTransporterService from "services/transporter";
+import useDeviceService from "services/device";
 import { cleanString } from 'utils/stringUtils';
 import { LoadingContext } from 'LoadingContext';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "AuthContext";
+import { useArgonController } from 'context';
 
 // Dashboard layout components
 import GeneralMap from "layouts/dashboard/components/GeneralMap";
 import MapControlStyle from 'controls/Maps/styles/MapControl';
-import {countRecentDevices, countDevicesInMovement, getPercentage} from 'layouts/dashboard/utils/dashboard';
+import {countRecentDevices, countDevicesInMovement, getPercentage, filterPositions} from 'layouts/dashboard/utils/dashboard';
+
+const TRAIL_LENGTH = 10;
 
 function Transporters({searchQuery, settings, setShowGeofence, showGeofence, geofences}) {
   const { t } = useTranslation();
   const { getDevicePositions } = useRouterService();
   const { getTransportersInGeofence } = useGeofencingService();
+  const { getPointsOfInterestByAccount } = usePointOfInterestService();
+  const { getGroups } = useGroupService();
+  const { getOperators } = useOperatorService();
+  const { getTransportersByGroup, getTransporterDeviceAssignmentsByAccount } = useTransporterService();
+  const { getDevicesByAccount } = useDeviceService();
   const { setLoading } = useContext(LoadingContext);
   const { isAuthenticated } = useAuth();
+  const [controller] = useArgonController();
+  const { darkMode } = controller;
   const [positions, setPositions] = useState([]);
   const [active, setActive] = useState(0);
   const [movement, setMovement] = useState(0);
@@ -47,8 +63,31 @@ function Transporters({searchQuery, settings, setShowGeofence, showGeofence, geo
   const [selectedTransporter, setSelectedTransporter] = useState(null);
   const [typeSummary, setTypeSummary] = useState([]);
   const [tableHeight, setTableHeight] = useState('calc(100vh - 280px)');
+  // Plate/name search lives in the page's top-right search box (searchQuery);
+  // the filter bar only narrows by type/group/operator/status.
+  const [filters, setFilters] = useState({ transporterType: 'all', groupId: 'all', operatorId: 'all', status: 'all' });
+  const [groupOptions, setGroupOptions] = useState([]);
+  const [operatorOptions, setOperatorOptions] = useState([]);
+  // Sets of transporterIds the selected group/operator maps to; null = no narrowing.
+  const [groupTransporterIds, setGroupTransporterIds] = useState(null);
+  const [operatorTransporterIds, setOperatorTransporterIds] = useState(null);
+  const [pois, setPois] = useState([]);
+  const [showPois, setShowPois] = useState(false);
+  const [followMode, setFollowMode] = useState(false);
+  const [showTrail, setShowTrail] = useState(false);
+  const [trails, setTrails] = useState({});
   const chipContainerRef = useRef(null);
-  
+  const poisLoadedRef = useRef(false);
+  // A slow round-trip (providers timing out server-side) can outlast the refresh
+  // countdown; never stack overlapping position fetches.
+  const positionsFetchInFlightRef = useRef(false);
+  // Lazy membership caches: fetched once per selected group/operator.
+  const groupMembershipCacheRef = useRef(new Map());
+  const operatorMembershipCacheRef = useRef(new Map());
+  // Account-wide device list + device-transporter assignments, fetched once
+  // on the first operator selection to map an operator to its transporters.
+  const operatorMappingRef = useRef(null);
+
   useEffect(() => {
     const typesObject = positions.reduce((acc, position) => {
       if (!acc[position.transporterType]) {
@@ -67,13 +106,48 @@ function Transporters({searchQuery, settings, setShowGeofence, showGeofence, geo
     }
   }, [typeSummary]);
 
+  // Client-side ring buffer of the last N received points per unit,
+  // used to render the trail of the selected unit.
+  useEffect(() => {
+    if (positions.length === 0) return;
+    setTrails(prev => {
+      const next = { ...prev };
+      positions.forEach(position => {
+        const key = position.transporterId || position.deviceName;
+        if (!key) return;
+        const buffer = next[key] ? [...next[key]] : [];
+        const last = buffer[buffer.length - 1];
+        if (!last || last.dateTime !== position.deviceDateTime) {
+          buffer.push({ lat: position.latitude, lng: position.longitude, dateTime: position.deviceDateTime });
+          if (buffer.length > TRAIL_LENGTH) {
+            buffer.splice(0, buffer.length - TRAIL_LENGTH);
+          }
+        }
+        next[key] = buffer;
+      });
+      return next;
+    });
+  }, [positions]);
+
   const fetchPositions = async () => {
+    if (positionsFetchInFlightRef.current) {
+      return;
+    }
+    positionsFetchInFlightRef.current = true;
     setLoading(true);
-    var result = await getDevicePositions() || [];
-    setPositions(result);
-    setActive(countRecentDevices(result, settings.onlineInterval));
-    setMovement(countDevicesInMovement(result));
-    setLoading(false);
+    try {
+      const result = await getDevicePositions();
+      // A failed or empty refresh keeps the last known positions on the map
+      // (the live map continues showing the cached positions it already has).
+      if (Array.isArray(result) && result.length > 0) {
+        setPositions(result);
+        setActive(countRecentDevices(result, settings.onlineInterval));
+        setMovement(countDevicesInMovement(result));
+      }
+    } finally {
+      positionsFetchInFlightRef.current = false;
+      setLoading(false);
+    }
   };
 
   const calculateReference = async () => {
@@ -85,16 +159,141 @@ function Transporters({searchQuery, settings, setShowGeofence, showGeofence, geo
     }
   };
 
+  const fetchFilterOptions = async () => {
+    const [groupList, operatorList] = await Promise.all([getGroups(), getOperators()]);
+    setGroupOptions((groupList || []).map(group => ({ value: group.groupId, label: group.name })));
+    setOperatorOptions((operatorList || []).map(operator => ({ value: operator.operatorId, label: operator.name })));
+  };
+
   useEffect(() => {
     if (isAuthenticated) {
       calculateReference();
       fetchPositions();
+      fetchFilterOptions();
     }
   }, [isAuthenticated]);
 
   const handleSelected = (selected) => {
     setSelectedTransporter(selected);
   };
+
+  // Resolves the transporter ids of a group, lazily and once per group.
+  const resolveGroupMembership = async (groupId) => {
+    if (!groupId || groupId === 'all') {
+      setGroupTransporterIds(null);
+      return;
+    }
+    const cache = groupMembershipCacheRef.current;
+    if (cache.has(groupId)) {
+      setGroupTransporterIds(cache.get(groupId));
+      return;
+    }
+    setLoading(true);
+    try {
+      const transportersInGroup = await getTransportersByGroup(groupId);
+      if (!Array.isArray(transportersInGroup)) {
+        // Fetch failed: keep the map un-narrowed instead of blanking it.
+        setGroupTransporterIds(null);
+        return;
+      }
+      const ids = new Set(transportersInGroup.map(item => item.transporterId));
+      cache.set(groupId, ids);
+      setGroupTransporterIds(ids);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Resolves the transporter ids served by an operator, lazily and once per
+  // operator: account devices (operatorId per device) joined with the active
+  // device-transporter assignments (deviceId -> transporterId).
+  const resolveOperatorMembership = async (operatorId) => {
+    if (!operatorId || operatorId === 'all') {
+      setOperatorTransporterIds(null);
+      return;
+    }
+    const cache = operatorMembershipCacheRef.current;
+    if (cache.has(operatorId)) {
+      setOperatorTransporterIds(cache.get(operatorId));
+      return;
+    }
+    setLoading(true);
+    try {
+      if (!operatorMappingRef.current) {
+        const [devices, assignments] = await Promise.all([
+          getDevicesByAccount(),
+          getTransporterDeviceAssignmentsByAccount(settings?.accountId, true)
+        ]);
+        if (!Array.isArray(devices)) {
+          setOperatorTransporterIds(null);
+          return;
+        }
+        operatorMappingRef.current = { devices, assignments: assignments || [] };
+      }
+      const { devices, assignments } = operatorMappingRef.current;
+      const deviceIds = new Set(devices
+        .filter(device => device.operatorId === operatorId)
+        .map(device => device.deviceId));
+      const ids = new Set(assignments
+        .filter(assignment => deviceIds.has(assignment.deviceId))
+        .map(assignment => assignment.transporterId));
+      cache.set(operatorId, ids);
+      setOperatorTransporterIds(ids);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFilterChange = (name, value) => {
+    setFilters(prev => ({ ...prev, [name]: value }));
+    if (name === 'groupId') {
+      resolveGroupMembership(value);
+    } else if (name === 'operatorId') {
+      resolveOperatorMembership(value);
+    }
+  };
+
+  const handleTogglePois = async () => {
+    if (!showPois && !poisLoadedRef.current) {
+      setLoading(true);
+      const result = await getPointsOfInterestByAccount() || [];
+      setPois(result);
+      poisLoadedRef.current = true;
+      setLoading(false);
+    }
+    setShowPois(value => !value);
+  };
+
+  const handleFollowDisengage = useCallback(() => {
+    setFollowMode(false);
+  }, []);
+
+  // Filters narrow the map view only; stats and table reflect the full set.
+  const filteredPositions = useMemo(
+    () => filterPositions(positions, {
+      ...filters,
+      onlineInterval: settings.onlineInterval,
+      groupTransporterIds,
+      operatorTransporterIds
+    }),
+    [positions, filters, settings.onlineInterval, groupTransporterIds, operatorTransporterIds]
+  );
+
+  const typeOptions = useMemo(
+    () => typeSummary.map(({ name }) => ({
+      value: name,
+      label: t(`transporterTypes.${cleanString(name)}`)
+    })),
+    [typeSummary, t]
+  );
+
+  const selectedTrail = useMemo(() => {
+    if (!selectedTransporter) return [];
+    const position = positions.find(p => p.deviceName === selectedTransporter);
+    if (!position) return [];
+    const key = position.transporterId || position.deviceName;
+    return trails[key] || [];
+  }, [selectedTransporter, positions, trails]);
 
   return (
     <ArgonBox py={1}>
@@ -128,27 +327,49 @@ function Transporters({searchQuery, settings, setShowGeofence, showGeofence, geo
                     title={t("dashboard.inGeofence")}
                     count={inGeofence}
                     icon={{
-                      color: "warning", 
+                      color: "warning",
                       onClick: () => setShowGeofence(!showGeofence),
                       component: <i className="ni ni-pin-3" /> }}
                     percentage={{ color: "success", count: `${getPercentage(inGeofence, positions.length)}%` }}
                 />
             </Grid>
         </Grid>
+        <FilterBar
+            typeOptions={typeOptions}
+            groupOptions={groupOptions}
+            operatorOptions={operatorOptions}
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            showPois={showPois}
+            onTogglePois={handleTogglePois}
+            followMode={followMode}
+            onToggleFollow={() => setFollowMode(value => !value)}
+            followDisabled={!selectedTransporter}
+            showTrail={showTrail}
+            onToggleTrail={() => setShowTrail(value => !value)}
+        />
         <Grid container spacing={3}>
             <Grid item size={{xs: 12, lg:9}}>
             <MapControlStyle>
-                <GeneralMap 
-                    mapType={settings.maps} 
-                    positions={positions} 
+                <GeneralMap
+                    mapType={settings.maps}
+                    positions={filteredPositions}
                     mapKey={settings.mapsKey}
                     selectedMarker={selectedTransporter}
                     geofences={geofences}
                     showGeofence={showGeofence}
                     handleSelected={handleSelected}
+                    onlineInterval={settings.onlineInterval}
+                    pois={pois}
+                    showPois={showPois}
+                    trail={selectedTrail}
+                    showTrail={showTrail && !!selectedTransporter}
+                    followUnit={followMode ? selectedTransporter : null}
+                    onFollowDisengage={handleFollowDisengage}
+                    darkMode={darkMode}
                     height="calc(100vh - 280px)"/>
-                <RefreshCounter 
-                    settings={settings} 
+                <RefreshCounter
+                    settings={settings}
                     fetchPositions={fetchPositions}
                     calculateReference={calculateReference} />
             </MapControlStyle>
@@ -156,7 +377,7 @@ function Transporters({searchQuery, settings, setShowGeofence, showGeofence, geo
             <Grid item size={{xs: 12, lg:3}}>
                 <ArgonBox ref={chipContainerRef} mb={2} display="flex" flexWrap="wrap" gap={1}>
                     {typeSummary.map(({ name, total }) => (
-                        <Chip 
+                        <Chip
                             key={name}
                             label={`${t(`transporterTypes.${cleanString(name)}`)}: ${total}`}
                             size="small"
@@ -165,10 +386,10 @@ function Transporters({searchQuery, settings, setShowGeofence, showGeofence, geo
                         />
                     ))}
                 </ArgonBox>
-                <TransportersTable 
-                    transporters={positions} 
+                <TransportersTable
+                    transporters={positions}
                     selected={selectedTransporter}
-                    handleSelected={handleSelected} 
+                    handleSelected={handleSelected}
                     searchQuery={searchQuery}
                     maxHeight={tableHeight}/>
             </Grid>
