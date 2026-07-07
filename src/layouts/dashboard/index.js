@@ -18,7 +18,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import DashboardTabbar from "controls/Navbars/DashboardTabbar";
 import Transporters from "layouts/dashboard/components/Transporters";
 import Positions from  "layouts/dashboard/components/Positions";
-import useSettignsService from 'services/settings';
+import useSettingsService from 'services/settings';
 import useGeofenceService from 'services/geofence';
 import { LoadingContext } from 'LoadingContext';
 import { useTranslation } from 'react-i18next';
@@ -28,7 +28,7 @@ function Default() {
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
   const { setLoading } = useContext(LoadingContext);
-  const { getAccountSettings } = useSettignsService();
+  const { getAccountSettings } = useSettingsService();
   const { getGeofencesByAccount } = useGeofenceService();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTab, setSelectedTab] = useState(0);

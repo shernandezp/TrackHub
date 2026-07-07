@@ -77,7 +77,7 @@ const routes = [
   },
   {
     type: "route",
-    name: "screen.superManager",
+    name: "screen.systemAdmin",
     key: "systemAdmin",
     route: "/systemAdmin",
     principalTypes: [PrincipalTypes.User],
@@ -88,7 +88,7 @@ const routes = [
   },
   {
     type: "route",
-    name: "screen.manager",
+    name: "screen.manageAdmin",
     key: "manageAdmin",
     route: "/manageAdmin",
     principalTypes: [PrincipalTypes.User],

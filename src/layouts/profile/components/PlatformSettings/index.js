@@ -42,7 +42,7 @@ import ArgonBox from "components/ArgonBox";
 import ArgonTypography from "components/ArgonTypography";
 import { useTranslation } from 'react-i18next';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
-import useSettignsService from 'services/settings';
+import useSettingsService from 'services/settings';
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
 import {
@@ -65,7 +65,7 @@ function PlatformSettings() {
   const [style, setStyle] = useState(false);
   const [sideNav, setSideNav] = useState(false);
   const [userSettings, setUserSettings] = useState({language: 'en'});
-  const { getUserSettings, updateUserSettings } = useSettignsService();
+  const { getUserSettings, updateUserSettings } = useSettingsService();
 
   const handleMiniSidenav = () => setMiniSidenav(dispatch, !miniSidenav);
   const handleDarkMode = () => {

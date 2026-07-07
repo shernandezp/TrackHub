@@ -17,7 +17,7 @@
 
 /**
  * Service for managing account and user settings.
- * @module useSettignsService
+ * @module useSettingsService
  */
 
 import useApiService from './apiService';
@@ -28,7 +28,7 @@ import { formatValue } from 'utils/dataUtils';
  * Custom hook for managing account and user settings.
  * @returns {Object} An object containing functions for retrieving and updating settings.
  */
-const useSettignsService = () => {
+const useSettingsService = () => {
   const { post } = useApiService(process.env.REACT_APP_MANAGER_ENDPOINT);
 
   /**
@@ -166,4 +166,4 @@ const useSettignsService = () => {
   };
 };
 
-export default useSettignsService;
+export default useSettingsService;

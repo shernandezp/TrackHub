@@ -433,10 +433,10 @@
     "account": "Account",
     "dashboard": "Dashboard",
     "geofence": "Geofences",
-    "manager": "Account Management",
+    "manageAdmin": "Account Management",
     "profile": "Profile",
     "reports": "Reports",
-    "superManager": "System Admin",
+    "systemAdmin": "System Admin",
     "userManager": "Control Panel",
     "gpsIntegration": "GPS Integration"
   },

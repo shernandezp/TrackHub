@@ -73,7 +73,7 @@ import { useAuth } from "AuthContext";
 import { LoadingContext } from 'LoadingContext';
 import { ClipLoader } from 'react-spinners';
 import useUserService from "services/users";
-import useSettignsService from 'services/settings';
+import useSettingsService from 'services/settings';
 import useAccountService from "services/account";
 import useAccountFeatureService from "services/accountFeatures";
 import usePrincipalService from "services/principals";
@@ -89,7 +89,7 @@ export default function App() {
   const { isAuthenticated, login, isLoggingIn, authError } = useAuth();
   const { pathname } = useLocation();
   const { isAdmin, isManager } = useUserService();
-  const { getUserSettings, getAccountSettings, updateAccountSettings } = useSettignsService();
+  const { getUserSettings, getAccountSettings, updateAccountSettings } = useSettingsService();
   const { getAccountByUser } = useAccountService();
   const { getAccountFeatures } = useAccountFeatureService();
   const { getCurrentPrincipal } = usePrincipalService();
