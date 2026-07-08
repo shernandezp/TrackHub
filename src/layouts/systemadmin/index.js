@@ -22,6 +22,7 @@ import ManageRoles from "layouts/systemadmin/components/roles";
 import ManagePolicies from "layouts/systemadmin/components/policies";
 import SystemAccountFeatures from "layouts/systemadmin/components/accountFeatures";
 import ManageAccountSupportGrants from "layouts/systemadmin/components/accountSupportGrants";
+import ManageServiceClientPermissions from "layouts/systemadmin/components/serviceClientPermissions";
 import ArgonBox from "components/ArgonBox";
 import DashboardLayout from "controls/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "controls/Navbars/DashboardNavbar";
@@ -35,6 +36,7 @@ function SystemAdmin() {
       <ArgonBox py={3}>
         <ManageAccounts/>
         <ManageClients/>
+        <ManageServiceClientPermissions/>
         <ManageTransporterTypes/>
         <ManageGeocodingProviders/>
         <ManageRoles/>

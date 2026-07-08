@@ -10,8 +10,12 @@ import useForm from "controls/Dialogs/useForm";
 import PublicLinkDialog from "layouts/manageadmin/components/publicLinks/PublicLinkDialog";
 import useAccountService from "services/account";
 import usePublicLinkService from "services/publicLinks";
+import useAccountFeatureService from "services/accountFeatures";
+import usePrincipalService from "services/principals";
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from "utils/dateUtils";
+
+const PUBLIC_LINKS_FEATURE_KEY = "public-links";
 
 function TextCell({ children }) {
   return (
@@ -34,16 +38,26 @@ function ManagePublicLinks() {
   const [open, setOpen] = useState(false);
   const [values, handleChange, setValues, setErrors, validate, errors] = useForm({});
   const [mintedToken, setMintedToken] = useState(null);
+  const [createEnabled, setCreateEnabled] = useState(false);
   const loaded = useRef(false);
   const { getAccountByUser } = useAccountService();
   const { getPublicLinkGrantsByAccount, createPublicLinkGrant, revokePublicLinkGrant } = usePublicLinkService();
+  const { getAccountFeatures } = useAccountFeatureService();
+  const { getCurrentPrincipal } = usePrincipalService();
+  const [revokedBy, setRevokedBy] = useState('');
 
   const loadLinks = async () => {
     setLoading(true);
     try {
+      const principal = await getCurrentPrincipal();
+      setRevokedBy(principal?.userId || principal?.driverId || principal?.clientId || principal?.subjectId || '');
       const currentAccount = await getAccountByUser();
       if (!currentAccount?.accountId) return;
       setAccount(currentAccount);
+      // Creation is feature-gated (backend enforces FEATURE_DISABLED); listing/revoking stay available.
+      const features = await getAccountFeatures(currentAccount.accountId) || [];
+      const feature = features.find(item => item.featureKey === PUBLIC_LINKS_FEATURE_KEY);
+      setCreateEnabled(!!feature?.enabled);
       const items = await getPublicLinkGrantsByAccount(currentAccount.accountId);
       setLinks(items || []);
     } finally {
@@ -92,7 +106,7 @@ function ManagePublicLinks() {
     if (!link?.publicLinkGrantId) return;
     setLoading(true);
     try {
-      await revokePublicLinkGrant(link.publicLinkGrantId);
+      await revokePublicLinkGrant(link.publicLinkGrantId, revokedBy);
       await loadLinks();
     } finally {
       setLoading(false);
@@ -103,7 +117,7 @@ function ManagePublicLinks() {
     <>
       <TableAccordion
         title={t('publicLinks.title')}
-        showAddIcon={true}
+        showAddIcon={createEnabled}
         expanded={expanded}
         setOpen={setOpen}
         handleAddClick={handleAddClick}

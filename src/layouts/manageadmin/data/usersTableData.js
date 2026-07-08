@@ -36,7 +36,21 @@ function useUserTableData(fetchData, handleEditClick, handleUpdatePasswordClick,
   const { isAuthenticated } = useAuth();
 
   const hasLoaded = useRef(false);
-  const { getUsersByAccount, createUser, updateUser, deleteUser, updatePassword } = useUserService();
+  const { getUsersByAccount, createUser, updateUser, deleteUser, updatePassword, unlockUser } = useUserService();
+
+  const isLocked = (user) => !!user.lockedUntil && new Date(user.lockedUntil) > new Date();
+
+  const onUnlock = async (userId) => {
+    setLoading(true);
+    try {
+      await unlockUser(userId);
+      const refreshed = await getUsersByAccount();
+      setUsers(refreshed);
+      setData(buildTableData(refreshed));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const onSave = async (user) => {
     setLoading(true);
@@ -104,6 +118,7 @@ function useUserTableData(fetchData, handleEditClick, handleUpdatePasswordClick,
       { name: "user", title:t('user.username'), align: "left" },
       { name: "firstName", title:t('user.firstName'), align: "left" },
       { name: "lastName", title:t('user.lastName'), align: "left" },
+      { name: "status", title:t('user.status'), align: "center" },
       { name: "action", title:t('generic.action'), align: "center" },
       { name: "password", title:t('user.password'), align: "center" },
       { name: "id" }
@@ -112,6 +127,20 @@ function useUserTableData(fetchData, handleEditClick, handleUpdatePasswordClick,
       user: <NameDetail name={user.emailAddress} detail={user.username} />,
       firstName: <NameDetail name={user.firstName} detail={user.secondName || ''} />,
       lastName: <NameDetail name={user.lastName} detail={user.secondSurname || ''} />,
+      status: (
+        isLocked(user) ? (
+          <ArgonButton
+            variant="text"
+            color="warning"
+            onClick={async () => await onUnlock(user.userId)}>
+            <Icon>lock_open</Icon>&nbsp;{t('user.unlock')}
+          </ArgonButton>
+        ) : (
+          <ArgonTypography variant="caption" color="secondary" fontWeight="medium">
+            {t('generic.active')}
+          </ArgonTypography>
+        )
+      ),
       action: (
         <>
             <ArgonButton 

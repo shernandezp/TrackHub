@@ -39,7 +39,7 @@ const useClientService = () => {
       const data = {
         query: `
           query {
-            clients {
+            clients(query: { skip: 0, take: 500 }) {
               clientId
               description
               name

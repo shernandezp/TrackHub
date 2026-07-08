@@ -135,13 +135,14 @@ const useUserService = () => {
       const data = {
         query: `
           query {
-            usersByAccount {
+            usersByAccount(query: { skip: 0, take: 500 }) {
               accountId
               username
               userId
               secondSurname
               secondName
               loginAttempts
+              lockedUntil
               lastName
               firstName
               emailAddress
@@ -370,6 +371,29 @@ const useUserService = () => {
   };
 
   /**
+   * Clears an account lockout so the user can sign in again immediately.
+   * @async
+   * @param {string} userId - The ID of the user to unlock.
+   * @returns {Promise<boolean>} A promise that resolves to a boolean indicating success.
+   */
+  const unlockUser = async (userId) => {
+    try {
+      const data = {
+        query: `
+            mutation {
+                unlockUser(id: "${userId}")
+            }
+        `
+      };
+      const response = await post(data);
+      return response.data.unlockUser;
+    } catch (error) {
+      handleError(error);
+      return false;
+    }
+  };
+
+  /**
    * Checks if the current user is an admin.
    * @async
    * @returns {Promise<boolean>} A promise that resolves to a boolean indicating if the user is an admin.
@@ -426,6 +450,7 @@ const useUserService = () => {
     updateCurrentUser,
     updatePassword,
     deleteUser,
+    unlockUser,
     isAdmin,
     isManager
   };
