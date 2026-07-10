@@ -74,11 +74,11 @@ import { LoadingContext } from 'LoadingContext';
 import { ClipLoader } from 'react-spinners';
 import useUserService from "services/users";
 import useSettingsService from 'services/settings';
-import useAccountService from "services/account";
-import useAccountFeatureService from "services/accountFeatures";
+import useAccountContextService from "services/accountContext";
 import usePrincipalService from "services/principals";
 import { useTranslation } from 'react-i18next';
 import ErrorBoundary from "components/ErrorBoundary";
+import SuspensionScreen from "components/SuspensionScreen";
 import PrincipalTypes from "constants/principalTypes";
 
 export default function App() {
@@ -90,8 +90,7 @@ export default function App() {
   const { pathname } = useLocation();
   const { isAdmin, isManager } = useUserService();
   const { getUserSettings, getAccountSettings, updateAccountSettings } = useSettingsService();
-  const { getAccountByUser } = useAccountService();
-  const { getAccountFeatures } = useAccountFeatureService();
+  const { getAccountContext } = useAccountContextService();
   const { getCurrentPrincipal } = usePrincipalService();
   const { i18n } = useTranslation();
 
@@ -100,6 +99,8 @@ export default function App() {
   const [userIsManager, setUserIsManager] = useState(true);
   const [accountSettings, setAccountSettings] = useState({});
   const [accountFeatures, setAccountFeatures] = useState([]);
+  const [accountStatus, setAccountStatus] = useState(null);
+  const [branding, setBranding] = useState(null);
   const [currentPrincipal, setCurrentPrincipal] = useState(null);
 
   useEffect(() => {
@@ -133,10 +134,13 @@ export default function App() {
         }
         const settings = await getAccountSettings();
         setAccountSettings(settings);
-        const account = await getAccountByUser();
-        if (account?.accountId) {
-          const features = await getAccountFeatures(account.accountId);
-          setAccountFeatures(features || []);
+        // Single bootstrap read (status + branding + features); allowed on non-operational accounts
+        // so the shell can render a suspension state instead of issuing operational queries.
+        const context = await getAccountContext();
+        if (context) {
+          setAccountStatus(context.status);
+          setBranding(context.branding);
+          setAccountFeatures(context.features || []);
         }
       }
     };
@@ -172,6 +176,9 @@ export default function App() {
     document.documentElement.scrollTop = 0;
     document.scrollingElement.scrollTop = 0;
   }, [pathname]);
+
+  // Operational statuses (Trial/Active) permit normal access; anything else renders a suspension shell.
+  const accountOperational = !accountStatus || accountStatus === 'TRIAL' || accountStatus === 'ACTIVE';
 
   const featureEnabled = (featureKey) => {
     if (!featureKey) return true;
@@ -239,6 +246,10 @@ export default function App() {
       <ThemeProvider theme={darkMode ? themeDark : theme}>
         <CssBaseline />
         <ErrorBoundary>
+          {isAuthenticated && !accountOperational ? (
+            <SuspensionScreen status={accountStatus} branding={branding} />
+          ) : (
+          <>
           {layout === "dashboard" && (
           <>
             <Sidenav
@@ -251,7 +262,7 @@ export default function App() {
               isManager={userIsManager}
               currentPrincipal={currentPrincipal}
             />
-            <Configurator 
+            <Configurator
               settings={accountSettings}
               updateSettings={updateAccountSettings}
                />
@@ -262,6 +273,8 @@ export default function App() {
           {getRoutes(enabledRoutes)}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
+          </>
+          )}
         </ErrorBoundary>
         {loading && (
           <div style={{

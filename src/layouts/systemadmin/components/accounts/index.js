@@ -19,9 +19,11 @@ import { useTranslation } from 'react-i18next';
 import Table from "controls/Tables/Table";
 import TableAccordion from "controls/Accordions/TableAccordion";
 import AccountFormDialog from 'layouts/systemadmin/components/accounts/AccountsDialog';
+import AccountStatusDialog from 'layouts/systemadmin/components/accounts/AccountStatusDialog';
 import UserFormDialog from 'layouts/manageadmin/components/users/UserDialog';
 import useForm from 'controls/Dialogs/useForm';
 import useAccountsTableData from 'layouts/systemadmin/data/accountsTableData';
+import { requiresReason } from 'data/accountStatuses';
 
 function ManageAccounts() {
   const { t } = useTranslation();
@@ -40,18 +42,27 @@ function ManageAccounts() {
     setUserErrors({});
   };
 
+  const handleStatusClick = (account) => {
+    setStatusValues({ accountId: account.accountId, statusId: account.statusId, targetStatus: '', reason: '' });
+    setStatusErrors({});
+  };
+
   const [expanded, setExpanded] = useState(false);
-  const { 
-    data, 
+  const {
+    data,
     open,
     openUser,
-    onSave, 
+    openStatus,
+    onSave,
     onSaveUser,
+    onChangeStatus,
     setOpen,
-    setOpenUser} = useAccountsTableData(expanded, handleEditClick, handleAddManagerClick);
+    setOpenUser,
+    setOpenStatus} = useAccountsTableData(expanded, handleEditClick, handleAddManagerClick, handleStatusClick);
 
   const [accountValues, handleAccountChange, setAccountValues, setAccountErrors, validateAccount, accountErrors] = useForm({});
   const [userValues, handleUserChange, setUserValues, setUserErrors, validateUser, userErrors] = useForm({});
+  const [statusValues, handleStatusChange, setStatusValues, setStatusErrors, validateStatus, statusErrors] = useForm({});
   const { columns, rows } = data;
 
   const handleSubmit = async () => {
@@ -63,6 +74,16 @@ function ManageAccounts() {
   const handleSubmitUser = async () => {
     if (validateUser(['emailAddress', 'firstName', 'lastName', 'password'])) {
       onSaveUser(userValues);
+    }
+  };
+
+  const handleSubmitStatus = async () => {
+    const required = ['targetStatus'];
+    if (requiresReason(statusValues.targetStatus)) {
+      required.push('reason');
+    }
+    if (validateStatus(required)) {
+      onChangeStatus(statusValues);
     }
   };
 
@@ -87,13 +108,22 @@ function ManageAccounts() {
         errors={accountErrors}
       />
 
-      <UserFormDialog 
+      <UserFormDialog
         open={openUser}
         setOpen={setOpenUser}
         handleSubmit={handleSubmitUser}
         values={userValues}
         handleChange={handleUserChange}
         errors={userErrors}
+      />
+
+      <AccountStatusDialog
+        open={openStatus}
+        setOpen={setOpenStatus}
+        handleSubmit={handleSubmitStatus}
+        values={statusValues}
+        handleChange={handleStatusChange}
+        errors={statusErrors}
       />
     </>
   );

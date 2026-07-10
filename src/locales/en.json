@@ -6,7 +6,34 @@
     "description": "Description",
     "type": "Type",
     "active": "Active",
-    "addUser": "Add User"
+    "addUser": "Add User",
+    "status": "Status",
+    "changeStatus": "Change Status",
+    "targetStatus": "New Status",
+    "reason": "Reason",
+    "suspend": "Suspend",
+    "reinstate": "Reinstate",
+    "cancel": "Cancel",
+    "archive": "Archive",
+    "statusTrial": "Trial",
+    "statusActive": "Active",
+    "statusSuspended": "Suspended",
+    "statusCancelled": "Cancelled",
+    "statusArchived": "Archived"
+  },
+  "branding": {
+    "title": "Branding",
+    "displayName": "Display Name",
+    "logoDocumentId": "Logo Document",
+    "primaryColor": "Primary Color",
+    "reportHeader": "Report / Export Header",
+    "preview": "Preview",
+    "save": "Save"
+  },
+  "suspension": {
+    "title": "Account Not Available",
+    "message": "This account is not currently operational. Please contact support for assistance.",
+    "statusLabel": "Status"
   },
   "actions": {
     "read": "Read",
@@ -204,6 +231,47 @@
     "accessCount": "Access Count",
     "status": "Status"
   },
+  "documentManagement": {
+    "title": "Documents",
+    "library": "Document Library",
+    "expiring": "Expiring Documents",
+    "types": "Document Types",
+    "upload": "Upload Document",
+    "replace": "New Version",
+    "download": "Download",
+    "preview": "Preview",
+    "void": "Void",
+    "expire": "Expire",
+    "delete": "Remove Reference",
+    "share": "Share",
+    "sign": "Sign",
+    "fileName": "File Name",
+    "category": "Type",
+    "displayTitle": "Title",
+    "description": "Description",
+    "classification": "Classification",
+    "status": "Status",
+    "scanStatus": "Scan Status",
+    "expiresAt": "Expires At",
+    "currentVersion": "Version",
+    "size": "Size",
+    "owner": "Owner",
+    "uploadedBy": "Uploaded By",
+    "versions": "Version History",
+    "signatures": "Signatures",
+    "shares": "Shares",
+    "required": "Required",
+    "expiringFlag": "Tracks Expiration",
+    "validityDays": "Default Validity (days)",
+    "quarantined": "Scanning — available once clean",
+    "infected": "Blocked: failed virus scan",
+    "consentText": "Consent Text",
+    "signerName": "Signer Name",
+    "reason": "Reason",
+    "missingRequired": "Missing Required Documents",
+    "dropHere": "Drag and drop a file here, or click to select",
+    "shareTokenWarning": "Copy this link now. The token will not be shown again."
+  },
   "supportGrants": {
     "title": "Support Grants",
     "request": "Support Grant Request",
@@ -220,7 +288,8 @@
     "approvedAt": "Approved At"
   },
   "errors": {
-    "featureDisabled": "This feature is not enabled for your account."
+    "featureDisabled": "This feature is not enabled for your account.",
+    "accountSuspended": "This account is not currently operational."
   },
   "driver": {
     "name": "Name",

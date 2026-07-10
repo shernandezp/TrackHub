@@ -23,11 +23,13 @@ import ManagePolicies from "layouts/manageadmin/components/policies";
 import ManageGroups from "layouts/manageadmin/components/groups";
 import ManagePois from "layouts/manageadmin/components/pois";
 import ManageAccountFeatures from "layouts/manageadmin/components/accountFeatures";
+import ManageBranding from "layouts/manageadmin/components/branding";
 import ManageDrivers from "layouts/manageadmin/components/drivers";
 import ManageAuditTrail from "layouts/manageadmin/components/auditTrail";
 import ManageNotificationRules from "layouts/manageadmin/components/notificationRules";
 import ManageAlertEvents from "layouts/manageadmin/components/alertEvents";
 import ManagePublicLinks from "layouts/manageadmin/components/publicLinks";
+import ManageDocuments from "layouts/manageadmin/components/documents";
 import ManageBackgroundJobs from "layouts/manageadmin/components/backgroundJobs";
 import ArgonBox from "components/ArgonBox";
 import DashboardLayout from "controls/LayoutContainers/DashboardLayout";
@@ -40,6 +42,7 @@ function ManageAdmin() {
       <DashboardNavbar />
         <ArgonBox py={3}>
           <ManageAccount/>
+          <ManageBranding/>
           <ManageDevices/>
           <ManageTransporters/>
           <ManageUsers/>
@@ -53,6 +56,7 @@ function ManageAdmin() {
           <ManageNotificationRules/>
           <ManageAlertEvents/>
           <ManagePublicLinks/>
+          <ManageDocuments/>
           <ManageBackgroundJobs/>
         </ArgonBox>
       <Footer />

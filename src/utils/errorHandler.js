@@ -23,17 +23,30 @@
 export function handleError(error) {
   if (error && error.response && error.response.data && error.response.data.errors) {
     var errors = error.response.data.errors;
+    var accountSuspended = errors.some(error => getErrorCode(error) === 'ACCOUNT_SUSPENDED');
     var featureDisabled = errors.some(error => getErrorCode(error) === 'FEATURE_DISABLED');
-    var errorMessage = featureDisabled
-      ? 'This feature is not enabled for your account.'
-      : errors.map(error => error.message).join('\n');
+    var errorMessage;
+    var type;
+    var code;
+    var i18nKey;
+    if (accountSuspended) {
+      errorMessage = 'This account is not currently operational.';
+      type = 'account-suspended';
+      code = 'ACCOUNT_SUSPENDED';
+      i18nKey = 'errors.accountSuspended';
+    } else if (featureDisabled) {
+      errorMessage = 'This feature is not enabled for your account.';
+      type = 'feature-disabled';
+      code = 'FEATURE_DISABLED';
+      i18nKey = 'errors.featureDisabled';
+    } else {
+      errorMessage = errors.map(error => error.message).join('\n');
+      type = 'graphql';
+      code = getErrorCode(errors[0]);
+      i18nKey = undefined;
+    }
     window.dispatchEvent(new CustomEvent('app-error', {
-      detail: {
-        message: errorMessage,
-        type: featureDisabled ? 'feature-disabled' : 'graphql',
-        code: featureDisabled ? 'FEATURE_DISABLED' : getErrorCode(errors[0]),
-        i18nKey: featureDisabled ? 'errors.featureDisabled' : undefined
-      }
+      detail: { message: errorMessage, type, code, i18nKey }
     }));
   } else if (process.env.NODE_ENV !== 'production') {
     console.error('Unexpected error:', error);

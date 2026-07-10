@@ -38,6 +38,8 @@ const useAccountService = () => {
             account(query: { id: "${accountId}" }) {
               accountId
               active
+              status
+              statusId
               description
               lastModified
               name
@@ -65,6 +67,8 @@ const useAccountService = () => {
             accountByUser {
               accountId
               active
+              status
+              statusId
               description
               lastModified
               name
@@ -92,6 +96,8 @@ const useAccountService = () => {
             accounts {
               accountId
               active
+              status
+              statusId
               description
               lastModified
               name
@@ -184,12 +190,52 @@ const useAccountService = () => {
     }
   };
 
+  /**
+   * Changes an account's lifecycle status (SuperAdministrator).
+   * @param {string} accountId - The ID of the account.
+   * @param {string} targetStatus - The target AccountStatus enum name (e.g. "SUSPENDED", "ACTIVE").
+   * @param {string} [reason] - Required when suspending or cancelling.
+   * @returns {Promise<Object|boolean>} The updated account, or false on error.
+   */
+  const changeAccountStatus = async (accountId, targetStatus, reason) => {
+    try {
+      const data = {
+        query: `
+          mutation {
+            changeAccountStatus(
+              command: {
+                accountId: "${accountId}",
+                targetStatus: ${targetStatus},
+                reason: ${formatValue(reason)}
+              }
+            ) {
+              accountId
+              active
+              status
+              statusId
+              name
+              type
+              typeId
+              lastModified
+            }
+          }
+        `
+      };
+      const response = await post(data);
+      return response.data.changeAccountStatus;
+    } catch (error) {
+      handleError(error);
+      return false;
+    }
+  };
+
   return {
     getAccount,
     getAccountByUser,
     getAccounts,
     createAccount,
-    updateAccount
+    updateAccount,
+    changeAccountStatus
   };
 };
 

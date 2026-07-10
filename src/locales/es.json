@@ -6,7 +6,34 @@
     "description": "Descripción",
     "type": "Tipo",
     "active": "Activo",
-    "addUser": "Agregar Usuario"
+    "addUser": "Agregar Usuario",
+    "status": "Estado",
+    "changeStatus": "Cambiar Estado",
+    "targetStatus": "Nuevo Estado",
+    "reason": "Motivo",
+    "suspend": "Suspender",
+    "reinstate": "Reactivar",
+    "cancel": "Cancelar",
+    "archive": "Archivar",
+    "statusTrial": "Prueba",
+    "statusActive": "Activa",
+    "statusSuspended": "Suspendida",
+    "statusCancelled": "Cancelada",
+    "statusArchived": "Archivada"
+  },
+  "branding": {
+    "title": "Personalización",
+    "displayName": "Nombre para Mostrar",
+    "logoDocumentId": "Documento del Logo",
+    "primaryColor": "Color Primario",
+    "reportHeader": "Encabezado de Reporte / Exportación",
+    "preview": "Vista Previa",
+    "save": "Guardar"
+  },
+  "suspension": {
+    "title": "Cuenta No Disponible",
+    "message": "Esta cuenta no está operativa actualmente. Por favor, contacte a soporte para obtener ayuda.",
+    "statusLabel": "Estado"
   },
   "actions": {
     "read": "Lectura",
@@ -204,6 +231,47 @@
     "accessCount": "Accesos",
     "status": "Estado"
   },
+  "documentManagement": {
+    "title": "Documentos",
+    "library": "Biblioteca de Documentos",
+    "expiring": "Documentos por Vencer",
+    "types": "Tipos de Documento",
+    "upload": "Subir Documento",
+    "replace": "Nueva Versión",
+    "download": "Descargar",
+    "preview": "Vista Previa",
+    "void": "Anular",
+    "expire": "Vencer",
+    "delete": "Quitar Referencia",
+    "share": "Compartir",
+    "sign": "Firmar",
+    "fileName": "Nombre de Archivo",
+    "category": "Tipo",
+    "displayTitle": "Título",
+    "description": "Descripción",
+    "classification": "Clasificación",
+    "status": "Estado",
+    "scanStatus": "Estado de Análisis",
+    "expiresAt": "Vence En",
+    "currentVersion": "Versión",
+    "size": "Tamaño",
+    "owner": "Propietario",
+    "uploadedBy": "Subido Por",
+    "versions": "Historial de Versiones",
+    "signatures": "Firmas",
+    "shares": "Compartidos",
+    "required": "Obligatorio",
+    "expiringFlag": "Controla Vencimiento",
+    "validityDays": "Validez Predeterminada (días)",
+    "quarantined": "Analizando — disponible cuando esté limpio",
+    "infected": "Bloqueado: análisis de virus fallido",
+    "consentText": "Texto de Consentimiento",
+    "signerName": "Nombre del Firmante",
+    "reason": "Motivo",
+    "missingRequired": "Documentos Obligatorios Faltantes",
+    "dropHere": "Arrastre y suelte un archivo aquí, o haga clic para seleccionar",
+    "shareTokenWarning": "Copie este enlace ahora. El token no se mostrará de nuevo."
+  },
   "supportGrants": {
     "title": "Concesiones de Soporte",
     "request": "Solicitud de Acceso de Soporte",
@@ -220,7 +288,8 @@
     "approvedAt": "Aprobado"
   },
   "errors": {
-    "featureDisabled": "Esta funcionalidad no está habilitada para su cuenta."
+    "featureDisabled": "Esta funcionalidad no está habilitada para su cuenta.",
+    "accountSuspended": "Esta cuenta no está operativa actualmente."
   },
   "driver": {
     "name": "Nombre",

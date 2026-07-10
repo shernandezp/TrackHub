@@ -27,17 +27,24 @@ import { handleSave } from "layouts/systemadmin/actions/accountsActions";
 import { formatDateTime } from "utils/dateUtils";
 import { LoadingContext } from 'LoadingContext';
 import accountTypes from "data/accountTypes";
+import {
+  ACCOUNT_STATUS_NAME,
+  ACCOUNT_STATUS_COLOR,
+  ACCOUNT_STATUS_I18N,
+  ALLOWED_TRANSITIONS
+} from "data/accountStatuses";
 
-function useAccountsTableData(fetchData, handleEditClick, handleAddManagerClick) {
+function useAccountsTableData(fetchData, handleEditClick, handleAddManagerClick, handleStatusClick) {
   const { t } = useTranslation();
   const [data, setData] = useState({ columns: [], rows: [] });
   const [accounts, setAccounts] = useState([]);
   const [open, setOpen] = useState(false);
   const [openUser, setOpenUser] = useState(false);
+  const [openStatus, setOpenStatus] = useState(false);
   const { setLoading } = useContext(LoadingContext);
 
   const hasLoaded = useRef(false);
-  const { getAccounts, createAccount, updateAccount } = useAccountService();
+  const { getAccounts, createAccount, updateAccount, changeAccountStatus } = useAccountService();
   const { createManager } = useUserService();
 
   const onSave = async (account) => {
@@ -78,13 +85,37 @@ function useAccountsTableData(fetchData, handleEditClick, handleAddManagerClick)
     setOpenUser(true);
   };
 
+  const handleOpenStatus = (account) => {
+    handleStatusClick(account);
+    setOpenStatus(true);
+  };
+
+  const onChangeStatus = async (statusValues) => {
+    setLoading(true);
+    try {
+      const updated = await changeAccountStatus(
+        statusValues.accountId, statusValues.targetStatus, statusValues.reason);
+      if (updated) {
+        const next = accounts.map(a =>
+          a.accountId === updated.accountId ? { ...a, ...updated } : a);
+        setAccounts(next);
+        setData(buildTableData(next));
+      }
+      setOpenStatus(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const buildTableData = (accounts) => ({
     columns: [
       { name: "name", title:t('account.name'), align: "left" },
       { name: "description", title:t('account.description'), align: "left" },
       { name: "type", title:t('account.type'), align: "center" },
+      { name: "status", title:t('account.status'), align: "center" },
       { name: "modified", title:t('generic.modified'), align: "center" },
       { name: "action", title:t('generic.action'), align: "center" },
+      { name: "lifecycle", title:t('account.changeStatus'), align: "center" },
       { name: "user", title:t('account.addUser'), align: "center" },
       { name: "id" }
     ],
@@ -94,18 +125,39 @@ function useAccountsTableData(fetchData, handleEditClick, handleAddManagerClick)
       type: (
         <ArgonBadge variant="gradient" badgeContent={account.type} color="success" size="xs" container />
       ),
+      status: (() => {
+        const name = ACCOUNT_STATUS_NAME[account.statusId] || 'ACTIVE';
+        return (
+          <ArgonBadge
+            variant="gradient"
+            badgeContent={t(ACCOUNT_STATUS_I18N[name])}
+            color={ACCOUNT_STATUS_COLOR[name]}
+            size="xs"
+            container />
+        );
+      })(),
       modified: (
         <ArgonTypography variant="caption" color="secondary" fontWeight="medium">
           {formatDateTime(account.lastModified)}
         </ArgonTypography>
       ),
       action: (
-        <ArgonButton 
-            variant="text" 
-            color="dark" 
+        <ArgonButton
+            variant="text"
+            color="dark"
             onClick={() => handleOpen(account)}>
           <Icon>edit</Icon>&nbsp;{t('generic.edit')}
         </ArgonButton>
+      ),
+      lifecycle: (
+        (ALLOWED_TRANSITIONS[account.statusId] || []).length > 0 ? (
+          <ArgonButton
+              variant="text"
+              color="dark"
+              onClick={() => handleOpenStatus(account)}>
+            <Icon>sync_alt</Icon>&nbsp;{t('account.changeStatus')}
+          </ArgonButton>
+        ) : null
       ),
       user: (
         <ArgonButton 
@@ -133,14 +185,17 @@ function useAccountsTableData(fetchData, handleEditClick, handleAddManagerClick)
     }
   }, [fetchData]);
 
-  return { 
-    data, 
+  return {
+    data,
     open,
     openUser,
+    openStatus,
     onSave,
     onSaveUser,
+    onChangeStatus,
     setOpen,
-    setOpenUser,};
+    setOpenUser,
+    setOpenStatus,};
 }
 
 export default useAccountsTableData;
