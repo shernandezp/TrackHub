@@ -73,9 +73,10 @@ import { useAuth } from "AuthContext";
 import { LoadingContext } from 'LoadingContext';
 import { ClipLoader } from 'react-spinners';
 import { isAdmin, isManager } from "api/security/users";
-import useSettingsService from 'services/settings';
-import useAccountContextService from "services/accountContext";
-import usePrincipalService from "services/principals";
+import { getUserSettings, getAccountSettings, updateAccountSettings } from "api/manager/settings";
+import { getAccountContext } from "api/manager/accounts";
+import { getCurrentPrincipal } from "api/manager/principals";
+import { notifyApiError } from "api/core/errors";
 import { useTranslation } from 'react-i18next';
 import ErrorBoundary from "components/ErrorBoundary";
 import SuspensionScreen from "components/SuspensionScreen";
@@ -88,10 +89,12 @@ export default function App() {
   const [onMouseEnter, setOnMouseEnter] = useState(false);
   const { isAuthenticated, login, isLoggingIn, authError } = useAuth();
   const { pathname } = useLocation();
-  const { getUserSettings, getAccountSettings, updateAccountSettings } = useSettingsService();
-  const { getAccountContext } = useAccountContextService();
-  const { getCurrentPrincipal } = usePrincipalService();
   const { i18n } = useTranslation();
+
+  // Account settings save is fire-and-forget from the Configurator; keep the
+  // legacy toast-on-failure semantics (the new api function throws).
+  const saveAccountSettings = (accountId, settings) =>
+    updateAccountSettings(accountId, settings).catch(notifyApiError);
 
   const [loading, setLoading] = useState(false);
   const [userIsAdmin, setUserIsAdmin] = useState(true);
@@ -117,7 +120,9 @@ export default function App() {
   useEffect(() => {
     const fetchPermissions = async () => {
       if (isAuthenticated) {
-        const principal = await getCurrentPrincipal();
+        // Graceful-null on failure (matches the old service's null fallback);
+        // routes fall back to the default principal type.
+        const principal = await getCurrentPrincipal().catch(() => null);
         setCurrentPrincipal(principal);
         // Silent ops: default to false on failure (matches the old service's
         // handleSilentError — no toast, routes stay locked down).
@@ -137,7 +142,7 @@ export default function App() {
         setAccountSettings(settings);
         // Single bootstrap read (status + branding + features); allowed on non-operational accounts
         // so the shell can render a suspension state instead of issuing operational queries.
-        const context = await getAccountContext();
+        const context = await getAccountContext().catch(() => null);
         if (context) {
           setAccountStatus(context.status);
           setBranding(context.branding);
@@ -265,7 +270,7 @@ export default function App() {
             />
             <Configurator
               settings={accountSettings}
-              updateSettings={updateAccountSettings}
+              updateSettings={saveAccountSettings}
                />
             {userIsManager && configsButton}
           </>

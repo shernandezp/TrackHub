@@ -14,39 +14,46 @@
 *  limitations under the License.
 */
 
-import { useEffect, useState, useRef, useContext } from "react";
+import { useEffect, useMemo, useState, useContext } from "react";
 import {Name, Description} from "controls/Tables/components/tableComponents";
 import ArgonTypography from "components/ArgonTypography";
 import ArgonBadge from "components/ArgonBadge";
 import ArgonButton from "components/ArgonButton";
 import Icon from "@mui/material/Icon";
-import useAccountService from "services/account";
+import { useAccountByUser, useUpdateAccount } from "queries/accounts";
 import { formatDateTime } from "utils/dateUtils";
-import { handleSave } from "layouts/manageadmin/actions/accountActions";
 import { LoadingContext } from 'LoadingContext';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "AuthContext";
 
 function useAccountTableData(fetchData, handleEditClick) {
   const { t } = useTranslation();
-  const [data, setData] = useState({ columns: [], rows: [] });
-  const [accounts, setAccounts] = useState([]);
   const [open, setOpen] = useState(false);
-  const hasLoaded = useRef(false);
-  const { getAccountByUser, updateAccount } = useAccountService();
   const { setLoading } = useContext(LoadingContext);
   const { isAuthenticated } = useAuth();
 
-  const onSave = (account) => {
+  const accountQuery = useAccountByUser({ enabled: !!fetchData && isAuthenticated });
+  const accounts = accountQuery.data ? [accountQuery.data] : [];
+  const updateAccount = useUpdateAccount();
+
+  // Keep the global spinner UX for the initial load / invalidation refetch.
+  useEffect(() => {
+    setLoading(accountQuery.isFetching);
+  }, [accountQuery.isFetching, setLoading]);
+
+  const onSave = async (account) => {
     setLoading(true);
-    try{
-      handleSave(account, 
-        accounts, 
-        setAccounts, 
-        setData, 
-        buildTableData, 
-        updateAccount);
+    try {
+      await updateAccount.mutateAsync({
+        accountId: account.accountId,
+        name: account.name,
+        description: account.description,
+        typeId: account.typeId,
+        active: account.active,
+      });
       setOpen(false);
+    } catch {
+      // Failure is surfaced by the global toast; keep the dialog open.
     } finally {
       setLoading(false);
     }
@@ -78,9 +85,9 @@ function useAccountTableData(fetchData, handleEditClick) {
         </ArgonTypography>
       ),
       action: (
-        <ArgonButton 
-            variant="text" 
-            color="dark" 
+        <ArgonButton
+            variant="text"
+            color="dark"
             onClick={() => handleOpen(account)}>
           <Icon>edit</Icon>&nbsp;{t('generic.edit')}
         </ArgonButton>
@@ -89,20 +96,11 @@ function useAccountTableData(fetchData, handleEditClick) {
     })),
   });
 
-  useEffect(() => {
-    if (fetchData && !hasLoaded.current && isAuthenticated) {
-      async function fetchData() {
-        setLoading(true);
-        const account = await getAccountByUser();
-        const accounts = [account];
-        setAccounts(accounts);
-        setData(buildTableData(accounts));
-        hasLoaded.current = true;
-        setLoading(false);
-      }
-      fetchData();
-    }
-  }, [fetchData, isAuthenticated]);
+  const data = useMemo(
+    () => buildTableData(accounts),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [accounts, t]
+  );
 
   return { data, open, onSave, setOpen };
 }

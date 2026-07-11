@@ -26,7 +26,8 @@ import useForm from 'controls/Dialogs/useForm';
 import ConfirmDialog from 'controls/Dialogs/ConfirmDialog';
 import GeofenceFormDialog from 'layouts/geofencemanager/GeofenceFormDialog';
 import useGeofencesTableData from "layouts/geofencemanager/data/geofencesData";
-import useSettingsService from 'services/settings';
+import { getAccountSettings } from 'api/manager/settings';
+import { notifyApiError } from 'api/core/errors';
 import { LoadingContext } from 'LoadingContext';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "AuthContext";
@@ -34,7 +35,6 @@ import { useAuth } from "AuthContext";
 function GeofenceManager() {
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
-  const { getAccountSettings } = useSettingsService();
   const { setLoading } = useContext(LoadingContext);
   const [settings, setSettings] = useState({maps:'OSM', mapsKey:'', refreshMapInterval: 60});
 
@@ -65,9 +65,14 @@ function GeofenceManager() {
   
   const fetchSettings = async () => {
     setLoading(true);
-    var settings = await getAccountSettings();
-    setSettings(settings);
-    setLoading(false);
+    try {
+      const settings = await getAccountSettings();
+      setSettings(settings);
+    } catch (error) {
+      notifyApiError(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {

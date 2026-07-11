@@ -21,7 +21,8 @@ import Icon from "@mui/material/Icon";
 import ArgonTypography from "components/ArgonTypography";
 import ArgonBadge from "components/ArgonBadge";
 import ArgonButton from "components/ArgonButton";
-import useCredentialService from "services/credential";
+import { getCredentialByOperator, createCredential, updateCredential } from "api/manager/credential";
+import { notifyApiError } from "api/core/errors";
 import { pingOperator } from "api/router/router";
 import {
   useOperatorsByCurrentAccount,
@@ -66,7 +67,6 @@ function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialCl
   const deleteOperator = useDeleteOperator();
   const setOperatorEnabled = useSetOperatorEnabled();
   const triggerOperatorDeviceSync = useTriggerOperatorDeviceSync();
-  const { getCredentialByOperator, createCredential, updateCredential } = useCredentialService();
 
   // Keep the global spinner UX for the initial load / invalidation refetch.
   useEffect(() => {
@@ -125,12 +125,15 @@ function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialCl
         credential,
         createCredential,
         updateCredential);
-        setOpenCredential(false);
-        await operatorsQuery.refetch();
-        notifyGpsIntegrationRefresh();
-      } finally {
-        setLoading(false);
-      }
+      setOpenCredential(false);
+      await operatorsQuery.refetch();
+      notifyGpsIntegrationRefresh();
+    } catch (error) {
+      // Keep the credential dialog open on failure so the user can retry.
+      notifyApiError(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleOpen = (operator) => {
@@ -139,8 +142,14 @@ function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialCl
   };
 
   const handleOpenCredential = async (operatorId) => {
-    const credential = await getCredentialByOperator(operatorId) || { operatorId };
-    handleEditCredentialClick(credential);
+    // Silent read: an operator without a stored credential opens an empty form.
+    let credential;
+    try {
+      credential = await getCredentialByOperator(operatorId);
+    } catch (error) {
+      if (process.env.NODE_ENV !== 'production') console.error(error);
+    }
+    handleEditCredentialClick(credential || { operatorId });
     setOpenCredential(true);
   };
 

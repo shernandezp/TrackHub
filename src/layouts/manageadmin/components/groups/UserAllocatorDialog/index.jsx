@@ -14,26 +14,30 @@
 *  limitations under the License.
 */
 
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useEffect, useContext, useState } from 'react';
 import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import DynamicTableDialog from 'controls/Dialogs/TableDialogs/DynamicTableDialog';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
 import { useUsersByAccount } from 'queries/users';
-import useGroupService from 'services/groups';
+import { useUsersByGroup, groupKeys } from 'queries/groups';
+import { createUserGroup, deleteUserGroup } from 'api/manager/groups';
+import { notifyApiError } from 'api/core/errors';
 import { LoadingContext } from 'LoadingContext';
 
 function UserAllocatorDialog({ open, setOpen, groupId }) {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
-  const { createUserGroup, deleteUserGroup, getUsersByGroup } = useGroupService();
-  const [data, setData] = useState([]);
+  const queryClient = useQueryClient();
   const [userId, setUserId] = useState('');
 
-  // Account users come from the security query layer; group membership stays on
-  // the (not-yet-migrated) group service.
+  // Account users come from the security query layer; group membership now comes
+  // from the manager groups query layer (invalidated after each add/remove).
   const accountUsersQuery = useUsersByAccount({ enabled: open });
   const accountUsers = accountUsersQuery.data ?? [];
+  const assignedUsersQuery = useUsersByGroup(open ? groupId : undefined);
+  const data = assignedUsersQuery.data ?? [];
 
   const columns = [
     { field: 'username', headerName: t('user.username') }
@@ -47,29 +51,14 @@ function UserAllocatorDialog({ open, setOpen, groupId }) {
     }));
 
   const reloadData = async () => {
-    const assignedUsers = await getUsersByGroup(groupId);
-    setData(assignedUsers);
+    await queryClient.invalidateQueries({ queryKey: groupKeys.usersByGroup(groupId) });
     setUserId('');
   };
 
+  // Keep the global spinner UX while the account-user / membership lists load.
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        await reloadData();
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (open)
-        fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
-
-  // Keep the global spinner UX while the account-user list loads.
-  useEffect(() => {
-    setLoading(accountUsersQuery.isFetching);
-  }, [accountUsersQuery.isFetching, setLoading]);
+    setLoading(accountUsersQuery.isFetching || assignedUsersQuery.isFetching);
+  }, [accountUsersQuery.isFetching, assignedUsersQuery.isFetching, setLoading]);
 
   const handleChange = (event) => {
     setLoading(true);
@@ -79,14 +68,21 @@ function UserAllocatorDialog({ open, setOpen, groupId }) {
 
   const handleAdd = async () => {
     setLoading(true);
-    await createUserGroup(userId, groupId);
+    try {
+      // createUserGroup surfaces failures via the global toast (legacy handleError).
+      await createUserGroup(userId, groupId);
+    } catch (e) {
+      notifyApiError(e);
+    }
     await reloadData();
     setLoading(false);
   };
 
   const handleDelete = async (selectedRows) => {
     setLoading(true);
-    const deletePromises = selectedRows.map(index => deleteUserGroup(data[index].userId, groupId));
+    // deleteUserGroup keeps the legacy silent semantics (handleSilentError).
+    const deletePromises = selectedRows.map(index =>
+      deleteUserGroup(data[index].userId, groupId).catch(() => undefined));
     await Promise.all(deletePromises);
     await reloadData();
     setLoading(false);
@@ -94,7 +90,6 @@ function UserAllocatorDialog({ open, setOpen, groupId }) {
 
   const handleClose = async () => {
     setUserId('');
-    setData([]);
     setOpen(false);
   };
 

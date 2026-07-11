@@ -14,15 +14,20 @@
 *  limitations under the License.
 */
 
-import { useEffect, useState, useRef, useContext } from "react";
+import { useEffect, useMemo, useState, useContext } from "react";
 import { useTranslation } from 'react-i18next';
 import { Name, Description } from "controls/Tables/components/tableComponents";
 import Icon from "@mui/material/Icon";
 import ArgonBadge from "components/ArgonBadge";
 import ArgonButton from "components/ArgonButton";
-import usePointOfInterestService from "services/pointsOfInterest";
-import useGroupService from "services/groups";
-import { handleDelete, handleSave } from "layouts/manageadmin/actions/poisActions";
+import { useAccountByUser } from "queries/accounts";
+import {
+  usePointsOfInterestByAccount,
+  useCreatePointOfInterest,
+  useUpdatePointOfInterest,
+  useDeletePointOfInterest,
+} from 'queries/pointsOfInterest';
+import { useGroups } from 'queries/groups';
 import { getPoiType } from "data/poiTypes";
 import { toCamelCase } from 'utils/stringUtils';
 import { LoadingContext } from 'LoadingContext';
@@ -30,30 +35,62 @@ import { useAuth } from "AuthContext";
 
 function usePoiTableData(fetchData, handleEditClick, handleDeleteClick) {
   const { t } = useTranslation();
-  const [data, setData] = useState({ columns: [], rows: [] });
-  const [pois, setPois] = useState([]);
-  const [groups, setGroups] = useState([]);
   const [open, setOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const { setLoading } = useContext(LoadingContext);
   const { isAuthenticated } = useAuth();
 
-  const hasLoaded = useRef(false);
-  const { getPointsOfInterestByAccount, createPointOfInterest, updatePointOfInterest, deletePointOfInterest } = usePointOfInterestService();
-  const { getGroups } = useGroupService();
+  const enabled = !!fetchData && isAuthenticated;
+  const poisQuery = usePointsOfInterestByAccount({ enabled });
+  const pois = poisQuery.data ?? [];
+  const groupsQuery = useGroups({ enabled });
+  const groups = groupsQuery.data ?? [];
+  const createPoi = useCreatePointOfInterest();
+  const updatePoi = useUpdatePointOfInterest();
+  const deletePoi = useDeletePointOfInterest();
+
+  // Current account id, required to create a POI (PointOfInterestDtoInput.accountId).
+  const accountQuery = useAccountByUser({ enabled });
+  const accountId = accountQuery.data?.accountId ?? null;
+
+  // Keep the global spinner UX for the initial load / invalidation refetch.
+  useEffect(() => {
+    setLoading(poisQuery.isFetching || groupsQuery.isFetching);
+  }, [poisQuery.isFetching, groupsQuery.isFetching, setLoading]);
 
   const onSave = async (poi) => {
     setLoading(true);
     try {
-      await handleSave(
-        poi,
-        pois,
-        setPois,
-        setData,
-        buildTableData,
-        createPointOfInterest,
-        updatePointOfInterest);
-        setOpen(false);
+      if (poi.pointOfInterestId) {
+        await updatePoi.mutateAsync({
+          pointOfInterestId: poi.pointOfInterestId,
+          name: poi.name,
+          description: poi.description,
+          type: poi.type,
+          latitude: poi.latitude,
+          longitude: poi.longitude,
+          address: poi.address,
+          color: poi.color,
+          groupId: poi.groupId,
+          active: poi.active,
+        });
+      } else {
+        await createPoi.mutateAsync({
+          accountId,
+          name: poi.name,
+          description: poi.description,
+          type: poi.type,
+          latitude: poi.latitude,
+          longitude: poi.longitude,
+          address: poi.address,
+          color: poi.color,
+          groupId: poi.groupId,
+          active: poi.active,
+        });
+      }
+      setOpen(false);
+    } catch {
+      // Failure is surfaced by the global toast; keep the dialog open.
     } finally {
       setLoading(false);
     }
@@ -62,18 +99,14 @@ function usePoiTableData(fetchData, handleEditClick, handleDeleteClick) {
   const onDelete = async (pointOfInterestId) => {
     setLoading(true);
     try {
-      await handleDelete(
-        pointOfInterestId,
-        pois,
-        setPois,
-        setData,
-        buildTableData,
-        deletePointOfInterest);
-        setConfirmOpen(false);
-      } finally {
-        setLoading(false);
-      }
-  }
+      await deletePoi.mutateAsync(pointOfInterestId);
+      setConfirmOpen(false);
+    } catch {
+      // Failure is surfaced by the global toast.
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleOpen = (poi) => {
     handleEditClick(poi);
@@ -85,7 +118,7 @@ function usePoiTableData(fetchData, handleEditClick, handleDeleteClick) {
     setConfirmOpen(true);
   };
 
-  const buildTableData = (pois, groupList = groups) => ({
+  const buildTableData = (poiList, groupList) => ({
     columns: [
       { name: "name", title:t('poi.name'), align: "left" },
       { name: "type", title:t('poi.type'), align: "left" },
@@ -95,7 +128,7 @@ function usePoiTableData(fetchData, handleEditClick, handleDeleteClick) {
       { name: "action", title:t('generic.action'), align: "center" },
       { name: "id" }
     ],
-    rows: pois.map(poi => {
+    rows: poiList.map(poi => {
       const group = groupList.find(g => g.groupId === poi.groupId);
       // Unknown type values must not render a dangling i18n key.
       const typeLabel = getPoiType(poi.type);
@@ -133,24 +166,11 @@ function usePoiTableData(fetchData, handleEditClick, handleDeleteClick) {
     }),
   });
 
-  useEffect(() => {
-    if (fetchData && !hasLoaded.current && isAuthenticated) {
-      async function fetchData() {
-        setLoading(true);
-        try {
-          const groupList = await getGroups() || [];
-          setGroups(groupList);
-          const pois = await getPointsOfInterestByAccount();
-          setPois(pois);
-          setData(buildTableData(pois, groupList));
-          hasLoaded.current = true;
-        } finally {
-          setLoading(false);
-        }
-      }
-      fetchData();
-    }
-  }, [fetchData, isAuthenticated]);
+  const data = useMemo(
+    () => buildTableData(pois, groups),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [pois, groups, t]
+  );
 
   const groupOptions = groups.map(group => ({ value: group.groupId, label: group.name }));
 

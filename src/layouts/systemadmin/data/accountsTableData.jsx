@@ -14,19 +14,22 @@
 *  limitations under the License.
 */
 
-import { useEffect, useState, useRef, useContext } from "react";
+import { useEffect, useMemo, useState, useContext } from "react";
 import { useTranslation } from 'react-i18next';
 import { Name, Description } from "controls/Tables/components/tableComponents";
 import Icon from "@mui/material/Icon";
 import ArgonTypography from "components/ArgonTypography";
 import ArgonBadge from "components/ArgonBadge";
 import ArgonButton from "components/ArgonButton";
-import useAccountService from "services/account";
+import {
+  useAccounts,
+  useCreateAccount,
+  useUpdateAccount,
+  useChangeAccountStatus,
+} from "queries/accounts";
 import { useCreateManager } from "queries/users";
-import { handleSave } from "layouts/systemadmin/actions/accountsActions";
 import { formatDateTime } from "utils/dateUtils";
 import { LoadingContext } from 'LoadingContext';
-import accountTypes from "data/accountTypes";
 import {
   ACCOUNT_STATUS_NAME,
   ACCOUNT_STATUS_COLOR,
@@ -36,30 +39,50 @@ import {
 
 function useAccountsTableData(fetchData, handleEditClick, handleAddManagerClick, handleStatusClick) {
   const { t } = useTranslation();
-  const [data, setData] = useState({ columns: [], rows: [] });
-  const [accounts, setAccounts] = useState([]);
   const [open, setOpen] = useState(false);
   const [openUser, setOpenUser] = useState(false);
   const [openStatus, setOpenStatus] = useState(false);
   const { setLoading } = useContext(LoadingContext);
 
-  const hasLoaded = useRef(false);
-  const { getAccounts, createAccount, updateAccount, changeAccountStatus } = useAccountService();
+  const accountsQuery = useAccounts({ enabled: !!fetchData });
+  const accounts = accountsQuery.data ?? [];
+  const createAccount = useCreateAccount();
+  const updateAccount = useUpdateAccount();
+  const changeAccountStatus = useChangeAccountStatus();
   const createManager = useCreateManager();
+
+  // Keep the global spinner UX for the initial load / invalidation refetch.
+  useEffect(() => {
+    setLoading(accountsQuery.isFetching);
+  }, [accountsQuery.isFetching, setLoading]);
 
   const onSave = async (account) => {
     setLoading(true);
     try {
-      await handleSave(
-        account, 
-        accounts, 
-        setAccounts, 
-        setData, 
-        buildTableData, 
-        createAccount, 
-        updateAccount,
-        accountTypes);
+      if (account.accountId) {
+        await updateAccount.mutateAsync({
+          accountId: account.accountId,
+          name: account.name,
+          description: account.description,
+          typeId: account.typeId,
+          active: account.active,
+        });
+      } else {
+        await createAccount.mutateAsync({
+          active: account.active,
+          typeId: account.typeId,
+          password: account.password,
+          name: account.name,
+          lastName: account.lastName,
+          firstName: account.firstName,
+          emailAddress: account.emailAddress,
+          description: account.description,
+        });
+      }
       setOpen(false);
+    } catch {
+      // Failure is surfaced by the global toast; keep the dialog open so the
+      // user can retry without re-entering the values.
     } finally {
       setLoading(false);
     }
@@ -95,15 +118,14 @@ function useAccountsTableData(fetchData, handleEditClick, handleAddManagerClick,
   const onChangeStatus = async (statusValues) => {
     setLoading(true);
     try {
-      const updated = await changeAccountStatus(
-        statusValues.accountId, statusValues.targetStatus, statusValues.reason);
-      if (updated) {
-        const next = accounts.map(a =>
-          a.accountId === updated.accountId ? { ...a, ...updated } : a);
-        setAccounts(next);
-        setData(buildTableData(next));
-      }
+      await changeAccountStatus.mutateAsync({
+        accountId: statusValues.accountId,
+        targetStatus: statusValues.targetStatus,
+        reason: statusValues.reason,
+      });
       setOpenStatus(false);
+    } catch {
+      // Failure is surfaced by the global toast; keep the dialog open.
     } finally {
       setLoading(false);
     }
@@ -162,9 +184,9 @@ function useAccountsTableData(fetchData, handleEditClick, handleAddManagerClick,
         ) : null
       ),
       user: (
-        <ArgonButton 
-            variant="text" 
-            color="dark" 
+        <ArgonButton
+            variant="text"
+            color="dark"
             onClick={() => handleOpenUser(account.accountId)}>
           <Icon>add</Icon>&nbsp;{t('generic.add')}
         </ArgonButton>
@@ -173,19 +195,11 @@ function useAccountsTableData(fetchData, handleEditClick, handleAddManagerClick,
     })),
   });
 
-  useEffect(() => {
-    if (fetchData && !hasLoaded.current) {
-      async function fetchData() {
-        setLoading(true);
-        const accounts = await getAccounts();
-        setAccounts(accounts);
-        setData(buildTableData(accounts));
-        hasLoaded.current = true;
-        setLoading(false);
-      }
-      fetchData();
-    }
-  }, [fetchData]);
+  const data = useMemo(
+    () => buildTableData(accounts),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [accounts, t]
+  );
 
   return {
     data,

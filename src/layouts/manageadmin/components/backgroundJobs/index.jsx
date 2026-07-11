@@ -4,8 +4,9 @@ import PropTypes from 'prop-types';
 import Table from "controls/Tables/Table";
 import TableAccordion from "controls/Accordions/TableAccordion";
 import ArgonTypography from "components/ArgonTypography";
-import useAccountService from "services/account";
-import useBackgroundJobService from "services/backgroundJobs";
+import { getAccountByUser } from "api/manager/accounts";
+import { getBackgroundJobRuns } from "api/manager/backgroundJobs";
+import { notifyApiError } from "api/core/errors";
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from "utils/dateUtils";
 
@@ -27,8 +28,6 @@ function ManageBackgroundJobs() {
   const [expanded, setExpanded] = useState(false);
   const [jobs, setJobs] = useState([]);
   const loaded = useRef(false);
-  const { getAccountByUser } = useAccountService();
-  const { getBackgroundJobRuns } = useBackgroundJobService();
 
   useEffect(() => {
     if (!expanded || loaded.current) return;
@@ -41,6 +40,8 @@ function ManageBackgroundJobs() {
         if (!account?.accountId) return;
         const items = await getBackgroundJobRuns(account.accountId);
         setJobs(items || []);
+      } catch (error) {
+        notifyApiError(error);
       } finally {
         setLoading(false);
       }

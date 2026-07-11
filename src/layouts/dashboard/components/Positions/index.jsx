@@ -31,7 +31,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { getTripsByTransporter } from 'api/router/router';
 import { routerKeys } from 'queries/router';
 import { useTransportersByUser } from 'queries/transporters';
-import useAccountFeatureService from 'services/accountFeatures';
+import { getAccountFeatures } from 'api/manager/accountFeatures';
+import { notifyApiError } from 'api/core/errors';
 import useForm from 'controls/Dialogs/useForm';
 import { usePlayback } from 'layouts/dashboard/utils/playback';
 import { downloadCsv, sanitizeFileNamePart } from 'utils/csvUtils';
@@ -45,7 +46,6 @@ const POSITION_HISTORY_FEATURE_KEY = 'gps.positionHistory';
 function Positions({settings, showGeofence, geofences}) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const { getAccountFeatures } = useAccountFeatureService();
   const { setLoading } = useContext(LoadingContext);
   const { isAuthenticated } = useAuth();
   const [controller] = useArgonController();
@@ -110,9 +110,14 @@ function Positions({settings, showGeofence, geofences}) {
 
   const fetchFeatures = async () => {
     if (!settings?.accountId) return;
-    const features = await getAccountFeatures(settings.accountId) || [];
-    const feature = features.find(item => item.featureKey === POSITION_HISTORY_FEATURE_KEY);
-    setHistoryEnabled(!!feature?.enabled);
+    try {
+      const features = await getAccountFeatures(settings.accountId);
+      const feature = features.find(item => item.featureKey === POSITION_HISTORY_FEATURE_KEY);
+      setHistoryEnabled(!!feature?.enabled);
+    } catch (error) {
+      notifyApiError(error);
+      setHistoryEnabled(false);
+    }
   };
 
   useEffect(() => {

@@ -22,9 +22,10 @@ import CustomTextField from 'controls/Dialogs/CustomTextField';
 import useForm from "controls/Dialogs/useForm";
 import ArgonBox from "components/ArgonBox";
 import ArgonTypography from "components/ArgonTypography";
-import usePublicLinkService from "services/publicLinks";
-import usePrincipalService from "services/principals";
-import useDocumentService from "services/documents";
+import { createPublicLinkGrant } from "api/manager/publicLinks";
+import { getCurrentPrincipal } from "api/manager/principals";
+import { notifyApiError } from "api/core/errors";
+import { publicDownloadUrl } from "api/manager/documents";
 
 // Create/copy a document public-share link (spec 04 §7, §8). Reuses PublicLinkGrant with
 // ResourceType="Document" + scope "document.read"; the token + URL are shown once at creation.
@@ -32,34 +33,36 @@ function ShareDialog({ open, setOpen, accountId, document }) {
   const { t } = useTranslation();
   const [values, handleChange, setValues, setErrors, validate, errors] = useForm({});
   const [share, setShare] = React.useState(null);
-  const { createPublicLinkGrant } = usePublicLinkService();
-  const { getCurrentPrincipal } = usePrincipalService();
-  const { publicDownloadUrl } = useDocumentService();
 
   const reset = () => { setValues({}); setErrors({}); setShare(null); };
 
   const handleSave = async () => {
     if (share) { reset(); setOpen(false); return; }
     if (!validate(['expiresAt']) || !document?.documentId || !accountId) return;
-    const principal = await getCurrentPrincipal();
+    const principal = await getCurrentPrincipal().catch(() => null);
     const createdBy = principal?.userId || principal?.driverId || principal?.clientId || principal?.subjectId || '';
-    const grant = await createPublicLinkGrant({
-      accountId,
-      resourceType: 'Document',
-      resourceId: document.documentId,
-      scopes: 'document.read',
-      purpose: values.purpose || 'Document share',
-      subjectTokenIdHash: null,
-      expiresAt: values.expiresAt ? new Date(values.expiresAt).toISOString() : null,
-      createdByPrincipalId: createdBy,
-    });
-    if (grant?.token) {
-      setShare({
-        token: grant.token,
-        url: publicDownloadUrl(grant.publicLinkGrantId, accountId, document.documentId, grant.token),
+    try {
+      const grant = await createPublicLinkGrant({
+        accountId,
+        resourceType: 'Document',
+        resourceId: document.documentId,
+        scopes: 'document.read',
+        purpose: values.purpose || 'Document share',
+        subjectTokenIdHash: null,
+        expiresAt: values.expiresAt ? new Date(values.expiresAt).toISOString() : null,
+        createdByPrincipalId: createdBy,
       });
-    } else {
-      setOpen(false);
+      if (grant?.token) {
+        setShare({
+          token: grant.token,
+          url: publicDownloadUrl(grant.publicLinkGrantId, accountId, document.documentId, grant.token),
+        });
+      } else {
+        setOpen(false);
+      }
+    } catch (error) {
+      // Keep the dialog open on failure so the user can retry.
+      notifyApiError(error);
     }
   };
 

@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import PropTypes from 'prop-types';
 import Icon from '@mui/material/Icon';
@@ -8,8 +8,8 @@ import ArgonButton from "components/ArgonButton";
 import ArgonTypography from "components/ArgonTypography";
 import useForm from "controls/Dialogs/useForm";
 import DriverDialog from "layouts/manageadmin/components/drivers/DriverDialog";
-import useAccountService from "services/account";
-import useDriverService from "services/drivers";
+import { useAccountByUser } from "queries/accounts";
+import { useDriversByAccount, useCreateDriver, useUpdateDriver, useDeactivateDriver } from 'queries/drivers';
 import { LoadingContext } from 'LoadingContext';
 
 function TextCell({ children }) {
@@ -28,33 +28,22 @@ function ManageDrivers() {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
   const [expanded, setExpanded] = useState(false);
-  const [account, setAccount] = useState(null);
-  const [drivers, setDrivers] = useState([]);
   const [open, setOpen] = useState(false);
   const [values, handleChange, setValues, setErrors, validate, errors] = useForm({ active: true });
-  const loaded = useRef(false);
-  const { getAccountByUser } = useAccountService();
-  const { getDriversByAccount, createDriver, updateDriver, deactivateDriver } = useDriverService();
 
-  const loadDrivers = async () => {
-    setLoading(true);
-    try {
-      const currentAccount = await getAccountByUser();
-      if (!currentAccount?.accountId) return;
-      setAccount(currentAccount);
-      const items = await getDriversByAccount(currentAccount.accountId);
-      setDrivers(items || []);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Account id comes from the query layer; the driver list is then keyed on it.
+  const accountQuery = useAccountByUser({ enabled: expanded });
+  const account = accountQuery.data ?? null;
+  const driversQuery = useDriversByAccount(account?.accountId, { enabled: expanded && !!account?.accountId });
+  const drivers = driversQuery.data ?? [];
+  const createDriver = useCreateDriver();
+  const updateDriver = useUpdateDriver();
+  const deactivateDriver = useDeactivateDriver();
 
+  // Keep the global spinner UX while the account/driver list loads/refreshes.
   useEffect(() => {
-    if (expanded && !loaded.current) {
-      loaded.current = true;
-      loadDrivers();
-    }
-  }, [expanded]);
+    setLoading(accountQuery.isFetching || driversQuery.isFetching);
+  }, [accountQuery.isFetching, driversQuery.isFetching, setLoading]);
 
   const handleAddClick = () => {
     setValues({ accountId: account?.accountId, active: true });
@@ -73,12 +62,13 @@ function ManageDrivers() {
     try {
       const driver = { ...values, accountId: account.accountId, active: values.active !== false };
       if (driver.driverId) {
-        await updateDriver(driver.driverId, driver);
+        await updateDriver.mutateAsync({ driverId: driver.driverId, driver });
       } else {
-        await createDriver(driver);
+        await createDriver.mutateAsync(driver);
       }
       setOpen(false);
-      await loadDrivers();
+    } catch {
+      // Failure is surfaced by the global toast; keep the dialog open.
     } finally {
       setLoading(false);
     }
@@ -88,8 +78,9 @@ function ManageDrivers() {
     if (!driver?.driverId || !window.confirm(t('driver.deactivateConfirmation'))) return;
     setLoading(true);
     try {
-      await deactivateDriver(driver.driverId);
-      await loadDrivers();
+      await deactivateDriver.mutateAsync(driver.driverId);
+    } catch {
+      // Failure is surfaced by the global toast.
     } finally {
       setLoading(false);
     }

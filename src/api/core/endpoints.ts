@@ -35,8 +35,12 @@ const managerRestBase = GRAPHQL_ENDPOINTS.manager.replace(/graphql\/?$/, '');
 export const REST_ENDPOINTS = {
   /** Excel report generation (Reporting service, REST). */
   reportingBasicReports: `${process.env.REACT_APP_REPORTING_ENDPOINT}api/BasicReports`,
-  /** Manager document REST API base, e.g. `${managerDocuments}/download`. */
-  managerDocuments: `${managerRestBase}api/documents`,
+  /**
+   * Manager document REST base, e.g. `${managerDocuments}/upload`. The Manager
+   * document endpoints are mapped at `~/documents/...` (no `api/` segment) —
+   * see TrackHub.Manager Web/Endpoints/Documents.cs.
+   */
+  managerDocuments: `${managerRestBase}documents`,
 } as const;
 
 export const OAUTH_ENDPOINTS = {

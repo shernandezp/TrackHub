@@ -14,46 +14,70 @@
 *  limitations under the License.
 */
 
-import { useEffect, useState, useRef, useContext } from "react";
+import { useEffect, useMemo, useState, useContext } from "react";
 import { useTranslation } from 'react-i18next';
 import { Name, Description } from "controls/Tables/components/tableComponents";
 import Icon from "@mui/material/Icon";
 import ArgonBadge from "components/ArgonBadge";
 import ArgonButton from "components/ArgonButton";
-import useGeocodingProviderService from "services/geocodingProviders";
-import { handleDelete, handleSave } from "layouts/systemadmin/actions/geocodingProvidersActions";
+import {
+  useGeocodingProviders,
+  useCreateGeocodingProvider,
+  useUpdateGeocodingProvider,
+  useDeleteGeocodingProvider,
+  useSetActiveGeocodingProvider,
+} from 'queries/geocodingProviders';
 import { getGeocodingProviderType } from "data/geocodingProviderTypes";
 import { toCamelCase } from 'utils/stringUtils';
 import { LoadingContext } from 'LoadingContext';
 
 function useGeocodingProvidersTableData(fetchData, handleEditClick, handleDeleteClick) {
   const { t } = useTranslation();
-  const [data, setData] = useState({ columns: [], rows: [] });
-  const [providers, setProviders] = useState([]);
   const [open, setOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const { setLoading } = useContext(LoadingContext);
 
-  const hasLoaded = useRef(false);
-  const {
-    getGeocodingProviders,
-    createGeocodingProvider,
-    updateGeocodingProvider,
-    deleteGeocodingProvider,
-    setActiveGeocodingProvider } = useGeocodingProviderService();
+  const providersQuery = useGeocodingProviders({ enabled: !!fetchData });
+  const providers = providersQuery.data ?? [];
+  const createProvider = useCreateGeocodingProvider();
+  const updateProvider = useUpdateGeocodingProvider();
+  const deleteProvider = useDeleteGeocodingProvider();
+  const activateProvider = useSetActiveGeocodingProvider();
+
+  // Keep the global spinner UX for the initial load / invalidation refetch.
+  useEffect(() => {
+    setLoading(providersQuery.isFetching);
+  }, [providersQuery.isFetching, setLoading]);
 
   const onSave = async (provider) => {
     setLoading(true);
     try {
-      await handleSave(
-        provider,
-        providers,
-        setProviders,
-        setData,
-        buildTableData,
-        createGeocodingProvider,
-        updateGeocodingProvider);
-        setOpen(false);
+      if (provider.geocodingProviderId) {
+        await updateProvider.mutateAsync({
+          geocodingProviderId: provider.geocodingProviderId,
+          name: provider.name,
+          type: provider.type,
+          endpointUri: provider.endpointUri,
+          apiKey: provider.apiKey,
+          requestsPerSecond: provider.requestsPerSecond,
+          timeoutSeconds: provider.timeoutSeconds,
+          configurationJson: provider.configurationJson,
+        });
+      } else {
+        await createProvider.mutateAsync({
+          name: provider.name,
+          type: provider.type,
+          endpointUri: provider.endpointUri,
+          apiKey: provider.apiKey,
+          requestsPerSecond: provider.requestsPerSecond,
+          timeoutSeconds: provider.timeoutSeconds,
+          configurationJson: provider.configurationJson,
+          active: provider.active,
+        });
+      }
+      setOpen(false);
+    } catch {
+      // Failure is surfaced by the global toast; keep the dialog open.
     } finally {
       setLoading(false);
     }
@@ -62,28 +86,21 @@ function useGeocodingProvidersTableData(fetchData, handleEditClick, handleDelete
   const onDelete = async (geocodingProviderId) => {
     setLoading(true);
     try {
-      await handleDelete(
-        geocodingProviderId,
-        providers,
-        setProviders,
-        setData,
-        buildTableData,
-        deleteGeocodingProvider);
-        setConfirmOpen(false);
-      } finally {
-        setLoading(false);
-      }
-  }
+      await deleteProvider.mutateAsync(geocodingProviderId);
+      setConfirmOpen(false);
+    } catch {
+      // Failure is surfaced by the global toast.
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const onActivate = async (geocodingProviderId) => {
     setLoading(true);
     try {
-      const response = await setActiveGeocodingProvider(geocodingProviderId);
-      if (response) {
-        const updatedProviders = await getGeocodingProviders();
-        setProviders(updatedProviders);
-        setData(buildTableData(updatedProviders));
-      }
+      await activateProvider.mutateAsync(geocodingProviderId);
+    } catch {
+      // Failure is surfaced by the global toast.
     } finally {
       setLoading(false);
     }
@@ -99,7 +116,7 @@ function useGeocodingProvidersTableData(fetchData, handleEditClick, handleDelete
     setConfirmOpen(true);
   };
 
-  const buildTableData = (providers) => ({
+  const buildTableData = (rows) => ({
     columns: [
       { name: "name", title:t('geocodingProviders.name'), align: "left" },
       { name: "type", title:t('geocodingProviders.type'), align: "left" },
@@ -109,7 +126,7 @@ function useGeocodingProvidersTableData(fetchData, handleEditClick, handleDelete
       { name: "action", title:t('generic.action'), align: "center" },
       { name: "id" }
     ],
-    rows: providers.map(provider => {
+    rows: rows.map(provider => {
       // Unknown type values must not render a dangling i18n key.
       const typeLabel = getGeocodingProviderType(provider.type);
       return {
@@ -154,22 +171,11 @@ function useGeocodingProvidersTableData(fetchData, handleEditClick, handleDelete
     }),
   });
 
-  useEffect(() => {
-    if (fetchData && !hasLoaded.current) {
-      async function fetchData() {
-        setLoading(true);
-        try {
-          const providers = await getGeocodingProviders();
-          setProviders(providers);
-          setData(buildTableData(providers));
-          hasLoaded.current = true;
-        } finally {
-          setLoading(false);
-        }
-      }
-      fetchData();
-    }
-  }, [fetchData]);
+  const data = useMemo(
+    () => buildTableData(providers),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [providers, t]
+  );
 
   return {
     data,

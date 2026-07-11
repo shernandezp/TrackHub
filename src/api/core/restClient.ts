@@ -45,17 +45,22 @@ export async function restRequest<T>(config: AxiosRequestConfig): Promise<T> {
   }
 }
 
-/** Downloads a POST response as a file through a transient anchor element. */
+/**
+ * Downloads a response as a file through a transient anchor element. Defaults
+ * to POST (report generation posts a request body); pass `method: 'GET'` for
+ * plain byte streams (e.g. document downloads), in which case no body is sent.
+ */
 export async function downloadFile(
   url: string,
   body: unknown,
   filename: string,
-  options: { timeout?: number } = {}
+  options: { timeout?: number; method?: 'GET' | 'POST' } = {}
 ): Promise<void> {
+  const method = options.method ?? 'POST';
   const blob = await restRequest<Blob>({
-    method: 'POST',
+    method,
     url,
-    data: body,
+    data: method === 'GET' ? undefined : body,
     responseType: 'blob',
     timeout: options.timeout ?? REQUEST_TIMEOUT_MS,
   });

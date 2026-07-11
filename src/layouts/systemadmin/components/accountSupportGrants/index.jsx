@@ -8,8 +8,14 @@ import ArgonButton from "components/ArgonButton";
 import ArgonTypography from "components/ArgonTypography";
 import useForm from "controls/Dialogs/useForm";
 import SupportGrantDialog from "layouts/systemadmin/components/accountSupportGrants/SupportGrantDialog";
-import usePrincipalService from "services/principals";
-import useSupportGrantService from "services/supportGrants";
+import { getCurrentPrincipal } from "api/manager/principals";
+import {
+  getAccountSupportGrants,
+  createAccountSupportGrant,
+  approveAccountSupportGrant,
+  revokeAccountSupportGrant,
+} from "api/manager/supportGrants";
+import { notifyApiError } from "api/core/errors";
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from "utils/dateUtils";
 
@@ -34,8 +40,6 @@ function ManageAccountSupportGrants() {
   const [open, setOpen] = useState(false);
   const [values, handleChange, setValues, setErrors, validate, errors] = useForm({ accessLevel: 'read' });
   const loaded = useRef(false);
-  const { getCurrentPrincipal } = usePrincipalService();
-  const { getAccountSupportGrants, createAccountSupportGrant, approveAccountSupportGrant, revokeAccountSupportGrant } = useSupportGrantService();
   const principalId = principal?.userId || principal?.driverId || principal?.clientId || principal?.subjectId || '';
 
   const loadGrants = async () => {
@@ -47,6 +51,8 @@ function ManageAccountSupportGrants() {
       ]);
       setGrants(items || []);
       setPrincipal(current);
+    } catch (error) {
+      notifyApiError(error);
     } finally {
       setLoading(false);
     }
@@ -79,6 +85,8 @@ function ManageAccountSupportGrants() {
       });
       setOpen(false);
       await loadGrants();
+    } catch (error) {
+      notifyApiError(error);
     } finally {
       setLoading(false);
     }
@@ -90,6 +98,8 @@ function ManageAccountSupportGrants() {
     try {
       await approveAccountSupportGrant(grant.accountSupportGrantId, principalId);
       await loadGrants();
+    } catch (error) {
+      notifyApiError(error);
     } finally {
       setLoading(false);
     }
@@ -101,6 +111,8 @@ function ManageAccountSupportGrants() {
     try {
       await revokeAccountSupportGrant(grant.accountSupportGrantId, principalId);
       await loadGrants();
+    } catch (error) {
+      notifyApiError(error);
     } finally {
       setLoading(false);
     }

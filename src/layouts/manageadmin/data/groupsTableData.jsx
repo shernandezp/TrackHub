@@ -14,40 +14,53 @@
 *  limitations under the License.
 */
 
-import { useEffect, useState, useRef, useContext } from "react";
+import { useEffect, useMemo, useState, useContext } from "react";
 import { useTranslation } from 'react-i18next';
 import { Name, Description } from "controls/Tables/components/tableComponents";
 import Icon from "@mui/material/Icon";
 import ArgonButton from "components/ArgonButton";
-import useGroupService from "services/groups";
-import { handleDelete, handleSave } from "layouts/manageadmin/actions/groupsActions";
+import { useGroups, useCreateGroup, useUpdateGroup, useDeleteGroup } from 'queries/groups';
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
 
 function useGroupTableData(fetchData, handleEditClick, handleDeleteClick, handleUserClick, handleTransporterClick) {
   const { t } = useTranslation();
-  const [data, setData] = useState({ columns: [], rows: [] });
-  const [groups, setGroups] = useState([]);
   const [open, setOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const { setLoading } = useContext(LoadingContext);
   const { isAuthenticated } = useAuth();
 
-  const hasLoaded = useRef(false);
-  const { getGroups, createGroup, updateGroup, deleteGroup } = useGroupService();
+  const groupsQuery = useGroups({ enabled: !!fetchData && isAuthenticated });
+  const groups = groupsQuery.data ?? [];
+  const createGroup = useCreateGroup();
+  const updateGroup = useUpdateGroup();
+  const deleteGroup = useDeleteGroup();
+
+  // Keep the global spinner UX for the initial load / invalidation refetch.
+  useEffect(() => {
+    setLoading(groupsQuery.isFetching);
+  }, [groupsQuery.isFetching, setLoading]);
 
   const onSave = async (group) => {
     setLoading(true);
     try {
-      await handleSave(
-        group, 
-        groups, 
-        setGroups, 
-        setData, 
-        buildTableData, 
-        createGroup, 
-        updateGroup);
-        setOpen(false);
+      if (group.groupId) {
+        await updateGroup.mutateAsync({
+          groupId: group.groupId,
+          name: group.name,
+          description: group.description,
+          active: group.active,
+        });
+      } else {
+        await createGroup.mutateAsync({
+          name: group.name,
+          description: group.description,
+          active: group.active,
+        });
+      }
+      setOpen(false);
+    } catch {
+      // Failure is surfaced by the global toast; keep the dialog open.
     } finally {
       setLoading(false);
     }
@@ -56,18 +69,14 @@ function useGroupTableData(fetchData, handleEditClick, handleDeleteClick, handle
   const onDelete = async (groupId) => {
     setLoading(true);
     try {
-      await handleDelete(
-        groupId, 
-        groups, 
-        setGroups, 
-        setData, 
-        buildTableData, 
-        deleteGroup);
-        setConfirmOpen(false);
-      } finally {
-        setLoading(false);
-      }
-  }
+      await deleteGroup.mutateAsync(groupId);
+      setConfirmOpen(false);
+    } catch {
+      // Failure is surfaced by the global toast.
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleOpenUser = (groupId) => {
     handleUserClick(groupId);
@@ -87,7 +96,7 @@ function useGroupTableData(fetchData, handleEditClick, handleDeleteClick, handle
     setConfirmOpen(true);
   };
 
-  const buildTableData = (groups) => ({
+  const buildTableData = (rows) => ({
     columns: [
       { name: "group", title:t('group.title'), align: "left" },
       { name: "description", title:t('group.description'), align: "left" },
@@ -96,19 +105,19 @@ function useGroupTableData(fetchData, handleEditClick, handleDeleteClick, handle
       { name: "transporter", title:t('transporter.title'), align: "center" },
       { name: "id" }
     ],
-    rows: groups.map(group => ({
+    rows: rows.map(group => ({
       group: <Name name={group.name} />,
       description: <Description description={group.description} />,
       action: (
         <>
-          <ArgonButton 
-              variant="text" 
-              color="dark" 
+          <ArgonButton
+              variant="text"
+              color="dark"
               onClick={() => handleOpen(group)}>
             <Icon>edit</Icon>&nbsp;{t('generic.edit')}
           </ArgonButton>
-          <ArgonButton 
-            variant="text" 
+          <ArgonButton
+            variant="text"
             color="error"
             onClick={() => handleOpenDelete(group.groupId)}>
             <Icon>delete</Icon>&nbsp;{t('generic.delete')}
@@ -116,17 +125,17 @@ function useGroupTableData(fetchData, handleEditClick, handleDeleteClick, handle
         </>
       ),
       user: (
-        <ArgonButton 
-            variant="text" 
-            color="dark" 
+        <ArgonButton
+            variant="text"
+            color="dark"
             onClick={() => handleOpenUser(group.groupId)}>
           <Icon>assignment</Icon>&nbsp;{t('generic.assign')}
         </ArgonButton>
       ),
       transporter: (
-        <ArgonButton 
-            variant="text" 
-            color="dark" 
+        <ArgonButton
+            variant="text"
+            color="dark"
             onClick={() => handleOpenTransporter(group.groupId)}>
           <Icon>assignment</Icon>&nbsp;{t('generic.assign')}
         </ArgonButton>
@@ -135,27 +144,19 @@ function useGroupTableData(fetchData, handleEditClick, handleDeleteClick, handle
     })),
   });
 
-  useEffect(() => {
-    if (fetchData && !hasLoaded.current && isAuthenticated) {
-      async function fetchData() {
-        setLoading(true);
-        const groups = await getGroups();
-        setGroups(groups);
-        setData(buildTableData(groups));
-        hasLoaded.current = true;
-        setLoading(false);
-      }
-      fetchData();
-    }
-  }, [fetchData, isAuthenticated]);
+  const data = useMemo(
+    () => buildTableData(groups),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [groups, t]
+  );
 
-  return { 
-    data, 
-    open, 
+  return {
+    data,
+    open,
     confirmOpen,
-    onSave, 
-    onDelete, 
-    setOpen, 
+    onSave,
+    onDelete,
+    setOpen,
     setConfirmOpen };
 }
 

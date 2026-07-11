@@ -22,8 +22,8 @@ import TableAccordion from 'controls/Accordions/TableAccordion';
 import ArgonBadge from 'components/ArgonBadge';
 import ArgonBox from 'components/ArgonBox';
 import ArgonTypography from 'components/ArgonTypography';
-import useAccountService from 'services/account';
-import useAlertEventService from 'services/alertEvents';
+import { getAccountByUser } from 'api/manager/accounts';
+import { getAlertEvents } from 'api/manager/alertEvents';
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from 'utils/dateUtils';
 
@@ -52,8 +52,6 @@ function OpenAlerts() {
   const [alerts, setAlerts] = useState([]);
   const [error, setError] = useState(null);
   const loaded = useRef(false);
-  const { getAccountByUser } = useAccountService();
-  const { getAlertEvents } = useAlertEventService();
 
   useEffect(() => {
     if (expanded && !loaded.current) {
@@ -71,6 +69,8 @@ function OpenAlerts() {
             .filter(a => (a.sourceModule || '').toUpperCase().startsWith('GPS'))
             .slice(0, 20);
           setAlerts(gpsAlerts);
+        } catch {
+          setError(t('gpsIntegration.errors.alertsLoad'));
         } finally { setLoading(false); }
       })();
     }

@@ -21,8 +21,9 @@ import Table from "controls/Tables/Table";
 import TableAccordion from "controls/Accordions/TableAccordion";
 import ArgonBadge from "components/ArgonBadge";
 import ArgonTypography from "components/ArgonTypography";
-import useAccountService from "services/account";
-import useAccountFeatureService from "services/accountFeatures";
+import { getAccountByUser } from "api/manager/accounts";
+import { getAccountFeatures } from "api/manager/accountFeatures";
+import { notifyApiError } from "api/core/errors";
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from "utils/dateUtils";
 
@@ -58,8 +59,6 @@ function ManageAccountFeatures() {
   const [account, setAccount] = useState(null);
   const [features, setFeatures] = useState([]);
   const loaded = useRef(false);
-  const { getAccountByUser } = useAccountService();
-  const { getAccountFeatures } = useAccountFeatureService();
 
   const loadFeatures = async () => {
     setLoading(true);
@@ -69,6 +68,8 @@ function ManageAccountFeatures() {
       setAccount(currentAccount);
       const accountFeatures = await getAccountFeatures(currentAccount.accountId);
       setFeatures(accountFeatures || []);
+    } catch (error) {
+      notifyApiError(error);
     } finally {
       setLoading(false);
     }

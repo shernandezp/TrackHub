@@ -26,7 +26,8 @@ import ArgonTypography from "components/ArgonTypography";
 import ConfirmDialog from "controls/Dialogs/ConfirmDialog";
 import DocumentUploadDialog from "layouts/manageadmin/components/documents/DocumentUploadDialog";
 import ShareDialog from "layouts/manageadmin/components/documents/ShareDialog";
-import useDocumentService from "services/documents";
+import { getDocumentsForOwner, uploadDocument, uploadDocumentVersion, downloadDocument, voidDocument, deleteDocumentReference } from "api/manager/documents";
+import { notifyApiError } from "api/core/errors";
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from "utils/dateUtils";
 
@@ -54,14 +55,14 @@ function DocumentPanel({ accountId, ownerEntityType, ownerEntityId, canManage, c
   const [active, setActive] = useState(null);
   const loaded = useRef(false);
 
-  const { getDocumentsForOwner, uploadDocument, uploadDocumentVersion, downloadDocument, voidDocument, deleteDocumentReference } = useDocumentService();
-
   const load = async () => {
     if (!accountId || !ownerEntityId) return;
     setLoading(true);
     try {
       const items = await getDocumentsForOwner(accountId, ownerEntityType, ownerEntityId);
       setDocs(items || []);
+    } catch (error) {
+      notifyApiError(error);
     } finally {
       setLoading(false);
     }
@@ -77,6 +78,8 @@ function DocumentPanel({ accountId, ownerEntityType, ownerEntityId, canManage, c
     try {
       await uploadDocument(file, { accountId, ownerEntityType, ownerEntityId, category, classification, title, description, expiresAt });
       await load();
+    } catch (error) {
+      notifyApiError(error);
     } finally {
       setLoading(false);
     }
@@ -88,13 +91,19 @@ function DocumentPanel({ accountId, ownerEntityType, ownerEntityId, canManage, c
     try {
       await uploadDocumentVersion(active.documentId, file, { reason });
       await load();
+    } catch (error) {
+      notifyApiError(error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleDownload = async (doc) => {
-    await downloadDocument(doc.documentId, doc.fileName);
+    try {
+      await downloadDocument(doc.documentId, doc.fileName);
+    } catch (error) {
+      notifyApiError(error);
+    }
   };
 
   const runConfirmed = async (action) => {
@@ -104,6 +113,8 @@ function DocumentPanel({ accountId, ownerEntityType, ownerEntityId, canManage, c
     try {
       await action(active);
       await load();
+    } catch (error) {
+      notifyApiError(error);
     } finally {
       setLoading(false);
     }

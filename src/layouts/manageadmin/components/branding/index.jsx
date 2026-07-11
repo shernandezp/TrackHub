@@ -22,8 +22,9 @@ import ArgonBox from "components/ArgonBox";
 import ArgonButton from "components/ArgonButton";
 import ArgonTypography from "components/ArgonTypography";
 import useForm from 'controls/Dialogs/useForm';
-import useAccountService from "services/account";
-import useAccountBrandingService from "services/accountBranding";
+import { getAccountByUser } from "api/manager/accounts";
+import { getAccountBranding, updateAccountBranding } from "api/manager/branding";
+import { notifyApiError } from "api/core/errors";
 import { LoadingContext } from 'LoadingContext';
 
 const HEX_COLOR = /^#[0-9A-Fa-f]{6}$/;
@@ -34,8 +35,6 @@ function ManageBranding() {
   const [expanded, setExpanded] = useState(false);
   const [values, handleChange, setValues, setErrors, validate, errors] = useForm({});
   const { setLoading } = useContext(LoadingContext);
-  const { getAccountByUser } = useAccountService();
-  const { getAccountBranding, updateAccountBranding } = useAccountBrandingService();
   const hasLoaded = useRef(false);
 
   useEffect(() => {
@@ -51,6 +50,8 @@ function ManageBranding() {
               : { accountId: account.accountId, primaryColor: DEFAULT_COLOR, displayName: account.name });
           }
           hasLoaded.current = true;
+        } catch (error) {
+          notifyApiError(error);
         } finally {
           setLoading(false);
         }
@@ -73,6 +74,8 @@ function ManageBranding() {
       if (saved) {
         setValues({ ...saved });
       }
+    } catch (error) {
+      notifyApiError(error);
     } finally {
       setLoading(false);
     }

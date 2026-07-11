@@ -42,7 +42,8 @@ import ArgonBox from "components/ArgonBox";
 import ArgonTypography from "components/ArgonTypography";
 import { useTranslation } from 'react-i18next';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
-import useSettingsService from 'services/settings';
+import { getUserSettings, updateUserSettings } from 'api/manager/settings';
+import { notifyApiError } from 'api/core/errors';
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
 import {
@@ -65,7 +66,6 @@ function PlatformSettings() {
   const [style, setStyle] = useState(false);
   const [sideNav, setSideNav] = useState(false);
   const [userSettings, setUserSettings] = useState({language: 'en'});
-  const { getUserSettings, updateUserSettings } = useSettingsService();
 
   const handleMiniSidenav = () => setMiniSidenav(dispatch, !miniSidenav);
   const handleDarkMode = () => {
@@ -76,20 +76,30 @@ function PlatformSettings() {
   useEffect(() => {
     const fetchUserSettings = async () => {
       setLoading(true);
-      const userSettings = await getUserSettings();
-      setStyle(userSettings.style !== 'light');
-      setSideNav(userSettings.navbar !== 'none');
-      setUserSettings(userSettings);
-      setLoading(false);
+      try {
+        const userSettings = await getUserSettings();
+        setStyle(userSettings.style !== 'light');
+        setSideNav(userSettings.navbar !== 'none');
+        setUserSettings(userSettings);
+      } catch (error) {
+        notifyApiError(error);
+      } finally {
+        setLoading(false);
+      }
     };
     if(isAuthenticated)
       fetchUserSettings();
   }, [isAuthenticated]);
-  
+
   async function onSaveSettings() {
     setLoading(true);
-    await updateUserSettings(userSettings.userId, userSettings);
-    setLoading(false);
+    try {
+      await updateUserSettings(userSettings.userId, userSettings);
+    } catch (error) {
+      notifyApiError(error);
+    } finally {
+      setLoading(false);
+    }
   }
 
   function handleLanguageChange(e) {

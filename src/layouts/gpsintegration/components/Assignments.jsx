@@ -26,14 +26,15 @@ import ArgonBadge from 'components/ArgonBadge';
 import ArgonBox from 'components/ArgonBox';
 import ArgonButton from 'components/ArgonButton';
 import ArgonTypography from 'components/ArgonTypography';
-import useAccountService from 'services/account';
+import { getAccountByUser } from 'api/manager/accounts';
 import {
   useTransportersByAccount,
   useTransporterDeviceAssignmentsByAccount,
   useAssignDeviceToTransporter,
   useEndDeviceTransporterAssignment,
 } from 'queries/transporters';
-import useDeviceService from 'services/device';
+import { getSynchronizedDevices, getUnassignedSynchronizedDevices } from 'api/manager/devices';
+import { notifyApiError } from 'api/core/errors';
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from 'utils/dateUtils';
 import { GPS_INTEGRATION_REFRESH_EVENT } from 'layouts/gpsintegration/gpsIntegrationEvents';
@@ -68,8 +69,6 @@ function ManageDeviceAssignments() {
   const [accountId, setAccountId] = useState(null);
   const [error, setError] = useState(null);
   const loaded = useRef(false);
-  const { getAccountByUser } = useAccountService();
-  const { getSynchronizedDevices, getUnassignedSynchronizedDevices } = useDeviceService();
 
   const transportersQuery = useTransportersByAccount({ enabled: expanded });
   const transporters = transportersQuery.data ?? [];
@@ -95,6 +94,9 @@ function ManageDeviceAssignments() {
       setUnassignedDevices(freeDevices || []);
       const syncedDevices = await getSynchronizedDevices(acct);
       setDevices(syncedDevices || []);
+    } catch (e) {
+      // Preserve the legacy toast-on-error behavior for device reads.
+      notifyApiError(e);
     } finally { setLoading(false); }
   };
 
@@ -102,13 +104,17 @@ function ManageDeviceAssignments() {
     if (expanded && !loaded.current) {
       loaded.current = true;
       (async () => {
-        const acct = await getAccountByUser();
-        if (!acct?.accountId) {
+        try {
+          const acct = await getAccountByUser();
+          if (!acct?.accountId) {
+            setError(t('gpsIntegration.errors.assignmentsLoad'));
+            return;
+          }
+          setAccountId(acct.accountId);
+          await loadDevices(acct.accountId);
+        } catch {
           setError(t('gpsIntegration.errors.assignmentsLoad'));
-          return;
         }
-        setAccountId(acct.accountId);
-        await loadDevices(acct.accountId);
       })();
     }
   }, [expanded]);

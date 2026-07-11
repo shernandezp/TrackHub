@@ -14,40 +14,44 @@
 *  limitations under the License.
 */
 
-import { useEffect, useState, useRef, useContext } from "react";
+import { useEffect, useMemo, useState, useContext } from "react";
 import { useTranslation } from 'react-i18next';
 import { Name } from "controls/Tables/components/tableComponents";
-import { handleSave } from "layouts/systemadmin/actions/transporterTypesActions";
 import { LoadingContext } from 'LoadingContext';
 import { getStringValue } from 'utils/booleanUtils';
 import { cleanString } from 'utils/stringUtils';
 import Icon from "@mui/material/Icon";
 import ArgonBadge from "components/ArgonBadge";
 import ArgonButton from "components/ArgonButton";
-import useTransporterTypeService from "services/transporterType";
-import transporterTypes from "data/transporterTypes";
+import { useTransporterTypes, useUpdateTransporterType } from 'queries/transporterTypes';
 
 function useTransporterTypesTableData(fetchData, handleEditClick) {
   const { t } = useTranslation();
-  const [data, setData] = useState({ columns: [], rows: [] });
-  const [transporterTypeList, setTransporterTypeList] = useState([]);
   const [open, setOpen] = useState(false);
   const { setLoading } = useContext(LoadingContext);
-  const hasLoaded = useRef(false);
-  const { getTransporterTypes, updateTransporterType } = useTransporterTypeService();
+
+  const transporterTypesQuery = useTransporterTypes({ enabled: !!fetchData });
+  const transporterTypeList = transporterTypesQuery.data ?? [];
+  const updateTransporterType = useUpdateTransporterType();
+
+  // Keep the global spinner UX for the initial load / invalidation refetch.
+  useEffect(() => {
+    setLoading(transporterTypesQuery.isFetching);
+  }, [transporterTypesQuery.isFetching, setLoading]);
 
   const onSave = async (transporterType) => {
     setLoading(true);
     try {
-      await handleSave(
-        transporterType, 
-        transporterTypeList, 
-        setTransporterTypeList, 
-        setData, 
-        buildTableData, 
-        updateTransporterType,
-        transporterTypes);
+      await updateTransporterType.mutateAsync({
+        transporterTypeId: transporterType.transporterTypeId,
+        accBased: transporterType.accBased,
+        stoppedGap: transporterType.stoppedGap,
+        maxTimeGap: transporterType.maxTimeGap,
+        maxDistance: transporterType.maxDistance,
+      });
       setOpen(false);
+    } catch {
+      // Failure is surfaced by the global toast; keep the dialog open.
     } finally {
       setLoading(false);
     }
@@ -58,7 +62,7 @@ function useTransporterTypesTableData(fetchData, handleEditClick) {
     setOpen(true);
   };
 
-  const buildTableData = (transporterTypeList) => ({
+  const buildTableData = (rows) => ({
     columns: [
       { name: "name", title:t('transporterType.name'), align: "left" },
       { name: "accBased", title:t('transporterType.accBased'), align: "left" },
@@ -68,12 +72,12 @@ function useTransporterTypesTableData(fetchData, handleEditClick) {
       { name: "action", title:t('generic.action'), align: "center" },
       { name: "id" }
     ],
-    rows: transporterTypeList.map(transporterType => ({
+    rows: rows.map(transporterType => ({
       name: (
-        <ArgonBadge 
-          variant="gradient" 
-          badgeContent={t(`transporterTypes.${cleanString(transporterType.type)}`)} 
-          color="success" 
+        <ArgonBadge
+          variant="gradient"
+          badgeContent={t(`transporterTypes.${cleanString(transporterType.type)}`)}
+          color="success"
           size="xs" container />
       ),
       accBased: <Name name={t(`generic.${getStringValue(transporterType.accBased)}`)} />,
@@ -81,9 +85,9 @@ function useTransporterTypesTableData(fetchData, handleEditClick) {
       maxTimeGap: <Name name={transporterType.maxTimeGap} />,
       maxDistance: <Name name={transporterType.maxDistance} />,
       action: (
-        <ArgonButton 
-            variant="text" 
-            color="dark" 
+        <ArgonButton
+            variant="text"
+            color="dark"
             onClick={() => handleOpen(transporterType)}>
           <Icon>edit</Icon>&nbsp;{t('generic.edit')}
         </ArgonButton>
@@ -92,22 +96,14 @@ function useTransporterTypesTableData(fetchData, handleEditClick) {
     })),
   });
 
-  useEffect(() => {
-    if (fetchData && !hasLoaded.current) {
-      async function fetchData() {
-        setLoading(true);
-        const transporterTypeList = await getTransporterTypes();
-        setTransporterTypeList(transporterTypeList);
-        setData(buildTableData(transporterTypeList));
-        hasLoaded.current = true;
-        setLoading(false);
-      }
-      fetchData();
-    }
-  }, [fetchData]);
+  const data = useMemo(
+    () => buildTableData(transporterTypeList),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [transporterTypeList, t]
+  );
 
-  return { 
-    data, 
+  return {
+    data,
     open,
     onSave,
     setOpen};

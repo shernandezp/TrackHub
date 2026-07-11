@@ -23,7 +23,7 @@ import TableAccordion from 'controls/Accordions/TableAccordion';
 import ArgonBadge from 'components/ArgonBadge';
 import ArgonBox from 'components/ArgonBox';
 import ArgonTypography from 'components/ArgonTypography';
-import useAccountService from 'services/account';
+import { getAccountByUser } from 'api/manager/accounts';
 import { useGpsOperators, useOperatorSyncRuns, operatorTelemetryKeys } from 'queries/operators';
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from 'utils/dateUtils';
@@ -57,7 +57,6 @@ function RecentSyncRuns() {
   const [accountId, setAccountId] = useState(null);
   const [error, setError] = useState(null);
   const accountRequested = useRef(false);
-  const { getAccountByUser } = useAccountService();
 
   // Reads run only once the accordion is expanded. The sync-run query also
   // waits for the account id (resolved imperatively below).
@@ -74,14 +73,18 @@ function RecentSyncRuns() {
     if (!expanded || accountRequested.current) return;
     accountRequested.current = true;
     (async () => {
-      const acct = await getAccountByUser();
-      if (!acct?.accountId) {
+      try {
+        const acct = await getAccountByUser();
+        if (!acct?.accountId) {
+          setError(t('gpsIntegration.errors.syncRunsLoad'));
+          return;
+        }
+        setAccountId(acct.accountId);
+      } catch {
         setError(t('gpsIntegration.errors.syncRunsLoad'));
-        return;
       }
-      setAccountId(acct.accountId);
     })();
-  }, [expanded, getAccountByUser, t]);
+  }, [expanded, t]);
 
   // The refresh bus now drives a cache invalidation; the sync-run query
   // refetches when it is active (accordion expanded). A read failure is

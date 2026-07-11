@@ -27,9 +27,10 @@ import CustomTextField from 'controls/Dialogs/CustomTextField';
 import ConfirmDialog from "controls/Dialogs/ConfirmDialog";
 import useForm from "controls/Dialogs/useForm";
 import DocumentTypeDialog from "layouts/manageadmin/components/documents/DocumentTypeDialog";
-import useAccountService from "services/account";
-import useAccountFeatureService from "services/accountFeatures";
-import useDocumentService from "services/documents";
+import { getAccountByUser } from "api/manager/accounts";
+import { getAccountFeatures } from "api/manager/accountFeatures";
+import { notifyApiError } from "api/core/errors";
+import { searchDocuments, getExpiringDocuments, getDocumentTypes, downloadDocument, configureDocumentType, disableDocumentType } from "api/manager/documents";
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from "utils/dateUtils";
 
@@ -53,20 +54,21 @@ function ManageDocuments() {
   const [typeValues, handleTypeChange, setTypeValues, setTypeErrors, validateType, typeErrors] = useForm({});
   const bootstrap = useRef(false);
 
-  const { getAccountByUser } = useAccountService();
-  const { getAccountFeatures } = useAccountFeatureService();
-  const { searchDocuments, getExpiringDocuments, getDocumentTypes, downloadDocument, configureDocumentType, disableDocumentType } = useDocumentService();
-
   const ensureAccount = async () => {
     if (bootstrap.current) return account;
     bootstrap.current = true;
-    const current = await getAccountByUser();
-    setAccount(current);
-    if (current?.accountId) {
-      const features = await getAccountFeatures(current.accountId) || [];
-      setEnabled(!!features.find(f => f.featureKey === DOCUMENTS_FEATURE_KEY)?.enabled);
+    try {
+      const current = await getAccountByUser();
+      setAccount(current);
+      if (current?.accountId) {
+        const features = await getAccountFeatures(current.accountId) || [];
+        setEnabled(!!features.find(f => f.featureKey === DOCUMENTS_FEATURE_KEY)?.enabled);
+      }
+      return current;
+    } catch (error) {
+      notifyApiError(error);
+      return null;
     }
-    return current;
   };
 
   const loadLibrary = async () => {
@@ -76,6 +78,8 @@ function ManageDocuments() {
       if (!current?.accountId) return;
       const items = await searchDocuments({ category: filters.category || null, status: filters.status || null }, 0, 100);
       setDocs(items || []);
+    } catch (error) {
+      notifyApiError(error);
     } finally { setLoading(false); }
   };
 
@@ -84,6 +88,8 @@ function ManageDocuments() {
     try {
       await ensureAccount();
       setExpiring((await getExpiringDocuments(30, 0, 100)) || []);
+    } catch (error) {
+      notifyApiError(error);
     } finally { setLoading(false); }
   };
 
@@ -93,7 +99,17 @@ function ManageDocuments() {
       const current = await ensureAccount();
       if (!current?.accountId) return;
       setTypes((await getDocumentTypes(current.accountId, true)) || []);
+    } catch (error) {
+      notifyApiError(error);
     } finally { setLoading(false); }
+  };
+
+  const handleDownload = async (documentId, fileName) => {
+    try {
+      await downloadDocument(documentId, fileName);
+    } catch (error) {
+      notifyApiError(error);
+    }
   };
 
   useEffect(() => { if (ctx.library) loadLibrary(); /* eslint-disable-next-line */ }, [ctx.library]);
@@ -116,6 +132,8 @@ function ManageDocuments() {
       });
       setTypeOpen(false);
       await loadTypes();
+    } catch (error) {
+      notifyApiError(error);
     } finally { setLoading(false); }
   };
 
@@ -124,7 +142,9 @@ function ManageDocuments() {
     setConfirm({ open: false, id: null });
     if (!id) return;
     setLoading(true);
-    try { await disableDocumentType(id); await loadTypes(); } finally { setLoading(false); }
+    try { await disableDocumentType(id); await loadTypes(); }
+    catch (error) { notifyApiError(error); }
+    finally { setLoading(false); }
   };
 
   return (
@@ -155,7 +175,7 @@ function ManageDocuments() {
             status: cap(d.status),
             scan: <ArgonBadge badgeContent={d.scanStatus} color={scanColor(d.scanStatus)} size="xs" container />,
             action: d.downloadUrl ? (
-              <ArgonButton variant="text" color="dark" onClick={() => downloadDocument(d.documentId, d.fileName)}><Icon>download</Icon></ArgonButton>
+              <ArgonButton variant="text" color="dark" onClick={() => handleDownload(d.documentId, d.fileName)}><Icon>download</Icon></ArgonButton>
             ) : null,
             id: d.documentId,
           }))}

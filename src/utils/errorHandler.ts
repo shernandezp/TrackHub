@@ -14,71 +14,12 @@
 *  limitations under the License.
 */
 
-/** A single GraphQL error entry as returned in an error response payload. */
-interface GraphQLErrorItem {
-  message?: string;
-  extensions?: { code?: string };
-  code?: string;
-}
-
-/** Structural shape of the (axios-like) errors handled by {@link handleError}. */
-interface HandledError {
-  response?: {
-    data?: {
-      errors?: GraphQLErrorItem[];
-      [key: string]: unknown;
-    };
-  };
-  message?: string;
-}
-
 /** Payload dispatched on the `app-error` CustomEvent. */
 export interface AppErrorDetail {
   message: string;
   type: string;
   code: string | undefined;
   i18nKey: string | undefined;
-}
-
-/**
- * Handles the given error by dispatching a notification event with the error message(s).
- * If the error object contains a response with data and errors, it extracts the error messages.
- */
-export function handleError(error: HandledError | null | undefined): void {
-  if (error && error.response && error.response.data && error.response.data.errors) {
-    var errors = error.response.data.errors;
-    var accountSuspended = errors.some(error => getErrorCode(error) === 'ACCOUNT_SUSPENDED');
-    var featureDisabled = errors.some(error => getErrorCode(error) === 'FEATURE_DISABLED');
-    var errorMessage: string;
-    var type: string;
-    var code: string | undefined;
-    var i18nKey: string | undefined;
-    if (accountSuspended) {
-      errorMessage = 'This account is not currently operational.';
-      type = 'account-suspended';
-      code = 'ACCOUNT_SUSPENDED';
-      i18nKey = 'errors.accountSuspended';
-    } else if (featureDisabled) {
-      errorMessage = 'This feature is not enabled for your account.';
-      type = 'feature-disabled';
-      code = 'FEATURE_DISABLED';
-      i18nKey = 'errors.featureDisabled';
-    } else {
-      errorMessage = errors.map(error => error.message).join('\n');
-      type = 'graphql';
-      code = getErrorCode(errors[0]);
-      i18nKey = undefined;
-    }
-    window.dispatchEvent(new CustomEvent<AppErrorDetail>('app-error', {
-      detail: { message: errorMessage, type, code, i18nKey }
-    }));
-  } else if (process.env.NODE_ENV !== 'production') {
-    console.error('Unexpected error:', error);
-  }
-}
-
-function getErrorCode(error: GraphQLErrorItem): string | undefined {
-  return error?.extensions?.code || error?.code;
 }
 
 /**

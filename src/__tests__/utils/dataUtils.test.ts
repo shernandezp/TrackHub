@@ -14,58 +14,12 @@
  *  limitations under the License.
  */
 
-import { formatValue, formatJSONValue, formatDateTimeOffSet } from 'utils/dataUtils';
+import { formatJSONValue, formatDateTimeOffSet } from 'utils/dataUtils';
 
 // Mock dateUtils to control toISOStringWithTimezone output
 vi.mock('utils/dateUtils', () => ({
   toISOStringWithTimezone: vi.fn((date) => date.toISOString()),
 }));
-
-describe('formatValue', () => {
-  test('wraps string in double quotes', () => {
-    expect(formatValue('hello')).toBe('"hello"');
-  });
-
-  test('wraps number in double quotes', () => {
-    expect(formatValue(42)).toBe('"42"');
-  });
-
-  test('returns null for null', () => {
-    expect(formatValue(null)).toBeNull();
-  });
-
-  test('returns null for undefined', () => {
-    expect(formatValue(undefined)).toBeNull();
-  });
-
-  test('returns null for empty string (falsy)', () => {
-    expect(formatValue('')).toBeNull();
-  });
-
-  test('returns null for 0 (falsy)', () => {
-    expect(formatValue(0)).toBeNull();
-  });
-
-  test('wraps boolean true', () => {
-    expect(formatValue(true)).toBe('"true"');
-  });
-
-  test('escapes double quotes in value', () => {
-    expect(formatValue('say "hello"')).toBe('"say \\"hello\\""');
-  });
-
-  test('escapes backslashes in value', () => {
-    expect(formatValue('path\\to\\file')).toBe('"path\\\\to\\\\file"');
-  });
-
-  test('escapes newlines in value', () => {
-    expect(formatValue('line1\nline2')).toBe('"line1\\nline2"');
-  });
-
-  test('escapes combined special characters', () => {
-    expect(formatValue('a"b\\c\nd')).toBe('"a\\"b\\\\c\\nd"');
-  });
-});
 
 describe('formatJSONValue', () => {
   test('returns string representation', () => {

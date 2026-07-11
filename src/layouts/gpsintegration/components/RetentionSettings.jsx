@@ -21,8 +21,8 @@ import TableAccordion from 'controls/Accordions/TableAccordion';
 import CustomReadOnly from 'controls/Dialogs/CustomReadOnly';
 import ArgonBox from 'components/ArgonBox';
 import ArgonTypography from 'components/ArgonTypography';
-import useAccountService from 'services/account';
-import useAccountFeatureService from 'services/accountFeatures';
+import { getAccountByUser } from 'api/manager/accounts';
+import { getAccountFeatures } from 'api/manager/accountFeatures';
 import { parseJson } from 'utils/jsonUtils';
 import { LoadingContext } from 'LoadingContext';
 
@@ -35,8 +35,6 @@ function RetentionSettings() {
   const [state, setState] = useState({ historyEnabled: false, retentionDays: null, storingIntervalSeconds: null });
   const [error, setError] = useState(null);
   const loaded = useRef(false);
-  const { getAccountByUser } = useAccountService();
-  const { getAccountFeatures } = useAccountFeatureService();
 
   useEffect(() => {
     if (expanded && !loaded.current) {
@@ -57,6 +55,8 @@ function RetentionSettings() {
             retentionDays: history?.enabled ? (parseJson(history.configurationJson).retentionDays ?? null) : null,
             storingIntervalSeconds: parseJson(integration?.configurationJson).storingIntervalSeconds ?? null
           });
+        } catch {
+          setError(t('gpsIntegration.errors.retentionLoad'));
         } finally { setLoading(false); }
       })();
     }

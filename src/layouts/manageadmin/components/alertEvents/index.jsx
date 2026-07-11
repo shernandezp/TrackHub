@@ -6,8 +6,9 @@ import Table from "controls/Tables/Table";
 import TableAccordion from "controls/Accordions/TableAccordion";
 import ArgonButton from "components/ArgonButton";
 import ArgonTypography from "components/ArgonTypography";
-import useAccountService from "services/account";
-import useAlertEventService from "services/alertEvents";
+import { getAccountByUser } from "api/manager/accounts";
+import { getAlertEvents, acknowledgeAlertEvent, resolveAlertEvent } from "api/manager/alertEvents";
+import { notifyApiError } from "api/core/errors";
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from "utils/dateUtils";
 
@@ -29,8 +30,6 @@ function ManageAlertEvents() {
   const [expanded, setExpanded] = useState(false);
   const [alerts, setAlerts] = useState([]);
   const loaded = useRef(false);
-  const { getAccountByUser } = useAccountService();
-  const { getAlertEvents, acknowledgeAlertEvent, resolveAlertEvent } = useAlertEventService();
 
   const loadAlerts = async () => {
     setLoading(true);
@@ -39,6 +38,8 @@ function ManageAlertEvents() {
       if (!account?.accountId) return;
       const items = await getAlertEvents(account.accountId);
       setAlerts(items || []);
+    } catch (error) {
+      notifyApiError(error);
     } finally {
       setLoading(false);
     }
@@ -57,6 +58,8 @@ function ManageAlertEvents() {
     try {
       await acknowledgeAlertEvent(alert.alertEventId);
       await loadAlerts();
+    } catch (error) {
+      notifyApiError(error);
     } finally {
       setLoading(false);
     }
@@ -68,6 +71,8 @@ function ManageAlertEvents() {
     try {
       await resolveAlertEvent(alert.alertEventId);
       await loadAlerts();
+    } catch (error) {
+      notifyApiError(error);
     } finally {
       setLoading(false);
     }

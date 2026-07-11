@@ -20,7 +20,8 @@ import { useTranslation } from 'react-i18next';
 import DynamicTableDialog from 'controls/Dialogs/TableDialogs/DynamicTableDialog';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
 import { useTransportersByAccount, useTransportersByGroup } from 'queries/transporters';
-import useGroupService from 'services/groups';
+import { createTransporterGroup, deleteTransporterGroup } from 'api/manager/groups';
+import { notifyApiError } from 'api/core/errors';
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
 
@@ -28,7 +29,6 @@ function TransporterAllocatorDialog({ open, setOpen, groupId }) {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
   const { isAuthenticated } = useAuth();
-  const { createTransporterGroup, deleteTransporterGroup } = useGroupService();
   const [transporterId, setTransporterId] = useState('');
 
   const accountTransportersQuery = useTransportersByAccount({ enabled: isAuthenticated });
@@ -62,24 +62,25 @@ function TransporterAllocatorDialog({ open, setOpen, groupId }) {
   const handleAdd = async () => {
     setLoading(true);
     try {
+      // createTransporterGroup surfaces failures via the global toast (legacy handleError).
       await createTransporterGroup(transporterId, groupId);
-      setTransporterId('');
-      // groups service is not on the query layer yet: refetch the group membership manually.
-      await assignedQuery.refetch();
-    } finally {
-      setLoading(false);
+    } catch (e) {
+      notifyApiError(e);
     }
+    setTransporterId('');
+    // Group membership is read via the transporters query; refetch it manually.
+    await assignedQuery.refetch();
+    setLoading(false);
   };
 
   const handleDelete = async (selectedRows) => {
     setLoading(true);
-    try {
-      const deletePromises = selectedRows.map(index => deleteTransporterGroup(assignedTransporters[index].transporterId, groupId));
-      await Promise.all(deletePromises);
-      await assignedQuery.refetch();
-    } finally {
-      setLoading(false);
-    }
+    // deleteTransporterGroup keeps the legacy silent semantics (handleSilentError).
+    const deletePromises = selectedRows.map(index =>
+      deleteTransporterGroup(assignedTransporters[index].transporterId, groupId).catch(() => undefined));
+    await Promise.all(deletePromises);
+    await assignedQuery.refetch();
+    setLoading(false);
   };
 
   const handleClose = async () => {

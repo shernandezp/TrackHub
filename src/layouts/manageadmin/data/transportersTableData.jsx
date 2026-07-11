@@ -20,7 +20,7 @@ import { Name } from "controls/Tables/components/tableComponents";
 import Icon from "@mui/material/Icon";
 import ArgonBadge from "components/ArgonBadge";
 import ArgonButton from "components/ArgonButton";
-import useAccountService from "services/account";
+import { useAccountByUser } from "queries/accounts";
 import {
   useTransportersByAccount,
   useCreateTransporter,
@@ -35,10 +35,8 @@ function useTransporterTableData(fetchData, handleEditClick, handleDeleteClick) 
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [accountId, setAccountId] = useState(null);
   const { setLoading } = useContext(LoadingContext);
   const { isAuthenticated } = useAuth();
-  const { getAccountByUser } = useAccountService();
 
   const transportersQuery = useTransportersByAccount({ enabled: !!fetchData && isAuthenticated });
   const transporters = transportersQuery.data ?? [];
@@ -46,21 +44,15 @@ function useTransporterTableData(fetchData, handleEditClick, handleDeleteClick) 
   const updateTransporter = useUpdateTransporter();
   const deleteTransporter = useDeleteTransporter();
 
+  // Current account id, required to create a transporter (TransporterDtoInput.accountId).
+  // Loaded the same way sibling manageadmin screens (drivers, accountFeatures) obtain it.
+  const accountQuery = useAccountByUser({ enabled: !!fetchData && isAuthenticated });
+  const accountId = accountQuery.data?.accountId ?? null;
+
   // Keep the global spinner UX for the initial load / invalidation refetch.
   useEffect(() => {
     setLoading(transportersQuery.isFetching);
   }, [transportersQuery.isFetching, setLoading]);
-
-  // Current account id, required to create a transporter (TransporterDtoInput.accountId).
-  // Loaded the same way sibling manageadmin screens (drivers, accountFeatures) obtain it.
-  useEffect(() => {
-    if (!!fetchData && isAuthenticated && !accountId) {
-      getAccountByUser().then((account) => {
-        if (account?.accountId) setAccountId(account.accountId);
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchData, isAuthenticated, accountId]);
 
   const handleOpen = (transporter) => {
     handleEditClick(transporter);

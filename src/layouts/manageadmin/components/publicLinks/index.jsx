@@ -8,10 +8,15 @@ import ArgonButton from "components/ArgonButton";
 import ArgonTypography from "components/ArgonTypography";
 import useForm from "controls/Dialogs/useForm";
 import PublicLinkDialog from "layouts/manageadmin/components/publicLinks/PublicLinkDialog";
-import useAccountService from "services/account";
-import usePublicLinkService from "services/publicLinks";
-import useAccountFeatureService from "services/accountFeatures";
-import usePrincipalService from "services/principals";
+import { getAccountByUser } from "api/manager/accounts";
+import {
+  getPublicLinkGrantsByAccount,
+  createPublicLinkGrant,
+  revokePublicLinkGrant,
+} from "api/manager/publicLinks";
+import { getAccountFeatures } from "api/manager/accountFeatures";
+import { getCurrentPrincipal } from "api/manager/principals";
+import { notifyApiError } from "api/core/errors";
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from "utils/dateUtils";
 
@@ -40,10 +45,6 @@ function ManagePublicLinks() {
   const [mintedToken, setMintedToken] = useState(null);
   const [createEnabled, setCreateEnabled] = useState(false);
   const loaded = useRef(false);
-  const { getAccountByUser } = useAccountService();
-  const { getPublicLinkGrantsByAccount, createPublicLinkGrant, revokePublicLinkGrant } = usePublicLinkService();
-  const { getAccountFeatures } = useAccountFeatureService();
-  const { getCurrentPrincipal } = usePrincipalService();
   const [revokedBy, setRevokedBy] = useState('');
 
   const loadLinks = async () => {
@@ -60,6 +61,8 @@ function ManagePublicLinks() {
       setCreateEnabled(!!feature?.enabled);
       const items = await getPublicLinkGrantsByAccount(currentAccount.accountId);
       setLinks(items || []);
+    } catch (error) {
+      notifyApiError(error);
     } finally {
       setLoading(false);
     }
@@ -82,13 +85,18 @@ function ManagePublicLinks() {
     if (!validate(['resourceType', 'resourceId', 'scopes', 'expiresAt']) || !account?.accountId) return;
     setLoading(true);
     try {
+      // createdByPrincipalId is required (String!) by the backend; the old
+      // string-built mutation never sent it, so create always failed. Source it
+      // from the current principal (same value used for revokedBy).
       const grant = {
         accountId: account.accountId,
         resourceType: values.resourceType,
         resourceId: values.resourceId,
         scopes: values.scopes,
-        purpose: values.purpose,
-        expiresAt: values.expiresAt ? new Date(values.expiresAt).toISOString() : null
+        purpose: values.purpose || '',
+        subjectTokenIdHash: null,
+        expiresAt: values.expiresAt ? new Date(values.expiresAt).toISOString() : null,
+        createdByPrincipalId: revokedBy,
       };
       const result = await createPublicLinkGrant(grant);
       if (result?.token) {
@@ -97,6 +105,9 @@ function ManagePublicLinks() {
         setOpen(false);
       }
       await loadLinks();
+    } catch (error) {
+      // Keep the dialog open on failure so the user can retry.
+      notifyApiError(error);
     } finally {
       setLoading(false);
     }
@@ -108,6 +119,8 @@ function ManagePublicLinks() {
     try {
       await revokePublicLinkGrant(link.publicLinkGrantId, revokedBy);
       await loadLinks();
+    } catch (error) {
+      notifyApiError(error);
     } finally {
       setLoading(false);
     }

@@ -25,8 +25,9 @@ import ArgonButton from "components/ArgonButton";
 import ArgonTypography from "components/ArgonTypography";
 import useForm from "controls/Dialogs/useForm";
 import AccountFeatureDialog from "layouts/systemadmin/components/accountFeatures/AccountFeatureDialog";
-import useAccountService from "services/account";
-import useAccountFeatureService from "services/accountFeatures";
+import { getAccounts } from "api/manager/accounts";
+import { getAccountFeaturesMaster, setAccountFeatureMaster } from "api/manager/accountFeatures";
+import { notifyApiError } from "api/core/errors";
 import { parseJson } from 'utils/jsonUtils';
 import { LoadingContext } from 'LoadingContext';
 
@@ -71,8 +72,6 @@ function SystemAccountFeatures() {
   const [open, setOpen] = useState(false);
   const [isAdd, setIsAdd] = useState(false);
   const loaded = useRef(false);
-  const { getAccounts } = useAccountService();
-  const { getAccountFeaturesMaster, setAccountFeatureMaster } = useAccountFeatureService();
   const [values, handleChange, setValues, setErrors, , errors] = useForm({});
 
   const loadFeatures = async () => {
@@ -85,6 +84,8 @@ function SystemAccountFeatures() {
         map[account.accountId] = await getAccountFeaturesMaster(account.accountId) || [];
       }
       setFeaturesByAccount(map);
+    } catch (error) {
+      notifyApiError(error);
     } finally {
       setLoading(false);
     }
@@ -149,6 +150,8 @@ function SystemAccountFeatures() {
       });
       setOpen(false);
       await loadFeatures();
+    } catch (error) {
+      notifyApiError(error);
     } finally {
       setLoading(false);
     }

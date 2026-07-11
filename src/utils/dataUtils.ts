@@ -20,26 +20,6 @@ import { toISOStringWithTimezone } from "utils/dateUtils";
 type FormattableValue = string | number | boolean | Date | null | undefined;
 
 /**
- * Escapes special characters in a string for safe use inside a GraphQL quoted string.
- */
-function escapeGraphQLString(str: unknown): string {
-  return String(str)
-    .replace(/\\/g, '\\\\')
-    .replace(/"/g, '\\"')
-    .replace(/\n/g, '\\n')
-    .replace(/\r/g, '\\r')
-    .replace(/\t/g, '\\t');
-}
-
-/**
- * Formats the given value by wrapping it in double quotes with proper escaping.
- * Returns null if the input is falsy.
- */
-export function formatValue(value: FormattableValue): string | null {
-  return value ? `"${escapeGraphQLString(value)}"` : null;
-}
-
-/**
  * Formats the given value as a string.
  * Returns null if the input is falsy.
  */

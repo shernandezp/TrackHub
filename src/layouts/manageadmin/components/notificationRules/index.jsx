@@ -8,8 +8,14 @@ import ArgonButton from "components/ArgonButton";
 import ArgonTypography from "components/ArgonTypography";
 import useForm from "controls/Dialogs/useForm";
 import NotificationRuleDialog from "layouts/manageadmin/components/notificationRules/NotificationRuleDialog";
-import useAccountService from "services/account";
-import useNotificationRuleService from "services/notificationRules";
+import { getAccountByUser } from "api/manager/accounts";
+import {
+  getNotificationRules,
+  createNotificationRule,
+  updateNotificationRule,
+  disableNotificationRule,
+} from "api/manager/notificationRules";
+import { notifyApiError } from "api/core/errors";
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from "utils/dateUtils";
 
@@ -34,8 +40,6 @@ function ManageNotificationRules() {
   const [open, setOpen] = useState(false);
   const [values, handleChange, setValues, setErrors, validate, errors] = useForm({ enabled: true });
   const loaded = useRef(false);
-  const { getAccountByUser } = useAccountService();
-  const { getNotificationRules, createNotificationRule, updateNotificationRule, disableNotificationRule } = useNotificationRuleService();
 
   const loadRules = async () => {
     setLoading(true);
@@ -45,6 +49,8 @@ function ManageNotificationRules() {
       setAccount(currentAccount);
       const items = await getNotificationRules(currentAccount.accountId);
       setRules(items || []);
+    } catch (error) {
+      notifyApiError(error);
     } finally {
       setLoading(false);
     }
@@ -72,14 +78,29 @@ function ManageNotificationRules() {
     if (!validate(['ruleKey', 'ruleType', 'triggerEvent']) || !account?.accountId) return;
     setLoading(true);
     try {
-      const rule = { ...values, accountId: account.accountId, enabled: values.enabled !== false };
-      if (rule.notificationRuleId) {
-        await updateNotificationRule(rule.notificationRuleId, rule);
+      // recipientSelector/channelsJson are required (String!) by the backend but
+      // not enforced by the dialog — default them so the typed create/update succeeds.
+      const rule = {
+        accountId: account.accountId,
+        ruleKey: values.ruleKey,
+        ruleType: values.ruleType,
+        enabled: values.enabled !== false,
+        triggerEvent: values.triggerEvent,
+        recipientSelector: values.recipientSelector ?? '',
+        channelsJson: values.channelsJson ?? '',
+        throttlingJson: values.throttlingJson ?? null,
+        configurationJson: values.configurationJson ?? null,
+      };
+      if (values.notificationRuleId) {
+        await updateNotificationRule(values.notificationRuleId, rule);
       } else {
         await createNotificationRule(rule);
       }
       setOpen(false);
       await loadRules();
+    } catch (error) {
+      // Keep the dialog open on failure so the user can retry without re-entering.
+      notifyApiError(error);
     } finally {
       setLoading(false);
     }
@@ -91,6 +112,8 @@ function ManageNotificationRules() {
     try {
       await disableNotificationRule(rule.notificationRuleId);
       await loadRules();
+    } catch (error) {
+      notifyApiError(error);
     } finally {
       setLoading(false);
     }

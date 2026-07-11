@@ -14,56 +14,49 @@
 *  limitations under the License.
 */
 
-import { useEffect, useState, useRef, useContext } from "react";
+import { useEffect, useMemo, useState, useContext } from "react";
 import { useTranslation } from 'react-i18next';
 import { Name, NameDetail, Description } from "controls/Tables/components/tableComponents";
 import Icon from "@mui/material/Icon";
 import ArgonBadge from "components/ArgonBadge";
 import ArgonButton from "components/ArgonButton";
-import useDeviceService from "services/device";
-import { handleDelete } from "layouts/manageadmin/actions/deviceActions";
+import { useDevicesByAccount, useDeleteDevice } from 'queries/devices';
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
 
 function useDeviceTableData(fetchData, handleDeleteClick) {
   const { t } = useTranslation();
-  const [data, setData] = useState({ columns: [], rows: [] });
-  const [devices, setDevices] = useState([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const { setLoading } = useContext(LoadingContext);
   const { isAuthenticated } = useAuth();
 
-  const hasLoaded = useRef(false);
-  const { getDevicesByAccount, deleteDevice } = useDeviceService();
+  const devicesQuery = useDevicesByAccount({ enabled: !!fetchData && isAuthenticated });
+  const devices = devicesQuery.data ?? [];
+  const deleteDevice = useDeleteDevice();
+
+  // Keep the global spinner UX for the initial load / invalidation refetch.
+  useEffect(() => {
+    setLoading(devicesQuery.isFetching);
+  }, [devicesQuery.isFetching, setLoading]);
 
   const onDelete = async (deviceId) => {
     setLoading(true);
     try {
-      await handleDelete(
-        deviceId, 
-        devices, 
-        setDevices, 
-        setData, 
-        buildTableData, 
-        deleteDevice);
-        setConfirmOpen(false);
-      } finally {
-        setLoading(false);
-      }
-  }
+      await deleteDevice.mutateAsync(deviceId);
+      setConfirmOpen(false);
+    } catch {
+      // Failure is surfaced by the global toast.
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleOpenDelete = (deviceId) => {
     handleDeleteClick(deviceId);
     setConfirmOpen(true);
   };
 
-  const refreshData = async () => {
-    const devices = await getDevicesByAccount();
-    setDevices(devices);
-    setData(buildTableData(devices));
-  }
-
-  const buildTableData = (devices) => ({
+  const buildTableData = (rows) => ({
     columns: [
       { name: "name", title:t('device.name'), align: "left" },
       { name: "serial", title:t('device.serial'), align: "left" },
@@ -72,7 +65,7 @@ function useDeviceTableData(fetchData, handleDeleteClick) {
       { name: "action", title:t('generic.action'), align: "center" },
       { name: "id" }
     ],
-    rows: devices.map(device => ({
+    rows: rows.map(device => ({
       name: <NameDetail name={device.name} detail={device.identifier} />,
       serial: <Name name={device.serial} />,
       description: <Description description={device.description} />,
@@ -81,8 +74,8 @@ function useDeviceTableData(fetchData, handleDeleteClick) {
       ),
       action: (
         <>
-            <ArgonButton 
-              variant="text" 
+            <ArgonButton
+              variant="text"
               color="error"
               onClick={() => handleOpenDelete(device.deviceId)}>
               <Icon>delete</Icon>&nbsp;{t('generic.delete')}
@@ -93,24 +86,17 @@ function useDeviceTableData(fetchData, handleDeleteClick) {
     })),
   });
 
-  useEffect(() => {
-    if (fetchData && !hasLoaded.current && isAuthenticated) {
-      async function fetchData() {
-        setLoading(true);
-        await refreshData();
-        hasLoaded.current = true;
-        setLoading(false);
-      }
-      fetchData();
-    }
-  }, [fetchData, isAuthenticated]);
+  const data = useMemo(
+    () => buildTableData(devices),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [devices, t]
+  );
 
-  return { 
-    data, 
+  return {
+    data,
     confirmOpen,
-    onDelete, 
-    setConfirmOpen,
-    refreshData
+    onDelete,
+    setConfirmOpen
   };
 }
 

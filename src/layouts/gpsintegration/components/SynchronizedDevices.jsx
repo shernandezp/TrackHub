@@ -29,8 +29,9 @@ import ArgonBadge from 'components/ArgonBadge';
 import ArgonButton from 'components/ArgonButton';
 import ArgonTypography from 'components/ArgonTypography';
 import ArgonBox from 'components/ArgonBox';
-import useAccountService from 'services/account';
-import useDeviceService from 'services/device';
+import { getAccountByUser } from 'api/manager/accounts';
+import { getSynchronizedDevices, setSynchronizedDeviceIgnored, deleteDevice } from 'api/manager/devices';
+import { notifyApiError } from 'api/core/errors';
 import { useGpsOperators } from 'queries/operators';
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from 'utils/dateUtils';
@@ -69,8 +70,6 @@ function ManageSynchronizedDevices() {
   const [recentOnly, setRecentOnly] = useState(false);
   const [error, setError] = useState(null);
   const loaded = useRef(false);
-  const { getAccountByUser } = useAccountService();
-  const { getSynchronizedDevices, setSynchronizedDeviceIgnored, deleteDevice } = useDeviceService();
   // Operator name map / filter options come from the query layer; the device
   // list stays on the legacy device service (migrated in a later batch).
   const operatorsQuery = useGpsOperators({ enabled: expanded });
@@ -86,8 +85,11 @@ function ManageSynchronizedDevices() {
     setLoading(true);
     try {
       const result = await getSynchronizedDevices(acct);
-      if (!result) setError(t('gpsIntegration.errors.devicesLoad'));
-      else setDevices(result);
+      setDevices(result);
+    } catch (e) {
+      // Preserve the legacy toast-on-error behavior; keep the inline notice too.
+      notifyApiError(e);
+      setError(t('gpsIntegration.errors.devicesLoad'));
     } finally { setLoading(false); }
   };
 
@@ -95,13 +97,17 @@ function ManageSynchronizedDevices() {
     if (expanded && !loaded.current) {
       loaded.current = true;
       (async () => {
-        const acct = await getAccountByUser();
-        if (!acct?.accountId) {
+        try {
+          const acct = await getAccountByUser();
+          if (!acct?.accountId) {
+            setError(t('gpsIntegration.errors.devicesLoad'));
+            return;
+          }
+          setAccountId(acct.accountId);
+          await refresh(acct.accountId);
+        } catch {
           setError(t('gpsIntegration.errors.devicesLoad'));
-          return;
         }
-        setAccountId(acct.accountId);
-        await refresh(acct.accountId);
       })();
     }
   }, [expanded]);
@@ -119,6 +125,8 @@ function ManageSynchronizedDevices() {
     try {
       await setSynchronizedDeviceIgnored(device.deviceId, ignore);
       await refresh();
+    } catch (e) {
+      notifyApiError(e);
     } finally { setLoading(false); }
   };
 
@@ -128,6 +136,8 @@ function ManageSynchronizedDevices() {
     try {
       await deleteDevice(device.deviceId);
       await refresh();
+    } catch (e) {
+      notifyApiError(e);
     } finally { setLoading(false); }
   };
 
@@ -191,6 +201,8 @@ function ManageSynchronizedDevices() {
     try {
       await Promise.all(filteredRows.map(r => setSynchronizedDeviceIgnored(r.id, ignored)));
       await refresh();
+    } catch (e) {
+      notifyApiError(e);
     } finally { setLoading(false); }
   };
 

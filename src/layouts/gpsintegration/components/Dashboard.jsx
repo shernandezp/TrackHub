@@ -23,7 +23,7 @@ import ArgonBox from 'components/ArgonBox';
 import ArgonTypography from 'components/ArgonTypography';
 import StatCard from 'layouts/gpsintegration/components/dashboard/StatCard';
 import ProviderStatusBreakdown from 'layouts/gpsintegration/components/dashboard/ProviderStatusBreakdown';
-import useAccountService from 'services/account';
+import { getAccountByUser } from 'api/manager/accounts';
 import { useGpsDashboard, gpsDashboardKeys } from 'queries/gpsDashboard';
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from 'utils/dateUtils';
@@ -32,7 +32,6 @@ import { GPS_INTEGRATION_REFRESH_EVENT } from 'layouts/gpsintegration/gpsIntegra
 function GpsDashboard() {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
-  const { getAccountByUser } = useAccountService();
   const queryClient = useQueryClient();
   const [accountId, setAccountId] = useState(null);
   const [error, setError] = useState(null);
@@ -50,14 +49,18 @@ function GpsDashboard() {
     if (loaded.current) return;
     loaded.current = true;
     (async () => {
-      const acct = await getAccountByUser();
-      if (!acct?.accountId) {
+      try {
+        const acct = await getAccountByUser();
+        if (!acct?.accountId) {
+          setError(t('gpsIntegration.errors.dashboardLoad'));
+          return;
+        }
+        setAccountId(acct.accountId);
+      } catch {
         setError(t('gpsIntegration.errors.dashboardLoad'));
-        return;
       }
-      setAccountId(acct.accountId);
     })();
-  }, [getAccountByUser, t]);
+  }, [t]);
 
   // The refresh bus (operator toggle/sync/credential save) now drives a cache
   // invalidation; the query refetches. A read failure is surfaced by the toast.

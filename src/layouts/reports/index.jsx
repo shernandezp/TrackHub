@@ -20,7 +20,7 @@ import ArgonBox from "components/ArgonBox";
 import DashboardLayout from "controls/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "controls/Navbars/DashboardNavbar";
 import CustomSelect from 'controls/Dialogs/CustomSelect';
-import useReportService from "services/reports";
+import { getReports } from "api/manager/reports";
 import ReportFilters from "layouts/reports/components/Filters";
 import { downloadExcelReport } from "api/reporting/excelReports";
 import { notifyApiError } from "api/core/errors";
@@ -32,7 +32,6 @@ import { toCamelCase } from 'utils/stringUtils';
 function Reports() {
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
-  const { getReports } = useReportService();
   const { setLoading } = useContext(LoadingContext);
 
   const [reports, setReports] = useState([]);
@@ -40,13 +39,18 @@ function Reports() {
 
   const fetchReports = async () => {
     setLoading(true);
-    var result = await getReports();
-    setReports(result.map(report => ({
-      value: report.code,
-      label: t(`reportList.${toCamelCase(report.code)}`)
-    })));
-    setSelectedReport(result.length > 0 ? result[0].code : '');
-    setLoading(false);
+    try {
+      const result = await getReports();
+      setReports(result.map(report => ({
+        value: report.code,
+        label: t(`reportList.${toCamelCase(report.code)}`)
+      })));
+      setSelectedReport(result.length > 0 ? result[0].code : '');
+    } catch (error) {
+      notifyApiError(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
