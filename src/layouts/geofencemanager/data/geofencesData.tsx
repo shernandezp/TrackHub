@@ -15,11 +15,11 @@
 */
 
 import { useEffect, useMemo, useState, useContext } from "react";
-import type { ReactNode } from "react";
+import type { Dispatch, ReactNode, SetStateAction } from "react";
 import { useTranslation } from 'react-i18next';
-import { Name as NameBase } from "controls/Tables/components/tableComponents";
+import { Name } from "controls/Tables/components/tableComponents";
 import Icon from "@mui/material/Icon";
-import ArgonButtonBase from "components/ArgonButton";
+import ArgonButton from "components/ArgonButton";
 import { getGeofence } from "api/geofencing/geofencing";
 import type { Geofence, GeofenceDtoInput } from "api/geofencing/geofencing";
 import {
@@ -34,16 +34,6 @@ import { toCamelCase } from 'utils/stringUtils';
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
 import type { MapPoint, MapPolygon } from 'layouts/geofencemanager/components/GeofenceEditor';
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-const Name = NameBase as unknown as (props: { name: ReactNode }) => ReactNode;
-interface ArgonButtonProps {
-  variant?: string;
-  color?: string;
-  onClick?: () => void;
-  children?: ReactNode;
-}
-const ArgonButton = ArgonButtonBase as unknown as (props: ArgonButtonProps) => ReactNode;
 
 /**
  * Dialog/form state for a geofence. Merges an API {@link Geofence} with UI-only
@@ -63,10 +53,11 @@ export interface GeofenceFormValues {
   geom?: { srid: number; coordinates: { latitude: number; longitude: number }[] };
 }
 
-/** A column descriptor consumed by the vendored `Table` control. */
-export interface GeofenceColumn { name: string; title?: string; align?: string; }
+/** A column descriptor consumed by the `Table` control. */
+export interface GeofenceColumn { name: string; title?: string; align?: "left" | "right" | "center"; }
 /** A rendered table row for the geofence list. */
 export interface GeofenceRow {
+  [key: string]: unknown;
   name: ReactNode;
   type: ReactNode;
   color: ReactNode;
@@ -86,8 +77,8 @@ export interface UseGeofencesTableData {
   onGet: (geofenceId: string) => Promise<Geofence>;
   onSave: (geofence: GeofenceFormValues) => Promise<void>;
   onDelete: (geofenceId: string) => Promise<void>;
-  setOpen: (open: boolean) => void;
-  setConfirmOpen: (open: boolean) => void;
+  setOpen: Dispatch<SetStateAction<boolean>>;
+  setConfirmOpen: Dispatch<SetStateAction<boolean>>;
 }
 
 // Builds a clean GeofenceDtoInput from the dialog values, dropping the UI-only

@@ -20,8 +20,8 @@ import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import Grid from '@mui/material/Grid';
 import Card from '@mui/material/Card';
-import ArgonBoxBase from 'components/ArgonBox';
-import ArgonTypographyBase from 'components/ArgonTypography';
+import ArgonBox from 'components/ArgonBox';
+import ArgonTypography from 'components/ArgonTypography';
 import StatCard from 'layouts/gpsintegration/components/dashboard/StatCard';
 import ProviderStatusBreakdown from 'layouts/gpsintegration/components/dashboard/ProviderStatusBreakdown';
 import { getAccountByUser } from 'api/manager/accounts';
@@ -29,12 +29,6 @@ import { useGpsDashboard, gpsDashboardKeys } from 'queries/gpsDashboard';
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from 'utils/dateUtils';
 import { GPS_INTEGRATION_REFRESH_EVENT } from 'layouts/gpsintegration/gpsIntegrationEvents';
-
-// Vendored (untyped) Argon primitives — type the prop slice crossing the boundary.
-interface ArgonBoxProps { p?: number; mt?: number; children?: ReactNode; }
-const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
-interface ArgonTypographyProps { variant?: string; color?: string; children?: ReactNode; }
-const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
 
 function GpsDashboard() {
   const { t } = useTranslation();

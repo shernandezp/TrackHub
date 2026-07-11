@@ -15,15 +15,14 @@
 */
 
 import { useState } from 'react';
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import TableBase from "controls/Tables/Table";
-import TableAccordionBase from "controls/Accordions/TableAccordion";
+import Table from "controls/Tables/Table";
+import TableAccordion from "controls/Accordions/TableAccordion";
 import OperatorFormDialog from 'layouts/gpsintegration/components/operators/OperatorDialog';
 import CredentialFormDialog from 'layouts/gpsintegration/components/operators/CredentialDialog';
 import useForm from 'controls/Dialogs/useForm';
-import ConfirmDialogBase from 'controls/Dialogs/ConfirmDialog';
-import MessageDialogBase from 'controls/Dialogs/MessageDialog';
+import ConfirmDialog from 'controls/Dialogs/ConfirmDialog';
+import MessageDialog from 'controls/Dialogs/MessageDialog';
 import useOperatorTableData from "layouts/gpsintegration/data/operatorsTableData";
 import type {
   OperatorFormValues,
@@ -31,61 +30,6 @@ import type {
   OperatorTableColumn,
   OperatorTableRow,
 } from "layouts/gpsintegration/data/operatorsTableData";
-
-// Change event shape emitted by the vendored dialog controls.
-type FormChangeHandler = (
-  event: { target: { name: string; value: string; type?: string; checked?: boolean } }
-) => void;
-
-// The vendored useForm hook is still JS; type its tuple result at the boundary.
-type OperatorUseFormResult = [
-  OperatorFormValues,
-  FormChangeHandler,
-  (values: OperatorFormValues) => void,
-  (errors: Record<string, string>) => void,
-  (requiredFields: string[]) => boolean,
-  Record<string, string>,
-];
-type CredentialUseFormResult = [
-  CredentialFormValues,
-  FormChangeHandler,
-  (values: CredentialFormValues) => void,
-  (errors: Record<string, string>) => void,
-  (requiredFields: string[]) => boolean,
-  Record<string, string>,
-];
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface TableProps { columns: OperatorTableColumn[]; rows: OperatorTableRow[]; selectedField?: string; }
-const Table = TableBase as unknown as (props: TableProps) => ReactNode;
-
-interface TableAccordionProps {
-  title: string;
-  showAddIcon?: boolean;
-  expanded: boolean;
-  setOpen?: (open: boolean) => void;
-  handleAddClick?: () => void;
-  setExpanded: (expanded: boolean) => void;
-  children?: ReactNode;
-}
-const TableAccordion = TableAccordionBase as unknown as (props: TableAccordionProps) => ReactNode;
-
-interface ConfirmDialogProps {
-  title: string;
-  message: string;
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  onConfirm: () => void | Promise<void>;
-}
-const ConfirmDialog = ConfirmDialogBase as unknown as (props: ConfirmDialogProps) => ReactNode;
-
-interface MessageDialogProps {
-  title: string;
-  message: string;
-  open: boolean;
-  setOpen: (open: boolean) => void;
-}
-const MessageDialog = MessageDialogBase as unknown as (props: MessageDialogProps) => ReactNode;
 
 function ManageOperators() {
   const { t } = useTranslation();
@@ -125,8 +69,8 @@ function ManageOperators() {
     setConfirmOpen,
     setTestOpen
   } = useOperatorTableData(expanded, handleEditClick, handleEditCredentialClick, handleDeleteClick);
-  const [operatorValues, handleOperatorChange, setOperatorValues, setOperatorErrors, validateOperator, operatorErrors] = useForm({}) as OperatorUseFormResult;
-  const [credentialValues, handleCredentialChange, setCredentialValues, setCredentialErrors, validateCredential, credentialErrors] = useForm({}) as CredentialUseFormResult;
+  const [operatorValues, handleOperatorChange, setOperatorValues, setOperatorErrors, validateOperator, operatorErrors] = useForm<OperatorFormValues>({});
+  const [credentialValues, handleCredentialChange, setCredentialValues, setCredentialErrors, validateCredential, credentialErrors] = useForm<CredentialFormValues>({});
   const [toDelete, setToDelete] = useState<string | null>(null);
   const { columns, rows } = data;
 

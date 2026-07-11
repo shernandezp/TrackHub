@@ -15,13 +15,12 @@
 */
 
 import { useState } from 'react';
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import TableBase from "controls/Tables/Table";
-import TableAccordionBase from "controls/Accordions/TableAccordion";
+import Table from "controls/Tables/Table";
+import TableAccordion from "controls/Accordions/TableAccordion";
 import PoiFormDialog from 'layouts/manageadmin/components/pois/PoiDialog';
 import useForm from 'controls/Dialogs/useForm';
-import ConfirmDialogBase from 'controls/Dialogs/ConfirmDialog';
+import ConfirmDialog from 'controls/Dialogs/ConfirmDialog';
 import usePoiTableData from "layouts/manageadmin/data/poisTableData";
 import type { PoiFormValues, PoiColumn, PoiRow } from "layouts/manageadmin/data/poisTableData";
 
@@ -30,39 +29,6 @@ type FormChangeHandler = (
   event: { target: { name: string; value: string; type?: string; checked?: boolean } }
 ) => void;
 
-// The vendored useForm hook is still JS; type its tuple result at the boundary.
-type PoiUseFormResult = [
-  PoiFormValues,
-  FormChangeHandler,
-  (values: PoiFormValues) => void,
-  (errors: Record<string, string>) => void,
-  (requiredFields: string[]) => boolean,
-  Record<string, string>,
-];
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface TableProps { columns: PoiColumn[]; rows: PoiRow[]; selectedField?: string; }
-const Table = TableBase as unknown as (props: TableProps) => ReactNode;
-
-interface TableAccordionProps {
-  title: string;
-  showAddIcon?: boolean;
-  expanded: boolean;
-  setOpen?: (open: boolean) => void;
-  handleAddClick?: () => void;
-  setExpanded: (expanded: boolean) => void;
-  children?: ReactNode;
-}
-const TableAccordion = TableAccordionBase as unknown as (props: TableAccordionProps) => ReactNode;
-
-interface ConfirmDialogProps {
-  title: string;
-  message: string;
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  onConfirm: () => void | Promise<void>;
-}
-const ConfirmDialog = ConfirmDialogBase as unknown as (props: ConfirmDialogProps) => ReactNode;
 
 function ManagePois() {
   const { t } = useTranslation();
@@ -91,7 +57,7 @@ function ManagePois() {
     setOpen,
     setConfirmOpen} = usePoiTableData(expanded, handleEditClick, handleDeleteClick);
 
-  const [values, handleChange, setValues, setErrors, validate, errors] = useForm({}) as PoiUseFormResult;
+  const [values, handleChange, setValues, setErrors, validate, errors] = useForm<PoiFormValues>({});
   const [toDelete, setToDelete] = useState<string | null>(null);
   const { columns, rows } = data;
 

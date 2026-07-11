@@ -15,9 +15,8 @@
 */
 
 import { useState } from 'react';
-import type { ReactNode } from 'react';
-import TableAccordionBase from "controls/Accordions/TableAccordion";
-import TableBase from "controls/Tables/Table";
+import TableAccordion from "controls/Accordions/TableAccordion";
+import Table from "controls/Tables/Table";
 import useForm from 'controls/Dialogs/useForm';
 import useAccountTableData from "layouts/manageadmin/data/accountTableData";
 import type {
@@ -27,33 +26,6 @@ import type {
 } from "layouts/manageadmin/data/accountTableData";
 import AccountFormDialog from 'layouts/manageadmin/components/account/AccountDialog';
 import { useTranslation } from 'react-i18next';
-
-// Change event shape emitted by the vendored dialog controls.
-type FormChangeHandler = (
-  event: { target: { name: string; value: string; type?: string; checked?: boolean } }
-) => void;
-
-// The vendored useForm hook is still JS; type its tuple result at the boundary.
-type AccountUseFormResult = [
-  AccountFormValues,
-  FormChangeHandler,
-  (values: AccountFormValues) => void,
-  (errors: Record<string, string>) => void,
-  (requiredFields: string[]) => boolean,
-  Record<string, string>,
-];
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface TableProps { columns: AccountTableColumn[]; rows: AccountTableRow[]; selectedField?: string; }
-const Table = TableBase as unknown as (props: TableProps) => ReactNode;
-
-interface TableAccordionProps {
-  title: string;
-  expanded: boolean;
-  setExpanded: (expanded: boolean) => void;
-  children?: ReactNode;
-}
-const TableAccordion = TableAccordionBase as unknown as (props: TableAccordionProps) => ReactNode;
 
 function ManageAccount() {
   const { t } = useTranslation();
@@ -65,7 +37,7 @@ function ManageAccount() {
 
   const [expanded, setExpanded] = useState(false);
   const { data, open, onSave, setOpen } = useAccountTableData(expanded, handleEditClick);
-  const [values, handleChange, setValues, setErrors, validate, errors] = useForm({}) as AccountUseFormResult;
+  const [values, handleChange, setValues, setErrors, validate, errors] = useForm<AccountFormValues>({});
   const { columns, rows } = data;
 
   const handleSubmit = async () => {

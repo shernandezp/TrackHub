@@ -17,9 +17,9 @@
 import { useEffect, useMemo, useState, useContext } from "react";
 import type { ReactNode } from "react";
 import { useTranslation } from 'react-i18next';
-import { Name as NameBase, Description as DescriptionBase } from "controls/Tables/components/tableComponents";
+import { Name, Description } from "controls/Tables/components/tableComponents";
 import Icon from "@mui/material/Icon";
-import ArgonButtonBase from "components/ArgonButton";
+import ArgonButton from "components/ArgonButton";
 import { useGroups, useCreateGroup, useUpdateGroup, useDeleteGroup } from 'queries/groups';
 import type { Group, GroupDtoInput, UpdateGroupDtoInput } from 'api/manager/groups';
 import { LoadingContext } from 'LoadingContext';
@@ -38,8 +38,9 @@ export interface GroupFormValues {
 }
 
 /** A column descriptor / rendered row for the vendored groups `Table`. */
-export interface GroupColumn { name: string; title?: string; align?: string; }
+export interface GroupColumn { name: string; title?: string; align?: "left" | "right" | "center"; }
 export interface GroupRow {
+  [key: string]: ReactNode;
   group: ReactNode;
   description: ReactNode;
   action: ReactNode;
@@ -48,12 +49,6 @@ export interface GroupRow {
   id: number;
 }
 export interface GroupTableData { columns: GroupColumn[]; rows: GroupRow[]; }
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-const Name = NameBase as unknown as (props: { name: ReactNode }) => ReactNode;
-const Description = DescriptionBase as unknown as (props: { description?: ReactNode }) => ReactNode;
-interface ArgonButtonProps { variant?: string; color?: string; onClick?: () => void; children?: ReactNode; }
-const ArgonButton = ArgonButtonBase as unknown as (props: ArgonButtonProps) => ReactNode;
 
 function useGroupTableData(
   fetchData: boolean,

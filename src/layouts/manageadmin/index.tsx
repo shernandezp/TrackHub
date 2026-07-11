@@ -31,19 +31,10 @@ import ManageAlertEvents from "layouts/manageadmin/components/alertEvents";
 import ManagePublicLinks from "layouts/manageadmin/components/publicLinks";
 import ManageDocuments from "layouts/manageadmin/components/documents";
 import ManageBackgroundJobs from "layouts/manageadmin/components/backgroundJobs";
-import type { ReactNode } from "react";
-import ArgonBoxBase from "components/ArgonBox";
-import DashboardLayoutBase from "controls/LayoutContainers/DashboardLayout";
-import DashboardNavbarBase from "controls/Navbars/DashboardNavbar";
-import FooterBase from "controls/Footer";
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface ArgonBoxProps { py?: number; children?: ReactNode; }
-const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
-interface DashboardLayoutProps { children?: ReactNode; }
-const DashboardLayout = DashboardLayoutBase as unknown as (props: DashboardLayoutProps) => ReactNode;
-const DashboardNavbar = DashboardNavbarBase as unknown as (props: Record<string, never>) => ReactNode;
-const Footer = FooterBase as unknown as (props: Record<string, never>) => ReactNode;
+import ArgonBox from "components/ArgonBox";
+import DashboardLayout from "controls/LayoutContainers/DashboardLayout";
+import DashboardNavbar from "controls/Navbars/DashboardNavbar";
+import Footer from "controls/Footer";
 
 function ManageAdmin() {
   return (

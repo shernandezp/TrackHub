@@ -18,11 +18,11 @@ import { useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from '@mui/material/Icon';
-import TableBase from "controls/Tables/Table";
-import TableAccordionBase from "controls/Accordions/TableAccordion";
-import ArgonButtonBase from "components/ArgonButton";
-import ArgonTypographyBase from "components/ArgonTypography";
-import ConfirmDialogBase from 'controls/Dialogs/ConfirmDialog';
+import Table from "controls/Tables/Table";
+import TableAccordion from "controls/Accordions/TableAccordion";
+import ArgonButton from "components/ArgonButton";
+import ArgonTypography from "components/ArgonTypography";
+import ConfirmDialog from 'controls/Dialogs/ConfirmDialog';
 import useForm from "controls/Dialogs/useForm";
 import ServiceClientPermissionDialog from "layouts/systemadmin/components/serviceClientPermissions/ServiceClientPermissionDialog";
 import {
@@ -54,53 +54,6 @@ export interface ServiceClientPermissionFormValues {
   effectiveTo?: string | null;
 }
 
-// Change event shape emitted by the vendored dialog controls.
-type FormChangeHandler = (
-  event: { target: { name: string; value: string; type?: string; checked?: boolean } }
-) => void;
-
-// The vendored useForm hook is still JS; type its tuple result at the boundary.
-type PermissionUseFormResult = [
-  ServiceClientPermissionFormValues,
-  FormChangeHandler,
-  (values: ServiceClientPermissionFormValues) => void,
-  (errors: Record<string, string>) => void,
-  (requiredFields: string[]) => boolean,
-  Record<string, string>,
-];
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface TableColumn { name: string; title?: string; align?: string; }
-type TableRow = Record<string, ReactNode>;
-interface TableProps { columns: TableColumn[]; rows: TableRow[]; selectedField?: string; }
-const Table = TableBase as unknown as (props: TableProps) => ReactNode;
-
-interface TableAccordionProps {
-  title: string;
-  showAddIcon?: boolean;
-  expanded: boolean;
-  setOpen?: (open: boolean) => void;
-  handleAddClick?: () => void;
-  setExpanded: (expanded: boolean) => void;
-  children?: ReactNode;
-}
-const TableAccordion = TableAccordionBase as unknown as (props: TableAccordionProps) => ReactNode;
-
-interface ArgonButtonProps { variant?: string; color?: string; onClick?: () => void; children?: ReactNode; }
-const ArgonButton = ArgonButtonBase as unknown as (props: ArgonButtonProps) => ReactNode;
-
-interface ArgonTypographyProps { variant?: string; color?: string; fontWeight?: string; children?: ReactNode; }
-const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
-
-interface ConfirmDialogProps {
-  title: string;
-  message: string;
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  onConfirm: () => void | Promise<void>;
-}
-const ConfirmDialog = ConfirmDialogBase as unknown as (props: ConfirmDialogProps) => ReactNode;
-
 function TextCell({ children }: { children?: ReactNode }) {
   return (
     <ArgonTypography variant="caption" color="secondary" fontWeight="medium">
@@ -118,7 +71,7 @@ function ManageServiceClientPermissions() {
   const [open, setOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [toDelete, setToDelete] = useState<string | null>(null);
-  const [values, handleChange, setValues, setErrors, validate, errors] = useForm({}) as PermissionUseFormResult;
+  const [values, handleChange, setValues, setErrors, validate, errors] = useForm<ServiceClientPermissionFormValues>({});
 
   const permissionsQuery = useServiceClientPermissions({ enabled: expanded });
   const permissions = permissionsQuery.data ?? [];

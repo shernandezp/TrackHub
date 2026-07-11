@@ -14,7 +14,6 @@
 *  limitations under the License.
 */
 
-import type { ReactNode } from 'react';
 import ManageAccounts from "layouts/systemadmin/components/accounts";
 import ManageClients from "layouts/systemadmin/components/clients";
 import ManageTransporterTypes from "layouts/systemadmin/components/transporterTypes";
@@ -24,16 +23,10 @@ import ManagePolicies from "layouts/systemadmin/components/policies";
 import SystemAccountFeatures from "layouts/systemadmin/components/accountFeatures";
 import ManageAccountSupportGrants from "layouts/systemadmin/components/accountSupportGrants";
 import ManageServiceClientPermissions from "layouts/systemadmin/components/serviceClientPermissions";
-import ArgonBoxBase from "components/ArgonBox";
-import DashboardLayoutBase from "controls/LayoutContainers/DashboardLayout";
-import DashboardNavbarBase from "controls/Navbars/DashboardNavbar";
-import FooterBase from "controls/Footer";
-
-// Vendored (untyped) Argon primitives — type the prop slice crossing the boundary.
-const ArgonBox = ArgonBoxBase as unknown as (props: { py?: number; children?: ReactNode }) => ReactNode;
-const DashboardLayout = DashboardLayoutBase as unknown as (props: { children?: ReactNode }) => ReactNode;
-const DashboardNavbar = DashboardNavbarBase as unknown as () => ReactNode;
-const Footer = FooterBase as unknown as () => ReactNode;
+import ArgonBox from "components/ArgonBox";
+import DashboardLayout from "controls/LayoutContainers/DashboardLayout";
+import DashboardNavbar from "controls/Navbars/DashboardNavbar";
+import Footer from "controls/Footer";
 
 function SystemAdmin() {
 

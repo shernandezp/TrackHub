@@ -14,11 +14,10 @@
 *  limitations under the License.
 */
 
-import type { ReactNode } from "react";
-import ArgonBoxBase from "components/ArgonBox";
-import DashboardLayoutBase from "controls/LayoutContainers/DashboardLayout";
-import DashboardNavbarBase from "controls/Navbars/DashboardNavbar";
-import FooterBase from "controls/Footer";
+import ArgonBox from "components/ArgonBox";
+import DashboardLayout from "controls/LayoutContainers/DashboardLayout";
+import DashboardNavbar from "controls/Navbars/DashboardNavbar";
+import Footer from "controls/Footer";
 import GpsDashboard from "layouts/gpsintegration/components/Dashboard";
 import ManageOperators from "layouts/gpsintegration/components/operators";
 import ManageSynchronizedDevices from "layouts/gpsintegration/components/SynchronizedDevices";
@@ -26,13 +25,6 @@ import ManageDeviceAssignments from "layouts/gpsintegration/components/Assignmen
 import RecentSyncRuns from "layouts/gpsintegration/components/RecentSyncRuns";
 import OpenAlerts from "layouts/gpsintegration/components/OpenAlerts";
 import RetentionSettings from "layouts/gpsintegration/components/RetentionSettings";
-
-// Vendored (untyped) Argon primitives / layout — type the props crossing the boundary.
-interface ArgonBoxProps { py?: number; mb?: number; children?: ReactNode; }
-const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
-const DashboardLayout = DashboardLayoutBase as unknown as (props: { children?: ReactNode }) => ReactNode;
-const DashboardNavbar = DashboardNavbarBase as unknown as (props: Record<string, never>) => ReactNode;
-const Footer = FooterBase as unknown as (props: Record<string, never>) => ReactNode;
 
 function GpsIntegration() {
   return (

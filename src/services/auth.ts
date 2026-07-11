@@ -15,6 +15,7 @@
 */
 
 import axios from 'axios';
+import { OAUTH_ENDPOINTS } from 'api/core/endpoints';
 
 /** OAuth token endpoint response (OpenIddict). */
 export interface TokenResponse {
@@ -37,14 +38,14 @@ export const exchangeAuthorizationCode = async (
   const requestBody = {
     grant_type: 'authorization_code',
     code: authorizationCode,
-    redirect_uri: process.env.REACT_APP_CALLBACK_ENDPOINT,
+    redirect_uri: OAUTH_ENDPOINTS.callback,
     code_verifier: codeVerifier,
-    client_id: process.env.REACT_APP_CLIENT_ID,
+    client_id: OAUTH_ENDPOINTS.clientId,
   };
 
   try {
     const response = await axios.post<TokenResponse>(
-      process.env.REACT_APP_TOKEN_ENDPOINT,
+      OAUTH_ENDPOINTS.token,
       requestBody,
       {
         headers: {
@@ -76,11 +77,11 @@ export const exchangeAuthorizationCode = async (
 export async function refreshAccessToken(refreshToken: string | null): Promise<TokenResponse> {
   try {
     const response = await axios.post<TokenResponse>(
-      process.env.REACT_APP_TOKEN_ENDPOINT,
+      OAUTH_ENDPOINTS.token,
       new URLSearchParams({
         grant_type: 'refresh_token',
         refresh_token: refreshToken ?? '',
-        client_id: process.env.REACT_APP_CLIENT_ID,
+        client_id: OAUTH_ENDPOINTS.clientId,
       }),
       {
         headers: {
@@ -102,11 +103,11 @@ export async function refreshAccessToken(refreshToken: string | null): Promise<T
 export async function revokeAccessToken(accessToken: string | null): Promise<void> {
   const revokeBody = new URLSearchParams({
     token: accessToken ?? '',
-    client_id: process.env.REACT_APP_CLIENT_ID,
+    client_id: OAUTH_ENDPOINTS.clientId,
   });
 
   try {
-    await axios.post(process.env.REACT_APP_REVOKE_TOKEN_ENDPOINT, revokeBody.toString(), {
+    await axios.post(OAUTH_ENDPOINTS.revocation, revokeBody.toString(), {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
@@ -125,7 +126,7 @@ export async function revokeAccessToken(accessToken: string | null): Promise<voi
 export async function logout(): Promise<void> {
   try {
     await axios.post(
-      process.env.REACT_APP_LOGOUT_ENDPOINT,
+      OAUTH_ENDPOINTS.logout,
       {},
       {
         headers: {

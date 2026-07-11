@@ -15,8 +15,7 @@
 */
 
 import { useState, useEffect, useContext } from 'react';
-import type { ReactNode } from 'react';
-import DashboardTabbarBase from "controls/Navbars/DashboardTabbar";
+import DashboardTabbar from "controls/Navbars/DashboardTabbar";
 import Transporters from "layouts/dashboard/components/Transporters";
 import Positions from "layouts/dashboard/components/Positions";
 import { getAccountSettings } from 'api/manager/settings';
@@ -26,18 +25,6 @@ import { useGeofencesByAccount } from 'queries/geofences';
 import { LoadingContext } from 'LoadingContext';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "AuthContext";
-
-// Vendored (untyped) tab navbar — type the prop slice crossing the boundary.
-interface DashboardTabbarProps {
-  stickyNavbar?: boolean;
-  searchQuery?: string;
-  handleSearch?: (event: { target: { value: string } }) => void;
-  searchVisibility?: boolean;
-  tabs: string[];
-  onTabChange: (newValue: number) => void;
-  children?: ReactNode;
-}
-const DashboardTabbar = DashboardTabbarBase as unknown as (props: DashboardTabbarProps) => ReactNode;
 
 function Default() {
   const { t } = useTranslation();

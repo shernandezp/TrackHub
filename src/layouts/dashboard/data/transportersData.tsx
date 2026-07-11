@@ -17,37 +17,15 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { useTranslation } from 'react-i18next';
-import { Name as NameBase, Description as DescriptionBase } from "controls/Tables/components/tableComponents";
-import ArgonTypographyBase from "components/ArgonTypography";
+import { Name, Description } from "controls/Tables/components/tableComponents";
+import ArgonTypography from "components/ArgonTypography";
 import Icon from "@mui/material/Icon";
-import ArgonButtonBase from "components/ArgonButton";
+import ArgonButton from "components/ArgonButton";
 import { formatDateTime } from "utils/dateUtils";
 import type { Position } from "api/router/router";
 
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-const Name = NameBase as unknown as (props: { name: ReactNode }) => ReactNode;
-const Description = DescriptionBase as unknown as (props: { description: ReactNode }) => ReactNode;
-
-interface ArgonTypographyProps {
-  variant?: string;
-  color?: string;
-  fontWeight?: string;
-  children?: ReactNode;
-}
-const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
-
-interface ArgonButtonProps {
-  variant?: string;
-  color?: string;
-  size?: string;
-  iconOnly?: boolean;
-  circular?: boolean;
-  children?: ReactNode;
-}
-const ArgonButton = ArgonButtonBase as unknown as (props: ArgonButtonProps) => ReactNode;
-
 /** A column descriptor consumed by the vendored `Table` control. */
-export interface TransporterColumn { name: string; title?: string; align?: string; width?: string; }
+export interface TransporterColumn { name: string; title?: string; align?: "left" | "right" | "center"; width?: string; }
 /** A rendered table row for the live transporters list. */
 export interface TransporterRow {
   status: ReactNode;
@@ -55,6 +33,7 @@ export interface TransporterRow {
   datetime: ReactNode;
   speed: ReactNode;
   id: string;
+  [key: string]: unknown;
 }
 export interface TransporterTableData {
   columns: TransporterColumn[];

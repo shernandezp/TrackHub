@@ -15,9 +15,9 @@
 */
 
 import { useState } from 'react';
-import type { ReactNode, RefObject } from 'react';
-import OSMGeofenceEditorBase from 'controls/Maps/OSM/GeofenceEditor';
-import GoogleGeofenceEditorBase from 'controls/Maps/Google/GeofenceEditor';
+import type { RefObject } from 'react';
+import OSMGeofenceEditor from 'controls/Maps/OSM/GeofenceEditor';
+import GoogleGeofenceEditor from 'controls/Maps/Google/GeofenceEditor';
 import MapControlStyle from 'controls/Maps/styles/MapControl';
 
 /** A point in the imperative map-editor handle payloads. */
@@ -42,26 +42,14 @@ export interface GeofenceEditorHandles {
   removeRef?: RefObject<RemoveGeofenceHandler | null>;
 }
 
-// Vendored (untyped) leaflet/google map editors — type the prop slice used.
-interface MapEditorProps extends GeofenceEditorHandles {
-  mapKey?: string | null;
-  initialPolygons?: MapPolygon[];
-  selectedPolygon?: string | null;
-  handleSelected?: (value: string | null) => void;
-  setIsEditing: (editing: boolean) => void;
-  setOpen?: (open: boolean) => void;
-  height?: string;
-}
-const OSMGeofenceEditor = OSMGeofenceEditorBase as unknown as (props: MapEditorProps) => ReactNode;
-const GoogleGeofenceEditor = GoogleGeofenceEditorBase as unknown as (props: MapEditorProps) => ReactNode;
-
 interface GeofenceEditorProps extends GeofenceEditorHandles {
   mapType: 'OSM' | 'Google';
   mapKey?: string | null;
   geofences?: MapPolygon[];
   selectedGeofence?: string | null;
-  handleSelected?: (value: string | null) => void;
-  setOpen?: (open: boolean) => void;
+  // Required by the underlying OSM/Google editors, which the manager always wires up.
+  handleSelected: (value: string | null) => void;
+  setOpen: (open: boolean) => void;
   handleAdd?: () => void;
   handleEdit?: () => void;
   height?: string;
@@ -105,7 +93,7 @@ const GeofenceEditor = ({
             ) : (
                 mapType === 'Google' &&
                 <GoogleGeofenceEditor
-                    mapKey={mapKey}
+                    mapKey={mapKey ?? undefined}
                     initialPolygons={geofences}
                     selectedPolygon={selectedGeofence}
                     handleSelected={handleSelected}

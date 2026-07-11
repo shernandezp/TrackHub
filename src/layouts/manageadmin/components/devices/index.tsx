@@ -15,34 +15,11 @@
 */
 
 import { useState } from 'react';
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import TableBase from "controls/Tables/Table";
-import TableAccordionBase from "controls/Accordions/TableAccordion";
-import ConfirmDialogBase from 'controls/Dialogs/ConfirmDialog';
+import Table from "controls/Tables/Table";
+import TableAccordion from "controls/Accordions/TableAccordion";
+import ConfirmDialog from 'controls/Dialogs/ConfirmDialog';
 import useDeviceTableData from "layouts/manageadmin/data/devicesTableData";
-import type { DeviceTableColumn, DeviceTableRow } from "layouts/manageadmin/data/devicesTableData";
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface TableProps { columns: DeviceTableColumn[]; rows: DeviceTableRow[]; selectedField?: string; }
-const Table = TableBase as unknown as (props: TableProps) => ReactNode;
-
-interface TableAccordionProps {
-  title: string;
-  expanded: boolean;
-  setExpanded: (expanded: boolean) => void;
-  children?: ReactNode;
-}
-const TableAccordion = TableAccordionBase as unknown as (props: TableAccordionProps) => ReactNode;
-
-interface ConfirmDialogProps {
-  title: string;
-  message: string;
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  onConfirm: () => void | Promise<void>;
-}
-const ConfirmDialog = ConfirmDialogBase as unknown as (props: ConfirmDialogProps) => ReactNode;
 
 function ManageDevices() {
   const { t } = useTranslation();

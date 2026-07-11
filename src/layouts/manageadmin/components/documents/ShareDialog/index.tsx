@@ -15,13 +15,13 @@
 */
 
 import { useState } from 'react';
-import type { ReactNode } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
-import FormDialogBase from "controls/Dialogs/FormDialog";
-import CustomTextFieldBase from 'controls/Dialogs/CustomTextField';
+import FormDialog from "controls/Dialogs/FormDialog";
+import CustomTextField from 'controls/Dialogs/CustomTextField';
 import useForm from "controls/Dialogs/useForm";
-import ArgonBoxBase from "components/ArgonBox";
-import ArgonTypographyBase from "components/ArgonTypography";
+import ArgonBox from "components/ArgonBox";
+import ArgonTypography from "components/ArgonTypography";
 import { createPublicLinkGrant } from "api/manager/publicLinks";
 import type { PublicLinkGrantDtoInput } from "api/manager/publicLinks";
 import { getCurrentPrincipal } from "api/manager/principals";
@@ -29,61 +29,13 @@ import { notifyApiError } from "api/core/errors";
 import { publicDownloadUrl } from "api/manager/documents";
 import type { DocumentVm } from "api/manager/documents";
 
-// Change event shape emitted by the vendored dialog controls.
-type FormChangeHandler = (
-  event: { target: { name: string; value: string; type?: string; checked?: boolean } }
-) => void;
-
 interface ShareFormValues { purpose?: string; expiresAt?: string; }
-
-// The vendored useForm hook is still JS; type its tuple result at the boundary.
-type ShareUseFormResult = [
-  ShareFormValues,
-  FormChangeHandler,
-  (values: ShareFormValues) => void,
-  (errors: Record<string, string>) => void,
-  (requiredFields: string[]) => boolean,
-  Record<string, string>,
-];
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface FormDialogProps {
-  title: string;
-  handleSave: () => void | Promise<void>;
-  handleCancel?: () => void;
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  maxWidth?: string;
-  children?: ReactNode;
-}
-const FormDialog = FormDialogBase as unknown as (props: FormDialogProps) => ReactNode;
-interface CustomTextFieldProps {
-  margin?: string;
-  name: string;
-  id: string;
-  label: string;
-  type?: string;
-  fullWidth?: boolean;
-  multiline?: boolean;
-  minRows?: number;
-  value: string | number;
-  onChange: FormChangeHandler;
-  required?: boolean;
-  errorMsg?: string;
-  InputProps?: object;
-  InputLabelProps?: object;
-}
-const CustomTextField = CustomTextFieldBase as unknown as (props: CustomTextFieldProps) => ReactNode;
-interface ArgonBoxProps { p?: number; mt?: number; children?: ReactNode; }
-const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
-interface ArgonTypographyProps { variant?: string; color?: string; fontWeight?: string; children?: ReactNode; }
-const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
 
 interface ShareState { token: string; url: string; }
 
 interface ShareDialogProps {
   open: boolean;
-  setOpen: (open: boolean) => void;
+  setOpen: Dispatch<SetStateAction<boolean>>;
   accountId?: string | null;
   document?: DocumentVm | null;
 }
@@ -92,7 +44,7 @@ interface ShareDialogProps {
 // ResourceType="Document" + scope "document.read"; the token + URL are shown once at creation.
 function ShareDialog({ open, setOpen, accountId = null, document = null }: ShareDialogProps) {
   const { t } = useTranslation();
-  const [values, handleChange, setValues, setErrors, validate, errors] = useForm({}) as ShareUseFormResult;
+  const [values, handleChange, setValues, setErrors, validate, errors] = useForm<ShareFormValues>({});
   const [share, setShare] = useState<ShareState | null>(null);
 
   const reset = () => { setValues({}); setErrors({}); setShare(null); };

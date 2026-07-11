@@ -15,46 +15,21 @@
 */
 
 import { useState, useEffect, useMemo, useContext } from 'react';
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import CheckboxTableDialogBase from 'controls/Dialogs/TableDialogs/CheckboxTableDialog';
-import CustomSelectBase from 'controls/Dialogs/CustomSelect';
+import CheckboxTableDialog from 'controls/Dialogs/TableDialogs/CheckboxTableDialog';
+import CustomSelect from 'controls/Dialogs/CustomSelect';
 import { useRoles, useRoleResources } from 'queries/roles';
 import { useActions } from 'queries/actions';
 import { useResources } from 'queries/resources';
 import { createResourceActionRole, deleteResourceActionRole } from 'api/security/roles';
 import { LoadingContext } from 'LoadingContext';
 import { toCamelCase } from 'utils/stringUtils';
+import type { FormChangeHandler } from 'controls/Dialogs/useForm';
 
 // A single resource-action assignment cell (nested under resourceId → actionId).
 interface ActionAssignment { actionId: number; actionName: string; resourceId: number }
-type AssignmentMap = Record<number, Record<number, ActionAssignment>>;
-interface SelectOption { value: number; name?: string; label: string }
-
-// Numeric-select change event shape emitted by the vendored CustomSelect.
-type SelectChangeHandler = (event: { target: { value: number } }) => void;
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface CheckboxTableDialogProps {
-  handleSave: (resourceId: number, actionId: number, checked: boolean) => Promise<boolean>;
-  title: string;
-  data: AssignmentMap;
-  columns: readonly SelectOption[];
-  rows: readonly SelectOption[];
-  children?: ReactNode;
-}
-const CheckboxTableDialog = CheckboxTableDialogBase as unknown as (props: CheckboxTableDialogProps) => ReactNode;
-
-interface CustomSelectProps {
-  list: readonly SelectOption[];
-  name: string;
-  id: string;
-  label: string;
-  value: number;
-  handleChange: SelectChangeHandler;
-  required?: boolean;
-}
-const CustomSelect = CustomSelectBase as unknown as (props: CustomSelectProps) => ReactNode;
+type AssignmentMap = Record<string, Record<string, ActionAssignment>>;
+interface SelectOption { value: number; name: string; label: string }
 
 interface RoleAssignmentTableProps {
   open: boolean;
@@ -107,6 +82,7 @@ function RoleAssignmentTable({ open }: RoleAssignmentTableProps) {
   const roles = useMemo<SelectOption[]>(
     () => (rolesQuery.data ?? []).map(roleItem => ({
       value: roleItem.roleId,
+      name: roleItem.name,
       label: t(`roles.${toCamelCase(roleItem.name)}` as 'roles.manager', { defaultValue: roleItem.name })
     })),
     [rolesQuery.data, t]
@@ -117,7 +93,7 @@ function RoleAssignmentTable({ open }: RoleAssignmentTableProps) {
     if (!roleResources) return {};
     return roleResources.resources.reduce<AssignmentMap>((map, resource) => {
       // `actions` is a nullable generated array — default to [] when absent.
-      map[resource.resourceId] = (resource.actions ?? []).reduce<Record<number, ActionAssignment>>((actionMap, action) => {
+      map[resource.resourceId] = (resource.actions ?? []).reduce<Record<string, ActionAssignment>>((actionMap, action) => {
         actionMap[action.actionId] = action;
         return actionMap;
       }, {});
@@ -125,19 +101,19 @@ function RoleAssignmentTable({ open }: RoleAssignmentTableProps) {
     }, {});
   }, [roleResourcesQuery.data]);
 
-  const handleChange: SelectChangeHandler = (event) => {
-    setRole(event.target.value);
+  const handleChange: FormChangeHandler = (event) => {
+    setRole(Number(event.target.value));
   };
 
-  const handleSubmit = async (resourceId: number, actionId: number, checked: boolean): Promise<boolean> => {
+  const handleSubmit = async (resourceId: string, actionId: string, checked: boolean): Promise<boolean> => {
     setLoading(true);
     let result = false;
     try {
       if (checked) {
-        const created = await createResourceActionRole(resourceId, actionId, role);
+        const created = await createResourceActionRole(Number(resourceId), Number(actionId), role);
         result = created.roleId === role;
       } else {
-        const deleted = await deleteResourceActionRole(resourceId, actionId, role);
+        const deleted = await deleteResourceActionRole(Number(resourceId), Number(actionId), role);
         result = deleted === role;
       }
     } catch {

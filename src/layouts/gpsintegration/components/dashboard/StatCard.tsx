@@ -16,30 +16,8 @@
 
 import type { ReactNode } from 'react';
 import Card from '@mui/material/Card';
-import ArgonBoxBase from 'components/ArgonBox';
-import ArgonTypographyBase from 'components/ArgonTypography';
-
-// Vendored (untyped) Argon primitives — type the prop slice crossing the boundary.
-interface ArgonBoxProps {
-  p?: number;
-  display?: string;
-  flexDirection?: string;
-  justifyContent?: string;
-  height?: string;
-  children?: ReactNode;
-}
-const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
-
-interface ArgonTypographyProps {
-  variant?: string;
-  color?: string;
-  fontWeight?: string;
-  textTransform?: string;
-  mt?: number;
-  sx?: object;
-  children?: ReactNode;
-}
-const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
+import ArgonBox from 'components/ArgonBox';
+import ArgonTypography from 'components/ArgonTypography';
 
 interface StatCardProps {
   label: string;

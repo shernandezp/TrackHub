@@ -17,28 +17,19 @@
 import { useEffect, useMemo, useState, useContext } from "react";
 import type { ReactNode } from "react";
 import { useTranslation } from 'react-i18next';
-import { Name as NameBase, NameDetail as NameDetailBase, Description as DescriptionBase } from "controls/Tables/components/tableComponents";
+import { Name, NameDetail, Description } from "controls/Tables/components/tableComponents";
 import Icon from "@mui/material/Icon";
-import ArgonBadgeBase from "components/ArgonBadge";
-import ArgonButtonBase from "components/ArgonButton";
+import ArgonBadge from "components/ArgonBadge";
+import ArgonButton from "components/ArgonButton";
 import { useDevicesByAccount, useDeleteDevice } from 'queries/devices';
 import type { Device } from 'api/manager/devices';
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
 
 /** A column descriptor / rendered row for the vendored devices `Table`. */
-export interface DeviceTableColumn { name: string; title?: string; align?: string; }
+export interface DeviceTableColumn { name: string; title?: string; align?: "left" | "right" | "center"; }
 export type DeviceTableRow = Record<string, ReactNode>;
 export interface DeviceTableData { columns: DeviceTableColumn[]; rows: DeviceTableRow[]; }
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-const Name = NameBase as unknown as (props: { name?: ReactNode }) => ReactNode;
-const NameDetail = NameDetailBase as unknown as (props: { name?: ReactNode; detail?: ReactNode }) => ReactNode;
-const Description = DescriptionBase as unknown as (props: { description?: ReactNode }) => ReactNode;
-interface ArgonBadgeProps { variant?: string; color?: string; badgeContent?: ReactNode; size?: string; container?: boolean; }
-const ArgonBadge = ArgonBadgeBase as unknown as (props: ArgonBadgeProps) => ReactNode;
-interface ArgonButtonProps { variant?: string; color?: string; onClick?: () => void; disabled?: boolean; children?: ReactNode; }
-const ArgonButton = ArgonButtonBase as unknown as (props: ArgonButtonProps) => ReactNode;
 
 function useDeviceTableData(
   fetchData: boolean,

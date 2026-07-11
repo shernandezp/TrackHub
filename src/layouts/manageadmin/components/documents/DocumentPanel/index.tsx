@@ -15,15 +15,14 @@
 */
 
 import { useContext, useEffect, useRef, useState } from 'react';
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from '@mui/material/Icon';
-import TableBase from "controls/Tables/Table";
-import ArgonBoxBase from "components/ArgonBox";
-import ArgonButtonBase from "components/ArgonButton";
-import ArgonBadgeBase from "components/ArgonBadge";
-import ArgonTypographyBase from "components/ArgonTypography";
-import ConfirmDialogBase from "controls/Dialogs/ConfirmDialog";
+import Table, { type TableColumn } from "controls/Tables/Table";
+import ArgonBox from "components/ArgonBox";
+import ArgonButton from "components/ArgonButton";
+import ArgonBadge from "components/ArgonBadge";
+import ArgonTypography from "components/ArgonTypography";
+import ConfirmDialog from "controls/Dialogs/ConfirmDialog";
 import DocumentUploadDialog from "layouts/manageadmin/components/documents/DocumentUploadDialog";
 import type { UploadPayload } from "layouts/manageadmin/components/documents/DocumentUploadDialog";
 import ShareDialog from "layouts/manageadmin/components/documents/ShareDialog";
@@ -33,33 +32,11 @@ import { notifyApiError } from "api/core/errors";
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from "utils/dateUtils";
 
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface TableColumn { name: string; title?: string; align?: string; }
-type TableRow = Record<string, ReactNode>;
-interface TableProps { columns: TableColumn[]; rows: TableRow[]; selectedField?: string; }
-const Table = TableBase as unknown as (props: TableProps) => ReactNode;
-interface ArgonBoxProps { mb?: number; display?: string; justifyContent?: string; flexWrap?: string; children?: ReactNode; }
-const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
-interface ArgonButtonProps { variant?: string; color?: string; size?: string; onClick?: () => void; children?: ReactNode; }
-const ArgonButton = ArgonButtonBase as unknown as (props: ArgonButtonProps) => ReactNode;
-interface ArgonBadgeProps { variant?: string; color?: string; badgeContent?: ReactNode; size?: string; container?: boolean; }
-const ArgonBadge = ArgonBadgeBase as unknown as (props: ArgonBadgeProps) => ReactNode;
-interface ArgonTypographyProps { variant?: string; color?: string; fontWeight?: string; children?: ReactNode; }
-const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
-interface ConfirmDialogProps {
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  title: string;
-  message: string;
-  onConfirm: () => void | Promise<void>;
-}
-const ConfirmDialog = ConfirmDialogBase as unknown as (props: ConfirmDialogProps) => ReactNode;
-
 // Intentionally bundle-absent, defaultValue-backed key; typed via a const so the
 // literal is not surfaced as a static (must-resolve) i18n key.
 const CONFIRM_DELETE_KEY = 'generic.confirmDelete' as 'generic.active';
 
-const scanColor = (scanStatus: string): string => {
+const scanColor = (scanStatus: string): 'success' | 'error' | 'warning' | 'secondary' => {
   switch (scanStatus) {
     case 'Clean': return 'success';
     case 'Infected':
@@ -222,7 +199,7 @@ function DocumentPanel({ accountId = null, ownerEntityType, ownerEntityId = null
       <ShareDialog open={shareOpen} setOpen={setShareOpen} accountId={accountId} document={active} />
       <ConfirmDialog
         open={confirm.open}
-        setOpen={(v) => setConfirm({ ...confirm, open: v })}
+        setOpen={(v) => setConfirm(prev => ({ ...prev, open: typeof v === 'function' ? v(prev.open) : v }))}
         title={confirm.kind === 'delete' ? t('documentManagement.delete') : t('documentManagement.void')}
         message={confirm.kind === 'delete' ? t(CONFIRM_DELETE_KEY, { defaultValue: 'Are you sure?' }) : t('documentManagement.void')}
         onConfirm={() => runConfirmed(confirm.kind === 'delete'

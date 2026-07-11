@@ -14,35 +14,11 @@
 *  limitations under the License.
 */
 
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import ArgonBoxBase from "components/ArgonBox";
-import ArgonTypographyBase from "components/ArgonTypography";
+import ArgonBox from "components/ArgonBox";
+import ArgonTypography from "components/ArgonTypography";
 import { ACCOUNT_STATUS_I18N } from 'data/accountStatuses';
 import type { AccountStatus, AccountContext } from 'api/manager/accounts';
-
-// Vendored (untyped) Argon primitives — type the props crossing the boundary.
-interface ArgonBoxProps {
-  display?: string;
-  flexDirection?: string;
-  justifyContent?: string;
-  alignItems?: string;
-  minHeight?: string;
-  textAlign?: string;
-  px?: number;
-  children?: ReactNode;
-}
-interface ArgonTypographyProps {
-  variant?: string;
-  fontWeight?: string;
-  color?: string;
-  mb?: number;
-  children?: ReactNode;
-}
-const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
-const ArgonTypography = ArgonTypographyBase as unknown as (
-  props: ArgonTypographyProps
-) => ReactNode;
 
 interface SuspensionScreenProps {
   status: AccountStatus | null;

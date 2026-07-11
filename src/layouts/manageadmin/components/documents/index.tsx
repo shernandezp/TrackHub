@@ -18,14 +18,14 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from '@mui/material/Icon';
-import TableBase from "controls/Tables/Table";
-import TableAccordionBase from "controls/Accordions/TableAccordion";
-import ArgonBoxBase from "components/ArgonBox";
-import ArgonButtonBase from "components/ArgonButton";
-import ArgonBadgeBase from "components/ArgonBadge";
-import ArgonTypographyBase from "components/ArgonTypography";
-import CustomTextFieldBase from 'controls/Dialogs/CustomTextField';
-import ConfirmDialogBase from "controls/Dialogs/ConfirmDialog";
+import Table from "controls/Tables/Table";
+import TableAccordion from "controls/Accordions/TableAccordion";
+import ArgonBox from "components/ArgonBox";
+import ArgonButton from "components/ArgonButton";
+import ArgonBadge from "components/ArgonBadge";
+import ArgonTypography from "components/ArgonTypography";
+import CustomTextField from 'controls/Dialogs/CustomTextField';
+import ConfirmDialog from "controls/Dialogs/ConfirmDialog";
 import useForm from "controls/Dialogs/useForm";
 import DocumentTypeDialog from "layouts/manageadmin/components/documents/DocumentTypeDialog";
 import type { DocumentTypeFormValues } from "layouts/manageadmin/components/documents/DocumentTypeDialog";
@@ -43,59 +43,8 @@ type FormChangeHandler = (
   event: { target: { name: string; value: string; type?: string; checked?: boolean } }
 ) => void;
 
-// The vendored useForm hook is still JS; type its tuple result at the boundary.
-type UseFormResult<T> = [
-  T,
-  FormChangeHandler,
-  (values: T) => void,
-  (errors: Record<string, string>) => void,
-  (requiredFields: string[]) => boolean,
-  Record<string, string>,
-];
 
 interface FilterValues { category?: string; status?: string; }
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface TableColumn { name: string; title?: string; align?: string; }
-type TableRow = Record<string, ReactNode>;
-interface TableProps { columns: TableColumn[]; rows: TableRow[]; selectedField?: string; }
-const Table = TableBase as unknown as (props: TableProps) => ReactNode;
-interface TableAccordionProps {
-  title: string;
-  showAddIcon?: boolean;
-  expanded: boolean;
-  setOpen?: (open: boolean) => void;
-  handleAddClick?: () => void;
-  setExpanded: (expanded: boolean) => void;
-  children?: ReactNode;
-}
-const TableAccordion = TableAccordionBase as unknown as (props: TableAccordionProps) => ReactNode;
-interface ArgonBoxProps { display?: string; gap?: number; mb?: number; alignItems?: string; flexWrap?: string; children?: ReactNode; }
-const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
-interface ArgonButtonProps { variant?: string; color?: string; size?: string; onClick?: () => void; children?: ReactNode; }
-const ArgonButton = ArgonButtonBase as unknown as (props: ArgonButtonProps) => ReactNode;
-interface ArgonBadgeProps { variant?: string; color?: string; badgeContent?: ReactNode; size?: string; container?: boolean; }
-const ArgonBadge = ArgonBadgeBase as unknown as (props: ArgonBadgeProps) => ReactNode;
-interface ArgonTypographyProps { variant?: string; color?: string; fontWeight?: string; children?: ReactNode; }
-const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
-interface CustomTextFieldProps {
-  margin?: string;
-  name: string;
-  id: string;
-  label: string;
-  type?: string;
-  value: string | number;
-  onChange: FormChangeHandler;
-}
-const CustomTextField = CustomTextFieldBase as unknown as (props: CustomTextFieldProps) => ReactNode;
-interface ConfirmDialogProps {
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  title: string;
-  message: string;
-  onConfirm: () => void | Promise<void>;
-}
-const ConfirmDialog = ConfirmDialogBase as unknown as (props: ConfirmDialogProps) => ReactNode;
 
 const DOCUMENTS_FEATURE_KEY = "documents";
 
@@ -103,7 +52,7 @@ const DOCUMENTS_FEATURE_KEY = "documents";
 // literal is not surfaced as a static (must-resolve) i18n key.
 const CONFIRM_DELETE_KEY = 'generic.confirmDelete' as 'generic.active';
 
-const scanColor = (s: string): string => (s === 'Clean' ? 'success' : (s === 'Infected' || s === 'Failed') ? 'error' : s === 'Quarantined' ? 'warning' : 'secondary');
+const scanColor = (s: string): 'success' | 'error' | 'warning' | 'secondary' => (s === 'Clean' ? 'success' : (s === 'Infected' || s === 'Failed') ? 'error' : s === 'Quarantined' ? 'warning' : 'secondary');
 const cap = (v: ReactNode): ReactNode => <ArgonTypography variant="caption" color="secondary">{v ?? '-'}</ArgonTypography>;
 
 interface ContextState { library: boolean; expiring: boolean; types: boolean; }
@@ -120,8 +69,8 @@ function ManageDocuments() {
   const [types, setTypes] = useState<DocumentTypeVm[]>([]);
   const [typeOpen, setTypeOpen] = useState(false);
   const [confirm, setConfirm] = useState<ConfirmState>({ open: false, id: null });
-  const [filters, handleFilterChange] = useForm({}) as UseFormResult<FilterValues>;
-  const [typeValues, handleTypeChange, setTypeValues, setTypeErrors, validateType, typeErrors] = useForm({}) as UseFormResult<DocumentTypeFormValues>;
+  const [filters, handleFilterChange] = useForm<FilterValues>({});
+  const [typeValues, handleTypeChange, setTypeValues, setTypeErrors, validateType, typeErrors] = useForm<DocumentTypeFormValues>({});
   const bootstrap = useRef(false);
 
   const ensureAccount = async (): Promise<Account | null> => {
@@ -305,7 +254,7 @@ function ManageDocuments() {
       <DocumentTypeDialog open={typeOpen} setOpen={setTypeOpen} handleSubmit={submitType} values={typeValues} handleChange={handleTypeChange} errors={typeErrors} />
       <ConfirmDialog
         open={confirm.open}
-        setOpen={(v) => setConfirm({ ...confirm, open: v })}
+        setOpen={(v) => setConfirm(prev => ({ ...prev, open: typeof v === 'function' ? v(prev.open) : v }))}
         title={t('documentManagement.types')}
         message={t(CONFIRM_DELETE_KEY, { defaultValue: 'Are you sure?' })}
         onConfirm={doDisableType}

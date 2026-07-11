@@ -18,11 +18,11 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from '@mui/material/Icon';
-import TableBase from "controls/Tables/Table";
-import TableAccordionBase from "controls/Accordions/TableAccordion";
-import ArgonBadgeBase from "components/ArgonBadge";
-import ArgonButtonBase from "components/ArgonButton";
-import ArgonTypographyBase from "components/ArgonTypography";
+import Table from "controls/Tables/Table";
+import TableAccordion from "controls/Accordions/TableAccordion";
+import ArgonBadge from "components/ArgonBadge";
+import ArgonButton from "components/ArgonButton";
+import ArgonTypography from "components/ArgonTypography";
 import useForm from "controls/Dialogs/useForm";
 import AccountFeatureDialog from "layouts/systemadmin/components/accountFeatures/AccountFeatureDialog";
 import { getAccounts } from "api/manager/accounts";
@@ -57,22 +57,6 @@ export interface FeatureFormValues {
 /** Option row for the account/feature selects. */
 export interface FeatureSelectOption { value: string; label: string }
 
-// Change event shape emitted by the vendored dialog controls.
-type FormChangeHandler = (
-  event: { target: { name: string; value: string; type?: string; checked?: boolean } }
-) => void;
-
-// The vendored useForm hook is still JS; type its tuple result at the boundary.
-// (setErrors accepts undefined entries — the add-mode guard clears fields.)
-type FeatureUseFormResult = [
-  FeatureFormValues,
-  FormChangeHandler,
-  (values: FeatureFormValues) => void,
-  (errors: Record<string, string | undefined>) => void,
-  (requiredFields: string[]) => boolean,
-  Record<string, string>,
-];
-
 // Billing-owned features the SuperAdministrator can assign to an account.
 const knownFeatures = [
   'gps.integration',
@@ -93,30 +77,6 @@ const configField: Record<string, ConfigFieldDef> = {
 
 const featureOptions: FeatureSelectOption[] = knownFeatures.map(key => ({ value: key, label: key }));
 
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface TableColumn { name: string; title?: string; align?: string; }
-type TableRow = Record<string, ReactNode>;
-interface TableProps { columns: TableColumn[]; rows: TableRow[]; selectedField?: string; }
-const Table = TableBase as unknown as (props: TableProps) => ReactNode;
-
-interface TableAccordionProps {
-  title: string;
-  showAddIcon?: boolean;
-  expanded: boolean;
-  setOpen?: (open: boolean) => void;
-  handleAddClick?: () => void;
-  setExpanded: (expanded: boolean) => void;
-  children?: ReactNode;
-}
-const TableAccordion = TableAccordionBase as unknown as (props: TableAccordionProps) => ReactNode;
-
-interface ArgonBadgeProps { variant?: string; color?: string; badgeContent?: ReactNode; size?: string; container?: boolean; }
-const ArgonBadge = ArgonBadgeBase as unknown as (props: ArgonBadgeProps) => ReactNode;
-interface ArgonButtonProps { variant?: string; color?: string; onClick?: () => void; children?: ReactNode; }
-const ArgonButton = ArgonButtonBase as unknown as (props: ArgonButtonProps) => ReactNode;
-interface ArgonTypographyProps { variant?: string; color?: string; fontWeight?: string; children?: ReactNode; }
-const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
-
 function TextCell({ children }: { children?: ReactNode }) {
   return (
     <ArgonTypography variant="caption" color="secondary" fontWeight="medium">
@@ -134,7 +94,7 @@ function SystemAccountFeatures() {
   const [open, setOpen] = useState(false);
   const [isAdd, setIsAdd] = useState(false);
   const loaded = useRef(false);
-  const [values, handleChange, setValues, setErrors, , errors] = useForm({}) as FeatureUseFormResult;
+  const [values, handleChange, setValues, setErrors, , errors] = useForm<FeatureFormValues>({});
 
   const loadFeatures = async () => {
     setLoading(true);
@@ -222,7 +182,7 @@ function SystemAccountFeatures() {
 
   const accountOptions: FeatureSelectOption[] = accounts.map(account => ({ value: account.accountId, label: account.name }));
 
-  const rows: TableRow[] = accounts.flatMap(account =>
+  const rows = accounts.flatMap(account =>
     (featuresByAccount[account.accountId] || []).map(feature => ({
       account: <TextCell>{account.name}</TextCell>,
       feature: <TextCell>{feature.featureKey}</TextCell>,

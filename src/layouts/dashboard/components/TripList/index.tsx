@@ -14,44 +14,14 @@
 *  limitations under the License.
 */
 
-import type { ReactNode } from "react";
 import Card from "@mui/material/Card";
 import Icon from "@mui/material/Icon";
-import ArgonBoxBase from "components/ArgonBox";
-import ArgonTypographyBase from "components/ArgonTypography";
+import ArgonBox from "components/ArgonBox";
+import ArgonTypography from "components/ArgonTypography";
 import SingleTrip from "layouts/dashboard/components/TripList/SingleTrip";
 import { formatDateTime } from "utils/dateUtils";
 import { useTheme } from '@mui/material/styles';
 import type { Trip } from "api/router/router";
-
-// Vendored (untyped) Argon primitives — type the prop slice crossing the boundary.
-interface ArgonBoxProps {
-  component?: string;
-  display?: string;
-  flexDirection?: string;
-  justifyContent?: string;
-  alignItems?: string;
-  color?: string;
-  pt?: number;
-  pb?: number;
-  px?: number;
-  p?: number;
-  m?: number;
-  mr?: number;
-  lineHeight?: number;
-  sx?: object;
-  onClick?: () => void;
-  children?: ReactNode;
-}
-const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
-
-interface ArgonTypographyProps {
-  variant?: string;
-  color?: string;
-  fontWeight?: string;
-  children?: ReactNode;
-}
-const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
 
 /** The (partial) replay filter values consumed for the date-range header. */
 interface TripListFilters {

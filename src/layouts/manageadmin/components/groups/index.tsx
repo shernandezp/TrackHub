@@ -15,56 +15,16 @@
 */
 
 import { useState } from 'react';
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import TableBase from "controls/Tables/Table";
-import TableAccordionBase from "controls/Accordions/TableAccordion";
+import Table from "controls/Tables/Table";
+import TableAccordion from "controls/Accordions/TableAccordion";
 import GroupFormDialog from 'layouts/manageadmin/components/groups/GroupDialog';
 import TransporterAllocatorDialog from 'layouts/manageadmin/components/groups/TransporterAllocatorDialog';
 import UserAllocatorDialog from 'layouts/manageadmin/components/groups/UserAllocatorDialog';
 import useForm from 'controls/Dialogs/useForm';
-import ConfirmDialogBase from 'controls/Dialogs/ConfirmDialog';
+import ConfirmDialog from 'controls/Dialogs/ConfirmDialog';
 import useGroupTableData from "layouts/manageadmin/data/groupsTableData";
 import type { GroupFormValues, GroupColumn, GroupRow } from "layouts/manageadmin/data/groupsTableData";
-
-// Change event shape emitted by the vendored dialog controls.
-type FormChangeHandler = (
-  event: { target: { name: string; value: string; type?: string; checked?: boolean } }
-) => void;
-
-// The vendored useForm hook is still JS; type its tuple result at the boundary.
-type GroupUseFormResult = [
-  GroupFormValues,
-  FormChangeHandler,
-  (values: GroupFormValues) => void,
-  (errors: Record<string, string>) => void,
-  (requiredFields: string[]) => boolean,
-  Record<string, string>,
-];
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface TableProps { columns: GroupColumn[]; rows: GroupRow[]; selectedField?: string; }
-const Table = TableBase as unknown as (props: TableProps) => ReactNode;
-
-interface TableAccordionProps {
-  title: string;
-  showAddIcon?: boolean;
-  expanded: boolean;
-  setOpen?: (open: boolean) => void;
-  handleAddClick?: () => void;
-  setExpanded: (expanded: boolean) => void;
-  children?: ReactNode;
-}
-const TableAccordion = TableAccordionBase as unknown as (props: TableAccordionProps) => ReactNode;
-
-interface ConfirmDialogProps {
-  title: string;
-  message: string;
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  onConfirm: () => void | Promise<void>;
-}
-const ConfirmDialog = ConfirmDialogBase as unknown as (props: ConfirmDialogProps) => ReactNode;
 
 function ManageGroups() {
   const { t } = useTranslation();
@@ -102,7 +62,7 @@ function ManageGroups() {
     setOpen,
     setConfirmOpen} = useGroupTableData(expanded, handleEditClick, handleDeleteClick, handleUserClick, handleTransporterClick);
 
-  const [values, handleChange, setValues, setErrors, validate, errors] = useForm({}) as GroupUseFormResult;
+  const [values, handleChange, setValues, setErrors, validate, errors] = useForm<GroupFormValues>({});
   const [toDelete, setToDelete] = useState<number | null>(null);
   const { columns, rows } = data;
   const [groupId, setGroupId] = useState(0);

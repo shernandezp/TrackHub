@@ -15,19 +15,9 @@
 */
 
 import { useState } from 'react';
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import PolicyAssignmentTable from 'layouts/systemadmin/components/policies/PolicyAssignmentTable';
-import TableAccordionBase from "controls/Accordions/TableAccordion";
-
-// Vendored (untyped) control — type the prop slice crossing the boundary.
-interface TableAccordionProps {
-  title: string;
-  expanded: boolean;
-  setExpanded: (expanded: boolean) => void;
-  children?: ReactNode;
-}
-const TableAccordion = TableAccordionBase as unknown as (props: TableAccordionProps) => ReactNode;
+import TableAccordion from "controls/Accordions/TableAccordion";
 
 function ManagePolicies() {
   const { t } = useTranslation();

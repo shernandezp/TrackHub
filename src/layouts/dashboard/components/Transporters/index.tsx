@@ -15,11 +15,10 @@
 */
 
 import { useState, useEffect, useContext, useRef, useMemo, useCallback } from 'react';
-import type { ReactNode, Ref } from 'react';
 import Grid from "@mui/material/Grid";
 import Chip from "@mui/material/Chip";
-import ArgonBoxBase from "components/ArgonBox";
-import DetailedStatisticsCardBase from "controls/Cards/StatisticsCards/DetailedStatisticsCard";
+import ArgonBox from "components/ArgonBox";
+import DetailedStatisticsCard from "controls/Cards/StatisticsCards/DetailedStatisticsCard";
 import TransportersTable from "layouts/dashboard/components/TransportersTable";
 import RefreshCounter from 'layouts/dashboard/components/RefreshCounter';
 import FilterBar from 'layouts/dashboard/components/Transporters/FilterBar';
@@ -63,27 +62,6 @@ const TRAIL_LENGTH = 10;
 
 /** A per-type total shown as a chip / stat summary. */
 interface TypeSummaryItem { name: string; total: number; }
-
-// Vendored (untyped) Argon primitive — type the prop slice crossing the boundary.
-interface ArgonBoxProps {
-  py?: number;
-  mb?: number;
-  display?: string;
-  flexWrap?: string;
-  gap?: number;
-  ref?: Ref<HTMLDivElement>;
-  children?: ReactNode;
-}
-const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
-
-// Vendored (untyped) statistics card — type the prop slice crossing the boundary.
-interface DetailedStatisticsCardProps {
-  title: string;
-  count: number;
-  icon: { color: string; component: ReactNode; onClick?: () => void };
-  percentage: { color: string; hide?: boolean; count?: string };
-}
-const DetailedStatisticsCard = DetailedStatisticsCardBase as unknown as (props: DetailedStatisticsCardProps) => ReactNode;
 
 interface TransportersProps {
   searchQuery: string;
@@ -397,7 +375,7 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
                     title={t("dashboard.totalTitle")}
                     count={positions.length}
                     icon={{ color: "info", component: <i className="ni ni-map-big" /> }}
-                    percentage={{ color: "success", hide: true }}
+                    percentage={{ color: "success", count: "", hide: true }}
                 />
             </Grid>
             <Grid size={{xs: 12, md:6, lg:3}}>
@@ -405,7 +383,7 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
                     title={t("dashboard.activeTitle")}
                     count={active}
                     icon={{ color: "error", component: <i className="ni ni-watch-time" /> }}
-                    percentage={{ color: "success", count: `${getPercentage(active, positions.length)}%` }}
+                    percentage={{ color: "success", count: `${getPercentage(active, positions.length)}%`, hide: false }}
                 />
             </Grid>
             <Grid size={{xs:12, md:6, lg:3}}>
@@ -413,7 +391,7 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
                     title={t("dashboard.movementTitle")}
                     count={movement}
                     icon={{ color: "success", component: <i className="ni ni-button-play" /> }}
-                    percentage={{ color: "error", count: `${getPercentage(movement, positions.length)}%` }}
+                    percentage={{ color: "error", count: `${getPercentage(movement, positions.length)}%`, hide: false }}
                 />
             </Grid>
             <Grid size={{xs: 12, md:6, lg:3}}>
@@ -424,7 +402,7 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
                       color: "warning",
                       onClick: () => setShowGeofence(!showGeofence),
                       component: <i className="ni ni-pin-3" /> }}
-                    percentage={{ color: "success", count: `${getPercentage(inGeofence, positions.length)}%` }}
+                    percentage={{ color: "success", count: `${getPercentage(inGeofence, positions.length)}%`, hide: false }}
                 />
             </Grid>
         </Grid>

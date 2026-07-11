@@ -17,10 +17,10 @@
 import { useEffect, useMemo, useState, useContext } from "react";
 import type { ReactNode } from "react";
 import { useTranslation } from 'react-i18next';
-import { Name as NameBase, Description as DescriptionBase } from "controls/Tables/components/tableComponents";
+import { Name, Description } from "controls/Tables/components/tableComponents";
 import Icon from "@mui/material/Icon";
-import ArgonBadgeBase from "components/ArgonBadge";
-import ArgonButtonBase from "components/ArgonButton";
+import ArgonBadge from "components/ArgonBadge";
+import ArgonButton from "components/ArgonButton";
 import { useAccountByUser } from "queries/accounts";
 import {
   usePointsOfInterestByAccount,
@@ -64,8 +64,9 @@ export interface PoiFormValues {
 export interface PoiGroupOption { value: number; label: string; }
 
 /** A column descriptor / rendered row for the vendored POIs `Table`. */
-export interface PoiColumn { name: string; title?: string; align?: string; }
+export interface PoiColumn { name: string; title?: string; align?: "left" | "right" | "center"; }
 export interface PoiRow {
+  [key: string]: ReactNode;
   name: ReactNode;
   type: ReactNode;
   coordinates: ReactNode;
@@ -75,14 +76,6 @@ export interface PoiRow {
   id: string;
 }
 export interface PoiTableData { columns: PoiColumn[]; rows: PoiRow[]; }
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-const Name = NameBase as unknown as (props: { name: ReactNode }) => ReactNode;
-const Description = DescriptionBase as unknown as (props: { description?: ReactNode }) => ReactNode;
-interface ArgonBadgeProps { variant?: string; color?: string; badgeContent?: ReactNode; size?: string; container?: boolean; }
-const ArgonBadge = ArgonBadgeBase as unknown as (props: ArgonBadgeProps) => ReactNode;
-interface ArgonButtonProps { variant?: string; color?: string; onClick?: () => void; children?: ReactNode; }
-const ArgonButton = ArgonButtonBase as unknown as (props: ArgonButtonProps) => ReactNode;
 
 function usePoiTableData(
   fetchData: boolean,

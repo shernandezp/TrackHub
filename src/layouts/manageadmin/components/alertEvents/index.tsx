@@ -18,28 +18,16 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from '@mui/material/Icon';
-import TableBase from "controls/Tables/Table";
-import TableAccordionBase from "controls/Accordions/TableAccordion";
-import ArgonButtonBase from "components/ArgonButton";
-import ArgonTypographyBase from "components/ArgonTypography";
+import Table from "controls/Tables/Table";
+import TableAccordion from "controls/Accordions/TableAccordion";
+import ArgonButton from "components/ArgonButton";
+import ArgonTypography from "components/ArgonTypography";
 import { getAccountByUser } from "api/manager/accounts";
 import { getAlertEvents, acknowledgeAlertEvent, resolveAlertEvent } from "api/manager/alertEvents";
 import type { AlertEvent } from "api/manager/alertEvents";
 import { notifyApiError } from "api/core/errors";
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from "utils/dateUtils";
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface TableColumn { name: string; title?: string; align?: string; }
-type TableRow = Record<string, ReactNode>;
-interface TableProps { columns: TableColumn[]; rows: TableRow[]; selectedField?: string; }
-const Table = TableBase as unknown as (props: TableProps) => ReactNode;
-interface TableAccordionProps { title: string; expanded: boolean; setExpanded: (expanded: boolean) => void; children?: ReactNode; }
-const TableAccordion = TableAccordionBase as unknown as (props: TableAccordionProps) => ReactNode;
-interface ArgonButtonProps { variant?: string; color?: string; onClick?: () => void; children?: ReactNode; }
-const ArgonButton = ArgonButtonBase as unknown as (props: ArgonButtonProps) => ReactNode;
-interface ArgonTypographyProps { variant?: string; color?: string; fontWeight?: string; children?: ReactNode; }
-const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
 
 function TextCell({ children }: { children?: ReactNode }) {
   return (

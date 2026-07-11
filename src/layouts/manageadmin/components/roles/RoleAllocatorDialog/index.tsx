@@ -15,43 +15,13 @@
 */
 
 import { useState, useEffect, useContext } from 'react';
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import DynamicTableDialogBase from 'controls/Dialogs/TableDialogs/DynamicTableDialog';
-import CustomSelectBase from 'controls/Dialogs/CustomSelect';
+import DynamicTableDialog from 'controls/Dialogs/TableDialogs/DynamicTableDialog';
+import CustomSelect from 'controls/Dialogs/CustomSelect';
+import type { FormChangeHandler } from 'controls/Dialogs/useForm';
 import { useUsersByAccount } from 'queries/users';
 import { useUsersByRole, useCreateUserRole, useDeleteUserRole } from 'queries/roles';
 import { LoadingContext } from 'LoadingContext';
-
-// Change event shape emitted by the vendored dialog controls.
-type FormChangeHandler = (
-  event: { target: { name: string; value: string; type?: string; checked?: boolean } }
-) => void;
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface DynamicTableDialogProps {
-  title: string;
-  handleAdd: () => void | Promise<void>;
-  handleDelete: (selectedRows: number[]) => void | Promise<void>;
-  handleClose: () => void | Promise<void>;
-  open: boolean;
-  data: readonly unknown[];
-  columns: { field: string; headerName: string }[];
-  children?: ReactNode;
-}
-const DynamicTableDialog = DynamicTableDialogBase as unknown as (props: DynamicTableDialogProps) => ReactNode;
-
-interface CustomSelectProps {
-  list: readonly unknown[];
-  name: string;
-  id: string;
-  label: string;
-  value: string | number | undefined;
-  handleChange: FormChangeHandler;
-  numericValue?: boolean;
-  required?: boolean;
-}
-const CustomSelect = CustomSelectBase as unknown as (props: CustomSelectProps) => ReactNode;
 
 interface RoleAllocatorDialogProps {
   open: boolean;
@@ -90,7 +60,7 @@ function RoleAllocatorDialog({ open, setOpen, roleId }: RoleAllocatorDialogProps
 
   const handleChange: FormChangeHandler = (event) => {
     setLoading(true);
-    setUserId(event.target.value);
+    setUserId(String(event.target.value ?? ''));
     setLoading(false);
   };
 

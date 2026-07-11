@@ -15,14 +15,13 @@
 */
 
 import { useState } from 'react';
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import TableBase from "controls/Tables/Table";
-import TableAccordionBase from "controls/Accordions/TableAccordion";
+import Table from "controls/Tables/Table";
+import TableAccordion from "controls/Accordions/TableAccordion";
 import UserFormDialog from 'layouts/manageadmin/components/users/UserDialog';
 import PasswordFormDialog from 'layouts/manageadmin/components/users/PasswordDialog';
 import useForm from 'controls/Dialogs/useForm';
-import ConfirmDialogBase from 'controls/Dialogs/ConfirmDialog';
+import ConfirmDialog from 'controls/Dialogs/ConfirmDialog';
 import useUserTableData from "layouts/manageadmin/data/usersTableData";
 import type {
   UserFormValues,
@@ -36,47 +35,6 @@ type FormChangeHandler = (
   event: { target: { name: string; value: string; type?: string; checked?: boolean } }
 ) => void;
 
-// The vendored useForm hook is still JS; type its tuple result at the boundary.
-type UserUseFormResult = [
-  UserFormValues,
-  FormChangeHandler,
-  (values: UserFormValues) => void,
-  (errors: Record<string, string>) => void,
-  (requiredFields: string[]) => boolean,
-  Record<string, string>,
-];
-type PasswordUseFormResult = [
-  PasswordFormValues,
-  FormChangeHandler,
-  (values: PasswordFormValues) => void,
-  (errors: Record<string, string>) => void,
-  (requiredFields: string[]) => boolean,
-  Record<string, string>,
-];
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface TableProps { columns: UserTableColumn[]; rows: UserTableRow[]; selectedField?: string; }
-const Table = TableBase as unknown as (props: TableProps) => ReactNode;
-
-interface TableAccordionProps {
-  title: string;
-  showAddIcon?: boolean;
-  expanded: boolean;
-  setOpen?: (open: boolean) => void;
-  handleAddClick?: () => void;
-  setExpanded: (expanded: boolean) => void;
-  children?: ReactNode;
-}
-const TableAccordion = TableAccordionBase as unknown as (props: TableAccordionProps) => ReactNode;
-
-interface ConfirmDialogProps {
-  title: string;
-  message: string;
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  onConfirm: () => void | Promise<void>;
-}
-const ConfirmDialog = ConfirmDialogBase as unknown as (props: ConfirmDialogProps) => ReactNode;
 
 function ManageUsers() {
   const { t } = useTranslation();
@@ -112,8 +70,8 @@ function ManageUsers() {
     setOpenPassword,
     setConfirmOpen} = useUserTableData(expanded, handleEditClick, handleUpdatePasswordClick, handleDeleteClick);
 
-  const [userValues, handleUserChange, setUserValues, setUserErrors, validateUser, userErrors] = useForm({}) as UserUseFormResult;
-  const [passwordValues, handlePasswordChange, setPasswordValues, setPasswordErrors, validatePassword, passwordErrors] = useForm({}) as PasswordUseFormResult;
+  const [userValues, handleUserChange, setUserValues, setUserErrors, validateUser, userErrors] = useForm<UserFormValues>({});
+  const [passwordValues, handlePasswordChange, setPasswordValues, setPasswordErrors, validatePassword, passwordErrors] = useForm<PasswordFormValues>({});
   const [toDelete, setToDelete] = useState<string | null>(null);
   const { columns, rows } = data;
 

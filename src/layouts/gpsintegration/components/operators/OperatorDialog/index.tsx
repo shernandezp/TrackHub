@@ -14,59 +14,18 @@
 *  limitations under the License.
 */
 
-import type { ReactNode } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
-import FormDialogBase from "controls/Dialogs/FormDialog";
-import CustomTextFieldBase from 'controls/Dialogs/CustomTextField';
-import CustomSelectBase from 'controls/Dialogs/CustomSelect';
+import FormDialog from "controls/Dialogs/FormDialog";
+import CustomTextField from 'controls/Dialogs/CustomTextField';
+import CustomSelect from 'controls/Dialogs/CustomSelect';
+import type { FormChangeHandler } from 'controls/Dialogs/useForm';
 import protocolTypes from 'data/protocolTypes';
 import type { OperatorFormValues } from 'layouts/gpsintegration/data/operatorsTableData';
 
-// Change event shape emitted by the vendored dialog controls.
-type FormChangeHandler = (
-  event: { target: { name: string; value: string; type?: string; checked?: boolean } }
-) => void;
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface FormDialogProps {
-  title: string;
-  handleSave: () => void | Promise<void>;
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  maxWidth?: string;
-  children?: ReactNode;
-}
-const FormDialog = FormDialogBase as unknown as (props: FormDialogProps) => ReactNode;
-
-interface CustomTextFieldProps {
-  autoFocus?: boolean;
-  margin?: string;
-  name: string;
-  id: string;
-  label: string;
-  type?: string;
-  fullWidth?: boolean;
-  value: string | number;
-  onChange: FormChangeHandler;
-  required?: boolean;
-  errorMsg?: string;
-}
-const CustomTextField = CustomTextFieldBase as unknown as (props: CustomTextFieldProps) => ReactNode;
-
-interface CustomSelectProps {
-  list: readonly unknown[];
-  handleChange: FormChangeHandler;
-  name: string;
-  id: string;
-  label: string;
-  value: string | number | undefined;
-  required?: boolean;
-}
-const CustomSelect = CustomSelectBase as unknown as (props: CustomSelectProps) => ReactNode;
-
 interface OperatorFormDialogProps {
   open: boolean;
-  setOpen: (open: boolean) => void;
+  setOpen: Dispatch<SetStateAction<boolean>>;
   handleSubmit: () => void | Promise<void>;
   values: OperatorFormValues;
   handleChange: FormChangeHandler;
@@ -163,7 +122,7 @@ function OperatorFormDialog({ open, setOpen, handleSubmit, values, handleChange,
           />
 
           <CustomSelect
-            list={protocolTypes}
+            list={[...protocolTypes]}
             handleChange={handleChange}
             name="protocolTypeId"
             id="protocolTypeId"

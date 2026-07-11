@@ -14,12 +14,12 @@
 *  limitations under the License.
 */
 
-import type { ReactNode } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
-import FormDialogBase from "controls/Dialogs/FormDialog";
-import CustomTextFieldBase from 'controls/Dialogs/CustomTextField';
-import ArgonBoxBase from "components/ArgonBox";
-import ArgonTypographyBase from "components/ArgonTypography";
+import FormDialog from "controls/Dialogs/FormDialog";
+import CustomTextField from 'controls/Dialogs/CustomTextField';
+import ArgonBox from "components/ArgonBox";
+import ArgonTypography from "components/ArgonTypography";
 
 // Change event shape emitted by the vendored dialog controls.
 type FormChangeHandler = (
@@ -35,42 +35,9 @@ export interface PublicLinkFormValues {
   expiresAt?: string;
 }
 
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface FormDialogProps {
-  title: string;
-  handleSave: () => void | Promise<void>;
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  maxWidth?: string;
-  children?: ReactNode;
-}
-const FormDialog = FormDialogBase as unknown as (props: FormDialogProps) => ReactNode;
-interface CustomTextFieldProps {
-  autoFocus?: boolean;
-  margin?: string;
-  name: string;
-  id: string;
-  label: string;
-  type?: string;
-  fullWidth?: boolean;
-  multiline?: boolean;
-  minRows?: number;
-  value: string | number;
-  onChange: FormChangeHandler;
-  required?: boolean;
-  errorMsg?: string;
-  InputProps?: object;
-  InputLabelProps?: object;
-}
-const CustomTextField = CustomTextFieldBase as unknown as (props: CustomTextFieldProps) => ReactNode;
-interface ArgonBoxProps { p?: number; mt?: number; children?: ReactNode; }
-const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
-interface ArgonTypographyProps { variant?: string; color?: string; fontWeight?: string; children?: ReactNode; }
-const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
-
 interface PublicLinkDialogProps {
   open: boolean;
-  setOpen: (open: boolean) => void;
+  setOpen: Dispatch<SetStateAction<boolean>>;
   handleSubmit: () => void | Promise<void>;
   values: PublicLinkFormValues;
   handleChange: FormChangeHandler;

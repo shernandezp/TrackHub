@@ -30,17 +30,17 @@ Coded by www.creative-tim.com
 */
 
 import { useEffect, useContext } from "react";
-import type { ReactNode } from "react";
 
 // @mui material components
 import Grid from "@mui/material/Grid";
+import type { Theme } from "@mui/material/styles";
 
 // Argon Dashboard 2 MUI components
-import ArgonBoxBase from "components/ArgonBox";
+import ArgonBox from "components/ArgonBox";
 
 // Argon Dashboard 2 MUI example components
-import DashboardLayoutBase from "controls/LayoutContainers/DashboardLayout";
-import FooterBase from "controls/Footer";
+import DashboardLayout from "controls/LayoutContainers/DashboardLayout";
+import Footer from "controls/Footer";
 import ProfileInfoCard from "layouts/profile/components/ProfileInfoCard";
 import UserPartOf from "layouts/profile/components/UserPartOf";
 
@@ -55,33 +55,6 @@ import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
 
 const bgImage = "assets/images/vr-bg.jpg";
-
-// Argon theme functions surfaced through the DashboardLayout `sx` callback.
-interface ArgonThemeFns {
-  functions: {
-    rgba: (color: string, opacity: number) => string;
-    linearGradient: (color1: string, color2: string) => string;
-  };
-  palette: {
-    gradients: { info: { main: string; state: string } };
-  };
-}
-
-// Vendored (untyped) Argon primitives / layout — type the props crossing the boundary.
-interface DashboardLayoutProps {
-  children?: ReactNode;
-  sx?: object;
-}
-const DashboardLayout = DashboardLayoutBase as unknown as (props: DashboardLayoutProps) => ReactNode;
-
-const Footer = FooterBase as unknown as () => ReactNode;
-
-interface ArgonBoxProps {
-  children?: ReactNode;
-  mt?: string | number;
-  mb?: string | number;
-}
-const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
 
 function Overview() {
   const { setLoading } = useContext(LoadingContext);
@@ -117,7 +90,7 @@ function Overview() {
   return (
     <DashboardLayout
       sx={{
-        backgroundImage: ({ functions: { rgba, linearGradient }, palette: { gradients } }: ArgonThemeFns) =>
+        backgroundImage: ({ functions: { rgba, linearGradient }, palette: { gradients } }: Theme) =>
           `${linearGradient(
             rgba(gradients.info.main, 0.6),
             rgba(gradients.info.state, 0.6)

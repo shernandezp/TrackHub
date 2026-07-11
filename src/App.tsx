@@ -40,10 +40,10 @@ import CssBaseline from "@mui/material/CssBaseline";
 import Icon from "@mui/material/Icon";
 
 // Argon Dashboard 2 MUI components
-import ArgonBoxBase from "components/ArgonBox";
+import ArgonBox from "components/ArgonBox";
 
 // Argon Dashboard 2 MUI example components
-import SidenavBase from "controls/Sidenav";
+import Sidenav from "controls/Sidenav";
 import Configurator from "controls/Configurator";
 
 // Argon Dashboard 2 MUI themes
@@ -86,39 +86,6 @@ import { useTranslation } from 'react-i18next';
 import ErrorBoundary from "components/ErrorBoundary";
 import SuspensionScreen from "components/SuspensionScreen";
 import PrincipalTypes from "constants/principalTypes";
-
-// Vendored (untyped) Argon primitives — type the props crossing the boundary.
-interface ArgonBoxConfigProps {
-  display?: string;
-  justifyContent?: string;
-  alignItems?: string;
-  width?: string;
-  height?: string;
-  bgColor?: string;
-  shadow?: string;
-  borderRadius?: string;
-  position?: string;
-  right?: string;
-  bottom?: string;
-  zIndex?: number;
-  color?: string;
-  sx?: object;
-  onClick?: () => void;
-  children?: ReactNode;
-}
-const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxConfigProps) => ReactNode;
-
-interface SidenavProps {
-  brand?: string;
-  brandName: string;
-  routes: RouteDefinition[];
-  onMouseEnter?: () => void;
-  onMouseLeave?: () => void;
-  isAdmin?: boolean;
-  isManager?: boolean;
-  currentPrincipal?: CurrentPrincipal | null;
-}
-const Sidenav = SidenavBase as unknown as (props: SidenavProps) => ReactNode;
 
 export default function App() {
   const [controller, dispatch] = useArgonController();

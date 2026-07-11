@@ -15,58 +15,14 @@
 */
 
 import { useState } from 'react';
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import TableBase from "controls/Tables/Table";
-import TableAccordionBase from "controls/Accordions/TableAccordion";
+import Table from "controls/Tables/Table";
+import TableAccordion from "controls/Accordions/TableAccordion";
 import GeocodingProviderFormDialog from 'layouts/systemadmin/components/geocodingProviders/GeocodingProviderDialog';
 import useForm from 'controls/Dialogs/useForm';
-import ConfirmDialogBase from 'controls/Dialogs/ConfirmDialog';
+import ConfirmDialog from 'controls/Dialogs/ConfirmDialog';
 import useGeocodingProvidersTableData from 'layouts/systemadmin/data/geocodingProvidersTableData';
-import type {
-  GeocodingProviderFormValues,
-  GeocodingProviderTableColumn,
-  GeocodingProviderTableRow,
-} from 'layouts/systemadmin/data/geocodingProvidersTableData';
-
-// Change event shape emitted by the vendored dialog controls.
-type FormChangeHandler = (
-  event: { target: { name: string; value: string; type?: string; checked?: boolean } }
-) => void;
-
-// The vendored useForm hook is still JS; type its tuple result at the boundary.
-type GeocodingProviderUseFormResult = [
-  GeocodingProviderFormValues,
-  FormChangeHandler,
-  (values: GeocodingProviderFormValues) => void,
-  (errors: Record<string, string>) => void,
-  (requiredFields: string[]) => boolean,
-  Record<string, string>,
-];
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface TableProps { columns: GeocodingProviderTableColumn[]; rows: GeocodingProviderTableRow[]; selectedField?: string; }
-const Table = TableBase as unknown as (props: TableProps) => ReactNode;
-
-interface TableAccordionProps {
-  title: string;
-  showAddIcon?: boolean;
-  expanded: boolean;
-  setOpen?: (open: boolean) => void;
-  handleAddClick?: () => void;
-  setExpanded: (expanded: boolean) => void;
-  children?: ReactNode;
-}
-const TableAccordion = TableAccordionBase as unknown as (props: TableAccordionProps) => ReactNode;
-
-interface ConfirmDialogProps {
-  title: string;
-  message: string;
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  onConfirm: () => void | Promise<void>;
-}
-const ConfirmDialog = ConfirmDialogBase as unknown as (props: ConfirmDialogProps) => ReactNode;
+import type { GeocodingProviderFormValues } from 'layouts/systemadmin/data/geocodingProvidersTableData';
 
 function ManageGeocodingProviders() {
   const { t } = useTranslation();
@@ -94,7 +50,7 @@ function ManageGeocodingProviders() {
     setOpen,
     setConfirmOpen} = useGeocodingProvidersTableData(expanded, handleEditClick, handleDeleteClick);
 
-  const [values, handleChange, setValues, setErrors, validate, errors] = useForm({}) as GeocodingProviderUseFormResult;
+  const [values, handleChange, setValues, setErrors, validate, errors] = useForm<GeocodingProviderFormValues>({});
   const [toDelete, setToDelete] = useState<string | null>(null);
   const { columns, rows } = data;
 

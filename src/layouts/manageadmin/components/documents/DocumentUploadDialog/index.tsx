@@ -15,20 +15,15 @@
 */
 
 import { useRef, useState } from 'react';
-import type { ReactNode, ChangeEvent, DragEvent } from 'react';
+import type { ChangeEvent, DragEvent, Dispatch, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
-import FormDialogBase from "controls/Dialogs/FormDialog";
-import CustomTextFieldBase from 'controls/Dialogs/CustomTextField';
-import CustomSelectBase from 'controls/Dialogs/CustomSelect';
+import FormDialog from "controls/Dialogs/FormDialog";
+import CustomTextField from 'controls/Dialogs/CustomTextField';
+import CustomSelect from 'controls/Dialogs/CustomSelect';
 import useForm from "controls/Dialogs/useForm";
-import ArgonBoxBase from "components/ArgonBox";
-import ArgonTypographyBase from "components/ArgonTypography";
+import ArgonBox from "components/ArgonBox";
+import ArgonTypography from "components/ArgonTypography";
 import type { DocumentTypeVm } from "api/manager/documents";
-
-// Change event shape emitted by the vendored dialog controls.
-type FormChangeHandler = (
-  event: { target: { name: string; value: string; type?: string; checked?: boolean } }
-) => void;
 
 /** The payload emitted by {@link DocumentUploadDialog} on save (file + metadata). */
 export interface UploadPayload {
@@ -51,70 +46,12 @@ interface UploadFormValues {
   reason?: string;
 }
 
-// The vendored useForm hook is still JS; type its tuple result at the boundary.
-type UploadUseFormResult = [
-  UploadFormValues,
-  FormChangeHandler,
-  (values: UploadFormValues) => void,
-  (errors: Record<string, string>) => void,
-  (requiredFields: string[]) => boolean,
-  Record<string, string>,
-];
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface FormDialogProps {
-  title: string;
-  handleSave: () => void | Promise<void>;
-  handleCancel?: () => void;
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  maxWidth?: string;
-  children?: ReactNode;
-}
-const FormDialog = FormDialogBase as unknown as (props: FormDialogProps) => ReactNode;
-interface CustomTextFieldProps {
-  margin?: string;
-  name: string;
-  id: string;
-  label: string;
-  type?: string;
-  fullWidth?: boolean;
-  value: string | number;
-  onChange: FormChangeHandler;
-  required?: boolean;
-  errorMsg?: string;
-  InputLabelProps?: object;
-}
-const CustomTextField = CustomTextFieldBase as unknown as (props: CustomTextFieldProps) => ReactNode;
-interface CustomSelectProps {
-  name: string;
-  id: string;
-  label: string;
-  list: readonly { value: string; label: string }[];
-  numericValue?: boolean;
-  value: string | number | undefined;
-  handleChange: FormChangeHandler;
-  required?: boolean;
-}
-const CustomSelect = CustomSelectBase as unknown as (props: CustomSelectProps) => ReactNode;
-interface ArgonBoxProps {
-  mt?: number;
-  onDragOver?: (event: DragEvent<HTMLDivElement>) => void;
-  onDragLeave?: () => void;
-  onDrop?: (event: DragEvent<HTMLDivElement>) => void;
-  onClick?: () => void;
-  sx?: object;
-  children?: ReactNode;
-}
-const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
-interface ArgonTypographyProps { variant?: string; color?: string; fontWeight?: string; children?: ReactNode; }
-const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
 
 const CLASSIFICATIONS = ['Public', 'Internal', 'Confidential', 'Legal'];
 
 interface DocumentUploadDialogProps {
   open: boolean;
-  setOpen: (open: boolean) => void;
+  setOpen: Dispatch<SetStateAction<boolean>>;
   onUpload: (payload: UploadPayload) => void | Promise<void>;
   categories?: DocumentTypeVm[];
   replaceMode?: boolean;
@@ -124,7 +61,7 @@ interface DocumentUploadDialogProps {
 // classification metadata; the drop area accepts drag-and-drop or click-to-select.
 function DocumentUploadDialog({ open, setOpen, onUpload, categories = [], replaceMode = false }: DocumentUploadDialogProps) {
   const { t } = useTranslation();
-  const [values, handleChange, setValues, setErrors, validate, errors] = useForm({ classification: 'Internal' }) as UploadUseFormResult;
+  const [values, handleChange, setValues, setErrors, validate, errors] = useForm<UploadFormValues>({ classification: 'Internal' });
   const [file, setFile] = useState<File | null>(null);
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);

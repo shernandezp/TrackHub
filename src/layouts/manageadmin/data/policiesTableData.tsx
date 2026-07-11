@@ -17,9 +17,9 @@
 import { useEffect, useMemo, useContext } from "react";
 import type { ReactNode } from "react";
 import { useTranslation } from 'react-i18next';
-import { Name as NameBase } from "controls/Tables/components/tableComponents";
+import { Name } from "controls/Tables/components/tableComponents";
 import Icon from "@mui/material/Icon";
-import ArgonButtonBase from "components/ArgonButton";
+import ArgonButton from "components/ArgonButton";
 import { usePolicies } from "queries/policies";
 import type { Policy } from "api/security/policies";
 import { LoadingContext } from 'LoadingContext';
@@ -27,14 +27,9 @@ import { toCamelCase } from 'utils/stringUtils';
 import { useAuth } from "AuthContext";
 
 /** A column descriptor / rendered row for the vendored policies `Table`. */
-export interface PolicyTableColumn { name: string; title?: string; align?: string; }
+export interface PolicyTableColumn { name: string; title?: string; align?: "left" | "right" | "center"; }
 export type PolicyTableRow = Record<string, ReactNode>;
 export interface PolicyTableData { columns: PolicyTableColumn[]; rows: PolicyTableRow[]; }
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-const Name = NameBase as unknown as (props: { name?: ReactNode }) => ReactNode;
-interface ArgonButtonProps { variant?: string; color?: string; onClick?: () => void; children?: ReactNode; }
-const ArgonButton = ArgonButtonBase as unknown as (props: ArgonButtonProps) => ReactNode;
 
 function usePolicyTableData(fetchData: boolean, handleOpenClick: (policyId: number) => void) {
   const { t } = useTranslation();

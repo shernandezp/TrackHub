@@ -17,10 +17,10 @@
 import { useEffect, useMemo, useState, useContext } from "react";
 import type { ReactNode } from "react";
 import { useTranslation } from 'react-i18next';
-import { NameDetail as NameDetailBase } from "controls/Tables/components/tableComponents";
+import { NameDetail } from "controls/Tables/components/tableComponents";
 import Icon from "@mui/material/Icon";
-import ArgonTypographyBase from "components/ArgonTypography";
-import ArgonButtonBase from "components/ArgonButton";
+import ArgonTypography from "components/ArgonTypography";
+import ArgonButton from "components/ArgonButton";
 import {
   useUsersByAccount,
   useCreateUser,
@@ -61,16 +61,9 @@ export interface PasswordFormValues {
 }
 
 /** A column descriptor / rendered row for the vendored users `Table`. */
-export interface UserTableColumn { name: string; title?: string; align?: string; }
+export interface UserTableColumn { name: string; title?: string; align?: "left" | "right" | "center"; }
 export type UserTableRow = Record<string, ReactNode>;
 export interface UserTableData { columns: UserTableColumn[]; rows: UserTableRow[]; }
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-const NameDetail = NameDetailBase as unknown as (props: { name?: ReactNode; detail?: ReactNode }) => ReactNode;
-interface ArgonTypographyProps { variant?: string; color?: string; fontWeight?: string; component?: string; href?: string; onClick?: () => void; children?: ReactNode; }
-const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
-interface ArgonButtonProps { variant?: string; color?: string; onClick?: () => void; disabled?: boolean; children?: ReactNode; }
-const ArgonButton = ArgonButtonBase as unknown as (props: ArgonButtonProps) => ReactNode;
 
 function useUserTableData(
   fetchData: boolean,

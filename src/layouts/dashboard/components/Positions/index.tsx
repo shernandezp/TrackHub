@@ -15,15 +15,14 @@
 */
 
 import { useState, useEffect, useContext, useMemo, useRef } from 'react';
-import type { ReactNode } from 'react';
 import Grid from "@mui/material/Grid";
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Icon from "@mui/material/Icon";
-import ArgonBoxBase from "components/ArgonBox";
-import ArgonButtonBase from "components/ArgonButton";
-import ArgonTypographyBase from "components/ArgonTypography";
-import FilterNavbarBase from 'controls/Navbars/FilterNavbar';
+import ArgonBox from "components/ArgonBox";
+import ArgonButton from "components/ArgonButton";
+import ArgonTypography from "components/ArgonTypography";
+import FilterNavbar from 'controls/Navbars/FilterNavbar';
 import TripList from "layouts/dashboard/components/TripList";
 import TripsMap from "layouts/dashboard/components/TripsMap";
 import PlaybackControls from "layouts/dashboard/components/Positions/PlaybackControls";
@@ -47,27 +46,14 @@ import type { Geofence } from 'api/geofencing/geofencing';
 
 const POSITION_HISTORY_FEATURE_KEY = 'gps.positionHistory';
 
-// Change event shape emitted by the vendored form controls.
-type FormChangeHandler = (
-  event: { target: { name: string; value: string; type?: string; checked?: boolean } }
-) => void;
-
 /** Replay filter values managed by the vendored useForm hook. */
 interface PositionsFormValues {
   selectedItem?: string;
   startDate?: string;
   endDate?: string;
+  [key: string]: string | undefined;
 }
 
-// The vendored useForm hook is still JS; type its tuple result at the boundary.
-type UseFormResult = [
-  PositionsFormValues,
-  FormChangeHandler,
-  (values: PositionsFormValues) => void,
-  (errors: Record<string, string>) => void,
-  (requiredFields: string[]) => boolean,
-  Record<string, string>,
-];
 
 /** An option shown in the transporter selector. */
 interface FilterNavbarOption { value: string; label: string; }
@@ -79,44 +65,6 @@ interface LoadedQuery {
   to?: string;
   source: PositionSourceType;
 }
-
-// Vendored (untyped) Argon primitives / controls — type the prop slice crossing the boundary.
-interface ArgonBoxProps {
-  py?: number;
-  mb?: number;
-  ml?: string;
-  display?: string;
-  alignItems?: string;
-  gap?: number;
-  children?: ReactNode;
-}
-const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
-
-interface ArgonButtonProps {
-  variant?: string;
-  color?: string;
-  size?: string;
-  disabled?: boolean;
-  onClick?: () => void;
-  children?: ReactNode;
-}
-const ArgonButton = ArgonButtonBase as unknown as (props: ArgonButtonProps) => ReactNode;
-
-interface ArgonTypographyProps {
-  variant?: string;
-  fontWeight?: string;
-  children?: ReactNode;
-}
-const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
-
-interface FilterNavbarProps {
-  list: FilterNavbarOption[];
-  values: PositionsFormValues;
-  handleChange: FormChangeHandler;
-  errors: Record<string, string>;
-  handleSearch: () => void;
-}
-const FilterNavbar = FilterNavbarBase as unknown as (props: FilterNavbarProps) => ReactNode;
 
 interface PositionsProps {
   settings: AccountSettings;
@@ -136,7 +84,7 @@ function Positions({ settings, showGeofence, geofences }: PositionsProps) {
   const [historyEnabled, setHistoryEnabled] = useState(false);
   const [source, setSource] = useState<PositionSourceType>('PROVIDER');
   const [loadedQuery, setLoadedQuery] = useState<LoadedQuery | null>(null);
-  const [values, handleChange, setValues, setErrors, validate, errors] = useForm({}) as UseFormResult;
+  const [values, handleChange, setValues, setErrors, validate, errors] = useForm<PositionsFormValues>({});
 
   const transportersQuery = useTransportersByUser({ enabled: isAuthenticated });
   const transporters = useMemo<FilterNavbarOption[]>(

@@ -15,13 +15,12 @@
 */
 
 import { useState, useEffect, useContext, useRef } from 'react';
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import TableAccordionBase from "controls/Accordions/TableAccordion";
-import CustomTextFieldBase from 'controls/Dialogs/CustomTextField';
-import ArgonBoxBase from "components/ArgonBox";
-import ArgonButtonBase from "components/ArgonButton";
-import ArgonTypographyBase from "components/ArgonTypography";
+import TableAccordion from "controls/Accordions/TableAccordion";
+import CustomTextField from 'controls/Dialogs/CustomTextField';
+import ArgonBox from "components/ArgonBox";
+import ArgonButton from "components/ArgonButton";
+import ArgonTypography from "components/ArgonTypography";
 import useForm from 'controls/Dialogs/useForm';
 import { getAccountByUser } from "api/manager/accounts";
 import { getAccountBranding, updateAccountBranding } from "api/manager/branding";
@@ -29,48 +28,8 @@ import type { AccountBranding, AccountBrandingDtoInput } from "api/manager/brand
 import { notifyApiError } from "api/core/errors";
 import { LoadingContext } from 'LoadingContext';
 
-// Change event shape emitted by the vendored dialog controls.
-type FormChangeHandler = (
-  event: { target: { name: string; value: string; type?: string; checked?: boolean } }
-) => void;
-
 // Dialog/form state for account branding — a partial view of the API record.
 type BrandingFormValues = Partial<AccountBranding>;
-
-// The vendored useForm hook is still JS; type its tuple result at the boundary.
-type BrandingUseFormResult = [
-  BrandingFormValues,
-  FormChangeHandler,
-  (values: BrandingFormValues) => void,
-  (errors: Record<string, string>) => void,
-  (requiredFields: string[]) => boolean,
-  Record<string, string>,
-];
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface TableAccordionProps { title: string; expanded: boolean; setExpanded: (expanded: boolean) => void; children?: ReactNode; }
-const TableAccordion = TableAccordionBase as unknown as (props: TableAccordionProps) => ReactNode;
-interface CustomTextFieldProps {
-  name: string;
-  id: string;
-  label: string;
-  type?: string;
-  fullWidth?: boolean;
-  value: string | number;
-  onChange: FormChangeHandler;
-  required?: boolean;
-  errorMsg?: string;
-}
-const CustomTextField = CustomTextFieldBase as unknown as (props: CustomTextFieldProps) => ReactNode;
-interface ArgonBoxProps {
-  p?: number; mt?: number; display?: string; alignItems?: string; gap?: number;
-  width?: string; height?: string; borderRadius?: string; sx?: object; children?: ReactNode;
-}
-const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
-interface ArgonButtonProps { color?: string; onClick?: () => void; children?: ReactNode; }
-const ArgonButton = ArgonButtonBase as unknown as (props: ArgonButtonProps) => ReactNode;
-interface ArgonTypographyProps { variant?: string; color?: string; children?: ReactNode; }
-const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
 
 const HEX_COLOR = /^#[0-9A-Fa-f]{6}$/;
 const DEFAULT_COLOR = '#1A73E8';
@@ -78,7 +37,7 @@ const DEFAULT_COLOR = '#1A73E8';
 function ManageBranding() {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
-  const [values, handleChange, setValues, setErrors, validate, errors] = useForm({}) as BrandingUseFormResult;
+  const [values, handleChange, setValues, setErrors, validate, errors] = useForm<BrandingFormValues>({});
   const { setLoading } = useContext(LoadingContext);
   const hasLoaded = useRef(false);
 

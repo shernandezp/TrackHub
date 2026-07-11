@@ -14,14 +14,13 @@
 *  limitations under the License.
 */
 
-import type { ReactNode } from 'react';
 import Chip from '@mui/material/Chip';
 import FormControl from '@mui/material/FormControl';
 import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import type { SelectChangeEvent } from '@mui/material/Select';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import ArgonBoxBase from 'components/ArgonBox';
+import ArgonBox from 'components/ArgonBox';
 import { useTranslation } from 'react-i18next';
 
 /** An option for one of the filter-bar selects. */
@@ -37,18 +36,6 @@ export interface DashboardFilters {
   operatorId: string;
   status: string;
 }
-
-// Vendored (untyped) Argon primitive — type the prop slice crossing the boundary.
-interface ArgonBoxProps {
-  mb?: number;
-  display?: string;
-  flexWrap?: string;
-  alignItems?: string;
-  gap?: number;
-  ml?: string;
-  children?: ReactNode;
-}
-const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
 
 // Make the chevron visible (the theme hides it globally) and keep the
 // control compact enough for a single-row filter bar.

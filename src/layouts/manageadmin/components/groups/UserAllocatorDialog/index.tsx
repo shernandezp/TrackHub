@@ -15,11 +15,11 @@
 */
 
 import { useEffect, useContext, useState } from 'react';
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
-import DynamicTableDialogBase from 'controls/Dialogs/TableDialogs/DynamicTableDialog';
-import CustomSelectBase from 'controls/Dialogs/CustomSelect';
+import DynamicTableDialog from 'controls/Dialogs/TableDialogs/DynamicTableDialog';
+import CustomSelect from 'controls/Dialogs/CustomSelect';
+import type { FormChangeHandler } from 'controls/Dialogs/useForm';
 import { useUsersByAccount } from 'queries/users';
 import { useUsersByGroup, groupKeys } from 'queries/groups';
 import { createUserGroup, deleteUserGroup } from 'api/manager/groups';
@@ -27,37 +27,7 @@ import type { GroupUser } from 'api/manager/groups';
 import { notifyApiError } from 'api/core/errors';
 import { LoadingContext } from 'LoadingContext';
 
-// Change event shape emitted by the vendored dialog controls.
-type FormChangeHandler = (
-  event: { target: { name: string; value: string; type?: string; checked?: boolean } }
-) => void;
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface DynamicTableColumn { field: string; headerName: string; }
-interface DynamicTableDialogProps {
-  title: string;
-  handleAdd: () => void | Promise<void>;
-  handleDelete: (selectedRows: number[]) => void | Promise<void>;
-  handleClose: () => void | Promise<void>;
-  open: boolean;
-  data: GroupUser[];
-  columns: DynamicTableColumn[];
-  children?: ReactNode;
-}
-const DynamicTableDialog = DynamicTableDialogBase as unknown as (props: DynamicTableDialogProps) => ReactNode;
-
 interface SelectOption { value: string; label: string; }
-interface CustomSelectProps {
-  list: readonly SelectOption[];
-  name: string;
-  id: string;
-  label: string;
-  value: string | number | undefined;
-  handleChange: FormChangeHandler;
-  numericValue?: boolean;
-  required?: boolean;
-}
-const CustomSelect = CustomSelectBase as unknown as (props: CustomSelectProps) => ReactNode;
 
 interface UserAllocatorDialogProps {
   open: boolean;
@@ -78,7 +48,7 @@ function UserAllocatorDialog({ open, setOpen, groupId }: UserAllocatorDialogProp
   const assignedUsersQuery = useUsersByGroup(open ? groupId : undefined);
   const data = assignedUsersQuery.data ?? [];
 
-  const columns: DynamicTableColumn[] = [
+  const columns = [
     { field: 'username', headerName: t('user.username') }
   ];
 
@@ -101,7 +71,7 @@ function UserAllocatorDialog({ open, setOpen, groupId }: UserAllocatorDialogProp
 
   const handleChange: FormChangeHandler = (event) => {
     setLoading(true);
-    setUserId(event.target.value);
+    setUserId(String(event.target.value ?? ''));
     setLoading(false);
   };
 

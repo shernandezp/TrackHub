@@ -15,12 +15,12 @@
 */
 
 import { useState, useEffect, useContext } from 'react';
-import type { ReactNode } from 'react';
 import Grid from "@mui/material/Grid";
-import ArgonBoxBase from "components/ArgonBox";
-import DashboardLayoutBase from "controls/LayoutContainers/DashboardLayout";
-import DashboardNavbarBase from "controls/Navbars/DashboardNavbar";
-import CustomSelectBase from 'controls/Dialogs/CustomSelect';
+import ArgonBox from "components/ArgonBox";
+import DashboardLayout from "controls/LayoutContainers/DashboardLayout";
+import DashboardNavbar from "controls/Navbars/DashboardNavbar";
+import CustomSelect from 'controls/Dialogs/CustomSelect';
+import type { FormChangeEvent } from 'controls/Dialogs/useForm';
 import { getReports } from "api/manager/reports";
 import ReportFilters from "layouts/reports/components/Filters";
 import { downloadExcelReport } from "api/reporting/excelReports";
@@ -30,31 +30,6 @@ import { useTranslation } from 'react-i18next';
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
 import { toCamelCase } from 'utils/stringUtils';
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface ArgonBoxProps {
-  py?: number;
-  children?: ReactNode;
-}
-const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
-
-interface DashboardLayoutProps {
-  children?: ReactNode;
-}
-const DashboardLayout = DashboardLayoutBase as unknown as (props: DashboardLayoutProps) => ReactNode;
-
-const DashboardNavbar = DashboardNavbarBase as unknown as (props: Record<string, never>) => ReactNode;
-
-interface CustomSelectProps {
-  list: ReportOption[];
-  handleChange: (event: { target: { value: string } }) => void;
-  name: string;
-  id: string;
-  label: string;
-  value: string;
-  required?: boolean;
-}
-const CustomSelect = CustomSelectBase as unknown as (props: CustomSelectProps) => ReactNode;
 
 /** A report option rendered in the report selector. */
 interface ReportOption {
@@ -101,8 +76,8 @@ function Reports() {
     }
   };
 
-  const handleChange = (event: { target: { value: string } }) => {
-    setSelectedReport(event.target.value);
+  const handleChange = (event: FormChangeEvent) => {
+    setSelectedReport(String(event.target.value ?? ''));
   };
 
   return (

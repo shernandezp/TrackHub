@@ -17,10 +17,10 @@
 import { useEffect, useMemo, useState, useContext } from "react";
 import type { ReactNode } from "react";
 import { useTranslation } from 'react-i18next';
-import { Name as NameBase, Description as DescriptionBase } from "controls/Tables/components/tableComponents";
+import { Name, Description } from "controls/Tables/components/tableComponents";
 import Icon from "@mui/material/Icon";
-import ArgonTypographyBase from "components/ArgonTypography";
-import ArgonButtonBase from "components/ArgonButton";
+import ArgonTypography from "components/ArgonTypography";
+import ArgonButton from "components/ArgonButton";
 import { useClients, useCreateClient, useUpdateClient, useDeleteClient } from "queries/clients";
 import type { Client, ClientDtoInput } from "api/security/clients";
 import { useIntegrationUsers } from "queries/users";
@@ -47,17 +47,9 @@ export interface ClientFormValues {
 export interface ClientUserOption { value: string; label: string; }
 
 /** A column descriptor / rendered row for the vendored clients `Table`. */
-export interface ClientTableColumn { name: string; title?: string; align?: string; }
+export interface ClientTableColumn { name: string; title?: string; align?: "left" | "right" | "center"; }
 export type ClientTableRow = Record<string, ReactNode>;
 export interface ClientTableData { columns: ClientTableColumn[]; rows: ClientTableRow[]; }
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-const Name = NameBase as unknown as (props: { name?: ReactNode }) => ReactNode;
-const Description = DescriptionBase as unknown as (props: { description?: ReactNode }) => ReactNode;
-interface ArgonTypographyProps { variant?: string; color?: string; fontWeight?: string; children?: ReactNode; }
-const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
-interface ArgonButtonProps { variant?: string; color?: string; onClick?: () => void; children?: ReactNode; }
-const ArgonButton = ArgonButtonBase as unknown as (props: ArgonButtonProps) => ReactNode;
 
 function useClientsTableData(
   fetchData: boolean,

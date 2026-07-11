@@ -15,67 +15,22 @@
 */
 
 import { useState } from 'react';
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import TableBase from "controls/Tables/Table";
-import TableAccordionBase from "controls/Accordions/TableAccordion";
+import Table from "controls/Tables/Table";
+import TableAccordion from "controls/Accordions/TableAccordion";
 import AccountFormDialog from 'layouts/systemadmin/components/accounts/AccountsDialog';
 import AccountStatusDialog from 'layouts/systemadmin/components/accounts/AccountStatusDialog';
-import UserFormDialogBase from 'layouts/manageadmin/components/users/UserDialog';
+import UserFormDialog from 'layouts/manageadmin/components/users/UserDialog';
 import useForm from 'controls/Dialogs/useForm';
 import useAccountsTableData from 'layouts/systemadmin/data/accountsTableData';
 import type {
   AccountFormValues,
   AccountUserFormValues,
   AccountStatusFormValues,
-  AccountTableColumn,
-  AccountTableRow,
 } from 'layouts/systemadmin/data/accountsTableData';
 import type { Account } from 'api/manager/accounts';
 import { requiresReason } from 'data/accountStatuses';
 import type { AccountStatusName } from 'data/accountStatuses';
-
-// Change event shape emitted by the vendored dialog controls.
-type FormChangeHandler = (
-  event: { target: { name: string; value: string; type?: string; checked?: boolean } }
-) => void;
-
-// The vendored useForm hook is still JS; type its tuple result at the boundary.
-type UseFormResult<T> = [
-  T,
-  FormChangeHandler,
-  (values: T) => void,
-  (errors: Record<string, string>) => void,
-  (requiredFields: string[]) => boolean,
-  Record<string, string>,
-];
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface TableProps { columns: AccountTableColumn[]; rows: AccountTableRow[]; selectedField?: string; }
-const Table = TableBase as unknown as (props: TableProps) => ReactNode;
-
-interface TableAccordionProps {
-  title: string;
-  showAddIcon?: boolean;
-  expanded: boolean;
-  setOpen?: (open: boolean) => void;
-  handleAddClick?: () => void;
-  setExpanded: (expanded: boolean) => void;
-  children?: ReactNode;
-}
-const TableAccordion = TableAccordionBase as unknown as (props: TableAccordionProps) => ReactNode;
-
-// manageadmin UserDialog is still JS (converted in a later Phase-5 batch) — type
-// the prop slice crossing the boundary.
-interface UserFormDialogProps {
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  handleSubmit: () => void | Promise<void>;
-  values: AccountUserFormValues;
-  handleChange: FormChangeHandler;
-  errors: Record<string, string>;
-}
-const UserFormDialog = UserFormDialogBase as unknown as (props: UserFormDialogProps) => ReactNode;
 
 function ManageAccounts() {
   const { t } = useTranslation();
@@ -112,9 +67,9 @@ function ManageAccounts() {
     setOpenUser,
     setOpenStatus} = useAccountsTableData(expanded, handleEditClick, handleAddManagerClick, handleStatusClick);
 
-  const [accountValues, handleAccountChange, setAccountValues, setAccountErrors, validateAccount, accountErrors] = useForm({}) as UseFormResult<AccountFormValues>;
-  const [userValues, handleUserChange, setUserValues, setUserErrors, validateUser, userErrors] = useForm({}) as UseFormResult<AccountUserFormValues>;
-  const [statusValues, handleStatusChange, setStatusValues, setStatusErrors, validateStatus, statusErrors] = useForm({}) as UseFormResult<AccountStatusFormValues>;
+  const [accountValues, handleAccountChange, setAccountValues, setAccountErrors, validateAccount, accountErrors] = useForm<AccountFormValues>({});
+  const [userValues, handleUserChange, setUserValues, setUserErrors, validateUser, userErrors] = useForm<AccountUserFormValues>({});
+  const [statusValues, handleStatusChange, setStatusValues, setStatusErrors, validateStatus, statusErrors] = useForm<AccountStatusFormValues>({});
   const { columns, rows } = data;
 
   const handleSubmit = async () => {

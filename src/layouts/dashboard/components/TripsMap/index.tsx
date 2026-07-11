@@ -15,9 +15,8 @@
 */
 
 import { useState, useEffect } from 'react';
-import type { ReactNode } from 'react';
-import OSMTripsMapBase from 'controls/Maps/OSM/OSMTripsMap';
-import GoogleTripsMapBase from 'controls/Maps/Google/GoogleTripsMap';
+import OSMTripsMap from 'controls/Maps/OSM/OSMTripsMap';
+import GoogleTripsMap from 'controls/Maps/Google/GoogleTripsMap';
 import TripStatsPanel from './TripStatsPanel';
 import { getRandomColor } from "utils/colorUtils";
 import type { Trip } from 'api/router/router';
@@ -33,23 +32,6 @@ interface TripPolygon {
   coordinates: [number, number][];
 }
 
-// Vendored (untyped) trips-map controls — type the prop slice crossing the boundary.
-interface TripsMapControlProps {
-  trips: TripPolygon[];
-  mapKey?: string | null;
-  selectedTrip?: string | null;
-  showGeofence?: boolean;
-  geofences?: Geofence[];
-  handleSelected?: (value: string | null) => void;
-  toggleStats: () => void;
-  showStats: boolean;
-  playbackPosition?: PlaybackPosition | null;
-  darkMode?: boolean;
-  height?: string;
-}
-const OSMTripsMap = OSMTripsMapBase as unknown as (props: TripsMapControlProps) => ReactNode;
-const GoogleTripsMap = GoogleTripsMapBase as unknown as (props: TripsMapControlProps) => ReactNode;
-
 interface TripsMapProps {
   mapType: 'OSM' | 'Google';
   mapKey?: string | null;
@@ -57,7 +39,7 @@ interface TripsMapProps {
   selectedTrip?: string | null;
   showGeofence?: boolean;
   geofences?: Geofence[];
-  handleSelected?: (value: string | null) => void;
+  handleSelected: (value: string | null) => void;
   playbackPosition?: PlaybackPosition | null;
   darkMode?: boolean;
   height?: string;
@@ -107,7 +89,7 @@ function TripsMap({
             ) : (
                 mapType === 'Google' &&
                     <GoogleTripsMap
-                        mapKey={mapKey}
+                        mapKey={mapKey ?? undefined}
                         trips={polygons}
                         selectedTrip={selectedTrip}
                         showGeofence={showGeofence}

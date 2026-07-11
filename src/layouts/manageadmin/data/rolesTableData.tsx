@@ -17,9 +17,9 @@
 import { useEffect, useMemo, useContext } from "react";
 import type { ReactNode } from "react";
 import { useTranslation } from 'react-i18next';
-import { Name as NameBase } from "controls/Tables/components/tableComponents";
+import { Name } from "controls/Tables/components/tableComponents";
 import Icon from "@mui/material/Icon";
-import ArgonButtonBase from "components/ArgonButton";
+import ArgonButton from "components/ArgonButton";
 import { useRoles } from "queries/roles";
 import type { Role } from "api/security/roles";
 import { LoadingContext } from 'LoadingContext';
@@ -27,14 +27,9 @@ import { toCamelCase } from 'utils/stringUtils';
 import { useAuth } from "AuthContext";
 
 /** A column descriptor / rendered row for the vendored roles `Table`. */
-export interface RoleTableColumn { name: string; title?: string; align?: string; }
+export interface RoleTableColumn { name: string; title?: string; align?: "left" | "right" | "center"; }
 export type RoleTableRow = Record<string, ReactNode>;
 export interface RoleTableData { columns: RoleTableColumn[]; rows: RoleTableRow[]; }
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-const Name = NameBase as unknown as (props: { name?: ReactNode }) => ReactNode;
-interface ArgonButtonProps { variant?: string; color?: string; onClick?: () => void; children?: ReactNode; }
-const ArgonButton = ArgonButtonBase as unknown as (props: ArgonButtonProps) => ReactNode;
 
 function useRoleTableData(fetchData: boolean, handleOpenClick: (roleId: number) => void) {
   const { t } = useTranslation();

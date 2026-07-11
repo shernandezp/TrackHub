@@ -14,75 +14,20 @@
 *  limitations under the License.
 */
 
-import type { ReactNode } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
-import FormDialogBase from "controls/Dialogs/FormDialog";
-import CustomTextFieldBase from 'controls/Dialogs/CustomTextField';
-import CustomPasswordFieldBase from 'controls/Dialogs/CustomPasswordField';
-import CustomSelectBase from 'controls/Dialogs/CustomSelect';
+import FormDialog from "controls/Dialogs/FormDialog";
+import CustomTextField from 'controls/Dialogs/CustomTextField';
+import CustomPasswordField from 'controls/Dialogs/CustomPasswordField';
+import CustomSelect from 'controls/Dialogs/CustomSelect';
 import { geocodingProviderTypes } from 'data/geocodingProviderTypes';
 import { toCamelCase } from 'utils/stringUtils';
+import type { FormChangeHandler } from 'controls/Dialogs/useForm';
 import type { GeocodingProviderFormValues } from 'layouts/systemadmin/data/geocodingProvidersTableData';
-
-// Change event shape emitted by the vendored dialog controls.
-type FormChangeHandler = (
-  event: { target: { name: string; value: string; type?: string; checked?: boolean } }
-) => void;
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface FormDialogProps {
-  title: string;
-  handleSave: () => void | Promise<void>;
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  maxWidth?: string;
-  children?: ReactNode;
-}
-const FormDialog = FormDialogBase as unknown as (props: FormDialogProps) => ReactNode;
-
-interface CustomTextFieldProps {
-  autoFocus?: boolean;
-  margin?: string;
-  name: string;
-  id: string;
-  label: string;
-  type?: string;
-  fullWidth?: boolean;
-  multiline?: boolean;
-  rows?: number;
-  value: string | number;
-  onChange: FormChangeHandler;
-  required?: boolean;
-  errorMsg?: string;
-}
-const CustomTextField = CustomTextFieldBase as unknown as (props: CustomTextFieldProps) => ReactNode;
-
-interface CustomPasswordFieldProps {
-  margin?: string;
-  name: string;
-  id: string;
-  label: string;
-  fullWidth?: boolean;
-  value: string;
-  onChange: FormChangeHandler;
-  errorMsg?: string;
-}
-const CustomPasswordField = CustomPasswordFieldBase as unknown as (props: CustomPasswordFieldProps) => ReactNode;
-
-interface CustomSelectProps {
-  list: readonly unknown[];
-  handleChange: FormChangeHandler;
-  name: string;
-  id: string;
-  label: string;
-  value: string | number | undefined;
-  required?: boolean;
-}
-const CustomSelect = CustomSelectBase as unknown as (props: CustomSelectProps) => ReactNode;
 
 interface GeocodingProviderFormDialogProps {
   open: boolean;
-  setOpen: (open: boolean) => void;
+  setOpen: Dispatch<SetStateAction<boolean>>;
   handleSubmit: () => void | Promise<void>;
   values: GeocodingProviderFormValues;
   handleChange: FormChangeHandler;

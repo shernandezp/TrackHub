@@ -18,44 +18,16 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
-import TableBase from 'controls/Tables/Table';
-import TableAccordionBase from 'controls/Accordions/TableAccordion';
-import ArgonBadgeBase from 'components/ArgonBadge';
-import ArgonBoxBase from 'components/ArgonBox';
-import ArgonTypographyBase from 'components/ArgonTypography';
+import Table from 'controls/Tables/Table';
+import TableAccordion from 'controls/Accordions/TableAccordion';
+import ArgonBadge from 'components/ArgonBadge';
+import ArgonBox from 'components/ArgonBox';
+import ArgonTypography from 'components/ArgonTypography';
 import { getAccountByUser } from 'api/manager/accounts';
 import { useGpsOperators, useOperatorSyncRuns, operatorTelemetryKeys } from 'queries/operators';
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from 'utils/dateUtils';
 import { GPS_INTEGRATION_REFRESH_EVENT } from 'layouts/gpsintegration/gpsIntegrationEvents';
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface TableColumn { name: string; title?: string; align?: string; }
-type TableRow = Record<string, ReactNode>;
-interface TableProps { columns: TableColumn[]; rows: TableRow[]; selectedField?: string; }
-const Table = TableBase as unknown as (props: TableProps) => ReactNode;
-
-interface TableAccordionProps {
-  title: string;
-  expanded: boolean;
-  setExpanded: (expanded: boolean) => void;
-  children?: ReactNode;
-}
-const TableAccordion = TableAccordionBase as unknown as (props: TableAccordionProps) => ReactNode;
-
-interface ArgonBadgeProps {
-  variant?: string;
-  color?: string;
-  badgeContent?: ReactNode;
-  size?: string;
-  container?: boolean;
-}
-const ArgonBadge = ArgonBadgeBase as unknown as (props: ArgonBadgeProps) => ReactNode;
-
-const ArgonBox = ArgonBoxBase as unknown as (props: { children?: ReactNode }) => ReactNode;
-
-interface ArgonTypographyProps { variant?: string; color?: string; fontWeight?: string; children?: ReactNode; }
-const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
 
 function TextCell({ children }: { children?: ReactNode }) {
   return (
@@ -65,7 +37,9 @@ function TextCell({ children }: { children?: ReactNode }) {
   );
 }
 
-function resultColor(result: string): string {
+type BadgeColor = 'primary' | 'secondary' | 'info' | 'success' | 'warning' | 'error' | 'light' | 'dark';
+
+function resultColor(result: string): BadgeColor {
   switch ((result || '').toUpperCase()) {
     case 'SUCCEEDED': return 'success';
     case 'PARTIAL': return 'warning';

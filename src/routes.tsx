@@ -66,17 +66,7 @@ import PrincipalTypes from "constants/principalTypes";
 import type { PrincipalType } from "constants/principalTypes";
 
 // Argon Dashboard 2 MUI components
-import ArgonBoxBase from "components/ArgonBox";
-
-// The vendored ArgonBox (a forwardRef JS component) has no types yet; type the
-// narrow slice of props the icon nodes below pass across the boundary.
-interface ArgonIconBoxProps {
-  component?: string;
-  color?: string;
-  fontSize?: string;
-  className?: string;
-}
-const ArgonBox = ArgonBoxBase as unknown as (props: ArgonIconBoxProps) => ReactNode;
+import ArgonBox from "components/ArgonBox";
 
 /**
  * A single entry in the Sidenav route table. Consumed by `App` (route

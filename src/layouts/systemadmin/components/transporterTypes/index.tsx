@@ -15,48 +15,13 @@
 */
 
 import { useState } from 'react';
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import TableBase from "controls/Tables/Table";
-import TableAccordionBase from "controls/Accordions/TableAccordion";
+import Table from "controls/Tables/Table";
+import TableAccordion from "controls/Accordions/TableAccordion";
 import TransporterTypeFormDialog from 'layouts/systemadmin/components/transporterTypes/TransporterTypeDialog';
 import useForm from 'controls/Dialogs/useForm';
 import useTransporterTypesTableData from 'layouts/systemadmin/data/transporterTypesTableData';
-import type {
-  TransporterTypeFormValues,
-  TransporterTypeTableColumn,
-  TransporterTypeTableRow,
-} from 'layouts/systemadmin/data/transporterTypesTableData';
-
-// Change event shape emitted by the vendored dialog controls.
-type FormChangeHandler = (
-  event: { target: { name: string; value: string; type?: string; checked?: boolean } }
-) => void;
-
-// The vendored useForm hook is still JS; type its tuple result at the boundary.
-type TransporterTypeUseFormResult = [
-  TransporterTypeFormValues,
-  FormChangeHandler,
-  (values: TransporterTypeFormValues) => void,
-  (errors: Record<string, string>) => void,
-  (requiredFields: string[]) => boolean,
-  Record<string, string>,
-];
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface TableProps { columns: TransporterTypeTableColumn[]; rows: TransporterTypeTableRow[]; selectedField?: string; }
-const Table = TableBase as unknown as (props: TableProps) => ReactNode;
-
-interface TableAccordionProps {
-  title: string;
-  showAddIcon?: boolean;
-  expanded: boolean;
-  setOpen?: (open: boolean) => void;
-  handleAddClick?: () => void;
-  setExpanded: (expanded: boolean) => void;
-  children?: ReactNode;
-}
-const TableAccordion = TableAccordionBase as unknown as (props: TableAccordionProps) => ReactNode;
+import type { TransporterTypeFormValues } from 'layouts/systemadmin/data/transporterTypesTableData';
 
 function ManageTransporterTypes() {
   const { t } = useTranslation();
@@ -73,7 +38,7 @@ function ManageTransporterTypes() {
     onSave,
     setOpen} = useTransporterTypesTableData(expanded, handleEditClick);
 
-  const [values, handleChange, setValues, setErrors, validate, errors] = useForm({}) as TransporterTypeUseFormResult;
+  const [values, handleChange, setValues, setErrors, validate, errors] = useForm<TransporterTypeFormValues>({});
   const { columns, rows } = data;
 
   const handleSubmit = async () => {

@@ -29,8 +29,11 @@ export const GRAPHQL_ENDPOINTS = {
 
 export type GraphQLBackend = keyof typeof GRAPHQL_ENDPOINTS;
 
-/** Manager REST base (document upload/download live outside GraphQL). */
-const managerRestBase = GRAPHQL_ENDPOINTS.manager.replace(/graphql\/?$/, '');
+/**
+ * Manager REST base (document upload/download live outside GraphQL). The
+ * fallback only matters under Vitest, where env vars are absent at load time.
+ */
+const managerRestBase = (GRAPHQL_ENDPOINTS.manager ?? '').replace(/graphql\/?$/, '');
 
 export const REST_ENDPOINTS = {
   /** Excel report generation (Reporting service, REST). */
@@ -43,11 +46,32 @@ export const REST_ENDPOINTS = {
   managerDocuments: `${managerRestBase}documents`,
 } as const;
 
+/** Default map center (Bogotá) used before real positions load. */
+export const MAP_DEFAULTS = {
+  lat: parseFloat(process.env.REACT_APP_DEFAULT_LAT),
+  lng: parseFloat(process.env.REACT_APP_DEFAULT_LNG),
+} as const;
+
+// Lazy getters: in production builds the process.env expressions are replaced
+// statically (vite define shim); in tests they read the live process.env so
+// suites can assign REACT_APP_* values at runtime (apiService/auth tests do).
 export const OAUTH_ENDPOINTS = {
-  authorization: process.env.REACT_APP_AUTHORIZATION_ENDPOINT,
-  token: process.env.REACT_APP_TOKEN_ENDPOINT,
-  revocation: process.env.REACT_APP_REVOKE_TOKEN_ENDPOINT,
-  logout: process.env.REACT_APP_LOGOUT_ENDPOINT,
-  callback: process.env.REACT_APP_CALLBACK_ENDPOINT,
-  clientId: process.env.REACT_APP_CLIENT_ID,
+  get authorization() {
+    return process.env.REACT_APP_AUTHORIZATION_ENDPOINT;
+  },
+  get token() {
+    return process.env.REACT_APP_TOKEN_ENDPOINT;
+  },
+  get revocation() {
+    return process.env.REACT_APP_REVOKE_TOKEN_ENDPOINT;
+  },
+  get logout() {
+    return process.env.REACT_APP_LOGOUT_ENDPOINT;
+  },
+  get callback() {
+    return process.env.REACT_APP_CALLBACK_ENDPOINT;
+  },
+  get clientId() {
+    return process.env.REACT_APP_CLIENT_ID;
+  },
 } as const;

@@ -14,9 +14,9 @@
 *  limitations under the License.
 */
 
-import type { ChangeEvent, Dispatch, ReactNode, SetStateAction } from "react";
-import CustomPasswordFieldBase from "controls/Dialogs/CustomPasswordField";
-import FormDialogBase from "controls/Dialogs/FormDialog";
+import type { ChangeEvent, Dispatch, SetStateAction } from "react";
+import CustomPasswordField from "controls/Dialogs/CustomPasswordField";
+import FormDialog from "controls/Dialogs/FormDialog";
 import { useTranslation } from "react-i18next";
 
 // Shared shape of the password-change form values (also consumed by ProfileInfoCard).
@@ -26,32 +26,7 @@ export interface PasswordFormValues {
   userId?: string;
 }
 
-// Vendored (untyped) Argon controls — type the props crossing the boundary.
 type FormChangeHandler = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-
-interface CustomPasswordFieldProps {
-  name: string;
-  id: string;
-  label: string;
-  fullWidth?: boolean;
-  value?: string;
-  onChange?: FormChangeHandler;
-  errorMsg?: string;
-}
-const CustomPasswordField = CustomPasswordFieldBase as unknown as (
-  props: CustomPasswordFieldProps
-) => ReactNode;
-
-interface FormDialogProps {
-  title?: string;
-  handleSave?: () => void;
-  handleCancel?: () => void;
-  open: boolean;
-  setOpen: Dispatch<SetStateAction<boolean>>;
-  maxWidth?: string;
-  children?: ReactNode;
-}
-const FormDialog = FormDialogBase as unknown as (props: FormDialogProps) => ReactNode;
 
 interface PasswordChangeFormProps {
   open: boolean;

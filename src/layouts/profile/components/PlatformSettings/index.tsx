@@ -30,19 +30,19 @@ Coded by www.creative-tim.com
 */
 
 import { useState, useEffect, useContext } from "react";
-import type { ChangeEvent, ReactNode } from "react";
+import type { FormChangeEvent } from 'controls/Dialogs/useForm';
 
 // @mui material components
 import Card from "@mui/material/Card";
 import Switch from "@mui/material/Switch";
-import ArgonButtonBase from "components/ArgonButton";
+import ArgonButton from "components/ArgonButton";
 import Icon from "@mui/material/Icon";
 
 // Argon Dashboard 2 MUI components
-import ArgonBoxBase from "components/ArgonBox";
-import ArgonTypographyBase from "components/ArgonTypography";
+import ArgonBox from "components/ArgonBox";
+import ArgonTypography from "components/ArgonTypography";
 import { useTranslation } from 'react-i18next';
-import CustomSelectBase from 'controls/Dialogs/CustomSelect';
+import CustomSelect from 'controls/Dialogs/CustomSelect';
 import { getUserSettings, updateUserSettings } from 'api/manager/settings';
 import type { UserSettings, UserSettingsDtoInput } from 'api/manager/settings';
 import { notifyApiError } from 'api/core/errors';
@@ -54,51 +54,6 @@ import {
   setMiniSidenav,
   setDarkMode,
 } from "context";
-
-// Vendored (untyped) Argon primitives — type the props crossing the boundary.
-interface ArgonBoxProps {
-  children?: ReactNode;
-  display?: string;
-  width?: string | number;
-  mt?: string | number;
-  ml?: string | number;
-  mb?: string | number;
-  pt?: string | number;
-  pb?: string | number;
-  px?: string | number;
-  py?: string | number;
-  lineHeight?: string | number;
-}
-const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
-
-interface ArgonTypographyProps {
-  children?: ReactNode;
-  variant?: string;
-  fontWeight?: string;
-  color?: string;
-  textTransform?: string;
-}
-const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
-
-interface ArgonButtonProps {
-  children?: ReactNode;
-  variant?: string;
-  color?: string;
-  onClick?: () => void;
-}
-const ArgonButton = ArgonButtonBase as unknown as (props: ArgonButtonProps) => ReactNode;
-
-interface CustomSelectProps {
-  list: Array<{ value: string; label: string }>;
-  handleChange?: (event: ChangeEvent<HTMLInputElement>) => void;
-  name: string;
-  id: string;
-  label: string;
-  value?: string;
-  numericValue?: boolean;
-  required?: boolean;
-}
-const CustomSelect = CustomSelectBase as unknown as (props: CustomSelectProps) => ReactNode;
 
 function PlatformSettings() {
   const [controller, dispatch] = useArgonController();
@@ -154,12 +109,13 @@ function PlatformSettings() {
     }
   }
 
-  function handleLanguageChange(e: ChangeEvent<HTMLInputElement>) {
+  function handleLanguageChange(e: FormChangeEvent) {
+    const language = String(e.target.value ?? '');
     setUserSettings(prevSettings => ({
       ...prevSettings,
-      language: e.target.value
+      language
     }));
-    i18n.changeLanguage(e.target.value);
+    i18n.changeLanguage(language);
   }
 
   function handleStyleChange() {

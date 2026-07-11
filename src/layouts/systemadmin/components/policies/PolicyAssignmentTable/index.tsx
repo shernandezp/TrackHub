@@ -15,46 +15,21 @@
 */
 
 import { useState, useEffect, useMemo, useContext } from 'react';
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import CheckboxTableDialogBase from 'controls/Dialogs/TableDialogs/CheckboxTableDialog';
-import CustomSelectBase from 'controls/Dialogs/CustomSelect';
+import CheckboxTableDialog from 'controls/Dialogs/TableDialogs/CheckboxTableDialog';
+import CustomSelect from 'controls/Dialogs/CustomSelect';
 import { usePolicies, usePolicyResources } from 'queries/policies';
 import { useActions } from 'queries/actions';
 import { useResources } from 'queries/resources';
 import { createResourceActionPolicy, deleteResourceActionPolicy } from 'api/security/policies';
 import { LoadingContext } from 'LoadingContext';
 import { toCamelCase } from 'utils/stringUtils';
+import type { FormChangeHandler } from 'controls/Dialogs/useForm';
 
 // A single resource-action assignment cell (nested under resourceId → actionId).
 interface ActionAssignment { actionId: number; actionName: string; resourceId: number }
-type AssignmentMap = Record<number, Record<number, ActionAssignment>>;
-interface SelectOption { value: number; name?: string; label: string }
-
-// Numeric-select change event shape emitted by the vendored CustomSelect.
-type SelectChangeHandler = (event: { target: { value: number } }) => void;
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface CheckboxTableDialogProps {
-  handleSave: (resourceId: number, actionId: number, checked: boolean) => Promise<boolean>;
-  title: string;
-  data: AssignmentMap;
-  columns: readonly SelectOption[];
-  rows: readonly SelectOption[];
-  children?: ReactNode;
-}
-const CheckboxTableDialog = CheckboxTableDialogBase as unknown as (props: CheckboxTableDialogProps) => ReactNode;
-
-interface CustomSelectProps {
-  list: readonly SelectOption[];
-  name: string;
-  id: string;
-  label: string;
-  value: number;
-  handleChange: SelectChangeHandler;
-  required?: boolean;
-}
-const CustomSelect = CustomSelectBase as unknown as (props: CustomSelectProps) => ReactNode;
+type AssignmentMap = Record<string, Record<string, ActionAssignment>>;
+interface SelectOption { value: number; name: string; label: string }
 
 interface PolicyAssignmentTableProps {
   open: boolean;
@@ -107,6 +82,7 @@ function PolicyAssignmentTable({ open }: PolicyAssignmentTableProps) {
   const policies = useMemo<SelectOption[]>(
     () => (policiesQuery.data ?? []).map(policyItem => ({
       value: policyItem.policyId,
+      name: policyItem.name,
       label: t(`policies.${toCamelCase(policyItem.name)}` as 'policies.fullAccess', { defaultValue: policyItem.name })
     })),
     [policiesQuery.data, t]
@@ -117,7 +93,7 @@ function PolicyAssignmentTable({ open }: PolicyAssignmentTableProps) {
     if (!policyResources) return {};
     return policyResources.resources.reduce<AssignmentMap>((map, resource) => {
       // `actions` is a nullable generated array — default to [] when absent.
-      map[resource.resourceId] = (resource.actions ?? []).reduce<Record<number, ActionAssignment>>((actionMap, action) => {
+      map[resource.resourceId] = (resource.actions ?? []).reduce<Record<string, ActionAssignment>>((actionMap, action) => {
         actionMap[action.actionId] = action;
         return actionMap;
       }, {});
@@ -125,19 +101,19 @@ function PolicyAssignmentTable({ open }: PolicyAssignmentTableProps) {
     }, {});
   }, [policyResourcesQuery.data]);
 
-  const handleChange: SelectChangeHandler = (event) => {
-    setPolicy(event.target.value);
+  const handleChange: FormChangeHandler = (event) => {
+    setPolicy(Number(event.target.value));
   };
 
-  const handleSubmit = async (resourceId: number, actionId: number, checked: boolean): Promise<boolean> => {
+  const handleSubmit = async (resourceId: string, actionId: string, checked: boolean): Promise<boolean> => {
     setLoading(true);
     let result = false;
     try {
       if (checked) {
-        const created = await createResourceActionPolicy(resourceId, actionId, policy);
+        const created = await createResourceActionPolicy(Number(resourceId), Number(actionId), policy);
         result = created.policyId === policy;
       } else {
-        const deleted = await deleteResourceActionPolicy(resourceId, actionId, policy);
+        const deleted = await deleteResourceActionPolicy(Number(resourceId), Number(actionId), policy);
         result = deleted === policy;
       }
     } catch {

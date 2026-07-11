@@ -15,13 +15,12 @@
 */
 
 import { useState } from 'react';
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import TableBase from "controls/Tables/Table";
-import TableAccordionBase from "controls/Accordions/TableAccordion";
+import Table from "controls/Tables/Table";
+import TableAccordion from "controls/Accordions/TableAccordion";
 import TransporterFormDialog from 'layouts/manageadmin/components/transporters/TransporterDialog';
 import useForm from 'controls/Dialogs/useForm';
-import ConfirmDialogBase from 'controls/Dialogs/ConfirmDialog';
+import ConfirmDialog from 'controls/Dialogs/ConfirmDialog';
 import useTransporterTableData from "layouts/manageadmin/data/transportersTableData";
 import type {
   TransporterFormValues,
@@ -34,39 +33,6 @@ type FormChangeHandler = (
   event: { target: { name: string; value: string; type?: string; checked?: boolean } }
 ) => void;
 
-// The vendored useForm hook is still JS; type its tuple result at the boundary.
-type TransporterUseFormResult = [
-  TransporterFormValues,
-  FormChangeHandler,
-  (values: TransporterFormValues) => void,
-  (errors: Record<string, string>) => void,
-  (requiredFields: string[]) => boolean,
-  Record<string, string>,
-];
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface TableProps { columns: TransporterTableColumn[]; rows: TransporterTableRow[]; selectedField?: string; }
-const Table = TableBase as unknown as (props: TableProps) => ReactNode;
-
-interface TableAccordionProps {
-  title: string;
-  showAddIcon?: boolean;
-  expanded: boolean;
-  setOpen?: (open: boolean) => void;
-  handleAddClick?: () => void;
-  setExpanded: (expanded: boolean) => void;
-  children?: ReactNode;
-}
-const TableAccordion = TableAccordionBase as unknown as (props: TableAccordionProps) => ReactNode;
-
-interface ConfirmDialogProps {
-  title: string;
-  message: string;
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  onConfirm: () => void | Promise<void>;
-}
-const ConfirmDialog = ConfirmDialogBase as unknown as (props: ConfirmDialogProps) => ReactNode;
 
 function ManageTransporters() {
   const { t } = useTranslation();
@@ -89,7 +55,7 @@ function ManageTransporters() {
     onDelete,
     setOpen,
     setConfirmOpen } = useTransporterTableData(expanded, handleEditClick, handleDeleteClick);
-  const [values, handleChange, setValues, setErrors, validate, errors] = useForm({}) as TransporterUseFormResult;
+  const [values, handleChange, setValues, setErrors, validate, errors] = useForm<TransporterFormValues>({});
   const [toDelete, setToDelete] = useState<string | null>(null);
   const { columns, rows } = data;
 

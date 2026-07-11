@@ -15,35 +15,16 @@
 */
 
 import { useContext, useEffect, useRef, useState } from 'react';
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import Grid from '@mui/material/Grid';
-import TableAccordionBase from 'controls/Accordions/TableAccordion';
-import CustomReadOnlyBase from 'controls/Dialogs/CustomReadOnly';
-import ArgonBoxBase from 'components/ArgonBox';
-import ArgonTypographyBase from 'components/ArgonTypography';
+import TableAccordion from 'controls/Accordions/TableAccordion';
+import CustomReadOnly from 'controls/Dialogs/CustomReadOnly';
+import ArgonBox from 'components/ArgonBox';
+import ArgonTypography from 'components/ArgonTypography';
 import { getAccountByUser } from 'api/manager/accounts';
 import { getAccountFeatures } from 'api/manager/accountFeatures';
 import { parseJson } from 'utils/jsonUtils';
 import { LoadingContext } from 'LoadingContext';
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface TableAccordionProps {
-  title: string;
-  expanded: boolean;
-  setExpanded: (expanded: boolean) => void;
-  children?: ReactNode;
-}
-const TableAccordion = TableAccordionBase as unknown as (props: TableAccordionProps) => ReactNode;
-
-interface CustomReadOnlyProps { label: string; value: ReactNode; }
-const CustomReadOnly = CustomReadOnlyBase as unknown as (props: CustomReadOnlyProps) => ReactNode;
-
-interface ArgonBoxProps { p?: number; mb?: number; children?: ReactNode; }
-const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
-
-interface ArgonTypographyProps { variant?: string; color?: string; children?: ReactNode; }
-const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
 
 /** Retention state derived from the account's gps.* feature configuration JSON. */
 interface RetentionState {

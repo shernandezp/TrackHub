@@ -19,13 +19,13 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from '@mui/material/Icon';
 import Grid from '@mui/material/Grid';
-import TableBase from 'controls/Tables/Table';
-import TableAccordionBase from 'controls/Accordions/TableAccordion';
-import CustomSelectBase from 'controls/Dialogs/CustomSelect';
-import ArgonBadgeBase from 'components/ArgonBadge';
-import ArgonBoxBase from 'components/ArgonBox';
-import ArgonButtonBase from 'components/ArgonButton';
-import ArgonTypographyBase from 'components/ArgonTypography';
+import Table from 'controls/Tables/Table';
+import TableAccordion from 'controls/Accordions/TableAccordion';
+import CustomSelect from 'controls/Dialogs/CustomSelect';
+import ArgonBadge from 'components/ArgonBadge';
+import ArgonBox from 'components/ArgonBox';
+import ArgonButton from 'components/ArgonButton';
+import ArgonTypography from 'components/ArgonTypography';
 import { getAccountByUser } from 'api/manager/accounts';
 import {
   useTransportersByAccount,
@@ -41,49 +41,6 @@ import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from 'utils/dateUtils';
 import { GPS_INTEGRATION_REFRESH_EVENT } from 'layouts/gpsintegration/gpsIntegrationEvents';
 
-// Change event shape emitted by the vendored dialog controls.
-type FormChangeHandler = (
-  event: { target: { name: string; value: string; type?: string; checked?: boolean } }
-) => void;
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface TableColumn { name: string; title?: string; align?: string; }
-type TableRow = Record<string, ReactNode>;
-interface TableProps { columns: TableColumn[]; rows: TableRow[]; selectedField?: string; }
-const Table = TableBase as unknown as (props: TableProps) => ReactNode;
-
-interface TableAccordionProps {
-  title: string;
-  expanded: boolean;
-  setExpanded: (expanded: boolean) => void;
-  children?: ReactNode;
-}
-const TableAccordion = TableAccordionBase as unknown as (props: TableAccordionProps) => ReactNode;
-
-interface CustomSelectProps {
-  list: unknown[];
-  name: string;
-  id: string;
-  label: string;
-  value: string;
-  handleChange: FormChangeHandler;
-  numericValue?: boolean;
-  placeholder?: string;
-}
-const CustomSelect = CustomSelectBase as unknown as (props: CustomSelectProps) => ReactNode;
-
-interface ArgonBadgeProps { variant?: string; color?: string; badgeContent?: ReactNode; size?: string; container?: boolean; }
-const ArgonBadge = ArgonBadgeBase as unknown as (props: ArgonBadgeProps) => ReactNode;
-
-interface ArgonBoxProps { display?: string; justifyContent?: string; mb?: number; children?: ReactNode; }
-const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
-
-interface ArgonButtonProps { variant?: string; color?: string; onClick?: () => void; disabled?: boolean; children?: ReactNode; }
-const ArgonButton = ArgonButtonBase as unknown as (props: ArgonButtonProps) => ReactNode;
-
-interface ArgonTypographyProps { variant?: string; color?: string; fontWeight?: string; children?: ReactNode; }
-const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
-
 function TextCell({ children }: { children?: ReactNode }) {
   return (
     <ArgonTypography variant="caption" color="secondary" fontWeight="medium">
@@ -92,7 +49,9 @@ function TextCell({ children }: { children?: ReactNode }) {
   );
 }
 
-function statusColor(status: string): string {
+type BadgeColor = 'primary' | 'secondary' | 'info' | 'success' | 'warning' | 'error' | 'light' | 'dark';
+
+function statusColor(status: string): BadgeColor {
   switch ((status || '').toUpperCase()) {
     case 'ACTIVE': return 'success';
     case 'ENDED': return 'secondary';
@@ -282,7 +241,7 @@ function ManageDeviceAssignments() {
                     id="selectedTransporterId"
                     label={t('gpsIntegration.assignmentForm.transporter')}
                     value={selectedTransporterId}
-                    handleChange={(e) => setSelectedTransporterId(e.target.value)}
+                    handleChange={(e) => setSelectedTransporterId(e.target.value as string)}
                     numericValue={false}
                     placeholder={t('gpsIntegration.assignmentForm.selectTransporter')}
                   />
@@ -300,7 +259,7 @@ function ManageDeviceAssignments() {
                     id="selectedDeviceId"
                     label={t('gpsIntegration.assignmentForm.device')}
                     value={selectedDeviceId}
-                    handleChange={(e) => setSelectedDeviceId(e.target.value)}
+                    handleChange={(e) => setSelectedDeviceId(e.target.value as string)}
                     numericValue={false}
                     placeholder={t('gpsIntegration.assignmentForm.selectDevice')}
                   />

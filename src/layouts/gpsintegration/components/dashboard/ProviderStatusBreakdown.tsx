@@ -14,13 +14,13 @@
 *  limitations under the License.
 */
 
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import Card from '@mui/material/Card';
 import Grid from '@mui/material/Grid';
-import ArgonBoxBase from 'components/ArgonBox';
-import ArgonBadgeBase from 'components/ArgonBadge';
-import ArgonTypographyBase from 'components/ArgonTypography';
+import type { Theme } from '@mui/material/styles';
+import ArgonBox from 'components/ArgonBox';
+import ArgonBadge from 'components/ArgonBadge';
+import ArgonTypography from 'components/ArgonTypography';
 import type { GpsIntegrationDashboard } from 'api/manager/gpsDashboard';
 
 /** A single (operator, detectedStatus, count) tuple from the dashboard. */
@@ -29,43 +29,9 @@ type ProviderStatusItem = GpsIntegrationDashboard['deviceCountsByProviderStatus'
 interface OperatorGroup { operatorName: string; statuses: Record<string, number>; }
 type StatusLabelFn = (status: string) => string;
 
-// Theme slice surfaced through the ArgonBox `sx` border callback.
-interface ArgonBordersTheme { borders: { borderWidth: string[]; borderColor: string }; }
+type BadgeColor = 'primary' | 'secondary' | 'info' | 'success' | 'warning' | 'error' | 'light' | 'dark';
 
-// Vendored (untyped) Argon primitives — type the prop slice crossing the boundary.
-interface ArgonBoxProps {
-  p?: number;
-  py?: number;
-  mb?: number;
-  gap?: number;
-  display?: string;
-  flexWrap?: string;
-  alignItems?: string;
-  justifyContent?: string;
-  sx?: object;
-  children?: ReactNode;
-}
-const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
-
-interface ArgonBadgeProps {
-  variant?: string;
-  color?: string;
-  badgeContent?: ReactNode;
-  size?: string;
-  container?: boolean;
-}
-const ArgonBadge = ArgonBadgeBase as unknown as (props: ArgonBadgeProps) => ReactNode;
-
-interface ArgonTypographyProps {
-  variant?: string;
-  color?: string;
-  fontWeight?: string;
-  sx?: object;
-  children?: ReactNode;
-}
-const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
-
-function statusColor(status: string): string {
+function statusColor(status: string): BadgeColor {
   switch ((status || '').toUpperCase()) {
     case 'NEW':
     case 'AVAILABLE': return 'warning';
@@ -106,7 +72,7 @@ function ProviderRow({ operatorName, statuses, statusLabel }: ProviderRowProps) 
       gap={1}
       py={1}
       sx={{
-        borderBottom: ({ borders: { borderWidth, borderColor } }: ArgonBordersTheme) => `${borderWidth[1]} solid ${borderColor}`,
+        borderBottom: ({ borders: { borderWidth, borderColor } }: Theme) => `${borderWidth[1]} solid ${borderColor}`,
         '&:last-of-type': { borderBottom: 0 },
       }}
     >

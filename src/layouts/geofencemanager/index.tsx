@@ -15,11 +15,10 @@
 */
 
 import { useState, useEffect, useContext, useRef } from 'react';
-import type { ReactNode } from 'react';
 import Grid from "@mui/material/Grid";
-import ArgonBoxBase from "components/ArgonBox";
-import DashboardLayoutBase from "controls/LayoutContainers/DashboardLayout";
-import DashboardNavbarBase from "controls/Navbars/DashboardNavbar";
+import ArgonBox from "components/ArgonBox";
+import DashboardLayout from "controls/LayoutContainers/DashboardLayout";
+import DashboardNavbar from "controls/Navbars/DashboardNavbar";
 import GeofenceEditor from 'layouts/geofencemanager/components/GeofenceEditor';
 import type {
   AddGeofenceHandler,
@@ -28,10 +27,10 @@ import type {
   EditGeofenceHandler,
   RemoveGeofenceHandler,
 } from 'layouts/geofencemanager/components/GeofenceEditor';
-import FooterBase from "controls/Footer";
-import TableBase from "controls/Tables/Table";
+import Footer from "controls/Footer";
+import Table from "controls/Tables/Table";
 import useForm from 'controls/Dialogs/useForm';
-import ConfirmDialogBase from 'controls/Dialogs/ConfirmDialog';
+import ConfirmDialog from 'controls/Dialogs/ConfirmDialog';
 import GeofenceFormDialog from 'layouts/geofencemanager/GeofenceFormDialog';
 import useGeofencesTableData from "layouts/geofencemanager/data/geofencesData";
 import type { GeofenceFormValues, GeofenceColumn, GeofenceRow } from "layouts/geofencemanager/data/geofencesData";
@@ -42,54 +41,6 @@ import { LoadingContext } from 'LoadingContext';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "AuthContext";
 
-// Change event shape emitted by the vendored dialog controls.
-type FormChangeHandler = (
-  event: { target: { name: string; value: string; type?: string; checked?: boolean } }
-) => void;
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface ArgonBoxProps {
-  py?: number;
-  children?: ReactNode;
-}
-const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
-
-interface DashboardLayoutProps {
-  children?: ReactNode;
-}
-const DashboardLayout = DashboardLayoutBase as unknown as (props: DashboardLayoutProps) => ReactNode;
-
-interface DashboardNavbarProps {
-  searchQuery?: string;
-  handleSearch?: (event: { target: { value: string } }) => void;
-  searchVisibility?: boolean;
-}
-const DashboardNavbar = DashboardNavbarBase as unknown as (props: DashboardNavbarProps) => ReactNode;
-
-interface TableProps {
-  columns: GeofenceColumn[];
-  rows: GeofenceRow[];
-  selectedField?: string;
-  selected?: string | null;
-  handleSelected?: (value: string | null) => void;
-  searchQuery?: string;
-  scrollable?: boolean;
-  maxHeight?: string;
-  compact?: boolean;
-}
-const Table = TableBase as unknown as (props: TableProps) => ReactNode;
-
-const Footer = FooterBase as unknown as (props: Record<string, never>) => ReactNode;
-
-interface ConfirmDialogProps {
-  title: string;
-  message: string;
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  onConfirm: () => void | Promise<void>;
-}
-const ConfirmDialog = ConfirmDialogBase as unknown as (props: ConfirmDialogProps) => ReactNode;
-
 /** Map-related account settings the geofence editor reads. */
 interface GeofenceMapSettings {
   maps: string;
@@ -97,15 +48,6 @@ interface GeofenceMapSettings {
   refreshMapInterval: number;
 }
 
-// The vendored useForm hook is still JS; type its tuple result at the boundary.
-type UseFormResult = [
-  GeofenceFormValues,
-  FormChangeHandler,
-  (values: GeofenceFormValues) => void,
-  (errors: Record<string, string>) => void,
-  (requiredFields: string[]) => boolean,
-  Record<string, string>,
-];
 
 function GeofenceManager() {
   const { t } = useTranslation();
@@ -132,7 +74,7 @@ function GeofenceManager() {
     setOpen,
     setConfirmOpen} = useGeofencesTableData(handleEditClick, handleDeleteClick);
 
-  const [values, handleChange, setValues, setErrors, validate, errors] = useForm({}) as UseFormResult;
+  const [values, handleChange, setValues, setErrors, validate, errors] = useForm<GeofenceFormValues>({});
   const [toDelete, setToDelete] = useState<string | null>(null);
   const [selectedGeofence, setSelectedGeofence] = useState<string | null>(null);
   const { geofences, columns, rows } = data;

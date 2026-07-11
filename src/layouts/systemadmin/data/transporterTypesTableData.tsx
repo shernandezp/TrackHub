@@ -17,13 +17,13 @@
 import { useEffect, useMemo, useState, useContext } from "react";
 import type { ReactNode } from "react";
 import { useTranslation } from 'react-i18next';
-import { Name as NameBase } from "controls/Tables/components/tableComponents";
+import { Name } from "controls/Tables/components/tableComponents";
 import { LoadingContext } from 'LoadingContext';
 import { getStringValue } from 'utils/booleanUtils';
 import { cleanString } from 'utils/stringUtils';
 import Icon from "@mui/material/Icon";
-import ArgonBadgeBase from "components/ArgonBadge";
-import ArgonButtonBase from "components/ArgonButton";
+import ArgonBadge from "components/ArgonBadge";
+import ArgonButton from "components/ArgonButton";
 import { useTransporterTypes, useUpdateTransporterType } from 'queries/transporterTypes';
 import type { TransporterTypeItem, TransporterTypeDtoInput } from "api/manager/transporterTypes";
 
@@ -43,16 +43,9 @@ export interface TransporterTypeFormValues {
 }
 
 /** A column descriptor / rendered row for the vendored transporter-types `Table`. */
-export interface TransporterTypeTableColumn { name: string; title?: string; align?: string; }
+export interface TransporterTypeTableColumn { name: string; title?: string; align?: "left" | "right" | "center"; }
 export type TransporterTypeTableRow = Record<string, ReactNode>;
 export interface TransporterTypeTableData { columns: TransporterTypeTableColumn[]; rows: TransporterTypeTableRow[]; }
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-const Name = NameBase as unknown as (props: { name?: ReactNode }) => ReactNode;
-interface ArgonBadgeProps { variant?: string; color?: string; badgeContent?: ReactNode; size?: string; container?: boolean; }
-const ArgonBadge = ArgonBadgeBase as unknown as (props: ArgonBadgeProps) => ReactNode;
-interface ArgonButtonProps { variant?: string; color?: string; onClick?: () => void; children?: ReactNode; }
-const ArgonButton = ArgonButtonBase as unknown as (props: ArgonButtonProps) => ReactNode;
 
 function useTransporterTypesTableData(
   fetchData: boolean,

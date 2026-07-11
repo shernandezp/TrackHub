@@ -15,10 +15,10 @@
 */
 
 import { useEffect, useState, useContext } from 'react';
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import DynamicTableDialogBase from 'controls/Dialogs/TableDialogs/DynamicTableDialog';
-import CustomSelectBase from 'controls/Dialogs/CustomSelect';
+import DynamicTableDialog from 'controls/Dialogs/TableDialogs/DynamicTableDialog';
+import CustomSelect from 'controls/Dialogs/CustomSelect';
+import type { FormChangeHandler } from 'controls/Dialogs/useForm';
 import { useTransportersByAccount, useTransportersByGroup } from 'queries/transporters';
 import { createTransporterGroup, deleteTransporterGroup } from 'api/manager/groups';
 import type { Transporter } from 'api/manager/transporters';
@@ -26,37 +26,7 @@ import { notifyApiError } from 'api/core/errors';
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
 
-// Change event shape emitted by the vendored dialog controls.
-type FormChangeHandler = (
-  event: { target: { name: string; value: string; type?: string; checked?: boolean } }
-) => void;
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface DynamicTableColumn { field: string; headerName: string; }
-interface DynamicTableDialogProps {
-  title: string;
-  handleAdd: () => void | Promise<void>;
-  handleDelete: (selectedRows: number[]) => void | Promise<void>;
-  handleClose: () => void | Promise<void>;
-  open: boolean;
-  data: Transporter[];
-  columns: DynamicTableColumn[];
-  children?: ReactNode;
-}
-const DynamicTableDialog = DynamicTableDialogBase as unknown as (props: DynamicTableDialogProps) => ReactNode;
-
 interface SelectOption { value: string; label: string; }
-interface CustomSelectProps {
-  list: readonly SelectOption[];
-  name: string;
-  id: string;
-  label: string;
-  value: string | number | undefined;
-  handleChange: FormChangeHandler;
-  numericValue?: boolean;
-  required?: boolean;
-}
-const CustomSelect = CustomSelectBase as unknown as (props: CustomSelectProps) => ReactNode;
 
 interface TransporterAllocatorDialogProps {
   open: boolean;
@@ -76,7 +46,7 @@ function TransporterAllocatorDialog({ open, setOpen, groupId }: TransporterAlloc
   const assignedQuery = useTransportersByGroup(open ? groupId : undefined);
   const assignedTransporters = assignedQuery.data ?? [];
 
-  const columns: DynamicTableColumn[] = [
+  const columns = [
     { field: 'name', headerName: t('transporter.name') }
   ];
 
@@ -94,7 +64,7 @@ function TransporterAllocatorDialog({ open, setOpen, groupId }: TransporterAlloc
 
   const handleChange: FormChangeHandler = (event) => {
     setLoading(true);
-    setTransporterId(event.target.value);
+    setTransporterId(String(event.target.value ?? ''));
     setLoading(false);
   };
 

@@ -15,77 +15,18 @@
 */
 
 import { useEffect, useContext, useState } from "react";
-import type { ChangeEvent, ReactNode } from "react";
 import Card from "@mui/material/Card";
-import ArgonButtonBase from "components/ArgonButton";
+import ArgonButton from "components/ArgonButton";
 import Icon from "@mui/material/Icon";
-import CustomTextFieldBase from 'controls/Dialogs/CustomTextField';
+import CustomTextField from 'controls/Dialogs/CustomTextField';
 import PasswordChangeForm from 'layouts/profile/components/Password';
 import type { PasswordFormValues } from 'layouts/profile/components/Password';
-import ArgonBoxBase from "components/ArgonBox";
-import ArgonTypographyBase from "components/ArgonTypography";
+import ArgonBox from "components/ArgonBox";
+import ArgonTypography from "components/ArgonTypography";
 import { LoadingContext } from 'LoadingContext';
 import { useTranslation } from 'react-i18next';
-import useFormBase from 'controls/Dialogs/useForm';
+import useForm from 'controls/Dialogs/useForm';
 import type { CurrentUser } from "api/security/users";
-
-// Vendored (untyped) Argon primitives / controls — type the props crossing the boundary.
-type FormChangeHandler = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
-
-interface ArgonBoxProps {
-  children?: ReactNode;
-  display?: string;
-  justifyContent?: string;
-  alignItems?: string;
-  p?: string | number;
-  pt?: string | number;
-  pr?: string | number;
-  px?: string | number;
-  py?: string | number;
-}
-const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
-
-interface ArgonTypographyProps {
-  children?: ReactNode;
-  variant?: string;
-  fontWeight?: string;
-  color?: string;
-  textTransform?: string;
-}
-const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
-
-interface ArgonButtonProps {
-  children?: ReactNode;
-  variant?: string;
-  color?: string;
-  onClick?: () => void;
-}
-const ArgonButton = ArgonButtonBase as unknown as (props: ArgonButtonProps) => ReactNode;
-
-interface CustomTextFieldProps {
-  name: string;
-  id: string;
-  label: string;
-  type?: string;
-  fullWidth?: boolean;
-  value?: string;
-  onChange?: FormChangeHandler;
-  errorMsg?: string;
-  required?: boolean;
-}
-const CustomTextField = CustomTextFieldBase as unknown as (props: CustomTextFieldProps) => ReactNode;
-
-// useForm returns a fixed tuple; type it generically over the form values shape.
-type UseFormReturn<T> = [
-  T,
-  FormChangeHandler,
-  (values: T) => void,
-  (errors: Record<string, string>) => void,
-  (requiredFields: string[]) => boolean,
-  Record<string, string>,
-  (field1: string, field2: string) => boolean,
-];
-const useForm = useFormBase as unknown as <T>(initialValues: T) => UseFormReturn<T>;
 
 interface ProfileInfoCardProps {
   user: CurrentUser;

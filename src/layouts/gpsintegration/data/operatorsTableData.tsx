@@ -17,11 +17,11 @@
 import { useEffect, useState, useContext } from "react";
 import type { ReactNode } from "react";
 import { useTranslation } from 'react-i18next';
-import { NameDetail as NameDetailBase, Description as DescriptionBase } from "controls/Tables/components/tableComponents";
+import { NameDetail, Description } from "controls/Tables/components/tableComponents";
 import Icon from "@mui/material/Icon";
-import ArgonTypographyBase from "components/ArgonTypography";
-import ArgonBadgeBase from "components/ArgonBadge";
-import ArgonButtonBase from "components/ArgonButton";
+import ArgonTypography from "components/ArgonTypography";
+import ArgonBadge from "components/ArgonBadge";
+import ArgonButton from "components/ArgonButton";
 import { getCredentialByOperator, createCredential, updateCredential } from "api/manager/credential";
 import type { Credential, CredentialFormInput } from "api/manager/credential";
 import { notifyApiError } from "api/core/errors";
@@ -76,21 +76,13 @@ export interface CredentialFormValues {
 }
 
 /** A column descriptor / rendered row for the vendored operators `Table`. */
-export interface OperatorTableColumn { name: string; title?: string; align?: string; }
+export interface OperatorTableColumn { name: string; title?: string; align?: "left" | "right" | "center"; }
 export type OperatorTableRow = Record<string, ReactNode>;
 export interface OperatorTableData { columns: OperatorTableColumn[]; rows: OperatorTableRow[]; }
 
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-const NameDetail = NameDetailBase as unknown as (props: { name?: ReactNode; detail?: ReactNode }) => ReactNode;
-const Description = DescriptionBase as unknown as (props: { description?: ReactNode }) => ReactNode;
-interface ArgonTypographyProps { variant?: string; color?: string; fontWeight?: string; children?: ReactNode; }
-const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
-interface ArgonBadgeProps { variant?: string; color?: string; badgeContent?: ReactNode; size?: string; container?: boolean; }
-const ArgonBadge = ArgonBadgeBase as unknown as (props: ArgonBadgeProps) => ReactNode;
-interface ArgonButtonProps { variant?: string; color?: string; onClick?: () => void; disabled?: boolean; children?: ReactNode; }
-const ArgonButton = ArgonButtonBase as unknown as (props: ArgonButtonProps) => ReactNode;
+type BadgeColor = 'primary' | 'secondary' | 'info' | 'success' | 'warning' | 'error' | 'light' | 'dark';
 
-function healthBadgeColor(status: string): string {
+function healthBadgeColor(status: string): BadgeColor {
   switch ((status || '').toUpperCase()) {
     case 'HEALTHY': return 'success';
     case 'DEGRADED': return 'warning';

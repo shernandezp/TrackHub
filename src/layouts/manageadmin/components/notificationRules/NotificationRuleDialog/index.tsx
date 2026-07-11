@@ -14,16 +14,12 @@
 *  limitations under the License.
 */
 
-import type { ReactNode } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
-import FormDialogBase from "controls/Dialogs/FormDialog";
-import CustomCheckboxBase from 'controls/Dialogs/CustomCheckbox';
-import CustomTextFieldBase from 'controls/Dialogs/CustomTextField';
-
-// Change event shape emitted by the vendored dialog controls.
-type FormChangeHandler = (
-  event: { target: { name: string; value: string; type?: string; checked?: boolean } }
-) => void;
+import FormDialog from "controls/Dialogs/FormDialog";
+import CustomCheckbox from 'controls/Dialogs/CustomCheckbox';
+import CustomTextField from 'controls/Dialogs/CustomTextField';
+import type { FormChangeHandler } from 'controls/Dialogs/useForm';
 
 /** Dialog/form state for a notification rule — a partial superset of the API record. */
 export interface NotificationRuleFormValues {
@@ -40,38 +36,9 @@ export interface NotificationRuleFormValues {
   lastModified?: string;
 }
 
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface FormDialogProps {
-  title: string;
-  handleSave: () => void | Promise<void>;
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  maxWidth?: string;
-  children?: ReactNode;
-}
-const FormDialog = FormDialogBase as unknown as (props: FormDialogProps) => ReactNode;
-interface CustomTextFieldProps {
-  autoFocus?: boolean;
-  margin?: string;
-  name: string;
-  id: string;
-  label: string;
-  type?: string;
-  fullWidth?: boolean;
-  multiline?: boolean;
-  minRows?: number;
-  value: string | number;
-  onChange: FormChangeHandler;
-  required?: boolean;
-  errorMsg?: string;
-}
-const CustomTextField = CustomTextFieldBase as unknown as (props: CustomTextFieldProps) => ReactNode;
-interface CustomCheckboxProps { name: string; id: string; value?: boolean; handleChange: FormChangeHandler; label: string; }
-const CustomCheckbox = CustomCheckboxBase as unknown as (props: CustomCheckboxProps) => ReactNode;
-
 interface NotificationRuleDialogProps {
   open: boolean;
-  setOpen: (open: boolean) => void;
+  setOpen: Dispatch<SetStateAction<boolean>>;
   handleSubmit: () => void | Promise<void>;
   values: NotificationRuleFormValues;
   handleChange: FormChangeHandler;

@@ -14,38 +14,15 @@
 *  limitations under the License.
 */
 
-import type { Dispatch, ReactNode, SetStateAction } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 import Slider from '@mui/material/Slider';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
-import ArgonBoxBase from 'components/ArgonBox';
-import ArgonButtonBase from 'components/ArgonButton';
+import ArgonBox from 'components/ArgonBox';
+import ArgonButton from 'components/ArgonButton';
 import { useTranslation } from 'react-i18next';
 
 const SPEED_MULTIPLIERS = [1, 2, 4, 8];
-
-// Vendored (untyped) Argon primitives — type the prop slice crossing the boundary.
-interface ArgonBoxProps {
-  display?: string;
-  alignItems?: string;
-  gap?: number;
-  px?: number;
-  py?: number;
-  flexWrap?: string;
-  flex?: number;
-  minWidth?: string;
-  children?: ReactNode;
-}
-const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
-
-interface ArgonButtonProps {
-  size?: string;
-  color?: string;
-  onClick?: () => void;
-  disabled?: boolean;
-  children?: ReactNode;
-}
-const ArgonButton = ArgonButtonBase as unknown as (props: ArgonButtonProps) => ReactNode;
 
 interface PlaybackControlsProps {
   playing: boolean;

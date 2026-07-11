@@ -16,10 +16,10 @@
 
 import { useEffect, useMemo, useState, useContext } from "react";
 import type { ReactNode } from "react";
-import { Name as NameBase, Description as DescriptionBase } from "controls/Tables/components/tableComponents";
-import ArgonTypographyBase from "components/ArgonTypography";
-import ArgonBadgeBase from "components/ArgonBadge";
-import ArgonButtonBase from "components/ArgonButton";
+import { Name, Description } from "controls/Tables/components/tableComponents";
+import ArgonTypography from "components/ArgonTypography";
+import ArgonBadge from "components/ArgonBadge";
+import ArgonButton from "components/ArgonButton";
 import Icon from "@mui/material/Icon";
 import { useAccountByUser, useUpdateAccount } from "queries/accounts";
 import type { Account, UpdateAccountDtoInput } from "api/manager/accounts";
@@ -44,19 +44,9 @@ export interface AccountFormValues {
 }
 
 /** A column descriptor / rendered row for the vendored accounts `Table`. */
-export interface AccountTableColumn { name: string; title?: string; align?: string; }
+export interface AccountTableColumn { name: string; title?: string; align?: "left" | "right" | "center"; }
 export type AccountTableRow = Record<string, ReactNode>;
 export interface AccountTableData { columns: AccountTableColumn[]; rows: AccountTableRow[]; }
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-const Name = NameBase as unknown as (props: { name?: ReactNode }) => ReactNode;
-const Description = DescriptionBase as unknown as (props: { description?: ReactNode }) => ReactNode;
-interface ArgonTypographyProps { variant?: string; color?: string; fontWeight?: string; children?: ReactNode; }
-const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
-interface ArgonBadgeProps { variant?: string; color?: string; badgeContent?: ReactNode; size?: string; container?: boolean; }
-const ArgonBadge = ArgonBadgeBase as unknown as (props: ArgonBadgeProps) => ReactNode;
-interface ArgonButtonProps { variant?: string; color?: string; onClick?: () => void; disabled?: boolean; children?: ReactNode; }
-const ArgonButton = ArgonButtonBase as unknown as (props: ArgonButtonProps) => ReactNode;
 
 function useAccountTableData(fetchData: boolean, handleEditClick: (account: AccountFormValues) => void) {
   const { t } = useTranslation();

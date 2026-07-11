@@ -15,26 +15,12 @@
 */
 
 import { useState } from 'react';
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import TableBase from "controls/Tables/Table";
-import TableAccordionBase from "controls/Accordions/TableAccordion";
+import Table from "controls/Tables/Table";
+import TableAccordion from "controls/Accordions/TableAccordion";
 import RoleAllocatorDialog from 'layouts/manageadmin/components/roles/RoleAllocatorDialog';
 import useRoleTableData from "layouts/manageadmin/data/rolesTableData";
 import type { RoleTableColumn, RoleTableRow } from "layouts/manageadmin/data/rolesTableData";
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface TableProps { columns: RoleTableColumn[]; rows: RoleTableRow[]; selectedField?: string; }
-const Table = TableBase as unknown as (props: TableProps) => ReactNode;
-
-interface TableAccordionProps {
-  title: string;
-  expanded: boolean;
-  setOpen?: (open: boolean) => void;
-  setExpanded: (expanded: boolean) => void;
-  children?: ReactNode;
-}
-const TableAccordion = TableAccordionBase as unknown as (props: TableAccordionProps) => ReactNode;
 
 function ManageRoles() {
   const { t } = useTranslation();

@@ -14,76 +14,23 @@
 *  limitations under the License.
 */
 
-import type { ReactNode } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
-import FormDialogBase from 'controls/Dialogs/FormDialog';
-import CustomTextFieldBase from 'controls/Dialogs/CustomTextField';
-import CustomCheckboxBase from 'controls/Dialogs/CustomCheckbox';
-import CustomSelectBase from 'controls/Dialogs/CustomSelect';
-import CustomReadOnlyBase from 'controls/Dialogs/CustomReadOnly';
+import FormDialog from 'controls/Dialogs/FormDialog';
+import CustomTextField from 'controls/Dialogs/CustomTextField';
+import CustomCheckbox from 'controls/Dialogs/CustomCheckbox';
+import CustomSelect from 'controls/Dialogs/CustomSelect';
+import CustomReadOnly from 'controls/Dialogs/CustomReadOnly';
+import type { FormChangeHandler } from 'controls/Dialogs/useForm';
 import type {
   FeatureFormValues,
   ConfigFieldDef,
   FeatureSelectOption,
 } from 'layouts/systemadmin/components/accountFeatures';
 
-// Change event shape emitted by the vendored dialog controls.
-type FormChangeHandler = (
-  event: { target: { name: string; value: string; type?: string; checked?: boolean } }
-) => void;
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface FormDialogProps {
-  title: string;
-  handleSave: () => void | Promise<void>;
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  maxWidth?: string;
-  children?: ReactNode;
-}
-const FormDialog = FormDialogBase as unknown as (props: FormDialogProps) => ReactNode;
-
-interface CustomTextFieldProps {
-  margin?: string;
-  name: string;
-  id: string;
-  label: string;
-  type?: string;
-  fullWidth?: boolean;
-  value: string | number;
-  onChange: FormChangeHandler;
-  errorMsg?: string;
-  inputProps?: object;
-}
-const CustomTextField = CustomTextFieldBase as unknown as (props: CustomTextFieldProps) => ReactNode;
-
-interface CustomCheckboxProps {
-  name: string;
-  id: string;
-  value: boolean;
-  handleChange: FormChangeHandler;
-  label: string;
-}
-const CustomCheckbox = CustomCheckboxBase as unknown as (props: CustomCheckboxProps) => ReactNode;
-
-interface CustomSelectProps {
-  list: readonly FeatureSelectOption[];
-  handleChange: FormChangeHandler;
-  name: string;
-  id: string;
-  label: string;
-  value: string;
-  required?: boolean;
-  numericValue?: boolean;
-}
-const CustomSelect = CustomSelectBase as unknown as (props: CustomSelectProps) => ReactNode;
-
-interface CustomReadOnlyProps { label: string; value: string | undefined; }
-const CustomReadOnly = CustomReadOnlyBase as unknown as (props: CustomReadOnlyProps) => ReactNode;
-
 interface AccountFeatureDialogProps {
   open: boolean;
-  setOpen: (open: boolean) => void;
+  setOpen: Dispatch<SetStateAction<boolean>>;
   handleSubmit: () => void | Promise<void>;
   values: FeatureFormValues;
   handleChange: FormChangeHandler;

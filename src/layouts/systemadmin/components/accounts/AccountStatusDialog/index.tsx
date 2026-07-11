@@ -14,59 +14,19 @@
 *  limitations under the License.
 */
 
-import type { ReactNode } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
-import FormDialogBase from "controls/Dialogs/FormDialog";
-import CustomSelectBase from 'controls/Dialogs/CustomSelect';
-import CustomTextFieldBase from 'controls/Dialogs/CustomTextField';
+import FormDialog from "controls/Dialogs/FormDialog";
+import CustomSelect from 'controls/Dialogs/CustomSelect';
+import CustomTextField from 'controls/Dialogs/CustomTextField';
 import { ALLOWED_TRANSITIONS, ACCOUNT_STATUS_I18N, requiresReason } from 'data/accountStatuses';
 import type { AccountStatusId, AccountStatusName } from 'data/accountStatuses';
+import type { FormChangeHandler } from 'controls/Dialogs/useForm';
 import type { AccountStatusFormValues } from 'layouts/systemadmin/data/accountsTableData';
-
-// Change event shape emitted by the vendored dialog controls.
-type FormChangeHandler = (
-  event: { target: { name: string; value: string; type?: string; checked?: boolean } }
-) => void;
-
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface FormDialogProps {
-  title: string;
-  handleSave: () => void | Promise<void>;
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  maxWidth?: string;
-  children?: ReactNode;
-}
-const FormDialog = FormDialogBase as unknown as (props: FormDialogProps) => ReactNode;
-
-interface CustomSelectProps {
-  list: readonly unknown[];
-  handleChange: FormChangeHandler;
-  name: string;
-  id: string;
-  label: string;
-  value: string | number | undefined;
-  required?: boolean;
-}
-const CustomSelect = CustomSelectBase as unknown as (props: CustomSelectProps) => ReactNode;
-
-interface CustomTextFieldProps {
-  margin?: string;
-  name: string;
-  id: string;
-  label: string;
-  type?: string;
-  fullWidth?: boolean;
-  value: string | number;
-  onChange: FormChangeHandler;
-  required?: boolean;
-  errorMsg?: string;
-}
-const CustomTextField = CustomTextFieldBase as unknown as (props: CustomTextFieldProps) => ReactNode;
 
 interface AccountStatusDialogProps {
   open: boolean;
-  setOpen: (open: boolean) => void;
+  setOpen: Dispatch<SetStateAction<boolean>>;
   handleSubmit: () => void | Promise<void>;
   values: AccountStatusFormValues;
   handleChange: FormChangeHandler;

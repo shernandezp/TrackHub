@@ -14,49 +14,13 @@
 *  limitations under the License.
 */
 
-import type { ReactNode } from "react";
 import Icon from "@mui/material/Icon";
-import ArgonBoxBase from "components/ArgonBox";
-import ArgonTypographyBase from "components/ArgonTypography";
-import ArgonButtonBase from "components/ArgonButton";
+import ArgonBox from "components/ArgonBox";
+import ArgonTypography from "components/ArgonTypography";
+import ArgonButton from "components/ArgonButton";
 import { useTranslation } from 'react-i18next';
 import { formatISODuration, formatTime } from "utils/timeUtils";
 import { formatDistance } from "utils/distanceUtils";
-
-// Vendored (untyped) Argon primitives — type the prop slice crossing the boundary.
-interface ArgonBoxProps {
-  component?: string;
-  display?: string;
-  flexDirection?: string;
-  justifyContent?: string;
-  alignItems?: string;
-  py?: number;
-  pr?: number;
-  mb?: number;
-  mr?: number;
-  children?: ReactNode;
-}
-const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
-
-interface ArgonTypographyProps {
-  variant?: string;
-  fontWeight?: string;
-  gutterBottom?: boolean;
-  color?: string;
-  textGradient?: boolean;
-  children?: ReactNode;
-}
-const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
-
-interface ArgonButtonProps {
-  variant?: string;
-  color?: string;
-  size?: string;
-  iconOnly?: boolean;
-  circular?: boolean;
-  children?: ReactNode;
-}
-const ArgonButton = ArgonButtonBase as unknown as (props: ArgonButtonProps) => ReactNode;
 
 interface SingleTripProps {
   id: string;

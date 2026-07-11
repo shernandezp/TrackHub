@@ -18,6 +18,7 @@ import React, { createContext, useContext, useState, useRef, useEffect } from 'r
 import { generateCodeVerifier, generateCodeChallenge } from 'utils/authutils';
 import { refreshAccessToken, revokeAccessToken, logout } from 'services/auth';
 import { tokenStore } from 'api/core/tokenStore';
+import { OAUTH_ENDPOINTS } from 'api/core/endpoints';
 
 export interface AuthContextValue {
   isAuthenticated: boolean;
@@ -110,15 +111,15 @@ export const AuthProvider = ({ children, navigate }: AuthProviderProps) => {
       const state = '123';
 
       const queryParams = new URLSearchParams({
-        client_id: process.env.REACT_APP_CLIENT_ID,
-        redirect_uri: process.env.REACT_APP_CALLBACK_ENDPOINT,
+        client_id: OAUTH_ENDPOINTS.clientId,
+        redirect_uri: OAUTH_ENDPOINTS.callback,
         response_type: responseType,
         scope: scope,
         state: state,
         code_challenge: codeChallenge,
         code_challenge_method: 'S256',
       });
-      const authorizationUrl = `${process.env.REACT_APP_AUTHORIZATION_ENDPOINT}?${queryParams.toString()}`;
+      const authorizationUrl = `${OAUTH_ENDPOINTS.authorization}?${queryParams.toString()}`;
       navigate(`/authentication/authorize?authorizationUrl=${encodeURIComponent(authorizationUrl)}`);
     }
   };

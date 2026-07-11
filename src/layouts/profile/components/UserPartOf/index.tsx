@@ -30,45 +30,19 @@ Coded by www.creative-tim.com
 */
 
 import { useEffect, useState } from "react";
-import type { ElementType, ReactNode } from "react";
 
 // @mui material components
 import Card from "@mui/material/Card";
 
 // Argon Dashboard 2 MUI components
-import ArgonBoxBase from "components/ArgonBox";
-import ArgonTypographyBase from "components/ArgonTypography";
+import ArgonBox from "components/ArgonBox";
+import ArgonTypography from "components/ArgonTypography";
 import { useTranslation } from 'react-i18next';
 
 import type { CurrentUser } from "api/security/users";
 
 type ProfileRole = NonNullable<CurrentUser['roles']>[number];
 type ProfilePolicy = NonNullable<CurrentUser['profiles']>[number];
-
-// Vendored (untyped) Argon primitives — type the props crossing the boundary.
-interface ArgonBoxProps {
-  children?: ReactNode;
-  component?: ElementType;
-  display?: string;
-  flexDirection?: string;
-  alignItems?: string;
-  justifyContent?: string;
-  p?: string | number;
-  pt?: string | number;
-  px?: string | number;
-  py?: string | number;
-  m?: string | number;
-  mb?: string | number;
-}
-const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
-
-interface ArgonTypographyProps {
-  children?: ReactNode;
-  variant?: string;
-  fontWeight?: string;
-  textTransform?: string;
-}
-const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
 
 interface UserPartOfProps {
   user: CurrentUser;

@@ -15,12 +15,11 @@
 */
 
 import { useState, useEffect } from 'react';
-import type { ReactNode } from 'react';
-import OSMClusteredMapBase from 'controls/Maps/OSM/OSMClusteredMap';
-import GoogleClusteredMapBase from 'controls/Maps/Google/GoogleClusteredMap';
+import OSMClusteredMap from 'controls/Maps/OSM/OSMClusteredMap';
+import GoogleClusteredMap from 'controls/Maps/Google/GoogleClusteredMap';
 import { getUnitStatus } from 'layouts/dashboard/utils/dashboard';
-import type { UnitStatus } from 'layouts/dashboard/utils/dashboard';
 import { getStatusMarkerColor, getStatusMarkerLabel } from 'controls/Maps/utils/markerUtils';
+import type { MapMarker, MapPoi } from 'controls/Maps/core/mapTypes';
 import type { Position } from 'api/router/router';
 import type { Geofence } from 'api/geofencing/geofencing';
 import type { PointOfInterest } from 'api/manager/pointsOfInterest';
@@ -28,48 +27,6 @@ import 'controls/Maps/css/map.css';
 
 /** A trail point (client-side ring buffer entry) for the selected unit. */
 export interface TrailPoint { lat: number; lng: number; dateTime: string; }
-
-/** A rendered map marker derived from a live {@link Position}. */
-interface Marker {
-  id: string;
-  lat: number;
-  lng: number;
-  rotation: number | null;
-  name: string;
-  dateTime: string;
-  speed: number;
-  status: UnitStatus;
-  color: string;
-  text: string;
-  attributes: object;
-  address: string | null;
-  altitude: number | null;
-  city: string | null;
-  country: string | null;
-  state: string | null;
-  transporterType: string;
-}
-
-// Vendored (untyped) clustered-map controls — type the prop slice crossing the boundary.
-interface ClusteredMapProps {
-  markers: Marker[];
-  mapKey?: string | null;
-  selectedMarker?: string | null;
-  geofences?: Geofence[];
-  showGeofence?: boolean;
-  handleSelected?: (value: string | null) => void;
-  pois?: PointOfInterest[];
-  showPois?: boolean;
-  trail?: TrailPoint[];
-  showTrail?: boolean;
-  followUnit?: string | null;
-  onFollowDisengage?: () => void;
-  darkMode?: boolean;
-  viewportThreshold?: number;
-  height?: string;
-}
-const OSMClusteredMap = OSMClusteredMapBase as unknown as (props: ClusteredMapProps) => ReactNode;
-const GoogleClusteredMap = GoogleClusteredMapBase as unknown as (props: ClusteredMapProps) => ReactNode;
 
 interface GeneralMapProps {
   mapType: 'OSM' | 'Google';
@@ -110,20 +67,19 @@ function GeneralMap({
     viewportThreshold = 1000,
     height = "70vh" }: GeneralMapProps) {
 
-    const [markers, setMarkers] = useState<Marker[]>([]);
+    const [markers, setMarkers] = useState<MapMarker[]>([]);
     useEffect(() => {
         const fetchMarkers = async () => {
-            const markers: Marker[] = positions.map(item => {
+            const markers: MapMarker[] = positions.map(item => {
                 const status = getUnitStatus(item, onlineInterval as number);
                 return {
                     id: item.transporterId,
                     lat: item.latitude,
                     lng: item.longitude,
-                    rotation: item.course,
+                    rotation: item.course ?? 0,
                     name: item.deviceName,
                     dateTime: item.deviceDateTime,
                     speed: item.speed,
-                    status,
                     color: getStatusMarkerColor(status),
                     text: getStatusMarkerLabel(status),
                     // Additional attributes
@@ -150,7 +106,7 @@ function GeneralMap({
                     geofences={geofences}
                     showGeofence={showGeofence}
                     handleSelected={handleSelected}
-                    pois={pois}
+                    pois={pois as MapPoi[]}
                     showPois={showPois}
                     trail={trail}
                     showTrail={showTrail}
@@ -163,12 +119,12 @@ function GeneralMap({
                 mapType === 'Google' &&
                     <GoogleClusteredMap
                         markers={markers}
-                        mapKey={mapKey}
+                        mapKey={mapKey ?? undefined}
                         selectedMarker={selectedMarker}
                         geofences={geofences}
                         showGeofence={showGeofence}
                         handleSelected={handleSelected}
-                        pois={pois}
+                        pois={pois as MapPoi[]}
                         showPois={showPois}
                         trail={trail}
                         showTrail={showTrail}

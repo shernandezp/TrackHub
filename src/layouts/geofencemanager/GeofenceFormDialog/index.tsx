@@ -14,75 +14,24 @@
 *  limitations under the License.
 */
 
-import type { ReactNode } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
-import CustomCheckboxBase from 'controls/Dialogs/CustomCheckbox';
-import CustomTextFieldBase from 'controls/Dialogs/CustomTextField';
-import CustomSelectBase from 'controls/Dialogs/CustomSelect';
-import FormDialogBase from "controls/Dialogs/FormDialog";
+import CustomCheckbox from 'controls/Dialogs/CustomCheckbox';
+import CustomTextField from 'controls/Dialogs/CustomTextField';
+import CustomSelect from 'controls/Dialogs/CustomSelect';
+import FormDialog from "controls/Dialogs/FormDialog";
+import type { FormChangeHandler } from 'controls/Dialogs/useForm';
 import { geofenceTypes } from 'data/geofenceTypes';
 import { colors } from 'data/colors';
 import { toCamelCase } from 'utils/stringUtils';
 import type { GeofenceFormValues } from 'layouts/geofencemanager/data/geofencesData';
 
-// Change event shape emitted by the vendored dialog controls.
-type FormChangeHandler = (
-  event: { target: { name: string; value: string; type?: string; checked?: boolean } }
-) => void;
-
 /** A translated option for the type/color selects. */
 interface SelectOption { value: number; label: string; }
 
-// Vendored (untyped) controls — type the prop slice crossing the boundary.
-interface FormDialogProps {
-  title: string;
-  handleSave: () => void;
-  handleCancel: () => void;
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  maxWidth?: string;
-  children?: ReactNode;
-}
-const FormDialog = FormDialogBase as unknown as (props: FormDialogProps) => ReactNode;
-
-interface CustomTextFieldProps {
-  autoFocus?: boolean;
-  margin?: string;
-  name: string;
-  id: string;
-  label: string;
-  type?: string;
-  fullWidth?: boolean;
-  value: string;
-  onChange: FormChangeHandler;
-  required?: boolean;
-  errorMsg?: string;
-}
-const CustomTextField = CustomTextFieldBase as unknown as (props: CustomTextFieldProps) => ReactNode;
-
-interface CustomSelectProps {
-  list: SelectOption[];
-  handleChange: FormChangeHandler;
-  name: string;
-  id: string;
-  label: string;
-  value: number | string | undefined;
-  required?: boolean;
-}
-const CustomSelect = CustomSelectBase as unknown as (props: CustomSelectProps) => ReactNode;
-
-interface CustomCheckboxProps {
-  name: string;
-  id: string;
-  value: boolean | undefined;
-  handleChange: FormChangeHandler;
-  label: string;
-}
-const CustomCheckbox = CustomCheckboxBase as unknown as (props: CustomCheckboxProps) => ReactNode;
-
 interface GeofenceFormDialogProps {
   open: boolean;
-  setOpen: (open: boolean) => void;
+  setOpen: Dispatch<SetStateAction<boolean>>;
   handleSubmit: () => void;
   handleCancel: () => void;
   values: GeofenceFormValues;

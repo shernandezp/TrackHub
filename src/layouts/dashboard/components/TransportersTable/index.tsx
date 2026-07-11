@@ -14,25 +14,9 @@
 *  limitations under the License.
 */
 
-import type { ReactNode } from "react";
-import TableBase from "controls/Tables/Table";
+import Table from "controls/Tables/Table";
 import useTransportersTableData from "layouts/dashboard/data/transportersData";
-import type { TransporterColumn, TransporterRow } from "layouts/dashboard/data/transportersData";
 import type { Position } from "api/router/router";
-
-// Vendored (untyped) control — type the prop slice crossing the boundary.
-interface TableProps {
-  columns: TransporterColumn[];
-  rows: TransporterRow[];
-  selected?: string | null;
-  selectedField?: string;
-  handleSelected?: (value: string | null) => void;
-  searchQuery?: string;
-  compact?: boolean;
-  scrollable?: boolean;
-  maxHeight?: string;
-}
-const Table = TableBase as unknown as (props: TableProps) => ReactNode;
 
 interface TransportersTableProps {
   transporters: Position[];
