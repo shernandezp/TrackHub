@@ -4,11 +4,14 @@ import react from '@vitejs/plugin-react';
 import fs from 'node:fs';
 
 export default defineConfig(({ mode }) => {
-  // Source still reads process.env.REACT_APP_* (CRA convention). Statically
-  // replace those references at build time until the api layer centralizes
-  // env access (migration spec 26, Phase 2). Skipped in test mode: tests
-  // assign process.env.REACT_APP_* at runtime, which static replacement
-  // would corrupt.
+  // PERMANENT (decided spec 26 Phase 7): all REACT_APP_* reads are centralized
+  // in src/api/core/endpoints.ts, which deliberately keeps the CRA
+  // process.env.REACT_APP_* convention so the existing .env files,
+  // .env.production.template, and deployment docs stay valid. This shim
+  // statically replaces those references at build time. Skipped in test mode:
+  // tests assign process.env.REACT_APP_* at runtime (endpoints.ts OAuth getters
+  // are lazy for exactly that reason), which static replacement would corrupt.
+  // NODE_ENV reads elsewhere need no shim — Vite defines those natively.
   const isTest = mode === 'test';
   const env = loadEnv(mode, process.cwd(), 'REACT_APP_');
   const define = isTest

@@ -61,7 +61,7 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "codegen": "graphql-codegen --config codegen.ts",
-    "lint": "eslint src",
+    "lint": "eslint .",
     "install:clean": "rm -rf node_modules/ && rm -rf package-lock.json && npm install && npm start"
   },
   "browserslist": {
