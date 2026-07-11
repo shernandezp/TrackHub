@@ -16,36 +16,27 @@
 
 /**
  * Formats a distance value into a human-readable format.
- *  
- * @param {number} value - The distance value to format.
- * @returns {string} The formatted distance string (e.g., "123.45 km") or an empty string if the input is invalid.
+ * Returns the formatted distance string (e.g., "123.45 km") or an empty
+ * string if the input is not a number.
  */
-export function formatDistance(value) {
+export function formatDistance(value: unknown): string {
     if (typeof value !== 'number') return '';
     return `${value.toFixed(2)} km`;
 }
 
 /**
  * Calculates the total distance from a list of objects and formats it.
- * 
- * @param {Array<Object>} list - The list of objects containing distance values.
- * @param {string} key - The key in the objects that holds the distance value.
- * @returns {string} The formatted total distance string (e.g., "123.45 km").
  */
-export function calculateTotalDistance(list, key) {
+export function calculateTotalDistance(list: Array<Record<string, unknown>>, key: string): string {
     let total = list.reduce((acc, item) => acc + (Number(item[key]) || 0), 0);
     return formatDistance(total);
 }
 
 /**
- * Calculate distance between two points using Haversine formula
- * @param {number} lat1 - Latitude of first point
- * @param {number} lng1 - Longitude of first point
- * @param {number} lat2 - Latitude of second point
- * @param {number} lng2 - Longitude of second point
- * @returns {number} - Distance in meters
+ * Calculate distance between two points using Haversine formula.
+ * Returns the distance in meters.
  */
-export function calculateDistance(lat1, lng1, lat2, lng2) {
+export function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
     const R = 6371000; // Earth's radius in meters
     const dLat = toRadians(lat2 - lat1);
     const dLng = toRadians(lng2 - lng1);
@@ -58,4 +49,4 @@ export function calculateDistance(lat1, lng1, lat2, lng2) {
     return R * c;
 }
 
-export const toRadians = (degrees) => degrees * (Math.PI / 180);
+export const toRadians = (degrees: number): number => degrees * (Math.PI / 180);

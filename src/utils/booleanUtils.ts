@@ -16,9 +16,8 @@
 
 /**
  * Converts a boolean value to a string representation.
- * @param {boolean} value - The boolean value to convert.
- * @returns {string} - Returns "yes" if the value is true, otherwise returns "no".
+ * Returns "yes" if the value is truthy, otherwise returns "no".
  */
-export function getStringValue(value) {
+export function getStringValue(value: unknown): string {
     return value ? "yes" : "no";
 }

@@ -14,21 +14,45 @@
 *  limitations under the License.
 */
 
+/** A single GraphQL error entry as returned in an error response payload. */
+interface GraphQLErrorItem {
+  message?: string;
+  extensions?: { code?: string };
+  code?: string;
+}
+
+/** Structural shape of the (axios-like) errors handled by {@link handleError}. */
+interface HandledError {
+  response?: {
+    data?: {
+      errors?: GraphQLErrorItem[];
+      [key: string]: unknown;
+    };
+  };
+  message?: string;
+}
+
+/** Payload dispatched on the `app-error` CustomEvent. */
+export interface AppErrorDetail {
+  message: string;
+  type: string;
+  code: string | undefined;
+  i18nKey: string | undefined;
+}
+
 /**
  * Handles the given error by dispatching a notification event with the error message(s).
  * If the error object contains a response with data and errors, it extracts the error messages.
- * 
- * @param {Error} error - The error object to handle.
  */
-export function handleError(error) {
+export function handleError(error: HandledError | null | undefined): void {
   if (error && error.response && error.response.data && error.response.data.errors) {
     var errors = error.response.data.errors;
     var accountSuspended = errors.some(error => getErrorCode(error) === 'ACCOUNT_SUSPENDED');
     var featureDisabled = errors.some(error => getErrorCode(error) === 'FEATURE_DISABLED');
-    var errorMessage;
-    var type;
-    var code;
-    var i18nKey;
+    var errorMessage: string;
+    var type: string;
+    var code: string | undefined;
+    var i18nKey: string | undefined;
     if (accountSuspended) {
       errorMessage = 'This account is not currently operational.';
       type = 'account-suspended';
@@ -45,7 +69,7 @@ export function handleError(error) {
       code = getErrorCode(errors[0]);
       i18nKey = undefined;
     }
-    window.dispatchEvent(new CustomEvent('app-error', {
+    window.dispatchEvent(new CustomEvent<AppErrorDetail>('app-error', {
       detail: { message: errorMessage, type, code, i18nKey }
     }));
   } else if (process.env.NODE_ENV !== 'production') {
@@ -53,16 +77,14 @@ export function handleError(error) {
   }
 }
 
-function getErrorCode(error) {
+function getErrorCode(error: GraphQLErrorItem): string | undefined {
   return error?.extensions?.code || error?.code;
 }
 
 /**
  * Handles the given error by logging it to the console (non-production only).
- * 
- * @param {Error} error - The error object to handle.
  */
-export function handleSilentError(error) {
+export function handleSilentError(error: unknown): void {
   if (process.env.NODE_ENV !== 'production') {
     console.error(error);
   }

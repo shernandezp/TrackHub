@@ -22,7 +22,12 @@ export const ACCOUNT_STATUS_NAME = {
   3: 'SUSPENDED',
   4: 'CANCELLED',
   5: 'ARCHIVED'
-};
+} as const;
+
+// Numeric statusId union (mirrors Common.Domain.Enums.AccountStatus values).
+export type AccountStatusId = keyof typeof ACCOUNT_STATUS_NAME;
+// Status enum name union (TRIAL | ACTIVE | SUSPENDED | CANCELLED | ARCHIVED).
+export type AccountStatusName = (typeof ACCOUNT_STATUS_NAME)[AccountStatusId];
 
 // Colored badge per status (ArgonBadge color).
 export const ACCOUNT_STATUS_COLOR = {
@@ -31,7 +36,10 @@ export const ACCOUNT_STATUS_COLOR = {
   SUSPENDED: 'warning',
   CANCELLED: 'error',
   ARCHIVED: 'secondary'
-};
+} as const;
+
+// ArgonBadge color token union.
+export type AccountStatusColor = (typeof ACCOUNT_STATUS_COLOR)[AccountStatusName];
 
 // i18n key suffix per status enum name.
 export const ACCOUNT_STATUS_I18N = {
@@ -40,7 +48,10 @@ export const ACCOUNT_STATUS_I18N = {
   SUSPENDED: 'account.statusSuspended',
   CANCELLED: 'account.statusCancelled',
   ARCHIVED: 'account.statusArchived'
-};
+} as const;
+
+// i18n key union for the status labels.
+export type AccountStatusI18nKey = (typeof ACCOUNT_STATUS_I18N)[AccountStatusName];
 
 // Allowed lifecycle transitions by current statusId (spec 03 §6.1).
 export const ALLOWED_TRANSITIONS = {
@@ -49,8 +60,8 @@ export const ALLOWED_TRANSITIONS = {
   3: ['ACTIVE', 'CANCELLED', 'ARCHIVED'],
   4: ['ACTIVE', 'ARCHIVED'],
   5: []
-};
+} as const;
 
 // A non-empty reason is required when suspending or cancelling.
-export const requiresReason = (targetStatus) =>
+export const requiresReason = (targetStatus: AccountStatusName): boolean =>
   targetStatus === 'SUSPENDED' || targetStatus === 'CANCELLED';

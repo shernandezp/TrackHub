@@ -17,21 +17,22 @@
 import { renderHook, act } from '@testing-library/react';
 import React from 'react';
 import { AuthProvider, useAuth } from 'AuthContext';
+import { refreshAccessToken } from 'services/auth';
 
 // Mock the auth service
-jest.mock('services/auth', () => ({
-  refreshAccessToken: jest.fn(),
-  revokeAccessToken: jest.fn().mockResolvedValue(undefined),
-  logout: jest.fn().mockResolvedValue(undefined),
+vi.mock('services/auth', () => ({
+  refreshAccessToken: vi.fn(),
+  revokeAccessToken: vi.fn().mockResolvedValue(undefined),
+  logout: vi.fn().mockResolvedValue(undefined),
 }));
 
 // Mock authutils
-jest.mock('utils/authutils', () => ({
-  generateCodeVerifier: jest.fn(() => 'mock-verifier'),
-  generateCodeChallenge: jest.fn(() => 'mock-challenge'),
+vi.mock('utils/authutils', () => ({
+  generateCodeVerifier: vi.fn(() => 'mock-verifier'),
+  generateCodeChallenge: vi.fn(() => 'mock-challenge'),
 }));
 
-const mockNavigate = jest.fn();
+const mockNavigate = vi.fn();
 
 const wrapper = ({ children }) => (
   <AuthProvider navigate={mockNavigate}>{children}</AuthProvider>
@@ -39,7 +40,7 @@ const wrapper = ({ children }) => (
 
 describe('AuthContext', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     process.env.REACT_APP_CLIENT_ID = 'test-client';
     process.env.REACT_APP_CALLBACK_ENDPOINT = 'https://app/callback';
     process.env.REACT_APP_AUTHORIZATION_ENDPOINT = 'https://auth/authorize';
@@ -65,7 +66,6 @@ describe('AuthContext', () => {
   });
 
   test('login stores code_verifier in sessionStorage', () => {
-    const { generateCodeVerifier } = require('utils/authutils');
     const { result } = renderHook(() => useAuth(), { wrapper });
 
     act(() => {
@@ -118,7 +118,6 @@ describe('AuthContext', () => {
   });
 
   test('handleRefreshToken calls refreshAccessToken and updates tokens', async () => {
-    const { refreshAccessToken } = require('services/auth');
     refreshAccessToken.mockResolvedValue({
       access_token: 'refreshed-access',
       refresh_token: 'refreshed-refresh',
@@ -136,9 +135,8 @@ describe('AuthContext', () => {
   });
 
   test('handleRefreshToken triggers login on failure', async () => {
-    const { refreshAccessToken } = require('services/auth');
     refreshAccessToken.mockRejectedValue(new Error('Token expired'));
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
 
     const { result } = renderHook(() => useAuth(), { wrapper });
 

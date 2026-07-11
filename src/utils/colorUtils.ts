@@ -15,10 +15,9 @@
 */
 
 /**
- * 
- * @returns a random color from a predefined list
+ * Returns a random color from a predefined list.
  */
-export function getRandomColor() {
+export function getRandomColor(): string {
     const colors = [
         '#1f77b4', // Blue
         '#ff7f0e', // Orange

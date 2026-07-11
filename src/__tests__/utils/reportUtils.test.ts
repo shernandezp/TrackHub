@@ -18,8 +18,8 @@ import { fetchList, buildTableData } from 'utils/reportUtils';
 
 describe('fetchList', () => {
   test('fetches and maps data', async () => {
-    const mockFetch = jest.fn().mockResolvedValue([1, 2, 3]);
-    const mockMap = jest.fn((x) => x * 2);
+    const mockFetch = vi.fn().mockResolvedValue([1, 2, 3]);
+    const mockMap = vi.fn((x) => x * 2);
 
     const result = await fetchList(mockFetch, mockMap);
     expect(result).toEqual([2, 4, 6]);
@@ -28,8 +28,8 @@ describe('fetchList', () => {
   });
 
   test('returns empty array when fetch returns empty', async () => {
-    const mockFetch = jest.fn().mockResolvedValue([]);
-    const mockMap = jest.fn();
+    const mockFetch = vi.fn().mockResolvedValue([]);
+    const mockMap = vi.fn();
 
     const result = await fetchList(mockFetch, mockMap);
     expect(result).toEqual([]);
@@ -37,16 +37,16 @@ describe('fetchList', () => {
   });
 
   test('propagates fetch errors', async () => {
-    const mockFetch = jest.fn().mockRejectedValue(new Error('Network error'));
-    const mockMap = jest.fn();
+    const mockFetch = vi.fn().mockRejectedValue(new Error('Network error'));
+    const mockMap = vi.fn();
 
     await expect(fetchList(mockFetch, mockMap)).rejects.toThrow('Network error');
   });
 
   test('maps objects with transformation', async () => {
     const data = [{ id: 1, name: 'A' }, { id: 2, name: 'B' }];
-    const mockFetch = jest.fn().mockResolvedValue(data);
-    const mockMap = (item) => ({ value: item.id, label: item.name });
+    const mockFetch = vi.fn().mockResolvedValue(data);
+    const mockMap = (item: { id: number; name: string }) => ({ value: item.id, label: item.name });
 
     const result = await fetchList(mockFetch, mockMap);
     expect(result).toEqual([

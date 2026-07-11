@@ -20,6 +20,8 @@ const PrincipalTypes = Object.freeze({
   Driver: "DRIVER",
   ServiceClient: "SERVICE_CLIENT",
   PublicLink: "PUBLIC_LINK",
-});
+} as const);
+
+export type PrincipalType = (typeof PrincipalTypes)[keyof typeof PrincipalTypes];
 
 export default PrincipalTypes;

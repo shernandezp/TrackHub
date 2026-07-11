@@ -18,9 +18,12 @@ const geocodingProviderTypes = [
     { value: 1, label: 'Nominatim' },
     { value: 2, label: 'OpenRouteService' },
     { value: 3, label: 'Google' }
-  ];
+  ] as const;
 
-const getGeocodingProviderType = (value) => {
+export type GeocodingProviderType = (typeof geocodingProviderTypes)[number];
+export type GeocodingProviderTypeValue = GeocodingProviderType['value'];
+
+const getGeocodingProviderType = (value: number): string => {
   const providerType = geocodingProviderTypes.find(type => type.value === value);
   return providerType ? providerType.label : '';
 };

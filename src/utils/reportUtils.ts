@@ -16,33 +16,58 @@
 
 /**
  * Fetches a list using the provided fetch function and maps the result using the provided map function.
- *
- * @param {Function} fetchFunction - The function to fetch the data.
- * @param {Function} mapFunction - The function to map the fetched data.
- * @returns {Promise<Array>} The mapped result of the fetched data.
  */
-export const fetchList = async (fetchFunction, mapFunction) => {
+export const fetchList = async <T, U>(
+    fetchFunction: () => Promise<T[]>,
+    mapFunction: (value: T, index: number, array: T[]) => U
+): Promise<U[]> => {
     const result = await fetchFunction();
     return result.map(mapFunction);
 };
 
+/** Parameters accepted by {@link buildTableData}. */
+interface BuildTableDataParams {
+    list1?: unknown[];
+    list2?: unknown[];
+    list3?: unknown[];
+    visibility?: boolean[];
+    labels?: string[];
+}
+
+interface VisibleDataFilter {
+    visible: boolean;
+    data: unknown[];
+    label: string;
+}
+
+interface VisibleFilter {
+    visible: boolean;
+    label: string;
+}
+
+/** The table data with visibility settings produced by {@link buildTableData}. */
+interface TableData {
+    stringFilter1: VisibleDataFilter;
+    stringFilter2: VisibleDataFilter;
+    stringFilter3: VisibleDataFilter;
+    dateTimeFilter1: VisibleFilter;
+    dateTimeFilter2: VisibleFilter;
+    dateTimeFilter3: VisibleFilter;
+    numericFilter1: VisibleFilter;
+    numericFilter2: VisibleFilter;
+    numericFilter3: VisibleFilter;
+}
+
 /**
  * Builds table data with visibility settings for different filters.
- *
- * @param {Array} list1 - The data for the first string filter.
- * @param {Array} list2 - The data for the second string filter.
- * @param {Array} list3 - The data for the third string filter.
- * @param {Array<boolean>} visibility - An array of booleans indicating the visibility of each filter.
- * @param {Array<boolean>} labels - An array of string indicating the label of each filter.
- * @returns {Object} The table data with visibility settings.
  */
-export const buildTableData = ({ 
-    list1 = [], 
-    list2 = [], 
-    list3 = [], 
-    visibility = [false, false, false, false, false, false, false, false, false], 
-    labels = ['', '', '', '', '', '', '', '', ''] 
-  }) => ({
+export const buildTableData = ({
+    list1 = [],
+    list2 = [],
+    list3 = [],
+    visibility = [false, false, false, false, false, false, false, false, false],
+    labels = ['', '', '', '', '', '', '', '', '']
+  }: BuildTableDataParams): TableData => ({
     stringFilter1: { visible: visibility[0], data: list1, label: labels[0] },
     stringFilter2: { visible: visibility[1], data: list2, label: labels[1] },
     stringFilter3: { visible: visibility[2], data: list3, label: labels[2] },

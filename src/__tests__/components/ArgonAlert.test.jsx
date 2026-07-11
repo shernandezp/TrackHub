@@ -54,7 +54,7 @@ describe('ArgonAlert', () => {
   });
 
   test('hides alert when close button is clicked', () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     renderAlert({ dismissible: true });
 
     const closeButton = screen.getByText('×');
@@ -62,11 +62,11 @@ describe('ArgonAlert', () => {
 
     // After clicking, alert should start fading out
     act(() => {
-      jest.advanceTimersByTime(500);
+      vi.advanceTimersByTime(500);
     });
 
     expect(screen.queryByText('Alert content')).not.toBeInTheDocument();
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   test('renders with all valid color props', () => {

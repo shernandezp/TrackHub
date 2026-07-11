@@ -16,13 +16,13 @@
 
 import { toISOStringWithTimezone } from "utils/dateUtils";
 
+/** Heterogeneous value accepted by the formatter helpers below. */
+type FormattableValue = string | number | boolean | Date | null | undefined;
+
 /**
  * Escapes special characters in a string for safe use inside a GraphQL quoted string.
- *
- * @param {string} str - The string to escape.
- * @returns {string} The escaped string.
  */
-function escapeGraphQLString(str) {
+function escapeGraphQLString(str: unknown): string {
   return String(str)
     .replace(/\\/g, '\\\\')
     .replace(/"/g, '\\"')
@@ -33,30 +33,24 @@ function escapeGraphQLString(str) {
 
 /**
  * Formats the given value by wrapping it in double quotes with proper escaping.
- *
- * @param {any} value - The value to format.
- * @returns {string|null} The formatted value or null if the input is falsy.
+ * Returns null if the input is falsy.
  */
-export function formatValue(value) {
+export function formatValue(value: FormattableValue): string | null {
   return value ? `"${escapeGraphQLString(value)}"` : null;
 }
 
 /**
  * Formats the given value as a string.
- *
- * @param {any} value - The value to format.
- * @returns {string|null} The formatted value or null if the input is falsy.
+ * Returns null if the input is falsy.
  */
-export function formatJSONValue(value) {
+export function formatJSONValue(value: FormattableValue): string | null {
   return value ? `${value}` : null;
 }
 
 /**
  * Formats the given date value to an ISO string with timezone offset.
- *
- * @param {string|Date} value - The date value to format.
- * @returns {string|null} The formatted date string or null if the input is falsy.
+ * Returns null if the input is falsy.
  */
-export function formatDateTimeOffSet(value) {
+export function formatDateTimeOffSet(value: string | number | Date | null | undefined): string | null {
   return value ? `${toISOStringWithTimezone(new Date(value))}` : null;
 }

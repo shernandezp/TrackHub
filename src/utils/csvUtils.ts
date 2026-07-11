@@ -17,11 +17,8 @@
 /**
  * Escapes a single CSV cell (RFC 4180): wraps the value in double quotes
  * when it contains a comma, quote or line break and doubles inner quotes.
- *
- * @param {any} value - The cell value.
- * @returns {string} The escaped cell text.
  */
-function escapeCsvCell(value) {
+function escapeCsvCell(value: unknown): string {
   if (value === undefined || value === null) return '';
   const text = String(value);
   return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
@@ -29,12 +26,8 @@ function escapeCsvCell(value) {
 
 /**
  * Builds CSV content from a header row and data rows.
- *
- * @param {Array<string>} headers - The column headers.
- * @param {Array<Array<any>>} rows - The data rows.
- * @returns {string} The CSV content.
  */
-export function buildCsvContent(headers, rows) {
+export function buildCsvContent(headers: string[], rows: unknown[][]): string {
   return [headers, ...rows]
     .map(row => row.map(escapeCsvCell).join(','))
     .join('\r\n');
@@ -42,11 +35,8 @@ export function buildCsvContent(headers, rows) {
 
 /**
  * Replaces characters that are unsafe in file names with dashes.
- *
- * @param {any} value - The raw file name part.
- * @returns {string} A file-name-safe string.
  */
-export function sanitizeFileNamePart(value) {
+export function sanitizeFileNamePart(value: unknown): string {
   return String(value ?? '')
     .replace(/[^\w.-]+/g, '-')
     .replace(/^-+|-+$/g, '');
@@ -55,12 +45,8 @@ export function sanitizeFileNamePart(value) {
 /**
  * Triggers a client-side download of the given rows as a UTF-8 CSV file
  * (with BOM so Excel detects the encoding).
- *
- * @param {string} filename - The name of the file to download.
- * @param {Array<string>} headers - The column headers.
- * @param {Array<Array<any>>} rows - The data rows.
  */
-export function downloadCsv(filename, headers, rows) {
+export function downloadCsv(filename: string, headers: string[], rows: unknown[][]): void {
   const blob = new Blob(['﻿' + buildCsvContent(headers, rows)], {
     type: 'text/csv;charset=utf-8;'
   });

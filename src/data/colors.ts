@@ -25,9 +25,13 @@ const colors = [
     { value: 8, label: 'Brown' },
     { value: 9, label: 'Black' },
     { value: 10, label: 'White' }
-  ];
+  ] as const;
 
-  const getColor = (value) => {
+  export type Color = (typeof colors)[number];
+  export type ColorValue = Color['value'];
+  export type ColorLabel = Color['label'];
+
+  const getColor = (value: number): ColorLabel => {
     const color = colors.find(type => type.value === value);
     return color ? color.label : 'Black';
   };

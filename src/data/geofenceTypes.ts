@@ -29,9 +29,12 @@ const geofenceTypes = [
     { value: 12, label: 'RetailStore' },
     { value: 13, label: 'School' },
     { value: 14, label: 'Warehouse' }
-  ];
+  ] as const;
 
-const getGeofenceType = (value) => {
+export type GeofenceType = (typeof geofenceTypes)[number];
+export type GeofenceTypeValue = GeofenceType['value'];
+
+const getGeofenceType = (value: number): string => {
   const geofence = geofenceTypes.find(type => type.value === value);
   return geofence ? geofence.label : '';
 };

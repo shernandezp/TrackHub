@@ -14,11 +14,11 @@
 *  limitations under the License.
 */
 
-export function validateEmail(value) {
+export function validateEmail(value: string | null | undefined): string | boolean | null | undefined {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return value && emailRegex.test(value);
 };
-  
-export function validatePassword(value) {
+
+export function validatePassword(value: string | null | undefined): string | boolean | null | undefined {
     return value && value.length >= 6;
 };

@@ -39,7 +39,7 @@ describe('ArgonButton', () => {
   });
 
   test('fires onClick handler', () => {
-    const handleClick = jest.fn();
+    const handleClick = vi.fn();
     renderButton({ onClick: handleClick });
 
     fireEvent.click(screen.getByText('Click me'));
@@ -47,7 +47,7 @@ describe('ArgonButton', () => {
   });
 
   test('does not fire onClick when disabled', () => {
-    const handleClick = jest.fn();
+    const handleClick = vi.fn();
     renderButton({ onClick: handleClick, disabled: true });
 
     fireEvent.click(screen.getByRole('button'));

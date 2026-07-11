@@ -17,7 +17,7 @@
 import axios from 'axios';
 import { exchangeAuthorizationCode, refreshAccessToken, revokeAccessToken, logout } from 'services/auth';
 
-jest.mock('axios');
+vi.mock('axios');
 
 const MOCK_TOKEN_ENDPOINT = 'https://auth.example.com/token';
 const MOCK_REVOKE_ENDPOINT = 'https://auth.example.com/revoke';
@@ -34,13 +34,13 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
-  jest.clearAllMocks();
-  jest.spyOn(console, 'error').mockImplementation(() => {});
-  jest.spyOn(console, 'log').mockImplementation(() => {});
+  vi.clearAllMocks();
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+  vi.spyOn(console, 'log').mockImplementation(() => {});
 });
 
 afterEach(() => {
-  jest.restoreAllMocks();
+  vi.restoreAllMocks();
 });
 
 describe('exchangeAuthorizationCode', () => {
@@ -123,7 +123,7 @@ describe('revokeAccessToken', () => {
   });
 
   test('does not throw on failure, logs error instead', async () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     axios.post.mockRejectedValue(new Error('Revoke failed'));
 
     await expect(revokeAccessToken('token')).resolves.not.toThrow();
@@ -148,7 +148,7 @@ describe('logout', () => {
   });
 
   test('does not throw on failure, logs error instead', async () => {
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     axios.post.mockRejectedValue(new Error('Logout failed'));
 
     await expect(logout()).resolves.not.toThrow();

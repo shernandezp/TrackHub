@@ -40,6 +40,9 @@ const transporterTypes = [
     { value: 22, label: 'TOOL', icon: 'tools_power_drill' },
     { value: 23, label: 'TRUCK', icon: 'local_shipping' },
     { value: 24, label: 'TRACTOR', icon: 'agriculture' },
-  ];
-  
+  ] as const;
+
+  export type TransporterType = (typeof transporterTypes)[number];
+  export type TransporterTypeValue = TransporterType['value'];
+
   export default transporterTypes;

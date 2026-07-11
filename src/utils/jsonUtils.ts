@@ -16,14 +16,11 @@
 
 /**
  * Safely parses a JSON string, returning a fallback when the input is empty or invalid.
- * @param {string} json - The JSON string to parse.
- * @param {*} fallback - Value returned when parsing fails (default: empty object).
- * @returns {*} The parsed object, or the fallback.
  */
-export function parseJson(json, fallback = {}) {
+export function parseJson<T = unknown>(json: string | null | undefined, fallback: T = {} as T): T {
   if (!json) return fallback;
   try {
-    return JSON.parse(json);
+    return JSON.parse(json) as T;
   } catch {
     return fallback;
   }

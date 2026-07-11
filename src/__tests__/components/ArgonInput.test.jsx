@@ -70,7 +70,7 @@ describe('ArgonInput', () => {
   });
 
   test('calls onChange handler', () => {
-    const handleChange = jest.fn();
+    const handleChange = vi.fn();
     renderInput({ onChange: handleChange, placeholder: 'Input' });
 
     fireEvent.change(screen.getByPlaceholderText('Input'), { target: { value: 'test' } });

@@ -19,6 +19,9 @@ const protocolTypes = [
     { value: 2, label: 'TRACCAR' },
     { value: 3, label: 'GEOTAB' },
     { value: 4, label: 'GPS_GATE' },
-  ];
-  
+  ] as const;
+
+  export type ProtocolType = (typeof protocolTypes)[number];
+  export type ProtocolTypeValue = ProtocolType['value'];
+
   export default protocolTypes;

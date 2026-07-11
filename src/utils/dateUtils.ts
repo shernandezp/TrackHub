@@ -16,16 +16,14 @@
 
 /**
 * Formats a date value into a string in the format MM/DD/YYYY.
-*
-* @param {string|number|Date} value - The date value to format.
-* @returns {string} The formatted date string or an empty string if the input is invalid.
+* Returns an empty string if the input is invalid.
 */
-export function formatDate(value) {
+export function formatDate(value: string | number | Date | null | undefined): string {
     if (value === null || value === undefined || value === '') {
         return '';
     }
     const date = new Date(value);
-    if (!(date instanceof Date) || isNaN(date)) {
+    if (!(date instanceof Date) || isNaN(date.getTime())) {
         return '';
     }
     return `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()}`;
@@ -33,16 +31,14 @@ export function formatDate(value) {
 
 /**
 * Formats a date value into a string in the format MM/DD/YYYY HH:MM:SS.
-*
-* @param {string|number|Date} value - The date value to format.
-* @returns {string} The formatted date-time string or an empty string if the input is invalid.
+* Returns an empty string if the input is invalid.
 */
-export function formatDateTime(value) {
+export function formatDateTime(value: string | number | Date | null | undefined): string {
     if (value === null || value === undefined || value === '') {
         return '';
     }
     const date = new Date(value);
-    if (!(date instanceof Date) || isNaN(date)) {
+    if (!(date instanceof Date) || isNaN(date.getTime())) {
         return '';
     }
     return `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()} ${(date.getHours()).toString().padStart(2, '0')}:${(date.getMinutes()).toString().padStart(2, '0')}:${(date.getSeconds()).toString().padStart(2, '0')}`;
@@ -50,16 +46,13 @@ export function formatDateTime(value) {
 
 /**
 * Converts a date value to an ISO string with timezone.
-*
-* @param {Date} value - The date value to convert.
-* @returns {string} The ISO formatted date string with timezone.
 */
-export function toISOStringWithTimezone(value) {
+export function toISOStringWithTimezone(value: Date): string {
     // https://www.30secondsofcode.org/js/s/iso-format-date-with-timezone/
     // Pad a number to 2 digits
-    const pad = n => `${Math.floor(Math.abs(n))}`.padStart(2, '0');
+    const pad = (n: number): string => `${Math.floor(Math.abs(n))}`.padStart(2, '0');
     // Get timezone offset in ISO format (+hh:mm or -hh:mm)
-    const getTimezoneOffset = date => {
+    const getTimezoneOffset = (date: Date): string => {
         const tzOffset = -date.getTimezoneOffset();
         const diff = tzOffset >= 0 ? '+' : '-';
         return diff + pad(tzOffset / 60) + ':' + pad(tzOffset % 60);
@@ -77,10 +70,8 @@ export function toISOStringWithTimezone(value) {
 /**
  * Formats a duration given in seconds into a string like "1h 23m".
  * Kept here for compatibility with older imports.
- * @param {number} seconds
- * @returns {string}
  */
-export function formatDurationString(seconds) {
+export function formatDurationString(seconds: number | null | undefined): string {
     if (!seconds || seconds <= 0) return '0h 0m';
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);

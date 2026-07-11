@@ -31,6 +31,9 @@ const deviceTypes = [
   { value: 13, label: 'Satellite' },
   { value: 14, label: 'Smartwatch' },
   { value: 15, label: 'Wearable' },
-];
+] as const;
+
+export type DeviceType = (typeof deviceTypes)[number];
+export type DeviceTypeValue = DeviceType['value'];
 
 export default deviceTypes;

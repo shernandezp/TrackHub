@@ -14,6 +14,8 @@
 *  limitations under the License.
 */
 
-const maps = ['OSM', 'Google'];
-  
+const maps = ['OSM', 'Google'] as const;
+
+  export type MapProvider = (typeof maps)[number];
+
   export default maps;

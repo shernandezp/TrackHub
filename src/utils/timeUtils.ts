@@ -16,15 +16,13 @@
 
 /**
 * Formats an ISO 8601 duration string (e.g., "PT2H30M15S") into a human-readable format.
-*
-* @param {string} value - The ISO 8601 duration string to format.
-* @returns {string} The formatted duration string (e.g., "2 hr 30 min 15 s") or an empty string if the input is invalid.
+* Returns the formatted duration string (e.g., "2 hr 30 min 15 s") or an empty string if the input is invalid.
 */
-export function formatISODuration(value) {
+export function formatISODuration(value: string): string {
     const match = value.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
     if (!match) return ""; // Return empty if format is invalid
 
-    const parts = [];
+    const parts: string[] = [];
     if (match[1]) parts.push(`${match[1]} hr`);
     if (match[2]) parts.push(`${match[2]} min`);
     if (match[3]) parts.push(`${match[3]} s`);
@@ -34,11 +32,9 @@ export function formatISODuration(value) {
 
 /**
 * Formats a timestamp into a time string in the format "HH:MM:SS".
-*
-* @param {number|string|Date} value - The timestamp to format. Can be a number (milliseconds since epoch), a string, or a Date object.
-* @returns {string} The formatted time string.
+* The value can be a number (milliseconds since epoch), a string, or a Date object.
 */
-export function formatTime(value) {
+export function formatTime(value: number | string | Date): string {
     const date = new Date(value);
     return `${(date.getHours()).toString().padStart(2, '0')}:${(date.getMinutes()).toString().padStart(2, '0')}:${(date.getSeconds()).toString().padStart(2, '0')}`;
 }

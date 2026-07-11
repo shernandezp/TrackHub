@@ -20,21 +20,21 @@ import { jwtDecode } from 'jwt-decode';
 import useApiService from 'services/apiService';
 import { useAuth } from '../../AuthContext';
 
-jest.mock('axios');
-jest.mock('jwt-decode', () => ({
-  jwtDecode: jest.fn(),
+vi.mock('axios');
+vi.mock('jwt-decode', () => ({
+  jwtDecode: vi.fn(),
 }));
-jest.mock('../../AuthContext', () => ({
-  useAuth: jest.fn(),
+vi.mock('../../AuthContext', () => ({
+  useAuth: vi.fn(),
 }));
 
 describe('useApiService GraphQL responses', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     jwtDecode.mockReturnValue({ exp: Date.now() / 1000 + 60 });
     useAuth.mockReturnValue({
       accessToken: 'access-token',
-      handleRefreshToken: jest.fn(),
+      handleRefreshToken: vi.fn(),
     });
   });
 

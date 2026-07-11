@@ -39,7 +39,11 @@ const resolveKey = (bundle, key) =>
 // Static t('...') keys that are NOT passed a defaultValue (those with a defaultValue are allowed to be
 // absent from the bundles).
 const staticKeysIn = (file) => {
-  const source = fs.readFileSync(path.join(SRC, file), 'utf8');
+  // Extension-agnostic: source files move .js → .jsx → .tsx during the TS migration
+  const base = path.join(SRC, file.replace(/\.js$/, ''));
+  const resolved = ['.js', '.jsx', '.ts', '.tsx'].map((ext) => base + ext).find(fs.existsSync);
+  if (!resolved) throw new Error(`Source file not found for any extension: ${file}`);
+  const source = fs.readFileSync(resolved, 'utf8');
   const keys = [];
   const pattern = /\bt\(\s*['"]([A-Za-z0-9_.-]+)['"]\s*(,\s*\{[^}]*defaultValue[^}]*\})?/g;
   let match;

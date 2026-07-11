@@ -33,7 +33,7 @@ function TestConsumer() {
 describe('LoadingContext', () => {
   test('provides default loading state as false', () => {
     render(
-      <LoadingContext.Provider value={{ loading: false, setLoading: jest.fn() }}>
+      <LoadingContext.Provider value={{ loading: false, setLoading: vi.fn() }}>
         <TestConsumer />
       </LoadingContext.Provider>
     );
@@ -42,7 +42,7 @@ describe('LoadingContext', () => {
 
   test('provides loading state as true when set', () => {
     render(
-      <LoadingContext.Provider value={{ loading: true, setLoading: jest.fn() }}>
+      <LoadingContext.Provider value={{ loading: true, setLoading: vi.fn() }}>
         <TestConsumer />
       </LoadingContext.Provider>
     );
@@ -50,7 +50,7 @@ describe('LoadingContext', () => {
   });
 
   test('setLoading can be called to update state', () => {
-    const mockSetLoading = jest.fn();
+    const mockSetLoading = vi.fn();
     render(
       <LoadingContext.Provider value={{ loading: false, setLoading: mockSetLoading }}>
         <TestConsumer />

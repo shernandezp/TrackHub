@@ -18,15 +18,15 @@ import useRouterService from 'services/router';
 import useApiService from 'services/apiService';
 import { handleError } from 'utils/errorHandler';
 
-jest.mock('services/apiService');
-jest.mock('utils/errorHandler', () => ({
-  handleError: jest.fn(),
-  handleSilentError: jest.fn(),
+vi.mock('services/apiService');
+vi.mock('utils/errorHandler', () => ({
+  handleError: vi.fn(),
+  handleSilentError: vi.fn(),
 }));
 
 describe('useRouterService', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('getDevicePositions returns an empty list after a GraphQL feature restriction error', async () => {
@@ -37,7 +37,7 @@ describe('useRouterService', () => {
         },
       },
     };
-    const post = jest.fn().mockRejectedValue(graphQLError);
+    const post = vi.fn().mockRejectedValue(graphQLError);
     useApiService.mockReturnValue({ post });
 
     const service = useRouterService();

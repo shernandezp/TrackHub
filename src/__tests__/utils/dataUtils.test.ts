@@ -17,8 +17,8 @@
 import { formatValue, formatJSONValue, formatDateTimeOffSet } from 'utils/dataUtils';
 
 // Mock dateUtils to control toISOStringWithTimezone output
-jest.mock('utils/dateUtils', () => ({
-  toISOStringWithTimezone: jest.fn((date) => date.toISOString()),
+vi.mock('utils/dateUtils', () => ({
+  toISOStringWithTimezone: vi.fn((date) => date.toISOString()),
 }));
 
 describe('formatValue', () => {

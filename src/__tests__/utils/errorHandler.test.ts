@@ -14,15 +14,15 @@
  *  limitations under the License.
  */
 
-import { handleError, handleSilentError } from 'utils/errorHandler';
+import { handleError, handleSilentError, type AppErrorDetail } from 'utils/errorHandler';
 
 describe('handleError', () => {
-  let dispatchSpy;
-  let consoleSpy;
+  let dispatchSpy: ReturnType<typeof vi.spyOn>;
+  let consoleSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    dispatchSpy = jest.spyOn(window, 'dispatchEvent').mockImplementation(() => {});
-    consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    dispatchSpy = vi.spyOn(window, 'dispatchEvent').mockImplementation(() => false);
+    consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -43,7 +43,7 @@ describe('handleError', () => {
     };
     handleError(error);
     expect(dispatchSpy).toHaveBeenCalledTimes(1);
-    const event = dispatchSpy.mock.calls[0][0];
+    const event = dispatchSpy.mock.calls[0][0] as CustomEvent<AppErrorDetail>;
     expect(event.type).toBe('app-error');
     expect(event.detail.message).toBe('Field is required\nInvalid format');
   });
@@ -58,7 +58,7 @@ describe('handleError', () => {
     };
     handleError(error);
     expect(dispatchSpy).toHaveBeenCalledTimes(1);
-    const event = dispatchSpy.mock.calls[0][0];
+    const event = dispatchSpy.mock.calls[0][0] as CustomEvent<AppErrorDetail>;
     expect(event.type).toBe('app-error');
     expect(event.detail.message).toBe('Something went wrong');
   });
@@ -95,7 +95,7 @@ describe('handleError', () => {
       },
     };
     handleError(error);
-    const event = dispatchSpy.mock.calls[0][0];
+    const event = dispatchSpy.mock.calls[0][0] as CustomEvent<AppErrorDetail>;
     expect(event.detail.message).toBe('Error with "quotes" & <tags>');
   });
 
@@ -108,7 +108,7 @@ describe('handleError', () => {
       },
     };
     handleError(error);
-    const event = dispatchSpy.mock.calls[0][0];
+    const event = dispatchSpy.mock.calls[0][0] as CustomEvent<AppErrorDetail>;
     expect(event.detail.type).toBe('feature-disabled');
     expect(event.detail.code).toBe('FEATURE_DISABLED');
     expect(event.detail.i18nKey).toBe('errors.featureDisabled');
@@ -116,10 +116,10 @@ describe('handleError', () => {
 });
 
 describe('handleSilentError', () => {
-  let consoleSpy;
+  let consoleSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {

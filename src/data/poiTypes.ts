@@ -23,9 +23,12 @@ const poiTypes = [
     { value: 6, label: 'Workshop' },
     { value: 7, label: 'Port' },
     { value: 8, label: 'Other' }
-  ];
+  ] as const;
 
-const getPoiType = (value) => {
+export type PoiType = (typeof poiTypes)[number];
+export type PoiTypeValue = PoiType['value'];
+
+const getPoiType = (value: number): string => {
   const poiType = poiTypes.find(type => type.value === value);
   return poiType ? poiType.label : '';
 };
