@@ -19,6 +19,17 @@ export function validateEmail(value: string | null | undefined): string | boolea
     return value && emailRegex.test(value);
 };
 
+/**
+ * Platform password policy (matches the Security backend validators and
+ * ColumnMetadata.MinimumPasswordLength): at least 8 characters with at least
+ * one uppercase letter, one lowercase letter, and one digit.
+ */
 export function validatePassword(value: string | null | undefined): string | boolean | null | undefined {
-    return value && value.length >= 6;
+    return (
+      value &&
+      value.length >= 8 &&
+      /[A-Z]/.test(value) &&
+      /[a-z]/.test(value) &&
+      /[0-9]/.test(value)
+    );
 };

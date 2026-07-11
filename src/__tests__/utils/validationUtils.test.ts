@@ -59,16 +59,32 @@ describe('validateEmail', () => {
 });
 
 describe('validatePassword', () => {
-  test('returns true for password with 6 characters', () => {
-    expect(validatePassword('123456')).toBe(true);
+  test('accepts a password meeting the full policy', () => {
+    expect(validatePassword('Passw0rd')).toBe(true);
   });
 
-  test('returns true for long password', () => {
-    expect(validatePassword('averylongpassword123')).toBe(true);
+  test('accepts a long compliant password', () => {
+    expect(validatePassword('AveryLongPassword123')).toBe(true);
   });
 
-  test('returns false for password with 5 characters', () => {
-    expect(validatePassword('12345')).toBeFalsy();
+  test('rejects fewer than 8 characters even when complex', () => {
+    expect(validatePassword('Pass1ab')).toBeFalsy();
+  });
+
+  test('rejects a password without an uppercase letter', () => {
+    expect(validatePassword('password1')).toBeFalsy();
+  });
+
+  test('rejects a password without a lowercase letter', () => {
+    expect(validatePassword('PASSWORD1')).toBeFalsy();
+  });
+
+  test('rejects a password without a digit', () => {
+    expect(validatePassword('PasswordX')).toBeFalsy();
+  });
+
+  test('rejects digits-only passwords', () => {
+    expect(validatePassword('12345678')).toBeFalsy();
   });
 
   test('returns false for empty password', () => {
@@ -81,9 +97,5 @@ describe('validatePassword', () => {
 
   test('returns false for undefined', () => {
     expect(validatePassword(undefined)).toBeFalsy();
-  });
-
-  test('returns true for exactly 6 chars', () => {
-    expect(validatePassword('abcdef')).toBe(true);
   });
 });
