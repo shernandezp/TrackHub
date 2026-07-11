@@ -31,7 +31,7 @@ import ArgonTypography from 'components/ArgonTypography';
 import ArgonBox from 'components/ArgonBox';
 import useAccountService from 'services/account';
 import useDeviceService from 'services/device';
-import useOperatorService from 'services/operator';
+import { useGpsOperators } from 'queries/operators';
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from 'utils/dateUtils';
 import { GPS_INTEGRATION_REFRESH_EVENT } from 'layouts/gpsintegration/gpsIntegrationEvents';
@@ -61,7 +61,6 @@ function ManageSynchronizedDevices() {
   const { setLoading } = useContext(LoadingContext);
   const [expanded, setExpanded] = useState(false);
   const [devices, setDevices] = useState([]);
-  const [operators, setOperators] = useState([]);
   const [accountId, setAccountId] = useState(null);
   const [statusFilter, setStatusFilter] = useState('');
   const [operatorFilter, setOperatorFilter] = useState('');
@@ -72,7 +71,10 @@ function ManageSynchronizedDevices() {
   const loaded = useRef(false);
   const { getAccountByUser } = useAccountService();
   const { getSynchronizedDevices, setSynchronizedDeviceIgnored, deleteDevice } = useDeviceService();
-  const { getGpsOperators } = useOperatorService();
+  // Operator name map / filter options come from the query layer; the device
+  // list stays on the legacy device service (migrated in a later batch).
+  const operatorsQuery = useGpsOperators({ enabled: expanded });
+  const operators = operatorsQuery.data ?? [];
 
   const statusLabel = (status) => {
     const key = (status || '').toLowerCase();
@@ -99,8 +101,6 @@ function ManageSynchronizedDevices() {
           return;
         }
         setAccountId(acct.accountId);
-        const ops = await getGpsOperators();
-        setOperators(ops || []);
         await refresh(acct.accountId);
       })();
     }

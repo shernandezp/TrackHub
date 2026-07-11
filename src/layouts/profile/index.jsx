@@ -29,7 +29,7 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
-import { useState, useEffect, useContext } from "react";
+import { useEffect, useContext } from "react";
 
 // @mui material components
 import Grid from "@mui/material/Grid";
@@ -48,7 +48,7 @@ import Header from "layouts/profile/components/Header";
 import PlatformSettings from "layouts/profile/components/PlatformSettings";
 
 // Data
-import useUserService from "services/users";
+import { useCurrentUser, useUpdateCurrentUser, useUpdatePassword } from "queries/users";
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
 
@@ -56,21 +56,32 @@ const bgImage = "assets/images/vr-bg.jpg";
 
 
 function Overview() {
-  const { getCurrentUser, updateCurrentUser, updatePassword } = useUserService();
   const { setLoading } = useContext(LoadingContext);
   const { isAuthenticated } = useAuth();
-  const [user, setUser] = useState({});
 
+  const currentUserQuery = useCurrentUser({ enabled: isAuthenticated });
+  const user = currentUserQuery.data ?? {};
+  const updateCurrentUserMutation = useUpdateCurrentUser();
+  const updatePasswordMutation = useUpdatePassword();
+
+  // Preserve the prop contracts ProfileInfoCard expects: updateCurrentUser(values)
+  // and updatePassword(userId, { userId, password }) — the password-change flow
+  // is unchanged.
+  const updateCurrentUser = (values) =>
+    updateCurrentUserMutation.mutateAsync({
+      firstName: values.firstName,
+      secondName: values.secondName,
+      lastName: values.lastName,
+      secondSurname: values.secondSurname,
+      dob: values.dob,
+    });
+  const updatePassword = (userId, userData) =>
+    updatePasswordMutation.mutateAsync({ userId, password: userData.password });
+
+  // Keep the global spinner UX while the profile loads.
   useEffect(() => {
-    const fetchUser = async () => {
-      setLoading(true);
-      const user = await getCurrentUser();
-      setUser(user);
-      setLoading(false);
-    };
-    if(isAuthenticated)
-      fetchUser();
-  }, [isAuthenticated]);
+    setLoading(currentUserQuery.isFetching);
+  }, [currentUserQuery.isFetching, setLoading]);
 
   return (
     <DashboardLayout

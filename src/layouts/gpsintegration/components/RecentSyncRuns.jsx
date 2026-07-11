@@ -14,8 +14,9 @@
 *  limitations under the License.
 */
 
-import { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import PropTypes from 'prop-types';
 import Table from 'controls/Tables/Table';
 import TableAccordion from 'controls/Accordions/TableAccordion';
@@ -23,7 +24,7 @@ import ArgonBadge from 'components/ArgonBadge';
 import ArgonBox from 'components/ArgonBox';
 import ArgonTypography from 'components/ArgonTypography';
 import useAccountService from 'services/account';
-import useOperatorService from 'services/operator';
+import { useGpsOperators, useOperatorSyncRuns, operatorTelemetryKeys } from 'queries/operators';
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from 'utils/dateUtils';
 import { GPS_INTEGRATION_REFRESH_EVENT } from 'layouts/gpsintegration/gpsIntegrationEvents';
@@ -51,55 +52,46 @@ function resultColor(result) {
 function RecentSyncRuns() {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
+  const queryClient = useQueryClient();
   const [expanded, setExpanded] = useState(false);
-  const [runs, setRuns] = useState([]);
-  const [operators, setOperators] = useState([]);
   const [accountId, setAccountId] = useState(null);
   const [error, setError] = useState(null);
-  const loaded = useRef(false);
+  const accountRequested = useRef(false);
   const { getAccountByUser } = useAccountService();
-  const { getGpsOperators, getOperatorSyncRuns } = useOperatorService();
 
-  const load = useCallback(async (acct = accountId) => {
-    if (!acct) return;
-    setLoading(true);
-    try {
-      const result = await getOperatorSyncRuns(acct, null, 20);
-      if (!result) setError(t('gpsIntegration.errors.syncRunsLoad'));
-      else {
-        setRuns(result);
-        setError(null);
+  // Reads run only once the accordion is expanded. The sync-run query also
+  // waits for the account id (resolved imperatively below).
+  const operatorsQuery = useGpsOperators({ enabled: expanded });
+  const syncRunsQuery = useOperatorSyncRuns(accountId, null, 20, { enabled: expanded });
+  const operators = operatorsQuery.data ?? [];
+  const runs = syncRunsQuery.data ?? [];
+
+  useEffect(() => {
+    setLoading(operatorsQuery.isFetching || syncRunsQuery.isFetching);
+  }, [operatorsQuery.isFetching, syncRunsQuery.isFetching, setLoading]);
+
+  useEffect(() => {
+    if (!expanded || accountRequested.current) return;
+    accountRequested.current = true;
+    (async () => {
+      const acct = await getAccountByUser();
+      if (!acct?.accountId) {
+        setError(t('gpsIntegration.errors.syncRunsLoad'));
+        return;
       }
-    } finally { setLoading(false); }
-  }, [accountId, getOperatorSyncRuns, setLoading, t]);
+      setAccountId(acct.accountId);
+    })();
+  }, [expanded, getAccountByUser, t]);
 
+  // The refresh bus now drives a cache invalidation; the sync-run query
+  // refetches when it is active (accordion expanded). A read failure is
+  // surfaced by the global toast.
   useEffect(() => {
-    if (expanded && !loaded.current) {
-      loaded.current = true;
-      (async () => {
-        setLoading(true);
-        try {
-          const acct = await getAccountByUser();
-          if (!acct?.accountId) {
-            setError(t('gpsIntegration.errors.syncRunsLoad'));
-            return;
-          }
-          setAccountId(acct.accountId);
-          const ops = await getGpsOperators();
-          setOperators(ops || []);
-          await load(acct.accountId);
-        } finally { setLoading(false); }
-      })();
-    }
-  }, [expanded, getAccountByUser, getGpsOperators, load, setLoading, t]);
-
-  useEffect(() => {
-    const handleRefresh = () => {
-      if (loaded.current) load();
-    };
+    const handleRefresh = () =>
+      queryClient.invalidateQueries({ queryKey: operatorTelemetryKeys.all });
     window.addEventListener(GPS_INTEGRATION_REFRESH_EVENT, handleRefresh);
     return () => window.removeEventListener(GPS_INTEGRATION_REFRESH_EVENT, handleRefresh);
-  }, [load]);
+  }, [queryClient]);
 
   const operatorNames = operators.reduce((acc, operator) => {
     acc[operator.operatorId] = operator.name;
@@ -124,7 +116,7 @@ function RecentSyncRuns() {
     <TableAccordion title={t('gpsIntegration.sections.recentSyncRuns')} expanded={expanded} setExpanded={setExpanded}>
       {error
         ? <ArgonBox><ArgonTypography variant="button" color="error">{error}</ArgonTypography></ArgonBox>
-        : runs.length === 0 && loaded.current
+        : runs.length === 0 && syncRunsQuery.isFetched
           ? <ArgonTypography variant="caption" color="secondary">{t('gpsIntegration.empty.syncRuns')}</ArgonTypography>
           : <Table
               columns={[

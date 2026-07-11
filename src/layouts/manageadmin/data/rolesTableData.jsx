@@ -14,24 +14,23 @@
 *  limitations under the License.
 */
 
-import { useEffect, useState, useRef, useContext } from "react";
+import { useEffect, useMemo, useContext } from "react";
 import { useTranslation } from 'react-i18next';
 import { Name } from "controls/Tables/components/tableComponents";
 import Icon from "@mui/material/Icon";
 import ArgonButton from "components/ArgonButton";
-import useRoleService from "services/roles";
+import { useRoles } from "queries/roles";
 import { LoadingContext } from 'LoadingContext';
 import { toCamelCase } from 'utils/stringUtils';
 import { useAuth } from "AuthContext";
 
 function useRoleTableData(fetchData, handleOpenClick) {
   const { t } = useTranslation();
-  const [data, setData] = useState({ columns: [], rows: [] });
   const { setLoading } = useContext(LoadingContext);
   const { isAuthenticated } = useAuth();
 
-  const hasLoaded = useRef(false);
-  const { getRoles } = useRoleService();
+  const rolesQuery = useRoles({ enabled: !!fetchData && isAuthenticated });
+  const roles = rolesQuery.data ?? [];
 
   const handleOpen = (roleId) => {
     handleOpenClick(roleId);
@@ -57,20 +56,18 @@ function useRoleTableData(fetchData, handleOpenClick) {
     })),
   });
 
+  // Keep the global spinner UX for the initial load / invalidation refetch.
   useEffect(() => {
-    if (fetchData && !hasLoaded.current && isAuthenticated) {
-      async function fetchData() {
-        setLoading(true);
-        const roles = await getRoles();
-        setData(buildTableData(roles));
-        hasLoaded.current = true;
-        setLoading(false);
-      }
-      fetchData();
-    }
-  }, [fetchData, isAuthenticated]);
+    setLoading(rolesQuery.isFetching);
+  }, [rolesQuery.isFetching, setLoading]);
 
-  return { 
+  const data = useMemo(
+    () => buildTableData(roles),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [roles, t]
+  );
+
+  return {
     data
   };
 }

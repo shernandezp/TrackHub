@@ -14,16 +14,23 @@
 *  limitations under the License.
 */
 
-import { useEffect, useState, useRef, useContext } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useTranslation } from 'react-i18next';
 import { NameDetail, Description } from "controls/Tables/components/tableComponents";
 import Icon from "@mui/material/Icon";
 import ArgonTypography from "components/ArgonTypography";
 import ArgonBadge from "components/ArgonBadge";
 import ArgonButton from "components/ArgonButton";
-import useOperatorService from "services/operator";
 import useCredentialService from "services/credential";
-import useRouterService from "services/router";
+import { pingOperator } from "api/router/router";
+import {
+  useOperatorsByCurrentAccount,
+  useCreateOperator,
+  useUpdateOperator,
+  useDeleteOperator,
+  useSetOperatorEnabled,
+  useTriggerOperatorDeviceSync,
+} from "queries/operators";
 import { formatDateTime } from "utils/dateUtils";
 import { handleSaveCredential, handleTestCredential } from "layouts/gpsintegration/actions/credentialActions";
 import { LoadingContext } from 'LoadingContext';
@@ -42,7 +49,6 @@ function healthBadgeColor(status) {
 
 function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialClick, handleDeleteClick) {
   const { t } = useTranslation();
-  const [operators, setOperators] = useState([]);
   const [open, setOpen] = useState(false);
   const [openCredential, setOpenCredential] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -53,26 +59,29 @@ function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialCl
   const { setLoading } = useContext(LoadingContext);
   const { isAuthenticated } = useAuth();
 
-  const hasLoaded = useRef(false);
-  const {
-    getOperator,
-    getOperatorsByCurrentAccount,
-    updateOperator,
-    createOperator,
-    deleteOperator,
-    setOperatorEnabled,
-    triggerOperatorDeviceSync
-  } = useOperatorService();
+  const operatorsQuery = useOperatorsByCurrentAccount({ enabled: !!fetchData && isAuthenticated });
+  const operators = operatorsQuery.data ?? [];
+  const createOperator = useCreateOperator();
+  const updateOperator = useUpdateOperator();
+  const deleteOperator = useDeleteOperator();
+  const setOperatorEnabled = useSetOperatorEnabled();
+  const triggerOperatorDeviceSync = useTriggerOperatorDeviceSync();
   const { getCredentialByOperator, createCredential, updateCredential } = useCredentialService();
-  const { testConnectivity } = useRouterService();
 
-  const updateOperatorRows = (nextOperators) => {
-    setOperators(nextOperators);
-  };
+  // Keep the global spinner UX for the initial load / invalidation refetch.
+  useEffect(() => {
+    setLoading(operatorsQuery.isFetching);
+  }, [operatorsQuery.isFetching, setLoading]);
 
-  const refreshOperators = async () => {
-    const nextOperators = await getOperatorsByCurrentAccount() || [];
-    updateOperatorRows(nextOperators);
+  // Silent op: connectivity failures surface in the test dialog, not the
+  // global toast, so call the api function directly and swallow the error.
+  const testConnectivity = async (operatorId) => {
+    try {
+      return await pingOperator(operatorId);
+    } catch (error) {
+      if (process.env.NODE_ENV !== 'production') console.error(error);
+      return false;
+    }
   };
 
   const healthLabel = (status) => {
@@ -83,10 +92,15 @@ function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialCl
   const onSave = async (operator) => {
     setLoading(true);
     try {
-      if (operator.operatorId) await updateOperator(operator.operatorId, operator);
-      else await createOperator(operator);
+      if (operator.operatorId) {
+        await updateOperator.mutateAsync({ operatorId: operator.operatorId, ...operator });
+      } else {
+        await createOperator.mutateAsync(operator);
+      }
       setOpen(false);
-      await refreshOperators();
+    } catch {
+      // Failure is surfaced by the global toast; keep the dialog open so the
+      // user can retry without re-entering the values.
     } finally {
       setLoading(false);
     }
@@ -95,11 +109,10 @@ function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialCl
   const onDelete = async (operatorId) => {
     setLoading(true);
     try {
-      const response = await deleteOperator(operatorId);
-      if (response) {
-        setConfirmOpen(false);
-        await refreshOperators();
-      }
+      await deleteOperator.mutateAsync(operatorId);
+      setConfirmOpen(false);
+    } catch {
+      // Failure is surfaced by the global toast.
     } finally {
       setLoading(false);
     }
@@ -113,7 +126,7 @@ function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialCl
         createCredential,
         updateCredential);
         setOpenCredential(false);
-        await refreshOperators();
+        await operatorsQuery.refetch();
         notifyGpsIntegrationRefresh();
       } finally {
         setLoading(false);
@@ -153,22 +166,12 @@ function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialCl
   const handleToggleEnabled = async (operator) => {
     setLoading(true);
     try {
-      const nextEnabled = !operator.enabled;
-      const saved = await setOperatorEnabled(operator.operatorId, nextEnabled);
-      if (!saved) {
-        await refreshOperators();
-        return;
-      }
-
-      const latest = await getOperator(operator.operatorId);
-      if (latest) {
-        setOperators(prev => prev.map(item => (
-          item.operatorId === latest.operatorId ? { ...item, ...latest } : item
-        )));
-      } else {
-        await refreshOperators();
-      }
+      // Mutation success invalidates the operators cache, so the list refetches
+      // with the new enabled/health values (replaces the old manual re-read).
+      await setOperatorEnabled.mutateAsync({ operatorId: operator.operatorId, enabled: !operator.enabled });
       notifyGpsIntegrationRefresh();
+    } catch {
+      // Failure is surfaced by the global toast; the cache is left unchanged.
     } finally {
       setLoading(false);
     }
@@ -178,14 +181,18 @@ function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialCl
     setLoading(true);
     try {
       setSyncingMap(prev => ({ ...prev, [operator.operatorId]: true }));
-      const completed = await triggerOperatorDeviceSync(operator.operatorId, resetDeviceCatalog);
+      const completed = await triggerOperatorDeviceSync.mutateAsync({
+        operatorId: operator.operatorId,
+        resetDeviceCatalog,
+      });
       if (!completed) {
         setTestTitle(t('gpsIntegration.actions.sync'));
         setTestMessage(t('gpsIntegration.actions.syncNotCompleted'));
         setTestOpen(true);
       }
-      await refreshOperators();
       notifyGpsIntegrationRefresh();
+    } catch {
+      // Failure is surfaced by the global toast.
     } finally {
       setSyncingMap(prev => ({ ...prev, [operator.operatorId]: false }));
       setLoading(false);
@@ -296,18 +303,6 @@ function useOperatorTableData(fetchData, handleEditClick, handleEditCredentialCl
       id: operator.operatorId
     })),
   });
-
-  useEffect(() => {
-    if (fetchData && !hasLoaded.current && isAuthenticated) {
-      async function fetchData() {
-        setLoading(true);
-        await refreshOperators();
-        hasLoaded.current = true;
-        setLoading(false);
-      }
-      fetchData();
-    }
-  }, [fetchData, isAuthenticated]);
 
   const data = buildTableData(operators);
 

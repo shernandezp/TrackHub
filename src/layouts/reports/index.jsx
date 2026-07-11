@@ -22,7 +22,8 @@ import DashboardNavbar from "controls/Navbars/DashboardNavbar";
 import CustomSelect from 'controls/Dialogs/CustomSelect';
 import useReportService from "services/reports";
 import ReportFilters from "layouts/reports/components/Filters";
-import useExcelReportService from "services/excelReports";
+import { downloadExcelReport } from "api/reporting/excelReports";
+import { notifyApiError } from "api/core/errors";
 import { useTranslation } from 'react-i18next';
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
@@ -33,7 +34,6 @@ function Reports() {
   const { isAuthenticated } = useAuth();
   const { getReports } = useReportService();
   const { setLoading } = useContext(LoadingContext);
-  const { getReport } = useExcelReportService();
 
   const [reports, setReports] = useState([]);
   const [selectedReport, setSelectedReport] = useState('');
@@ -57,7 +57,11 @@ function Reports() {
 
   const handleSearch = async (values) => {
     var reportName = reports.find(report => report.value === selectedReport).label;
-    await getReport(selectedReport, reportName, values);
+    try {
+      await downloadExcelReport(selectedReport, reportName, values);
+    } catch (error) {
+      notifyApiError(error);
+    }
   };
 
   const handleChange = (event) => {

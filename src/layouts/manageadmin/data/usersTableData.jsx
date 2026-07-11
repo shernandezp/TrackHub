@@ -14,39 +14,52 @@
 *  limitations under the License.
 */
 
-import { useEffect, useState, useRef, useContext } from "react";
+import { useEffect, useMemo, useState, useContext } from "react";
 import { useTranslation } from 'react-i18next';
 import { NameDetail } from "controls/Tables/components/tableComponents";
 import Icon from "@mui/material/Icon";
 import ArgonTypography from "components/ArgonTypography";
 import ArgonButton from "components/ArgonButton";
-import useUserService from "services/users";
-import { handleDelete, handleSave, handleUpdatePassword } from "layouts/manageadmin/actions/usersActions";
+import {
+  useUsersByAccount,
+  useCreateUser,
+  useUpdateUser,
+  useDeleteUser,
+  useUpdatePassword,
+  useUnlockUser,
+} from "queries/users";
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
 
 function useUserTableData(fetchData, handleEditClick, handleUpdatePasswordClick, handleDeleteClick) {
   const { t } = useTranslation();
-  const [data, setData] = useState({ columns: [], rows: [] });
-  const [users, setUsers] = useState([]);
   const [open, setOpen] = useState(false);
   const [openPassword, setOpenPassword] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const { setLoading } = useContext(LoadingContext);
   const { isAuthenticated } = useAuth();
 
-  const hasLoaded = useRef(false);
-  const { getUsersByAccount, createUser, updateUser, deleteUser, updatePassword, unlockUser } = useUserService();
+  const usersQuery = useUsersByAccount({ enabled: !!fetchData && isAuthenticated });
+  const users = usersQuery.data ?? [];
+  const createUser = useCreateUser();
+  const updateUser = useUpdateUser();
+  const deleteUser = useDeleteUser();
+  const updatePassword = useUpdatePassword();
+  const unlockUser = useUnlockUser();
+
+  // Keep the global spinner UX for the initial load / invalidation refetch.
+  useEffect(() => {
+    setLoading(usersQuery.isFetching);
+  }, [usersQuery.isFetching, setLoading]);
 
   const isLocked = (user) => !!user.lockedUntil && new Date(user.lockedUntil) > new Date();
 
   const onUnlock = async (userId) => {
     setLoading(true);
     try {
-      await unlockUser(userId);
-      const refreshed = await getUsersByAccount();
-      setUsers(refreshed);
-      setData(buildTableData(refreshed));
+      await unlockUser.mutateAsync(userId);
+    } catch {
+      // Failure is surfaced by the global toast.
     } finally {
       setLoading(false);
     }
@@ -55,15 +68,15 @@ function useUserTableData(fetchData, handleEditClick, handleUpdatePasswordClick,
   const onSave = async (user) => {
     setLoading(true);
     try {
-      await handleSave(
-        user, 
-        users, 
-        setUsers, 
-        setData, 
-        buildTableData, 
-        createUser, 
-        updateUser);
-        setOpen(false);
+      if (user.userId) {
+        await updateUser.mutateAsync(user);
+      } else {
+        await createUser.mutateAsync(user);
+      }
+      setOpen(false);
+    } catch {
+      // Failure is surfaced by the global toast; keep the dialog open so the
+      // user can retry without re-entering the values.
     } finally {
       setLoading(false);
     }
@@ -72,29 +85,25 @@ function useUserTableData(fetchData, handleEditClick, handleUpdatePasswordClick,
   const onDelete = async (userId) => {
     setLoading(true);
     try {
-      await handleDelete(
-        userId, 
-        users, 
-        setUsers, 
-        setData, 
-        buildTableData, 
-        deleteUser);
-        setConfirmOpen(false);
-      } finally {
-        setLoading(false);
-      }
-  }
+      await deleteUser.mutateAsync(userId);
+      setConfirmOpen(false);
+    } catch {
+      // Failure is surfaced by the global toast.
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const onSavePassword = async (user) => {
     setLoading(true);
     try {
-      await handleUpdatePassword(
-        user, 
-        updatePassword);
-        setOpenPassword(false);
-      } finally {
-        setLoading(false);
-      }
+      await updatePassword.mutateAsync({ userId: user.userId, password: user.password });
+      setOpenPassword(false);
+    } catch {
+      // Failure is surfaced by the global toast; keep the dialog open.
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleOpen = (user) => {
@@ -143,14 +152,14 @@ function useUserTableData(fetchData, handleEditClick, handleUpdatePasswordClick,
       ),
       action: (
         <>
-            <ArgonButton 
-                variant="text" 
-                color="dark" 
+            <ArgonButton
+                variant="text"
+                color="dark"
                 onClick={() => handleOpen(user)}>
               <Icon>edit</Icon>&nbsp;{t('generic.edit')}
             </ArgonButton>
-            <ArgonButton 
-              variant="text" 
+            <ArgonButton
+              variant="text"
               color="error"
               onClick={() => handleOpenDelete(user.userId)}>
               <Icon>delete</Icon>&nbsp;{t('generic.delete')}
@@ -173,30 +182,22 @@ function useUserTableData(fetchData, handleEditClick, handleUpdatePasswordClick,
     })),
   });
 
-  useEffect(() => {
-    if (fetchData && !hasLoaded.current && isAuthenticated) {
-      async function fetchData() {
-        setLoading(true);
-        const users = await getUsersByAccount();
-        setUsers(users);
-        setData(buildTableData(users));
-        hasLoaded.current = true;
-        setLoading(false);
-      }
-      fetchData();
-    }
-  }, [fetchData, isAuthenticated]);
+  const data = useMemo(
+    () => buildTableData(users),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [users, t]
+  );
 
-  return { 
-    data, 
-    open, 
-    openPassword, 
+  return {
+    data,
+    open,
+    openPassword,
     confirmOpen,
-    onSave, 
-    onDelete, 
+    onSave,
+    onDelete,
     onSavePassword,
-    setOpen, 
-    setOpenPassword, 
+    setOpen,
+    setOpenPassword,
     setConfirmOpen };
 }
 

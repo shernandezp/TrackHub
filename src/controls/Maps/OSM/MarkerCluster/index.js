@@ -26,7 +26,7 @@ import 'leaflet.markercluster';
 import { useTranslation } from 'react-i18next';
 import { createSvgIcon } from 'controls/Maps/utils/imageUtils';
 import { createEnhancedPopupContent, getRelativeTimeText } from 'controls/Maps/utils/popupUtils';
-import useRouterService from 'services/router';
+import { reverseGeocode } from 'api/router/router';
 
 const ANIMATION_DURATION_MS = 1000;
 // Above this rendered-marker count position changes are applied without animation.
@@ -58,7 +58,6 @@ const iconChanged = (prev, next) =>
 const MarkerCluster = ({ markers, selectedMarker, handleSelected, viewportThreshold = 1000 }) => {
     const { t } = useTranslation();
     const map = useMap();
-    const { reverseGeocode } = useRouterService();
     const groupRef = useRef(null);
     // id -> { marker: L.Marker, data, animationFrame }
     const entriesRef = useRef(new Map());
@@ -223,7 +222,14 @@ const MarkerCluster = ({ markers, selectedMarker, handleSelected, viewportThresh
             if (!entry) return;
             button.disabled = true;
             button.textContent = t('transporterMap.resolvingAddress');
-            const result = await reverseGeocode(entry.data.lat, entry.data.lng, entry.data.id);
+            // Silent op: a failed reverse-geocode must not toast, so call the
+            // api function directly and swallow the error.
+            let result = null;
+            try {
+                result = await reverseGeocode(entry.data.lat, entry.data.lng, entry.data.id);
+            } catch (error) {
+                if (process.env.NODE_ENV !== 'production') console.error(error);
+            }
             if (!entriesRef.current.has(markerId(entry.data))) return;
             if (result && (result.address || result.city || result.state || result.country)) {
                 entry.data = {
@@ -243,7 +249,7 @@ const MarkerCluster = ({ markers, selectedMarker, handleSelected, viewportThresh
         return () => {
             container.removeEventListener('click', onClick);
         };
-    }, [map, reverseGeocode, t]);
+    }, [map, t]);
 
     // Center and open the popup of the selected unit (selection change only,
     // so refresh cycles do not recenter the map).

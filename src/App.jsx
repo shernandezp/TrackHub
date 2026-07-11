@@ -72,7 +72,7 @@ import "assets/css/nucleo-svg.css";
 import { useAuth } from "AuthContext";
 import { LoadingContext } from 'LoadingContext';
 import { ClipLoader } from 'react-spinners';
-import useUserService from "services/users";
+import { isAdmin, isManager } from "api/security/users";
 import useSettingsService from 'services/settings';
 import useAccountContextService from "services/accountContext";
 import usePrincipalService from "services/principals";
@@ -88,7 +88,6 @@ export default function App() {
   const [onMouseEnter, setOnMouseEnter] = useState(false);
   const { isAuthenticated, login, isLoggingIn, authError } = useAuth();
   const { pathname } = useLocation();
-  const { isAdmin, isManager } = useUserService();
   const { getUserSettings, getAccountSettings, updateAccountSettings } = useSettingsService();
   const { getAccountContext } = useAccountContextService();
   const { getCurrentPrincipal } = usePrincipalService();
@@ -120,8 +119,10 @@ export default function App() {
       if (isAuthenticated) {
         const principal = await getCurrentPrincipal();
         setCurrentPrincipal(principal);
-        const admin = await isAdmin();
-        const manager = await isManager();
+        // Silent ops: default to false on failure (matches the old service's
+        // handleSilentError — no toast, routes stay locked down).
+        const admin = await isAdmin().catch(() => false);
+        const manager = await isManager().catch(() => false);
         const userSettings = await getUserSettings();
         setUserIsAdmin(admin);
         setUserIsManager(manager);

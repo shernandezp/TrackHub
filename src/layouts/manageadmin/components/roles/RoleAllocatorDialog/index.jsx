@@ -19,46 +19,38 @@ import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 import DynamicTableDialog from 'controls/Dialogs/TableDialogs/DynamicTableDialog';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
-import useUserService from 'services/users';
-import useRoleService from 'services/roles';
+import { useUsersByAccount } from 'queries/users';
+import { useUsersByRole, useCreateUserRole, useDeleteUserRole } from 'queries/roles';
 import { LoadingContext } from 'LoadingContext';
 
 function RoleAllocatorDialog({ open, setOpen, roleId }) {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
-  const { getUsersByAccount } = useUserService();
-  const { getUsersByRole, createUserRole, deleteUserRole } = useRoleService();
-  const [data, setData] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [accountUsers, setAccountUsers] = useState([]);
   const [userId, setUserId] = useState('');
+
+  const accountUsersQuery = useUsersByAccount({ enabled: open });
+  const accountUsers = accountUsersQuery.data ?? [];
+  // Assigned users only matter while the dialog is open.
+  const assignedQuery = useUsersByRole(open ? roleId : undefined);
+  const assignedUsers = assignedQuery.data ?? [];
+  const createUserRole = useCreateUserRole();
+  const deleteUserRole = useDeleteUserRole();
 
   const columns = [
     { field: 'username', headerName: t('user.username') }
   ];
 
-  const reloadData = async () => {
-    const assignedUsers = await getUsersByRole(roleId);
-    const unassignedUsers = accountUsers.filter(user => !assignedUsers.some(assignedUser => assignedUser.userId === user.userId));
-    setUsers(unassignedUsers.map(user => ({
+  // Keep the global spinner UX while the lists load/refresh.
+  useEffect(() => {
+    setLoading(accountUsersQuery.isFetching || assignedQuery.isFetching);
+  }, [accountUsersQuery.isFetching, assignedQuery.isFetching, setLoading]);
+
+  const users = accountUsers
+    .filter(user => !assignedUsers.some(assignedUser => assignedUser.userId === user.userId))
+    .map(user => ({
       value: user.userId,
       label: user.username
-    })));
-    setData(assignedUsers);
-    setUserId('');
-  };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      const users = await getUsersByAccount();
-      setAccountUsers(users);
-      await reloadData();
-      setLoading(false);
-    };
-    if (open)
-        fetchData();
-  }, [open]);
+    }));
 
   const handleChange = (event) => {
     setLoading(true);
@@ -68,33 +60,43 @@ function RoleAllocatorDialog({ open, setOpen, roleId }) {
 
   const handleAdd = async () => {
     setLoading(true);
-    await createUserRole(userId, roleId);
-    await reloadData();
-    setLoading(false);
+    try {
+      await createUserRole.mutateAsync({ userId, roleId });
+      setUserId('');
+    } catch {
+      // Failure is surfaced by the global toast.
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDelete = async (selectedRows) => {
     setLoading(true);
-    const deletePromises = selectedRows.map(index => deleteUserRole(data[index].userId, roleId));
-    await Promise.all(deletePromises);
-    await reloadData();
-    setLoading(false);
+    try {
+      const deletePromises = selectedRows.map(index =>
+        deleteUserRole.mutateAsync({ userId: assignedUsers[index].userId, roleId }));
+      await Promise.all(deletePromises);
+      setUserId('');
+    } catch {
+      // Failure is surfaced by the global toast.
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleClose = async () => {
     setUserId('');
-    setData([]);
     setOpen(false);
   };
 
   return (
-    <DynamicTableDialog 
+    <DynamicTableDialog
       title={t('role.assignRole')}
       handleAdd={handleAdd}
       handleDelete={handleDelete}
       handleClose={handleClose}
       open={open}
-      data={data} 
+      data={assignedUsers}
       columns={columns}>
       <CustomSelect
         list={users}

@@ -23,14 +23,17 @@ import DetailedStatisticsCard from "controls/Cards/StatisticsCards/DetailedStati
 import TransportersTable from "layouts/dashboard/components/TransportersTable";
 import RefreshCounter from 'layouts/dashboard/components/RefreshCounter';
 import FilterBar from 'layouts/dashboard/components/Transporters/FilterBar';
-import useRouterService from "services/router";
-import useGeofencingService from "services/geofencing";
 import usePointOfInterestService from 'services/pointsOfInterest';
 import useGroupService from "services/groups";
-import useOperatorService from "services/operator";
 import { useQueryClient } from '@tanstack/react-query';
 import { getTransportersByGroup, getTransporterDeviceAssignmentsByAccount } from 'api/manager/transporters';
+import { getOperators } from 'api/manager/operators';
+import { getDevicePositions } from 'api/router/router';
+import { getTransportersInGeofence } from 'api/geofencing/geofencing';
 import { transporterKeys } from 'queries/transporters';
+import { operatorKeys } from 'queries/operators';
+import { routerKeys } from 'queries/router';
+import { geofenceKeys } from 'queries/geofences';
 import useDeviceService from "services/device";
 import { cleanString } from 'utils/stringUtils';
 import { LoadingContext } from 'LoadingContext';
@@ -47,11 +50,8 @@ const TRAIL_LENGTH = 10;
 
 function Transporters({searchQuery, settings, setShowGeofence, showGeofence, geofences}) {
   const { t } = useTranslation();
-  const { getDevicePositions } = useRouterService();
-  const { getTransportersInGeofence } = useGeofencingService();
   const { getPointsOfInterestByAccount } = usePointOfInterestService();
   const { getGroups } = useGroupService();
-  const { getOperators } = useOperatorService();
   const queryClient = useQueryClient();
   const { getDevicesByAccount } = useDeviceService();
   const { setLoading } = useContext(LoadingContext);
@@ -138,14 +138,21 @@ function Transporters({searchQuery, settings, setShowGeofence, showGeofence, geo
     positionsFetchInFlightRef.current = true;
     setLoading(true);
     try {
-      const result = await getDevicePositions();
       // A failed or empty refresh keeps the last known positions on the map
       // (the live map continues showing the cached positions it already has).
+      // A total failure is surfaced by the global toast and swallowed here.
+      const result = await queryClient.fetchQuery({
+        queryKey: routerKeys.devicePositions(),
+        queryFn: getDevicePositions,
+        staleTime: 0,
+      });
       if (Array.isArray(result) && result.length > 0) {
         setPositions(result);
         setActive(countRecentDevices(result, settings.onlineInterval));
         setMovement(countDevicesInMovement(result));
       }
+    } catch {
+      // Keep the last known positions on a failed refresh.
     } finally {
       positionsFetchInFlightRef.current = false;
       setLoading(false);
@@ -154,15 +161,28 @@ function Transporters({searchQuery, settings, setShowGeofence, showGeofence, geo
 
   const calculateReference = async () => {
     try {
-      var result = await getTransportersInGeofence();
+      const result = await queryClient.fetchQuery({
+        queryKey: geofenceKeys.transportersInGeofence,
+        queryFn: getTransportersInGeofence,
+        staleTime: 0,
+      });
       setInGeofence(result.length);
     } catch(e) {
+      // Failure is surfaced by the global toast; keep the previous count.
       console.error(e);
     }
   };
 
   const fetchFilterOptions = async () => {
-    const [groupList, operatorList] = await Promise.all([getGroups(), getOperators()]);
+    const [groupList, operatorList] = await Promise.all([
+      getGroups(),
+      // A failed operator read is surfaced by the global toast; keep the
+      // operator filter empty instead of rejecting the whole options load.
+      queryClient.fetchQuery({
+        queryKey: operatorKeys.summary(),
+        queryFn: getOperators,
+      }).catch(() => []),
+    ]);
     setGroupOptions((groupList || []).map(group => ({ value: group.groupId, label: group.name })));
     setOperatorOptions((operatorList || []).map(operator => ({ value: operator.operatorId, label: operator.name })));
   };

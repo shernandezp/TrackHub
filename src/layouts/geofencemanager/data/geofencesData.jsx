@@ -14,16 +14,21 @@
 *  limitations under the License.
 */
 
-import { useEffect, useState, useRef, useContext } from "react";
+import { useEffect, useMemo, useState, useContext } from "react";
 import { useTranslation } from 'react-i18next';
-import { Name, Description } from "controls/Tables/components/tableComponents";
+import { Name } from "controls/Tables/components/tableComponents";
 import Icon from "@mui/material/Icon";
 import ArgonButton from "components/ArgonButton";
-import useGeofenceService from "services/geofence";
+import { getGeofence } from "api/geofencing/geofencing";
+import {
+  useGeofencesByAccount,
+  useCreateGeofence,
+  useUpdateGeofence,
+  useDeleteGeofence,
+} from 'queries/geofences';
 import { getGeofenceType } from 'data/geofenceTypes';
 import { getColor } from 'data/colors';
 import { toCamelCase } from 'utils/stringUtils';
-import { handleDelete, handleSave } from "layouts/geofencemanager/actions/geofenceActions";
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
 
@@ -33,40 +38,59 @@ import { useAuth } from "AuthContext";
  * @param {Function} handleEditClick - Function to handle edit click event.
  * @param {Function} handleDeleteClick - Function to handle delete click event.
  * @returns {Object} - Returns an object containing table data, modal states, and CRUD operations.
- * @property {Object} data - Table data including columns and rows.
- * @property {boolean} open - State to control the open state of the edit modal.
- * @property {boolean} confirmOpen - State to control the open state of the delete confirmation modal.
- * @property {Function} onGet - Function to get a geofence by ID.
- * @property {Function} onSave - Function to save a geofence.
- * @property {Function} onDelete - Function to delete a geofence.
- * @property {Function} setOpen - Function to set the open state of the edit modal.
- * @property {Function} setConfirmOpen - Function to set the open state of the delete confirmation modal.
  */
+
+// Builds a clean GeofenceDtoInput from the dialog values, dropping the UI-only
+// fields (new, coordinates, accountId, ...) the schema does not accept.
+function toGeofenceInput(geofence) {
+  return {
+    geofenceId: geofence.geofenceId,
+    name: geofence.name,
+    description: geofence.description ?? null,
+    type: Number(geofence.type),
+    color: Number(geofence.color),
+    active: !!geofence.active,
+    geom: {
+      srid: geofence.geom.srid,
+      coordinates: geofence.geom.coordinates.map(coord => ({
+        latitude: coord.latitude,
+        longitude: coord.longitude,
+      })),
+    },
+  };
+}
 
 function useGeofencesTableData(handleEditClick, handleDeleteClick) {
   const { t } = useTranslation();
-  const [data, setData] = useState({ columns: [], rows: [] });
-  const [geofences, setGeofences] = useState([]);
   const [open, setOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const { setLoading } = useContext(LoadingContext);
   const { isAuthenticated } = useAuth();
 
-  const hasLoaded = useRef(false);
-  const { getGeofencesByAccount, getGeofence, createGeofence, updateGeofence, deleteGeofence } = useGeofenceService();
+  const geofencesQuery = useGeofencesByAccount(false, { enabled: isAuthenticated });
+  const geofences = geofencesQuery.data ?? [];
+  const createGeofence = useCreateGeofence();
+  const updateGeofence = useUpdateGeofence();
+  const deleteGeofence = useDeleteGeofence();
+
+  // Keep the global spinner UX for the initial load / invalidation refetch.
+  useEffect(() => {
+    setLoading(geofencesQuery.isFetching);
+  }, [geofencesQuery.isFetching, setLoading]);
 
   const onSave = async (geofence) => {
     setLoading(true);
     try {
-      await handleSave(
-        geofence, 
-        geofences, 
-        setGeofences, 
-        setData, 
-        buildTableData, 
-        createGeofence, 
-        updateGeofence);
-        setOpen(false);
+      const input = toGeofenceInput(geofence);
+      if (geofence.new) {
+        await createGeofence.mutateAsync(input);
+      } else {
+        await updateGeofence.mutateAsync({ geofenceId: geofence.geofenceId, geofence: input });
+      }
+      setOpen(false);
+    } catch {
+      // Failure is surfaced by the global toast; keep the dialog open so the
+      // user can retry without re-drawing the shape.
     } finally {
       setLoading(false);
     }
@@ -75,30 +99,26 @@ function useGeofencesTableData(handleEditClick, handleDeleteClick) {
   const onDelete = async (geofenceId) => {
     setLoading(true);
     try {
-      await handleDelete(
-        geofenceId, 
-        geofences, 
-        setGeofences, 
-        setData, 
-        buildTableData, 
-        deleteGeofence);
-        setConfirmOpen(false);
-      } finally {
-        setLoading(false);
-      }
-  }
+      await deleteGeofence.mutateAsync(geofenceId);
+      setConfirmOpen(false);
+    } catch {
+      // Failure is surfaced by the global toast.
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleOpenDelete = (geofenceId) => {
     handleDeleteClick(geofenceId);
     setConfirmOpen(true);
   };
 
-  const onGet = async (geofenceId) => {
-    return await getGeofence(geofenceId);
-  }
+  // Imperative single-geofence read for the map editor. Throws on failure
+  // (surfaced by the global toast) — the caller decides what to do next.
+  const onGet = async (geofenceId) => getGeofence(geofenceId);
 
-  const buildTableData = (geofences) => ({
-    geofences: geofences.map(item => ({
+  const buildTableData = (rows) => ({
+    geofences: rows.map(item => ({
       id: item.geofenceId,
       name: item.name,
       latlngs: item.geom.coordinates.map(coord => [coord.latitude, coord.longitude])
@@ -110,13 +130,13 @@ function useGeofencesTableData(handleEditClick, handleDeleteClick) {
       { name: "action", title:t('generic.action'), align: "center" },
       { name: "id" }
     ],
-    rows: geofences.map(geofence => ({
+    rows: rows.map(geofence => ({
       name: <Name name={geofence.name} />,
       type: <Name name={t(`geofenceTypes.${toCamelCase(getGeofenceType(geofence.type))}`)} />,
       color: <Name name={t(`colors.${getColor(geofence.color).toLowerCase()}`)} />,
       action: (
-        <ArgonButton 
-          variant="text" 
+        <ArgonButton
+          variant="text"
           color="error"
           onClick={() => handleOpenDelete(geofence.geofenceId)}>
           <Icon>delete</Icon>
@@ -126,28 +146,20 @@ function useGeofencesTableData(handleEditClick, handleDeleteClick) {
     })),
   });
 
-  useEffect(() => {
-    if (!hasLoaded.current && isAuthenticated) {
-      async function fetchData() {
-        setLoading(true);
-        const geofences = await getGeofencesByAccount();
-        setGeofences(geofences);
-        setData(buildTableData(geofences));
-        hasLoaded.current = true;
-        setLoading(false);
-      }
-      fetchData();
-    }
-  }, [isAuthenticated]);
+  const data = useMemo(
+    () => buildTableData(geofences),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [geofences, t]
+  );
 
-  return { 
-    data, 
-    open, 
+  return {
+    data,
+    open,
     confirmOpen,
     onGet,
-    onSave, 
-    onDelete, 
-    setOpen, 
+    onSave,
+    onDelete,
+    setOpen,
     setConfirmOpen };
 }
 

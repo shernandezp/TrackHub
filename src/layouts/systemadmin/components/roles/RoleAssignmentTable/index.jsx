@@ -14,106 +14,112 @@
 *  limitations under the License.
 */
 
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useMemo, useContext } from 'react';
 import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 import CheckboxTableDialog from 'controls/Dialogs/TableDialogs/CheckboxTableDialog';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
-import useRoleService from 'services/roles';
-import useActionService from 'services/actions';
-import useResourceService from 'services/resources';
+import { useRoles, useRoleResources } from 'queries/roles';
+import { useActions } from 'queries/actions';
+import { useResources } from 'queries/resources';
+import { createResourceActionRole, deleteResourceActionRole } from 'api/security/roles';
 import { LoadingContext } from 'LoadingContext';
 import { toCamelCase } from 'utils/stringUtils';
 
 function RoleAssignmentTable({ open }) {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
-  const { getRoles, getResourcesByRole, createResourceActionRole, deleteResourceActionRole } = useRoleService();
-  const { getActions } = useActionService();
-  const { getResources } = useResourceService();
-  const [data, setData] = useState({});
-  const [roles, setRoles] = useState([]);
-  const [actions, setActions] = useState([]);
-  const [resources, setResources] = useState([]);
   const [role, setRole] = useState(0);
 
-  useEffect(() => {
-    const fetchActions = async () => {
-        setLoading(true);
-        const result = await getActions();
-        setActions(result.map(action => ({
-            value: action.actionId,
-            name: action.actionName,
-            label: t(`actions.${toCamelCase(action.actionName)}`)
-        })));
-        setLoading(false);
-    };
-    if (open)
-      fetchActions();
-  }, [open]);
+  const actionsQuery = useActions({ enabled: open });
+  const resourcesQuery = useResources({ enabled: open });
+  const rolesQuery = useRoles({ enabled: open });
+  const roleResourcesQuery = useRoleResources(role);
 
+  // Keep the global spinner UX while the lists load/refresh.
   useEffect(() => {
-    const fetchResources = async () => {
-        setLoading(true);
-        const result = await getResources();
-        setResources(result.map(resource => ({
-            value: resource.resourceId,
-            name: resource.resourceName,
-            label: t(`resources.${toCamelCase(resource.resourceName)}`)
-        })));
-        setLoading(false);
-    };
-    if (open)
-      fetchResources();
-  }, [open]);
+    setLoading(
+      actionsQuery.isFetching ||
+      resourcesQuery.isFetching ||
+      rolesQuery.isFetching ||
+      roleResourcesQuery.isFetching
+    );
+  }, [
+    actionsQuery.isFetching,
+    resourcesQuery.isFetching,
+    rolesQuery.isFetching,
+    roleResourcesQuery.isFetching,
+    setLoading
+  ]);
 
-  useEffect(() => {
-    const fetchRoles = async () => {
-        setLoading(true);
-        const result = await getRoles();
-        setRoles(result.map(role => ({
-            value: role.roleId,
-            label: t(`roles.${toCamelCase(role.name)}`, { defaultValue: role.name })
-        })));
-        setLoading(false);
-    };
-    if (open)
-      fetchRoles();
-  }, [open]);
+  const actions = useMemo(
+    () => (actionsQuery.data ?? []).map(action => ({
+      value: action.actionId,
+      name: action.actionName,
+      label: t(`actions.${toCamelCase(action.actionName)}`)
+    })),
+    [actionsQuery.data, t]
+  );
 
-  const handleChange = async (event) => {
-    setLoading(true);
-    setRole(event.target.value);
-    let data = await getResourcesByRole(event.target.value);
-    let actionMap = data.resources.reduce((map, resource) => {
+  const resources = useMemo(
+    () => (resourcesQuery.data ?? []).map(resource => ({
+      value: resource.resourceId,
+      name: resource.resourceName,
+      label: t(`resources.${toCamelCase(resource.resourceName)}`)
+    })),
+    [resourcesQuery.data, t]
+  );
+
+  const roles = useMemo(
+    () => (rolesQuery.data ?? []).map(roleItem => ({
+      value: roleItem.roleId,
+      label: t(`roles.${toCamelCase(roleItem.name)}`, { defaultValue: roleItem.name })
+    })),
+    [rolesQuery.data, t]
+  );
+
+  const data = useMemo(() => {
+    const roleResources = roleResourcesQuery.data;
+    if (!roleResources) return {};
+    return roleResources.resources.reduce((map, resource) => {
       map[resource.resourceId] = resource.actions.reduce((actionMap, action) => {
-          actionMap[action.actionId] = action;
-          return actionMap;
+        actionMap[action.actionId] = action;
+        return actionMap;
       }, {});
       return map;
     }, {});
-    setData(actionMap);
-    setLoading(false);
+  }, [roleResourcesQuery.data]);
+
+  const handleChange = (event) => {
+    setRole(event.target.value);
   };
 
   const handleSubmit = async (resourceId, actionId, checked) => {
     setLoading(true);
-    let result = null;
-    if (checked) {
-      result = await createResourceActionRole(resourceId, actionId, role);
-    } else {
-      result = await deleteResourceActionRole(resourceId, actionId, role);
+    let result = false;
+    try {
+      if (checked) {
+        const created = await createResourceActionRole(resourceId, actionId, role);
+        result = created.roleId === role;
+      } else {
+        const deleted = await deleteResourceActionRole(resourceId, actionId, role);
+        result = deleted === role;
+      }
+    } catch {
+      // Silent (matches the old handleSilentError): no toast, treat as failure.
+      result = false;
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
     return result;
   };
 
   return (
-    <CheckboxTableDialog 
+    <CheckboxTableDialog
       key="role"
       handleSave={handleSubmit}
       title={t('role.resources')}
-      data={data} 
+      data={data}
       columns={actions}
       rows={resources}>
       <CustomSelect

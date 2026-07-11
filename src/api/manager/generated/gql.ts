@@ -14,6 +14,19 @@ import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 type Documents = {
+    "\n  query GetGpsIntegrationDashboard($accountId: UUID!) {\n    gpsIntegrationDashboard(query: { accountId: $accountId }) {\n      operatorsTotal\n      operatorsEnabled\n      operatorsHealthy\n      operatorsDegraded\n      operatorsOffline\n      devicesTotal\n      devicesNew\n      devicesAvailable\n      devicesAssigned\n      devicesIgnored\n      devicesRemoved\n      recentlyAddedDevicesLast24h\n      unassignedDevicesCount\n      syncRunsSucceededLast24h\n      syncRunsFailedLast24h\n      lastAutomaticSyncAt\n      lastManualSyncAt\n      averageSyncDurationSeconds\n      deviceCountsByProviderStatus {\n        operatorId\n        operatorName\n        detectedStatus\n        count\n      }\n    }\n  }\n": typeof types.GetGpsIntegrationDashboardDocument,
+    "\n  fragment OperatorDetail on OperatorVm {\n    operatorId\n    name\n    description\n    phoneNumber\n    emailAddress\n    address\n    contactName\n    protocolType\n    protocolTypeId\n    enabled\n    syncIntervalMinutes\n    healthStatus\n    lastSuccessfulSyncAt\n    lastFailedSyncAt\n    lastFailureCode\n    lastLatencyMs\n    lastDeviceSyncAt\n    lastPositionSyncAt\n    lastModified\n  }\n": typeof types.OperatorDetailFragmentDoc,
+    "\n  fragment OperatorSummary on OperatorVm {\n    operatorId\n    name\n  }\n": typeof types.OperatorSummaryFragmentDoc,
+    "\n  fragment OperatorGps on OperatorVm {\n    operatorId\n    name\n    protocolType\n    enabled\n    lastDeviceSyncAt\n    lastPositionSyncAt\n    syncIntervalMinutes\n  }\n": typeof types.OperatorGpsFragmentDoc,
+    "\n  query GetOperator($id: UUID!) {\n    operator(query: { id: $id }) {\n      ...OperatorDetail\n    }\n  }\n": typeof types.GetOperatorDocument,
+    "\n  query GetOperatorsByCurrentAccount {\n    operatorsByCurrentAccount {\n      ...OperatorDetail\n    }\n  }\n": typeof types.GetOperatorsByCurrentAccountDocument,
+    "\n  query GetOperatorsSummary {\n    operatorsByCurrentAccount {\n      ...OperatorSummary\n    }\n  }\n": typeof types.GetOperatorsSummaryDocument,
+    "\n  query GetGpsOperators {\n    operatorsByCurrentAccount {\n      ...OperatorGps\n    }\n  }\n": typeof types.GetGpsOperatorsDocument,
+    "\n  mutation CreateOperator($operator: OperatorDtoInput!) {\n    createOperator(command: { operator: $operator }) {\n      ...OperatorDetail\n    }\n  }\n": typeof types.CreateOperatorDocument,
+    "\n  mutation UpdateOperator($id: UUID!, $operator: UpdateOperatorDtoInput!) {\n    updateOperator(id: $id, command: { operator: $operator })\n  }\n": typeof types.UpdateOperatorDocument,
+    "\n  mutation DeleteOperator($id: UUID!) {\n    deleteOperator(id: $id)\n  }\n": typeof types.DeleteOperatorDocument,
+    "\n  mutation SetOperatorEnabled($operatorId: UUID!, $enabled: Boolean!) {\n    setOperatorEnabled(command: { operatorId: $operatorId, enabled: $enabled })\n  }\n": typeof types.SetOperatorEnabledDocument,
+    "\n  mutation TriggerOperatorDeviceSync($command: TriggerOperatorDeviceSyncCommandInput!) {\n    triggerOperatorDeviceSync(command: $command)\n  }\n": typeof types.TriggerOperatorDeviceSyncDocument,
     "\n  fragment TransporterItem on TransporterVm {\n    transporterId\n    name\n    transporterType\n    transporterTypeId\n  }\n": typeof types.TransporterItemFragmentDoc,
     "\n  query GetTransporter($id: UUID!) {\n    transporter(query: { id: $id }) {\n      ...TransporterItem\n    }\n  }\n": typeof types.GetTransporterDocument,
     "\n  query GetTransportersByAccount {\n    transportersByAccount {\n      ...TransporterItem\n    }\n  }\n": typeof types.GetTransportersByAccountDocument,
@@ -29,6 +42,19 @@ type Documents = {
     "\n  mutation EndDeviceTransporterAssignment($assignmentId: UUID!, $reason: String) {\n    endDeviceTransporterAssignment(command: { assignmentId: $assignmentId, reason: $reason })\n  }\n": typeof types.EndDeviceTransporterAssignmentDocument,
 };
 const documents: Documents = {
+    "\n  query GetGpsIntegrationDashboard($accountId: UUID!) {\n    gpsIntegrationDashboard(query: { accountId: $accountId }) {\n      operatorsTotal\n      operatorsEnabled\n      operatorsHealthy\n      operatorsDegraded\n      operatorsOffline\n      devicesTotal\n      devicesNew\n      devicesAvailable\n      devicesAssigned\n      devicesIgnored\n      devicesRemoved\n      recentlyAddedDevicesLast24h\n      unassignedDevicesCount\n      syncRunsSucceededLast24h\n      syncRunsFailedLast24h\n      lastAutomaticSyncAt\n      lastManualSyncAt\n      averageSyncDurationSeconds\n      deviceCountsByProviderStatus {\n        operatorId\n        operatorName\n        detectedStatus\n        count\n      }\n    }\n  }\n": types.GetGpsIntegrationDashboardDocument,
+    "\n  fragment OperatorDetail on OperatorVm {\n    operatorId\n    name\n    description\n    phoneNumber\n    emailAddress\n    address\n    contactName\n    protocolType\n    protocolTypeId\n    enabled\n    syncIntervalMinutes\n    healthStatus\n    lastSuccessfulSyncAt\n    lastFailedSyncAt\n    lastFailureCode\n    lastLatencyMs\n    lastDeviceSyncAt\n    lastPositionSyncAt\n    lastModified\n  }\n": types.OperatorDetailFragmentDoc,
+    "\n  fragment OperatorSummary on OperatorVm {\n    operatorId\n    name\n  }\n": types.OperatorSummaryFragmentDoc,
+    "\n  fragment OperatorGps on OperatorVm {\n    operatorId\n    name\n    protocolType\n    enabled\n    lastDeviceSyncAt\n    lastPositionSyncAt\n    syncIntervalMinutes\n  }\n": types.OperatorGpsFragmentDoc,
+    "\n  query GetOperator($id: UUID!) {\n    operator(query: { id: $id }) {\n      ...OperatorDetail\n    }\n  }\n": types.GetOperatorDocument,
+    "\n  query GetOperatorsByCurrentAccount {\n    operatorsByCurrentAccount {\n      ...OperatorDetail\n    }\n  }\n": types.GetOperatorsByCurrentAccountDocument,
+    "\n  query GetOperatorsSummary {\n    operatorsByCurrentAccount {\n      ...OperatorSummary\n    }\n  }\n": types.GetOperatorsSummaryDocument,
+    "\n  query GetGpsOperators {\n    operatorsByCurrentAccount {\n      ...OperatorGps\n    }\n  }\n": types.GetGpsOperatorsDocument,
+    "\n  mutation CreateOperator($operator: OperatorDtoInput!) {\n    createOperator(command: { operator: $operator }) {\n      ...OperatorDetail\n    }\n  }\n": types.CreateOperatorDocument,
+    "\n  mutation UpdateOperator($id: UUID!, $operator: UpdateOperatorDtoInput!) {\n    updateOperator(id: $id, command: { operator: $operator })\n  }\n": types.UpdateOperatorDocument,
+    "\n  mutation DeleteOperator($id: UUID!) {\n    deleteOperator(id: $id)\n  }\n": types.DeleteOperatorDocument,
+    "\n  mutation SetOperatorEnabled($operatorId: UUID!, $enabled: Boolean!) {\n    setOperatorEnabled(command: { operatorId: $operatorId, enabled: $enabled })\n  }\n": types.SetOperatorEnabledDocument,
+    "\n  mutation TriggerOperatorDeviceSync($command: TriggerOperatorDeviceSyncCommandInput!) {\n    triggerOperatorDeviceSync(command: $command)\n  }\n": types.TriggerOperatorDeviceSyncDocument,
     "\n  fragment TransporterItem on TransporterVm {\n    transporterId\n    name\n    transporterType\n    transporterTypeId\n  }\n": types.TransporterItemFragmentDoc,
     "\n  query GetTransporter($id: UUID!) {\n    transporter(query: { id: $id }) {\n      ...TransporterItem\n    }\n  }\n": types.GetTransporterDocument,
     "\n  query GetTransportersByAccount {\n    transportersByAccount {\n      ...TransporterItem\n    }\n  }\n": types.GetTransportersByAccountDocument,
@@ -58,6 +84,58 @@ const documents: Documents = {
  */
 export function graphql(source: string): unknown;
 
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query GetGpsIntegrationDashboard($accountId: UUID!) {\n    gpsIntegrationDashboard(query: { accountId: $accountId }) {\n      operatorsTotal\n      operatorsEnabled\n      operatorsHealthy\n      operatorsDegraded\n      operatorsOffline\n      devicesTotal\n      devicesNew\n      devicesAvailable\n      devicesAssigned\n      devicesIgnored\n      devicesRemoved\n      recentlyAddedDevicesLast24h\n      unassignedDevicesCount\n      syncRunsSucceededLast24h\n      syncRunsFailedLast24h\n      lastAutomaticSyncAt\n      lastManualSyncAt\n      averageSyncDurationSeconds\n      deviceCountsByProviderStatus {\n        operatorId\n        operatorName\n        detectedStatus\n        count\n      }\n    }\n  }\n"): (typeof documents)["\n  query GetGpsIntegrationDashboard($accountId: UUID!) {\n    gpsIntegrationDashboard(query: { accountId: $accountId }) {\n      operatorsTotal\n      operatorsEnabled\n      operatorsHealthy\n      operatorsDegraded\n      operatorsOffline\n      devicesTotal\n      devicesNew\n      devicesAvailable\n      devicesAssigned\n      devicesIgnored\n      devicesRemoved\n      recentlyAddedDevicesLast24h\n      unassignedDevicesCount\n      syncRunsSucceededLast24h\n      syncRunsFailedLast24h\n      lastAutomaticSyncAt\n      lastManualSyncAt\n      averageSyncDurationSeconds\n      deviceCountsByProviderStatus {\n        operatorId\n        operatorName\n        detectedStatus\n        count\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  fragment OperatorDetail on OperatorVm {\n    operatorId\n    name\n    description\n    phoneNumber\n    emailAddress\n    address\n    contactName\n    protocolType\n    protocolTypeId\n    enabled\n    syncIntervalMinutes\n    healthStatus\n    lastSuccessfulSyncAt\n    lastFailedSyncAt\n    lastFailureCode\n    lastLatencyMs\n    lastDeviceSyncAt\n    lastPositionSyncAt\n    lastModified\n  }\n"): (typeof documents)["\n  fragment OperatorDetail on OperatorVm {\n    operatorId\n    name\n    description\n    phoneNumber\n    emailAddress\n    address\n    contactName\n    protocolType\n    protocolTypeId\n    enabled\n    syncIntervalMinutes\n    healthStatus\n    lastSuccessfulSyncAt\n    lastFailedSyncAt\n    lastFailureCode\n    lastLatencyMs\n    lastDeviceSyncAt\n    lastPositionSyncAt\n    lastModified\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  fragment OperatorSummary on OperatorVm {\n    operatorId\n    name\n  }\n"): (typeof documents)["\n  fragment OperatorSummary on OperatorVm {\n    operatorId\n    name\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  fragment OperatorGps on OperatorVm {\n    operatorId\n    name\n    protocolType\n    enabled\n    lastDeviceSyncAt\n    lastPositionSyncAt\n    syncIntervalMinutes\n  }\n"): (typeof documents)["\n  fragment OperatorGps on OperatorVm {\n    operatorId\n    name\n    protocolType\n    enabled\n    lastDeviceSyncAt\n    lastPositionSyncAt\n    syncIntervalMinutes\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query GetOperator($id: UUID!) {\n    operator(query: { id: $id }) {\n      ...OperatorDetail\n    }\n  }\n"): (typeof documents)["\n  query GetOperator($id: UUID!) {\n    operator(query: { id: $id }) {\n      ...OperatorDetail\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query GetOperatorsByCurrentAccount {\n    operatorsByCurrentAccount {\n      ...OperatorDetail\n    }\n  }\n"): (typeof documents)["\n  query GetOperatorsByCurrentAccount {\n    operatorsByCurrentAccount {\n      ...OperatorDetail\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query GetOperatorsSummary {\n    operatorsByCurrentAccount {\n      ...OperatorSummary\n    }\n  }\n"): (typeof documents)["\n  query GetOperatorsSummary {\n    operatorsByCurrentAccount {\n      ...OperatorSummary\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query GetGpsOperators {\n    operatorsByCurrentAccount {\n      ...OperatorGps\n    }\n  }\n"): (typeof documents)["\n  query GetGpsOperators {\n    operatorsByCurrentAccount {\n      ...OperatorGps\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateOperator($operator: OperatorDtoInput!) {\n    createOperator(command: { operator: $operator }) {\n      ...OperatorDetail\n    }\n  }\n"): (typeof documents)["\n  mutation CreateOperator($operator: OperatorDtoInput!) {\n    createOperator(command: { operator: $operator }) {\n      ...OperatorDetail\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation UpdateOperator($id: UUID!, $operator: UpdateOperatorDtoInput!) {\n    updateOperator(id: $id, command: { operator: $operator })\n  }\n"): (typeof documents)["\n  mutation UpdateOperator($id: UUID!, $operator: UpdateOperatorDtoInput!) {\n    updateOperator(id: $id, command: { operator: $operator })\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DeleteOperator($id: UUID!) {\n    deleteOperator(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeleteOperator($id: UUID!) {\n    deleteOperator(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation SetOperatorEnabled($operatorId: UUID!, $enabled: Boolean!) {\n    setOperatorEnabled(command: { operatorId: $operatorId, enabled: $enabled })\n  }\n"): (typeof documents)["\n  mutation SetOperatorEnabled($operatorId: UUID!, $enabled: Boolean!) {\n    setOperatorEnabled(command: { operatorId: $operatorId, enabled: $enabled })\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation TriggerOperatorDeviceSync($command: TriggerOperatorDeviceSyncCommandInput!) {\n    triggerOperatorDeviceSync(command: $command)\n  }\n"): (typeof documents)["\n  mutation TriggerOperatorDeviceSync($command: TriggerOperatorDeviceSyncCommandInput!) {\n    triggerOperatorDeviceSync(command: $command)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

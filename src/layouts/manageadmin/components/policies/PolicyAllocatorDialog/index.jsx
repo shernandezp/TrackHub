@@ -19,46 +19,38 @@ import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 import DynamicTableDialog from 'controls/Dialogs/TableDialogs/DynamicTableDialog';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
-import useUserService from 'services/users';
-import usePolicyService from 'services/policies';
+import { useUsersByAccount } from 'queries/users';
+import { useUsersByPolicy, useCreateUserPolicy, useDeleteUserPolicy } from 'queries/policies';
 import { LoadingContext } from 'LoadingContext';
 
 function PolicyAllocatorDialog({ open, setOpen, policyId }) {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
-  const { getUsersByAccount } = useUserService();
-  const { getUsersByPolicy, createUserPolicy, deleteUserPolicy } = usePolicyService();
-  const [data, setData] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [accountUsers, setAccountUsers] = useState([]);
   const [userId, setUserId] = useState('');
+
+  const accountUsersQuery = useUsersByAccount({ enabled: open });
+  const accountUsers = accountUsersQuery.data ?? [];
+  // Assigned users only matter while the dialog is open.
+  const assignedQuery = useUsersByPolicy(open ? policyId : undefined);
+  const assignedUsers = assignedQuery.data ?? [];
+  const createUserPolicy = useCreateUserPolicy();
+  const deleteUserPolicy = useDeleteUserPolicy();
 
   const columns = [
     { field: 'username', headerName: t('user.username') }
   ];
 
-  const reloadData = async () => {
-    const assignedUsers = await getUsersByPolicy(policyId);
-    const unassignedUsers = accountUsers.filter(user => !assignedUsers.some(assignedUser => assignedUser.userId === user.userId));
-    setUsers(unassignedUsers.map(user => ({
-        value: user.userId,
-        label: user.username
-    })));
-    setData(assignedUsers);
-    setUserId('');
-  };
-
+  // Keep the global spinner UX while the lists load/refresh.
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      const users = await getUsersByAccount();
-      setAccountUsers(users);
-      await reloadData();
-      setLoading(false);
-    };
-    if (open)
-        fetchData();
-  }, [open]);
+    setLoading(accountUsersQuery.isFetching || assignedQuery.isFetching);
+  }, [accountUsersQuery.isFetching, assignedQuery.isFetching, setLoading]);
+
+  const users = accountUsers
+    .filter(user => !assignedUsers.some(assignedUser => assignedUser.userId === user.userId))
+    .map(user => ({
+      value: user.userId,
+      label: user.username
+    }));
 
   const handleChange = (event) => {
     setLoading(true);
@@ -68,33 +60,43 @@ function PolicyAllocatorDialog({ open, setOpen, policyId }) {
 
   const handleAdd = async () => {
     setLoading(true);
-    await createUserPolicy(userId, policyId);
-    await reloadData();
-    setLoading(false);
+    try {
+      await createUserPolicy.mutateAsync({ userId, policyId });
+      setUserId('');
+    } catch {
+      // Failure is surfaced by the global toast.
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDelete = async (selectedRows) => {
     setLoading(true);
-    const deletePromises = selectedRows.map(index => deleteUserPolicy(data[index].userId, policyId));
-    await Promise.all(deletePromises);
-    await reloadData();
-    setLoading(false);
+    try {
+      const deletePromises = selectedRows.map(index =>
+        deleteUserPolicy.mutateAsync({ userId: assignedUsers[index].userId, policyId }));
+      await Promise.all(deletePromises);
+      setUserId('');
+    } catch {
+      // Failure is surfaced by the global toast.
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleClose = async () => {
     setUserId('');
-    setData([]);
     setOpen(false);
   };
 
   return (
-    <DynamicTableDialog 
+    <DynamicTableDialog
       title={t('policy.assignPolicy')}
       handleAdd={handleAdd}
       handleDelete={handleDelete}
       handleClose={handleClose}
       open={open}
-      data={data} 
+      data={assignedUsers}
       columns={columns}>
       <CustomSelect
         list={users}

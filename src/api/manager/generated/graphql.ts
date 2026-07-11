@@ -9,6 +9,43 @@ export type AssignmentStatus =
   | 'ENDED'
   | 'SUPERSEDED';
 
+export type DetectedStatus =
+  | 'ASSIGNED'
+  | 'AVAILABLE'
+  | 'IGNORED'
+  | 'NEW'
+  | 'REMOVED';
+
+export type OperatorDtoInput = {
+  address?: string | null | undefined;
+  contactName?: string | null | undefined;
+  description?: string | null | undefined;
+  emailAddress?: string | null | undefined;
+  name: string;
+  phoneNumber?: string | null | undefined;
+  protocolTypeId: number;
+  syncIntervalMinutes?: number;
+};
+
+export type OperatorHealthStatus =
+  | 'DEGRADED'
+  | 'DISABLED'
+  | 'HEALTHY'
+  | 'OFFLINE'
+  | 'UNKNOWN';
+
+export type ProtocolType =
+  | 'COMMAND_TRACK'
+  | 'FLESPI'
+  | 'GEO_TAB'
+  | 'GPS_GATE'
+  | 'METTAX'
+  | 'NAVIXY'
+  | 'PROTRACK'
+  | 'SAMSARA'
+  | 'TRACCAR'
+  | 'WIALON';
+
 export type TransporterDeviceAssignmentDtoInput = {
   accountId: string;
   assignmentReason?: string | null | undefined;
@@ -50,11 +87,101 @@ export type TransporterType =
   | 'TRACTOR'
   | 'TRUCK';
 
+export type TriggerOperatorDeviceSyncCommandInput = {
+  autoAssignNewDevices?: boolean | null | undefined;
+  operatorId: string;
+  resetDeviceCatalog?: boolean;
+};
+
+export type UpdateOperatorDtoInput = {
+  address?: string | null | undefined;
+  contactName?: string | null | undefined;
+  description?: string | null | undefined;
+  emailAddress?: string | null | undefined;
+  name: string;
+  operatorId: string;
+  phoneNumber?: string | null | undefined;
+  protocolTypeId: number;
+  syncIntervalMinutes: number;
+};
+
 export type UpdateTransporterDtoInput = {
   name: string;
   transporterId: string;
   transporterTypeId: number;
 };
+
+export type GetGpsIntegrationDashboardQueryVariables = Exact<{
+  accountId: string;
+}>;
+
+
+export type GetGpsIntegrationDashboardQuery = { gpsIntegrationDashboard: { operatorsTotal: number, operatorsEnabled: number, operatorsHealthy: number, operatorsDegraded: number, operatorsOffline: number, devicesTotal: number, devicesNew: number, devicesAvailable: number, devicesAssigned: number, devicesIgnored: number, devicesRemoved: number, recentlyAddedDevicesLast24h: number, unassignedDevicesCount: number, syncRunsSucceededLast24h: number, syncRunsFailedLast24h: number, lastAutomaticSyncAt: string | null, lastManualSyncAt: string | null, averageSyncDurationSeconds: number, deviceCountsByProviderStatus: Array<{ operatorId: string, operatorName: string, detectedStatus: DetectedStatus, count: number }> } };
+
+export type OperatorDetailFragment = { operatorId: string, name: string, description: string | null, phoneNumber: string | null, emailAddress: string | null, address: string | null, contactName: string | null, protocolType: ProtocolType, protocolTypeId: number, enabled: boolean, syncIntervalMinutes: number, healthStatus: OperatorHealthStatus, lastSuccessfulSyncAt: string | null, lastFailedSyncAt: string | null, lastFailureCode: string | null, lastLatencyMs: number | null, lastDeviceSyncAt: string | null, lastPositionSyncAt: string | null, lastModified: string };
+
+export type OperatorSummaryFragment = { operatorId: string, name: string };
+
+export type OperatorGpsFragment = { operatorId: string, name: string, protocolType: ProtocolType, enabled: boolean, lastDeviceSyncAt: string | null, lastPositionSyncAt: string | null, syncIntervalMinutes: number };
+
+export type GetOperatorQueryVariables = Exact<{
+  id: string;
+}>;
+
+
+export type GetOperatorQuery = { operator: { operatorId: string, name: string, description: string | null, phoneNumber: string | null, emailAddress: string | null, address: string | null, contactName: string | null, protocolType: ProtocolType, protocolTypeId: number, enabled: boolean, syncIntervalMinutes: number, healthStatus: OperatorHealthStatus, lastSuccessfulSyncAt: string | null, lastFailedSyncAt: string | null, lastFailureCode: string | null, lastLatencyMs: number | null, lastDeviceSyncAt: string | null, lastPositionSyncAt: string | null, lastModified: string } };
+
+export type GetOperatorsByCurrentAccountQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetOperatorsByCurrentAccountQuery = { operatorsByCurrentAccount: Array<{ operatorId: string, name: string, description: string | null, phoneNumber: string | null, emailAddress: string | null, address: string | null, contactName: string | null, protocolType: ProtocolType, protocolTypeId: number, enabled: boolean, syncIntervalMinutes: number, healthStatus: OperatorHealthStatus, lastSuccessfulSyncAt: string | null, lastFailedSyncAt: string | null, lastFailureCode: string | null, lastLatencyMs: number | null, lastDeviceSyncAt: string | null, lastPositionSyncAt: string | null, lastModified: string }> };
+
+export type GetOperatorsSummaryQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetOperatorsSummaryQuery = { operatorsByCurrentAccount: Array<{ operatorId: string, name: string }> };
+
+export type GetGpsOperatorsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetGpsOperatorsQuery = { operatorsByCurrentAccount: Array<{ operatorId: string, name: string, protocolType: ProtocolType, enabled: boolean, lastDeviceSyncAt: string | null, lastPositionSyncAt: string | null, syncIntervalMinutes: number }> };
+
+export type CreateOperatorMutationVariables = Exact<{
+  operator: OperatorDtoInput;
+}>;
+
+
+export type CreateOperatorMutation = { createOperator: { operatorId: string, name: string, description: string | null, phoneNumber: string | null, emailAddress: string | null, address: string | null, contactName: string | null, protocolType: ProtocolType, protocolTypeId: number, enabled: boolean, syncIntervalMinutes: number, healthStatus: OperatorHealthStatus, lastSuccessfulSyncAt: string | null, lastFailedSyncAt: string | null, lastFailureCode: string | null, lastLatencyMs: number | null, lastDeviceSyncAt: string | null, lastPositionSyncAt: string | null, lastModified: string } };
+
+export type UpdateOperatorMutationVariables = Exact<{
+  id: string;
+  operator: UpdateOperatorDtoInput;
+}>;
+
+
+export type UpdateOperatorMutation = { updateOperator: boolean };
+
+export type DeleteOperatorMutationVariables = Exact<{
+  id: string;
+}>;
+
+
+export type DeleteOperatorMutation = { deleteOperator: string };
+
+export type SetOperatorEnabledMutationVariables = Exact<{
+  operatorId: string;
+  enabled: boolean;
+}>;
+
+
+export type SetOperatorEnabledMutation = { setOperatorEnabled: boolean };
+
+export type TriggerOperatorDeviceSyncMutationVariables = Exact<{
+  command: TriggerOperatorDeviceSyncCommandInput;
+}>;
+
+
+export type TriggerOperatorDeviceSyncMutation = { triggerOperatorDeviceSync: boolean };
 
 export type TransporterItemFragment = { transporterId: string, name: string, transporterType: TransporterType, transporterTypeId: number };
 
@@ -137,8 +264,21 @@ export type EndDeviceTransporterAssignmentMutationVariables = Exact<{
 
 export type EndDeviceTransporterAssignmentMutation = { endDeviceTransporterAssignment: boolean };
 
+export const OperatorDetailFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"OperatorDetail"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"OperatorVm"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"operatorId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"phoneNumber"}},{"kind":"Field","name":{"kind":"Name","value":"emailAddress"}},{"kind":"Field","name":{"kind":"Name","value":"address"}},{"kind":"Field","name":{"kind":"Name","value":"contactName"}},{"kind":"Field","name":{"kind":"Name","value":"protocolType"}},{"kind":"Field","name":{"kind":"Name","value":"protocolTypeId"}},{"kind":"Field","name":{"kind":"Name","value":"enabled"}},{"kind":"Field","name":{"kind":"Name","value":"syncIntervalMinutes"}},{"kind":"Field","name":{"kind":"Name","value":"healthStatus"}},{"kind":"Field","name":{"kind":"Name","value":"lastSuccessfulSyncAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastFailedSyncAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastFailureCode"}},{"kind":"Field","name":{"kind":"Name","value":"lastLatencyMs"}},{"kind":"Field","name":{"kind":"Name","value":"lastDeviceSyncAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastPositionSyncAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastModified"}}]}}]} as unknown as DocumentNode<OperatorDetailFragment, unknown>;
+export const OperatorSummaryFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"OperatorSummary"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"OperatorVm"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"operatorId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]} as unknown as DocumentNode<OperatorSummaryFragment, unknown>;
+export const OperatorGpsFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"OperatorGps"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"OperatorVm"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"operatorId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"protocolType"}},{"kind":"Field","name":{"kind":"Name","value":"enabled"}},{"kind":"Field","name":{"kind":"Name","value":"lastDeviceSyncAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastPositionSyncAt"}},{"kind":"Field","name":{"kind":"Name","value":"syncIntervalMinutes"}}]}}]} as unknown as DocumentNode<OperatorGpsFragment, unknown>;
 export const TransporterItemFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"TransporterItem"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"TransporterVm"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"transporterId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"transporterType"}},{"kind":"Field","name":{"kind":"Name","value":"transporterTypeId"}}]}}]} as unknown as DocumentNode<TransporterItemFragment, unknown>;
 export const AssignmentFieldsFragmentDoc = {"kind":"Document","definitions":[{"kind":"FragmentDefinition","name":{"kind":"Name","value":"AssignmentFields"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"TransporterDeviceAssignmentVm"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"transporterDeviceAssignmentId"}},{"kind":"Field","name":{"kind":"Name","value":"accountId"}},{"kind":"Field","name":{"kind":"Name","value":"transporterId"}},{"kind":"Field","name":{"kind":"Name","value":"deviceId"}},{"kind":"Field","name":{"kind":"Name","value":"effectiveFrom"}},{"kind":"Field","name":{"kind":"Name","value":"effectiveTo"}},{"kind":"Field","name":{"kind":"Name","value":"priority"}},{"kind":"Field","name":{"kind":"Name","value":"isPrimary"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"assignmentReason"}}]}}]} as unknown as DocumentNode<AssignmentFieldsFragment, unknown>;
+export const GetGpsIntegrationDashboardDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetGpsIntegrationDashboard"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"accountId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"gpsIntegrationDashboard"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"query"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"accountId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"accountId"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"operatorsTotal"}},{"kind":"Field","name":{"kind":"Name","value":"operatorsEnabled"}},{"kind":"Field","name":{"kind":"Name","value":"operatorsHealthy"}},{"kind":"Field","name":{"kind":"Name","value":"operatorsDegraded"}},{"kind":"Field","name":{"kind":"Name","value":"operatorsOffline"}},{"kind":"Field","name":{"kind":"Name","value":"devicesTotal"}},{"kind":"Field","name":{"kind":"Name","value":"devicesNew"}},{"kind":"Field","name":{"kind":"Name","value":"devicesAvailable"}},{"kind":"Field","name":{"kind":"Name","value":"devicesAssigned"}},{"kind":"Field","name":{"kind":"Name","value":"devicesIgnored"}},{"kind":"Field","name":{"kind":"Name","value":"devicesRemoved"}},{"kind":"Field","name":{"kind":"Name","value":"recentlyAddedDevicesLast24h"}},{"kind":"Field","name":{"kind":"Name","value":"unassignedDevicesCount"}},{"kind":"Field","name":{"kind":"Name","value":"syncRunsSucceededLast24h"}},{"kind":"Field","name":{"kind":"Name","value":"syncRunsFailedLast24h"}},{"kind":"Field","name":{"kind":"Name","value":"lastAutomaticSyncAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastManualSyncAt"}},{"kind":"Field","name":{"kind":"Name","value":"averageSyncDurationSeconds"}},{"kind":"Field","name":{"kind":"Name","value":"deviceCountsByProviderStatus"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"operatorId"}},{"kind":"Field","name":{"kind":"Name","value":"operatorName"}},{"kind":"Field","name":{"kind":"Name","value":"detectedStatus"}},{"kind":"Field","name":{"kind":"Name","value":"count"}}]}}]}}]}}]} as unknown as DocumentNode<GetGpsIntegrationDashboardQuery, GetGpsIntegrationDashboardQueryVariables>;
+export const GetOperatorDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetOperator"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"operator"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"query"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"OperatorDetail"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"OperatorDetail"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"OperatorVm"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"operatorId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"phoneNumber"}},{"kind":"Field","name":{"kind":"Name","value":"emailAddress"}},{"kind":"Field","name":{"kind":"Name","value":"address"}},{"kind":"Field","name":{"kind":"Name","value":"contactName"}},{"kind":"Field","name":{"kind":"Name","value":"protocolType"}},{"kind":"Field","name":{"kind":"Name","value":"protocolTypeId"}},{"kind":"Field","name":{"kind":"Name","value":"enabled"}},{"kind":"Field","name":{"kind":"Name","value":"syncIntervalMinutes"}},{"kind":"Field","name":{"kind":"Name","value":"healthStatus"}},{"kind":"Field","name":{"kind":"Name","value":"lastSuccessfulSyncAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastFailedSyncAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastFailureCode"}},{"kind":"Field","name":{"kind":"Name","value":"lastLatencyMs"}},{"kind":"Field","name":{"kind":"Name","value":"lastDeviceSyncAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastPositionSyncAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastModified"}}]}}]} as unknown as DocumentNode<GetOperatorQuery, GetOperatorQueryVariables>;
+export const GetOperatorsByCurrentAccountDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetOperatorsByCurrentAccount"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"operatorsByCurrentAccount"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"OperatorDetail"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"OperatorDetail"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"OperatorVm"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"operatorId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"phoneNumber"}},{"kind":"Field","name":{"kind":"Name","value":"emailAddress"}},{"kind":"Field","name":{"kind":"Name","value":"address"}},{"kind":"Field","name":{"kind":"Name","value":"contactName"}},{"kind":"Field","name":{"kind":"Name","value":"protocolType"}},{"kind":"Field","name":{"kind":"Name","value":"protocolTypeId"}},{"kind":"Field","name":{"kind":"Name","value":"enabled"}},{"kind":"Field","name":{"kind":"Name","value":"syncIntervalMinutes"}},{"kind":"Field","name":{"kind":"Name","value":"healthStatus"}},{"kind":"Field","name":{"kind":"Name","value":"lastSuccessfulSyncAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastFailedSyncAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastFailureCode"}},{"kind":"Field","name":{"kind":"Name","value":"lastLatencyMs"}},{"kind":"Field","name":{"kind":"Name","value":"lastDeviceSyncAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastPositionSyncAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastModified"}}]}}]} as unknown as DocumentNode<GetOperatorsByCurrentAccountQuery, GetOperatorsByCurrentAccountQueryVariables>;
+export const GetOperatorsSummaryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetOperatorsSummary"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"operatorsByCurrentAccount"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"OperatorSummary"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"OperatorSummary"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"OperatorVm"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"operatorId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]} as unknown as DocumentNode<GetOperatorsSummaryQuery, GetOperatorsSummaryQueryVariables>;
+export const GetGpsOperatorsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetGpsOperators"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"operatorsByCurrentAccount"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"OperatorGps"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"OperatorGps"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"OperatorVm"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"operatorId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"protocolType"}},{"kind":"Field","name":{"kind":"Name","value":"enabled"}},{"kind":"Field","name":{"kind":"Name","value":"lastDeviceSyncAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastPositionSyncAt"}},{"kind":"Field","name":{"kind":"Name","value":"syncIntervalMinutes"}}]}}]} as unknown as DocumentNode<GetGpsOperatorsQuery, GetGpsOperatorsQueryVariables>;
+export const CreateOperatorDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateOperator"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"operator"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"OperatorDtoInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createOperator"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"command"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"operator"},"value":{"kind":"Variable","name":{"kind":"Name","value":"operator"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"OperatorDetail"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"OperatorDetail"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"OperatorVm"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"operatorId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"phoneNumber"}},{"kind":"Field","name":{"kind":"Name","value":"emailAddress"}},{"kind":"Field","name":{"kind":"Name","value":"address"}},{"kind":"Field","name":{"kind":"Name","value":"contactName"}},{"kind":"Field","name":{"kind":"Name","value":"protocolType"}},{"kind":"Field","name":{"kind":"Name","value":"protocolTypeId"}},{"kind":"Field","name":{"kind":"Name","value":"enabled"}},{"kind":"Field","name":{"kind":"Name","value":"syncIntervalMinutes"}},{"kind":"Field","name":{"kind":"Name","value":"healthStatus"}},{"kind":"Field","name":{"kind":"Name","value":"lastSuccessfulSyncAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastFailedSyncAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastFailureCode"}},{"kind":"Field","name":{"kind":"Name","value":"lastLatencyMs"}},{"kind":"Field","name":{"kind":"Name","value":"lastDeviceSyncAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastPositionSyncAt"}},{"kind":"Field","name":{"kind":"Name","value":"lastModified"}}]}}]} as unknown as DocumentNode<CreateOperatorMutation, CreateOperatorMutationVariables>;
+export const UpdateOperatorDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateOperator"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"operator"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateOperatorDtoInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateOperator"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}},{"kind":"Argument","name":{"kind":"Name","value":"command"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"operator"},"value":{"kind":"Variable","name":{"kind":"Name","value":"operator"}}}]}}]}]}}]} as unknown as DocumentNode<UpdateOperatorMutation, UpdateOperatorMutationVariables>;
+export const DeleteOperatorDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DeleteOperator"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteOperator"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}]}]}}]} as unknown as DocumentNode<DeleteOperatorMutation, DeleteOperatorMutationVariables>;
+export const SetOperatorEnabledDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SetOperatorEnabled"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"operatorId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"enabled"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Boolean"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"setOperatorEnabled"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"command"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"operatorId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"operatorId"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"enabled"},"value":{"kind":"Variable","name":{"kind":"Name","value":"enabled"}}}]}}]}]}}]} as unknown as DocumentNode<SetOperatorEnabledMutation, SetOperatorEnabledMutationVariables>;
+export const TriggerOperatorDeviceSyncDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"TriggerOperatorDeviceSync"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"command"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"TriggerOperatorDeviceSyncCommandInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"triggerOperatorDeviceSync"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"command"},"value":{"kind":"Variable","name":{"kind":"Name","value":"command"}}}]}]}}]} as unknown as DocumentNode<TriggerOperatorDeviceSyncMutation, TriggerOperatorDeviceSyncMutationVariables>;
 export const GetTransporterDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetTransporter"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"transporter"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"query"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"TransporterItem"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"TransporterItem"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"TransporterVm"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"transporterId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"transporterType"}},{"kind":"Field","name":{"kind":"Name","value":"transporterTypeId"}}]}}]} as unknown as DocumentNode<GetTransporterQuery, GetTransporterQueryVariables>;
 export const GetTransportersByAccountDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetTransportersByAccount"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"transportersByAccount"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"TransporterItem"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"TransporterItem"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"TransporterVm"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"transporterId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"transporterType"}},{"kind":"Field","name":{"kind":"Name","value":"transporterTypeId"}}]}}]} as unknown as DocumentNode<GetTransportersByAccountQuery, GetTransportersByAccountQueryVariables>;
 export const GetTransportersByUserDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetTransportersByUser"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"transportersByUser"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"TransporterItem"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"TransporterItem"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"TransporterVm"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"transporterId"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"transporterType"}},{"kind":"Field","name":{"kind":"Name","value":"transporterTypeId"}}]}}]} as unknown as DocumentNode<GetTransportersByUserQuery, GetTransportersByUserQueryVariables>;

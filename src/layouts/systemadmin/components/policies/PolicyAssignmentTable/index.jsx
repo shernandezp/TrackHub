@@ -14,106 +14,112 @@
 *  limitations under the License.
 */
 
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useMemo, useContext } from 'react';
 import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 import CheckboxTableDialog from 'controls/Dialogs/TableDialogs/CheckboxTableDialog';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
-import usePolicyService from 'services/policies';
-import useActionService from 'services/actions';
-import useResourceService from 'services/resources';
+import { usePolicies, usePolicyResources } from 'queries/policies';
+import { useActions } from 'queries/actions';
+import { useResources } from 'queries/resources';
+import { createResourceActionPolicy, deleteResourceActionPolicy } from 'api/security/policies';
 import { LoadingContext } from 'LoadingContext';
 import { toCamelCase } from 'utils/stringUtils';
 
 function PolicyAssignmentTable({ open }) {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
-  const { getPolicies, getResourcesByPolicy, createResourceActionPolicy, deleteResourceActionPolicy } = usePolicyService();
-  const { getActions } = useActionService();
-  const { getResources } = useResourceService();
-  const [data, setData] = useState({});
-  const [policies, setPolicies] = useState([]);
-  const [actions, setActions] = useState([]);
-  const [resources, setResources] = useState([]);
   const [policy, setPolicy] = useState(0);
 
-  useEffect(() => {
-    const fetchActions = async () => {
-        setLoading(true);
-        const result = await getActions();
-        setActions(result.map(action => ({
-            value: action.actionId,
-            name: action.actionName,
-            label: t(`actions.${toCamelCase(action.actionName)}`)
-        })));
-        setLoading(false);
-    };
-    if (open)
-      fetchActions();
-  }, [open]);
+  const actionsQuery = useActions({ enabled: open });
+  const resourcesQuery = useResources({ enabled: open });
+  const policiesQuery = usePolicies({ enabled: open });
+  const policyResourcesQuery = usePolicyResources(policy);
 
+  // Keep the global spinner UX while the lists load/refresh.
   useEffect(() => {
-    const fetchResources = async () => {
-        setLoading(true);
-        const result = await getResources();
-        setResources(result.map(resource => ({
-            value: resource.resourceId,
-            name: resource.resourceName,
-            label: t(`resources.${toCamelCase(resource.resourceName)}`)
-        })));
-        setLoading(false);
-    };
-    if (open)
-      fetchResources();
-  }, [open]);
+    setLoading(
+      actionsQuery.isFetching ||
+      resourcesQuery.isFetching ||
+      policiesQuery.isFetching ||
+      policyResourcesQuery.isFetching
+    );
+  }, [
+    actionsQuery.isFetching,
+    resourcesQuery.isFetching,
+    policiesQuery.isFetching,
+    policyResourcesQuery.isFetching,
+    setLoading
+  ]);
 
-  useEffect(() => {
-    const fetchPolicies = async () => {
-        setLoading(true);
-        const result = await getPolicies();
-        setPolicies(result.map(policy => ({
-            value: policy.policyId,
-            label: t(`policies.${toCamelCase(policy.name)}`, { defaultValue: policy.name })
-        })));
-        setLoading(false);
-    };
-    if (open)
-        fetchPolicies();
-  }, [open]);
+  const actions = useMemo(
+    () => (actionsQuery.data ?? []).map(action => ({
+      value: action.actionId,
+      name: action.actionName,
+      label: t(`actions.${toCamelCase(action.actionName)}`)
+    })),
+    [actionsQuery.data, t]
+  );
 
-  const handleChange = async (event) => {
-    setLoading(true);
-    setPolicy(event.target.value);
-    let data = await getResourcesByPolicy(event.target.value);
-    let actionMap = data.resources.reduce((map, resource) => {
+  const resources = useMemo(
+    () => (resourcesQuery.data ?? []).map(resource => ({
+      value: resource.resourceId,
+      name: resource.resourceName,
+      label: t(`resources.${toCamelCase(resource.resourceName)}`)
+    })),
+    [resourcesQuery.data, t]
+  );
+
+  const policies = useMemo(
+    () => (policiesQuery.data ?? []).map(policyItem => ({
+      value: policyItem.policyId,
+      label: t(`policies.${toCamelCase(policyItem.name)}`, { defaultValue: policyItem.name })
+    })),
+    [policiesQuery.data, t]
+  );
+
+  const data = useMemo(() => {
+    const policyResources = policyResourcesQuery.data;
+    if (!policyResources) return {};
+    return policyResources.resources.reduce((map, resource) => {
       map[resource.resourceId] = resource.actions.reduce((actionMap, action) => {
-          actionMap[action.actionId] = action;
-          return actionMap;
+        actionMap[action.actionId] = action;
+        return actionMap;
       }, {});
       return map;
     }, {});
-    setData(actionMap);
-    setLoading(false);
+  }, [policyResourcesQuery.data]);
+
+  const handleChange = (event) => {
+    setPolicy(event.target.value);
   };
 
   const handleSubmit = async (resourceId, actionId, checked) => {
     setLoading(true);
-    let result = null;
-    if (checked) {
-      result = await createResourceActionPolicy(resourceId, actionId, policy);
-    } else {
-      result = await deleteResourceActionPolicy(resourceId, actionId, policy);
+    let result = false;
+    try {
+      if (checked) {
+        const created = await createResourceActionPolicy(resourceId, actionId, policy);
+        result = created.policyId === policy;
+      } else {
+        const deleted = await deleteResourceActionPolicy(resourceId, actionId, policy);
+        result = deleted === policy;
+      }
+    } catch {
+      // Silent (matches the old handleSilentError): no toast, treat as failure.
+      result = false;
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
     return result;
   };
 
   return (
-    <CheckboxTableDialog 
+    <CheckboxTableDialog
       key="policy"
       handleSave={handleSubmit}
       title={t('policy.resources')}
-      data={data} 
+      data={data}
       columns={actions}
       rows={resources}>
       <CustomSelect

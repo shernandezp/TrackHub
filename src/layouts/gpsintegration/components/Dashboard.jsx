@@ -14,16 +14,17 @@
 *  limitations under the License.
 */
 
-import { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import Grid from '@mui/material/Grid';
 import Card from '@mui/material/Card';
 import ArgonBox from 'components/ArgonBox';
 import ArgonTypography from 'components/ArgonTypography';
 import StatCard from 'layouts/gpsintegration/components/dashboard/StatCard';
 import ProviderStatusBreakdown from 'layouts/gpsintegration/components/dashboard/ProviderStatusBreakdown';
-import useGpsDashboardService from 'services/gpsDashboard';
 import useAccountService from 'services/account';
+import { useGpsDashboard, gpsDashboardKeys } from 'queries/gpsDashboard';
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from 'utils/dateUtils';
 import { GPS_INTEGRATION_REFRESH_EVENT } from 'layouts/gpsintegration/gpsIntegrationEvents';
@@ -31,26 +32,19 @@ import { GPS_INTEGRATION_REFRESH_EVENT } from 'layouts/gpsintegration/gpsIntegra
 function GpsDashboard() {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
-  const { getDashboard } = useGpsDashboardService();
   const { getAccountByUser } = useAccountService();
-  const [dashboard, setDashboard] = useState(null);
+  const queryClient = useQueryClient();
   const [accountId, setAccountId] = useState(null);
   const [error, setError] = useState(null);
   const loaded = useRef(false);
 
-  const loadDashboard = useCallback(async (acct = accountId) => {
-    if (!acct) return;
-    setLoading(true);
-    try {
-      const result = await getDashboard(acct);
-      if (result) {
-        setDashboard(result);
-        setError(null);
-      } else setError(t('gpsIntegration.errors.dashboardLoad'));
-    } finally {
-      setLoading(false);
-    }
-  }, [accountId, getDashboard, setLoading, t]);
+  const dashboardQuery = useGpsDashboard(accountId);
+  const dashboard = dashboardQuery.data ?? null;
+
+  // Keep the global spinner UX for the dashboard load / invalidation refetch.
+  useEffect(() => {
+    setLoading(dashboardQuery.isFetching);
+  }, [dashboardQuery.isFetching, setLoading]);
 
   useEffect(() => {
     if (loaded.current) return;
@@ -62,21 +56,23 @@ function GpsDashboard() {
         return;
       }
       setAccountId(acct.accountId);
-      await loadDashboard(acct.accountId);
     })();
-  }, [getAccountByUser, loadDashboard, t]);
+  }, [getAccountByUser, t]);
 
+  // The refresh bus (operator toggle/sync/credential save) now drives a cache
+  // invalidation; the query refetches. A read failure is surfaced by the toast.
   useEffect(() => {
-    const handleRefresh = () => loadDashboard();
+    const handleRefresh = () => queryClient.invalidateQueries({ queryKey: gpsDashboardKeys.all });
     window.addEventListener(GPS_INTEGRATION_REFRESH_EVENT, handleRefresh);
     return () => window.removeEventListener(GPS_INTEGRATION_REFRESH_EVENT, handleRefresh);
-  }, [loadDashboard]);
+  }, [queryClient]);
 
-  if (error) {
+  const errorMessage = error || (dashboardQuery.isError ? t('gpsIntegration.errors.dashboardLoad') : null);
+  if (errorMessage) {
     return (
       <Card>
         <ArgonBox p={3}>
-          <ArgonTypography variant="button" color="error">{error}</ArgonTypography>
+          <ArgonTypography variant="button" color="error">{errorMessage}</ArgonTypography>
         </ArgonBox>
       </Card>
     );

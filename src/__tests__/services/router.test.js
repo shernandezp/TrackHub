@@ -14,36 +14,26 @@
  *  limitations under the License.
  */
 
-import useRouterService from 'services/router';
-import useApiService from 'services/apiService';
-import { handleError } from 'utils/errorHandler';
+import { executeGraphQL } from 'api/core/graphqlClient';
+import { getDevicePositions } from 'api/router/router';
+import { ApiError } from 'api/core/errors';
 
-vi.mock('services/apiService');
-vi.mock('utils/errorHandler', () => ({
-  handleError: vi.fn(),
-  handleSilentError: vi.fn(),
+vi.mock('api/core/graphqlClient', () => ({
+  executeGraphQL: vi.fn(),
 }));
 
-describe('useRouterService', () => {
+describe('router api', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  test('getDevicePositions returns an empty list after a GraphQL feature restriction error', async () => {
-    const graphQLError = {
-      response: {
-        data: {
-          errors: [{ message: 'Feature disabled', extensions: { code: 'FEATURE_DISABLED' } }],
-        },
-      },
-    };
-    const post = vi.fn().mockRejectedValue(graphQLError);
-    useApiService.mockReturnValue({ post });
+  // The api layer no longer swallows failures into an empty list: a GraphQL
+  // feature-restriction error propagates as the thrown ApiError, and the
+  // query/toast layer owns the fallback UX.
+  test('getDevicePositions rejects with the ApiError thrown by the client', async () => {
+    const error = new ApiError('Feature disabled', { code: 'FEATURE_DISABLED' });
+    executeGraphQL.mockRejectedValue(error);
 
-    const service = useRouterService();
-    const result = await service.getDevicePositions();
-
-    expect(result).toEqual([]);
-    expect(handleError).toHaveBeenCalledWith(graphQLError);
+    await expect(getDevicePositions()).rejects.toBe(error);
   });
 });

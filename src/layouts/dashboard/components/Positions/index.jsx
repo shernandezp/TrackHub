@@ -27,7 +27,9 @@ import FilterNavbar from 'controls/Navbars/FilterNavbar';
 import TripList from "layouts/dashboard/components/TripList";
 import TripsMap from "layouts/dashboard/components/TripsMap";
 import PlaybackControls from "layouts/dashboard/components/Positions/PlaybackControls";
-import useRouterService from "services/router";
+import { useQueryClient } from '@tanstack/react-query';
+import { getTripsByTransporter } from 'api/router/router';
+import { routerKeys } from 'queries/router';
 import { useTransportersByUser } from 'queries/transporters';
 import useAccountFeatureService from 'services/accountFeatures';
 import useForm from 'controls/Dialogs/useForm';
@@ -42,7 +44,7 @@ const POSITION_HISTORY_FEATURE_KEY = 'gps.positionHistory';
 
 function Positions({settings, showGeofence, geofences}) {
   const { t } = useTranslation();
-  const { getTripsByTransporter } = useRouterService();
+  const queryClient = useQueryClient();
   const { getAccountFeatures } = useAccountFeatureService();
   const { setLoading } = useContext(LoadingContext);
   const { isAuthenticated } = useAuth();
@@ -82,18 +84,24 @@ function Positions({settings, showGeofence, geofences}) {
 
   const fetchPositions = async () => {
     setLoading(true);
-    const usedSource = historyEnabled ? source : undefined;
-    var result = await getTripsByTransporter(
-      values.selectedItem,
-      values.startDate,
-      values.endDate,
-      usedSource) || [];
+    const usedSource = historyEnabled ? source : 'PROVIDER';
+    let result = [];
+    try {
+      result = await queryClient.fetchQuery({
+        queryKey: routerKeys.trips(values.selectedItem, values.startDate, values.endDate, usedSource),
+        queryFn: () => getTripsByTransporter(values.selectedItem, values.startDate, values.endDate, usedSource),
+        staleTime: 0,
+      });
+    } catch {
+      // Failure is surfaced by the global toast; fall back to an empty result.
+      result = [];
+    }
     setTrips(result);
     setLoadedQuery({
       transporterId: values.selectedItem,
       from: values.startDate,
       to: values.endDate,
-      source: usedSource || 'PROVIDER'
+      source: usedSource
     });
     setSelectedTrip(null);
     setErrors({});

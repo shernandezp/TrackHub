@@ -22,7 +22,7 @@ import ArgonTypography from "components/ArgonTypography";
 import ArgonBadge from "components/ArgonBadge";
 import ArgonButton from "components/ArgonButton";
 import useAccountService from "services/account";
-import useUserService from "services/users";
+import { useCreateManager } from "queries/users";
 import { handleSave } from "layouts/systemadmin/actions/accountsActions";
 import { formatDateTime } from "utils/dateUtils";
 import { LoadingContext } from 'LoadingContext';
@@ -45,7 +45,7 @@ function useAccountsTableData(fetchData, handleEditClick, handleAddManagerClick,
 
   const hasLoaded = useRef(false);
   const { getAccounts, createAccount, updateAccount, changeAccountStatus } = useAccountService();
-  const { createManager } = useUserService();
+  const createManager = useCreateManager();
 
   const onSave = async (account) => {
     setLoading(true);
@@ -68,8 +68,10 @@ function useAccountsTableData(fetchData, handleEditClick, handleAddManagerClick,
   const onSaveUser = async (user) => {
     setLoading(true);
     try {
-      await createManager(user, user.accountId);
+      await createManager.mutateAsync({ user, accountId: user.accountId });
       setOpenUser(false);
+    } catch {
+      // Failure is surfaced by the global toast; keep the dialog open.
     } finally {
       setLoading(false);
     }

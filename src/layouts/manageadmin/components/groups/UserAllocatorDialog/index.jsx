@@ -19,31 +19,35 @@ import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 import DynamicTableDialog from 'controls/Dialogs/TableDialogs/DynamicTableDialog';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
-import useUserService from 'services/users';
+import { useUsersByAccount } from 'queries/users';
 import useGroupService from 'services/groups';
 import { LoadingContext } from 'LoadingContext';
 
 function UserAllocatorDialog({ open, setOpen, groupId }) {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
-  const { getUsersByAccount } = useUserService();
   const { createUserGroup, deleteUserGroup, getUsersByGroup } = useGroupService();
   const [data, setData] = useState([]);
-  const [accountUsers, setAccountUsers] = useState([]);
-  const [users, setUsers] = useState([]);
   const [userId, setUserId] = useState('');
+
+  // Account users come from the security query layer; group membership stays on
+  // the (not-yet-migrated) group service.
+  const accountUsersQuery = useUsersByAccount({ enabled: open });
+  const accountUsers = accountUsersQuery.data ?? [];
 
   const columns = [
     { field: 'username', headerName: t('user.username') }
   ];
 
+  const users = accountUsers
+    .filter(user => !data.some(assignedUser => assignedUser.userId === user.userId))
+    .map(user => ({
+      value: user.userId,
+      label: user.username
+    }));
+
   const reloadData = async () => {
     const assignedUsers = await getUsersByGroup(groupId);
-    const unassignedUsers = accountUsers.filter(user => !assignedUsers.some(assignedUser => assignedUser.userId === user.userId));
-    setUsers(unassignedUsers.map(user => ({
-        value: user.userId,
-        label: user.username
-    })));
     setData(assignedUsers);
     setUserId('');
   };
@@ -51,14 +55,21 @@ function UserAllocatorDialog({ open, setOpen, groupId }) {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const users = await getUsersByAccount();
-      setAccountUsers(users);
-      await reloadData();
-      setLoading(false);
+      try {
+        await reloadData();
+      } finally {
+        setLoading(false);
+      }
     };
     if (open)
         fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  // Keep the global spinner UX while the account-user list loads.
+  useEffect(() => {
+    setLoading(accountUsersQuery.isFetching);
+  }, [accountUsersQuery.isFetching, setLoading]);
 
   const handleChange = (event) => {
     setLoading(true);
@@ -88,13 +99,13 @@ function UserAllocatorDialog({ open, setOpen, groupId }) {
   };
 
   return (
-    <DynamicTableDialog 
+    <DynamicTableDialog
       title={t('group.assignUser')}
       handleAdd={handleAdd}
       handleDelete={handleDelete}
       handleClose={handleClose}
       open={open}
-      data={data} 
+      data={data}
       columns={columns}>
       <CustomSelect
         list={users}

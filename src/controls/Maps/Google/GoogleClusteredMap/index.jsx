@@ -30,7 +30,7 @@ import MapProviderContext, { GOOGLE_PROVIDER } from 'controls/Maps/core/MapProvi
 import PoiLayer from 'controls/Maps/core/PoiLayer';
 import TrailLayer from 'controls/Maps/core/TrailLayer';
 import { GOOGLE_NIGHT_STYLES } from 'controls/Maps/utils/darkMapStyles';
-import useRouterService from 'services/router';
+import { reverseGeocode } from 'api/router/router';
 import 'controls/Maps/css/googleMap.css';
 
 const ANIMATION_DURATION_MS = 1000;
@@ -262,7 +262,6 @@ const GoogleClusteredMap = ({
     const [resolvedAddresses, setResolvedAddresses] = useState({});
     const [resolveStates, setResolveStates] = useState({});
     const { t } = useTranslation();
-    const { reverseGeocode } = useRouterService();
     const mapRef = useRef();
     const markersRef = useRef(markers);
     const boundsFittedRef = useRef(false);
@@ -335,14 +334,21 @@ const GoogleClusteredMap = ({
     const handleResolveAddress = useCallback(async (marker) => {
         const id = markerId(marker);
         setResolveStates(prev => ({ ...prev, [id]: 'pending' }));
-        const result = await reverseGeocode(marker.lat, marker.lng, marker.id);
+        // Silent op: a failed reverse-geocode must not toast, so call the api
+        // function directly and swallow the error (the button shows "failed").
+        let result = null;
+        try {
+            result = await reverseGeocode(marker.lat, marker.lng, marker.id);
+        } catch (error) {
+            if (process.env.NODE_ENV !== 'production') console.error(error);
+        }
         if (result && (result.address || result.city || result.state || result.country)) {
             setResolvedAddresses(prev => ({ ...prev, [id]: result }));
             setResolveStates(prev => ({ ...prev, [id]: 'done' }));
         } else {
             setResolveStates(prev => ({ ...prev, [id]: 'failed' }));
         }
-    }, [reverseGeocode]);
+    }, []);
 
     const mapOptions = useMemo(() => ({
         gestureHandling: "greedy",

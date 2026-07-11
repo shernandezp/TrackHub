@@ -14,7 +14,7 @@
 *  limitations under the License.
 */
 
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import PropTypes from 'prop-types';
 import Icon from '@mui/material/Icon';
@@ -25,7 +25,12 @@ import ArgonTypography from "components/ArgonTypography";
 import ConfirmDialog from 'controls/Dialogs/ConfirmDialog';
 import useForm from "controls/Dialogs/useForm";
 import ServiceClientPermissionDialog from "layouts/systemadmin/components/serviceClientPermissions/ServiceClientPermissionDialog";
-import useServiceClientPermissionService from "services/serviceClientPermissions";
+import {
+  useServiceClientPermissions,
+  useCreateServiceClientPermission,
+  useUpdateServiceClientPermission,
+  useDeleteServiceClientPermission,
+} from "queries/serviceClientPermissions";
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from "utils/dateUtils";
 
@@ -47,35 +52,21 @@ function ManageServiceClientPermissions() {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
   const [expanded, setExpanded] = useState(false);
-  const [permissions, setPermissions] = useState([]);
   const [open, setOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [toDelete, setToDelete] = useState(null);
   const [values, handleChange, setValues, setErrors, validate, errors] = useForm({});
-  const loaded = useRef(false);
-  const {
-    getServiceClientPermissions,
-    createServiceClientPermission,
-    updateServiceClientPermission,
-    deleteServiceClientPermission
-  } = useServiceClientPermissionService();
 
-  const loadPermissions = async () => {
-    setLoading(true);
-    try {
-      const items = await getServiceClientPermissions();
-      setPermissions(items || []);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const permissionsQuery = useServiceClientPermissions({ enabled: expanded });
+  const permissions = permissionsQuery.data ?? [];
+  const createPermission = useCreateServiceClientPermission();
+  const updatePermission = useUpdateServiceClientPermission();
+  const deletePermission = useDeleteServiceClientPermission();
 
+  // Keep the global spinner UX for the initial load / invalidation refetch.
   useEffect(() => {
-    if (expanded && !loaded.current) {
-      loaded.current = true;
-      loadPermissions();
-    }
-  }, [expanded]);
+    setLoading(permissionsQuery.isFetching);
+  }, [permissionsQuery.isFetching, setLoading]);
 
   const handleAddClick = () => {
     setValues({});
@@ -104,12 +95,16 @@ function ManageServiceClientPermissions() {
         effectiveTo: toIsoOrNull(values.effectiveTo)
       };
       if (values.serviceClientPermissionId) {
-        await updateServiceClientPermission(values.serviceClientPermissionId, dto);
+        await updatePermission.mutateAsync({
+          serviceClientPermissionId: values.serviceClientPermissionId,
+          permission: dto
+        });
       } else {
-        await createServiceClientPermission(dto);
+        await createPermission.mutateAsync(dto);
       }
       setOpen(false);
-      await loadPermissions();
+    } catch {
+      // Failure is surfaced by the global toast; keep the dialog open.
     } finally {
       setLoading(false);
     }
@@ -119,8 +114,9 @@ function ManageServiceClientPermissions() {
     if (!toDelete) return;
     setLoading(true);
     try {
-      await deleteServiceClientPermission(toDelete);
-      await loadPermissions();
+      await deletePermission.mutateAsync(toDelete);
+    } catch {
+      // Failure is surfaced by the global toast.
     } finally {
       setLoading(false);
     }

@@ -19,7 +19,7 @@ import DashboardTabbar from "controls/Navbars/DashboardTabbar";
 import Transporters from "layouts/dashboard/components/Transporters";
 import Positions from  "layouts/dashboard/components/Positions";
 import useSettingsService from 'services/settings';
-import useGeofenceService from 'services/geofence';
+import { useGeofencesByAccount } from 'queries/geofences';
 import { LoadingContext } from 'LoadingContext';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "AuthContext";
@@ -29,25 +29,20 @@ function Default() {
   const { isAuthenticated } = useAuth();
   const { setLoading } = useContext(LoadingContext);
   const { getAccountSettings } = useSettingsService();
-  const { getGeofencesByAccount } = useGeofenceService();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTab, setSelectedTab] = useState(0);
   const [showGeofence, setShowGeofence] = useState(false);
-  const [geofences, setGeofences] = useState([]);
   const [searchVisibility, setSearchVisibility] = useState(true);
   const [settings, setSettings] = useState({maps:'OSM', mapsKey:'', refreshMapInterval: 60});
+
+  // Geofences are loaded (cached) only once the overlay is toggled on.
+  const geofencesQuery = useGeofencesByAccount(true, { enabled: isAuthenticated && showGeofence });
+  const geofences = geofencesQuery.data ?? [];
 
   const fetchSettings = async () => {
     setLoading(true);
     var settings = await getAccountSettings();
     setSettings(settings);
-    setLoading(false);
-  };
-
-  const fetchGeofences = async () => {
-    setLoading(true);
-    var geofences = await getGeofencesByAccount(true);
-    setGeofences(geofences);
     setLoading(false);
   };
 
@@ -57,12 +52,11 @@ function Default() {
     }
   }, [isAuthenticated]);
 
+  // Keep the global spinner UX while the geofence overlay loads.
   useEffect(() => {
-    if (isAuthenticated && showGeofence) {
-      fetchGeofences();
-    }
-  }, [isAuthenticated, showGeofence]);
-  
+    setLoading(geofencesQuery.isFetching);
+  }, [geofencesQuery.isFetching, setLoading]);
+
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
   };
