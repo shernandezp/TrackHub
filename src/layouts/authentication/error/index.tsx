@@ -16,6 +16,7 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from "react-i18next";
 import { useAuth } from "AuthContext";
 
 // @mui material components
@@ -30,6 +31,7 @@ import ArgonButton from "components/ArgonButton";
 
 const ErrorPage = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { resetAuthError, login } = useAuth();
   const [errorMessage, setErrorMessage] = useState("");
   const [canRetry, setCanRetry] = useState(false);
@@ -47,13 +49,13 @@ const ErrorPage = () => {
     
     switch(authError) {
       case 'token_exchange_failed':
-        setErrorMessage("Failed to exchange authorization code for access token. The authentication service may be unavailable.");
+        setErrorMessage(t('authError.tokenExchangeFailed'));
         break;
       case 'no_code':
-        setErrorMessage("No authorization code was received. The authentication process was interrupted.");
+        setErrorMessage(t('authError.noCode'));
         break;
       default:
-        setErrorMessage(authError || "An authentication error occurred. Please try again later.");
+        setErrorMessage(authError || t('authError.generic'));
     }
 
     // Start countdown for retry button
@@ -101,7 +103,7 @@ const ErrorPage = () => {
           <ArgonBox p={3} textAlign="center">
             <ArgonBox mb={2}>
               <ArgonTypography variant="h3" fontWeight="bold" color="error">
-                Authentication Failed
+                {t('authError.title')}
               </ArgonTypography>
             </ArgonBox>
             
@@ -113,22 +115,22 @@ const ErrorPage = () => {
 
             <ArgonBox mb={2}>
               <ArgonTypography variant="body2" color="text">
-                This could be due to:
+                {t('authError.causesIntro')}
               </ArgonTypography>
               <ArgonBox component="ul" textAlign="left" pl={4} mt={1}>
                 <li>
                   <ArgonTypography variant="body2" color="text">
-                    The authentication service is temporarily unavailable
+                    {t('authError.causeUnavailable')}
                   </ArgonTypography>
                 </li>
                 <li>
                   <ArgonTypography variant="body2" color="text">
-                    Network connectivity issues
+                    {t('authError.causeNetwork')}
                   </ArgonTypography>
                 </li>
                 <li>
                   <ArgonTypography variant="body2" color="text">
-                    Invalid or expired authentication request
+                    {t('authError.causeInvalidRequest')}
                   </ArgonTypography>
                 </li>
               </ArgonBox>
@@ -141,21 +143,21 @@ const ErrorPage = () => {
                 onClick={handleRetry}
                 disabled={!canRetry}
               >
-                {canRetry ? "Retry Authentication" : `Retry in ${countdown}s`}
+                {canRetry ? t('authError.retry') : t('authError.retryIn', { seconds: countdown })}
               </ArgonButton>
               <ArgonButton
                 variant="outlined"
                 color="dark"
                 onClick={handleGoBack}
               >
-                Go Back
+                {t('authError.goBack')}
               </ArgonButton>
             </ArgonBox>
 
             {!canRetry && (
               <ArgonBox mt={2}>
                 <ArgonTypography variant="caption" color="text">
-                  Please wait before retrying to avoid overloading the authentication service.
+                  {t('authError.waitNote')}
                 </ArgonTypography>
               </ArgonBox>
             )}

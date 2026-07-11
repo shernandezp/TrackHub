@@ -1,4 +1,42 @@
 {
+  "authError": {
+    "title": "Authentication Failed",
+    "tokenExchangeFailed": "Failed to exchange authorization code for access token. The authentication service may be unavailable.",
+    "noCode": "No authorization code was received. The authentication process was interrupted.",
+    "generic": "An authentication error occurred. Please try again later.",
+    "causesIntro": "This could be due to:",
+    "causeUnavailable": "The authentication service is temporarily unavailable",
+    "causeNetwork": "Network connectivity issues",
+    "causeInvalidRequest": "Invalid or expired authentication request",
+    "retry": "Retry Authentication",
+    "retryIn": "Retry in {{seconds}}s",
+    "goBack": "Go Back",
+    "waitNote": "Please wait before retrying to avoid overloading the authentication service."
+  },
+  "accountType": {
+    "personal": "Personal",
+    "business": "Business",
+    "associate": "Associate",
+    "asociate": "Associate"
+  },
+  "deviceTypes": {
+    "unknown": "Unknown",
+    "aviation": "Aviation",
+    "camera": "Camera",
+    "cycling": "Cycling",
+    "cellular": "Cellular",
+    "drones": "Drones",
+    "emergency_locator": "Emergency Locator",
+    "fitness": "Fitness",
+    "handheld": "Handheld",
+    "marine": "Marine",
+    "obd_scanner": "OBD Scanner",
+    "pet_tracking": "Pet Tracking",
+    "phone": "Phone",
+    "satellite": "Satellite",
+    "smartwatch": "Smartwatch",
+    "wearable": "Wearable"
+  },
   "account": {
     "title": "Account",
     "details": "Account Details",
@@ -271,7 +309,31 @@
     "reason": "Reason",
     "missingRequired": "Missing Required Documents",
     "dropHere": "Drag and drop a file here, or click to select",
-    "shareTokenWarning": "Copy this link now. The token will not be shown again."
+    "shareTokenWarning": "Copy this link now. The token will not be shown again.",
+    "values": {
+      "classification": {
+        "public": "Public",
+        "internal": "Internal",
+        "confidential": "Confidential",
+        "legal": "Legal"
+      },
+      "status": {
+        "pending": "Pending",
+        "uploaded": "Uploaded",
+        "active": "Active",
+        "expired": "Expired",
+        "replaced": "Replaced",
+        "voided": "Voided",
+        "deleted": "Deleted"
+      },
+      "scan": {
+        "pending": "Pending",
+        "clean": "Clean",
+        "failed": "Failed",
+        "quarantined": "Quarantined",
+        "infected": "Infected"
+      }
+    }
   },
   "supportGrants": {
     "title": "Support Grants",
@@ -489,7 +551,9 @@
     "publicLinks": "Public Links",
     "serviceClients": "Service Clients",
     "supportGrants": "Support Grants",
-    "synchronizedDevices": "Synchronized Devices"
+    "synchronizedDevices": "Synchronized Devices",
+    "tripManagement": "Trip Management",
+    "driverMobile": "Driver Mobile"
   },
   "role": {
     "title": "Roles",
@@ -775,6 +839,19 @@
       "active": "Active",
       "ended": "Ended",
       "superseded": "Superseded"
+    },
+    "severity": {
+      "critical": "Critical",
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "result": {
+      "succeeded": "Succeeded",
+      "partial": "Partial",
+      "failed": "Failed",
+      "running": "Running",
+      "pending": "Pending"
     },
     "assignmentForm": {
       "transporter": "Unit to receive the device",

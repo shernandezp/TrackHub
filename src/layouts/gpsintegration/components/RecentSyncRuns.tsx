@@ -108,7 +108,7 @@ function RecentSyncRuns() {
     operator: <TextCell>{operatorNames[r.operatorId] || r.operatorId}</TextCell>,
     trigger: <TextCell>{r.triggerType}</TextCell>,
     result: (
-      <ArgonBadge variant="gradient" badgeContent={r.result} color={resultColor(r.result)} size="xs" container />
+      <ArgonBadge variant="gradient" badgeContent={t(`gpsIntegration.result.${(r.result || '').toLowerCase()}` as 'gpsIntegration.result.succeeded', { defaultValue: r.result })} color={resultColor(r.result)} size="xs" container />
     ),
     startedAt: <TextCell>{formatDateTime(r.startedAt)}</TextCell>,
     completedAt: <TextCell>{formatDateTime(r.completedAt)}</TextCell>,

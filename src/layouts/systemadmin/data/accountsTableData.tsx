@@ -207,7 +207,7 @@ function useAccountsTableData(
       name: <Name name={account.name} />,
       description: <Description description={account.description} />,
       type: (
-        <ArgonBadge variant="gradient" badgeContent={account.type} color="success" size="xs" container />
+        <ArgonBadge variant="gradient" badgeContent={t(`accountType.${(account.type || '').toLowerCase()}` as 'accountType.personal', { defaultValue: account.type })} color="success" size="xs" container />
       ),
       status: (() => {
         const name = ACCOUNT_STATUS_NAME[account.statusId as AccountStatusId] || 'ACTIVE';

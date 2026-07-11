@@ -146,9 +146,9 @@ function DocumentPanel({ accountId = null, ownerEntityType, ownerEntityId = null
   const rows = docs.map(doc => ({
     fileName: <ArgonTypography variant="caption" fontWeight="medium">{doc.title || doc.fileName}</ArgonTypography>,
     category: <ArgonTypography variant="caption" color="secondary">{doc.category}</ArgonTypography>,
-    classification: <ArgonTypography variant="caption" color="secondary">{doc.classification}</ArgonTypography>,
-    status: <ArgonTypography variant="caption" color="secondary">{doc.status}</ArgonTypography>,
-    scan: <ArgonBadge badgeContent={doc.scanStatus} color={scanColor(doc.scanStatus)} size="xs" container />,
+    classification: <ArgonTypography variant="caption" color="secondary">{t(`documentManagement.values.classification.${(doc.classification || '').toLowerCase()}` as 'documentManagement.values.classification.public', { defaultValue: doc.classification })}</ArgonTypography>,
+    status: <ArgonTypography variant="caption" color="secondary">{t(`documentManagement.values.status.${(doc.status || '').toLowerCase()}` as 'documentManagement.values.status.active', { defaultValue: doc.status })}</ArgonTypography>,
+    scan: <ArgonBadge badgeContent={t(`documentManagement.values.scan.${(doc.scanStatus || '').toLowerCase()}` as 'documentManagement.values.scan.clean', { defaultValue: doc.scanStatus })} color={scanColor(doc.scanStatus)} size="xs" container />,
     expires: <ArgonTypography variant="caption" color="secondary">{doc.expiresAt ? formatDateTime(doc.expiresAt) : '-'}</ArgonTypography>,
     version: <ArgonTypography variant="caption" color="secondary">{doc.currentVersion}</ArgonTypography>,
     action: (

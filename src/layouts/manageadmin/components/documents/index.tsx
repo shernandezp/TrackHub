@@ -187,9 +187,9 @@ function ManageDocuments() {
             fileName: <ArgonTypography variant="caption" fontWeight="medium">{d.title || d.fileName}</ArgonTypography>,
             owner: cap(`${d.ownerEntityType}:${(d.ownerEntityId || '').substring(0, 8)}`),
             category: cap(d.category),
-            classification: cap(d.classification),
-            status: cap(d.status),
-            scan: <ArgonBadge badgeContent={d.scanStatus} color={scanColor(d.scanStatus)} size="xs" container />,
+            classification: cap(t(`documentManagement.values.classification.${(d.classification || '').toLowerCase()}` as 'documentManagement.values.classification.public', { defaultValue: d.classification })),
+            status: cap(t(`documentManagement.values.status.${(d.status || '').toLowerCase()}` as 'documentManagement.values.status.active', { defaultValue: d.status })),
+            scan: <ArgonBadge badgeContent={t(`documentManagement.values.scan.${(d.scanStatus || '').toLowerCase()}` as 'documentManagement.values.scan.clean', { defaultValue: d.scanStatus })} color={scanColor(d.scanStatus)} size="xs" container />,
             action: d.downloadUrl ? (
               <ArgonButton variant="text" color="dark" onClick={() => handleDownload(d.documentId, d.fileName)}><Icon>download</Icon></ArgonButton>
             ) : null,
@@ -213,7 +213,7 @@ function ManageDocuments() {
             category: <ArgonTypography variant="caption" fontWeight="medium">{d.category}</ArgonTypography>,
             owner: cap(`${d.ownerEntityType}:${(d.ownerEntityId || '').substring(0, 8)}`),
             expires: cap(d.expiresAt ? formatDateTime(d.expiresAt) : '-'),
-            status: cap(d.status),
+            status: cap(t(`documentManagement.values.status.${(d.status || '').toLowerCase()}` as 'documentManagement.values.status.active', { defaultValue: d.status })),
             id: d.documentId,
           }))}
           selectedField="category"

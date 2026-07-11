@@ -31,6 +31,7 @@ import { getAccountFeaturesMaster, setAccountFeatureMaster } from "api/manager/a
 import type { AccountFeature, AccountFeatureDtoInput } from "api/manager/accountFeatures";
 import { notifyApiError } from "api/core/errors";
 import { parseJson } from 'utils/jsonUtils';
+import { toCamelCase } from "utils/stringUtils";
 import { LoadingContext } from 'LoadingContext';
 
 /** Editable storage/cost configuration bound to a specific feature key. */
@@ -185,7 +186,7 @@ function SystemAccountFeatures() {
   const rows = accounts.flatMap(account =>
     (featuresByAccount[account.accountId] || []).map(feature => ({
       account: <TextCell>{account.name}</TextCell>,
-      feature: <TextCell>{feature.featureKey}</TextCell>,
+      feature: <TextCell>{t(`resources.${toCamelCase(feature.featureKey || '')}` as 'resources.geofencing', { defaultValue: feature.featureKey })}</TextCell>,
       enabled: <ArgonBadge variant="gradient" color={feature.enabled ? 'success' : 'secondary'} size="xs" container badgeContent={feature.enabled ? t('generic.yes') : t('generic.no')} />,
       tier: <TextCell>{feature.tier}</TextCell>,
       source: <TextCell>{feature.source}</TextCell>,

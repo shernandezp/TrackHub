@@ -81,7 +81,7 @@ function OpenAlerts() {
   const rows = alerts.map(a => ({
     eventType: <TextCell>{a.eventType}</TextCell>,
     severity: (
-      <ArgonBadge variant="gradient" badgeContent={a.severity} color={severityColor(a.severity)} size="xs" container />
+      <ArgonBadge variant="gradient" badgeContent={t(`gpsIntegration.severity.${(a.severity || '').toLowerCase()}` as 'gpsIntegration.severity.critical', { defaultValue: a.severity })} color={severityColor(a.severity)} size="xs" container />
     ),
     status: <TextCell>{a.status}</TextCell>,
     source: <TextCell>{a.sourceModule}</TextCell>,

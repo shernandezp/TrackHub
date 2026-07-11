@@ -80,7 +80,7 @@ function useDeviceTableData(
       serial: <Name name={device.serial} />,
       description: <Description description={device.description} />,
       devicetype: (
-        <ArgonBadge variant="gradient" badgeContent={device.deviceType} color="success" size="xs" container />
+        <ArgonBadge variant="gradient" badgeContent={t(`deviceTypes.${(device.deviceType || '').toLowerCase()}` as 'deviceTypes.cellular', { defaultValue: device.deviceType })} color="success" size="xs" container />
       ),
       action: (
         <>

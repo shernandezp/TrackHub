@@ -28,6 +28,7 @@ import type { AccountFeature } from "api/manager/accountFeatures";
 import { notifyApiError } from "api/core/errors";
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from "utils/dateUtils";
+import { toCamelCase } from "utils/stringUtils";
 
 // Managers only visualize their account features; enabling/disabling is a billing decision
 // owned by the SuperAdministrator.
@@ -92,7 +93,7 @@ function ManageAccountFeatures() {
     };
 
     return {
-      feature: <TextCell>{feature.featureKey}</TextCell>,
+      feature: <TextCell>{t(`resources.${toCamelCase(feature.featureKey || '')}` as 'resources.geofencing', { defaultValue: feature.featureKey })}</TextCell>,
       enabled: <ArgonBadge variant="gradient" color={feature.enabled ? 'success' : 'secondary'} size="xs" container badgeContent={feature.enabled ? t('generic.yes') : t('generic.no')} />,
       tier: <TextCell>{feature.tier}</TextCell>,
       source: <TextCell>{feature.source}</TextCell>,

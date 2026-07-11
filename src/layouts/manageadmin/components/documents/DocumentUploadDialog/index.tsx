@@ -169,7 +169,7 @@ function DocumentUploadDialog({ open, setOpen, onUpload, categories = [], replac
             name="classification"
             id="classification"
             label={t('documentManagement.classification')}
-            list={CLASSIFICATIONS.map(c => ({ value: c, label: c }))}
+            list={CLASSIFICATIONS.map(c => ({ value: c, label: t(`documentManagement.values.classification.${c.toLowerCase()}` as 'documentManagement.values.classification.public', { defaultValue: c }) }))}
             numericValue={false}
             value={values.classification || 'Internal'}
             handleChange={handleChange}

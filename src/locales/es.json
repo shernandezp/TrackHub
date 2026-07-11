@@ -1,4 +1,42 @@
 {
+  "authError": {
+    "title": "Error de Autenticación",
+    "tokenExchangeFailed": "No se pudo canjear el código de autorización por un token de acceso. Es posible que el servicio de autenticación no esté disponible.",
+    "noCode": "No se recibió ningún código de autorización. El proceso de autenticación fue interrumpido.",
+    "generic": "Ocurrió un error de autenticación. Por favor, intente nuevamente más tarde.",
+    "causesIntro": "Esto puede deberse a:",
+    "causeUnavailable": "El servicio de autenticación no está disponible temporalmente",
+    "causeNetwork": "Problemas de conectividad de red",
+    "causeInvalidRequest": "Solicitud de autenticación inválida o expirada",
+    "retry": "Reintentar Autenticación",
+    "retryIn": "Reintentar en {{seconds}}s",
+    "goBack": "Volver",
+    "waitNote": "Por favor, espere antes de reintentar para evitar sobrecargar el servicio de autenticación."
+  },
+  "accountType": {
+    "personal": "Personal",
+    "business": "Empresarial",
+    "associate": "Asociado",
+    "asociate": "Asociado"
+  },
+  "deviceTypes": {
+    "unknown": "Desconocido",
+    "aviation": "Aviación",
+    "camera": "Cámara",
+    "cycling": "Ciclismo",
+    "cellular": "Celular",
+    "drones": "Drones",
+    "emergency_locator": "Localizador de Emergencia",
+    "fitness": "Actividad Física",
+    "handheld": "Dispositivo de Mano",
+    "marine": "Marino",
+    "obd_scanner": "Escáner OBD",
+    "pet_tracking": "Rastreo de Mascotas",
+    "phone": "Teléfono",
+    "satellite": "Satélite",
+    "smartwatch": "Reloj Inteligente",
+    "wearable": "Dispositivo Vestible"
+  },
   "account": {
     "title": "Cuenta",
     "details": "Detalle de la Cuenta",
@@ -271,7 +309,31 @@
     "reason": "Motivo",
     "missingRequired": "Documentos Obligatorios Faltantes",
     "dropHere": "Arrastre y suelte un archivo aquí, o haga clic para seleccionar",
-    "shareTokenWarning": "Copie este enlace ahora. El token no se mostrará de nuevo."
+    "shareTokenWarning": "Copie este enlace ahora. El token no se mostrará de nuevo.",
+    "values": {
+      "classification": {
+        "public": "Público",
+        "internal": "Interno",
+        "confidential": "Confidencial",
+        "legal": "Legal"
+      },
+      "status": {
+        "pending": "Pendiente",
+        "uploaded": "Cargado",
+        "active": "Activo",
+        "expired": "Expirado",
+        "replaced": "Reemplazado",
+        "voided": "Anulado",
+        "deleted": "Eliminado"
+      },
+      "scan": {
+        "pending": "Pendiente",
+        "clean": "Limpio",
+        "failed": "Fallido",
+        "quarantined": "En Cuarentena",
+        "infected": "Infectado"
+      }
+    }
   },
   "supportGrants": {
     "title": "Concesiones de Soporte",
@@ -489,7 +551,9 @@
     "publicLinks": "Enlaces Públicos",
     "serviceClients": "Clientes de Servicio",
     "supportGrants": "Concesiones de Soporte",
-    "synchronizedDevices": "Dispositivos Sincronizados"
+    "synchronizedDevices": "Dispositivos Sincronizados",
+    "tripManagement": "Gestión de Viajes",
+    "driverMobile": "Móvil del Conductor"
   },
   "role": {
     "title": "Roles",
@@ -506,7 +570,7 @@
     "title": "Configuración",
     "detail": "Detalle de la Configuración",
     "style": "Modo Claro/Oscuro",
-    "sidenav": "Collapsar Barra Lateral",
+    "sidenav": "Contraer Barra Lateral",
     "language": "Idioma",
     "maps": "Mapas",
     "mapsKey": "Clave de Mapas",
@@ -515,7 +579,7 @@
     "storingInterval": "Intervalo de Almacenamiento (Segundos)",
     "refreshMap": "Actualizar Mapa",
     "refreshMapInterval": "Intervalo de Actualización de Mapa (Segundos)",
-    "saveMessage": "Algunas configuraciones requieren reiniciar sesión para que los cambios surtan efecto"
+    "saveMessage": "Algunas configuraciones pueden requerir recargar la página para que los cambios surtan efecto"
   },
   "screen": {
     "account": "Cuenta",
@@ -664,7 +728,7 @@
     "title": "Perfil de Usuario",
     "account": "Cuenta",
     "style": "Modo Claro/Oscuro",
-    "sidenav": "Collapsar Barra Lateral",
+    "sidenav": "Contraer Barra Lateral",
     "language": "Idioma",
     "info": "Información del Perfil",
     "partOf": "Parte de"
@@ -775,6 +839,19 @@
       "active": "Activa",
       "ended": "Finalizada",
       "superseded": "Reemplazada"
+    },
+    "severity": {
+      "critical": "Crítica",
+      "high": "Alta",
+      "medium": "Media",
+      "low": "Baja"
+    },
+    "result": {
+      "succeeded": "Exitosa",
+      "partial": "Parcial",
+      "failed": "Fallida",
+      "running": "En Ejecución",
+      "pending": "Pendiente"
     },
     "assignmentForm": {
       "transporter": "Unidad que recibirá el dispositivo",

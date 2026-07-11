@@ -126,7 +126,7 @@ function AccountsFormDialog({ open, setOpen, handleSubmit, values, handleChange,
           )}
 
           <CustomSelect
-            list={[...accountTypes]}
+            list={accountTypes.map(a => ({ value: a.value, label: t(`accountType.${a.label.toLowerCase()}` as 'accountType.personal', { defaultValue: a.label }) }))}
             handleChange={handleChange}
             name="typeId"
             id="typeId"
