@@ -54,7 +54,7 @@ import type { CurrentUser } from "api/security/users";
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
 
-const bgImage = "assets/images/vr-bg.jpg";
+import bgImage from "assets/images/vr-bg.jpg";
 
 function Overview() {
   const { setLoading } = useContext(LoadingContext);

@@ -90,10 +90,6 @@ import PrincipalTypes from "constants/principalTypes";
 export default function App() {
   const [controller, dispatch] = useArgonController();
   const { miniSidenav, layout, openConfigurator, darkMode } = controller;
-  // `direction` was historically destructured from the controller, but the
-  // reducer never sets it — it is always undefined. Read it via a narrow local
-  // widening so the (dead) dir effect keeps its exact prior behavior.
-  const { direction } = controller as typeof controller & { direction?: string };
   const [onMouseEnter, setOnMouseEnter] = useState(false);
   const { isAuthenticated, login, isLoggingIn, authError } = useAuth();
   const { pathname } = useLocation();
@@ -182,13 +178,9 @@ export default function App() {
   // Change the openConfigurator state
   const handleConfiguratorOpen = () => setOpenConfigurator(dispatch, !openConfigurator);
 
-  // Setting the dir attribute for the body element.
-  // NOTE: `direction` is not part of the Argon controller state (the reducer
-  // never sets it), so it is always undefined here — String() reproduces the
-  // pre-existing behavior of writing dir="undefined". See findings.
-  useEffect(() => {
-    document.body.setAttribute("dir", String(direction));
-  }, [direction]);
+  // The Argon template's RTL support was dropped in this fork: the controller
+  // has no `direction` state, so the app is LTR-only. The old effect wrote the
+  // invalid dir="undefined" to <body>; it is intentionally gone.
 
   // Setting page scroll to 0 when changing the route
   useEffect(() => {

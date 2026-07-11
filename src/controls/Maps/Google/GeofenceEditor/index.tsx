@@ -228,7 +228,7 @@ const GoogleGeofenceEditor = ({
             }}
           />
         ))}
-        {enableScale && <GoogleScaleControl mapRef={mapRef} position="BOTTOM_LEFT" />}
+        {enableScale && <GoogleScaleControl mapRef={mapRef} />}
         {enableFullscreen && <GoogleFullscreenControl mapRef={mapRef} position="TOP_LEFT" />}
         {enableMeasurement && <GoogleMeasurementTool mapRef={mapRef} position="TOP_LEFT" unit="metric" enabled={true} />}
       </GoogleMap>

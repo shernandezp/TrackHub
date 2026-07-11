@@ -48,10 +48,6 @@ interface FilterValues { category?: string; status?: string; }
 
 const DOCUMENTS_FEATURE_KEY = "documents";
 
-// Intentionally bundle-absent, defaultValue-backed key; typed via a const so the
-// literal is not surfaced as a static (must-resolve) i18n key.
-const CONFIRM_DELETE_KEY = 'generic.confirmDelete' as 'generic.active';
-
 const scanColor = (s: string): 'success' | 'error' | 'warning' | 'secondary' => (s === 'Clean' ? 'success' : (s === 'Infected' || s === 'Failed') ? 'error' : s === 'Quarantined' ? 'warning' : 'secondary');
 const cap = (v: ReactNode): ReactNode => <ArgonTypography variant="caption" color="secondary">{v ?? '-'}</ArgonTypography>;
 
@@ -256,7 +252,7 @@ function ManageDocuments() {
         open={confirm.open}
         setOpen={(v) => setConfirm(prev => ({ ...prev, open: typeof v === 'function' ? v(prev.open) : v }))}
         title={t('documentManagement.types')}
-        message={t(CONFIRM_DELETE_KEY, { defaultValue: 'Are you sure?' })}
+        message={t('generic.confirmDelete')}
         onConfirm={doDisableType}
       />
     </>

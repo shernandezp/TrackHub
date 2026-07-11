@@ -177,19 +177,18 @@ function Positions({ settings, showGeofence, geofences }: PositionsProps) {
       t('replay.exportTimestamp'),
       t('replay.exportLatitude'),
       t('replay.exportLongitude'),
-      t('replay.exportSpeed'),
-      t('replay.exportAddress')
+      t('replay.exportSpeed')
     ];
+    // No Address column: the backend's TripPointVm carries no address (only live
+    // positions do), so the old column was always empty. Restore it if/when the
+    // Router service adds address to trip points.
     const rows = trips.flatMap(trip => (trip.points || []).map(point => [
       transporterName,
       trip.tripId,
       point.deviceDateTime,
       point.latitude,
       point.longitude,
-      point.speed,
-      // `address` is not part of the trip-points fragment (always undefined at
-      // runtime); exported as an empty column, matching prior behavior.
-      (point as { address?: string | null }).address || ''
+      point.speed
     ]));
     const filename = [
       'replay',

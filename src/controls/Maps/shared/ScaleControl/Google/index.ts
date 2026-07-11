@@ -17,34 +17,24 @@
 import { useEffect } from 'react';
 import type { RefObject } from 'react';
 
-type ControlCorner = 'TOP_LEFT' | 'TOP_RIGHT' | 'BOTTOM_LEFT' | 'BOTTOM_RIGHT';
-
 interface ScaleControlProps {
     mapRef: RefObject<google.maps.Map | null>;
-    position?: ControlCorner;
 }
 
-const ScaleControl = ({ mapRef, position = 'BOTTOM_LEFT' }: ScaleControlProps) => {
+// The Google Maps scale control has a fixed position (bottom-right); unlike the
+// OSM variant there is no position option, so none is accepted here.
+const ScaleControl = ({ mapRef }: ScaleControlProps) => {
     useEffect(() => {
         if (!mapRef || !mapRef.current || !window.google) return;
 
         const map = mapRef.current;
 
-        // Add scale control to map
-        map.setOptions({
-            scaleControl: true,
-            // google.maps.ScaleControlOptions has no `position` (the scale control
-            // sits bottom-right); this preserves the original call, which the API
-            // ignores at runtime.
-            scaleControlOptions: {
-                position: window.google.maps.ControlPosition[position]
-            } as google.maps.ScaleControlOptions
-        });
+        map.setOptions({ scaleControl: true });
 
         return () => {
             map.setOptions({ scaleControl: false });
         };
-    }, [mapRef, position]);
+    }, [mapRef]);
 
     return null;
 };

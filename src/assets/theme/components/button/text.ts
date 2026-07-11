@@ -37,10 +37,7 @@ import typography from "assets/theme/base/typography";
 import pxToRem from "assets/theme/functions/pxToRem";
 
 const { info, secondary, grey } = colors;
-// Argon's vendored code reads `transparent.focus`, which does not exist on the
-// `transparent` color (only `main`) — at runtime it is `undefined` (a CSS no-op).
-// Typed optional so the read compiles while the rendered output stays identical.
-const transparent: { main: string; focus?: string } = colors.transparent;
+const { transparent } = colors;
 const { size } = typography;
 
 const buttonText = {
@@ -104,7 +101,7 @@ const buttonText = {
 
     "&:focus:not(:hover)": {
       color: info.focus,
-      backgroundColor: transparent.focus,
+      backgroundColor: transparent.main,
       boxShadow: "none",
     },
   },
@@ -120,7 +117,7 @@ const buttonText = {
 
     "&:focus:not(:hover)": {
       color: secondary.focus,
-      backgroundColor: transparent.focus,
+      backgroundColor: transparent.main,
       boxShadow: "none",
     },
   },

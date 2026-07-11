@@ -35,31 +35,29 @@ import type { Theme } from "@mui/material/styles";
 interface SidenavItemOwnerState {
   active?: boolean;
   darkSidenav?: boolean;
-  sidenavColor?: string;
   miniSidenav?: boolean;
 }
 
 function item(theme: Theme, ownerState: SidenavItemOwnerState) {
   const { palette, transitions, breakpoints, boxShadows, borders, functions } = theme;
-  const { active, darkSidenav, sidenavColor, miniSidenav } = ownerState;
+  const { active, darkSidenav, miniSidenav } = ownerState;
 
   const { dark, transparent, white } = palette;
   const { xxl } = boxShadows;
   const { borderRadius } = borders;
   const { pxToRem, rgba } = functions;
-  // Dynamic palette lookup by color key (sidenavColor is a runtime string);
-  // also surfaces Argon's `text.main` shade which MUI's TypeText omits.
+  // Surfaces Argon's `text.main` shade, which MUI's TypeText omits.
   const paletteColors = palette as unknown as Record<string, { main: string }>;
   const text = paletteColors.text;
 
   return {
     background: active
-      ? rgba(paletteColors[sidenavColor ?? "info"].main, sidenavColor ? 1 : 0.1)
+      ? rgba(palette.info.main, 0.1)
       : transparent.main,
     color: () => {
       let result = text.main;
 
-      if ((active && sidenavColor) || (active && darkSidenav) || darkSidenav) {
+      if (darkSidenav) {
         result = white.main;
       } else if (active) {
         result = dark.main;
@@ -96,7 +94,7 @@ function item(theme: Theme, ownerState: SidenavItemOwnerState) {
 
 function itemIconBox(theme: Theme, ownerState: SidenavItemOwnerState) {
   const { transitions, borders, functions } = theme;
-  const { darkSidenav, sidenavColor, active } = ownerState;
+  const { darkSidenav, active } = ownerState;
 
   const { borderRadius } = borders;
   const { pxToRem } = functions;
@@ -118,7 +116,7 @@ function itemIconBox(theme: Theme, ownerState: SidenavItemOwnerState) {
     },
 
     "& i": {
-      color: active && (darkSidenav || sidenavColor) ? "inherit" : null,
+      color: active && darkSidenav ? "inherit" : null,
     },
   };
 }

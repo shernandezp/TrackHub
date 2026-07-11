@@ -57,17 +57,14 @@ export interface SidenavItemProps {
 function SidenavItem({ icon, name, active = false }: SidenavItemProps) {
   const [controller] = useArgonController();
   const { miniSidenav, darkSidenav } = controller;
-  // `sidenavColor` is not part of the Argon controller state (the reducer never
-  // sets it), so it is always undefined here — preserved as a latent no-op.
-  const sidenavColor: string | undefined = undefined;
 
   return (
     <>
       <ListItem component="li">
         <ArgonBox
-          sx={(theme) => item(theme, { active, darkSidenav, sidenavColor, miniSidenav })}
+          sx={(theme) => item(theme, { active, darkSidenav, miniSidenav })}
         >
-          <ListItemIcon sx={(theme) => itemIconBox(theme, { active, darkSidenav, sidenavColor })}>
+          <ListItemIcon sx={(theme) => itemIconBox(theme, { active, darkSidenav })}>
             {typeof icon === "string" ? (
               <Icon sx={(theme) => itemIcon(theme, { active })}>{icon}</Icon>
             ) : (

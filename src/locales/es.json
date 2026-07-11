@@ -145,7 +145,8 @@
     "enable": "Habilitar",
     "disable": "Deshabilitar",
     "yes": "Sí",
-    "no": "No"
+    "no": "No",
+    "confirmDelete": "¿Está seguro de que desea eliminar este elemento?"
   },
   "serviceClientPermissions": {
     "title": "Permisos de Cliente de Servicio",

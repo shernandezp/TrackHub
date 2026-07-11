@@ -270,7 +270,7 @@ const colors = {
   badgeColors: {
     primary: {
       background: "#eaecfb",
-      text: "##2643e9",
+      text: "#2643e9",
     },
 
     secondary: {

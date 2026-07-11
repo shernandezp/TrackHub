@@ -145,7 +145,8 @@
     "enable": "Enable",
     "disable": "Disable",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "confirmDelete": "Are you sure you want to delete this item?"
   },
   "serviceClientPermissions": {
     "title": "Service Client Permissions",

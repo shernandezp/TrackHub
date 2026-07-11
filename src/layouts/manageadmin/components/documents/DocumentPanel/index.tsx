@@ -32,10 +32,6 @@ import { notifyApiError } from "api/core/errors";
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from "utils/dateUtils";
 
-// Intentionally bundle-absent, defaultValue-backed key; typed via a const so the
-// literal is not surfaced as a static (must-resolve) i18n key.
-const CONFIRM_DELETE_KEY = 'generic.confirmDelete' as 'generic.active';
-
 const scanColor = (scanStatus: string): 'success' | 'error' | 'warning' | 'secondary' => {
   switch (scanStatus) {
     case 'Clean': return 'success';
@@ -201,7 +197,7 @@ function DocumentPanel({ accountId = null, ownerEntityType, ownerEntityId = null
         open={confirm.open}
         setOpen={(v) => setConfirm(prev => ({ ...prev, open: typeof v === 'function' ? v(prev.open) : v }))}
         title={confirm.kind === 'delete' ? t('documentManagement.delete') : t('documentManagement.void')}
-        message={confirm.kind === 'delete' ? t(CONFIRM_DELETE_KEY, { defaultValue: 'Are you sure?' }) : t('documentManagement.void')}
+        message={confirm.kind === 'delete' ? t('generic.confirmDelete') : t('documentManagement.void')}
         onConfirm={() => runConfirmed(confirm.kind === 'delete'
           ? (d) => deleteDocumentReference(d.documentId)
           : (d) => voidDocument(d.documentId, 'Voided from panel'))}

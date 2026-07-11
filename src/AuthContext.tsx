@@ -108,7 +108,10 @@ export const AuthProvider = ({ children, navigate }: AuthProviderProps) => {
       const codeChallenge = generateCodeChallenge(codeVerifierRef.current);
       const responseType = 'code';
       const scope = 'web_scope offline_access';
-      const state = '123';
+      // CSRF protection: random state, verified by the callback page. (Was a
+      // constant '123' that the callback never checked.)
+      const state = crypto.randomUUID();
+      sessionStorage.setItem('oauth_state', state);
 
       const queryParams = new URLSearchParams({
         client_id: OAUTH_ENDPOINTS.clientId,

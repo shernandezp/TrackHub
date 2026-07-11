@@ -44,6 +44,21 @@ const CallbackPage = () => {
       return;
     }
 
+    // CSRF check: the state round-tripped by the identity provider must match
+    // the value login() generated for this attempt (single-use).
+    const returnedState = searchParams.get('state');
+    const expectedState = sessionStorage.getItem('oauth_state');
+    sessionStorage.removeItem('oauth_state');
+    if (!expectedState || returnedState !== expectedState) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('OAuth state mismatch — possible CSRF or stale callback.');
+      }
+      setIsLoggingIn(false);
+      sessionStorage.setItem('auth_error', 'state_mismatch');
+      navigate("/error", { replace: true });
+      return;
+    }
+
     if (authorizationCode) {
       // Exchange authorization code for access token
       exchangeAuthorizationCode(authorizationCode).then((data: TokenResponse) => {
