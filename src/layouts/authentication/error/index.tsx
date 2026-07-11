@@ -14,7 +14,8 @@
 *  limitations under the License.
 */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import type { ReactNode } from "react";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from "AuthContext";
 
@@ -23,10 +24,44 @@ import Card from "@mui/material/Card";
 import Container from "@mui/material/Container";
 import Alert from "@mui/material/Alert";
 
-// Argon Dashboard 2 MUI components
-import ArgonBox from "components/ArgonBox";
-import ArgonTypography from "components/ArgonTypography";
-import ArgonButton from "components/ArgonButton";
+// Argon Dashboard 2 MUI components (vendored, untyped) — type the prop slice
+// crossing the boundary.
+import ArgonBoxBase from "components/ArgonBox";
+import ArgonTypographyBase from "components/ArgonTypography";
+import ArgonButtonBase from "components/ArgonButton";
+
+interface ArgonBoxProps {
+  minHeight?: string;
+  p?: number;
+  pl?: number;
+  mb?: number;
+  mt?: number;
+  display?: string;
+  gap?: number;
+  justifyContent?: string;
+  textAlign?: string;
+  component?: string;
+  sx?: object;
+  children?: ReactNode;
+}
+const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
+
+interface ArgonTypographyProps {
+  variant?: string;
+  fontWeight?: string;
+  color?: string;
+  children?: ReactNode;
+}
+const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
+
+interface ArgonButtonProps {
+  variant?: string;
+  color?: string;
+  onClick?: () => void;
+  disabled?: boolean;
+  children?: ReactNode;
+}
+const ArgonButton = ArgonButtonBase as unknown as (props: ArgonButtonProps) => ReactNode;
 
 const ErrorPage = () => {
   const navigate = useNavigate();

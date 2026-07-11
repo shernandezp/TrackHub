@@ -35,18 +35,40 @@ Coded by www.creative-tim.com
 */
 
 import { createContext, useContext, useReducer, useMemo } from "react";
+import type { Dispatch, ReactNode } from "react";
 
-// prop-types is a library for typechecking of props
-import PropTypes from "prop-types";
+// Global UI state controlled by the Argon dashboard shell.
+export interface ArgonControllerState {
+  miniSidenav: boolean;
+  darkSidenav: boolean;
+  transparentNavbar: boolean;
+  openConfigurator: boolean;
+  layout: string;
+  darkMode: boolean;
+}
+
+// Reducer actions — one per settable field.
+export type ArgonControllerAction =
+  | { type: "MINI_SIDENAV"; value: boolean }
+  | { type: "DARK_SIDENAV"; value: boolean }
+  | { type: "TRANSPARENT_NAVBAR"; value: boolean }
+  | { type: "OPEN_CONFIGURATOR"; value: boolean }
+  | { type: "LAYOUT"; value: string }
+  | { type: "DARK_MODE"; value: boolean };
+
+export type ArgonControllerDispatch = Dispatch<ArgonControllerAction>;
+
+// Tuple exposed by the context / useArgonController hook.
+export type ArgonControllerValue = [ArgonControllerState, ArgonControllerDispatch];
 
 // The Argon Dashboard 2 MUI main context
-const Argon = createContext(null);
+const Argon = createContext<ArgonControllerValue | null>(null);
 
 // Setting custom name for the context which is visible on react dev tools
 Argon.displayName = "ArgonContext";
 
 // Argon Dashboard 2 MUI reducer
-function reducer(state, action) {
+function reducer(state: ArgonControllerState, action: ArgonControllerAction): ArgonControllerState {
   switch (action.type) {
     case "MINI_SIDENAV": {
       return { ...state, miniSidenav: action.value };
@@ -67,14 +89,18 @@ function reducer(state, action) {
       return { ...state, darkMode: action.value };
     }
     default: {
-      throw new Error(`Unhandled action type: ${action.type}`);
+      throw new Error(`Unhandled action type: ${(action as { type?: string }).type}`);
     }
   }
 }
 
+interface ArgonControllerProviderProps {
+  children: ReactNode;
+}
+
 // Argon Dashboard 2 MUI context provider
-function ArgonControllerProvider({ children }) {
-  const initialState = {
+function ArgonControllerProvider({ children }: ArgonControllerProviderProps) {
+  const initialState: ArgonControllerState = {
     miniSidenav: false,
     darkSidenav: false,
     transparentNavbar: true,
@@ -85,13 +111,16 @@ function ArgonControllerProvider({ children }) {
 
   const [controller, dispatch] = useReducer(reducer, initialState);
 
-  const value = useMemo(() => [controller, dispatch], [controller, dispatch]);
+  const value = useMemo<ArgonControllerValue>(
+    () => [controller, dispatch],
+    [controller, dispatch]
+  );
 
   return <Argon.Provider value={value}>{children}</Argon.Provider>;
 }
 
 // Argon Dashboard 2 MUI custom hook for using context
-function useArgonController() {
+function useArgonController(): ArgonControllerValue {
   const context = useContext(Argon);
 
   if (!context) {
@@ -101,18 +130,19 @@ function useArgonController() {
   return context;
 }
 
-// Typechecking props for the ArgonControllerProvider
-ArgonControllerProvider.propTypes = {
-  children: PropTypes.node.isRequired,
-};
-
 // Context module functions
-const setMiniSidenav = (dispatch, value) => dispatch({ type: "MINI_SIDENAV", value });
-const setDarkSidenav = (dispatch, value) => dispatch({ type: "DARK_SIDENAV", value });
-const setTransparentNavbar = (dispatch, value) => dispatch({ type: "TRANSPARENT_NAVBAR", value });
-const setOpenConfigurator = (dispatch, value) => dispatch({ type: "OPEN_CONFIGURATOR", value });
-const setLayout = (dispatch, value) => dispatch({ type: "LAYOUT", value });
-const setDarkMode = (dispatch, value) => dispatch({ type: "DARK_MODE", value });
+const setMiniSidenav = (dispatch: ArgonControllerDispatch, value: boolean) =>
+  dispatch({ type: "MINI_SIDENAV", value });
+const setDarkSidenav = (dispatch: ArgonControllerDispatch, value: boolean) =>
+  dispatch({ type: "DARK_SIDENAV", value });
+const setTransparentNavbar = (dispatch: ArgonControllerDispatch, value: boolean) =>
+  dispatch({ type: "TRANSPARENT_NAVBAR", value });
+const setOpenConfigurator = (dispatch: ArgonControllerDispatch, value: boolean) =>
+  dispatch({ type: "OPEN_CONFIGURATOR", value });
+const setLayout = (dispatch: ArgonControllerDispatch, value: string) =>
+  dispatch({ type: "LAYOUT", value });
+const setDarkMode = (dispatch: ArgonControllerDispatch, value: boolean) =>
+  dispatch({ type: "DARK_MODE", value });
 
 export {
   ArgonControllerProvider,

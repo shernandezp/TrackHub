@@ -14,27 +14,60 @@
 *  limitations under the License.
 */
 
-import React, { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import type { ReactNode } from 'react';
 import Grid from "@mui/material/Grid";
-import ArgonBox from "components/ArgonBox";
-import DashboardLayout from "controls/LayoutContainers/DashboardLayout";
-import DashboardNavbar from "controls/Navbars/DashboardNavbar";
-import CustomSelect from 'controls/Dialogs/CustomSelect';
+import ArgonBoxBase from "components/ArgonBox";
+import DashboardLayoutBase from "controls/LayoutContainers/DashboardLayout";
+import DashboardNavbarBase from "controls/Navbars/DashboardNavbar";
+import CustomSelectBase from 'controls/Dialogs/CustomSelect';
 import { getReports } from "api/manager/reports";
 import ReportFilters from "layouts/reports/components/Filters";
 import { downloadExcelReport } from "api/reporting/excelReports";
+import type { ReportFilterValues } from "api/reporting/excelReports";
 import { notifyApiError } from "api/core/errors";
 import { useTranslation } from 'react-i18next';
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
 import { toCamelCase } from 'utils/stringUtils';
 
+// Vendored (untyped) controls — type the prop slice crossing the boundary.
+interface ArgonBoxProps {
+  py?: number;
+  children?: ReactNode;
+}
+const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
+
+interface DashboardLayoutProps {
+  children?: ReactNode;
+}
+const DashboardLayout = DashboardLayoutBase as unknown as (props: DashboardLayoutProps) => ReactNode;
+
+const DashboardNavbar = DashboardNavbarBase as unknown as (props: Record<string, never>) => ReactNode;
+
+interface CustomSelectProps {
+  list: ReportOption[];
+  handleChange: (event: { target: { value: string } }) => void;
+  name: string;
+  id: string;
+  label: string;
+  value: string;
+  required?: boolean;
+}
+const CustomSelect = CustomSelectBase as unknown as (props: CustomSelectProps) => ReactNode;
+
+/** A report option rendered in the report selector. */
+interface ReportOption {
+  value: string;
+  label: string;
+}
+
 function Reports() {
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
   const { setLoading } = useContext(LoadingContext);
 
-  const [reports, setReports] = useState([]);
+  const [reports, setReports] = useState<ReportOption[]>([]);
   const [selectedReport, setSelectedReport] = useState('');
 
   const fetchReports = async () => {
@@ -43,7 +76,7 @@ function Reports() {
       const result = await getReports();
       setReports(result.map(report => ({
         value: report.code,
-        label: t(`reportList.${toCamelCase(report.code)}`)
+        label: t(`reportList.${toCamelCase(report.code)}` as 'reportList.liveReport')
       })));
       setSelectedReport(result.length > 0 ? result[0].code : '');
     } catch (error) {
@@ -59,8 +92,8 @@ function Reports() {
     }
   }, [isAuthenticated]);
 
-  const handleSearch = async (values) => {
-    var reportName = reports.find(report => report.value === selectedReport).label;
+  const handleSearch = async (values: ReportFilterValues) => {
+    const reportName = reports.find(report => report.value === selectedReport)?.label ?? '';
     try {
       await downloadExcelReport(selectedReport, reportName, values);
     } catch (error) {
@@ -68,7 +101,7 @@ function Reports() {
     }
   };
 
-  const handleChange = (event) => {
+  const handleChange = (event: { target: { value: string } }) => {
     setSelectedReport(event.target.value);
   };
 
@@ -77,10 +110,10 @@ function Reports() {
       <DashboardNavbar />
       <ArgonBox py={3}>
         <Grid container spacing={3} mb={3}>
-          <Grid item size={{xs:12, lg: 12}}>
+          <Grid size={{xs:12, lg: 12}}>
             <ArgonBox py={3}>
               <Grid container spacing={3} alignItems="center">
-                <Grid item size={{xs: 12, sm:3}}>
+                <Grid size={{xs: 12, sm:3}}>
                   <CustomSelect
                     list={reports}
                     handleChange={handleChange}
@@ -96,7 +129,7 @@ function Reports() {
           </Grid>
         </Grid>
         <Grid container spacing={3} mb={3}>
-          <Grid item size={{xs:12, lg:6}}>
+          <Grid size={{xs:12, lg:6}}>
             <ReportFilters 
               selectedReport={selectedReport} 
               generateReport={handleSearch} />

@@ -15,32 +15,96 @@
 */
 
 import { useEffect } from "react";
-import PropTypes from "prop-types";
+import type { ReactNode } from "react";
 import Card from "@mui/material/Card";
-import ArgonButton from "components/ArgonButton";
+import ArgonButtonBase from "components/ArgonButton";
 import Icon from "@mui/material/Icon";
-import ArgonBox from "components/ArgonBox";
-import CustomSelect from 'controls/Dialogs/CustomSelect';
-import CustomTextField from 'controls/Dialogs/CustomTextField';
+import ArgonBoxBase from "components/ArgonBox";
+import CustomSelectBase from 'controls/Dialogs/CustomSelect';
+import CustomTextFieldBase from 'controls/Dialogs/CustomTextField';
 import useFiltersData from "layouts/reports/data/filtersData";
 import useForm from 'controls/Dialogs/useForm';
+import type { ReportFilterValues } from "api/reporting/excelReports";
 import { useTranslation } from 'react-i18next';
 
-function ReportFilters({selectedReport, generateReport}) {
-  const [values, handleChange, setValues, setErrors, validate, errors] = useForm({});
+// Change event shape emitted by the vendored dialog controls (a subset of the
+// MUI/DOM change event that `useForm.handleChange` reads).
+type FormChangeHandler = (
+  event: { target: { name: string; value: string; type?: string; checked?: boolean } }
+) => void;
+
+// Vendored (untyped) controls — type the prop slice crossing the boundary.
+interface ArgonBoxProps {
+  pt?: number;
+  pb?: number;
+  px?: number;
+  py?: number;
+  mb?: number;
+  lineHeight?: number;
+  display?: string;
+  children?: ReactNode;
+}
+const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
+
+interface ArgonButtonProps {
+  variant?: string;
+  color?: string;
+  onClick?: () => void;
+  children?: ReactNode;
+}
+const ArgonButton = ArgonButtonBase as unknown as (props: ArgonButtonProps) => ReactNode;
+
+interface CustomSelectProps {
+  list: unknown[];
+  handleChange: FormChangeHandler;
+  name: string;
+  id: string;
+  label: string;
+  value: string;
+  numericValue?: boolean;
+}
+const CustomSelect = CustomSelectBase as unknown as (props: CustomSelectProps) => ReactNode;
+
+interface CustomTextFieldProps {
+  name: string;
+  id: string;
+  label: string;
+  type?: string;
+  fullWidth?: boolean;
+  value: string | number | Date;
+  errorMsg?: string;
+  onChange: FormChangeHandler;
+}
+const CustomTextField = CustomTextFieldBase as unknown as (props: CustomTextFieldProps) => ReactNode;
+
+// The vendored useForm hook is still JS; type its tuple result at the boundary.
+type UseFormResult = [
+  ReportFilterValues,
+  FormChangeHandler,
+  (values: ReportFilterValues) => void,
+  (errors: Record<string, string>) => void,
+  (requiredFields: string[]) => boolean,
+  Record<string, string>,
+];
+
+interface ReportFiltersProps {
+  selectedReport?: string;
+  generateReport: (values: ReportFilterValues) => void | Promise<void>;
+}
+
+function ReportFilters({ selectedReport, generateReport }: ReportFiltersProps) {
+  const [values, handleChange, setValues, setErrors, validate, errors] =
+    useForm({}) as UseFormResult;
 
   const { t } = useTranslation();
-  const { data } = useFiltersData(selectedReport);
-  const { 
-    stringFilter1, 
+  const { data } = useFiltersData(selectedReport ?? '');
+  const {
+    stringFilter1,
     stringFilter2,
     stringFilter3,
     dateTimeFilter1,
     dateTimeFilter2,
     dateTimeFilter3,
-    numericFilter1,
-    numericFilter2,
-    numericFilter3
   } = data;
 
   useEffect(() => {
@@ -48,12 +112,12 @@ function ReportFilters({selectedReport, generateReport}) {
       setValues({});
       setErrors({});
     };
-  
+
     fetchFilters();
   }, []);
 
   async function onGenerate() {
-    let requiredFields = [];
+    const requiredFields: string[] = [];
     if (validate(requiredFields)) {
       await generateReport(values);
     }
@@ -148,11 +212,6 @@ function ReportFilters({selectedReport, generateReport}) {
       </ArgonBox>
     </Card>
   );
-};
-
-ReportFilters.propTypes = {
-  selectedReport: PropTypes.string,
-  generateReport: PropTypes.func.isRequired
 };
 
 export default ReportFilters;

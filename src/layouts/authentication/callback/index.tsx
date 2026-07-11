@@ -14,10 +14,11 @@
 *  limitations under the License.
 */
 
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useNavigate } from 'react-router-dom';
 import { exchangeAuthorizationCode } from "services/auth";
+import type { TokenResponse } from "services/auth";
 import { useAuth } from "AuthContext";
 
 const CallbackPage = () => {
@@ -45,7 +46,7 @@ const CallbackPage = () => {
 
     if (authorizationCode) {
       // Exchange authorization code for access token
-      exchangeAuthorizationCode(authorizationCode).then((data) => {
+      exchangeAuthorizationCode(authorizationCode).then((data: TokenResponse) => {
         setAccessToken(data.access_token);
         setRefreshToken(data.refresh_token);
         setIsAuthenticated(true);
@@ -55,7 +56,7 @@ const CallbackPage = () => {
         // Redirect to dashboard
         navigate("/dashboard", { replace: true });
       })
-      .catch((error) => {
+      .catch((error: unknown) => {
         if (process.env.NODE_ENV !== 'production') {
           console.error("Error exchanging authorization code:", error);
         }

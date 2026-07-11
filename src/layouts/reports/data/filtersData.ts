@@ -17,15 +17,19 @@
 import { useEffect, useState, useContext } from "react";
 import { useTransportersByUser } from 'queries/transporters';
 import { buildTableData } from 'utils/reportUtils';
+import type { TableData } from 'utils/reportUtils';
 import { LoadingContext } from "LoadingContext";
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "AuthContext";
 
-function useFiltersData(reportCode) {
+/** Builds a filter table for a given report code. */
+type FilterStrategy = () => TableData;
+
+function useFiltersData(reportCode: string): { data: TableData } {
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
   const { setLoading } = useContext(LoadingContext);
-  const [data, setData] = useState({ });
+  const [data, setData] = useState<TableData>(buildTableData({}));
 
   // Only the two transporter-scoped reports need the transporter list.
   const needsTransporters = reportCode === 'PositionRecord' || reportCode === 'GeofenceEvents';
@@ -51,7 +55,7 @@ function useFiltersData(reportCode) {
     });
 
     // Map report codes to their respective filter builders.
-    const reportStrategies = {
+    const reportStrategies: Record<string, FilterStrategy> = {
       LiveReport: () => buildTableData({}),
       PositionRecord: transporterFilter,
       TransportersInGeofence: () => buildTableData({}),

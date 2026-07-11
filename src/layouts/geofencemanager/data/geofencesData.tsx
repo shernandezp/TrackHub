@@ -15,11 +15,13 @@
 */
 
 import { useEffect, useMemo, useState, useContext } from "react";
+import type { ReactNode } from "react";
 import { useTranslation } from 'react-i18next';
-import { Name } from "controls/Tables/components/tableComponents";
+import { Name as NameBase } from "controls/Tables/components/tableComponents";
 import Icon from "@mui/material/Icon";
-import ArgonButton from "components/ArgonButton";
+import ArgonButtonBase from "components/ArgonButton";
 import { getGeofence } from "api/geofencing/geofencing";
+import type { Geofence, GeofenceDtoInput } from "api/geofencing/geofencing";
 import {
   useGeofencesByAccount,
   useCreateGeofence,
@@ -31,28 +33,76 @@ import { getColor } from 'data/colors';
 import { toCamelCase } from 'utils/stringUtils';
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
+import type { MapPoint, MapPolygon } from 'layouts/geofencemanager/components/GeofenceEditor';
+
+// Vendored (untyped) controls — type the prop slice crossing the boundary.
+const Name = NameBase as unknown as (props: { name: ReactNode }) => ReactNode;
+interface ArgonButtonProps {
+  variant?: string;
+  color?: string;
+  onClick?: () => void;
+  children?: ReactNode;
+}
+const ArgonButton = ArgonButtonBase as unknown as (props: ArgonButtonProps) => ReactNode;
 
 /**
- * Custom hook to manage geofences table data.
- *
- * @param {Function} handleEditClick - Function to handle edit click event.
- * @param {Function} handleDeleteClick - Function to handle delete click event.
- * @returns {Object} - Returns an object containing table data, modal states, and CRUD operations.
+ * Dialog/form state for a geofence. Merges an API {@link Geofence} with UI-only
+ * fields the editor adds (`new`, `coordinates`) before submit. `type`/`color`
+ * may arrive as strings from the select controls, hence the widened unions.
  */
+export interface GeofenceFormValues {
+  geofenceId?: string;
+  name?: string;
+  description?: string | null;
+  type?: number | string;
+  color?: number | string;
+  active?: boolean;
+  new?: boolean;
+  /** Points drawn on the map ({lat,lng}) for the non-new save path. */
+  coordinates?: MapPoint[];
+  geom?: { srid: number; coordinates: { latitude: number; longitude: number }[] };
+}
+
+/** A column descriptor consumed by the vendored `Table` control. */
+export interface GeofenceColumn { name: string; title?: string; align?: string; }
+/** A rendered table row for the geofence list. */
+export interface GeofenceRow {
+  name: ReactNode;
+  type: ReactNode;
+  color: ReactNode;
+  action: ReactNode;
+  id: string;
+}
+export interface GeofenceTableData {
+  geofences: MapPolygon[];
+  columns: GeofenceColumn[];
+  rows: GeofenceRow[];
+}
+
+export interface UseGeofencesTableData {
+  data: GeofenceTableData;
+  open: boolean;
+  confirmOpen: boolean;
+  onGet: (geofenceId: string) => Promise<Geofence>;
+  onSave: (geofence: GeofenceFormValues) => Promise<void>;
+  onDelete: (geofenceId: string) => Promise<void>;
+  setOpen: (open: boolean) => void;
+  setConfirmOpen: (open: boolean) => void;
+}
 
 // Builds a clean GeofenceDtoInput from the dialog values, dropping the UI-only
 // fields (new, coordinates, accountId, ...) the schema does not accept.
-function toGeofenceInput(geofence) {
+function toGeofenceInput(geofence: GeofenceFormValues): GeofenceDtoInput {
   return {
-    geofenceId: geofence.geofenceId,
-    name: geofence.name,
+    geofenceId: geofence.geofenceId as string,
+    name: geofence.name as string,
     description: geofence.description ?? null,
     type: Number(geofence.type),
     color: Number(geofence.color),
     active: !!geofence.active,
     geom: {
-      srid: geofence.geom.srid,
-      coordinates: geofence.geom.coordinates.map(coord => ({
+      srid: geofence.geom!.srid,
+      coordinates: geofence.geom!.coordinates.map(coord => ({
         latitude: coord.latitude,
         longitude: coord.longitude,
       })),
@@ -60,7 +110,10 @@ function toGeofenceInput(geofence) {
   };
 }
 
-function useGeofencesTableData(handleEditClick, handleDeleteClick) {
+function useGeofencesTableData(
+  handleEditClick: (rowData: GeofenceFormValues) => void,
+  handleDeleteClick: (geofenceId: string) => void
+): UseGeofencesTableData {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -78,14 +131,14 @@ function useGeofencesTableData(handleEditClick, handleDeleteClick) {
     setLoading(geofencesQuery.isFetching);
   }, [geofencesQuery.isFetching, setLoading]);
 
-  const onSave = async (geofence) => {
+  const onSave = async (geofence: GeofenceFormValues) => {
     setLoading(true);
     try {
       const input = toGeofenceInput(geofence);
       if (geofence.new) {
         await createGeofence.mutateAsync(input);
       } else {
-        await updateGeofence.mutateAsync({ geofenceId: geofence.geofenceId, geofence: input });
+        await updateGeofence.mutateAsync({ geofenceId: geofence.geofenceId as string, geofence: input });
       }
       setOpen(false);
     } catch {
@@ -96,7 +149,7 @@ function useGeofencesTableData(handleEditClick, handleDeleteClick) {
     }
   };
 
-  const onDelete = async (geofenceId) => {
+  const onDelete = async (geofenceId: string) => {
     setLoading(true);
     try {
       await deleteGeofence.mutateAsync(geofenceId);
@@ -108,20 +161,20 @@ function useGeofencesTableData(handleEditClick, handleDeleteClick) {
     }
   };
 
-  const handleOpenDelete = (geofenceId) => {
+  const handleOpenDelete = (geofenceId: string) => {
     handleDeleteClick(geofenceId);
     setConfirmOpen(true);
   };
 
   // Imperative single-geofence read for the map editor. Throws on failure
   // (surfaced by the global toast) — the caller decides what to do next.
-  const onGet = async (geofenceId) => getGeofence(geofenceId);
+  const onGet = async (geofenceId: string): Promise<Geofence> => getGeofence(geofenceId);
 
-  const buildTableData = (rows) => ({
+  const buildTableData = (rows: Geofence[]): GeofenceTableData => ({
     geofences: rows.map(item => ({
       id: item.geofenceId,
       name: item.name,
-      latlngs: item.geom.coordinates.map(coord => [coord.latitude, coord.longitude])
+      latlngs: item.geom.coordinates.map((coord): [number, number] => [coord.latitude, coord.longitude])
     })),
     columns: [
       { name: "name", title:t('geofence.name'), align: "left" },
@@ -132,8 +185,8 @@ function useGeofencesTableData(handleEditClick, handleDeleteClick) {
     ],
     rows: rows.map(geofence => ({
       name: <Name name={geofence.name} />,
-      type: <Name name={t(`geofenceTypes.${toCamelCase(getGeofenceType(geofence.type))}`)} />,
-      color: <Name name={t(`colors.${getColor(geofence.color).toLowerCase()}`)} />,
+      type: <Name name={t(`geofenceTypes.${toCamelCase(getGeofenceType(geofence.type))}` as 'geofenceTypes.office')} />,
+      color: <Name name={t(`colors.${getColor(geofence.color).toLowerCase()}` as 'colors.red')} />,
       action: (
         <ArgonButton
           variant="text"

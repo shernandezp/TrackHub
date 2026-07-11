@@ -14,11 +14,58 @@
 *  limitations under the License.
 */
 
-import React, { useState } from 'react';
-import PropTypes from "prop-types";
-import OSMGeofenceEditor from 'controls/Maps/OSM/GeofenceEditor';
-import GoogleGeofenceEditor from 'controls/Maps/Google/GeofenceEditor';
+import { useState } from 'react';
+import type { ReactNode, RefObject } from 'react';
+import OSMGeofenceEditorBase from 'controls/Maps/OSM/GeofenceEditor';
+import GoogleGeofenceEditorBase from 'controls/Maps/Google/GeofenceEditor';
 import MapControlStyle from 'controls/Maps/styles/MapControl';
+
+/** A point in the imperative map-editor handle payloads. */
+export interface MapPoint { lat: number; lng: number; }
+/** Result of committing (save/edit) a drawn geofence shape on the map. */
+export interface GeofenceShapeHandle { id: string; latlngs: MapPoint[]; }
+/** A polygon rendered on the map (geom coordinates as [lat, lng] tuples). */
+export interface MapPolygon { id: string; name: string; latlngs: [number, number][]; }
+
+export type AddGeofenceHandler = () => void;
+export type SaveGeofenceHandler = (name: string) => GeofenceShapeHandle;
+export type CancelGeofenceHandler = () => void;
+export type EditGeofenceHandler = () => GeofenceShapeHandle;
+export type RemoveGeofenceHandler = (id: string) => void;
+
+/** Refs the vendored map editors populate with imperative draw handles. */
+export interface GeofenceEditorHandles {
+  addRef?: RefObject<AddGeofenceHandler | null>;
+  saveRef?: RefObject<SaveGeofenceHandler | null>;
+  cancelRef?: RefObject<CancelGeofenceHandler | null>;
+  editingRef?: RefObject<EditGeofenceHandler | null>;
+  removeRef?: RefObject<RemoveGeofenceHandler | null>;
+}
+
+// Vendored (untyped) leaflet/google map editors — type the prop slice used.
+interface MapEditorProps extends GeofenceEditorHandles {
+  mapKey?: string | null;
+  initialPolygons?: MapPolygon[];
+  selectedPolygon?: string | null;
+  handleSelected?: (value: string | null) => void;
+  setIsEditing: (editing: boolean) => void;
+  setOpen?: (open: boolean) => void;
+  height?: string;
+}
+const OSMGeofenceEditor = OSMGeofenceEditorBase as unknown as (props: MapEditorProps) => ReactNode;
+const GoogleGeofenceEditor = GoogleGeofenceEditorBase as unknown as (props: MapEditorProps) => ReactNode;
+
+interface GeofenceEditorProps extends GeofenceEditorHandles {
+  mapType: 'OSM' | 'Google';
+  mapKey?: string | null;
+  geofences?: MapPolygon[];
+  selectedGeofence?: string | null;
+  handleSelected?: (value: string | null) => void;
+  setOpen?: (open: boolean) => void;
+  handleAdd?: () => void;
+  handleEdit?: () => void;
+  height?: string;
+}
 
 const GeofenceEditor = ({
     mapType,
@@ -35,14 +82,14 @@ const GeofenceEditor = ({
     handleAdd,
     handleEdit,
     height = '70vh'
-    }) => {
+    }: GeofenceEditorProps) => {
 
   const [isEditing, setIsEditing] = useState(false);
 
   return (
     <MapControlStyle>
         {mapType === 'OSM' ? (
-            <OSMGeofenceEditor 
+            <OSMGeofenceEditor
                 initialPolygons={geofences}
                 selectedPolygon={selectedGeofence}
                 handleSelected={handleSelected}
@@ -56,7 +103,7 @@ const GeofenceEditor = ({
                 height={height}
             />
             ) : (
-                mapType === 'Google' && 
+                mapType === 'Google' &&
                 <GoogleGeofenceEditor
                     mapKey={mapKey}
                     initialPolygons={geofences}
@@ -79,22 +126,5 @@ const GeofenceEditor = ({
     </MapControlStyle>
   );
 }
-
-GeofenceEditor.propTypes = {
-    mapType: PropTypes.oneOf(['OSM', 'Google']).isRequired,
-    mapKey: PropTypes.string,
-    geofences: PropTypes.array,
-    selectedGeofence: PropTypes.string,
-    handleSelected: PropTypes.func,
-    setOpen: PropTypes.func,
-    addRef: PropTypes.object,
-    saveRef: PropTypes.object,
-    cancelRef: PropTypes.object,
-    editingRef: PropTypes.object,
-    removeRef: PropTypes.object,
-    handleAdd: PropTypes.func,
-    handleEdit: PropTypes.func,
-    height: PropTypes.string,
-};
 
 export default GeofenceEditor;

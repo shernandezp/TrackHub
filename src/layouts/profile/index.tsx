@@ -30,16 +30,17 @@ Coded by www.creative-tim.com
 */
 
 import { useEffect, useContext } from "react";
+import type { ReactNode } from "react";
 
 // @mui material components
 import Grid from "@mui/material/Grid";
 
 // Argon Dashboard 2 MUI components
-import ArgonBox from "components/ArgonBox";
+import ArgonBoxBase from "components/ArgonBox";
 
 // Argon Dashboard 2 MUI example components
-import DashboardLayout from "controls/LayoutContainers/DashboardLayout";
-import Footer from "controls/Footer";
+import DashboardLayoutBase from "controls/LayoutContainers/DashboardLayout";
+import FooterBase from "controls/Footer";
 import ProfileInfoCard from "layouts/profile/components/ProfileInfoCard";
 import UserPartOf from "layouts/profile/components/UserPartOf";
 
@@ -49,34 +50,64 @@ import PlatformSettings from "layouts/profile/components/PlatformSettings";
 
 // Data
 import { useCurrentUser, useUpdateCurrentUser, useUpdatePassword } from "queries/users";
+import type { CurrentUser } from "api/security/users";
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
 
 const bgImage = "assets/images/vr-bg.jpg";
 
+// Argon theme functions surfaced through the DashboardLayout `sx` callback.
+interface ArgonThemeFns {
+  functions: {
+    rgba: (color: string, opacity: number) => string;
+    linearGradient: (color1: string, color2: string) => string;
+  };
+  palette: {
+    gradients: { info: { main: string; state: string } };
+  };
+}
+
+// Vendored (untyped) Argon primitives / layout — type the props crossing the boundary.
+interface DashboardLayoutProps {
+  children?: ReactNode;
+  sx?: object;
+}
+const DashboardLayout = DashboardLayoutBase as unknown as (props: DashboardLayoutProps) => ReactNode;
+
+const Footer = FooterBase as unknown as () => ReactNode;
+
+interface ArgonBoxProps {
+  children?: ReactNode;
+  mt?: string | number;
+  mb?: string | number;
+}
+const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
 
 function Overview() {
   const { setLoading } = useContext(LoadingContext);
   const { isAuthenticated } = useAuth();
 
   const currentUserQuery = useCurrentUser({ enabled: isAuthenticated });
-  const user = currentUserQuery.data ?? {};
+  // Loaded shape is a CurrentUser; the `{}` fallback mirrors the pre-load state
+  // the child components already guard against (Object.keys checks).
+  const user = (currentUserQuery.data ?? {}) as CurrentUser;
   const updateCurrentUserMutation = useUpdateCurrentUser();
   const updatePasswordMutation = useUpdatePassword();
 
   // Preserve the prop contracts ProfileInfoCard expects: updateCurrentUser(values)
   // and updatePassword(userId, { userId, password }) — the password-change flow
-  // is unchanged.
-  const updateCurrentUser = (values) =>
+  // is unchanged. firstName/lastName are guaranteed by ProfileInfoCard's validate()
+  // gate before this runs, so the non-null assertions match runtime behavior.
+  const updateCurrentUser = (values: Partial<CurrentUser>): Promise<boolean> =>
     updateCurrentUserMutation.mutateAsync({
-      firstName: values.firstName,
+      firstName: values.firstName!,
       secondName: values.secondName,
-      lastName: values.lastName,
+      lastName: values.lastName!,
       secondSurname: values.secondSurname,
       dob: values.dob,
     });
-  const updatePassword = (userId, userData) =>
-    updatePasswordMutation.mutateAsync({ userId, password: userData.password });
+  const updatePassword = (userId: string, userData: { password?: string }): Promise<boolean> =>
+    updatePasswordMutation.mutateAsync({ userId, password: userData.password! });
 
   // Keep the global spinner UX while the profile loads.
   useEffect(() => {
@@ -86,7 +117,7 @@ function Overview() {
   return (
     <DashboardLayout
       sx={{
-        backgroundImage: ({ functions: { rgba, linearGradient }, palette: { gradients } }) =>
+        backgroundImage: ({ functions: { rgba, linearGradient }, palette: { gradients } }: ArgonThemeFns) =>
           `${linearGradient(
             rgba(gradients.info.main, 0.6),
             rgba(gradients.info.state, 0.6)
@@ -97,17 +128,17 @@ function Overview() {
       <Header user= {user}/>
       <ArgonBox mt={5} mb={3}>
         <Grid container spacing={3}>
-          <Grid item size={{xs: 12, md: 6, xl:4}}>
+          <Grid size={{xs: 12, md: 6, xl:4}}>
             <PlatformSettings />
           </Grid>
-          <Grid item size={{xs: 12, md: 6, xl:4}}>
+          <Grid size={{xs: 12, md: 6, xl:4}}>
             <ProfileInfoCard
               user={user}
               updateCurrentUser={updateCurrentUser}
               updatePassword={updatePassword}
             />
           </Grid>
-          <Grid item size={{xs: 12, xl:4}}>
+          <Grid size={{xs: 12, xl:4}}>
             <UserPartOf user={user} />
           </Grid>
         </Grid>

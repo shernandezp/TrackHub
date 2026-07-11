@@ -15,31 +15,97 @@
 */
 
 import { useEffect, useContext, useState } from "react";
-import PropTypes from "prop-types";
+import type { ChangeEvent, ReactNode } from "react";
 import Card from "@mui/material/Card";
-import ArgonButton from "components/ArgonButton";
+import ArgonButtonBase from "components/ArgonButton";
 import Icon from "@mui/material/Icon";
-import CustomTextField from 'controls/Dialogs/CustomTextField';
+import CustomTextFieldBase from 'controls/Dialogs/CustomTextField';
 import PasswordChangeForm from 'layouts/profile/components/Password';
-import ArgonBox from "components/ArgonBox";
-import ArgonTypography from "components/ArgonTypography";
+import type { PasswordFormValues } from 'layouts/profile/components/Password';
+import ArgonBoxBase from "components/ArgonBox";
+import ArgonTypographyBase from "components/ArgonTypography";
 import { LoadingContext } from 'LoadingContext';
 import { useTranslation } from 'react-i18next';
-import useForm from 'controls/Dialogs/useForm';
+import useFormBase from 'controls/Dialogs/useForm';
+import type { CurrentUser } from "api/security/users";
 
-function ProfileInfoCard({ user, updateCurrentUser, updatePassword }) {
+// Vendored (untyped) Argon primitives / controls — type the props crossing the boundary.
+type FormChangeHandler = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+
+interface ArgonBoxProps {
+  children?: ReactNode;
+  display?: string;
+  justifyContent?: string;
+  alignItems?: string;
+  p?: string | number;
+  pt?: string | number;
+  pr?: string | number;
+  px?: string | number;
+  py?: string | number;
+}
+const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
+
+interface ArgonTypographyProps {
+  children?: ReactNode;
+  variant?: string;
+  fontWeight?: string;
+  color?: string;
+  textTransform?: string;
+}
+const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
+
+interface ArgonButtonProps {
+  children?: ReactNode;
+  variant?: string;
+  color?: string;
+  onClick?: () => void;
+}
+const ArgonButton = ArgonButtonBase as unknown as (props: ArgonButtonProps) => ReactNode;
+
+interface CustomTextFieldProps {
+  name: string;
+  id: string;
+  label: string;
+  type?: string;
+  fullWidth?: boolean;
+  value?: string;
+  onChange?: FormChangeHandler;
+  errorMsg?: string;
+  required?: boolean;
+}
+const CustomTextField = CustomTextFieldBase as unknown as (props: CustomTextFieldProps) => ReactNode;
+
+// useForm returns a fixed tuple; type it generically over the form values shape.
+type UseFormReturn<T> = [
+  T,
+  FormChangeHandler,
+  (values: T) => void,
+  (errors: Record<string, string>) => void,
+  (requiredFields: string[]) => boolean,
+  Record<string, string>,
+  (field1: string, field2: string) => boolean,
+];
+const useForm = useFormBase as unknown as <T>(initialValues: T) => UseFormReturn<T>;
+
+interface ProfileInfoCardProps {
+  user: CurrentUser;
+  updateCurrentUser: (values: Partial<CurrentUser>) => Promise<boolean>;
+  updatePassword: (userId: string, userData: PasswordFormValues) => Promise<boolean>;
+}
+
+function ProfileInfoCard({ user, updateCurrentUser, updatePassword }: ProfileInfoCardProps) {
   const { setLoading } = useContext(LoadingContext);
   const { t } = useTranslation();
   const [openPassword, setOpenPassword] = useState(false);
-  const [values, handleChange, setValues, setErrors, validate, errors] = useForm({});
-  const [passwordValues, handlePasswordChange, setPasswordValues, setPasswordErrors, validatePassword, passwordErrors, validateMatch] = useForm({});
-  
+  const [values, handleChange, setValues, setErrors, validate, errors] = useForm<Partial<CurrentUser>>({});
+  const [passwordValues, handlePasswordChange, setPasswordValues, setPasswordErrors, validatePassword, passwordErrors, validateMatch] = useForm<PasswordFormValues>({});
+
   useEffect(() => {
     const fetchUserInfo = async () => {
       setValues(user);
       setErrors({});
     };
-  
+
     fetchUserInfo();
   }, [user]);
 
@@ -76,7 +142,7 @@ function ProfileInfoCard({ user, updateCurrentUser, updatePassword }) {
           <ArgonTypography variant="h6" fontWeight="medium" textTransform="capitalize">
             {t('userprofile.info')}
           </ArgonTypography>
-          <Icon 
+          <Icon
             sx={{ fontSize: 24, cursor: "pointer" }}
             onClick={handleUpdatePasswordClick}>
               lock
@@ -154,17 +220,17 @@ function ProfileInfoCard({ user, updateCurrentUser, updatePassword }) {
                   onChange={handleChange}
               />
           </form>
-          
+
         </ArgonBox>
-        <ArgonButton 
-            variant="gradient" 
+        <ArgonButton
+            variant="gradient"
             onClick={onSaveUser}
             color="dark">
             <Icon sx={{ fontWeight: "bold" }}>save</Icon>
             &nbsp;{t('generic.save')}
           </ArgonButton>
       </Card>
-      <PasswordChangeForm 
+      <PasswordChangeForm
         open={openPassword}
         setOpen={setOpenPassword}
         handleSubmit={handleSubmitPassword}
@@ -175,11 +241,5 @@ function ProfileInfoCard({ user, updateCurrentUser, updatePassword }) {
     </>
   );
 }
-
-ProfileInfoCard.propTypes = {
-  user: PropTypes.object.isRequired,
-  updateCurrentUser: PropTypes.func.isRequired,
-  updatePassword: PropTypes.func.isRequired
-};
 
 export default ProfileInfoCard;

@@ -30,19 +30,21 @@ Coded by www.creative-tim.com
 */
 
 import { useState, useEffect, useContext } from "react";
+import type { ChangeEvent, ReactNode } from "react";
 
 // @mui material components
 import Card from "@mui/material/Card";
 import Switch from "@mui/material/Switch";
-import ArgonButton from "components/ArgonButton";
+import ArgonButtonBase from "components/ArgonButton";
 import Icon from "@mui/material/Icon";
 
 // Argon Dashboard 2 MUI components
-import ArgonBox from "components/ArgonBox";
-import ArgonTypography from "components/ArgonTypography";
+import ArgonBoxBase from "components/ArgonBox";
+import ArgonTypographyBase from "components/ArgonTypography";
 import { useTranslation } from 'react-i18next';
-import CustomSelect from 'controls/Dialogs/CustomSelect';
+import CustomSelectBase from 'controls/Dialogs/CustomSelect';
 import { getUserSettings, updateUserSettings } from 'api/manager/settings';
+import type { UserSettings, UserSettingsDtoInput } from 'api/manager/settings';
 import { notifyApiError } from 'api/core/errors';
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
@@ -53,6 +55,51 @@ import {
   setDarkMode,
 } from "context";
 
+// Vendored (untyped) Argon primitives — type the props crossing the boundary.
+interface ArgonBoxProps {
+  children?: ReactNode;
+  display?: string;
+  width?: string | number;
+  mt?: string | number;
+  ml?: string | number;
+  mb?: string | number;
+  pt?: string | number;
+  pb?: string | number;
+  px?: string | number;
+  py?: string | number;
+  lineHeight?: string | number;
+}
+const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
+
+interface ArgonTypographyProps {
+  children?: ReactNode;
+  variant?: string;
+  fontWeight?: string;
+  color?: string;
+  textTransform?: string;
+}
+const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
+
+interface ArgonButtonProps {
+  children?: ReactNode;
+  variant?: string;
+  color?: string;
+  onClick?: () => void;
+}
+const ArgonButton = ArgonButtonBase as unknown as (props: ArgonButtonProps) => ReactNode;
+
+interface CustomSelectProps {
+  list: Array<{ value: string; label: string }>;
+  handleChange?: (event: ChangeEvent<HTMLInputElement>) => void;
+  name: string;
+  id: string;
+  label: string;
+  value?: string;
+  numericValue?: boolean;
+  required?: boolean;
+}
+const CustomSelect = CustomSelectBase as unknown as (props: CustomSelectProps) => ReactNode;
+
 function PlatformSettings() {
   const [controller, dispatch] = useArgonController();
   const { miniSidenav, darkMode } =
@@ -60,12 +107,12 @@ function PlatformSettings() {
   const { setLoading } = useContext(LoadingContext);
   const { isAuthenticated } = useAuth();
   const { t, i18n } = useTranslation();
-  const languages = i18n.options.supportedLngs
+  const languages = (i18n.options.supportedLngs || [])
     .filter(lang => lang !== 'cimode')
     .map(lang => ({ value: lang, label: lang }));
   const [style, setStyle] = useState(false);
   const [sideNav, setSideNav] = useState(false);
-  const [userSettings, setUserSettings] = useState({language: 'en'});
+  const [userSettings, setUserSettings] = useState<Partial<UserSettings>>({ language: 'en' });
 
   const handleMiniSidenav = () => setMiniSidenav(dispatch, !miniSidenav);
   const handleDarkMode = () => {
@@ -94,7 +141,12 @@ function PlatformSettings() {
   async function onSaveSettings() {
     setLoading(true);
     try {
-      await updateUserSettings(userSettings.userId, userSettings);
+      // userId is populated once settings load; the assertion/cast keep the exact
+      // runtime call the JS made while satisfying the typed api signature.
+      await updateUserSettings(
+        userSettings.userId!,
+        userSettings as Omit<UserSettingsDtoInput, 'userId'>
+      );
     } catch (error) {
       notifyApiError(error);
     } finally {
@@ -102,7 +154,7 @@ function PlatformSettings() {
     }
   }
 
-  function handleLanguageChange(e) {
+  function handleLanguageChange(e: ChangeEvent<HTMLInputElement>) {
     setUserSettings(prevSettings => ({
       ...prevSettings,
       language: e.target.value
@@ -172,8 +224,8 @@ function PlatformSettings() {
             />
         </ArgonBox>
 
-        <ArgonButton 
-          variant="gradient" 
+        <ArgonButton
+          variant="gradient"
           onClick={onSaveSettings}
           color="dark">
           <Icon sx={{ fontWeight: "bold" }}>save</Icon>

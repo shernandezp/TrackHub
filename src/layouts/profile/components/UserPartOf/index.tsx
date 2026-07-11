@@ -30,28 +30,62 @@ Coded by www.creative-tim.com
 */
 
 import { useEffect, useState } from "react";
-import PropTypes from "prop-types";
+import type { ElementType, ReactNode } from "react";
 
 // @mui material components
 import Card from "@mui/material/Card";
 
 // Argon Dashboard 2 MUI components
-import ArgonBox from "components/ArgonBox";
-import ArgonTypography from "components/ArgonTypography";
+import ArgonBoxBase from "components/ArgonBox";
+import ArgonTypographyBase from "components/ArgonTypography";
 import { useTranslation } from 'react-i18next';
 
-function UserPartOf({ user }) {
+import type { CurrentUser } from "api/security/users";
+
+type ProfileRole = NonNullable<CurrentUser['roles']>[number];
+type ProfilePolicy = NonNullable<CurrentUser['profiles']>[number];
+
+// Vendored (untyped) Argon primitives — type the props crossing the boundary.
+interface ArgonBoxProps {
+  children?: ReactNode;
+  component?: ElementType;
+  display?: string;
+  flexDirection?: string;
+  alignItems?: string;
+  justifyContent?: string;
+  p?: string | number;
+  pt?: string | number;
+  px?: string | number;
+  py?: string | number;
+  m?: string | number;
+  mb?: string | number;
+}
+const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
+
+interface ArgonTypographyProps {
+  children?: ReactNode;
+  variant?: string;
+  fontWeight?: string;
+  textTransform?: string;
+}
+const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
+
+interface UserPartOfProps {
+  user: CurrentUser;
+}
+
+function UserPartOf({ user }: UserPartOfProps) {
   const { t } = useTranslation();
-  const [roles, setRoles] = useState([]);
-  const [policies, setPolicies] = useState([]);
+  const [roles, setRoles] = useState<ProfileRole[]>([]);
+  const [policies, setPolicies] = useState<ProfilePolicy[]>([]);
 
   useEffect(() => {
     const fetchRoles= async () => {
       if (user && Object.keys(user).length > 0) {
-        setRoles(user.roles);
-        setPolicies(user.profiles);
+        setRoles(user.roles ?? []);
+        setPolicies(user.profiles ?? []);
       }
-    }; 
+    };
     fetchRoles();
   }, [user]);
 
@@ -65,7 +99,7 @@ function UserPartOf({ user }) {
       <ArgonBox p={2}>
         <ArgonBox component="ul" display="flex" flexDirection="column" p={0} m={0}>
         {roles.map((role) => (
-            role.name && 
+            role.name &&
             <ArgonBox key={role.name} component="li" display="flex" alignItems="center" py={1} mb={1}>
                 <ArgonBox
                 display="flex"
@@ -88,7 +122,7 @@ function UserPartOf({ user }) {
       <ArgonBox p={2}>
         <ArgonBox component="ul" display="flex" flexDirection="column" p={0} m={0}>
         {policies.map((policy) => (
-            policy.name && 
+            policy.name &&
             <ArgonBox key={policy.name} component="li" display="flex" alignItems="center" py={1} mb={1}>
                 <ArgonBox
                 display="flex"
@@ -106,10 +140,5 @@ function UserPartOf({ user }) {
     </Card>
   );
 }
-
-// Typechecking props for the ProfilesList
-UserPartOf.propTypes = {
-  user: PropTypes.any
-};
 
 export default UserPartOf;

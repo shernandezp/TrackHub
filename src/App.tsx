@@ -28,7 +28,8 @@ Coded by www.creative-tim.com
 
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
 
 // react-router components
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
@@ -39,10 +40,10 @@ import CssBaseline from "@mui/material/CssBaseline";
 import Icon from "@mui/material/Icon";
 
 // Argon Dashboard 2 MUI components
-import ArgonBox from "components/ArgonBox";
+import ArgonBoxBase from "components/ArgonBox";
 
 // Argon Dashboard 2 MUI example components
-import Sidenav from "controls/Sidenav";
+import SidenavBase from "controls/Sidenav";
 import Configurator from "controls/Configurator";
 
 // Argon Dashboard 2 MUI themes
@@ -51,10 +52,11 @@ import themeDark from "assets/theme-dark";
 
 // Argon Dashboard 2 MUI routes
 import routes from "routes";
+import type { RouteDefinition } from "routes";
 
 // Argon Dashboard 2 MUI contexts
-import { 
-  useArgonController, 
+import {
+  useArgonController,
   setOpenConfigurator,
   setDarkSidenav,
   setMiniSidenav,
@@ -74,18 +76,57 @@ import { LoadingContext } from 'LoadingContext';
 import { ClipLoader } from 'react-spinners';
 import { isAdmin, isManager } from "api/security/users";
 import { getUserSettings, getAccountSettings, updateAccountSettings } from "api/manager/settings";
+import type { AccountSettings, AccountSettingsDtoInput } from "api/manager/settings";
 import { getAccountContext } from "api/manager/accounts";
+import type { AccountContext, AccountStatus } from "api/manager/accounts";
 import { getCurrentPrincipal } from "api/manager/principals";
+import type { CurrentPrincipal } from "api/manager/principals";
 import { notifyApiError } from "api/core/errors";
 import { useTranslation } from 'react-i18next';
 import ErrorBoundary from "components/ErrorBoundary";
 import SuspensionScreen from "components/SuspensionScreen";
 import PrincipalTypes from "constants/principalTypes";
 
+// Vendored (untyped) Argon primitives — type the props crossing the boundary.
+interface ArgonBoxConfigProps {
+  display?: string;
+  justifyContent?: string;
+  alignItems?: string;
+  width?: string;
+  height?: string;
+  bgColor?: string;
+  shadow?: string;
+  borderRadius?: string;
+  position?: string;
+  right?: string;
+  bottom?: string;
+  zIndex?: number;
+  color?: string;
+  sx?: object;
+  onClick?: () => void;
+  children?: ReactNode;
+}
+const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxConfigProps) => ReactNode;
+
+interface SidenavProps {
+  brand?: string;
+  brandName: string;
+  routes: RouteDefinition[];
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
+  isAdmin?: boolean;
+  isManager?: boolean;
+  currentPrincipal?: CurrentPrincipal | null;
+}
+const Sidenav = SidenavBase as unknown as (props: SidenavProps) => ReactNode;
+
 export default function App() {
   const [controller, dispatch] = useArgonController();
-  const { miniSidenav, direction, layout, openConfigurator, darkMode } =
-    controller;
+  const { miniSidenav, layout, openConfigurator, darkMode } = controller;
+  // `direction` was historically destructured from the controller, but the
+  // reducer never sets it — it is always undefined. Read it via a narrow local
+  // widening so the (dead) dir effect keeps its exact prior behavior.
+  const { direction } = controller as typeof controller & { direction?: string };
   const [onMouseEnter, setOnMouseEnter] = useState(false);
   const { isAuthenticated, login, isLoggingIn, authError } = useAuth();
   const { pathname } = useLocation();
@@ -93,17 +134,19 @@ export default function App() {
 
   // Account settings save is fire-and-forget from the Configurator; keep the
   // legacy toast-on-failure semantics (the new api function throws).
-  const saveAccountSettings = (accountId, settings) =>
-    updateAccountSettings(accountId, settings).catch(notifyApiError);
+  const saveAccountSettings = (
+    accountId: string,
+    settings: Omit<AccountSettingsDtoInput, 'accountId'>
+  ) => updateAccountSettings(accountId, settings).catch(notifyApiError);
 
   const [loading, setLoading] = useState(false);
   const [userIsAdmin, setUserIsAdmin] = useState(true);
   const [userIsManager, setUserIsManager] = useState(true);
-  const [accountSettings, setAccountSettings] = useState({});
-  const [accountFeatures, setAccountFeatures] = useState([]);
-  const [accountStatus, setAccountStatus] = useState(null);
-  const [branding, setBranding] = useState(null);
-  const [currentPrincipal, setCurrentPrincipal] = useState(null);
+  const [accountSettings, setAccountSettings] = useState<Partial<AccountSettings>>({});
+  const [accountFeatures, setAccountFeatures] = useState<AccountContext['features']>([]);
+  const [accountStatus, setAccountStatus] = useState<AccountStatus | null>(null);
+  const [branding, setBranding] = useState<AccountContext['branding'] | null>(null);
+  const [currentPrincipal, setCurrentPrincipal] = useState<CurrentPrincipal | null>(null);
 
   useEffect(() => {
     // Redirect to login page if not authenticated
@@ -172,34 +215,39 @@ export default function App() {
   // Change the openConfigurator state
   const handleConfiguratorOpen = () => setOpenConfigurator(dispatch, !openConfigurator);
 
-  // Setting the dir attribute for the body element
+  // Setting the dir attribute for the body element.
+  // NOTE: `direction` is not part of the Argon controller state (the reducer
+  // never sets it), so it is always undefined here — String() reproduces the
+  // pre-existing behavior of writing dir="undefined". See findings.
   useEffect(() => {
-    document.body.setAttribute("dir", direction);
+    document.body.setAttribute("dir", String(direction));
   }, [direction]);
 
   // Setting page scroll to 0 when changing the route
   useEffect(() => {
     document.documentElement.scrollTop = 0;
-    document.scrollingElement.scrollTop = 0;
+    if (document.scrollingElement) {
+      document.scrollingElement.scrollTop = 0;
+    }
   }, [pathname]);
 
   // Operational statuses (Trial/Active) permit normal access; anything else renders a suspension shell.
   const accountOperational = !accountStatus || accountStatus === 'TRIAL' || accountStatus === 'ACTIVE';
 
-  const featureEnabled = (featureKey) => {
+  const featureEnabled = (featureKey: string | undefined): boolean => {
     if (!featureKey) return true;
     const feature = accountFeatures.find(item => item.featureKey === featureKey);
     return feature ? feature.enabled : false;
   };
 
-  const filterRoutesByFeatures = (allRoutes) =>
+  const filterRoutesByFeatures = (allRoutes: RouteDefinition[]): RouteDefinition[] =>
     allRoutes
       .filter(route => featureEnabled(route.featureKey))
       .map(route => route.collapse ? { ...route, collapse: filterRoutesByFeatures(route.collapse) } : route);
 
   const enabledRoutes = filterRoutesByFeatures(routes);
 
-  const routeAllowed = (route) => {
+  const routeAllowed = (route: RouteDefinition): boolean => {
     if (route.key === 'systemAdmin' && !userIsAdmin) return false;
     if (route.key === 'manageAdmin' && !userIsManager) return false;
     if (route.key === 'gpsIntegration' && !userIsManager) return false;
@@ -210,14 +258,14 @@ export default function App() {
     return true;
   };
 
-  const getRoutes = (allRoutes) =>
+  const getRoutes = (allRoutes: RouteDefinition[]): ReactNode =>
     allRoutes.map((route) => {
       if (route.collapse) {
         return getRoutes(route.collapse);
       }
 
       if (route.route) {
-        return <Route exact path={route.route} element={routeAllowed(route) ? route.component : <Navigate to="/dashboard" replace />} key={route.key} />;
+        return <Route path={route.route} element={routeAllowed(route) ? route.component : <Navigate to="/dashboard" replace />} key={route.key} />;
       }
 
       return null;
@@ -241,7 +289,7 @@ export default function App() {
       sx={{ cursor: "pointer" }}
       onClick={handleConfiguratorOpen}
     >
-      <Icon fontSize="default" color="inherit">
+      <Icon color="inherit">
         settings
       </Icon>
     </ArgonBox>

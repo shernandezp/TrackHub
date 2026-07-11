@@ -30,18 +30,20 @@ Coded by www.creative-tim.com
 */
 
 import { useState, useEffect } from "react";
+import type { ReactNode } from "react";
 
 // @mui material components
 import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
+import type { SxProps, Theme } from "@mui/material/styles";
 
 // Argon Dashboard 2 MUI components
-import ArgonBox from "components/ArgonBox";
-import ArgonTypography from "components/ArgonTypography";
-import ArgonAvatar from "components/ArgonAvatar";
+import ArgonBoxBase from "components/ArgonBox";
+import ArgonTypographyBase from "components/ArgonTypography";
+import ArgonAvatarBase from "components/ArgonAvatar";
 
 // Argon Dashboard 2 MUI example components
-import DashboardNavbar from "controls/Navbars/DashboardNavbar";
+import DashboardNavbarBase from "controls/Navbars/DashboardNavbar";
 
 // Argon Dashboard 2 MUI base styles
 import breakpoints from "assets/theme/base/breakpoints";
@@ -49,9 +51,46 @@ import breakpoints from "assets/theme/base/breakpoints";
 // Images
 import profileImage from "assets/images/profile.jpeg";
 
-import PropTypes from "prop-types";
+import type { CurrentUser } from "api/security/users";
 
-function Header({ user }) {
+// Vendored (untyped) Argon primitives — type the props crossing the boundary.
+interface ArgonBoxProps {
+  children?: ReactNode;
+  height?: string | number;
+  position?: string;
+  mt?: string | number;
+  lineHeight?: string | number;
+}
+const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
+
+interface ArgonTypographyProps {
+  children?: ReactNode;
+  variant?: string;
+  fontWeight?: string;
+  color?: string;
+}
+const ArgonTypography = ArgonTypographyBase as unknown as (props: ArgonTypographyProps) => ReactNode;
+
+interface ArgonAvatarProps {
+  src?: string;
+  alt?: string;
+  variant?: string;
+  size?: string;
+  shadow?: string;
+}
+const ArgonAvatar = ArgonAvatarBase as unknown as (props: ArgonAvatarProps) => ReactNode;
+
+interface DashboardNavbarProps {
+  absolute?: boolean;
+  light?: boolean;
+}
+const DashboardNavbar = DashboardNavbarBase as unknown as (props: DashboardNavbarProps) => ReactNode;
+
+interface HeaderProps {
+  user: CurrentUser;
+}
+
+function Header({ user }: HeaderProps) {
   const [tabsOrientation, setTabsOrientation] = useState("horizontal");
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -62,7 +101,7 @@ function Header({ user }) {
         setName(`${user.firstName} ${user.lastName}`);
         setEmail(user.emailAddress);
       }
-    }; 
+    };
     fetchData();
   }, [user]);
 
@@ -74,7 +113,7 @@ function Header({ user }) {
         : setTabsOrientation("horizontal");
     }
 
-    /** 
+    /**
      The event listener that's calling the handleTabsOrientation function when resizing the window.
     */
     window.addEventListener("resize", handleTabsOrientation);
@@ -94,11 +133,13 @@ function Header({ user }) {
         sx={{
           py: 2,
           px: 2,
-          boxShadow: ({ boxShadows: { md } }) => md,
-        }}
+          // Argon theme extends MUI Theme with `boxShadows`; annotate the param
+          // and cast the object so the strict MUI `sx` type accepts it.
+          boxShadow: ({ boxShadows: { md } }: { boxShadows: { md: string } }) => md,
+        } as unknown as SxProps<Theme>}
       >
         <Grid container spacing={3} alignItems="center">
-          <Grid item>
+          <Grid>
             <ArgonAvatar
               src={profileImage}
               alt="profile-image"
@@ -107,7 +148,7 @@ function Header({ user }) {
               shadow="sm"
             />
           </Grid>
-          <Grid item>
+          <Grid>
             <ArgonBox height="100%" mt={0.5} lineHeight={1}>
               <ArgonTypography variant="h5" fontWeight="medium">
                 {name}
@@ -122,10 +163,5 @@ function Header({ user }) {
     </ArgonBox>
   );
 }
-
-Header.propTypes = {
-  user: PropTypes.any
-};
-
 
 export default Header;

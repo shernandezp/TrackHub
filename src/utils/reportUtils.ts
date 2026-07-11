@@ -34,19 +34,19 @@ interface BuildTableDataParams {
     labels?: string[];
 }
 
-interface VisibleDataFilter {
+export interface VisibleDataFilter {
     visible: boolean;
     data: unknown[];
     label: string;
 }
 
-interface VisibleFilter {
+export interface VisibleFilter {
     visible: boolean;
     label: string;
 }
 
 /** The table data with visibility settings produced by {@link buildTableData}. */
-interface TableData {
+export interface TableData {
     stringFilter1: VisibleDataFilter;
     stringFilter2: VisibleDataFilter;
     stringFilter3: VisibleDataFilter;

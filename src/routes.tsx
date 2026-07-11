@@ -49,6 +49,8 @@ Coded by www.creative-tim.com
   10. The `component` key is used to store the component of its route.
 */
 
+import type { ReactNode } from "react";
+
 // Argon Dashboard 2 MUI layouts
 import Dashboard from "layouts/dashboard";
 import ManageAdmin from "layouts/manageadmin";
@@ -61,11 +63,58 @@ import Callback from "layouts/authentication/callback";
 import AuthorizeRedirect from "layouts/authentication/authorizeredirect";
 import ErrorPage from "layouts/authentication/error";
 import PrincipalTypes from "constants/principalTypes";
+import type { PrincipalType } from "constants/principalTypes";
 
 // Argon Dashboard 2 MUI components
-import ArgonBox from "components/ArgonBox";
+import ArgonBoxBase from "components/ArgonBox";
 
-const routes = [
+// The vendored ArgonBox (a forwardRef JS component) has no types yet; type the
+// narrow slice of props the icon nodes below pass across the boundary.
+interface ArgonIconBoxProps {
+  component?: string;
+  color?: string;
+  fontSize?: string;
+  className?: string;
+}
+const ArgonBox = ArgonBoxBase as unknown as (props: ArgonIconBoxProps) => ReactNode;
+
+/**
+ * A single entry in the Sidenav route table. Consumed by `App` (route
+ * rendering + role/feature-flag filtering) and `controls/Sidenav`.
+ *
+ * - `route` entries render a `<Route>` and a Sidenav link.
+ * - `title` entries render a Sidenav section header (uses `title`).
+ * - `divider` entries render a Sidenav divider.
+ * - `hidden` entries render a `<Route>` but no Sidenav link (auth callbacks).
+ * - `collapse` entries hold nested routes in `collapse`.
+ */
+export interface RouteDefinition {
+  /** Discriminator driving how the entry is rendered. */
+  type: "route" | "title" | "divider" | "collapse" | "hidden";
+  /** i18n key of the Sidenav label (also the display name for hidden routes);
+   *  absent on `title`/`divider` entries. */
+  name?: string;
+  /** Stable React key / role-gate identifier. */
+  key: string;
+  /** react-router path (route/hidden entries). */
+  route?: string;
+  /** Sidenav icon node. */
+  icon?: ReactNode;
+  /** Element rendered for the route. */
+  component?: ReactNode;
+  /** Nested routes for a collapsible Sidenav group. */
+  collapse?: RouteDefinition[];
+  /** External link target (route entries with an outbound href). */
+  href?: string;
+  /** i18n key of the section header (title entries). */
+  title?: string;
+  /** Principal types allowed to see/access this route (defaults to [User]). */
+  principalTypes?: PrincipalType[];
+  /** Account feature flag gating this route's visibility. */
+  featureKey?: string;
+}
+
+const routes: RouteDefinition[] = [
   {
     type: "route",
     name: "screen.dashboard",

@@ -14,59 +14,134 @@
 *  limitations under the License.
 */
 
-import React, { useState, useEffect, useContext, useRef } from 'react';
+import { useState, useEffect, useContext, useRef } from 'react';
+import type { ReactNode } from 'react';
 import Grid from "@mui/material/Grid";
-import ArgonBox from "components/ArgonBox";
-import DashboardLayout from "controls/LayoutContainers/DashboardLayout";
-import DashboardNavbar from "controls/Navbars/DashboardNavbar";
+import ArgonBoxBase from "components/ArgonBox";
+import DashboardLayoutBase from "controls/LayoutContainers/DashboardLayout";
+import DashboardNavbarBase from "controls/Navbars/DashboardNavbar";
 import GeofenceEditor from 'layouts/geofencemanager/components/GeofenceEditor';
-import Footer from "controls/Footer";
-import Table from "controls/Tables/Table";
+import type {
+  AddGeofenceHandler,
+  SaveGeofenceHandler,
+  CancelGeofenceHandler,
+  EditGeofenceHandler,
+  RemoveGeofenceHandler,
+} from 'layouts/geofencemanager/components/GeofenceEditor';
+import FooterBase from "controls/Footer";
+import TableBase from "controls/Tables/Table";
 import useForm from 'controls/Dialogs/useForm';
-import ConfirmDialog from 'controls/Dialogs/ConfirmDialog';
+import ConfirmDialogBase from 'controls/Dialogs/ConfirmDialog';
 import GeofenceFormDialog from 'layouts/geofencemanager/GeofenceFormDialog';
 import useGeofencesTableData from "layouts/geofencemanager/data/geofencesData";
+import type { GeofenceFormValues, GeofenceColumn, GeofenceRow } from "layouts/geofencemanager/data/geofencesData";
 import { getAccountSettings } from 'api/manager/settings';
+import type { AccountSettings } from 'api/manager/settings';
 import { notifyApiError } from 'api/core/errors';
 import { LoadingContext } from 'LoadingContext';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "AuthContext";
 
+// Change event shape emitted by the vendored dialog controls.
+type FormChangeHandler = (
+  event: { target: { name: string; value: string; type?: string; checked?: boolean } }
+) => void;
+
+// Vendored (untyped) controls — type the prop slice crossing the boundary.
+interface ArgonBoxProps {
+  py?: number;
+  children?: ReactNode;
+}
+const ArgonBox = ArgonBoxBase as unknown as (props: ArgonBoxProps) => ReactNode;
+
+interface DashboardLayoutProps {
+  children?: ReactNode;
+}
+const DashboardLayout = DashboardLayoutBase as unknown as (props: DashboardLayoutProps) => ReactNode;
+
+interface DashboardNavbarProps {
+  searchQuery?: string;
+  handleSearch?: (event: { target: { value: string } }) => void;
+  searchVisibility?: boolean;
+}
+const DashboardNavbar = DashboardNavbarBase as unknown as (props: DashboardNavbarProps) => ReactNode;
+
+interface TableProps {
+  columns: GeofenceColumn[];
+  rows: GeofenceRow[];
+  selectedField?: string;
+  selected?: string | null;
+  handleSelected?: (value: string | null) => void;
+  searchQuery?: string;
+  scrollable?: boolean;
+  maxHeight?: string;
+  compact?: boolean;
+}
+const Table = TableBase as unknown as (props: TableProps) => ReactNode;
+
+const Footer = FooterBase as unknown as (props: Record<string, never>) => ReactNode;
+
+interface ConfirmDialogProps {
+  title: string;
+  message: string;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  onConfirm: () => void | Promise<void>;
+}
+const ConfirmDialog = ConfirmDialogBase as unknown as (props: ConfirmDialogProps) => ReactNode;
+
+/** Map-related account settings the geofence editor reads. */
+interface GeofenceMapSettings {
+  maps: string;
+  mapsKey: string | null;
+  refreshMapInterval: number;
+}
+
+// The vendored useForm hook is still JS; type its tuple result at the boundary.
+type UseFormResult = [
+  GeofenceFormValues,
+  FormChangeHandler,
+  (values: GeofenceFormValues) => void,
+  (errors: Record<string, string>) => void,
+  (requiredFields: string[]) => boolean,
+  Record<string, string>,
+];
+
 function GeofenceManager() {
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
   const { setLoading } = useContext(LoadingContext);
-  const [settings, setSettings] = useState({maps:'OSM', mapsKey:'', refreshMapInterval: 60});
+  const [settings, setSettings] = useState<GeofenceMapSettings>({maps:'OSM', mapsKey:'', refreshMapInterval: 60});
 
-  const handleEditClick = (rowData) => {
+  const handleEditClick = (rowData: GeofenceFormValues) => {
     setValues(rowData);
     setErrors({});
   };
 
-  const handleDeleteClick = (geofenceId) => {
+  const handleDeleteClick = (geofenceId: string) => {
     setToDelete(geofenceId);
   };
 
-  const { 
-    data, 
-    open, 
+  const {
+    data,
+    open,
     confirmOpen,
     onGet,
-    onSave, 
-    onDelete, 
-    setOpen, 
+    onSave,
+    onDelete,
+    setOpen,
     setConfirmOpen} = useGeofencesTableData(handleEditClick, handleDeleteClick);
 
-  const [values, handleChange, setValues, setErrors, validate, errors] = useForm({});
-  const [toDelete, setToDelete] = useState(null);
-  const [selectedGeofence, setSelectedGeofence] = useState(null);
+  const [values, handleChange, setValues, setErrors, validate, errors] = useForm({}) as UseFormResult;
+  const [toDelete, setToDelete] = useState<string | null>(null);
+  const [selectedGeofence, setSelectedGeofence] = useState<string | null>(null);
   const { geofences, columns, rows } = data;
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   const fetchSettings = async () => {
     setLoading(true);
     try {
-      const settings = await getAccountSettings();
+      const settings: AccountSettings = await getAccountSettings();
       setSettings(settings);
     } catch (error) {
       notifyApiError(error);
@@ -81,23 +156,23 @@ function GeofenceManager() {
     }
   }, [isAuthenticated]);
 
-  const addRef = useRef(null);
-  const saveRef = useRef(null);
-  const cancelRef = useRef(null);
-  const editingRef = useRef(null);
-  const removeRef = useRef(null);
+  const addRef = useRef<AddGeofenceHandler | null>(null);
+  const saveRef = useRef<SaveGeofenceHandler | null>(null);
+  const cancelRef = useRef<CancelGeofenceHandler | null>(null);
+  const editingRef = useRef<EditGeofenceHandler | null>(null);
+  const removeRef = useRef<RemoveGeofenceHandler | null>(null);
 
   const handleSave = () => {
-    let requiredFields = ['name'];
+    const requiredFields = ['name'];
     if (validate(requiredFields)) {
       if (values.new) {
-        let result = saveRef.current(values.name);
-        let coordinates = result.latlngs.map(coord => ({latitude: coord.lat, longitude: coord.lng}));
-        let geom = {srid: 4326, coordinates: coordinates};
+        const result = saveRef.current!(values.name!);
+        const coordinates = result.latlngs.map(coord => ({latitude: coord.lat, longitude: coord.lng}));
+        const geom = {srid: 4326, coordinates: coordinates};
         values.geom = geom;
         values.geofenceId = result.id;
       } else {
-        let coordinates = values.coordinates.map(coord => ({latitude: coord.lat, longitude: coord.lng}));
+        const coordinates = values.coordinates!.map(coord => ({latitude: coord.lat, longitude: coord.lng}));
         values.geom = {srid: 4326, coordinates: coordinates};
       }
       onSave(values);
@@ -120,8 +195,8 @@ function GeofenceManager() {
 
   const handleDelete = async () => {
     if (removeRef.current) {
-      await onDelete(toDelete)
-      removeRef.current(toDelete);
+      await onDelete(toDelete!)
+      removeRef.current(toDelete!);
     }
   };
 
@@ -129,7 +204,7 @@ function GeofenceManager() {
     if (editingRef.current) {
       setLoading(true);
       const newGeofence = editingRef.current();
-      const geofence = await onGet(newGeofence.id);
+      const geofence: GeofenceFormValues = await onGet(newGeofence.id);
       geofence.new = false;
       geofence.coordinates = newGeofence.latlngs;
       handleEditClick(geofence);
@@ -138,7 +213,7 @@ function GeofenceManager() {
     }
   };
 
-  const handleSearchChange = (event) => {
+  const handleSearchChange = (event: { target: { value: string } }) => {
     setSearchQuery(event.target.value);
   };
 
@@ -147,9 +222,9 @@ function GeofenceManager() {
       <DashboardNavbar searchQuery={searchQuery} handleSearch={handleSearchChange} searchVisibility={true}/>
       <ArgonBox py={1}>
         <Grid container spacing={3}>
-          <Grid item size={{xs: 12, lg: 9}} sx={{ position: 'relative', zIndex: 1 }}>
-            <GeofenceEditor 
-               mapType={settings.maps}
+          <Grid size={{xs: 12, lg: 9}} sx={{ position: 'relative', zIndex: 1 }}>
+            <GeofenceEditor
+               mapType={settings.maps as 'OSM' | 'Google'}
                mapKey={settings.mapsKey}
                geofences={geofences}
                selectedGeofence={selectedGeofence}
@@ -165,7 +240,7 @@ function GeofenceManager() {
                height="calc(100vh - 180px)"
             />
           </Grid>
-          <Grid item size={{xs: 12, lg: 3}} sx={{ position: 'relative', zIndex: 2 }}>
+          <Grid size={{xs: 12, lg: 3}} sx={{ position: 'relative', zIndex: 2 }}>
             <Table 
               columns={columns} 
               rows={rows} 
