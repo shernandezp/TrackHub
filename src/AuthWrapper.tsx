@@ -15,9 +15,13 @@
 */
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AuthProvider } from './AuthContext';
 
-// Create a new context
-export const LoadingContext = React.createContext({
-  loading: false, // default value
-  setLoading: () => {}, // default function
-});
+const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
+  const navigate = useNavigate();
+
+  return <AuthProvider navigate={navigate}>{children}</AuthProvider>;
+};
+
+export default AuthWrapper;

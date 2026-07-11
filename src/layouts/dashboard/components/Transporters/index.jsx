@@ -28,7 +28,9 @@ import useGeofencingService from "services/geofencing";
 import usePointOfInterestService from 'services/pointsOfInterest';
 import useGroupService from "services/groups";
 import useOperatorService from "services/operator";
-import useTransporterService from "services/transporter";
+import { useQueryClient } from '@tanstack/react-query';
+import { getTransportersByGroup, getTransporterDeviceAssignmentsByAccount } from 'api/manager/transporters';
+import { transporterKeys } from 'queries/transporters';
 import useDeviceService from "services/device";
 import { cleanString } from 'utils/stringUtils';
 import { LoadingContext } from 'LoadingContext';
@@ -50,7 +52,7 @@ function Transporters({searchQuery, settings, setShowGeofence, showGeofence, geo
   const { getPointsOfInterestByAccount } = usePointOfInterestService();
   const { getGroups } = useGroupService();
   const { getOperators } = useOperatorService();
-  const { getTransportersByGroup, getTransporterDeviceAssignmentsByAccount } = useTransporterService();
+  const queryClient = useQueryClient();
   const { getDevicesByAccount } = useDeviceService();
   const { setLoading } = useContext(LoadingContext);
   const { isAuthenticated } = useAuth();
@@ -190,9 +192,15 @@ function Transporters({searchQuery, settings, setShowGeofence, showGeofence, geo
     }
     setLoading(true);
     try {
-      const transportersInGroup = await getTransportersByGroup(groupId);
-      if (!Array.isArray(transportersInGroup)) {
-        // Fetch failed: keep the map un-narrowed instead of blanking it.
+      let transportersInGroup;
+      try {
+        transportersInGroup = await queryClient.fetchQuery({
+          queryKey: transporterKeys.byGroup(groupId),
+          queryFn: () => getTransportersByGroup(groupId),
+        });
+      } catch {
+        // Fetch failed (already surfaced by the global toast): keep the map
+        // un-narrowed instead of blanking it.
         setGroupTransporterIds(null);
         return;
       }
@@ -220,10 +228,21 @@ function Transporters({searchQuery, settings, setShowGeofence, showGeofence, geo
     setLoading(true);
     try {
       if (!operatorMappingRef.current) {
-        const [devices, assignments] = await Promise.all([
-          getDevicesByAccount(),
-          getTransporterDeviceAssignmentsByAccount(settings?.accountId, true)
-        ]);
+        let devices;
+        let assignments;
+        try {
+          [devices, assignments] = await Promise.all([
+            getDevicesByAccount(),
+            queryClient.fetchQuery({
+              queryKey: transporterKeys.assignmentsByAccount(settings?.accountId ?? '', true),
+              queryFn: () => getTransporterDeviceAssignmentsByAccount(settings?.accountId, true),
+            })
+          ]);
+        } catch {
+          // Assignments fetch failed (surfaced by the global toast): keep un-narrowed.
+          setOperatorTransporterIds(null);
+          return;
+        }
         if (!Array.isArray(devices)) {
           setOperatorTransporterIds(null);
           return;

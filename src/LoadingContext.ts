@@ -14,22 +14,14 @@
 *  limitations under the License.
 */
 
-import { useNavigate } from 'react-router-dom';
-import { AuthProvider } from './AuthContext';
-import PropTypes from 'prop-types';
+import React from 'react';
 
-const AuthWrapper = ({ children }) => {
-  const navigate = useNavigate();
+export interface LoadingContextValue {
+  loading: boolean;
+  setLoading: (loading: boolean) => void;
+}
 
-  return (
-    <AuthProvider navigate={navigate}>
-      {children}
-    </AuthProvider>
-  );
-};
-
-AuthWrapper.propTypes = {
-  children: PropTypes.node.isRequired
-};
-
-export default AuthWrapper;
+export const LoadingContext = React.createContext<LoadingContextValue>({
+  loading: false,
+  setLoading: () => {},
+});

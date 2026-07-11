@@ -15,11 +15,13 @@
     "@emotion/cache": "11.14.0",
     "@emotion/react": "11.14.0",
     "@emotion/styled": "11.14.1",
+    "@graphql-typed-document-node/core": "^3.2.0",
     "@mui/icons-material": "7.3.6",
     "@mui/material": "7.3.6",
     "@mui/styled-engine": "7.3.6",
     "@pathofdev/react-tag-input": "1.0.7",
     "@react-google-maps/api": "^2.20.8",
+    "@tanstack/react-query": "^5.101.2",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.1",
@@ -28,6 +30,7 @@
     "chart.js": "4.5.1",
     "chroma-js": "3.2.0",
     "crypto-js": "^4.2.0",
+    "graphql": "^17.0.2",
     "i18next": "^25.7.3",
     "i18next-browser-languagedetector": "^8.2.0",
     "jwt-decode": "^4.0.0",
@@ -58,6 +61,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
+    "codegen": "graphql-codegen --config codegen.ts",
     "lint": "eslint src",
     "install:clean": "rm -rf node_modules/ && rm -rf package-lock.json && npm install && npm start"
   },
@@ -74,6 +78,8 @@
     ]
   },
   "devDependencies": {
+    "@graphql-codegen/cli": "^7.2.0",
+    "@graphql-codegen/client-preset": "^6.1.0",
     "@types/chroma-js": "^3.1.2",
     "@types/crypto-js": "^4.2.2",
     "@types/leaflet": "^1.9.21",

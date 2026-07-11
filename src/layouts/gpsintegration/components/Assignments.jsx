@@ -27,7 +27,12 @@ import ArgonBox from 'components/ArgonBox';
 import ArgonButton from 'components/ArgonButton';
 import ArgonTypography from 'components/ArgonTypography';
 import useAccountService from 'services/account';
-import useTransporterService from 'services/transporter';
+import {
+  useTransportersByAccount,
+  useTransporterDeviceAssignmentsByAccount,
+  useAssignDeviceToTransporter,
+  useEndDeviceTransporterAssignment,
+} from 'queries/transporters';
 import useDeviceService from 'services/device';
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from 'utils/dateUtils';
@@ -55,9 +60,7 @@ function ManageDeviceAssignments() {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
   const [expanded, setExpanded] = useState(false);
-  const [assignments, setAssignments] = useState([]);
   const [activeOnly, setActiveOnly] = useState(true);
-  const [transporters, setTransporters] = useState([]);
   const [unassignedDevices, setUnassignedDevices] = useState([]);
   const [devices, setDevices] = useState([]);
   const [selectedTransporterId, setSelectedTransporterId] = useState('');
@@ -66,21 +69,28 @@ function ManageDeviceAssignments() {
   const [error, setError] = useState(null);
   const loaded = useRef(false);
   const { getAccountByUser } = useAccountService();
-  const {
-    getTransporterByAccount,
-    getTransporterDeviceAssignmentsByAccount,
-    assignDeviceToTransporter,
-    endDeviceTransporterAssignment
-  } = useTransporterService();
   const { getSynchronizedDevices, getUnassignedSynchronizedDevices } = useDeviceService();
 
-  const load = async (acct = accountId, only = activeOnly) => {
+  const transportersQuery = useTransportersByAccount({ enabled: expanded });
+  const transporters = transportersQuery.data ?? [];
+  // Assignments are keyed by (accountId, activeOnly); toggling the filter re-keys
+  // and refetches, and the assign/end mutations invalidate this query.
+  const assignmentsQuery = useTransporterDeviceAssignmentsByAccount(accountId, activeOnly);
+  const assignments = assignmentsQuery.data ?? [];
+  const assignDevice = useAssignDeviceToTransporter();
+  const endAssignment = useEndDeviceTransporterAssignment();
+
+  // Keep the global spinner UX while transporter data loads/refreshes.
+  useEffect(() => {
+    setLoading(transportersQuery.isFetching || assignmentsQuery.isFetching);
+  }, [transportersQuery.isFetching, assignmentsQuery.isFetching, setLoading]);
+
+  // Device lists come from the (still legacy) device service; assignments come
+  // from the query above, so this only refreshes the device-side state.
+  const loadDevices = async (acct = accountId) => {
     if (!acct) return;
     setLoading(true);
     try {
-      const result = await getTransporterDeviceAssignmentsByAccount(acct, only);
-      if (!result) setError(t('gpsIntegration.errors.assignmentsLoad'));
-      else setAssignments(result);
       const freeDevices = await getUnassignedSynchronizedDevices(acct);
       setUnassignedDevices(freeDevices || []);
       const syncedDevices = await getSynchronizedDevices(acct);
@@ -98,25 +108,25 @@ function ManageDeviceAssignments() {
           return;
         }
         setAccountId(acct.accountId);
-        const trs = await getTransporterByAccount();
-        setTransporters(trs || []);
-        await load(acct.accountId, activeOnly);
+        await loadDevices(acct.accountId);
       })();
     }
   }, [expanded]);
 
-  const toggleActiveOnly = async () => {
-    const next = !activeOnly;
-    setActiveOnly(next);
-    await load(accountId, next);
+  const toggleActiveOnly = () => {
+    // Re-keys the assignments query, which refetches automatically.
+    setActiveOnly((prev) => !prev);
   };
 
   const handleEnd = async (a) => {
     setLoading(true);
     try {
       const reason = window.prompt(t('gpsIntegration.actions.endAssignmentReasonPrompt'), 'portal') || 'portal';
-      await endDeviceTransporterAssignment(a.transporterDeviceAssignmentId, reason);
-      await load();
+      await endAssignment.mutateAsync({ assignmentId: a.transporterDeviceAssignmentId, reason });
+      // Assignments refetch via query invalidation; refresh the device lists too.
+      await loadDevices();
+    } catch {
+      // Failure is surfaced by the global toast.
     } finally { setLoading(false); }
   };
 
@@ -124,7 +134,7 @@ function ManageDeviceAssignments() {
     if (!accountId || !selectedTransporterId || !selectedDeviceId) return;
     setLoading(true);
     try {
-      await assignDeviceToTransporter({
+      await assignDevice.mutateAsync({
         accountId,
         transporterId: selectedTransporterId,
         deviceId: selectedDeviceId,
@@ -133,7 +143,10 @@ function ManageDeviceAssignments() {
         assignmentReason: 'portal'
       });
       setSelectedDeviceId('');
-      await load();
+      // Assignments refetch via query invalidation; refresh the device lists too.
+      await loadDevices();
+    } catch {
+      // Failure is surfaced by the global toast.
     } finally { setLoading(false); }
   };
 
@@ -149,10 +162,14 @@ function ManageDeviceAssignments() {
 
   useEffect(() => {
     const handleRefresh = () => {
-      if (loaded.current) load();
+      if (loaded.current) {
+        assignmentsQuery.refetch();
+        loadDevices();
+      }
     };
     window.addEventListener(GPS_INTEGRATION_REFRESH_EVENT, handleRefresh);
     return () => window.removeEventListener(GPS_INTEGRATION_REFRESH_EVENT, handleRefresh);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accountId, activeOnly]);
 
   const statusLabel = (status) => {

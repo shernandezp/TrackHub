@@ -14,36 +14,75 @@
 *  limitations under the License.
 */
 
-import React, { createContext, useContext, useState, useRef } from "react";
-import { generateCodeVerifier, generateCodeChallenge } from "utils/authutils";
-import { refreshAccessToken, revokeAccessToken, logout } from "services/auth";
+import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
+import { generateCodeVerifier, generateCodeChallenge } from 'utils/authutils';
+import { refreshAccessToken, revokeAccessToken, logout } from 'services/auth';
+import { tokenStore } from 'api/core/tokenStore';
 
-import PropTypes from 'prop-types';
+export interface AuthContextValue {
+  isAuthenticated: boolean;
+  isLoggingIn: boolean;
+  authError: boolean;
+  setIsAuthenticated: (value: boolean) => void;
+  setIsLoggingIn: (value: boolean) => void;
+  login: () => void;
+  logoff: () => Promise<void>;
+  accessToken: string | null;
+  setAccessToken: (token: string | null) => void;
+  setRefreshToken: (token: string | null) => void;
+  handleRefreshToken: () => Promise<string | undefined>;
+  resetAuthError: () => void;
+}
 
-// Create the authentication context
-const AuthContext = createContext();
+const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 // Custom hook to consume the authentication context
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = (): AuthContextValue => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+interface AuthProviderProps {
+  children: React.ReactNode;
+  navigate: (to: string) => void;
+}
+
+interface LoginAttempts {
+  count: number;
+  lastAttempt: number | null;
+}
 
 // Authentication provider component
-export const AuthProvider = ({ children, navigate }) => {
-  const [accessToken, setAccessToken] = useState(null);
-  const [refreshToken, setRefreshToken] = useState(null);
+export const AuthProvider = ({ children, navigate }: AuthProviderProps) => {
+  const [accessToken, setAccessTokenState] = useState<string | null>(null);
+  const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [authError, setAuthError] = useState(false);
-  const codeVerifierRef = useRef();
-  const loginAttemptsRef = useRef({ count: 0, lastAttempt: null });
+  const codeVerifierRef = useRef<string | undefined>(undefined);
+  const loginAttemptsRef = useRef<LoginAttempts>({ count: 0, lastAttempt: null });
   const MAX_LOGIN_ATTEMPTS = 3;
   const COOLDOWN_PERIOD = 30000; // 30 seconds
 
-  const login = () => {
+  // Mirror the access token into the framework-agnostic token store so the
+  // api layer (plain functions, not hooks) can authenticate requests.
+  const setAccessToken = (token: string | null): void => {
+    tokenStore.setAccessToken(token);
+    setAccessTokenState(token);
+  };
+
+  const login = (): void => {
     // Check if we're in cooldown period
     const now = Date.now();
     if (loginAttemptsRef.current.lastAttempt) {
       const timeSinceLastAttempt = now - loginAttemptsRef.current.lastAttempt;
-      if (loginAttemptsRef.current.count >= MAX_LOGIN_ATTEMPTS && timeSinceLastAttempt < COOLDOWN_PERIOD) {
+      if (
+        loginAttemptsRef.current.count >= MAX_LOGIN_ATTEMPTS &&
+        timeSinceLastAttempt < COOLDOWN_PERIOD
+      ) {
         if (process.env.NODE_ENV !== 'production') {
           console.warn('Too many login attempts. Please wait before trying again.');
         }
@@ -66,9 +105,9 @@ export const AuthProvider = ({ children, navigate }) => {
         sessionStorage.setItem('code_verifier', codeVerifierRef.current);
       }
       const codeChallenge = generateCodeChallenge(codeVerifierRef.current);
-      const responseType = "code";
-      const scope = "web_scope offline_access";
-      const state = "123";
+      const responseType = 'code';
+      const scope = 'web_scope offline_access';
+      const state = '123';
 
       const queryParams = new URLSearchParams({
         client_id: process.env.REACT_APP_CLIENT_ID,
@@ -77,26 +116,26 @@ export const AuthProvider = ({ children, navigate }) => {
         scope: scope,
         state: state,
         code_challenge: codeChallenge,
-        code_challenge_method: "S256"
+        code_challenge_method: 'S256',
       });
       const authorizationUrl = `${process.env.REACT_APP_AUTHORIZATION_ENDPOINT}?${queryParams.toString()}`;
       navigate(`/authentication/authorize?authorizationUrl=${encodeURIComponent(authorizationUrl)}`);
     }
   };
 
-  const logoff = async () => {
-    await revokeAccessToken(accessToken, refreshToken);
+  const logoff = async (): Promise<void> => {
+    await revokeAccessToken(accessToken);
     await logout();
 
     // Clear any stored tokens or user information
     setAccessToken('');
     setRefreshToken('');
-  
+
     // Redirect to the login page
     login();
   };
 
-  const handleRefreshToken = async () => {
+  const handleRefreshToken = async (): Promise<string | undefined> => {
     try {
       const data = await refreshAccessToken(refreshToken);
       setAccessToken(data.access_token);
@@ -109,35 +148,41 @@ export const AuthProvider = ({ children, navigate }) => {
       }
       setAuthError(true);
       login();
+      return undefined;
     }
   };
 
-  const resetAuthError = () => {
+  // The refresh routine closes over the current refresh token; re-register on change.
+  const handleRefreshTokenRef = useRef(handleRefreshToken);
+  handleRefreshTokenRef.current = handleRefreshToken;
+  useEffect(() => {
+    tokenStore.registerRefreshHandler(() => handleRefreshTokenRef.current());
+    return () => tokenStore.registerRefreshHandler(null);
+  }, []);
+
+  const resetAuthError = (): void => {
     setAuthError(false);
     loginAttemptsRef.current = { count: 0, lastAttempt: null };
   };
 
   return (
-    <AuthContext.Provider value={{ 
-        isAuthenticated, 
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
         isLoggingIn,
         authError,
         setIsAuthenticated,
-        setIsLoggingIn, 
-        login, 
-        logoff, 
+        setIsLoggingIn,
+        login,
+        logoff,
         accessToken,
-        setAccessToken, 
+        setAccessToken,
         setRefreshToken,
         handleRefreshToken,
-        resetAuthError
-      }}>
+        resetAuthError,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
-
-AuthProvider.propTypes = {
-    children: PropTypes.node.isRequired,
-    navigate: PropTypes.func.isRequired
-  };

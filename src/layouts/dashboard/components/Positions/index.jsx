@@ -14,7 +14,7 @@
 *  limitations under the License.
 */
 
-import React, { useState, useEffect, useContext, useMemo } from 'react';
+import React, { useState, useEffect, useContext, useMemo, useRef } from 'react';
 import PropTypes from "prop-types";
 import Grid from "@mui/material/Grid";
 import ToggleButton from '@mui/material/ToggleButton';
@@ -28,7 +28,7 @@ import TripList from "layouts/dashboard/components/TripList";
 import TripsMap from "layouts/dashboard/components/TripsMap";
 import PlaybackControls from "layouts/dashboard/components/Positions/PlaybackControls";
 import useRouterService from "services/router";
-import useTransporterService from "services/transporter";
+import { useTransportersByUser } from 'queries/transporters';
 import useAccountFeatureService from 'services/accountFeatures';
 import useForm from 'controls/Dialogs/useForm';
 import { usePlayback } from 'layouts/dashboard/utils/playback';
@@ -43,19 +43,42 @@ const POSITION_HISTORY_FEATURE_KEY = 'gps.positionHistory';
 function Positions({settings, showGeofence, geofences}) {
   const { t } = useTranslation();
   const { getTripsByTransporter } = useRouterService();
-  const { getTransportersByUser } = useTransporterService();
   const { getAccountFeatures } = useAccountFeatureService();
   const { setLoading } = useContext(LoadingContext);
   const { isAuthenticated } = useAuth();
   const [controller] = useArgonController();
   const { darkMode } = controller;
   const [trips, setTrips] = useState([]);
-  const [transporters, setTransporters] = useState([]);
   const [selectedTrip, setSelectedTrip] = useState(null);
   const [historyEnabled, setHistoryEnabled] = useState(false);
   const [source, setSource] = useState('PROVIDER');
   const [loadedQuery, setLoadedQuery] = useState(null);
   const [values, handleChange, setValues, setErrors, validate, errors] = useForm({});
+
+  const transportersQuery = useTransportersByUser({ enabled: isAuthenticated });
+  const transporters = useMemo(
+    () => (transportersQuery.data ?? []).map(transporter => ({
+      value: transporter.transporterId,
+      label: transporter.name
+    })),
+    [transportersQuery.data]
+  );
+  const defaultSelectionSetRef = useRef(false);
+
+  // Keep the global spinner UX while the transporter list loads.
+  useEffect(() => {
+    setLoading(transportersQuery.isFetching);
+  }, [transportersQuery.isFetching, setLoading]);
+
+  // Default the filter to the first transporter, once, after the list first loads.
+  useEffect(() => {
+    if (transportersQuery.isSuccess && !defaultSelectionSetRef.current) {
+      const list = transportersQuery.data ?? [];
+      setValues({ selectedItem: list.length > 0 ? list[0].transporterId : '' });
+      defaultSelectionSetRef.current = true;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transportersQuery.isSuccess, transportersQuery.data]);
 
   const fetchPositions = async () => {
     setLoading(true);
@@ -77,29 +100,12 @@ function Positions({settings, showGeofence, geofences}) {
     setLoading(false);
   };
 
-  const fetchTransporters = async () => {
-    setLoading(true);
-    var result = await getTransportersByUser();
-    setTransporters(result.map(transporter => ({
-      value: transporter.transporterId,
-      label: transporter.name
-    })));
-    setValues({selectedItem: result.length > 0 ? result[0].transporterId : ''});
-    setLoading(false);
-  };
-
   const fetchFeatures = async () => {
     if (!settings?.accountId) return;
     const features = await getAccountFeatures(settings.accountId) || [];
     const feature = features.find(item => item.featureKey === POSITION_HISTORY_FEATURE_KEY);
     setHistoryEnabled(!!feature?.enabled);
   };
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchTransporters();
-    }
-  }, [isAuthenticated]);
 
   useEffect(() => {
     if (isAuthenticated) {

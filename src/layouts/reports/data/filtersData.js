@@ -15,8 +15,8 @@
 */
 
 import { useEffect, useState, useContext } from "react";
-import useTransporterService from "services/transporter";
-import { fetchList, buildTableData } from 'utils/reportUtils';
+import { useTransportersByUser } from 'queries/transporters';
+import { buildTableData } from 'utils/reportUtils';
 import { LoadingContext } from "LoadingContext";
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "AuthContext";
@@ -25,57 +25,43 @@ function useFiltersData(reportCode) {
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
   const { setLoading } = useContext(LoadingContext);
-  const { getTransportersByUser } = useTransporterService();
   const [data, setData] = useState({ });
 
-  // Define individual fetch functions with custom mappings
-  const defaultFetchFilters = async () => buildTableData({});
-  const fetchLiveReport = async () => buildTableData({});
-  const fetchTransportersInGeofence = async () => buildTableData({});
+  // Only the two transporter-scoped reports need the transporter list.
+  const needsTransporters = reportCode === 'PositionRecord' || reportCode === 'GeofenceEvents';
+  const transportersQuery = useTransportersByUser({ enabled: isAuthenticated && needsTransporters });
 
-  const fetchPositionRecord = async () => {
-    const list1 = await fetchList(getTransportersByUser, transporter => ({
-      value: transporter.transporterId,
-      label: transporter.name
-    }));
-    return buildTableData({
-      list1,
-      visibility: [true, false, false, true, true, false, false, false, false],
-      labels: [t('reports.transporter'), '', '', t('reports.from'), t('reports.to'), '', '', '', '']
-    });
-  };
-
-  const fetchGeofenceEvents = async () => {
-    const list1 = await fetchList(getTransportersByUser, transporter => ({
-      value: transporter.transporterId,
-      label: transporter.name
-    }));
-    return buildTableData({
-      list1,
-      visibility: [true, false, false, true, true, false, false, false, false],
-      labels: [t('reports.transporter'), '', '', t('reports.from'), t('reports.to'), '', '', '', '']
-    });
-  };
-
-  // Map report codes to their respective functions
-  const reportStrategies = {
-    LiveReport: fetchLiveReport,
-    PositionRecord: fetchPositionRecord,
-    TransportersInGeofence: fetchTransportersInGeofence,
-    GeofenceEvents: fetchGeofenceEvents
-  };
+  // Keep the global spinner UX while the transporter list loads.
+  useEffect(() => {
+    setLoading(transportersQuery.isFetching);
+  }, [transportersQuery.isFetching, setLoading]);
 
   useEffect(() => {
-    if (reportCode && isAuthenticated) {
-      async function fetchData() {
-        setLoading(true);
-        const fetchStrategy = reportStrategies[reportCode] || defaultFetchFilters;
-        setData(await fetchStrategy());
-        setLoading(false);
-      }
-      fetchData();
-    }
-  }, [reportCode, isAuthenticated]);
+    if (!reportCode || !isAuthenticated) return;
+
+    const transporterOptions = (transportersQuery.data ?? []).map(transporter => ({
+      value: transporter.transporterId,
+      label: transporter.name
+    }));
+
+    const transporterFilter = () => buildTableData({
+      list1: transporterOptions,
+      visibility: [true, false, false, true, true, false, false, false, false],
+      labels: [t('reports.transporter'), '', '', t('reports.from'), t('reports.to'), '', '', '', '']
+    });
+
+    // Map report codes to their respective filter builders.
+    const reportStrategies = {
+      LiveReport: () => buildTableData({}),
+      PositionRecord: transporterFilter,
+      TransportersInGeofence: () => buildTableData({}),
+      GeofenceEvents: transporterFilter
+    };
+
+    const fetchStrategy = reportStrategies[reportCode] || (() => buildTableData({}));
+    setData(fetchStrategy());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reportCode, isAuthenticated, transportersQuery.data]);
 
   return { data };
 }

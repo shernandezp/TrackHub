@@ -58,6 +58,8 @@ i18n
 
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "queries/queryClient";
 import App from "App";
 import AuthWrapper from 'AuthWrapper';
 
@@ -78,11 +80,13 @@ root.render(
   <BrowserRouter>
     <ArgonControllerProvider>
       <NotificationProvider>
-        <PerfectScrollbar>
-          <AuthWrapper>
-            <App />
-          </AuthWrapper>
-        </PerfectScrollbar>
+        <QueryClientProvider client={queryClient}>
+          <PerfectScrollbar>
+            <AuthWrapper>
+              <App />
+            </AuthWrapper>
+          </PerfectScrollbar>
+        </QueryClientProvider>
       </NotificationProvider>
     </ArgonControllerProvider>
   </BrowserRouter>

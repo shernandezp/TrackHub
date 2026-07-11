@@ -14,63 +14,53 @@
 *  limitations under the License.
 */
 
-import { useEffect, useState, useRef, useContext } from "react";
+import { useEffect, useMemo, useState, useContext } from "react";
 import { useTranslation } from 'react-i18next';
 import { Name } from "controls/Tables/components/tableComponents";
 import Icon from "@mui/material/Icon";
-import transporterTypes from 'data/transporterTypes';
 import ArgonBadge from "components/ArgonBadge";
 import ArgonButton from "components/ArgonButton";
-import useTransporterService from "services/transporter";
-import { handleEdit, handleDelete } from "layouts/manageadmin/actions/transportersActions";
+import useAccountService from "services/account";
+import {
+  useTransportersByAccount,
+  useCreateTransporter,
+  useUpdateTransporter,
+  useDeleteTransporter,
+} from 'queries/transporters';
 import { cleanString } from 'utils/stringUtils';
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
 
 function useTransporterTableData(fetchData, handleEditClick, handleDeleteClick) {
   const { t } = useTranslation();
-  const [data, setData] = useState({ columns: [], rows: [] });
-  const [transporters, setTransporters] = useState([]);
   const [open, setOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [accountId, setAccountId] = useState(null);
   const { setLoading } = useContext(LoadingContext);
   const { isAuthenticated } = useAuth();
+  const { getAccountByUser } = useAccountService();
 
-  const hasLoaded = useRef(false);
-  const { getTransporterByAccount, updateTransporter, deleteTransporter } = useTransporterService();
+  const transportersQuery = useTransportersByAccount({ enabled: !!fetchData && isAuthenticated });
+  const transporters = transportersQuery.data ?? [];
+  const createTransporter = useCreateTransporter();
+  const updateTransporter = useUpdateTransporter();
+  const deleteTransporter = useDeleteTransporter();
 
-  const onSave = async (transporter) => {
-    setLoading(true);
-    try {
-      await handleEdit(
-        transporter, 
-        transporters, 
-        setTransporters, 
-        setData, 
-        buildTableData, 
-        updateTransporter, 
-        transporterTypes);
-        setOpen(false);
-      } finally {
-        setLoading(false);
-      }
-  };
+  // Keep the global spinner UX for the initial load / invalidation refetch.
+  useEffect(() => {
+    setLoading(transportersQuery.isFetching);
+  }, [transportersQuery.isFetching, setLoading]);
 
-  const onDelete = async (transporterId) => {
-    setLoading(true);
-    try {
-      await handleDelete(
-        transporterId, 
-        transporters, 
-        setTransporters, 
-        setData, 
-        buildTableData, 
-        deleteTransporter);
-        setConfirmOpen(false);
-      } finally {
-        setLoading(false);
-      }
-  }
+  // Current account id, required to create a transporter (TransporterDtoInput.accountId).
+  // Loaded the same way sibling manageadmin screens (drivers, accountFeatures) obtain it.
+  useEffect(() => {
+    if (!!fetchData && isAuthenticated && !accountId) {
+      getAccountByUser().then((account) => {
+        if (account?.accountId) setAccountId(account.accountId);
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchData, isAuthenticated, accountId]);
 
   const handleOpen = (transporter) => {
     handleEditClick(transporter);
@@ -82,30 +72,67 @@ function useTransporterTableData(fetchData, handleEditClick, handleDeleteClick) 
     setConfirmOpen(true);
   };
 
-  const buildTableData = (transporters) => ({
+  const onSave = async (transporter) => {
+    setLoading(true);
+    try {
+      if (transporter.transporterId) {
+        await updateTransporter.mutateAsync({
+          transporterId: transporter.transporterId,
+          name: transporter.name,
+          transporterTypeId: transporter.transporterTypeId,
+        });
+      } else {
+        await createTransporter.mutateAsync({
+          name: transporter.name,
+          transporterTypeId: transporter.transporterTypeId,
+          accountId,
+        });
+      }
+      setOpen(false);
+    } catch {
+      // Failure is surfaced by the global toast; keep the dialog open so the
+      // user can retry without re-entering the values.
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onDelete = async (transporterId) => {
+    setLoading(true);
+    try {
+      await deleteTransporter.mutateAsync(transporterId);
+      setConfirmOpen(false);
+    } catch {
+      // Failure is surfaced by the global toast.
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const buildTableData = (rows) => ({
     columns: [
       { name: "name", title:t('transporter.name'), align: "left" },
       { name: "transporterType", title:t('transporter.type'), align: "center" },
       { name: "action", title:t('generic.action'), align: "center" },
       { name: "id" }
     ],
-    rows: transporters.map(transporter => ({
+    rows: rows.map(transporter => ({
       name: <Name name={transporter.name} />,
       transporterType: (
-        <ArgonBadge variant="gradient" 
+        <ArgonBadge variant="gradient"
           badgeContent={t(`transporterTypes.${cleanString(transporter.transporterType)}`)}
           color="success" size="xs" container />
       ),
       action: (
         <>
-          <ArgonButton 
-              variant="text" 
-              color="dark" 
+          <ArgonButton
+              variant="text"
+              color="dark"
               onClick={() => handleOpen(transporter)}>
             <Icon>edit</Icon>&nbsp;{t('generic.edit')}
           </ArgonButton>
-          <ArgonButton 
-            variant="text" 
+          <ArgonButton
+            variant="text"
             color="error"
             onClick={() => handleOpenDelete(transporter.transporterId)}>
             <Icon>delete</Icon>&nbsp;{t('generic.delete')}
@@ -116,27 +143,19 @@ function useTransporterTableData(fetchData, handleEditClick, handleDeleteClick) 
     })),
   });
 
-  useEffect(() => {
-    if (fetchData && !hasLoaded.current && isAuthenticated) {
-      async function fetchData() {
-        setLoading(true);
-        const transporters = await getTransporterByAccount();
-        setTransporters(transporters);
-        setData(buildTableData(transporters));
-        hasLoaded.current = true;
-        setLoading(false);
-      }
-      fetchData();
-    }
-  }, [fetchData, isAuthenticated]);
+  const data = useMemo(
+    () => buildTableData(transporters),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [transporters, t]
+  );
 
-  return { 
-    data, 
-    open, 
+  return {
+    data,
+    open,
     confirmOpen,
-    onSave, 
-    onDelete, 
-    setOpen, 
+    onSave,
+    onDelete,
+    setOpen,
     setConfirmOpen };
 }
 
