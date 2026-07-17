@@ -261,7 +261,7 @@ function Positions({ settings, showGeofence, geofences }: PositionsProps) {
             handleSelected={handleSelected}
             playbackPosition={selectedTrip ? playback.position : null}
             darkMode={darkMode}
-            height="calc(100vh - 280px)"/>
+            height="calc(100vh - 384px)"/>
           {selectedTrip && playback.hasTimeline && (
             <PlaybackControls
               playing={playback.playing}
@@ -279,7 +279,7 @@ function Positions({ settings, showGeofence, geofences }: PositionsProps) {
             filters={values}
             selectedTrip={selectedTrip}
             handleSelected={handleSelected}
-            maxHeight="calc(100vh - 280px)"/>
+            maxHeight="calc(100vh - 384px)"/>
         </Grid>
       </Grid>
     </ArgonBox>

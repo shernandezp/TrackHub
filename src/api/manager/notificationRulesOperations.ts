@@ -31,6 +31,8 @@ export const NotificationRuleItemFragment = graphql(`
     triggerEvent
     recipientSelector
     channelsJson
+    throttlingJson
+    configurationJson
     lastModified
   }
 `);

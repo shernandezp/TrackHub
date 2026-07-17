@@ -15,11 +15,12 @@
 */
 
 /**
- * Converts a string to camel case.
+ * Converts a string to camel case. '-', '_' and '.' act as word separators
+ * (dotted feature keys like 'notifications.email' map to i18n label keys).
  */
 export function toCamelCase(str: string): string {
-    return str.replace(/([-_][a-z])/gi, ($1) => {
-        return $1.toUpperCase().replace('-', '').replace('_', '');
+    return str.replace(/([-_.][a-z])/gi, ($1) => {
+        return $1.toUpperCase().replace('-', '').replace('_', '').replace('.', '');
     }).replace(/(^[A-Z])/g, $1 => $1.toLowerCase());
 }
 

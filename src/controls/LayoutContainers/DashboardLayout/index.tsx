@@ -78,13 +78,16 @@ function DashboardLayout({ bgColor, children, ...rest }: DashboardLayoutProps) {
         },
       })}
     >
+      {/* Full-bleed header band. Anchored left/right instead of width:100vw — 100vw includes the
+          vertical scrollbar width and forced a browser-level horizontal scrollbar on every
+          vertically-scrolling page. */}
       <ArgonBox
         bgColor={background || "info"}
         height="300px"
-        width="100vw"
         position="absolute"
         top={0}
         left={0}
+        right={0}
         sx={darkMode ? { bgColor: (theme) => theme.palette.background.default } : undefined}
         {...rest}
       />

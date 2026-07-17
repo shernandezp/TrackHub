@@ -33,17 +33,26 @@ Coded by www.creative-tim.com
 import { useLocation, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "AuthContext";
-import type { ChangeEventHandler } from "react";
+import { useState } from "react";
+import type { ChangeEventHandler, MouseEvent } from "react";
 // @mui core components
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
 import Icon from "@mui/material/Icon";
+import Badge from "@mui/material/Badge";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
 
 // Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
 import ArgonTypography from "components/ArgonTypography";
 import ArgonInput from "components/ArgonInput";
+
+// In-app notification feed (spec 05)
+import { useMyNotifications, useMarkNotificationRead } from "queries/notifications";
+import { formatDateTime } from "utils/dateUtils";
+import { toCamelCase } from "utils/stringUtils";
 
 // Argon Dashboard 2 MUI example components
 import Breadcrumbs from "controls/Breadcrumbs";
@@ -81,10 +90,37 @@ function DashboardNavbar({
   const [controller, dispatch] = useArgonController();
   const { miniSidenav, transparentNavbar } = controller;
   const route = useLocation().pathname.split("/").slice(1);
-  const { logoff } = useAuth();
+  const { logoff, isAuthenticated } = useAuth();
   const { t } = useTranslation();
+  const [bellAnchor, setBellAnchor] = useState<HTMLElement | null>(null);
+
+  // A failed feed read (e.g. permissions) renders the bell with a zero badge
+  // and an empty menu; the global query-cache handler owns the error toast.
+  const { data: myNotifications, isError: feedError } = useMyNotifications(false, {
+    enabled: isAuthenticated,
+  });
+  const markRead = useMarkNotificationRead();
+  const notifications = feedError ? [] : myNotifications ?? [];
+  const unreadCount = notifications.filter((item) => !item.readAt).length;
 
   const handleMiniSidenav = () => setMiniSidenav(dispatch, !miniSidenav);
+
+  const handleBellOpen = (event: MouseEvent<HTMLElement>) => setBellAnchor(event.currentTarget);
+  const handleBellClose = () => setBellAnchor(null);
+
+  const handleNotificationClick = (notificationDeliveryId: string, readAt?: string | null) => {
+    if (!readAt) {
+      markRead.mutate(notificationDeliveryId);
+    }
+    handleBellClose();
+  };
+
+  const severityColor = (severity?: string | null): "error" | "warning" | "info" => {
+    const normalized = (severity || "").toLowerCase();
+    if (normalized === "critical") return "error";
+    if (normalized === "warning") return "warning";
+    return "info";
+  };
 
   return (
     <AppBar
@@ -125,6 +161,63 @@ function DashboardNavbar({
               )}
             </ArgonBox>
             <ArgonBox color={light ? "white" : "inherit"}>
+              <IconButton
+                sx={navbarIconButton}
+                size="small"
+                onClick={handleBellOpen}
+                aria-label={t("notificationBell.title")}
+              >
+                <Badge badgeContent={unreadCount} color="error">
+                  <Icon
+                    sx={({ palette: { dark, white } }) => ({
+                      color: light && transparentNavbar ? white.main : dark.main,
+                    })}
+                  >
+                    notifications
+                  </Icon>
+                </Badge>
+              </IconButton>
+              <Menu
+                anchorEl={bellAnchor}
+                open={Boolean(bellAnchor)}
+                onClose={handleBellClose}
+                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                transformOrigin={{ vertical: "top", horizontal: "right" }}
+              >
+                {notifications.length === 0 ? (
+                  <MenuItem disabled>
+                    <ArgonTypography variant="caption" color="secondary">
+                      {t("notificationBell.empty")}
+                    </ArgonTypography>
+                  </MenuItem>
+                ) : (
+                  notifications.map((item) => (
+                    <MenuItem
+                      key={item.notificationDeliveryId}
+                      onClick={() =>
+                        handleNotificationClick(item.notificationDeliveryId, item.readAt)
+                      }
+                    >
+                      <ArgonBox display="flex" flexDirection="column" lineHeight={1.25}>
+                        <ArgonTypography
+                          variant="button"
+                          fontWeight={item.readAt ? "regular" : "bold"}
+                        >
+                          {item.eventType
+                            ? t(
+                                `alertEventTypes.${toCamelCase(item.eventType)}` as 'alertEventTypes.geofenceEntered',
+                                { defaultValue: item.eventType }
+                              )
+                            : t("notificationBell.title")}
+                        </ArgonTypography>
+                        <ArgonTypography variant="caption" color={severityColor(item.severity)}>
+                          {item.severity || "-"} &middot; {formatDateTime(item.createdAt)}
+                        </ArgonTypography>
+                      </ArgonBox>
+                    </MenuItem>
+                  ))
+                )}
+              </Menu>
               <Link
                 to={undefined as never}
                 onClick={(e) => {

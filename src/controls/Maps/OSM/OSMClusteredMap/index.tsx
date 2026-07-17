@@ -111,6 +111,11 @@ const OSMClusteredMap = ({
     const mapRef = useRef<L.Map | null>(null);
     const boundsSetRef = useRef(false);
 
+    // Leaflet does not watch its container: re-measure whenever the reactive height changes.
+    useEffect(() => {
+        mapRef.current?.invalidateSize();
+    }, [height]);
+
     useEffect(() => {
         if (markers.length > 0) {
             const newBounds = markers.map(marker => [marker.lat, marker.lng] as [number, number]);
@@ -148,14 +153,16 @@ const OSMClusteredMap = ({
     const tile = darkMode ? OSM_DARK_TILE : OSM_LIGHT_TILE;
 
     return (
-        <div>
+        <div style={{ height, width: "100%" }}>
             <UserLocation setUserLocation={setUserLocation} />
             <MapProviderContext.Provider value={OSM_PROVIDER}>
+                {/* MapContainer props are immutable after mount, so the reactive height lives on
+                    the wrapper div and the map fills it (invalidateSize re-measures on change). */}
                 <MapContainer
                     center={userLocation}
                     zoom={13}
                     preferCanvas={true}
-                    style={{ height: height, width: "100%" }}
+                    style={{ height: "100%", width: "100%" }}
                     ref={mapRef}>
                     <TileLayer
                         key={darkMode ? 'dark' : 'light'}

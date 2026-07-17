@@ -48,6 +48,12 @@ describe('toCamelCase', () => {
   test('converts mixed separators', () => {
     expect(toCamelCase('hello-world_foo')).toBe('helloWorldFoo');
   });
+
+  test('treats dots as separators (I18N-01 feature keys)', () => {
+    expect(toCamelCase('notifications.email')).toBe('notificationsEmail');
+    expect(toCamelCase('gps.integration')).toBe('gpsIntegration');
+    expect(toCamelCase('gps.positionHistory')).toBe('gpsPositionHistory');
+  });
 });
 
 describe('cleanString', () => {

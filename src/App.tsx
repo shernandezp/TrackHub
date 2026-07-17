@@ -37,6 +37,7 @@ import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 // @mui material components
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
+import GlobalStyles from "@mui/material/GlobalStyles";
 import Icon from "@mui/material/Icon";
 
 // Argon Dashboard 2 MUI components
@@ -258,6 +259,9 @@ export default function App() {
     <LoadingContext.Provider value={{ loading, setLoading }}>
       <ThemeProvider theme={darkMode ? themeDark : theme}>
         <CssBaseline />
+        {/* The page itself never scrolls laterally (full-bleed bands, sub-pixel grid rounding
+            under browser zoom, etc. must clip); wide content scrolls inside its own container. */}
+        <GlobalStyles styles={{ html: { overflowX: "clip" }, body: { overflowX: "clip" } }} />
         <ErrorBoundary>
           {isAuthenticated && !accountOperational ? (
             <SuspensionScreen status={accountStatus} branding={branding} />

@@ -141,7 +141,8 @@
     "poiLayer": "Points of Interest",
     "followMode": "Follow",
     "trail": "Trail",
-    "darkMap": "Dark map"
+    "darkMap": "Dark map",
+    "criticalAlerts": "Critical Alerts"
   },
   "device": {
     "title": "Devices",
@@ -247,12 +248,113 @@
     "type": "Type",
     "status": "Status",
     "triggerEvent": "Trigger Event",
-    "recipientSelector": "Recipient Selector",
-    "channelsJson": "Channels (JSON)",
-    "throttlingJson": "Throttling (JSON)",
-    "configurationJson": "Configuration (JSON)",
+    "channels": "Channels",
+    "recipients": "Recipients",
+    "subscribers": "Notify subscribers",
+    "contacts": "Additional contacts",
+    "addContact": "Add contact",
+    "contactAddress": "Address",
+    "throttling": "Throttling",
+    "dedupeWindowMinutes": "Dedupe Window (minutes)",
+    "digest": "Digest",
+    "digestModes": {
+      "none": "None",
+      "hourly": "Hourly",
+      "daily": "Daily"
+    },
+    "maxPerHour": "Max per Hour",
+    "webhookUrl": "Webhook URL",
+    "webhookSecret": "Webhook Secret",
     "enabled": "Enabled",
     "disable": "Disable"
+  },
+  "alertEventTypes": {
+    "geofenceEntered": "Geofence Entered",
+    "geofenceExited": "Geofence Exited",
+    "geofenceDwellExceeded": "Geofence Dwell Exceeded",
+    "communicationLoss": "Communication Loss",
+    "gpsCredentialExpiring": "GPS Credential Expiring",
+    "gpsOperatorPositionSyncFailed": "GPS Operator Sync Failed",
+    "documentExpiring": "Document Expiring",
+    "documentExpired": "Document Expired",
+    "notificationDeliveryFailed": "Notification Delivery Failed"
+  },
+  "notificationChannels": {
+    "inApp": "In-App",
+    "email": "Email",
+    "webhook": "Webhook",
+    "whatsApp": "WhatsApp"
+  },
+  "alertSubscriptions": {
+    "title": "Alert Subscriptions",
+    "create": "Create Subscription",
+    "update": "Update Subscription",
+    "principalType": "Recipient Type",
+    "principalId": "Recipient Id",
+    "user": "User",
+    "driver": "Driver",
+    "eventType": "Event Type",
+    "allEvents": "All events",
+    "channel": "Channel",
+    "contact": "Contact",
+    "enabled": "Enabled",
+    "deleteTitle": "Delete Subscription",
+    "deleteMessage": "Are you sure you want to delete this subscription?",
+    "invalidPrincipalId": "The recipient id must be a valid GUID",
+    "invalidContact": "The contact does not match the selected channel format"
+  },
+  "notificationDeliveries": {
+    "title": "Notification Deliveries",
+    "channel": "Channel",
+    "recipient": "Recipient",
+    "status": "Status",
+    "attempts": "Attempts",
+    "error": "Error",
+    "sentAt": "Sent At",
+    "readAt": "Read At",
+    "retry": "Retry",
+    "sentCount": "Sent (7 days)",
+    "failedCount": "Failed (7 days)",
+    "pendingCount": "Pending (7 days)",
+    "filterStatus": "Status",
+    "filterChannel": "Channel",
+    "allStatuses": "All statuses",
+    "allChannels": "All channels",
+    "statuses": {
+      "pending": "Pending",
+      "sending": "Sending",
+      "sent": "Sent",
+      "failed": "Failed",
+      "deferred": "Deferred",
+      "digested": "Digested"
+    }
+  },
+  "notificationTemplates": {
+    "title": "Notification Templates",
+    "create": "Create Template",
+    "update": "Update Template",
+    "templateKey": "Template",
+    "channel": "Channel",
+    "locale": "Language",
+    "localeEn": "English",
+    "localeEs": "Spanish",
+    "subject": "Subject",
+    "body": "Body",
+    "active": "Active",
+    "scope": "Scope",
+    "default": "Default",
+    "custom": "Custom",
+    "deleteTitle": "Delete Template",
+    "deleteMessage": "Are you sure you want to delete this template override?",
+    "placeholders": "Available tokens",
+    "keys": {
+      "testNotification": "Test Notification",
+      "notificationDigest": "Notification Digest"
+    }
+  },
+  "notificationBell": {
+    "title": "Notifications",
+    "empty": "No notifications"
   },
   "publicLinks": {
     "title": "Public Links",
@@ -553,7 +655,11 @@
     "supportGrants": "Support Grants",
     "synchronizedDevices": "Synchronized Devices",
     "tripManagement": "Trip Management",
-    "driverMobile": "Driver Mobile"
+    "driverMobile": "Driver Mobile",
+    "notificationsEmail": "Email Notifications",
+    "notificationsWhatsapp": "WhatsApp Notifications",
+    "gpsIntegration": "GPS Integration",
+    "gpsPositionHistory": "GPS Position History"
   },
   "role": {
     "title": "Roles",

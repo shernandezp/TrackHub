@@ -40,7 +40,9 @@ const displayFeatures = [
   'driver-mobile',
   'public-links',
   'documents',
-  'notifications'
+  'notifications',
+  'notifications.email',
+  'notifications.whatsapp'
 ];
 
 function TextCell({ children }: { children?: ReactNode }) {

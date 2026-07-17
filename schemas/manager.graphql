@@ -84,6 +84,16 @@ type Query {
     @cost(weight: "10")
   notificationRules(query: GetNotificationRulesQueryInput!): [NotificationRuleVm!]!
     @cost(weight: "10")
+  notificationDeliveries(query: GetNotificationDeliveriesQueryInput!): [NotificationDeliveryVm!]!
+    @cost(weight: "10")
+  alertSubscriptions(query: GetAlertSubscriptionsQueryInput!): [AlertSubscriptionVm!]!
+    @cost(weight: "10")
+  notificationTemplates(query: GetNotificationTemplatesQueryInput!): [NotificationTemplateVm!]!
+    @cost(weight: "10")
+  myNotifications(query: GetMyNotificationsQueryInput!): [MyNotificationVm!]!
+    @cost(weight: "10")
+  deliveryHealth(query: GetDeliveryHealthQueryInput!): [DeliveryHealthVm!]!
+    @cost(weight: "10")
   operatorCredentialMetadata(query: GetOperatorCredentialMetadataQueryInput!): CredentialMetadataVm
     @cost(weight: "10")
   operator(query: GetOperatorQueryInput!): OperatorVm! @cost(weight: "10")
@@ -231,6 +241,24 @@ type Mutation {
     @cost(weight: "10")
   createNotificationDelivery(command: CreateNotificationDeliveryCommandInput!): NotificationDeliveryVm!
     @cost(weight: "10")
+  createAlertSubscription(command: CreateAlertSubscriptionCommandInput!): AlertSubscriptionVm!
+    @cost(weight: "10")
+  updateAlertSubscription(command: UpdateAlertSubscriptionCommandInput!): Boolean!
+    @cost(weight: "10")
+  deleteAlertSubscription(command: DeleteAlertSubscriptionCommandInput!): UUID!
+    @cost(weight: "10")
+  createNotificationTemplate(command: CreateNotificationTemplateCommandInput!): NotificationTemplateVm!
+    @cost(weight: "10")
+  updateNotificationTemplate(command: UpdateNotificationTemplateCommandInput!): Boolean!
+    @cost(weight: "10")
+  deleteNotificationTemplate(command: DeleteNotificationTemplateCommandInput!): UUID!
+    @cost(weight: "10")
+  retryNotificationDelivery(command: RetryNotificationDeliveryCommandInput!): Boolean!
+    @cost(weight: "10")
+  markNotificationRead(command: MarkNotificationReadCommandInput!): Boolean!
+    @cost(weight: "10")
+  sendTestNotification(command: SendTestNotificationCommandInput!): NotificationDeliveryVm!
+    @cost(weight: "10")
   createOperator(command: CreateOperatorCommandInput!): OperatorVm!
     @cost(weight: "10")
   updateOperator(id: UUID!, command: UpdateOperatorCommandInput!): Boolean!
@@ -367,6 +395,18 @@ type AlertEventVm {
   lastModified: DateTime!
 }
 
+type AlertSubscriptionVm {
+  alertSubscriptionId: UUID!
+  accountId: UUID!
+  principalType: String!
+  principalId: UUID!
+  eventTypeFilter: String
+  channel: String!
+  contact: String
+  enabled: Boolean!
+  lastModified: DateTime!
+}
+
 type AuditEventVm {
   auditEventId: UUID!
   accountId: UUID!
@@ -450,6 +490,13 @@ type CurrentPrincipalVm {
   scopes: [String!]!
   audiences: [String!]!
   correlationId: String
+}
+
+type DeliveryHealthVm {
+  channel: String!
+  status: String!
+  count: Int!
+  averageAttempts: Float!
 }
 
 type DeviceProviderStatusCountVm {
@@ -633,6 +680,19 @@ type GroupVm {
   accountId: UUID!
 }
 
+type MyNotificationVm {
+  notificationDeliveryId: UUID!
+  alertEventId: UUID
+  eventType: String
+  severity: String
+  sourceModule: String
+  resourceType: String
+  resourceId: String
+  payloadJson: String
+  createdAt: DateTime!
+  readAt: DateTime
+}
+
 type NotificationDeliveryVm {
   notificationDeliveryId: UUID!
   accountId: UUID!
@@ -661,6 +721,18 @@ type NotificationRuleVm {
   channelsJson: String!
   throttlingJson: String
   configurationJson: String
+  lastModified: DateTime!
+}
+
+type NotificationTemplateVm {
+  notificationTemplateId: UUID!
+  accountId: UUID
+  templateKey: String!
+  channel: String!
+  locale: String!
+  subject: String
+  body: String!
+  active: Boolean!
   lastModified: DateTime!
 }
 
@@ -885,6 +957,16 @@ input AlertEventDtoInput {
   deduplicationKey: String!
 }
 
+input AlertSubscriptionDtoInput {
+  accountId: UUID!
+  principalType: String!
+  principalId: UUID!
+  eventTypeFilter: String
+  channel: String!
+  contact: String
+  enabled: Boolean!
+}
+
 input ApproveAccountSupportGrantCommandInput {
   accountSupportGrantId: UUID!
   approvedBy: String!
@@ -941,6 +1023,10 @@ input CreateAccountSupportGrantCommandInput {
   accountSupportGrant: AccountSupportGrantDtoInput!
 }
 
+input CreateAlertSubscriptionCommandInput {
+  subscription: AlertSubscriptionDtoInput!
+}
+
 input CreateAuditEventCommandInput {
   auditEvent: AuditEventDtoInput!
 }
@@ -975,6 +1061,10 @@ input CreateNotificationDeliveryCommandInput {
 
 input CreateNotificationRuleCommandInput {
   notificationRule: NotificationRuleDtoInput!
+}
+
+input CreateNotificationTemplateCommandInput {
+  template: NotificationTemplateDtoInput!
 }
 
 input CreateOperatorCommandInput {
@@ -1018,8 +1108,16 @@ input DeactivateDriverCommandInput {
   driverId: UUID!
 }
 
+input DeleteAlertSubscriptionCommandInput {
+  alertSubscriptionId: UUID!
+}
+
 input DeleteDocumentReferenceCommandInput {
   documentId: UUID!
+}
+
+input DeleteNotificationTemplateCommandInput {
+  notificationTemplateId: UUID!
 }
 
 input DeviceDtoInput {
@@ -1211,6 +1309,13 @@ input GetAlertEventsQueryInput {
   take: Int! = 50
 }
 
+input GetAlertSubscriptionsQueryInput {
+  accountId: UUID!
+  principalId: UUID
+  skip: Int! = 0
+  take: Int! = 50
+}
+
 input GetAssignedDeviceTransportersByOperatorQueryInput {
   accountId: UUID!
   operatorId: UUID!
@@ -1238,6 +1343,12 @@ input GetCredentialByOperatorQueryInput {
 
 input GetCredentialQueryInput {
   id: UUID!
+}
+
+input GetDeliveryHealthQueryInput {
+  accountId: UUID!
+  from: DateTime!
+  to: DateTime!
 }
 
 input GetDeviceQueryInput {
@@ -1317,10 +1428,30 @@ input GetGroupQueryInput {
   id: Long!
 }
 
+input GetMyNotificationsQueryInput {
+  unreadOnly: Boolean! = false
+  skip: Int! = 0
+  take: Int! = 50
+}
+
+input GetNotificationDeliveriesQueryInput {
+  accountId: UUID!
+  status: String
+  channel: String
+  from: DateTime
+  to: DateTime
+  skip: Int! = 0
+  take: Int! = 50
+}
+
 input GetNotificationRulesQueryInput {
   accountId: UUID!
   skip: Int! = 0
   take: Int! = 50
+}
+
+input GetNotificationTemplatesQueryInput {
+  accountId: UUID!
 }
 
 input GetOperatorByTransporterQueryInput {
@@ -1426,6 +1557,10 @@ input MarkDocumentUploadedCommandInput {
   status: String!
 }
 
+input MarkNotificationReadCommandInput {
+  notificationDeliveryId: UUID!
+}
+
 input NotificationDeliveryDtoInput {
   accountId: UUID!
   notificationRuleId: UUID
@@ -1446,6 +1581,16 @@ input NotificationRuleDtoInput {
   channelsJson: String!
   throttlingJson: String
   configurationJson: String
+}
+
+input NotificationTemplateDtoInput {
+  accountId: UUID
+  templateKey: String!
+  channel: String!
+  locale: String!
+  subject: String
+  body: String!
+  active: Boolean!
 }
 
 input OperatorDtoInput {
@@ -1500,6 +1645,10 @@ input ResolveAlertEventCommandInput {
   alertEventId: UUID!
 }
 
+input RetryNotificationDeliveryCommandInput {
+  notificationDeliveryId: UUID!
+}
+
 input RevokeAccountSupportGrantCommandInput {
   accountSupportGrantId: UUID!
   revokedBy: String!
@@ -1514,6 +1663,12 @@ input SearchDocumentsQueryInput {
   filter: DocumentSearchFilterInput!
   skip: Int! = 0
   take: Int! = 50
+}
+
+input SendTestNotificationCommandInput {
+  accountId: UUID!
+  channel: String!
+  contact: String
 }
 
 input SetAccountFeatureCommandInput {
@@ -1606,6 +1761,11 @@ input UpdateAccountSettingsCommandInput {
   accountSettings: AccountSettingsDtoInput!
 }
 
+input UpdateAlertSubscriptionCommandInput {
+  alertSubscriptionId: UUID!
+  subscription: AlertSubscriptionDtoInput!
+}
+
 input UpdateCredentialCommandInput {
   credential: UpdateCredentialDtoInput!
 }
@@ -1653,6 +1813,11 @@ input UpdateGroupDtoInput {
 input UpdateNotificationRuleCommandInput {
   notificationRuleId: UUID!
   notificationRule: NotificationRuleDtoInput!
+}
+
+input UpdateNotificationTemplateCommandInput {
+  notificationTemplateId: UUID!
+  template: NotificationTemplateDtoInput!
 }
 
 input UpdateOperatorCommandInput {

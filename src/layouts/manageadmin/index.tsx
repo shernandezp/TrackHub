@@ -28,6 +28,9 @@ import ManageDrivers from "layouts/manageadmin/components/drivers";
 import ManageAuditTrail from "layouts/manageadmin/components/auditTrail";
 import ManageNotificationRules from "layouts/manageadmin/components/notificationRules";
 import ManageAlertEvents from "layouts/manageadmin/components/alertEvents";
+import ManageAlertSubscriptions from "layouts/manageadmin/components/alertSubscriptions";
+import ManageNotificationDeliveries from "layouts/manageadmin/components/notificationDeliveries";
+import ManageNotificationTemplates from "layouts/manageadmin/components/notificationTemplates";
 import ManagePublicLinks from "layouts/manageadmin/components/publicLinks";
 import ManageDocuments from "layouts/manageadmin/components/documents";
 import ManageBackgroundJobs from "layouts/manageadmin/components/backgroundJobs";
@@ -55,6 +58,9 @@ function ManageAdmin() {
           <ManageAuditTrail/>
           <ManageNotificationRules/>
           <ManageAlertEvents/>
+          <ManageAlertSubscriptions/>
+          <ManageNotificationDeliveries/>
+          <ManageNotificationTemplates/>
           <ManagePublicLinks/>
           <ManageDocuments/>
           <ManageBackgroundJobs/>

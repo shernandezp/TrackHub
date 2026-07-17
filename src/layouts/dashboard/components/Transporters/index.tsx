@@ -34,6 +34,8 @@ import { getOperators } from 'api/manager/operators';
 import type { OperatorSummary } from 'api/manager/operators';
 import { getDevicesByAccount } from 'api/manager/devices';
 import type { Device } from 'api/manager/devices';
+import { getAccountByUser } from 'api/manager/accounts';
+import { getAlertEvents } from 'api/manager/alertEvents';
 import { getDevicePositions } from 'api/router/router';
 import type { Position } from 'api/router/router';
 import { getTransportersInGeofence } from 'api/geofencing/geofencing';
@@ -82,9 +84,15 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
   const [active, setActive] = useState(0);
   const [movement, setMovement] = useState(0);
   const [inGeofence, setInGeofence] = useState(0);
+  const [criticalAlerts, setCriticalAlerts] = useState(0);
   const [selectedTransporter, setSelectedTransporter] = useState<string | null>(null);
   const [typeSummary, setTypeSummary] = useState<TypeSummaryItem[]>([]);
-  const [tableHeight, setTableHeight] = useState('calc(100vh - 280px)');
+  // Distance from the page top to the map row plus the fixed below-map spacing (70px). The header
+  // stack above the map (navbar, tabs, stat cards, filter bar) is width-dependent — the filter bar
+  // wraps on smaller screens — so it is measured, not hardcoded: the dashboard must always fit the
+  // viewport with no page-level scroll (the map view and the side grid's own scroll depend on it).
+  const [mapViewportOffset, setMapViewportOffset] = useState(371);
+  const [tableHeight, setTableHeight] = useState('calc(100vh - 371px)');
   // Plate/name search lives in the page's top-right search box (searchQuery);
   // the filter bar only narrows by type/group/operator/status.
   const [filters, setFilters] = useState<DashboardFilters>({ transporterType: 'all', groupId: 'all', operatorId: 'all', status: 'all' });
@@ -121,12 +129,47 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
     setTypeSummary(Object.values(typesObject));
   }, [positions]);
 
+  // Self-fitting: absorb any page-level overflow into the offset whenever the app content's
+  // height changes (the #root element grows with content; ResizeObserver on it also catches
+  // font/wrap shifts that happen without a React render). The header stack (cards, filter bar)
+  // wraps differently per width, so this converges to an exact viewport fit instead of chasing a
+  // constant; a window resize re-fits from the base.
+  useEffect(() => {
+    let frame = 0;
+    const fit = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const doc = document.documentElement;
+        const root = document.getElementById('root') ?? document.body;
+        const excess = doc.scrollHeight - doc.clientHeight;
+        if (excess > 0) {
+          // Page overflows: shrink the map/grid by the overflow.
+          setMapViewportOffset((offset) => offset + excess);
+          return;
+        }
+        // Page fits with room to spare: grow the map/grid into the free space.
+        const slack = doc.clientHeight - Math.ceil(root.getBoundingClientRect().bottom);
+        if (slack > 1) {
+          setMapViewportOffset((offset) => Math.max(200, offset - slack));
+        }
+      });
+    };
+    const observer = new ResizeObserver(fit);
+    observer.observe(document.getElementById('root') ?? document.body);
+    window.addEventListener('resize', fit);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener('resize', fit);
+    };
+  }, []);
+
   useEffect(() => {
     if (chipContainerRef.current) {
       const chipHeight = chipContainerRef.current.offsetHeight;
-      setTableHeight(`calc(100vh - ${chipHeight + 280}px)`); // Viewport height minus stats cards, navbar, and spacing
+      setTableHeight(`calc(100vh - ${chipHeight + mapViewportOffset}px)`); // Viewport minus the measured header stack and chip row
     }
-  }, [typeSummary]);
+  }, [typeSummary, mapViewportOffset]);
 
   // Client-side ring buffer of the last N received points per unit,
   // used to render the trail of the selected unit.
@@ -193,6 +236,23 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
     }
   };
 
+  // Open critical alerts (spec 05): anything not acknowledged/resolved with
+  // Critical severity. A failed read (e.g. permissions) keeps the count at 0.
+  const fetchCriticalAlerts = async () => {
+    try {
+      const account = await getAccountByUser();
+      if (!account?.accountId) return;
+      const events = await getAlertEvents(account.accountId, 0, 100);
+      const closedStatuses = ['acknowledged', 'resolved'];
+      setCriticalAlerts((events || []).filter(event =>
+        (event.severity || '').toLowerCase() === 'critical' &&
+        !closedStatuses.includes((event.status || '').toLowerCase())
+      ).length);
+    } catch {
+      setCriticalAlerts(0);
+    }
+  };
+
   const fetchFilterOptions = async () => {
     const [groupList, operatorList] = await Promise.all([
       // A failed group read is surfaced by the global toast; keep the group
@@ -217,6 +277,7 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
       calculateReference();
       fetchPositions();
       fetchFilterOptions();
+      fetchCriticalAlerts();
     }
   }, [isAuthenticated]);
 
@@ -370,7 +431,7 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
   return (
     <ArgonBox py={1}>
         <Grid container spacing={3} mb={1}>
-            <Grid size={{xs: 12, md:6, lg:3}}>
+            <Grid size={{xs: 12, md:6, lg:2.4}}>
                 <DetailedStatisticsCard
                     title={t("dashboard.totalTitle")}
                     count={positions.length}
@@ -378,7 +439,7 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
                     percentage={{ color: "success", count: "", hide: true }}
                 />
             </Grid>
-            <Grid size={{xs: 12, md:6, lg:3}}>
+            <Grid size={{xs: 12, md:6, lg:2.4}}>
                 <DetailedStatisticsCard
                     title={t("dashboard.activeTitle")}
                     count={active}
@@ -386,7 +447,7 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
                     percentage={{ color: "success", count: `${getPercentage(active, positions.length)}%`, hide: false }}
                 />
             </Grid>
-            <Grid size={{xs:12, md:6, lg:3}}>
+            <Grid size={{xs: 12, md:6, lg:2.4}}>
                 <DetailedStatisticsCard
                     title={t("dashboard.movementTitle")}
                     count={movement}
@@ -394,7 +455,7 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
                     percentage={{ color: "error", count: `${getPercentage(movement, positions.length)}%`, hide: false }}
                 />
             </Grid>
-            <Grid size={{xs: 12, md:6, lg:3}}>
+            <Grid size={{xs: 12, md:6, lg:2.4}}>
                 <DetailedStatisticsCard
                     title={t("dashboard.inGeofence")}
                     count={inGeofence}
@@ -403,6 +464,14 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
                       onClick: () => setShowGeofence(!showGeofence),
                       component: <i className="ni ni-pin-3" /> }}
                     percentage={{ color: "success", count: `${getPercentage(inGeofence, positions.length)}%`, hide: false }}
+                />
+            </Grid>
+            <Grid size={{xs: 12, md:6, lg:2.4}}>
+                <DetailedStatisticsCard
+                    title={t("dashboard.criticalAlerts")}
+                    count={criticalAlerts}
+                    icon={{ color: "error", component: <i className="ni ni-notification-70" /> }}
+                    percentage={{ color: "success", count: "", hide: true }}
                 />
             </Grid>
         </Grid>
@@ -439,7 +508,7 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
                     followUnit={followMode ? selectedTransporter : null}
                     onFollowDisengage={handleFollowDisengage}
                     darkMode={darkMode}
-                    height="calc(100vh - 280px)"/>
+                    height={`calc(100vh - ${mapViewportOffset}px)`}/>
                 <RefreshCounter
                     settings={settings}
                     fetchPositions={fetchPositions}

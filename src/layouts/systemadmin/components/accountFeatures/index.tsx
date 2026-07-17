@@ -67,7 +67,9 @@ const knownFeatures = [
   'driver-mobile',
   'public-links',
   'documents',
-  'notifications'
+  'notifications',
+  'notifications.email',
+  'notifications.whatsapp'
 ];
 
 // Storage/cost features carry an editable configuration value stored in configurationJson.

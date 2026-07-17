@@ -23,26 +23,29 @@ import TableAccordion from "controls/Accordions/TableAccordion";
 import ArgonButton from "components/ArgonButton";
 import ArgonTypography from "components/ArgonTypography";
 import useForm from "controls/Dialogs/useForm";
-import NotificationRuleDialog from "layouts/manageadmin/components/notificationRules/NotificationRuleDialog";
+import NotificationRuleDialog, {
+  ruleToFormValues,
+  formValuesToRuleInput,
+} from "layouts/manageadmin/components/notificationRules/NotificationRuleDialog";
 import type { NotificationRuleFormValues } from "layouts/manageadmin/components/notificationRules/NotificationRuleDialog";
 import { getAccountByUser } from "api/manager/accounts";
 import type { Account } from "api/manager/accounts";
+import { getAccountFeatures } from "api/manager/accountFeatures";
 import {
   getNotificationRules,
   createNotificationRule,
   updateNotificationRule,
   disableNotificationRule,
 } from "api/manager/notificationRules";
-import type { NotificationRule, NotificationRuleDtoInput } from "api/manager/notificationRules";
+import type { NotificationRule } from "api/manager/notificationRules";
 import { notifyApiError } from "api/core/errors";
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from "utils/dateUtils";
-
-// Change event shape emitted by the vendored dialog controls.
-type FormChangeHandler = (
-  event: { target: { name: string; value: string; type?: string; checked?: boolean } }
-) => void;
-
+import {
+  NOTIFICATIONS_FEATURE_KEY,
+  NOTIFICATIONS_EMAIL_FEATURE_KEY,
+  NOTIFICATIONS_WHATSAPP_FEATURE_KEY,
+} from 'utils/notificationsCatalog';
 
 function TextCell({ children }: { children?: ReactNode }) {
   return (
@@ -58,6 +61,9 @@ function ManageNotificationRules() {
   const [expanded, setExpanded] = useState(false);
   const [account, setAccount] = useState<Account | null>(null);
   const [rules, setRules] = useState<NotificationRule[]>([]);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [emailEnabled, setEmailEnabled] = useState(false);
+  const [whatsAppEnabled, setWhatsAppEnabled] = useState(false);
   const [open, setOpen] = useState(false);
   const [values, handleChange, setValues, setErrors, validate, errors] = useForm<NotificationRuleFormValues>({ enabled: true });
   const loaded = useRef(false);
@@ -68,8 +74,16 @@ function ManageNotificationRules() {
       const currentAccount = await getAccountByUser();
       if (!currentAccount?.accountId) return;
       setAccount(currentAccount);
-      const items = await getNotificationRules(currentAccount.accountId);
+      const [items, features] = await Promise.all([
+        getNotificationRules(currentAccount.accountId),
+        // Channel entitlements only gate UI affordances — the backend is authoritative.
+        getAccountFeatures(currentAccount.accountId).catch(() => []),
+      ]);
       setRules(items || []);
+      const enabled = (key: string) => !!(features || []).find(f => f.featureKey === key)?.enabled;
+      setNotificationsEnabled(enabled(NOTIFICATIONS_FEATURE_KEY));
+      setEmailEnabled(enabled(NOTIFICATIONS_EMAIL_FEATURE_KEY));
+      setWhatsAppEnabled(enabled(NOTIFICATIONS_WHATSAPP_FEATURE_KEY));
     } catch (error) {
       notifyApiError(error);
     } finally {
@@ -85,12 +99,20 @@ function ManageNotificationRules() {
   }, [expanded]);
 
   const handleAddClick = () => {
-    setValues({ accountId: account?.accountId, enabled: true });
+    setValues({
+      accountId: account?.accountId,
+      enabled: true,
+      subscribers: true,
+      channels: [],
+      roles: [],
+      contacts: [],
+      digest: 'None',
+    });
     setErrors({});
   };
 
   const handleEdit = (rule: NotificationRule) => {
-    setValues({ ...rule, accountId: account?.accountId || rule.accountId });
+    setValues(ruleToFormValues(rule));
     setErrors({});
     setOpen(true);
   };
@@ -99,20 +121,7 @@ function ManageNotificationRules() {
     if (!validate(['ruleKey', 'ruleType', 'triggerEvent']) || !account?.accountId) return;
     setLoading(true);
     try {
-      // recipientSelector/channelsJson are required (String!) by the backend but
-      // not enforced by the dialog — default them so the typed create/update succeeds.
-      // validate() gates the required fields, so assert the mutation input at the boundary.
-      const rule = {
-        accountId: account.accountId,
-        ruleKey: values.ruleKey,
-        ruleType: values.ruleType,
-        enabled: values.enabled !== false,
-        triggerEvent: values.triggerEvent,
-        recipientSelector: values.recipientSelector ?? '',
-        channelsJson: values.channelsJson ?? '',
-        throttlingJson: values.throttlingJson ?? null,
-        configurationJson: values.configurationJson ?? null,
-      } as NotificationRuleDtoInput;
+      const rule = formValuesToRuleInput(values, account.accountId);
       if (values.notificationRuleId) {
         await updateNotificationRule(values.notificationRuleId, rule);
       } else {
@@ -145,7 +154,7 @@ function ManageNotificationRules() {
     <>
       <TableAccordion
         title={t('notificationRules.title')}
-        showAddIcon={true}
+        showAddIcon={notificationsEnabled}
         expanded={expanded}
         setOpen={setOpen}
         handleAddClick={handleAddClick}
@@ -187,7 +196,10 @@ function ManageNotificationRules() {
         handleSubmit={handleSubmit}
         values={values}
         handleChange={handleChange}
+        setValues={setValues}
         errors={errors}
+        emailEnabled={emailEnabled}
+        whatsAppEnabled={whatsAppEnabled}
       />
     </>
   );

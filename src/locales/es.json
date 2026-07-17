@@ -141,7 +141,8 @@
     "poiLayer": "Puntos de Interés",
     "followMode": "Seguir",
     "trail": "Recorrido",
-    "darkMap": "Mapa oscuro"
+    "darkMap": "Mapa oscuro",
+    "criticalAlerts": "Alertas Críticas"
   },
   "device": {
     "title": "Dispositivos",
@@ -247,12 +248,113 @@
     "type": "Tipo",
     "status": "Estado",
     "triggerEvent": "Evento Disparador",
-    "recipientSelector": "Selector de Destinatarios",
-    "channelsJson": "Canales (JSON)",
-    "throttlingJson": "Limitación (JSON)",
-    "configurationJson": "Configuración (JSON)",
+    "channels": "Canales",
+    "recipients": "Destinatarios",
+    "subscribers": "Notificar a los suscriptores",
+    "contacts": "Contactos adicionales",
+    "addContact": "Agregar contacto",
+    "contactAddress": "Dirección",
+    "throttling": "Limitación",
+    "dedupeWindowMinutes": "Ventana de Deduplicación (minutos)",
+    "digest": "Resumen",
+    "digestModes": {
+      "none": "Ninguno",
+      "hourly": "Cada hora",
+      "daily": "Diario"
+    },
+    "maxPerHour": "Máximo por Hora",
+    "webhookUrl": "URL del Webhook",
+    "webhookSecret": "Secreto del Webhook",
     "enabled": "Habilitada",
     "disable": "Deshabilitar"
+  },
+  "alertEventTypes": {
+    "geofenceEntered": "Entrada a Geocerca",
+    "geofenceExited": "Salida de Geocerca",
+    "geofenceDwellExceeded": "Permanencia Excedida en Geocerca",
+    "communicationLoss": "Pérdida de Comunicación",
+    "gpsCredentialExpiring": "Credencial GPS por Expirar",
+    "gpsOperatorPositionSyncFailed": "Fallo de Sincronización del Operador GPS",
+    "documentExpiring": "Documento por Vencer",
+    "documentExpired": "Documento Vencido",
+    "notificationDeliveryFailed": "Fallo de Entrega de Notificación"
+  },
+  "notificationChannels": {
+    "inApp": "En la Aplicación",
+    "email": "Correo",
+    "webhook": "Webhook",
+    "whatsApp": "WhatsApp"
+  },
+  "alertSubscriptions": {
+    "title": "Suscripciones de Alertas",
+    "create": "Crear Suscripción",
+    "update": "Actualizar Suscripción",
+    "principalType": "Tipo de Destinatario",
+    "principalId": "Id del Destinatario",
+    "user": "Usuario",
+    "driver": "Conductor",
+    "eventType": "Tipo de Evento",
+    "allEvents": "Todos los eventos",
+    "channel": "Canal",
+    "contact": "Contacto",
+    "enabled": "Habilitada",
+    "deleteTitle": "Eliminar Suscripción",
+    "deleteMessage": "¿Está seguro de que desea eliminar esta suscripción?",
+    "invalidPrincipalId": "El id del destinatario debe ser un GUID válido",
+    "invalidContact": "El contacto no coincide con el formato del canal seleccionado"
+  },
+  "notificationDeliveries": {
+    "title": "Entregas de Notificaciones",
+    "channel": "Canal",
+    "recipient": "Destinatario",
+    "status": "Estado",
+    "attempts": "Intentos",
+    "error": "Error",
+    "sentAt": "Enviada",
+    "readAt": "Leída",
+    "retry": "Reintentar",
+    "sentCount": "Enviadas (7 días)",
+    "failedCount": "Fallidas (7 días)",
+    "pendingCount": "Pendientes (7 días)",
+    "filterStatus": "Estado",
+    "filterChannel": "Canal",
+    "allStatuses": "Todos los estados",
+    "allChannels": "Todos los canales",
+    "statuses": {
+      "pending": "Pendiente",
+      "sending": "Enviando",
+      "sent": "Enviada",
+      "failed": "Fallida",
+      "deferred": "Diferida",
+      "digested": "En resumen"
+    }
+  },
+  "notificationTemplates": {
+    "title": "Plantillas de Notificación",
+    "create": "Crear Plantilla",
+    "update": "Actualizar Plantilla",
+    "templateKey": "Plantilla",
+    "channel": "Canal",
+    "locale": "Idioma",
+    "localeEn": "Inglés",
+    "localeEs": "Español",
+    "subject": "Asunto",
+    "body": "Cuerpo",
+    "active": "Activa",
+    "scope": "Alcance",
+    "default": "Predeterminada",
+    "custom": "Personalizada",
+    "deleteTitle": "Eliminar Plantilla",
+    "deleteMessage": "¿Está seguro de que desea eliminar esta plantilla personalizada?",
+    "placeholders": "Tokens disponibles",
+    "keys": {
+      "testNotification": "Notificación de Prueba",
+      "notificationDigest": "Resumen de Notificaciones"
+    }
+  },
+  "notificationBell": {
+    "title": "Notificaciones",
+    "empty": "No hay notificaciones"
   },
   "publicLinks": {
     "title": "Enlaces Públicos",
@@ -553,7 +655,11 @@
     "supportGrants": "Concesiones de Soporte",
     "synchronizedDevices": "Dispositivos Sincronizados",
     "tripManagement": "Gestión de Viajes",
-    "driverMobile": "Móvil del Conductor"
+    "driverMobile": "Móvil del Conductor",
+    "notificationsEmail": "Notificaciones por Correo",
+    "notificationsWhatsapp": "Notificaciones por WhatsApp",
+    "gpsIntegration": "Integración GPS",
+    "gpsPositionHistory": "Historial de Posiciones GPS"
   },
   "role": {
     "title": "Roles",
