@@ -31,6 +31,14 @@ export const GeofenceFieldsFragment = graphql(`
     type
     color
     active
+    circleCenter {
+      latitude
+      longitude
+    }
+    circleRadiusMeters
+    alertOnEntry
+    alertOnExit
+    dwellThresholdMinutes
     geom {
       srid
       coordinates {
@@ -50,16 +58,35 @@ export const GetGeofenceDocument = graphql(`
 `);
 
 export const GetGeofencesByAccountDocument = graphql(`
-  query GetGeofencesByAccount($enableCaching: Boolean!) {
-    geofencesByAccount(query: { enableCaching: $enableCaching }) {
-      ...GeofenceFields
+  query GetGeofencesByAccount(
+    $enableCaching: Boolean!
+    $skip: Int
+    $take: Int
+    $type: Short
+    $active: Boolean
+    $search: String
+  ) {
+    geofencesByAccount(
+      query: {
+        enableCaching: $enableCaching
+        skip: $skip
+        take: $take
+        type: $type
+        active: $active
+        search: $search
+      }
+    ) {
+      items {
+        ...GeofenceFields
+      }
+      totalCount
     }
   }
 `);
 
 export const GetTransportersInGeofenceDocument = graphql(`
-  query GetTransportersInGeofence {
-    transportersInGeofence {
+  query GetTransportersInGeofence($geofenceId: UUID, $type: Short) {
+    transportersInGeofence(geofenceId: $geofenceId, type: $type) {
       transporterId
       transporterName
       geofenceId

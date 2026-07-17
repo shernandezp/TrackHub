@@ -32,6 +32,7 @@ import MapProviderContext, { GOOGLE_PROVIDER } from 'controls/Maps/core/MapProvi
 import PoiLayer from 'controls/Maps/core/PoiLayer';
 import TrailLayer from 'controls/Maps/core/TrailLayer';
 import { GOOGLE_NIGHT_STYLES } from 'controls/Maps/utils/darkMapStyles';
+import { DEFAULT_GOOGLE_ZOOM } from 'controls/Maps/core/mapConfig';
 import { reverseGeocode } from 'api/router/router';
 import type { Address } from 'api/router/router';
 import type { MapMarker, MapGeofence, MapPoi, TrailPoint } from 'controls/Maps/core/mapTypes';
@@ -389,7 +390,7 @@ const GoogleClusteredMap = ({
             <UserLocation setUserLocation={setUserLocation} />
             <MapProviderContext.Provider value={GOOGLE_PROVIDER}>
                 <GoogleMap mapContainerStyle={{ height: height, width: "100%" }}
-                    zoom={6}
+                    zoom={DEFAULT_GOOGLE_ZOOM}
                     center={userLocation}
                     onLoad={map => {
                         mapRef.current = map;

@@ -14,6 +14,7 @@ declare module 'leaflet' {
   class Editable {
     constructor(map: Map, options?: unknown);
     startPolygon(latlng?: LatLng): Polygon;
+    startCircle(latlng?: LatLng): Circle;
     stopDrawing(): void;
   }
 
@@ -22,6 +23,12 @@ declare module 'leaflet' {
   }
 
   interface Polygon {
+    enableEdit(map?: Map): this;
+    disableEdit(): this;
+    editEnabled(): boolean;
+  }
+
+  interface Circle {
     enableEdit(map?: Map): this;
     disableEdit(): this;
     editEnabled(): boolean;

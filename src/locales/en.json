@@ -488,7 +488,28 @@
     "type": "Type",
     "active": "Active",
     "deleteTitle": "Delete Geofence",
-    "deleteMessage": "Are you sure you want to delete this geofence?"
+    "deleteMessage": "Are you sure you want to delete this geofence?",
+    "alertOnEntry": "Alert on entry",
+    "alertOnExit": "Alert on exit",
+    "dwellThreshold": "Dwell threshold (min)",
+    "dwellThresholdHelp": "1–10080 min",
+    "radius": "Radius (m)",
+    "radiusHelp": "10–100000 m",
+    "center": "Center",
+    "drawPolygon": "Draw polygon",
+    "drawCircle": "Draw circle",
+    "saveShape": "Save shape",
+    "filterType": "Type",
+    "filterActive": "Status",
+    "allTypes": "All types",
+    "allActive": "All",
+    "onlyActive": "Active",
+    "onlyInactive": "Inactive",
+    "showing": "Showing {{from}}–{{to}} of {{total}}",
+    "validation": {
+      "radiusRange": "Radius must be between 10 and 100000 m",
+      "dwellRange": "Dwell threshold must be between 1 and 10080 min"
+    }
   },
   "geofenceTypes": {
     "clientLocation": "Client Location",

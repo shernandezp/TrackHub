@@ -226,7 +226,7 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
     try {
       const result = await queryClient.fetchQuery({
         queryKey: geofenceKeys.transportersInGeofence,
-        queryFn: getTransportersInGeofence,
+        queryFn: () => getTransportersInGeofence(),
         staleTime: 0,
       });
       setInGeofence(result.length);

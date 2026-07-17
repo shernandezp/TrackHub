@@ -16,18 +16,46 @@
 
 import { useState } from 'react';
 import type { RefObject } from 'react';
+import Tooltip from '@mui/material/Tooltip';
+import Icon from '@mui/material/Icon';
+import { useTranslation } from 'react-i18next';
+import { useArgonController } from 'context';
 import OSMGeofenceEditor from 'controls/Maps/OSM/GeofenceEditor';
 import GoogleGeofenceEditor from 'controls/Maps/Google/GeofenceEditor';
 import MapControlStyle from 'controls/Maps/styles/MapControl';
 
 /** A point in the imperative map-editor handle payloads. */
 export interface MapPoint { lat: number; lng: number; }
-/** Result of committing (save/edit) a drawn geofence shape on the map. */
-export interface GeofenceShapeHandle { id: string; latlngs: MapPoint[]; }
-/** A polygon rendered on the map (geom coordinates as [lat, lng] tuples). */
-export interface MapPolygon { id: string; name: string; latlngs: [number, number][]; }
+/** Whether a geofence is a free-drawn polygon or a center+radius circle. */
+export type GeofenceShape = 'polygon' | 'circle';
+/**
+ * Result of committing (save/edit) a drawn geofence shape on the map. Polygons
+ * carry their ring in `latlngs`; circles carry `center` + `radiusMeters` and an
+ * empty `latlngs`.
+ */
+export interface GeofenceShapeHandle {
+  id: string;
+  shape: GeofenceShape;
+  latlngs: MapPoint[];
+  center?: MapPoint;
+  radiusMeters?: number;
+}
+/**
+ * A geofence rendered on the map. Polygons use `latlngs` (geom as [lat, lng]
+ * tuples); circles additionally set `shape: 'circle'`, `center` and
+ * `radiusMeters` so they render as true circles and stay editable.
+ */
+export interface MapPolygon {
+  id: string;
+  name: string;
+  latlngs: [number, number][];
+  shape?: GeofenceShape;
+  center?: [number, number];
+  radiusMeters?: number;
+}
 
 export type AddGeofenceHandler = () => void;
+export type AddCircleGeofenceHandler = () => void;
 export type SaveGeofenceHandler = (name: string) => GeofenceShapeHandle;
 export type CancelGeofenceHandler = () => void;
 export type EditGeofenceHandler = () => GeofenceShapeHandle;
@@ -36,6 +64,7 @@ export type RemoveGeofenceHandler = (id: string) => void;
 /** Refs the vendored map editors populate with imperative draw handles. */
 export interface GeofenceEditorHandles {
   addRef?: RefObject<AddGeofenceHandler | null>;
+  addCircleRef?: RefObject<AddCircleGeofenceHandler | null>;
   saveRef?: RefObject<SaveGeofenceHandler | null>;
   cancelRef?: RefObject<CancelGeofenceHandler | null>;
   editingRef?: RefObject<EditGeofenceHandler | null>;
@@ -51,6 +80,7 @@ interface GeofenceEditorProps extends GeofenceEditorHandles {
   handleSelected: (value: string | null) => void;
   setOpen: (open: boolean) => void;
   handleAdd?: () => void;
+  handleAddCircle?: () => void;
   handleEdit?: () => void;
   height?: string;
 }
@@ -63,15 +93,20 @@ const GeofenceEditor = ({
     handleSelected,
     setOpen,
     addRef,
+    addCircleRef,
     saveRef,
     cancelRef,
     editingRef,
     removeRef,
     handleAdd,
+    handleAddCircle,
     handleEdit,
     height = '70vh'
     }: GeofenceEditorProps) => {
 
+  const { t } = useTranslation();
+  const [controller] = useArgonController();
+  const { darkMode } = controller;
   const [isEditing, setIsEditing] = useState(false);
 
   return (
@@ -84,10 +119,12 @@ const GeofenceEditor = ({
                 setIsEditing={setIsEditing}
                 setOpen={setOpen}
                 addRef={addRef}
+                addCircleRef={addCircleRef}
                 saveRef={saveRef}
                 cancelRef={cancelRef}
                 editingRef={editingRef}
                 removeRef={removeRef}
+                darkMode={darkMode}
                 height={height}
             />
             ) : (
@@ -100,16 +137,33 @@ const GeofenceEditor = ({
                     setIsEditing={setIsEditing}
                     setOpen={setOpen}
                     addRef={addRef}
+                    addCircleRef={addCircleRef}
                     saveRef={saveRef}
                     cancelRef={cancelRef}
                     editingRef={editingRef}
                     removeRef={removeRef}
+                    darkMode={darkMode}
                     height={height}
                 />
             )}
         <div className="mapcontrol">
-        <label className="mapcontrol-label" onClick={handleAdd}>&nbsp;+&nbsp;</label>
-        {isEditing && <label className="mapcontrol-label" onClick={handleEdit}>&nbsp;💾&nbsp;</label>}
+          <Tooltip title={t('geofence.drawPolygon')} placement="left">
+            <label className="mapcontrol-label" onClick={handleAdd}>
+              <Icon fontSize="small" sx={{ verticalAlign: 'middle' }}>pentagon</Icon>
+            </label>
+          </Tooltip>
+          <Tooltip title={t('geofence.drawCircle')} placement="left">
+            <label className="mapcontrol-label" onClick={handleAddCircle}>
+              <Icon fontSize="small" sx={{ verticalAlign: 'middle' }}>circle</Icon>
+            </label>
+          </Tooltip>
+          {isEditing && (
+            <Tooltip title={t('geofence.saveShape')} placement="left">
+              <label className="mapcontrol-label" onClick={handleEdit}>
+                <Icon fontSize="small" sx={{ verticalAlign: 'middle' }}>save</Icon>
+              </label>
+            </Tooltip>
+          )}
         </div>
     </MapControlStyle>
   );

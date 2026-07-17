@@ -27,6 +27,7 @@ import MapProviderContext, { OSM_PROVIDER } from 'controls/Maps/core/MapProvider
 import PoiLayer from 'controls/Maps/core/PoiLayer';
 import TrailLayer from 'controls/Maps/core/TrailLayer';
 import { OSM_LIGHT_TILE, OSM_DARK_TILE } from 'controls/Maps/utils/darkMapStyles';
+import { DEFAULT_OSM_ZOOM } from 'controls/Maps/core/mapConfig';
 import L from 'leaflet';
 import type { MapMarker, MapGeofence, MapPoi, TrailPoint } from 'controls/Maps/core/mapTypes';
 
@@ -160,7 +161,7 @@ const OSMClusteredMap = ({
                     the wrapper div and the map fills it (invalidateSize re-measures on change). */}
                 <MapContainer
                     center={userLocation}
-                    zoom={13}
+                    zoom={DEFAULT_OSM_ZOOM}
                     preferCanvas={true}
                     style={{ height: "100%", width: "100%" }}
                     ref={mapRef}>

@@ -23,6 +23,7 @@ import type { MapMarker, MapPoi } from 'controls/Maps/core/mapTypes';
 import type { Position } from 'api/router/router';
 import type { Geofence } from 'api/geofencing/geofencing';
 import type { PointOfInterest } from 'api/manager/pointsOfInterest';
+import { MAP_CONTAINER_CLASS } from 'controls/Maps/core/mapConfig';
 import 'controls/Maps/css/map.css';
 
 /** A trail point (client-side ring buffer entry) for the selected unit. */
@@ -98,7 +99,7 @@ function GeneralMap({
       }, [positions, onlineInterval]);
 
     return (
-        <div className="map-container">
+        <div className={MAP_CONTAINER_CLASS}>
             {mapType === 'OSM' ? (
                 <OSMClusteredMap
                     markers={markers}

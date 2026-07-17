@@ -50,7 +50,7 @@ export interface MapMarker {
   attributes?: MarkerAttributes | null;
 }
 
-/** A geofence polygon rendered as an overlay. */
+/** A geofence rendered as an overlay: a true circle when the circle fields are set, else a polygon. */
 export interface MapGeofence {
   geofenceId?: string;
   name: string;
@@ -58,6 +58,8 @@ export interface MapGeofence {
   geom: {
     coordinates: Array<{ latitude: number; longitude: number }>;
   };
+  circleCenter?: { latitude: number; longitude: number } | null;
+  circleRadiusMeters?: number | null;
 }
 
 /** A trip rendered as a polyline (or single marker when `type === 1`). */

@@ -488,7 +488,28 @@
     "type": "Tipo",
     "active": "Activa",
     "deleteTitle": "Eliminar Geocerca",
-    "deleteMessage": "¿Está seguro de que desea eliminar esta geocerca?"
+    "deleteMessage": "¿Está seguro de que desea eliminar esta geocerca?",
+    "alertOnEntry": "Alerta al entrar",
+    "alertOnExit": "Alerta al salir",
+    "dwellThreshold": "Umbral de permanencia (min)",
+    "dwellThresholdHelp": "1–10080 min",
+    "radius": "Radio (m)",
+    "radiusHelp": "10–100000 m",
+    "center": "Centro",
+    "drawPolygon": "Dibujar polígono",
+    "drawCircle": "Dibujar círculo",
+    "saveShape": "Guardar forma",
+    "filterType": "Tipo",
+    "filterActive": "Estado",
+    "allTypes": "Todos los tipos",
+    "allActive": "Todas",
+    "onlyActive": "Activas",
+    "onlyInactive": "Inactivas",
+    "showing": "Mostrando {{from}}–{{to}} de {{total}}",
+    "validation": {
+      "radiusRange": "El radio debe estar entre 10 y 100000 m",
+      "dwellRange": "El umbral de permanencia debe estar entre 1 y 10080 min"
+    }
   },
   "geofenceTypes": {
     "clientLocation": "Cliente",

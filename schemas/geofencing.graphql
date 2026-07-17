@@ -4,12 +4,13 @@ schema {
 }
 
 type Query {
-  geofenceEvents(query: GetGeofenceEventsQueryInput!): [GeofenceEventReportVm!]!
+  geofenceEvents(query: GetGeofenceEventsQueryInput!): GeofenceEventsPageVm!
     @cost(weight: "10")
   geofence(query: GetGeofenceQueryInput!): GeofenceVm! @cost(weight: "10")
-  geofencesByAccount(query: GetGeofencesByAccountQueryInput!): [GeofenceVm!]!
+  geofencesByAccount(query: GetGeofencesByAccountQueryInput!): GeofencesPageVm!
     @cost(weight: "10")
-  transportersInGeofence: [TransporterInGeofenceVm!]! @cost(weight: "10")
+  transportersInGeofence(geofenceId: UUID, type: Short): [TransporterInGeofenceVm!]!
+    @cost(weight: "10")
 }
 
 type Mutation {
@@ -28,19 +29,33 @@ type CoordinateVm {
 }
 
 type GeofenceEventReportVm {
+  geofenceEventId: UUID!
+  transporterId: UUID!
+  geofenceId: UUID!
   transporterName: String!
   geofenceName: String!
   datetimeIn: DateTime!
   datetimeOut: DateTime
   totalTime: String!
+  dwellSeconds: Long
   latitude: Float!
   longitude: Float!
+}
+
+type GeofenceEventsPageVm {
+  items: [GeofenceEventReportVm!]!
+  totalCount: Int!
 }
 
 type GeofenceProcessingResultVm {
   processedCount: Int!
   eventsCreated: Int!
   eventsUpdated: Int!
+}
+
+type GeofencesPageVm {
+  items: [GeofenceVm!]!
+  totalCount: Int!
 }
 
 type GeofenceVm {
@@ -52,6 +67,11 @@ type GeofenceVm {
   color: Short!
   type: Short!
   active: Boolean!
+  circleCenter: CoordinateVm
+  circleRadiusMeters: Float
+  alertOnEntry: Boolean!
+  alertOnExit: Boolean!
+  dwellThresholdMinutes: Int
 }
 
 type MultiPolygonVm {
@@ -77,18 +97,27 @@ input CreateGeofenceCommandInput {
 
 input GeofenceDtoInput {
   geofenceId: UUID!
-  geom: MultiPolygonVmInput!
+  geom: MultiPolygonVmInput
   name: String!
   description: String
   color: Short!
   type: Short!
   active: Boolean!
+  circleCenter: CoordinateVmInput
+  circleRadiusMeters: Float
+  alertOnEntry: Boolean!
+  alertOnExit: Boolean!
+  dwellThresholdMinutes: Int
 }
 
 input GetGeofenceEventsQueryInput {
   from: DateTime!
   to: DateTime!
   transporterId: UUID
+  geofenceId: UUID
+  openOnly: Boolean
+  skip: Int
+  take: Int
 }
 
 input GetGeofenceQueryInput {
@@ -97,6 +126,11 @@ input GetGeofenceQueryInput {
 
 input GetGeofencesByAccountQueryInput {
   enableCaching: Boolean!
+  skip: Int
+  take: Int
+  type: Short
+  active: Boolean
+  search: String
 }
 
 input MultiPolygonVmInput {
@@ -133,6 +167,10 @@ enum ApplyPolicy {
 "The `DateTime` scalar type represents a date and time with time zone offset information."
 scalar DateTime
   @specifiedBy(url: "https://scalars.graphql.org/chillicream/date-time.html")
+
+"The `Long` scalar type represents a signed 64-bit integer."
+scalar Long
+  @specifiedBy(url: "https://scalars.graphql.org/chillicream/long.html")
 
 "The `Short` scalar type represents a signed 16-bit integer."
 scalar Short

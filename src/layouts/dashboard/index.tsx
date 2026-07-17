@@ -21,7 +21,7 @@ import Positions from "layouts/dashboard/components/Positions";
 import { getAccountSettings } from 'api/manager/settings';
 import type { AccountSettings } from 'api/manager/settings';
 import { notifyApiError } from 'api/core/errors';
-import { useGeofencesByAccount } from 'queries/geofences';
+import { useAllGeofences } from 'queries/geofences';
 import { LoadingContext } from 'LoadingContext';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "AuthContext";
@@ -38,8 +38,9 @@ function Default() {
   // getAccountSettings() resolves; cast keeps the exact runtime shape.
   const [settings, setSettings] = useState<AccountSettings>({ maps: 'OSM', mapsKey: '', refreshMapInterval: 60 } as AccountSettings);
 
-  // Geofences are loaded (cached) only once the overlay is toggled on.
-  const geofencesQuery = useGeofencesByAccount(true, { enabled: isAuthenticated && showGeofence });
+  // Geofences are loaded (cached, all pages drained) only once the overlay is
+  // toggled on.
+  const geofencesQuery = useAllGeofences(true, {}, { enabled: isAuthenticated && showGeofence });
   const geofences = geofencesQuery.data ?? [];
 
   const fetchSettings = async () => {

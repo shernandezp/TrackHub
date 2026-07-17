@@ -32,6 +32,31 @@ function closePolygon(latlngs: LatLngPoint[]): LatLngPoint[] {
     return latlngs;
 }
 
+const EARTH_RADIUS_M = 6378137;
+
+/**
+ * SW/NE corners (`[[south, west], [north, east]]`) of the lat/lng box that
+ * encloses a circle of `radiusMeters` around (lat, lng). Provider-agnostic and
+ * map-instance-free (equirectangular degree offset), so both the Leaflet and
+ * Google geofence editors can extend their native bounds with a circle shape
+ * when fitting the viewport to an account's geofences.
+ */
+function circleBoundsCorners(
+    lat: number,
+    lng: number,
+    radiusMeters: number
+): [[number, number], [number, number]] {
+    const dLat = (radiusMeters / EARTH_RADIUS_M) * (180 / Math.PI);
+    const cos = Math.cos((lat * Math.PI) / 180);
+    const safeCos = Math.abs(cos) < 1e-12 ? 1e-12 : cos;
+    const dLng = (radiusMeters / (EARTH_RADIUS_M * safeCos)) * (180 / Math.PI);
+    return [
+        [lat - dLat, lng - dLng],
+        [lat + dLat, lng + dLng],
+    ];
+}
+
 export {
-    closePolygon
+    closePolygon,
+    circleBoundsCorners
 };

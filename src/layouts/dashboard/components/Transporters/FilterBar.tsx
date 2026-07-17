@@ -15,19 +15,13 @@
 */
 
 import Chip from '@mui/material/Chip';
-import FormControl from '@mui/material/FormControl';
-import MenuItem from '@mui/material/MenuItem';
-import Select from '@mui/material/Select';
-import type { SelectChangeEvent } from '@mui/material/Select';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import ArgonBox from 'components/ArgonBox';
+import CompactSelect from 'controls/Selects/CompactSelect';
+import type { CompactSelectOption } from 'controls/Selects/CompactSelect';
 import { useTranslation } from 'react-i18next';
 
 /** An option for one of the filter-bar selects. */
-export interface FilterOption {
-  value: string | number;
-  label: string;
-}
+export type FilterOption = CompactSelectOption;
 
 /** Client-side filter state driving the live map narrowing. */
 export interface DashboardFilters {
@@ -35,66 +29,6 @@ export interface DashboardFilters {
   groupId: string | number;
   operatorId: string;
   status: string;
-}
-
-// Make the chevron visible (the theme hides it globally) and keep the
-// control compact enough for a single-row filter bar.
-const selectSx = {
-  minWidth: 130,
-  fontSize: '0.75rem',
-  cursor: 'pointer',
-  '& .MuiSelect-icon': {
-    display: 'inline-block !important',
-    right: 8,
-    color: 'inherit',
-    pointerEvents: 'none',
-  },
-  '& .MuiSelect-select': {
-    width: '100% !important',
-    paddingRight: '28px !important',
-    paddingTop: '4px !important',
-    paddingBottom: '4px !important',
-    cursor: 'pointer',
-  },
-};
-
-interface CompactSelectProps {
-  name: string;
-  value: string | number;
-  options: FilterOption[];
-  label: string;
-  onChange: (name: string, value: string | number) => void;
-}
-
-// Compact select: the "all" option doubles as the field label, so no
-// stacked label is rendered and the bar stays a single light row.
-function CompactSelect({ name, value, options, label, onChange }: CompactSelectProps) {
-  const labelFor = (selected: string | number) => {
-    const option = options.find((item) => item.value === selected);
-    return option ? option.label : label;
-  };
-  return (
-    <FormControl size="small" variant="outlined">
-      <Select<string | number>
-        id={name}
-        name={name}
-        value={value}
-        onChange={(event: SelectChangeEvent<string | number>) => onChange(name, event.target.value)}
-        displayEmpty
-        size="small"
-        IconComponent={KeyboardArrowDownIcon}
-        inputProps={{ 'aria-label': label }}
-        renderValue={(selected) => (selected === 'all' ? labelFor(selected) : `${label}: ${labelFor(selected)}`)}
-        sx={selectSx}
-      >
-        {options.map((item) => (
-          <MenuItem key={item.value} value={item.value}>
-            {item.label}
-          </MenuItem>
-        ))}
-      </Select>
-    </FormControl>
-  );
 }
 
 interface FilterBarProps {

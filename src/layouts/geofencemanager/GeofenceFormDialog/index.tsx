@@ -102,13 +102,73 @@ function GeofenceFormDialog({ open, setOpen, handleSubmit, handleCancel, values,
               value={values.color}
               required
             />
-            
-            <CustomCheckbox 
-            name="active" 
-            id="active" 
-            value={values.active} 
-            handleChange={handleChange} 
+
+            {values.shape === 'circle' && (
+              <>
+                <CustomTextField
+                  margin="normal"
+                  name="circleRadiusMeters"
+                  id="circleRadiusMeters"
+                  label={t('geofence.radius')}
+                  type="number"
+                  fullWidth
+                  value={values.circleRadiusMeters ?? ''}
+                  onChange={handleChange}
+                  helperText={errors.circleRadiusMeters || t('geofence.radiusHelp')}
+                  error={!!errors.circleRadiusMeters}
+                  inputProps={{ min: 10, max: 100000 }}
+                />
+                <CustomTextField
+                  margin="normal"
+                  name="circleCenter"
+                  id="circleCenter"
+                  label={t('geofence.center')}
+                  type="text"
+                  fullWidth
+                  value={
+                    values.circleCenter
+                      ? `${values.circleCenter.latitude.toFixed(6)}, ${values.circleCenter.longitude.toFixed(6)}`
+                      : ''
+                  }
+                  slotProps={{ input: { readOnly: true } }}
+                />
+              </>
+            )}
+
+            <CustomTextField
+              margin="normal"
+              name="dwellThresholdMinutes"
+              id="dwellThresholdMinutes"
+              label={t('geofence.dwellThreshold')}
+              type="number"
+              fullWidth
+              value={values.dwellThresholdMinutes ?? ''}
+              onChange={handleChange}
+              helperText={errors.dwellThresholdMinutes || t('geofence.dwellThresholdHelp')}
+              error={!!errors.dwellThresholdMinutes}
+              inputProps={{ min: 1, max: 10080 }}
+            />
+
+            <CustomCheckbox
+            name="active"
+            id="active"
+            value={values.active}
+            handleChange={handleChange}
             label={t('geofence.active')} />
+
+            <CustomCheckbox
+            name="alertOnEntry"
+            id="alertOnEntry"
+            value={values.alertOnEntry}
+            handleChange={handleChange}
+            label={t('geofence.alertOnEntry')} />
+
+            <CustomCheckbox
+            name="alertOnExit"
+            id="alertOnExit"
+            value={values.alertOnExit}
+            handleChange={handleChange}
+            label={t('geofence.alertOnExit')} />
         </form>
       </FormDialog>
   );
