@@ -137,7 +137,7 @@ type Documents = {
     "\n  query GetPublicLinkGrantsByAccount($accountId: UUID!, $skip: Int!, $take: Int!) {\n    publicLinkGrantsByAccount(query: { accountId: $accountId, skip: $skip, take: $take }) {\n      ...PublicLinkGrantFields\n    }\n  }\n": typeof types.GetPublicLinkGrantsByAccountDocument,
     "\n  mutation CreatePublicLinkGrant($publicLinkGrant: PublicLinkGrantDtoInput!) {\n    createPublicLinkGrant(command: { publicLinkGrant: $publicLinkGrant }) {\n      ...PublicLinkGrantFields\n    }\n  }\n": typeof types.CreatePublicLinkGrantDocument,
     "\n  mutation RevokePublicLinkGrant($publicLinkGrantId: UUID!, $revokedBy: String!) {\n    revokePublicLinkGrant(command: { publicLinkGrantId: $publicLinkGrantId, revokedBy: $revokedBy })\n  }\n": typeof types.RevokePublicLinkGrantDocument,
-    "\n  fragment ReportFields on ReportVm {\n    reportId\n    code\n    description\n    type\n    typeId\n    active\n  }\n": typeof types.ReportFieldsFragmentDoc,
+    "\n  fragment ReportFields on ReportVm {\n    reportId\n    code\n    description\n    type\n    typeId\n    active\n    category\n    requiredFeatureKey\n    managerOnly\n    supportsPdf\n    sortOrder\n  }\n": typeof types.ReportFieldsFragmentDoc,
     "\n  query GetReports {\n    reports {\n      ...ReportFields\n    }\n  }\n": typeof types.GetReportsDocument,
     "\n  mutation UpdateReport($id: UUID!, $report: UpdateReportDtoInput!) {\n    updateReport(id: $id, command: { report: $report })\n  }\n": typeof types.UpdateReportDocument,
     "\n  fragment AccountSettingsItem on AccountSettingsVm {\n    accountId\n    maps\n    mapsKey\n    onlineInterval\n    refreshMap\n    refreshMapInterval\n  }\n": typeof types.AccountSettingsItemFragmentDoc,
@@ -293,7 +293,7 @@ const documents: Documents = {
     "\n  query GetPublicLinkGrantsByAccount($accountId: UUID!, $skip: Int!, $take: Int!) {\n    publicLinkGrantsByAccount(query: { accountId: $accountId, skip: $skip, take: $take }) {\n      ...PublicLinkGrantFields\n    }\n  }\n": types.GetPublicLinkGrantsByAccountDocument,
     "\n  mutation CreatePublicLinkGrant($publicLinkGrant: PublicLinkGrantDtoInput!) {\n    createPublicLinkGrant(command: { publicLinkGrant: $publicLinkGrant }) {\n      ...PublicLinkGrantFields\n    }\n  }\n": types.CreatePublicLinkGrantDocument,
     "\n  mutation RevokePublicLinkGrant($publicLinkGrantId: UUID!, $revokedBy: String!) {\n    revokePublicLinkGrant(command: { publicLinkGrantId: $publicLinkGrantId, revokedBy: $revokedBy })\n  }\n": types.RevokePublicLinkGrantDocument,
-    "\n  fragment ReportFields on ReportVm {\n    reportId\n    code\n    description\n    type\n    typeId\n    active\n  }\n": types.ReportFieldsFragmentDoc,
+    "\n  fragment ReportFields on ReportVm {\n    reportId\n    code\n    description\n    type\n    typeId\n    active\n    category\n    requiredFeatureKey\n    managerOnly\n    supportsPdf\n    sortOrder\n  }\n": types.ReportFieldsFragmentDoc,
     "\n  query GetReports {\n    reports {\n      ...ReportFields\n    }\n  }\n": types.GetReportsDocument,
     "\n  mutation UpdateReport($id: UUID!, $report: UpdateReportDtoInput!) {\n    updateReport(id: $id, command: { report: $report })\n  }\n": types.UpdateReportDocument,
     "\n  fragment AccountSettingsItem on AccountSettingsVm {\n    accountId\n    maps\n    mapsKey\n    onlineInterval\n    refreshMap\n    refreshMapInterval\n  }\n": types.AccountSettingsItemFragmentDoc,
@@ -835,7 +835,7 @@ export function graphql(source: "\n  mutation RevokePublicLinkGrant($publicLinkG
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  fragment ReportFields on ReportVm {\n    reportId\n    code\n    description\n    type\n    typeId\n    active\n  }\n"): (typeof documents)["\n  fragment ReportFields on ReportVm {\n    reportId\n    code\n    description\n    type\n    typeId\n    active\n  }\n"];
+export function graphql(source: "\n  fragment ReportFields on ReportVm {\n    reportId\n    code\n    description\n    type\n    typeId\n    active\n    category\n    requiredFeatureKey\n    managerOnly\n    supportsPdf\n    sortOrder\n  }\n"): (typeof documents)["\n  fragment ReportFields on ReportVm {\n    reportId\n    code\n    description\n    type\n    typeId\n    active\n    category\n    requiredFeatureKey\n    managerOnly\n    supportsPdf\n    sortOrder\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

@@ -110,6 +110,7 @@ type Query {
   publicLinkGrantsByAccount(query: GetPublicLinkGrantsByAccountQueryInput!): [PublicLinkGrantVm!]!
     @cost(weight: "10")
   reports: [ReportVm!]! @cost(weight: "10")
+  reportByCode(code: String!): ReportVm @cost(weight: "10")
   synchronizedDevices(query: GetSynchronizedDevicesQueryInput!): [DeviceVm!]!
     @cost(weight: "10")
   unassignedSynchronizedDevices(
@@ -822,6 +823,11 @@ type ReportVm {
   type: ReportType!
   typeId: Short!
   active: Boolean!
+  category: String!
+  requiredFeatureKey: String
+  managerOnly: Boolean!
+  supportsPdf: Boolean!
+  sortOrder: Int!
 }
 
 type TokenVm {
@@ -1875,6 +1881,11 @@ input UpdateReportDtoInput {
   description: String
   typeId: Short!
   active: Boolean!
+  category: String!
+  requiredFeatureKey: String
+  managerOnly: Boolean!
+  supportsPdf: Boolean!
+  sortOrder: Int!
 }
 
 input UpdateTokenCommandInput {

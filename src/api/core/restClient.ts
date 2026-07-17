@@ -15,7 +15,7 @@
 */
 
 import axios, { AxiosError, type AxiosRequestConfig } from 'axios';
-import { ApiError } from './errors';
+import { ApiError, extractRestErrorEntries } from './errors';
 import { tokenStore } from './tokenStore';
 import { REQUEST_TIMEOUT_MS } from './graphqlClient';
 
@@ -38,6 +38,18 @@ export async function restRequest<T>(config: AxiosRequestConfig): Promise<T> {
     return response.data;
   } catch (error) {
     const axiosError = error as AxiosError;
+    // 4xx bodies carry a `{ errors: [{ message, extensions: { code } }] }`
+    // envelope — as JSON for preview, or as a Blob for the download path. Parse
+    // it so well-known codes (FEATURE_DISABLED, REPORT_ROW_LIMIT_EXCEEDED, …)
+    // surface as friendly localized toasts instead of a raw transport message.
+    const entries = await extractRestErrorEntries(axiosError.response?.data);
+    if (entries.length > 0) {
+      throw ApiError.fromRestErrors(
+        entries,
+        `Request to ${config.url} failed: ${axiosError.message}`,
+        axiosError.response?.status
+      );
+    }
     throw new ApiError(`Request to ${config.url} failed: ${axiosError.message}`, {
       status: axiosError.response?.status,
       cause: error,

@@ -18,7 +18,7 @@
  * Report-catalog GraphQL documents (Manager backend). Codegen validates these
  * against schemas/manager.graphql — values always travel as variables. The
  * generated .xlsx itself is produced by the Reporting REST service (see
- * api/reporting/excelReports.ts); this file only manages the report catalog.
+ * api/reporting/reports.ts); this file only manages the report catalog.
  */
 
 import { graphql } from './generated';
@@ -31,6 +31,11 @@ export const ReportFieldsFragment = graphql(`
     type
     typeId
     active
+    category
+    requiredFeatureKey
+    managerOnly
+    supportsPdf
+    sortOrder
   }
 `);
 

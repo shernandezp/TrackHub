@@ -36,8 +36,10 @@ export type GraphQLBackend = keyof typeof GRAPHQL_ENDPOINTS;
 const managerRestBase = (GRAPHQL_ENDPOINTS.manager ?? '').replace(/graphql\/?$/, '');
 
 export const REST_ENDPOINTS = {
-  /** Excel report generation (Reporting service, REST). */
+  /** Report generation — xlsx/pdf file bytes (Reporting service, REST). */
   reportingBasicReports: `${process.env.REACT_APP_REPORTING_ENDPOINT}api/BasicReports`,
+  /** On-screen report preview — JSON dataset (Reporting service, REST). */
+  reportingBasicReportsPreview: `${process.env.REACT_APP_REPORTING_ENDPOINT}api/BasicReports/preview`,
   /**
    * Manager document REST base, e.g. `${managerDocuments}/upload`. The Manager
    * document endpoints are mapped at `~/documents/...` (no `api/` segment) —

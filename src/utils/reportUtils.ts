@@ -14,6 +14,52 @@
 *  limitations under the License.
 */
 
+import type { ReportPreview, ReportPreviewCell } from 'api/reporting/reports';
+import type { TableColumn, TableRowData } from 'controls/Tables/Table';
+
+/**
+ * Maps a preview payload's positional rows onto the {@link Table} shape: each
+ * cell array is keyed by its column's `name`, with a stable `id` per row. Column
+ * headers (already localized by the backend) become the table column titles.
+ * Pure — cell display formatting is applied separately at render time.
+ */
+export function mapPreviewToTable(preview: ReportPreview): {
+  columns: TableColumn[];
+  rows: TableRowData[];
+} {
+  const columns: TableColumn[] = preview.columns.map((column) => ({
+    name: column.name,
+    title: column.header,
+  }));
+
+  const rows: TableRowData[] = preview.rows.map((cells, rowIndex) => {
+    const row: TableRowData = { id: rowIndex };
+    preview.columns.forEach((column, columnIndex) => {
+      row[column.name] = cells[columnIndex] ?? null;
+    });
+    return row;
+  });
+
+  return { columns, rows };
+}
+
+/** ISO-8601 date/date-time detector for {@link formatPreviewCell}. */
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}([T ]\d{2}:\d{2}(:\d{2})?(\.\d+)?(Z|[+-]\d{2}:?\d{2})?)?$/;
+
+/**
+ * Formats a preview cell for display: null → '-', booleans → yes/no glyph text,
+ * ISO date strings → locale date-time, everything else stringified as-is.
+ */
+export function formatPreviewCell(value: ReportPreviewCell): string {
+  if (value === null || value === undefined) return '-';
+  if (typeof value === 'boolean') return value ? '✓' : '✗';
+  if (typeof value === 'string' && ISO_DATE_RE.test(value)) {
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) return parsed.toLocaleString();
+  }
+  return String(value);
+}
+
 /**
  * Fetches a list using the provided fetch function and maps the result using the provided map function.
  */

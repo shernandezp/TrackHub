@@ -23,6 +23,45 @@ export interface GraphQLErrorEntry {
 }
 
 /**
+ * Maps well-known backend error codes to user-facing i18n keys. Covers the
+ * Reporting REST envelope codes (spec 06 §7.4) plus the shared account/feature
+ * codes so blob/JSON error responses surface as friendly localized toasts.
+ */
+const REST_ERROR_I18N: Record<string, string> = {
+  FEATURE_DISABLED: 'errors.featureDisabled',
+  ACCOUNT_SUSPENDED: 'errors.accountSuspended',
+  REPORT_ACCESS_DENIED: 'errors.reportAccessDenied',
+  REPORT_NOT_FOUND: 'errors.reportNotFound',
+  UNSUPPORTED_REPORT_FORMAT: 'errors.unsupportedReportFormat',
+  REPORT_ROW_LIMIT_EXCEEDED: 'errors.reportRowLimitExceeded',
+};
+
+/**
+ * Extracts the `{ errors: [...] }` envelope from a REST error response body.
+ * The download path receives the body as a `Blob` (responseType: 'blob'); the
+ * preview/JSON path receives a parsed object. Returns `[]` when nothing parses.
+ */
+export async function extractRestErrorEntries(data: unknown): Promise<GraphQLErrorEntry[]> {
+  if (data == null) return [];
+  const parse = (text: string): GraphQLErrorEntry[] => {
+    try {
+      const parsed = JSON.parse(text) as { errors?: GraphQLErrorEntry[] };
+      return parsed.errors ?? [];
+    } catch {
+      return [];
+    }
+  };
+  if (typeof Blob !== 'undefined' && data instanceof Blob) {
+    return parse(await data.text());
+  }
+  if (typeof data === 'string') return parse(data);
+  if (typeof data === 'object') {
+    return (data as { errors?: GraphQLErrorEntry[] }).errors ?? [];
+  }
+  return [];
+}
+
+/**
  * Normalized API failure. The api layer THROWS these; deciding what a failure
  * means (fallback value, toast, retry) belongs to the caller — usually the
  * query layer's global error handler.
@@ -53,6 +92,31 @@ export class ApiError extends Error {
     this.i18nKey = options.i18nKey;
     this.status = options.status;
     this.graphQLErrors = options.graphQLErrors ?? [];
+  }
+
+  /**
+   * Builds an ApiError from a REST error envelope (`{ errors: [...] }`), mapping
+   * well-known Reporting codes to friendly i18n keys. Falls back to the transport
+   * message when no envelope/code is present.
+   */
+  static fromRestErrors(
+    errors: GraphQLErrorEntry[],
+    fallbackMessage: string,
+    status?: number
+  ): ApiError {
+    const codeOf = (e: GraphQLErrorEntry) => e.extensions?.code ?? e.code;
+    const mapped = errors.find((e) => {
+      const code = codeOf(e);
+      return code !== undefined && code in REST_ERROR_I18N;
+    });
+    const entry = mapped ?? errors[0];
+    const code = entry ? codeOf(entry) : undefined;
+    return new ApiError(entry?.message ?? fallbackMessage, {
+      code,
+      i18nKey: code ? REST_ERROR_I18N[code] : undefined,
+      status,
+      graphQLErrors: errors,
+    });
   }
 
   static fromGraphQLErrors(errors: GraphQLErrorEntry[]): ApiError {

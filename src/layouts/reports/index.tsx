@@ -1,5 +1,5 @@
 /**
-* Copyright (c) 2025 Sergio Hernandez. All rights reserved.
+* Copyright (c) 2026 Sergio Hernandez. All rights reserved.
 *
 *  Licensed under the Apache License, Version 2.0 (the "License").
 *  You may not use this file except in compliance with the License.
@@ -19,95 +19,77 @@ import Grid from "@mui/material/Grid";
 import ArgonBox from "components/ArgonBox";
 import DashboardLayout from "controls/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "controls/Navbars/DashboardNavbar";
-import CustomSelect from 'controls/Dialogs/CustomSelect';
-import type { FormChangeEvent } from 'controls/Dialogs/useForm';
-import { getReports } from "api/manager/reports";
 import ReportFilters from "layouts/reports/components/Filters";
-import { downloadExcelReport } from "api/reporting/excelReports";
-import type { ReportFilterValues } from "api/reporting/excelReports";
-import { notifyApiError } from "api/core/errors";
+import type { ReportAction } from "layouts/reports/components/Filters";
+import ReportCatalog from "layouts/reports/components/Catalog";
+import ReportPreviewPanel from "layouts/reports/components/Preview";
+import { useReportCatalog, useReportPreview, useDownloadReport } from "queries/reports";
+import type { Report } from "api/manager/reports";
+import type { ReportFilterValues, ReportPreview } from "api/reporting/reports";
 import { useTranslation } from 'react-i18next';
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
 import { toCamelCase } from 'utils/stringUtils';
-
-/** A report option rendered in the report selector. */
-interface ReportOption {
-  value: string;
-  label: string;
-}
 
 function Reports() {
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
   const { setLoading } = useContext(LoadingContext);
 
-  const [reports, setReports] = useState<ReportOption[]>([]);
-  const [selectedReport, setSelectedReport] = useState('');
+  const [selected, setSelected] = useState<Report | undefined>(undefined);
+  const [preview, setPreview] = useState<ReportPreview | undefined>(undefined);
 
-  const fetchReports = async () => {
-    setLoading(true);
-    try {
-      const result = await getReports();
-      setReports(result.map(report => ({
-        value: report.code,
-        label: t(`reportList.${toCamelCase(report.code)}` as 'reportList.liveReport')
-      })));
-      setSelectedReport(result.length > 0 ? result[0].code : '');
-    } catch (error) {
-      notifyApiError(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const catalogQuery = useReportCatalog({ enabled: isAuthenticated });
+  const previewMutation = useReportPreview();
+  const downloadMutation = useDownloadReport();
+
+  const reports = catalogQuery.data ?? [];
+  const running = previewMutation.isPending || downloadMutation.isPending;
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchReports();
-    }
-  }, [isAuthenticated]);
+    setLoading(catalogQuery.isFetching || running);
+  }, [catalogQuery.isFetching, running, setLoading]);
 
-  const handleSearch = async (values: ReportFilterValues) => {
-    const reportName = reports.find(report => report.value === selectedReport)?.label ?? '';
-    try {
-      await downloadExcelReport(selectedReport, reportName, values);
-    } catch (error) {
-      notifyApiError(error);
-    }
+  const handleSelect = (report: Report) => {
+    setSelected(report);
+    setPreview(undefined);
   };
 
-  const handleChange = (event: FormChangeEvent) => {
-    setSelectedReport(String(event.target.value ?? ''));
+  const handleRun = async (values: ReportFilterValues, action: ReportAction) => {
+    if (!selected) return;
+    const reportName = t(`reportList.${toCamelCase(selected.code)}` as 'reportList.liveReport');
+    const args = { reportCode: selected.code, reportName, filters: values };
+    if (action === 'preview') {
+      previewMutation.mutate(args, { onSuccess: setPreview });
+    } else {
+      downloadMutation.mutate({ ...args, format: action });
+    }
   };
 
   return (
     <DashboardLayout>
       <DashboardNavbar />
       <ArgonBox py={3}>
-        <Grid container spacing={3} mb={3}>
-          <Grid size={{xs:12, lg: 12}}>
-            <ArgonBox py={3}>
-              <Grid container spacing={3} alignItems="center">
-                <Grid size={{xs: 12, sm:3}}>
-                  <CustomSelect
-                    list={reports}
-                    handleChange={handleChange}
-                    name="selectedReport"
-                    id="selectedReport"
-                    label={t('reports.select')}
-                    value={selectedReport}
-                    required
-                  />
-                </Grid>
-              </Grid>
-            </ArgonBox>
+        <Grid container spacing={3}>
+          <Grid size={{ xs: 12, lg: 5 }}>
+            <ReportCatalog
+              reports={reports}
+              selectedReport={selected?.code}
+              onSelect={handleSelect}
+            />
           </Grid>
-        </Grid>
-        <Grid container spacing={3} mb={3}>
-          <Grid size={{xs:12, lg:6}}>
-            <ReportFilters 
-              selectedReport={selectedReport} 
-              generateReport={handleSearch} />
+          <Grid size={{ xs: 12, lg: 7 }}>
+            {selected && (
+              <ArgonBox mb={3}>
+                <ReportFilters
+                  selectedReport={selected.code}
+                  supportsPdf={selected.supportsPdf}
+                  running={running}
+                  onRun={handleRun}
+                />
+              </ArgonBox>
+            )}
+            {preview && <ReportPreviewPanel preview={preview} />}
           </Grid>
         </Grid>
       </ArgonBox>

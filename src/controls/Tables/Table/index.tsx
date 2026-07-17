@@ -53,6 +53,9 @@ export interface TableProps {
   searchQuery?: string;
   compact?: boolean;
   scrollable?: boolean;
+  /** Size columns to their content and scroll horizontally when they overflow the container
+   *  (for wide datasets, e.g. report previews). Default keeps the fixed 100%-width layout. */
+  horizontalScroll?: boolean;
   maxHeight?: string;
   defaultRowsPerPage?: number;
 }
@@ -66,6 +69,7 @@ function Table({
   searchQuery = "",
   compact = false,
   scrollable = false,
+  horizontalScroll = false,
   maxHeight = "600px",
   defaultRowsPerPage = 10,
 }: TableProps) {
@@ -140,9 +144,23 @@ function Table({
 
   return (
     <TableContainer
-      sx={scrollable ? { maxHeight: maxHeight, overflow: "auto", overflowX: "hidden" } : {}}
+      sx={{
+        ...(scrollable ? { maxHeight: maxHeight, overflow: "auto", overflowX: "hidden" } : {}),
+        ...(horizontalScroll ? { overflowX: "auto" } : {}),
+      }}
     >
-      <MuiTable sx={{ tableLayout: "fixed", width: "100%" }}>
+      <MuiTable
+        sx={
+          horizontalScroll
+            ? {
+                tableLayout: "auto",
+                width: "max-content",
+                minWidth: "100%",
+                "& th": { whiteSpace: "nowrap" },
+              }
+            : { tableLayout: "fixed", width: "100%" }
+        }
+      >
         <TableHeader
           columns={columns}
           orderBy={orderBy}

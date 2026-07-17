@@ -1,5 +1,5 @@
 /**
-* Copyright (c) 2025 Sergio Hernandez. All rights reserved.
+* Copyright (c) 2026 Sergio Hernandez. All rights reserved.
 *
 *  Licensed under the Apache License, Version 2.0 (the "License").
 *  You may not use this file except in compliance with the License.
@@ -16,28 +16,33 @@
 
 import { useEffect } from "react";
 import Card from "@mui/material/Card";
-import ArgonButton from "components/ArgonButton";
 import Icon from "@mui/material/Icon";
+import ArgonButton from "components/ArgonButton";
 import ArgonBox from "components/ArgonBox";
 import CustomSelect from 'controls/Dialogs/CustomSelect';
 import type { SelectListItem } from 'controls/Dialogs/CustomSelect';
 import CustomTextField from 'controls/Dialogs/CustomTextField';
 import useFiltersData from "layouts/reports/data/filtersData";
 import useForm from 'controls/Dialogs/useForm';
-import type { ReportFilterValues } from "api/reporting/excelReports";
+import type { ReportFilterValues } from "api/reporting/reports";
 import { useTranslation } from 'react-i18next';
+
+/** The action a filter-form button triggers. */
+export type ReportAction = 'preview' | 'xlsx' | 'pdf';
 
 interface ReportFiltersProps {
   selectedReport?: string;
-  generateReport: (values: ReportFilterValues) => void | Promise<void>;
+  supportsPdf?: boolean;
+  running?: boolean;
+  onRun: (values: ReportFilterValues, action: ReportAction) => void | Promise<void>;
 }
 
-function ReportFilters({ selectedReport, generateReport }: ReportFiltersProps) {
+function ReportFilters({ selectedReport, supportsPdf = false, running = false, onRun }: ReportFiltersProps) {
   const [values, handleChange, setValues, setErrors, validate, errors] =
     useForm<ReportFilterValues>({});
 
   const { t } = useTranslation();
-  const { data } = useFiltersData(selectedReport ?? '');
+  const { data, stringKinds } = useFiltersData(selectedReport ?? '');
   const {
     stringFilter1,
     stringFilter2,
@@ -45,30 +50,41 @@ function ReportFilters({ selectedReport, generateReport }: ReportFiltersProps) {
     dateTimeFilter1,
     dateTimeFilter2,
     dateTimeFilter3,
+    numericFilter1,
+    numericFilter2,
+    numericFilter3,
   } = data;
 
+  // Reset the form whenever the selected report (and therefore its filters) changes.
   useEffect(() => {
-    const fetchFilters = async () => {
-      setValues({});
-      setErrors({});
-    };
+    setValues({});
+    setErrors({});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedReport]);
 
-    fetchFilters();
-  }, []);
-
-  async function onGenerate() {
-    const requiredFields: string[] = [];
-    if (validate(requiredFields)) {
-      await generateReport(values);
+  async function run(action: ReportAction) {
+    if (validate([])) {
+      await onRun(values, action);
     }
   }
 
   return (
     <Card>
       <ArgonBox pt={1.5} pb={2} px={2} lineHeight={1.25}>
-        {stringFilter1 && stringFilter1.visible && (
+        {stringFilter1.visible && (
           <ArgonBox display="flex" py={1} mb={0.25}>
-            <CustomSelect
+            {stringKinds[0] === 'text' ? (
+              <CustomTextField
+                name="selectedItem1"
+                id="selectedItem1"
+                label={stringFilter1.label}
+                type="text"
+                fullWidth
+                value={values.selectedItem1 || ''}
+                errorMsg={errors.selectedItem1}
+                onChange={handleChange} />
+            ) : (
+              <CustomSelect
                 list={stringFilter1.data as SelectListItem[]}
                 handleChange={handleChange}
                 name="selectedItem1"
@@ -77,11 +93,22 @@ function ReportFilters({ selectedReport, generateReport }: ReportFiltersProps) {
                 value={values.selectedItem1 || ''}
                 numericValue={false}
               />
+            )}
           </ArgonBox>)}
-        {errors.selectedItem1 && <p>{errors.selectedItem1}</p>}
-        {stringFilter1 && stringFilter2.visible && (
+        {stringFilter2.visible && (
           <ArgonBox display="flex" py={1} mb={0.25}>
-            <CustomSelect
+            {stringKinds[1] === 'text' ? (
+              <CustomTextField
+                name="selectedItem2"
+                id="selectedItem2"
+                label={stringFilter2.label}
+                type="text"
+                fullWidth
+                value={values.selectedItem2 || ''}
+                errorMsg={errors.selectedItem2}
+                onChange={handleChange} />
+            ) : (
+              <CustomSelect
                 list={stringFilter2.data as SelectListItem[]}
                 handleChange={handleChange}
                 name="selectedItem2"
@@ -90,11 +117,22 @@ function ReportFilters({ selectedReport, generateReport }: ReportFiltersProps) {
                 value={values.selectedItem2 || ''}
                 numericValue={false}
               />
+            )}
           </ArgonBox>)}
-        {errors.selectedItem2 && <p>{errors.selectedItem2}</p>}
-        {stringFilter1 && stringFilter3.visible && (
+        {stringFilter3.visible && (
           <ArgonBox display="flex" py={1} mb={0.25}>
-            <CustomSelect
+            {stringKinds[2] === 'text' ? (
+              <CustomTextField
+                name="selectedItem3"
+                id="selectedItem3"
+                label={stringFilter3.label}
+                type="text"
+                fullWidth
+                value={values.selectedItem3 || ''}
+                errorMsg={errors.selectedItem3}
+                onChange={handleChange} />
+            ) : (
+              <CustomSelect
                 list={stringFilter3.data as SelectListItem[]}
                 handleChange={handleChange}
                 name="selectedItem3"
@@ -103,9 +141,9 @@ function ReportFilters({ selectedReport, generateReport }: ReportFiltersProps) {
                 value={values.selectedItem3 || ''}
                 numericValue={false}
               />
+            )}
           </ArgonBox>)}
-        {errors.selectedItem3 && <p>{errors.selectedItem3}</p>}
-        {stringFilter1 && dateTimeFilter1.visible && (
+        {dateTimeFilter1.visible && (
           <ArgonBox display="flex" py={1} mb={0.25}>
             <CustomTextField
               name="selectedDate1"
@@ -115,9 +153,9 @@ function ReportFilters({ selectedReport, generateReport }: ReportFiltersProps) {
               fullWidth
               value={values.selectedDate1 || ''}
               errorMsg={errors.selectedDate1}
-              onChange={handleChange}/>
+              onChange={handleChange} />
           </ArgonBox>)}
-        {stringFilter1 && dateTimeFilter2.visible && (
+        {dateTimeFilter2.visible && (
           <ArgonBox display="flex" py={1} mb={0.25}>
             <CustomTextField
               name="selectedDate2"
@@ -127,9 +165,9 @@ function ReportFilters({ selectedReport, generateReport }: ReportFiltersProps) {
               fullWidth
               value={values.selectedDate2 || ''}
               errorMsg={errors.selectedDate2}
-              onChange={handleChange}/>
+              onChange={handleChange} />
           </ArgonBox>)}
-        {stringFilter1 && dateTimeFilter3.visible && (
+        {dateTimeFilter3.visible && (
           <ArgonBox display="flex" py={1} mb={0.25}>
             <CustomTextField
               name="selectedDate3"
@@ -139,16 +177,72 @@ function ReportFilters({ selectedReport, generateReport }: ReportFiltersProps) {
               fullWidth
               value={values.selectedDate3 || ''}
               errorMsg={errors.selectedDate3}
-              onChange={handleChange}/>
+              onChange={handleChange} />
+          </ArgonBox>)}
+        {numericFilter1.visible && (
+          <ArgonBox display="flex" py={1} mb={0.25}>
+            <CustomTextField
+              name="selectedNumber1"
+              id="selectedNumber1"
+              label={numericFilter1.label}
+              type="number"
+              fullWidth
+              value={values.selectedNumber1 ?? ''}
+              errorMsg={errors.selectedNumber1}
+              onChange={handleChange} />
+          </ArgonBox>)}
+        {numericFilter2.visible && (
+          <ArgonBox display="flex" py={1} mb={0.25}>
+            <CustomTextField
+              name="selectedNumber2"
+              id="selectedNumber2"
+              label={numericFilter2.label}
+              type="number"
+              fullWidth
+              value={values.selectedNumber2 ?? ''}
+              errorMsg={errors.selectedNumber2}
+              onChange={handleChange} />
+          </ArgonBox>)}
+        {numericFilter3.visible && (
+          <ArgonBox display="flex" py={1} mb={0.25}>
+            <CustomTextField
+              name="selectedNumber3"
+              id="selectedNumber3"
+              label={numericFilter3.label}
+              type="number"
+              fullWidth
+              value={values.selectedNumber3 ?? ''}
+              errorMsg={errors.selectedNumber3}
+              onChange={handleChange} />
           </ArgonBox>)}
 
-        <ArgonButton 
-          variant="gradient" 
-          onClick={onGenerate}
-          color="dark">
-          <Icon sx={{ fontWeight: "bold" }}>save</Icon>
-          &nbsp;{t('reports.generate')}
-        </ArgonButton>
+        <ArgonBox display="flex" gap={1} mt={2} flexWrap="wrap">
+          <ArgonButton
+            variant="gradient"
+            onClick={() => run('preview')}
+            disabled={running}
+            color="info">
+            <Icon sx={{ fontWeight: "bold" }}>visibility</Icon>
+            &nbsp;{t('reports.preview')}
+          </ArgonButton>
+          <ArgonButton
+            variant="gradient"
+            onClick={() => run('xlsx')}
+            disabled={running}
+            color="success">
+            <Icon sx={{ fontWeight: "bold" }}>download</Icon>
+            &nbsp;{t('reports.exportExcel')}
+          </ArgonButton>
+          {supportsPdf && (
+            <ArgonButton
+              variant="gradient"
+              onClick={() => run('pdf')}
+              disabled={running}
+              color="error">
+              <Icon sx={{ fontWeight: "bold" }}>picture_as_pdf</Icon>
+              &nbsp;{t('reports.exportPdf')}
+            </ArgonButton>)}
+        </ArgonBox>
       </ArgonBox>
     </Card>
   );
