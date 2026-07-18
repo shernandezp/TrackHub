@@ -3,7 +3,7 @@
  * envPrefix-less define shim in vite.config.ts). Source code reads these
  * through process.env.*; the references are statically replaced at build
  * time. Centralized typed access arrives with src/api/core/endpoints.ts
- * (migration spec 26, Phase 2).
+ *.
  */
 declare namespace NodeJS {
   interface ProcessEnv {

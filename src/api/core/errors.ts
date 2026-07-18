@@ -24,7 +24,7 @@ export interface GraphQLErrorEntry {
 
 /**
  * Maps well-known backend error codes to user-facing i18n keys. Covers the
- * Reporting REST envelope codes (spec 06 §7.4) plus the shared account/feature
+ * Reporting REST envelope codes plus the shared account/feature
  * codes so blob/JSON error responses surface as friendly localized toasts.
  */
 const REST_ERROR_I18N: Record<string, string> = {

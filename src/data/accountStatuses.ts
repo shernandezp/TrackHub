@@ -53,7 +53,7 @@ export const ACCOUNT_STATUS_I18N = {
 // i18n key union for the status labels.
 export type AccountStatusI18nKey = (typeof ACCOUNT_STATUS_I18N)[AccountStatusName];
 
-// Allowed lifecycle transitions by current statusId (spec 03 §6.1).
+// Allowed lifecycle transitions by current statusId.
 export const ALLOWED_TRANSITIONS = {
   1: ['ACTIVE', 'SUSPENDED', 'CANCELLED'],
   2: ['SUSPENDED', 'CANCELLED'],

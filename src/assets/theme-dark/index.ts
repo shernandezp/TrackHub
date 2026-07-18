@@ -102,7 +102,7 @@ import dialogActions from "assets/theme-dark/components/dialog/dialogActions";
 export default createTheme({
   breakpoints: { ...breakpoints },
   // See src/types/mui-theme.d.ts — Argon palette extensions typed at the boundary;
-  // the spread interior stays permissive per the migration spec (§6 Phase 6).
+  // the spread interior stays permissive.
   palette: {
     ...colors,
     mode: 'dark'

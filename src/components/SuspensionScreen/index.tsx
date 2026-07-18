@@ -25,7 +25,7 @@ interface SuspensionScreenProps {
   branding: AccountContext['branding'] | null;
 }
 
-// Full-screen state rendered instead of the app when the account is non-operational (spec 03 §8).
+// Full-screen state rendered instead of the app when the account is non-operational.
 function SuspensionScreen({ status, branding }: SuspensionScreenProps) {
   const { t } = useTranslation();
   const statusKey = status ? ACCOUNT_STATUS_I18N[status] : undefined;

@@ -41,7 +41,6 @@ export default [
     languageOptions: { globals: { ...globals.node } },
   },
   // Phase 7 guard: src/ is 100% TypeScript — any new .js/.jsx file is an error.
-  // (spec 26 §6 Phase 7; the migration completed 2026-07-11.)
   {
     files: ["src/**/*.{js,jsx}"],
     rules: {

@@ -52,7 +52,7 @@ interface DocumentPanelProps {
   categories?: DocumentTypeVm[];
 }
 
-// Reusable, owner-scoped document panel (spec 04 §8). Lists an owner's documents and provides upload
+// Reusable, owner-scoped document panel. Lists an owner's documents and provides upload
 // (drag-drop), download, new-version, void, remove-reference, and share. Embeddable on any owner detail
 // surface; gated by the OWNER module's feature (pass canManage), not the `documents` feature.
 function DocumentPanel({ accountId = null, ownerEntityType, ownerEntityId = null, canManage = true, categories = [] }: DocumentPanelProps) {

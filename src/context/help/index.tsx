@@ -35,7 +35,7 @@ interface HelpProviderProps {
 }
 
 /**
- * Contextual help state (spec 26): mounted once in App around the dashboard
+ * Contextual help state: mounted once in App around the dashboard
  * shell. Owns the modal open state and the in-modal navigation stack, and
  * binds the F1 / Shift+? shortcuts. Data fetching lives in the dialog so
  * users who never open help never fetch anything.

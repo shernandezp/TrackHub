@@ -40,7 +40,7 @@ interface DocumentTypeDialogProps {
   errors: Record<string, string>;
 }
 
-// Configure an account document type / Category with required + expiring flags (spec 04 §7.1, §8).
+// Configure an account document type / Category with required + expiring flags.
 function DocumentTypeDialog({ open, setOpen, handleSubmit, values, handleChange, errors }: DocumentTypeDialogProps) {
   const { t } = useTranslation();
 

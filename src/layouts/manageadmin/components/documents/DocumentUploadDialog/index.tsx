@@ -57,7 +57,7 @@ interface DocumentUploadDialogProps {
   replaceMode?: boolean;
 }
 
-// Upload a new document or a replacement version (spec 04 §8). Collects the file plus category/
+// Upload a new document or a replacement version. Collects the file plus category/
 // classification metadata; the drop area accepts drag-and-drop or click-to-select.
 function DocumentUploadDialog({ open, setOpen, onUpload, categories = [], replaceMode = false }: DocumentUploadDialogProps) {
   const { t } = useTranslation();

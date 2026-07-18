@@ -14,7 +14,7 @@
 *  limitations under the License.
 */
 
-// Screen/topic resolution and index visibility filtering (spec 26 §5.2/§7.2).
+// Screen/topic resolution and index visibility filtering.
 
 import { describe, expect, it } from 'vitest';
 import { isTopicVisible, resolveScreenKey, topicsForScreen } from 'context/help/HelpContext';

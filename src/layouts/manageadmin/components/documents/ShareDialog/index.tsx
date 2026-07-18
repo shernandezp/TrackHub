@@ -40,7 +40,7 @@ interface ShareDialogProps {
   document?: DocumentVm | null;
 }
 
-// Create/copy a document public-share link (spec 04 §7, §8). Reuses PublicLinkGrant with
+// Create/copy a document public-share link. Reuses PublicLinkGrant with
 // ResourceType="Document" + scope "document.read"; the token + URL are shown once at creation.
 function ShareDialog({ open, setOpen, accountId = null, document = null }: ShareDialogProps) {
   const { t } = useTranslation();

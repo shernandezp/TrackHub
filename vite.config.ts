@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 import fs from 'node:fs';
 
 export default defineConfig(({ mode }) => {
-  // PERMANENT (decided spec 26 Phase 7): all REACT_APP_* reads are centralized
+  // PERMANENT: all REACT_APP_* reads are centralized
   // in src/api/core/endpoints.ts, which deliberately keeps the CRA
   // process.env.REACT_APP_* convention so the existing .env files,
   // .env.production.template, and deployment docs stay valid. This shim

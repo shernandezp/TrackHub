@@ -32,7 +32,7 @@ import {
 // Passthrough translator: returns the key so we can assert label wiring.
 const t = ((key: string) => key) as unknown as TFunction;
 
-// The 21 seeded report codes (spec 06 §8). Every one must have a strategy so the
+// The 21 seeded report codes. Every one must have a strategy so the
 // silent empty-filter fallback is gone.
 const SEEDED_CODES = [
   'LiveReport',

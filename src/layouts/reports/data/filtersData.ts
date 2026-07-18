@@ -51,7 +51,7 @@ export type StringInputKind = 'select' | 'text';
 
 /**
  * Which FilterDto fields each seeded report consumes — derived from the Reporting
- * report factories (spec 06 §8). Codes are the server's report codes, NOT
+ * report factories. Codes are the server's report codes, NOT
  * hardcoded UI ordering; the catalog is still rendered from whatever the server
  * returns. Reports consuming nothing get an explicit empty spec.
  */

@@ -101,7 +101,7 @@ export default createTheme({
   breakpoints: { ...breakpoints },
   // Spread of the Argon color catalog: values are the widened string literals of the
   // vendored template; typed at the theme boundary (see src/types/mui-theme.d.ts), the
-  // interior stays permissive per the migration spec (§6 Phase 6).
+  // interior stays permissive.
   palette: { ...colors } as ThemeOptions["palette"],
   typography: { ...typography },
   boxShadows: { ...boxShadows },

@@ -236,7 +236,7 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
     }
   };
 
-  // Open critical alerts (spec 05): anything not acknowledged/resolved with
+  // Open critical alerts: anything not acknowledged/resolved with
   // Critical severity. A failed read (e.g. permissions) keeps the count at 0.
   const fetchCriticalAlerts = async () => {
     try {

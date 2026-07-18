@@ -15,13 +15,13 @@
 */
 
 /**
- * Static catalogs for the alerts & notifications module (spec 05). Labels come
+ * Static catalogs for the alerts & notifications module. Labels come
  * from i18n (`alertEventTypes.*`, `notificationChannels.*`) via toCamelCase;
  * these are the raw backend identifiers. UI gating is cosmetic — the backend
  * is authoritative for feature entitlements.
  */
 
-/** Alert event types emitted across the platform (spec 05 §catalog). */
+/** Alert event types emitted across the platform. */
 export const ALERT_EVENT_TYPES = [
   'GeofenceEntered',
   'GeofenceExited',
@@ -34,7 +34,7 @@ export const ALERT_EVENT_TYPES = [
   'NotificationDeliveryFailed',
 ] as const;
 
-/** Rule delivery channels. Push ships with spec 10 and is intentionally hidden. */
+/** Rule delivery channels. Push is not yet available and is intentionally hidden. */
 export const NOTIFICATION_CHANNELS = ['InApp', 'Email', 'Webhook', 'WhatsApp'] as const;
 
 /** Channels a principal can subscribe to directly (no Webhook at principal level). */

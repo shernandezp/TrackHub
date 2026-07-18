@@ -1,7 +1,7 @@
 /**
  * Module declarations for dependencies that ship no types and have no
  * published @types package. Revisit each when its usage is converted
- * (migration spec 26); delete a shim if upstream gains types.
+ *; delete a shim if upstream gains types.
  */
 
 // The Google Maps JS API attaches its namespace to `window.google` at

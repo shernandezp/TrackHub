@@ -14,7 +14,7 @@
 *  limitations under the License.
 */
 
-// Validator-rule coverage for scripts/build-help.mjs (spec 26 §9): every rule
+// Validator-rule coverage for scripts/build-help.mjs: every rule
 // gets a broken fixture; a valid fixture proves the happy path and manifest.
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';

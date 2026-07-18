@@ -45,7 +45,7 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Tooltip from "@mui/material/Tooltip";
 
-// Contextual help (spec 26)
+// Contextual help
 import { useHelp } from "context/help/HelpContext";
 
 // Argon Dashboard 2 MUI components
@@ -53,7 +53,7 @@ import ArgonBox from "components/ArgonBox";
 import ArgonTypography from "components/ArgonTypography";
 import ArgonInput from "components/ArgonInput";
 
-// In-app notification feed (spec 05)
+// In-app notification feed
 import { useMyNotifications, useMarkNotificationRead } from "queries/notifications";
 import { formatDateTime } from "utils/dateUtils";
 import { toCamelCase } from "utils/stringUtils";

@@ -14,7 +14,7 @@
 *  limitations under the License.
 */
 
-// Help content validator + manifest generator (spec 26).
+// Help content validator + manifest generator.
 //
 // Parses public/help/{lang}/*.md, validates the authoring contract, and emits
 // public/help/manifest.json (gitignored). Run modes:

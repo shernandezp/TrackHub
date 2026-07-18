@@ -70,7 +70,7 @@ function resolveView(
   return topic ? { kind: 'topic', topic, anchor: entry.anchor } : { kind: 'missing' };
 }
 
-/** Contextual help modal (spec 26). Rendered once by HelpProvider. */
+/** Contextual help modal. Rendered once by HelpProvider. */
 function HelpDialog() {
   const { t, i18n } = useTranslation();
   const theme = useTheme();

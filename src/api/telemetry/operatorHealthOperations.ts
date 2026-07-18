@@ -16,8 +16,7 @@
 
 /**
  * Operator health / sync-run GraphQL documents (Telemetry backend). These
- * reads were split out of the former dual-backend operator service (spec 01.3
- * §5.5). Codegen validates them against schemas/telemetry.graphql; values
+ * reads were split out of the former dual-backend operator service. Codegen validates them against schemas/telemetry.graphql; values
  * always travel as variables.
  */
 

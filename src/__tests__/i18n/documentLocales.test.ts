@@ -21,7 +21,7 @@ import es from 'locales/es.json';
 
 const SRC = path.join(__dirname, '..', '..');
 
-// Every source file that renders the Document Management screens (spec 04 §8).
+// Every source file that renders the Document Management screens.
 const PANEL_SOURCES = [
   'layouts/manageadmin/components/documents/index.js',
   'layouts/manageadmin/components/documents/DocumentPanel/index.js',
