@@ -571,6 +571,26 @@
       "operations": "Operations & Monitoring"
     }
   },
+  "help": {
+    "open": "Help",
+    "title": "Help",
+    "search": "Search help topics...",
+    "thisScreen": "This screen",
+    "allTopics": "All topics",
+    "related": "Related topics",
+    "back": "Back",
+    "index": "All help topics",
+    "topicUnavailable": "This help topic isn't available right now — browse the topics below.",
+    "unavailable": "Help content isn't available right now. Please try again later.",
+    "noResults": "No topics match your search.",
+    "category": {
+      "getting-started": "Getting started",
+      "operation": "Day-to-day operation",
+      "administration": "Administration",
+      "troubleshooting": "Troubleshooting",
+      "reference": "Reference"
+    }
+  },
   "navbar": {
     "searchText": "Type here...",
     "signOff": "Sign off"

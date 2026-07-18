@@ -43,6 +43,10 @@ import Icon from "@mui/material/Icon";
 import Badge from "@mui/material/Badge";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
+import Tooltip from "@mui/material/Tooltip";
+
+// Contextual help (spec 26)
+import { useHelp } from "context/help/HelpContext";
 
 // Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
@@ -92,6 +96,7 @@ function DashboardNavbar({
   const route = useLocation().pathname.split("/").slice(1);
   const { logoff, isAuthenticated } = useAuth();
   const { t } = useTranslation();
+  const { openHelp } = useHelp();
   const [bellAnchor, setBellAnchor] = useState<HTMLElement | null>(null);
 
   // A failed feed read (e.g. permissions) renders the bell with a zero badge
@@ -161,6 +166,22 @@ function DashboardNavbar({
               )}
             </ArgonBox>
             <ArgonBox color={light ? "white" : "inherit"}>
+              <Tooltip title={t("help.open")}>
+                <IconButton
+                  sx={navbarIconButton}
+                  size="small"
+                  onClick={() => openHelp()}
+                  aria-label={t("help.open")}
+                >
+                  <Icon
+                    sx={({ palette: { dark, white } }) => ({
+                      color: light && transparentNavbar ? white.main : dark.main,
+                    })}
+                  >
+                    help_outline
+                  </Icon>
+                </IconButton>
+              </Tooltip>
               <IconButton
                 sx={navbarIconButton}
                 size="small"

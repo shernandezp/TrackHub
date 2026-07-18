@@ -571,6 +571,26 @@
       "operations": "Operación y Monitoreo"
     }
   },
+  "help": {
+    "open": "Ayuda",
+    "title": "Ayuda",
+    "search": "Buscar temas de ayuda...",
+    "thisScreen": "Esta pantalla",
+    "allTopics": "Todos los temas",
+    "related": "Temas relacionados",
+    "back": "Atrás",
+    "index": "Todos los temas de ayuda",
+    "topicUnavailable": "Este tema de ayuda no está disponible en este momento — explora los temas a continuación.",
+    "unavailable": "El contenido de ayuda no está disponible en este momento. Inténtalo de nuevo más tarde.",
+    "noResults": "Ningún tema coincide con tu búsqueda.",
+    "category": {
+      "getting-started": "Primeros pasos",
+      "operation": "Operación diaria",
+      "administration": "Administración",
+      "troubleshooting": "Solución de problemas",
+      "reference": "Referencia"
+    }
+  },
   "navbar": {
     "searchText": "Escribe aquí...",
     "signOff": "Cerrar Sesión"

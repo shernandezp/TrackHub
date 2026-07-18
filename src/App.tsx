@@ -87,6 +87,7 @@ import { useTranslation } from 'react-i18next';
 import ErrorBoundary from "components/ErrorBoundary";
 import SuspensionScreen from "components/SuspensionScreen";
 import PrincipalTypes from "constants/principalTypes";
+import HelpProvider from "context/help";
 
 export default function App() {
   const [controller, dispatch] = useArgonController();
@@ -194,7 +195,7 @@ export default function App() {
   // Operational statuses (Trial/Active) permit normal access; anything else renders a suspension shell.
   const accountOperational = !accountStatus || accountStatus === 'TRIAL' || accountStatus === 'ACTIVE';
 
-  const featureEnabled = (featureKey: string | undefined): boolean => {
+  const featureEnabled = (featureKey?: string | null): boolean => {
     if (!featureKey) return true;
     const feature = accountFeatures.find(item => item.featureKey === featureKey);
     return feature ? feature.enabled : false;
@@ -217,6 +218,12 @@ export default function App() {
     }
     return true;
   };
+
+  // Screens the principal can actually reach (feature + role filtered) — the
+  // help index hides topics for screens outside this set (UX filtering, CH-01).
+  const allowedScreens = enabledRoutes
+    .filter(route => route.type === 'route' && !!route.route && routeAllowed(route))
+    .map(route => route.key);
 
   const getRoutes = (allRoutes: RouteDefinition[]): ReactNode =>
     allRoutes.map((route) => {
@@ -266,7 +273,7 @@ export default function App() {
           {isAuthenticated && !accountOperational ? (
             <SuspensionScreen status={accountStatus} branding={branding} />
           ) : (
-          <>
+          <HelpProvider allowedScreens={allowedScreens} isFeatureEnabled={featureEnabled}>
           {layout === "dashboard" && (
           <>
             <Sidenav
@@ -290,7 +297,7 @@ export default function App() {
           {getRoutes(enabledRoutes)}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
-          </>
+          </HelpProvider>
           )}
         </ErrorBoundary>
         {loading && (
