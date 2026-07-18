@@ -14,6 +14,8 @@
 *  limitations under the License.
 */
 
+import type { ComponentType } from "react";
+import { useTranslation } from "react-i18next";
 import ManageAccount from "layouts/manageadmin/components/account";
 import ManageDevices from "layouts/manageadmin/components/devices";
 import ManageTransporters from "layouts/manageadmin/components/transporters";
@@ -35,35 +37,54 @@ import ManagePublicLinks from "layouts/manageadmin/components/publicLinks";
 import ManageDocuments from "layouts/manageadmin/components/documents";
 import ManageBackgroundJobs from "layouts/manageadmin/components/backgroundJobs";
 import ArgonBox from "components/ArgonBox";
+import ArgonTypography from "components/ArgonTypography";
 import DashboardLayout from "controls/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "controls/Navbars/DashboardNavbar";
 import Footer from "controls/Footer";
+import { SECTION_GROUP_KEYS } from "layouts/manageadmin/data/sectionGroups";
+import type { SectionGroupKey } from "layouts/manageadmin/data/sectionGroups";
+
+// Sections per functional group; the group order lives in sectionGroups.ts.
+const SECTION_GROUPS: Record<SectionGroupKey, ComponentType[]> = {
+  account: [ManageAccount, ManageBranding, ManageAccountFeatures],
+  fleet: [ManageDevices, ManageTransporters, ManageDrivers, ManageGroups, ManagePois],
+  access: [ManageUsers, ManageRoles, ManagePolicies],
+  alerts: [
+    ManageNotificationRules,
+    ManageAlertSubscriptions,
+    ManageNotificationTemplates,
+    ManageAlertEvents,
+    ManageNotificationDeliveries,
+  ],
+  documents: [ManageDocuments, ManagePublicLinks],
+  operations: [ManageAuditTrail, ManageBackgroundJobs],
+};
 
 function ManageAdmin() {
+  const { t } = useTranslation();
+
   return (
     <DashboardLayout>
       <DashboardNavbar />
         <ArgonBox py={3}>
-          <ManageAccount/>
-          <ManageBranding/>
-          <ManageDevices/>
-          <ManageTransporters/>
-          <ManageUsers/>
-          <ManageRoles/>
-          <ManagePolicies/>
-          <ManageGroups/>
-          <ManagePois/>
-          <ManageAccountFeatures/>
-          <ManageDrivers/>
-          <ManageAuditTrail/>
-          <ManageNotificationRules/>
-          <ManageAlertEvents/>
-          <ManageAlertSubscriptions/>
-          <ManageNotificationDeliveries/>
-          <ManageNotificationTemplates/>
-          <ManagePublicLinks/>
-          <ManageDocuments/>
-          <ManageBackgroundJobs/>
+          {SECTION_GROUP_KEYS.map((groupKey) => (
+            <ArgonBox key={groupKey} mb={4}>
+              <ArgonTypography
+                variant="button"
+                fontWeight="bold"
+                textTransform="uppercase"
+                color="text"
+                sx={{ letterSpacing: 1 }}
+              >
+                {t(`manageAdmin.groups.${groupKey}` as 'manageAdmin.groups.account')}
+              </ArgonTypography>
+              <ArgonBox mt={1.5}>
+                {SECTION_GROUPS[groupKey].map((Section) => (
+                  <Section key={Section.displayName ?? Section.name} />
+                ))}
+              </ArgonBox>
+            </ArgonBox>
+          ))}
         </ArgonBox>
       <Footer />
     </DashboardLayout>

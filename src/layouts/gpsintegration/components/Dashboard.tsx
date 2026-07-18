@@ -15,14 +15,13 @@
 */
 
 import { useContext, useEffect, useRef, useState } from 'react';
-import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import Grid from '@mui/material/Grid';
 import Card from '@mui/material/Card';
 import ArgonBox from 'components/ArgonBox';
 import ArgonTypography from 'components/ArgonTypography';
-import StatCard from 'layouts/gpsintegration/components/dashboard/StatCard';
+import SummaryCard from 'layouts/gpsintegration/components/dashboard/SummaryCard';
 import ProviderStatusBreakdown from 'layouts/gpsintegration/components/dashboard/ProviderStatusBreakdown';
 import { getAccountByUser } from 'api/manager/accounts';
 import { useGpsDashboard, gpsDashboardKeys } from 'queries/gpsDashboard';
@@ -91,32 +90,47 @@ function GpsDashboard() {
     );
   }
 
-  const stats: Array<[string, ReactNode]> = [
-    [t('gpsIntegration.dashboard.operatorsEnabled'), `${dashboard.operatorsEnabled}/${dashboard.operatorsTotal}`],
-    [t('gpsIntegration.dashboard.operatorsHealthy'), dashboard.operatorsHealthy],
-    [t('gpsIntegration.dashboard.operatorsDegraded'), dashboard.operatorsDegraded],
-    [t('gpsIntegration.dashboard.operatorsOffline'), dashboard.operatorsOffline],
-    [t('gpsIntegration.dashboard.devicesTotal'), dashboard.devicesTotal],
-    [t('gpsIntegration.dashboard.devicesAssigned'), dashboard.devicesAssigned],
-    [t('gpsIntegration.dashboard.devicesUnassigned'), dashboard.unassignedDevicesCount],
-    [t('gpsIntegration.dashboard.devicesIgnored'), dashboard.devicesIgnored],
-    [t('gpsIntegration.dashboard.recentlyAdded24h'), dashboard.recentlyAddedDevicesLast24h],
-    [t('gpsIntegration.dashboard.syncsOk24h'), dashboard.syncRunsSucceededLast24h],
-    [t('gpsIntegration.dashboard.syncsFailed24h'), dashboard.syncRunsFailedLast24h],
-    [t('gpsIntegration.dashboard.averageSyncDuration'),
-      dashboard.averageSyncDurationSeconds == null ? '-' : `${Math.round(dashboard.averageSyncDurationSeconds)} s`],
-    [t('gpsIntegration.dashboard.lastAutoSync'), formatDateTime(dashboard.lastAutomaticSyncAt)],
-    [t('gpsIntegration.dashboard.lastManualSync'), formatDateTime(dashboard.lastManualSyncAt)],
-  ];
-
   return (
     <ArgonBox>
       <Grid container spacing={2}>
-        {stats.map(([label, value]) => (
-          <Grid size={{ xs: 6, sm: 4, md: 3 }} key={label}>
-            <StatCard label={label} value={value} />
-          </Grid>
-        ))}
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+          <SummaryCard
+            title={t('gpsIntegration.dashboard.operators')}
+            primary={`${dashboard.operatorsEnabled}/${dashboard.operatorsTotal}`}
+            primaryLabel={t('gpsIntegration.dashboard.enabledOfTotal')}
+            rows={[
+              { label: t('gpsIntegration.dashboard.operatorsHealthy'), value: dashboard.operatorsHealthy, color: 'success' },
+              { label: t('gpsIntegration.dashboard.operatorsDegraded'), value: dashboard.operatorsDegraded, color: 'warning' },
+              { label: t('gpsIntegration.dashboard.operatorsOffline'), value: dashboard.operatorsOffline, color: 'error' },
+            ]}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+          <SummaryCard
+            title={t('gpsIntegration.dashboard.devices')}
+            primary={dashboard.devicesTotal}
+            primaryLabel={t('generic.total')}
+            rows={[
+              { label: t('gpsIntegration.status.assigned'), value: dashboard.devicesAssigned },
+              { label: t('gpsIntegration.status.available'), value: dashboard.unassignedDevicesCount, color: 'warning' },
+              { label: t('gpsIntegration.status.ignored'), value: dashboard.devicesIgnored },
+              { label: t('gpsIntegration.dashboard.recentlyAdded24h'), value: dashboard.recentlyAddedDevicesLast24h },
+            ]}
+          />
+        </Grid>
+        <Grid size={{ xs: 12, sm: 12, md: 4 }}>
+          <SummaryCard
+            title={t('gpsIntegration.dashboard.sync')}
+            primary={`${dashboard.syncRunsSucceededLast24h}/${dashboard.syncRunsFailedLast24h}`}
+            primaryLabel={t('gpsIntegration.dashboard.okFailed24h')}
+            rows={[
+              { label: t('gpsIntegration.dashboard.averageSyncDuration'),
+                value: dashboard.averageSyncDurationSeconds == null ? '-' : `${Math.round(dashboard.averageSyncDurationSeconds)} s` },
+              { label: t('gpsIntegration.dashboard.lastAutoSync'), value: formatDateTime(dashboard.lastAutomaticSyncAt) },
+              { label: t('gpsIntegration.dashboard.lastManualSync'), value: formatDateTime(dashboard.lastManualSyncAt) },
+            ]}
+          />
+        </Grid>
       </Grid>
       <ArgonBox mt={2}>
         <ProviderStatusBreakdown items={dashboard.deviceCountsByProviderStatus} />

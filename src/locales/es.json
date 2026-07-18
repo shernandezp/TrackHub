@@ -185,6 +185,7 @@
     "disable": "Deshabilitar",
     "yes": "Sí",
     "no": "No",
+    "total": "Total",
     "confirmDelete": "¿Está seguro de que desea eliminar este elemento?"
   },
   "serviceClientPermissions": {
@@ -559,6 +560,16 @@
     "deleteMessage": "¿Está seguro de que desea eliminar este grupo?",
     "assignTransporter": "Asignar Unidad",
     "assignUser": "Asignar Usuario"
+  },
+  "manageAdmin": {
+    "groups": {
+      "account": "Cuenta y Suscripción",
+      "fleet": "Flota y Rastreo",
+      "access": "Usuarios y Accesos",
+      "alerts": "Alertas y Notificaciones",
+      "documents": "Documentos y Compartidos",
+      "operations": "Operación y Monitoreo"
+    }
   },
   "navbar": {
     "searchText": "Escribe aquí...",
@@ -944,22 +955,19 @@
       "openAlerts": "Alertas GPS Abiertas"
     },
     "dashboard": {
-      "operatorsEnabled": "Operadores (Activos/Totales)",
+      "operators": "Operadores",
+      "devices": "Dispositivos",
+      "sync": "Sincronización",
+      "enabledOfTotal": "Habilitados / Totales",
+      "okFailed24h": "OK / Fallidas (24h)",
       "operatorsHealthy": "Saludables",
       "operatorsDegraded": "Degradados",
       "operatorsOffline": "Desconectados",
-      "devicesTotal": "Dispositivos Totales",
-      "devicesAssigned": "Dispositivos Asignados",
-      "devicesUnassigned": "Dispositivos sin Asignar",
-      "devicesIgnored": "Dispositivos Ignorados",
       "recentlyAdded24h": "Nuevos (24h)",
-      "syncsOk24h": "Sincronizaciones OK (24h)",
-      "syncsFailed24h": "Sincronizaciones Fallidas (24h)",
       "lastAutoSync": "Última Sincronización Automática",
       "lastManualSync": "Última Sincronización Manual",
       "averageSyncDuration": "Duración Promedio de Sincronización",
-      "deviceCountsByProviderStatus": "Dispositivos por Proveedor/Estado",
-      "providerBreakdownHint": "Totales por operador"
+      "deviceCountsByProviderStatus": "Dispositivos por Proveedor/Estado"
     },
     "columns": {
       "health": "Estado",

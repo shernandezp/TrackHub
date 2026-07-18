@@ -37,6 +37,7 @@ type AttributesVm {
   mileage: Float
   hourmeter: Float
   temperature: Float
+  extra: String
 }
 
 type DeviceVm {

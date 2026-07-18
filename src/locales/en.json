@@ -185,6 +185,7 @@
     "disable": "Disable",
     "yes": "Yes",
     "no": "No",
+    "total": "Total",
     "confirmDelete": "Are you sure you want to delete this item?"
   },
   "serviceClientPermissions": {
@@ -559,6 +560,16 @@
     "deleteMessage": "Are you sure you want to delete this group?",
     "assignTransporter": "Assign Unit",
     "assignUser": "Assign User"
+  },
+  "manageAdmin": {
+    "groups": {
+      "account": "Account & Subscription",
+      "fleet": "Fleet & Tracking",
+      "access": "Users & Access",
+      "alerts": "Alerts & Notifications",
+      "documents": "Documents & Sharing",
+      "operations": "Operations & Monitoring"
+    }
   },
   "navbar": {
     "searchText": "Type here...",
@@ -944,22 +955,19 @@
       "openAlerts": "Open GPS Alerts"
     },
     "dashboard": {
-      "operatorsEnabled": "Operators (Enabled/Total)",
+      "operators": "Operators",
+      "devices": "Devices",
+      "sync": "Synchronization",
+      "enabledOfTotal": "Enabled / Total",
+      "okFailed24h": "OK / Failed (24h)",
       "operatorsHealthy": "Healthy",
       "operatorsDegraded": "Degraded",
       "operatorsOffline": "Offline",
-      "devicesTotal": "Devices Total",
-      "devicesAssigned": "Devices Assigned",
-      "devicesUnassigned": "Devices Unassigned",
-      "devicesIgnored": "Devices Ignored",
       "recentlyAdded24h": "Added (last 24h)",
-      "syncsOk24h": "Sync OK (24h)",
-      "syncsFailed24h": "Sync Failed (24h)",
       "lastAutoSync": "Last Automatic Sync",
       "lastManualSync": "Last Manual Sync",
       "averageSyncDuration": "Average Sync Duration",
-      "deviceCountsByProviderStatus": "Devices by Provider/Status",
-      "providerBreakdownHint": "Per operator totals"
+      "deviceCountsByProviderStatus": "Devices by Provider/Status"
     },
     "columns": {
       "health": "Health",

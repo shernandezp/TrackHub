@@ -14,88 +14,25 @@
 *  limitations under the License.
 */
 
+import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import Card from '@mui/material/Card';
-import Grid from '@mui/material/Grid';
-import type { Theme } from '@mui/material/styles';
+import Table from 'controls/Tables/Table';
+import TableAccordion from 'controls/Accordions/TableAccordion';
 import ArgonBox from 'components/ArgonBox';
-import ArgonBadge from 'components/ArgonBadge';
 import ArgonTypography from 'components/ArgonTypography';
-import type { GpsIntegrationDashboard } from 'api/manager/gpsDashboard';
+import { pivotProviderStatus } from 'layouts/gpsintegration/data/providerStatusData';
+import type { ProviderStatusItem } from 'layouts/gpsintegration/data/providerStatusData';
 
-/** A single (operator, detectedStatus, count) tuple from the dashboard. */
-type ProviderStatusItem = GpsIntegrationDashboard['deviceCountsByProviderStatus'][number];
-/** Per-operator rollup: counts keyed by detected-status string. */
-interface OperatorGroup { operatorName: string; statuses: Record<string, number>; }
-type StatusLabelFn = (status: string) => string;
-
-type BadgeColor = 'primary' | 'secondary' | 'info' | 'success' | 'warning' | 'error' | 'light' | 'dark';
-
-function statusColor(status: string): BadgeColor {
-  switch ((status || '').toUpperCase()) {
-    case 'NEW':
-    case 'AVAILABLE': return 'warning';
-    case 'ASSIGNED': return 'info';
-    case 'IGNORED': return 'secondary';
-    case 'REMOVED': return 'error';
-    default: return 'secondary';
-  }
-}
-
-function groupByOperator(items: ProviderStatusItem[] = []): OperatorGroup[] {
-  const map = new Map<string, OperatorGroup>();
-  items.forEach((item) => {
-    const key = item.operatorId || item.operatorName || 'unknown';
-    if (!map.has(key)) {
-      map.set(key, { operatorName: item.operatorName || key, statuses: {} });
-    }
-    const entry = map.get(key)!;
-    const status = item.detectedStatus || 'unknown';
-    entry.statuses[status] = (entry.statuses[status] || 0) + (item.count || 0);
-  });
-  return Array.from(map.values()).sort((a, b) => a.operatorName.localeCompare(b.operatorName));
-}
-
-interface ProviderRowProps {
-  operatorName: string;
-  statuses: Record<string, number>;
-  statusLabel: StatusLabelFn;
-}
-
-function ProviderRow({ operatorName, statuses, statusLabel }: ProviderRowProps) {
-  const entries = Object.entries(statuses).filter(([, count]) => count > 0);
+function CountCell({ value, color }: { value: number; color?: 'success' | 'warning' | 'error' }) {
   return (
-    <ArgonBox
-      display="flex"
-      flexWrap="wrap"
-      alignItems="center"
-      gap={1}
-      py={1}
-      sx={{
-        borderBottom: ({ borders: { borderWidth, borderColor } }: Theme) => `${borderWidth[1]} solid ${borderColor}`,
-        '&:last-of-type': { borderBottom: 0 },
-      }}
+    <ArgonTypography
+      variant="caption"
+      fontWeight={value > 0 ? 'bold' : 'regular'}
+      color={value > 0 ? (color ?? 'text') : 'secondary'}
     >
-      <ArgonTypography variant="button" fontWeight="medium" sx={{ minWidth: 140 }}>
-        {operatorName}
-      </ArgonTypography>
-      <ArgonBox display="flex" flexWrap="wrap" gap={0.5}>
-        {entries.length === 0 ? (
-          <ArgonTypography variant="caption" color="secondary">-</ArgonTypography>
-        ) : (
-          entries.map(([status, count]) => (
-            <ArgonBadge
-              key={status}
-              variant="gradient"
-              color={statusColor(status)}
-              badgeContent={`${statusLabel(status)}: ${count}`}
-              size="xs"
-              container
-            />
-          ))
-        )}
-      </ArgonBox>
-    </ArgonBox>
+      {value}
+    </ArgonTypography>
   );
 }
 
@@ -103,44 +40,58 @@ interface ProviderStatusBreakdownProps {
   items?: ProviderStatusItem[];
 }
 
+/**
+ * One pivoted table row per operator (collapsed by default): unassigned /
+ * assigned / ignored / removed counts plus a total, sorted by total so the
+ * screen stays usable with many providers.
+ */
 function ProviderStatusBreakdown({ items }: ProviderStatusBreakdownProps) {
   const { t } = useTranslation();
-  const statusLabel = (status: string): string => {
-    const key = (status || '').toLowerCase();
-    return t(`gpsIntegration.status.${key}` as 'gpsIntegration.status.new', { defaultValue: status || '-' });
-  };
-  const groups = groupByOperator(items);
+  const [expanded, setExpanded] = useState(false);
+  const rows = pivotProviderStatus(items);
+
+  const tableRows: Record<string, ReactNode>[] = rows.map((row) => ({
+    operator: (
+      <ArgonTypography variant="caption" fontWeight="medium">
+        {row.operatorName}
+      </ArgonTypography>
+    ),
+    unassigned: <CountCell value={row.unassigned} color="warning" />,
+    assigned: <CountCell value={row.assigned} />,
+    ignored: <CountCell value={row.ignored} />,
+    removed: <CountCell value={row.removed} color="error" />,
+    total: <CountCell value={row.total} />,
+    id: row.operatorId,
+  }));
 
   return (
-    <Card sx={{ height: '100%' }}>
-      <ArgonBox p={2}>
-        <ArgonBox display="flex" alignItems="center" justifyContent="space-between" mb={1}>
-          <ArgonTypography variant="h6" fontWeight="medium">
-            {t('gpsIntegration.dashboard.deviceCountsByProviderStatus')}
-          </ArgonTypography>
-          <ArgonTypography variant="caption" color="secondary">
-            {t('gpsIntegration.dashboard.providerBreakdownHint')}
-          </ArgonTypography>
+    <TableAccordion
+      title={`${t('gpsIntegration.dashboard.deviceCountsByProviderStatus')} (${rows.length})`}
+      expanded={expanded}
+      setExpanded={setExpanded}
+    >
+      {rows.length === 0 ? (
+        <ArgonTypography variant="caption" color="secondary">
+          {t('gpsIntegration.empty.dashboard')}
+        </ArgonTypography>
+      ) : (
+        <ArgonBox sx={{ maxHeight: 420, overflowY: 'auto' }}>
+          <Table
+            columns={[
+              { name: 'operator', title: t('operator.singleTitle'), align: 'left' },
+              { name: 'unassigned', title: t('gpsIntegration.status.available'), align: 'center' },
+              { name: 'assigned', title: t('gpsIntegration.status.assigned'), align: 'center' },
+              { name: 'ignored', title: t('gpsIntegration.status.ignored'), align: 'center' },
+              { name: 'removed', title: t('gpsIntegration.status.removed'), align: 'center' },
+              { name: 'total', title: t('generic.total'), align: 'center' },
+              { name: 'id' },
+            ]}
+            rows={tableRows}
+            selectedField="operator"
+          />
         </ArgonBox>
-        {groups.length === 0 ? (
-          <ArgonTypography variant="caption" color="secondary">
-            {t('gpsIntegration.empty.dashboard')}
-          </ArgonTypography>
-        ) : (
-          <Grid container>
-            {groups.map((group) => (
-              <Grid size={{ xs: 12 }} key={group.operatorName}>
-                <ProviderRow
-                  operatorName={group.operatorName}
-                  statuses={group.statuses}
-                  statusLabel={statusLabel}
-                />
-              </Grid>
-            ))}
-          </Grid>
-        )}
-      </ArgonBox>
-    </Card>
+      )}
+    </TableAccordion>
   );
 }
 
