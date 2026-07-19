@@ -141,9 +141,6 @@ La aplicación TrackHub es un cliente web desarrollado con React, basado en la p
 
 El archivo `.env` contiene las siguientes variables de entorno utilizadas en la aplicación:
 
-- **`GENERATE_SOURCEMAP=false`**  
-  Desactiva la generación de mapas de origen en la compilación de producción. Los mapas de origen se utilizan normalmente para depurar, pero desactivarlos puede mejorar el rendimiento en entornos de producción.
-
 - **`REACT_APP_DEFAULT_LAT=4.624335`**  
 - **`REACT_APP_DEFAULT_LNG=-74.063644`**  
   Estas dos variables definen el centro predeterminado del mapa en caso de que el usuario deniegue los permisos de ubicación en el navegador.

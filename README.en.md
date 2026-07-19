@@ -141,9 +141,6 @@ TrackHub Application is a web client developed with React, based on the Argon te
 
 The `.env` file contains the following environment variables used in the application:
 
-- **`GENERATE_SOURCEMAP=false`**  
-  Disables the generation of source maps in the production build. Source maps are typically used for debugging, but disabling them can improve performance in production environments.
-
 - **`REACT_APP_DEFAULT_LAT=4.624335`**
 - **`REACT_APP_DEFAULT_LNG=-74.063644`**
   These two variables define the default map center when the user denies location permissions in the browser.
