@@ -43,48 +43,75 @@ import DashboardNavbar from "controls/Navbars/DashboardNavbar";
 import Footer from "controls/Footer";
 import { SECTION_GROUP_KEYS } from "layouts/manageadmin/data/sectionGroups";
 import type { SectionGroupKey } from "layouts/manageadmin/data/sectionGroups";
+import { useFeatures } from "context/features";
+
+/** A Manage section, optionally gated by an account feature flag. */
+interface SectionEntry {
+  Section: ComponentType;
+  /** Feature key gating the section's backend queries; ungated sections omit it. */
+  featureKey?: string;
+}
 
 // Sections per functional group; the group order lives in sectionGroups.ts.
-const SECTION_GROUPS: Record<SectionGroupKey, ComponentType[]> = {
-  account: [ManageAccount, ManageBranding, ManageAccountFeatures],
-  fleet: [ManageDevices, ManageTransporters, ManageDrivers, ManageGroups, ManagePois],
-  access: [ManageUsers, ManageRoles, ManagePolicies],
-  alerts: [
-    ManageNotificationRules,
-    ManageAlertSubscriptions,
-    ManageNotificationTemplates,
-    ManageAlertEvents,
-    ManageNotificationDeliveries,
+// Feature keys mirror the backend [RequireFeature] gates so disabled features
+// hide their sections instead of erroring server-side. Alert events stay
+// visible: their read path is deliberately ungated (other modules emit them).
+const SECTION_GROUPS: Record<SectionGroupKey, SectionEntry[]> = {
+  account: [{ Section: ManageAccount }, { Section: ManageBranding }, { Section: ManageAccountFeatures }],
+  fleet: [
+    { Section: ManageDevices },
+    { Section: ManageTransporters },
+    { Section: ManageDrivers },
+    { Section: ManageGroups },
+    { Section: ManagePois },
   ],
-  documents: [ManageDocuments, ManagePublicLinks],
-  operations: [ManageAuditTrail, ManageBackgroundJobs],
+  access: [{ Section: ManageUsers }, { Section: ManageRoles }, { Section: ManagePolicies }],
+  alerts: [
+    { Section: ManageNotificationRules, featureKey: 'notifications' },
+    { Section: ManageAlertSubscriptions, featureKey: 'notifications' },
+    { Section: ManageNotificationTemplates, featureKey: 'notifications' },
+    { Section: ManageAlertEvents },
+    { Section: ManageNotificationDeliveries, featureKey: 'notifications' },
+  ],
+  documents: [
+    { Section: ManageDocuments, featureKey: 'documents' },
+    { Section: ManagePublicLinks, featureKey: 'public-links' },
+  ],
+  operations: [{ Section: ManageAuditTrail }, { Section: ManageBackgroundJobs }],
 };
 
 function ManageAdmin() {
   const { t } = useTranslation();
+  const { isFeatureEnabled } = useFeatures();
 
   return (
     <DashboardLayout>
       <DashboardNavbar />
         <ArgonBox py={3}>
-          {SECTION_GROUP_KEYS.map((groupKey) => (
-            <ArgonBox key={groupKey} mb={4}>
-              <ArgonTypography
-                variant="button"
-                fontWeight="bold"
-                textTransform="uppercase"
-                color="text"
-                sx={{ letterSpacing: 1 }}
-              >
-                {t(`manageAdmin.groups.${groupKey}` as 'manageAdmin.groups.account')}
-              </ArgonTypography>
-              <ArgonBox mt={1.5}>
-                {SECTION_GROUPS[groupKey].map((Section) => (
-                  <Section key={Section.displayName ?? Section.name} />
-                ))}
+          {SECTION_GROUP_KEYS.map((groupKey) => {
+            const sections = SECTION_GROUPS[groupKey].filter(
+              ({ featureKey }) => isFeatureEnabled(featureKey)
+            );
+            if (sections.length === 0) return null;
+            return (
+              <ArgonBox key={groupKey} mb={4}>
+                <ArgonTypography
+                  variant="button"
+                  fontWeight="bold"
+                  textTransform="uppercase"
+                  color="text"
+                  sx={{ letterSpacing: 1 }}
+                >
+                  {t(`manageAdmin.groups.${groupKey}` as 'manageAdmin.groups.account')}
+                </ArgonTypography>
+                <ArgonBox mt={1.5}>
+                  {sections.map(({ Section }) => (
+                    <Section key={Section.displayName ?? Section.name} />
+                  ))}
+                </ArgonBox>
               </ArgonBox>
-            </ArgonBox>
-          ))}
+            );
+          })}
         </ArgonBox>
       <Footer />
     </DashboardLayout>

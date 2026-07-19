@@ -88,6 +88,7 @@ import ErrorBoundary from "components/ErrorBoundary";
 import SuspensionScreen from "components/SuspensionScreen";
 import PrincipalTypes from "constants/principalTypes";
 import HelpProvider from "context/help";
+import { FeaturesContext, isFeatureActive } from "context/features";
 
 export default function App() {
   const [controller, dispatch] = useArgonController();
@@ -195,11 +196,10 @@ export default function App() {
   // Operational statuses (Trial/Active) permit normal access; anything else renders a suspension shell.
   const accountOperational = !accountStatus || accountStatus === 'TRIAL' || accountStatus === 'ACTIVE';
 
-  const featureEnabled = (featureKey?: string | null): boolean => {
-    if (!featureKey) return true;
-    const feature = accountFeatures.find(item => item.featureKey === featureKey);
-    return feature ? feature.enabled : false;
-  };
+  // Shared with FeaturesContext consumers; matches the backend flag semantics
+  // (missing row ⇒ disabled, effective window honoured).
+  const featureEnabled = (featureKey?: string | null): boolean =>
+    isFeatureActive(accountFeatures, featureKey);
 
   const filterRoutesByFeatures = (allRoutes: RouteDefinition[]): RouteDefinition[] =>
     allRoutes
@@ -273,6 +273,7 @@ export default function App() {
           {isAuthenticated && !accountOperational ? (
             <SuspensionScreen status={accountStatus} branding={branding} />
           ) : (
+          <FeaturesContext.Provider value={{ features: accountFeatures, isFeatureEnabled: featureEnabled }}>
           <HelpProvider allowedScreens={allowedScreens} isFeatureEnabled={featureEnabled}>
           {layout === "dashboard" && (
           <>
@@ -298,6 +299,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
           </HelpProvider>
+          </FeaturesContext.Provider>
           )}
         </ErrorBoundary>
         {loading && (
