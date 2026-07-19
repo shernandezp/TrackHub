@@ -24,7 +24,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-package-lock.json
+# package-lock.json is tracked: the Docker build (Dockerfile.frontend) installs with
+# `npm ci`, which requires the lockfile in the clone.
 yarn.lock
 
 commit.sh
