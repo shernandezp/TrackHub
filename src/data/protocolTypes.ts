@@ -14,11 +14,18 @@
 *  limitations under the License.
 */
 
+// Values mirror Common.Domain.Enums.ProtocolType (TrackHubCommon) — keep in lockstep when a
+// provider is added. Mettax (10) is reserved in the enum but has no Router provider assembly yet.
 const protocolTypes = [
     { value: 1, label: 'COMMAND_TRACK' },
     { value: 2, label: 'TRACCAR' },
-    { value: 3, label: 'GEOTAB' },
-    { value: 4, label: 'GPS_GATE' },
+    { value: 3, label: 'FLESPI' },
+    { value: 4, label: 'GEOTAB' },
+    { value: 5, label: 'GPS_GATE' },
+    { value: 6, label: 'NAVIXY' },
+    { value: 7, label: 'SAMSARA' },
+    { value: 8, label: 'WIALON' },
+    { value: 9, label: 'PROTRACK' },
   ] as const;
 
   export type ProtocolType = (typeof protocolTypes)[number];
