@@ -4,7 +4,7 @@ title: Administración del Sistema
 description: Controles de toda la plataforma para superadministradores — cuentas, clientes API, permisos, roles, tipos de unidad, geocodificación, funciones y soporte.
 category: administration
 screens: [systemAdmin]
-related: [roles-and-permissions, gps-integration]
+related: [roles-and-permissions, gps-integration, platform-status]
 tags: [admin, cuentas, clientes, funciones, roles, políticas, soporte]
 order: 70
 ---

@@ -88,6 +88,11 @@ import ErrorBoundary from "components/ErrorBoundary";
 import SuspensionScreen from "components/SuspensionScreen";
 import PrincipalTypes from "constants/principalTypes";
 import HelpProvider from "context/help";
+import { FeaturesContext, isFeatureActive } from "context/features";
+import AnnouncementBanner from "components/AnnouncementBanner";
+
+/** Public, chrome-less route (see routes.tsx `platformStatus`). */
+const STATUS_ROUTE = "/status";
 
 export default function App() {
   const [controller, dispatch] = useArgonController();
@@ -118,11 +123,14 @@ export default function App() {
     // Skip redirect if: on callback page, already logging in, on error page, or auth error occurred
     const isAuthRoute = pathname.startsWith("/authentication/");
     const isErrorPage = pathname === "/error";
-    
-    if (!isAuthenticated && !isLoggingIn && !isAuthRoute && !isErrorPage && !authError) {
+    // The platform status page is deliberately public: its whole purpose is to
+    // answer "can nobody sign in?", so it must never bounce to the login flow.
+    const isStatusPage = pathname === STATUS_ROUTE;
+
+    if (!isAuthenticated && !isLoggingIn && !isAuthRoute && !isErrorPage && !isStatusPage && !authError) {
       login();
     }
-  
+
   }, [isAuthenticated, isLoggingIn, login, pathname, authError]);
 
   useEffect(() => {
@@ -195,11 +203,14 @@ export default function App() {
   // Operational statuses (Trial/Active) permit normal access; anything else renders a suspension shell.
   const accountOperational = !accountStatus || accountStatus === 'TRIAL' || accountStatus === 'ACTIVE';
 
-  const featureEnabled = (featureKey?: string | null): boolean => {
-    if (!featureKey) return true;
-    const feature = accountFeatures.find(item => item.featureKey === featureKey);
-    return feature ? feature.enabled : false;
-  };
+  // The status page renders chrome-less for everyone (signed in or not) and stays
+  // reachable on a suspended account — it is the screen you check when things break.
+  const onStatusPage = pathname === STATUS_ROUTE;
+
+  // Shared with FeaturesContext consumers; matches the backend flag semantics
+  // (missing row ⇒ disabled, effective window honoured).
+  const featureEnabled = (featureKey?: string | null): boolean =>
+    isFeatureActive(accountFeatures, featureKey);
 
   const filterRoutesByFeatures = (allRoutes: RouteDefinition[]): RouteDefinition[] =>
     allRoutes
@@ -209,6 +220,10 @@ export default function App() {
   const enabledRoutes = filterRoutesByFeatures(routes);
 
   const routeAllowed = (route: RouteDefinition): boolean => {
+    // Public routes bypass every gate. Without this a non-User principal (Driver, public link)
+    // would fail the default [User] check and be redirected to /dashboard — which is itself
+    // User-only, so it would redirect again: an infinite navigation loop.
+    if (route.public) return true;
     if (route.key === 'systemAdmin' && !userIsAdmin) return false;
     if (route.key === 'manageAdmin' && !userIsManager) return false;
     if (route.key === 'gpsIntegration' && !userIsManager) return false;
@@ -270,11 +285,12 @@ export default function App() {
             under browser zoom, etc. must clip); wide content scrolls inside its own container. */}
         <GlobalStyles styles={{ html: { overflowX: "clip" }, body: { overflowX: "clip" } }} />
         <ErrorBoundary>
-          {isAuthenticated && !accountOperational ? (
+          {isAuthenticated && !accountOperational && !onStatusPage ? (
             <SuspensionScreen status={accountStatus} branding={branding} />
           ) : (
+          <FeaturesContext.Provider value={{ features: accountFeatures, isFeatureEnabled: featureEnabled }}>
           <HelpProvider allowedScreens={allowedScreens} isFeatureEnabled={featureEnabled}>
-          {layout === "dashboard" && (
+          {layout === "dashboard" && !onStatusPage && (
           <>
             <Sidenav
               brand={darkMode ? brand : brandDark}
@@ -293,11 +309,15 @@ export default function App() {
             {userIsManager && configsButton}
           </>
         )}
+        {/* Platform announcements reach every signed-in user on every screen; the
+            status page renders its own copy, so it is skipped there. */}
+        {isAuthenticated && !onStatusPage && <AnnouncementBanner />}
         <Routes>
           {getRoutes(enabledRoutes)}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
           </HelpProvider>
+          </FeaturesContext.Provider>
           )}
         </ErrorBoundary>
         {loading && (

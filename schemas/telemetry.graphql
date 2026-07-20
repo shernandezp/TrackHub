@@ -12,6 +12,8 @@ type Query {
     @cost(weight: "10")
   operatorSyncRuns(query: GetOperatorSyncRunsQueryInput!): [OperatorSyncRunVm!]!
     @cost(weight: "10")
+  platformSyncActivity(query: GetPlatformSyncActivityQueryInput!): PlatformSyncActivityVm!
+    @cost(weight: "10")
   positionHistory(query: GetPositionHistoryQueryInput!): [TransporterPositionHistoryVm!]!
     @cost(weight: "10")
   positionHistoryRange(query: GetPositionHistoryRangeQueryInput!): [TransporterPositionHistoryVm!]!
@@ -112,6 +114,14 @@ type OperatorSyncRunVm {
   correlationId: String
 }
 
+type PlatformSyncActivityVm {
+  lastSyncRunAt: DateTime
+  lastHealthCheckAt: DateTime
+  syncRunsLastHour: Int!
+  healthChecksLastHour: Int!
+  hasEnabledGpsIntegration: Boolean!
+}
+
 type TransporterPositionHistoryVm {
   transporterPositionHistoryId: UUID!
   accountId: UUID!
@@ -194,6 +204,10 @@ input GetOperatorSyncRunsQueryInput {
   accountId: UUID
   operatorId: UUID
   take: Int! = 50
+}
+
+input GetPlatformSyncActivityQueryInput {
+  lookbackMinutes: Int! = 60
 }
 
 input GetPositionHistoryQueryInput {

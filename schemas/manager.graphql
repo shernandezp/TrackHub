@@ -103,6 +103,9 @@ type Query {
   operatorsByUser: [OperatorVm!]! @cost(weight: "10")
   operatorByTransporter(query: GetOperatorByTransporterQueryInput!): OperatorVm!
     @cost(weight: "10")
+  platformAnnouncements(query: GetPlatformAnnouncementsQueryInput!): [PlatformAnnouncementVm!]!
+    @cost(weight: "10")
+  backgroundJobStatus: [BackgroundJobStatusVm!]! @cost(weight: "10")
   pointsOfInterestByAccount: [PointOfInterestVm!]! @cost(weight: "10")
   currentPrincipal: CurrentPrincipalVm! @cost(weight: "10")
   publicLinkGrant(query: GetPublicLinkGrantQueryInput!): PublicLinkGrantVm!
@@ -268,6 +271,12 @@ type Mutation {
   setOperatorEnabled(command: SetOperatorEnabledCommandInput!): Boolean!
     @cost(weight: "10")
   triggerOperatorDeviceSync(command: TriggerOperatorDeviceSyncCommandInput!): Boolean!
+    @cost(weight: "10")
+  createPlatformAnnouncement(command: CreatePlatformAnnouncementCommandInput!): PlatformAnnouncementVm!
+    @cost(weight: "10")
+  updatePlatformAnnouncement(command: UpdatePlatformAnnouncementCommandInput!): Boolean!
+    @cost(weight: "10")
+  deletePlatformAnnouncement(command: DeletePlatformAnnouncementCommandInput!): UUID!
     @cost(weight: "10")
   createPointOfInterest(command: CreatePointOfInterestCommandInput!): PointOfInterestVm!
     @cost(weight: "10")
@@ -436,6 +445,16 @@ type BackgroundJobRunVm {
   completedAt: DateTime
   errorCode: String
   errorMessage: String
+}
+
+type BackgroundJobStatusVm {
+  jobKey: String!
+  status: String!
+  startedAt: DateTime!
+  completedAt: DateTime
+  attempts: Int!
+  errorCode: String
+  recordsEveryCycle: Boolean!
 }
 
 type CredentialMetadataVm {
@@ -785,6 +804,17 @@ type OperatorVm {
   lastHealthCheckAt: DateTime
 }
 
+type PlatformAnnouncementVm {
+  platformAnnouncementId: UUID!
+  messageEn: String!
+  messageEs: String
+  severity: AnnouncementSeverity!
+  startsAt: DateTime
+  endsAt: DateTime
+  active: Boolean!
+  lastModified: DateTime!
+}
+
 type PointOfInterestVm {
   pointOfInterestId: UUID!
   accountId: UUID!
@@ -1077,6 +1107,10 @@ input CreateOperatorCommandInput {
   operator: OperatorDtoInput!
 }
 
+input CreatePlatformAnnouncementCommandInput {
+  announcement: PlatformAnnouncementDtoInput!
+}
+
 input CreatePointOfInterestCommandInput {
   pointOfInterest: PointOfInterestDtoInput!
 }
@@ -1124,6 +1158,10 @@ input DeleteDocumentReferenceCommandInput {
 
 input DeleteNotificationTemplateCommandInput {
   notificationTemplateId: UUID!
+}
+
+input DeletePlatformAnnouncementCommandInput {
+  platformAnnouncementId: UUID!
 }
 
 input DeviceDtoInput {
@@ -1476,6 +1514,11 @@ input GetOperatorQueryInput {
   id: UUID!
 }
 
+input GetPlatformAnnouncementsQueryInput {
+  skip: Int! = 0
+  take: Int! = 50
+}
+
 input GetPublicLinkGrantQueryInput {
   publicLinkGrantId: UUID!
 }
@@ -1608,6 +1651,15 @@ input OperatorDtoInput {
   contactName: String
   protocolTypeId: Short!
   syncIntervalMinutes: Int! = 30
+}
+
+input PlatformAnnouncementDtoInput {
+  messageEn: String!
+  messageEs: String
+  severity: AnnouncementSeverity!
+  startsAt: DateTime
+  endsAt: DateTime
+  active: Boolean!
 }
 
 input PointOfInterestDtoInput {
@@ -1855,6 +1907,11 @@ input UpdateOperatorDtoInput {
   syncIntervalMinutes: Int!
 }
 
+input UpdatePlatformAnnouncementCommandInput {
+  platformAnnouncementId: UUID!
+  announcement: PlatformAnnouncementDtoInput!
+}
+
 input UpdatePointOfInterestCommandInput {
   id: UUID!
   pointOfInterest: UpdatePointOfInterestDtoInput!
@@ -1982,6 +2039,12 @@ enum AccountType {
   PERSONAL
   BUSINESS
   ASSOCIATE
+}
+
+enum AnnouncementSeverity {
+  INFO
+  WARNING
+  CRITICAL
 }
 
 "Defines when a policy shall be executed."

@@ -125,6 +125,12 @@ type Documents = {
     "\n  mutation DeleteOperator($id: UUID!) {\n    deleteOperator(id: $id)\n  }\n": typeof types.DeleteOperatorDocument,
     "\n  mutation SetOperatorEnabled($operatorId: UUID!, $enabled: Boolean!) {\n    setOperatorEnabled(command: { operatorId: $operatorId, enabled: $enabled })\n  }\n": typeof types.SetOperatorEnabledDocument,
     "\n  mutation TriggerOperatorDeviceSync($command: TriggerOperatorDeviceSyncCommandInput!) {\n    triggerOperatorDeviceSync(command: $command)\n  }\n": typeof types.TriggerOperatorDeviceSyncDocument,
+    "\n  fragment PlatformAnnouncementItem on PlatformAnnouncementVm {\n    platformAnnouncementId\n    messageEn\n    messageEs\n    severity\n    startsAt\n    endsAt\n    active\n    lastModified\n  }\n": typeof types.PlatformAnnouncementItemFragmentDoc,
+    "\n  query GetPlatformAnnouncements($skip: Int!, $take: Int!) {\n    platformAnnouncements(query: { skip: $skip, take: $take }) {\n      ...PlatformAnnouncementItem\n    }\n  }\n": typeof types.GetPlatformAnnouncementsDocument,
+    "\n  query GetBackgroundJobStatus {\n    backgroundJobStatus {\n      jobKey\n      status\n      startedAt\n      completedAt\n      attempts\n      errorCode\n      recordsEveryCycle\n    }\n  }\n": typeof types.GetBackgroundJobStatusDocument,
+    "\n  mutation CreatePlatformAnnouncement($announcement: PlatformAnnouncementDtoInput!) {\n    createPlatformAnnouncement(command: { announcement: $announcement }) {\n      ...PlatformAnnouncementItem\n    }\n  }\n": typeof types.CreatePlatformAnnouncementDocument,
+    "\n  mutation UpdatePlatformAnnouncement($platformAnnouncementId: UUID!, $announcement: PlatformAnnouncementDtoInput!) {\n    updatePlatformAnnouncement(\n      command: { platformAnnouncementId: $platformAnnouncementId, announcement: $announcement }\n    )\n  }\n": typeof types.UpdatePlatformAnnouncementDocument,
+    "\n  mutation DeletePlatformAnnouncement($platformAnnouncementId: UUID!) {\n    deletePlatformAnnouncement(command: { platformAnnouncementId: $platformAnnouncementId })\n  }\n": typeof types.DeletePlatformAnnouncementDocument,
     "\n  fragment PointOfInterestItem on PointOfInterestVm {\n    pointOfInterestId\n    accountId\n    name\n    description\n    type\n    latitude\n    longitude\n    address\n    color\n    groupId\n    active\n  }\n": typeof types.PointOfInterestItemFragmentDoc,
     "\n  query GetPointsOfInterestByAccount {\n    pointsOfInterestByAccount {\n      ...PointOfInterestItem\n    }\n  }\n": typeof types.GetPointsOfInterestByAccountDocument,
     "\n  mutation CreatePointOfInterest($pointOfInterest: PointOfInterestDtoInput!) {\n    createPointOfInterest(command: { pointOfInterest: $pointOfInterest }) {\n      ...PointOfInterestItem\n    }\n  }\n": typeof types.CreatePointOfInterestDocument,
@@ -281,6 +287,12 @@ const documents: Documents = {
     "\n  mutation DeleteOperator($id: UUID!) {\n    deleteOperator(id: $id)\n  }\n": types.DeleteOperatorDocument,
     "\n  mutation SetOperatorEnabled($operatorId: UUID!, $enabled: Boolean!) {\n    setOperatorEnabled(command: { operatorId: $operatorId, enabled: $enabled })\n  }\n": types.SetOperatorEnabledDocument,
     "\n  mutation TriggerOperatorDeviceSync($command: TriggerOperatorDeviceSyncCommandInput!) {\n    triggerOperatorDeviceSync(command: $command)\n  }\n": types.TriggerOperatorDeviceSyncDocument,
+    "\n  fragment PlatformAnnouncementItem on PlatformAnnouncementVm {\n    platformAnnouncementId\n    messageEn\n    messageEs\n    severity\n    startsAt\n    endsAt\n    active\n    lastModified\n  }\n": types.PlatformAnnouncementItemFragmentDoc,
+    "\n  query GetPlatformAnnouncements($skip: Int!, $take: Int!) {\n    platformAnnouncements(query: { skip: $skip, take: $take }) {\n      ...PlatformAnnouncementItem\n    }\n  }\n": types.GetPlatformAnnouncementsDocument,
+    "\n  query GetBackgroundJobStatus {\n    backgroundJobStatus {\n      jobKey\n      status\n      startedAt\n      completedAt\n      attempts\n      errorCode\n      recordsEveryCycle\n    }\n  }\n": types.GetBackgroundJobStatusDocument,
+    "\n  mutation CreatePlatformAnnouncement($announcement: PlatformAnnouncementDtoInput!) {\n    createPlatformAnnouncement(command: { announcement: $announcement }) {\n      ...PlatformAnnouncementItem\n    }\n  }\n": types.CreatePlatformAnnouncementDocument,
+    "\n  mutation UpdatePlatformAnnouncement($platformAnnouncementId: UUID!, $announcement: PlatformAnnouncementDtoInput!) {\n    updatePlatformAnnouncement(\n      command: { platformAnnouncementId: $platformAnnouncementId, announcement: $announcement }\n    )\n  }\n": types.UpdatePlatformAnnouncementDocument,
+    "\n  mutation DeletePlatformAnnouncement($platformAnnouncementId: UUID!) {\n    deletePlatformAnnouncement(command: { platformAnnouncementId: $platformAnnouncementId })\n  }\n": types.DeletePlatformAnnouncementDocument,
     "\n  fragment PointOfInterestItem on PointOfInterestVm {\n    pointOfInterestId\n    accountId\n    name\n    description\n    type\n    latitude\n    longitude\n    address\n    color\n    groupId\n    active\n  }\n": types.PointOfInterestItemFragmentDoc,
     "\n  query GetPointsOfInterestByAccount {\n    pointsOfInterestByAccount {\n      ...PointOfInterestItem\n    }\n  }\n": types.GetPointsOfInterestByAccountDocument,
     "\n  mutation CreatePointOfInterest($pointOfInterest: PointOfInterestDtoInput!) {\n    createPointOfInterest(command: { pointOfInterest: $pointOfInterest }) {\n      ...PointOfInterestItem\n    }\n  }\n": types.CreatePointOfInterestDocument,
@@ -784,6 +796,30 @@ export function graphql(source: "\n  mutation SetOperatorEnabled($operatorId: UU
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation TriggerOperatorDeviceSync($command: TriggerOperatorDeviceSyncCommandInput!) {\n    triggerOperatorDeviceSync(command: $command)\n  }\n"): (typeof documents)["\n  mutation TriggerOperatorDeviceSync($command: TriggerOperatorDeviceSyncCommandInput!) {\n    triggerOperatorDeviceSync(command: $command)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  fragment PlatformAnnouncementItem on PlatformAnnouncementVm {\n    platformAnnouncementId\n    messageEn\n    messageEs\n    severity\n    startsAt\n    endsAt\n    active\n    lastModified\n  }\n"): (typeof documents)["\n  fragment PlatformAnnouncementItem on PlatformAnnouncementVm {\n    platformAnnouncementId\n    messageEn\n    messageEs\n    severity\n    startsAt\n    endsAt\n    active\n    lastModified\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query GetPlatformAnnouncements($skip: Int!, $take: Int!) {\n    platformAnnouncements(query: { skip: $skip, take: $take }) {\n      ...PlatformAnnouncementItem\n    }\n  }\n"): (typeof documents)["\n  query GetPlatformAnnouncements($skip: Int!, $take: Int!) {\n    platformAnnouncements(query: { skip: $skip, take: $take }) {\n      ...PlatformAnnouncementItem\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query GetBackgroundJobStatus {\n    backgroundJobStatus {\n      jobKey\n      status\n      startedAt\n      completedAt\n      attempts\n      errorCode\n      recordsEveryCycle\n    }\n  }\n"): (typeof documents)["\n  query GetBackgroundJobStatus {\n    backgroundJobStatus {\n      jobKey\n      status\n      startedAt\n      completedAt\n      attempts\n      errorCode\n      recordsEveryCycle\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreatePlatformAnnouncement($announcement: PlatformAnnouncementDtoInput!) {\n    createPlatformAnnouncement(command: { announcement: $announcement }) {\n      ...PlatformAnnouncementItem\n    }\n  }\n"): (typeof documents)["\n  mutation CreatePlatformAnnouncement($announcement: PlatformAnnouncementDtoInput!) {\n    createPlatformAnnouncement(command: { announcement: $announcement }) {\n      ...PlatformAnnouncementItem\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation UpdatePlatformAnnouncement($platformAnnouncementId: UUID!, $announcement: PlatformAnnouncementDtoInput!) {\n    updatePlatformAnnouncement(\n      command: { platformAnnouncementId: $platformAnnouncementId, announcement: $announcement }\n    )\n  }\n"): (typeof documents)["\n  mutation UpdatePlatformAnnouncement($platformAnnouncementId: UUID!, $announcement: PlatformAnnouncementDtoInput!) {\n    updatePlatformAnnouncement(\n      command: { platformAnnouncementId: $platformAnnouncementId, announcement: $announcement }\n    )\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DeletePlatformAnnouncement($platformAnnouncementId: UUID!) {\n    deletePlatformAnnouncement(command: { platformAnnouncementId: $platformAnnouncementId })\n  }\n"): (typeof documents)["\n  mutation DeletePlatformAnnouncement($platformAnnouncementId: UUID!) {\n    deletePlatformAnnouncement(command: { platformAnnouncementId: $platformAnnouncementId })\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

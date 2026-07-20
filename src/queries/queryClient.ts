@@ -24,7 +24,13 @@ import { notifyApiError } from 'api/core/errors';
  */
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
-    onError: (error) => notifyApiError(error),
+    // `meta: { silent: true }` opts a query out of the global toast. Used by surfaces that
+    // DISPLAY failure as their content rather than as an interruption — the platform status
+    // page must not fire a toast every poll while it is calmly reporting an outage.
+    onError: (error, query) => {
+      if (query.meta?.silent === true) return;
+      notifyApiError(error);
+    },
   }),
   mutationCache: new MutationCache({
     // Mutations are never retried (GraphQL mutations are not idempotent).

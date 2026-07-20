@@ -117,7 +117,7 @@ function DefaultPricingCard({ title, price, specifications, action }: DefaultPri
           <ArgonBox mt={3}>
             <ArgonButton
               component={Link}
-              {...({ to: action.route } as Record<string, unknown>)}
+              to={action.route}
               color={action.color}
               fullWidth
             >

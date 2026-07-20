@@ -733,11 +733,13 @@
     "administrative": "Administrative",
     "credentials": "Credentials",
     "devices": "Devices",
+    "geocodingProviders": "Geocoding Providers",
     "geofences": "Geofences",
     "geofencing": "Geofencing",
     "groups": "Groups",
     "operators": "Operators",
     "permissions": "Permissions",
+    "pointsOfInterest": "Points of Interest",
     "positions": "Positions",
     "profile": "Profile",
     "reports": "Reports",
@@ -807,7 +809,8 @@
     "reports": "Reports",
     "systemAdmin": "System Admin",
     "userManager": "Control Panel",
-    "gpsIntegration": "GPS Integration"
+    "gpsIntegration": "GPS Integration",
+    "platformStatus": "Platform Status"
   },
   "transporter": {
     "title": "Units",
@@ -1113,5 +1116,130 @@
       "alerts": "No open GPS alerts.",
       "healthHistory": "No health history records."
     }
+  },
+  "platformStatus": {
+    "title": "Platform Status",
+    "checking": "Checking…",
+    "lastChecked": "Last checked {{age}}",
+    "refresh": "Refresh",
+    "backToPortal": "Back to the portal",
+    "viewStatus": "Platform status",
+    "bookmarkHint": "This page works without signing in — bookmark it so you can check it when you cannot log in.",
+    "overall": {
+      "up": "All systems operational",
+      "down": "Some systems are having problems",
+      "unknown": "Checking systems…"
+    },
+    "state": {
+      "up": "Working",
+      "down": "Not working",
+      "unknown": "Unknown"
+    },
+    "detail": {
+      "timeout": "The service did not answer in time.",
+      "unreachable": "The service could not be reached.",
+      "unhealthy": "The service is reachable, but its database is not.",
+      "httpError": "The service answered with an error.",
+      "nothingToSync": "No account currently has GPS integration enabled, so there is nothing to synchronise."
+    },
+    "severity": {
+      "INFO": "Information",
+      "WARNING": "Warning",
+      "CRITICAL": "Critical"
+    },
+    "services": {
+      "authority": {
+        "name": "Sign-in",
+        "description": "Lets people log in to TrackHub."
+      },
+      "security": {
+        "name": "Permissions",
+        "description": "Decides what each person is allowed to see and do."
+      },
+      "manager": {
+        "name": "Fleet management",
+        "description": "Vehicles, drivers, groups, documents and account settings."
+      },
+      "router": {
+        "name": "GPS connections",
+        "description": "Talks to your GPS providers to collect data."
+      },
+      "telemetry": {
+        "name": "Position data",
+        "description": "Stores and serves vehicle positions and history."
+      },
+      "geofencing": {
+        "name": "Geofences",
+        "description": "Watches entries, exits and stops inside your zones."
+      },
+      "reporting": {
+        "name": "Reports",
+        "description": "Builds the reports you download or preview."
+      },
+      "syncWorker": {
+        "name": "GPS synchronisation",
+        "description": "Keeps device lists and positions up to date in the background."
+      }
+    },
+    "jobs": {
+      "title": "Background tasks",
+      "subtitle": "Scheduled work that runs on its own. Many tasks only record activity when they actually had something to do.",
+      "empty": "No background task has recorded activity yet.",
+      "never": "never",
+      "columns": {
+        "job": "Task",
+        "state": "State",
+        "lastActivity": "Last activity",
+        "lastOutcome": "Last outcome"
+      },
+      "state": {
+        "ok": "Recent activity",
+        "failed": "Last run failed",
+        "stale": "No recent activity",
+        "idle": "Idle"
+      },
+      "ago": {
+        "minute_one": "{{count}} minute ago",
+        "minute_other": "{{count}} minutes ago",
+        "hour_one": "{{count}} hour ago",
+        "hour_other": "{{count}} hours ago",
+        "day_one": "{{count}} day ago",
+        "day_other": "{{count}} days ago"
+      },
+      "names": {
+        "alert-evaluation": "Alert evaluation",
+        "notification-dispatch": "Notification delivery",
+        "notification-digest": "Notification digests",
+        "delivery-retention": "Delivery clean-up",
+        "document-scan": "Document virus scan",
+        "document-expiration": "Document expiry reminders",
+        "document-retention-cleanup": "Document retention clean-up",
+        "trial-expiration": "Trial expiry",
+        "geofence-dwell-evaluation": "Geofence stop detection"
+      }
+    },
+    "manage": {
+      "open": "Manage announcements",
+      "title": "Platform announcements",
+      "messageEn": "Message (English)",
+      "messageEs": "Message (Spanish)",
+      "messageEsHint": "Optional. Spanish users see the English message when this is empty.",
+      "severity": "Severity",
+      "startsAt": "Starts at",
+      "endsAt": "Ends at",
+      "active": "Active",
+      "newAnnouncement": "New announcement",
+      "existing": "Existing announcements",
+      "none": "No announcements yet.",
+      "stateActive": "Active",
+      "stateInactive": "Inactive",
+      "errors": {
+        "messageRequired": "The English message is required.",
+        "messageTooLong": "Messages cannot be longer than {{max}} characters.",
+        "windowInvalid": "The end time must be later than the start time."
+      }
+    },
+    "signIn": "Sign in",
+    "signInHint": "Managers and administrators see more here after signing in — including GPS synchronisation."
   }
 }

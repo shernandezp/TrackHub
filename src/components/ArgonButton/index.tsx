@@ -51,6 +51,11 @@ export interface ArgonButtonProps extends Omit<ButtonProps, "color" | "variant" 
     | "dark";
   variant?: "text" | "contained" | "outlined" | "gradient";
   size?: "xsmall" | "small" | "medium" | "large";
+  /**
+   * react-router target, valid when `component` is a router `Link`. Declared on
+   * the control (rather than cast at each call site) per the portal's rule 13.
+   */
+  to?: string;
   circular?: boolean;
   iconOnly?: boolean;
   children: ReactNode;

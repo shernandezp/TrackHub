@@ -59,6 +59,7 @@ import Reports from "layouts/reports";
 import GpsIntegration from "layouts/gpsintegration";
 import GeofenceManager from "layouts/geofencemanager";
 import Profile from "layouts/profile";
+import PlatformStatus from "layouts/platformstatus";
 import Callback from "layouts/authentication/callback";
 import AuthorizeRedirect from "layouts/authentication/authorizeredirect";
 import ErrorPage from "layouts/authentication/error";
@@ -100,6 +101,12 @@ export interface RouteDefinition {
   title?: string;
   /** Principal types allowed to see/access this route (defaults to [User]). */
   principalTypes?: PrincipalType[];
+  /**
+   * Reachable by anyone, including signed-out visitors and non-User principals.
+   * Bypasses the role and principal-type gates entirely — without this, omitting
+   * `principalTypes` would silently DEFAULT to [User] rather than mean "public".
+   */
+  public?: boolean;
   /** Account feature flag gating this route's visibility. */
   featureKey?: string;
 }
@@ -167,6 +174,20 @@ const routes: RouteDefinition[] = [
       <ArgonBox component="i" color="info" fontSize="14px" className="ni ni-satisfied" />
     ),
     component: <GpsIntegration />,
+  },
+  {
+    // Public route: rendered without authentication (App skips the login redirect
+    // for /status) so a locked-out user can still see whether sign-in is down.
+    // Listed as a normal route so every signed-in role gets the Sidenav link.
+    type: "route",
+    name: "screen.platformStatus",
+    key: "platformStatus",
+    route: "/status",
+    public: true,
+    icon: (
+      <ArgonBox component="i" color="info" fontSize="14px" className="ni ni-atom" />
+    ),
+    component: <PlatformStatus />,
   },
   { type: "title", title: "screen.account", key: "account-pages" },
   {

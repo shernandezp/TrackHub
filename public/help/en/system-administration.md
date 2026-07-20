@@ -4,7 +4,7 @@ title: System Administration
 description: Platform-wide controls for super administrators — accounts, API clients, permissions, roles, unit types, geocoding, account features, and support access.
 category: administration
 screens: [systemAdmin]
-related: [roles-and-permissions, gps-integration]
+related: [roles-and-permissions, gps-integration, platform-status]
 tags: [admin, accounts, clients, features, roles, policies, support]
 order: 70
 ---

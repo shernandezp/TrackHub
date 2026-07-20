@@ -15,7 +15,7 @@
 */
 
 import { useState, useEffect } from "react";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useTranslation } from "react-i18next";
 import { useAuth } from "AuthContext";
 
@@ -161,6 +161,14 @@ const ErrorPage = () => {
                 </ArgonTypography>
               </ArgonBox>
             )}
+
+            {/* Sign-in just failed — the status page says whether the platform is
+                the cause, and it renders without signing in. */}
+            <ArgonBox mt={2}>
+              <ArgonTypography variant="button" component={RouterLink} to="/status">
+                {t('platformStatus.viewStatus')}
+              </ArgonTypography>
+            </ArgonBox>
           </ArgonBox>
         </Card>
       </Container>

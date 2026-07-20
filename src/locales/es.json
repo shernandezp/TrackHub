@@ -733,12 +733,14 @@
     "administrative": "Administración",
     "credentials": "Credenciales",
     "devices": "Dispositivos",
+    "geocodingProviders": "Proveedores de Geocodificación",
     "geofences": "Geocercas",
     "geofencing": "Geocercado",
     "groups": "Grupos",
     "operators": "Operadores",
     "positions": "Posiciones",
     "permissions": "Permisos",
+    "pointsOfInterest": "Puntos de Interés",
     "profile": "Perfil",
     "reports": "Reportes",
     "settingsScreen": "Configuración",
@@ -807,7 +809,8 @@
     "reports": "Reportes",
     "systemAdmin": "Administrador del Sistema",
     "userManager": "Panel de Control",
-    "gpsIntegration": "Integración GPS"
+    "gpsIntegration": "Integración GPS",
+    "platformStatus": "Estado de la Plataforma"
   },
   "transporter": {
     "title": "Unidades",
@@ -1113,5 +1116,130 @@
       "alerts": "No hay alertas GPS abiertas.",
       "healthHistory": "No hay registros de historial de salud."
     }
+  },
+  "platformStatus": {
+    "title": "Estado de la Plataforma",
+    "checking": "Verificando…",
+    "lastChecked": "Última verificación hace {{age}}",
+    "refresh": "Actualizar",
+    "backToPortal": "Volver al portal",
+    "viewStatus": "Estado de la plataforma",
+    "bookmarkHint": "Esta página funciona sin iniciar sesión — guárdela en favoritos para consultarla cuando no pueda ingresar.",
+    "overall": {
+      "up": "Todos los sistemas funcionan correctamente",
+      "down": "Algunos sistemas presentan problemas",
+      "unknown": "Verificando los sistemas…"
+    },
+    "state": {
+      "up": "Funcionando",
+      "down": "No funciona",
+      "unknown": "Desconocido"
+    },
+    "detail": {
+      "timeout": "El servicio no respondió a tiempo.",
+      "unreachable": "No fue posible comunicarse con el servicio.",
+      "unhealthy": "El servicio responde, pero su base de datos no.",
+      "httpError": "El servicio respondió con un error.",
+      "nothingToSync": "Ninguna cuenta tiene la integración GPS habilitada, por lo que no hay nada que sincronizar."
+    },
+    "severity": {
+      "INFO": "Información",
+      "WARNING": "Advertencia",
+      "CRITICAL": "Crítico"
+    },
+    "services": {
+      "authority": {
+        "name": "Inicio de sesión",
+        "description": "Permite que las personas ingresen a TrackHub."
+      },
+      "security": {
+        "name": "Permisos",
+        "description": "Determina qué puede ver y hacer cada persona."
+      },
+      "manager": {
+        "name": "Gestión de flota",
+        "description": "Vehículos, conductores, grupos, documentos y configuración de la cuenta."
+      },
+      "router": {
+        "name": "Conexiones GPS",
+        "description": "Se comunica con sus proveedores GPS para recolectar datos."
+      },
+      "telemetry": {
+        "name": "Datos de posición",
+        "description": "Almacena y entrega las posiciones e historial de los vehículos."
+      },
+      "geofencing": {
+        "name": "Geocercas",
+        "description": "Vigila entradas, salidas y permanencias dentro de sus zonas."
+      },
+      "reporting": {
+        "name": "Informes",
+        "description": "Genera los informes que descarga o previsualiza."
+      },
+      "syncWorker": {
+        "name": "Sincronización GPS",
+        "description": "Mantiene actualizados los dispositivos y posiciones en segundo plano."
+      }
+    },
+    "jobs": {
+      "title": "Tareas en segundo plano",
+      "subtitle": "Trabajos programados que se ejecutan solos. Muchas tareas solo registran actividad cuando realmente tuvieron algo que hacer.",
+      "empty": "Ninguna tarea en segundo plano ha registrado actividad todavía.",
+      "never": "nunca",
+      "columns": {
+        "job": "Tarea",
+        "state": "Estado",
+        "lastActivity": "Última actividad",
+        "lastOutcome": "Último resultado"
+      },
+      "state": {
+        "ok": "Actividad reciente",
+        "failed": "La última ejecución falló",
+        "stale": "Sin actividad reciente",
+        "idle": "Inactiva"
+      },
+      "ago": {
+        "minute_one": "hace {{count}} minuto",
+        "minute_other": "hace {{count}} minutos",
+        "hour_one": "hace {{count}} hora",
+        "hour_other": "hace {{count}} horas",
+        "day_one": "hace {{count}} día",
+        "day_other": "hace {{count}} días"
+      },
+      "names": {
+        "alert-evaluation": "Evaluación de alertas",
+        "notification-dispatch": "Envío de notificaciones",
+        "notification-digest": "Resúmenes de notificaciones",
+        "delivery-retention": "Limpieza de envíos",
+        "document-scan": "Análisis antivirus de documentos",
+        "document-expiration": "Avisos de vencimiento de documentos",
+        "document-retention-cleanup": "Limpieza de retención de documentos",
+        "trial-expiration": "Vencimiento de pruebas",
+        "geofence-dwell-evaluation": "Detección de permanencia en geocercas"
+      }
+    },
+    "manage": {
+      "open": "Gestionar anuncios",
+      "title": "Anuncios de la plataforma",
+      "messageEn": "Mensaje (inglés)",
+      "messageEs": "Mensaje (español)",
+      "messageEsHint": "Opcional. Los usuarios en español verán el mensaje en inglés si se deja vacío.",
+      "severity": "Severidad",
+      "startsAt": "Inicia el",
+      "endsAt": "Termina el",
+      "active": "Activo",
+      "newAnnouncement": "Nuevo anuncio",
+      "existing": "Anuncios existentes",
+      "none": "Aún no hay anuncios.",
+      "stateActive": "Activo",
+      "stateInactive": "Inactivo",
+      "errors": {
+        "messageRequired": "El mensaje en inglés es obligatorio.",
+        "messageTooLong": "Los mensajes no pueden superar los {{max}} caracteres.",
+        "windowInvalid": "La fecha de fin debe ser posterior a la de inicio."
+      }
+    },
+    "signIn": "Iniciar sesión",
+    "signInHint": "Los gerentes y administradores ven más información aquí tras iniciar sesión — incluida la sincronización GPS."
   }
 }

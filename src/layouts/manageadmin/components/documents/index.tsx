@@ -31,7 +31,7 @@ import DocumentTypeDialog from "layouts/manageadmin/components/documents/Documen
 import type { DocumentTypeFormValues } from "layouts/manageadmin/components/documents/DocumentTypeDialog";
 import { getAccountByUser } from "api/manager/accounts";
 import type { Account } from "api/manager/accounts";
-import { getAccountFeatures } from "api/manager/accountFeatures";
+import { useFeatures } from "context/features";
 import { notifyApiError } from "api/core/errors";
 import { searchDocuments, getExpiringDocuments, getDocumentTypes, downloadDocument, configureDocumentType, disableDocumentType } from "api/manager/documents";
 import type { DocumentVm, DocumentTypeVm, DocumentTypeDtoInput } from "api/manager/documents";
@@ -57,8 +57,9 @@ interface ConfirmState { open: boolean; id: string | null; }
 function ManageDocuments() {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
+  const { isFeatureEnabled } = useFeatures();
+  const enabled = isFeatureEnabled(DOCUMENTS_FEATURE_KEY);
   const [account, setAccount] = useState<Account | null>(null);
-  const [enabled, setEnabled] = useState(false);
   const [ctx, setCtx] = useState<ContextState>({ library: false, expiring: false, types: false });
   const [docs, setDocs] = useState<DocumentVm[]>([]);
   const [expiring, setExpiring] = useState<DocumentVm[]>([]);
@@ -75,10 +76,6 @@ function ManageDocuments() {
     try {
       const current = await getAccountByUser();
       setAccount(current);
-      if (current?.accountId) {
-        const features = await getAccountFeatures(current.accountId) || [];
-        setEnabled(!!features.find(f => f.featureKey === DOCUMENTS_FEATURE_KEY)?.enabled);
-      }
       return current;
     } catch (error) {
       notifyApiError(error);
