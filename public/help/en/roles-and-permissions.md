@@ -4,7 +4,7 @@ title: Roles and permissions
 description: Who can see and do what — the three portal roles, account features that hide parts of the app, and what a suspended account looks like.
 category: getting-started
 screens: []
-related: [getting-started, users-roles-groups, system-administration]
+related: [getting-started, users-roles-groups, system-administration, feature-catalog, admin-account-setup]
 tags: [roles, permissions, features, account status, access]
 order: 20
 ---
@@ -85,11 +85,11 @@ The account features are:
 
 | Feature | Key | What it controls |
 |---------|-----|------------------|
-| **GPS Integration** | `gps.integration` | The GPS provider synchronisation tooling and its position-retention settings. |
+| **GPS Integration** | `gps.integration` | How positions are collected, plus the GPS reports. The **GPS Integration** menu item stays either way. |
 | **GPS Position History** | `gps.positionHistory` | Storing and replaying a unit's past track (history playback). |
 | **Geofencing** | `geofencing` | The whole **Geofences** menu item and map zones. |
-| **Trip Management** | `trip-management` | Trip and route-planning capabilities. |
-| **Driver Mobile** | `driver-mobile` | The field driver mobile app for your account. |
+| **Trip Management** | `trip-management` | Reserved — nothing changes in the current release. |
+| **Driver Mobile** | `driver-mobile` | Reserved — nothing changes in the web portal. |
 | **Public Links** | `public-links` | Creating shareable public links. |
 | **Documents** | `documents` | The document management surfaces (uploading, sharing, and tracking files). |
 | **Notifications** | `notifications` | Notification rules and alert delivery. |
@@ -97,6 +97,8 @@ The account features are:
 | **WhatsApp Notifications** | `notifications.whatsapp` | Delivering notifications over WhatsApp. |
 
 The **Geofencing** feature is the one that hides a whole left-menu item: when it is off, **Geofences** disappears from the menu for everyone in the account. The other features work at the section level — when a feature is off, its section, buttons, or delivery channel are hidden inside the relevant screen (for example, the **Documents** or **Public Links** sections of Account Management), rather than removing a menu item.
+
+For exactly what each feature turns on and off, its settings, and what happens to your data when one is switched off, see the [Feature catalogue](topic:feature-catalog).
 
 ## Account status: what a suspended account looks like
 

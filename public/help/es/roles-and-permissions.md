@@ -4,7 +4,7 @@ title: Roles y permisos
 description: Quién puede ver y hacer qué — los tres roles del portal, las funcionalidades que ocultan partes de la app y cómo se ve una cuenta suspendida.
 category: getting-started
 screens: []
-related: [getting-started, users-roles-groups, system-administration]
+related: [getting-started, users-roles-groups, system-administration, feature-catalog, admin-account-setup]
 tags: [roles, permisos, funcionalidades, estado de cuenta, acceso]
 order: 20
 ---
@@ -85,11 +85,11 @@ Las funcionalidades de cuenta son:
 
 | Funcionalidad | Clave | Qué controla |
 |---------|-------|------------------|
-| **Integración GPS** | `gps.integration` | Las herramientas de sincronización con proveedores de GPS y sus ajustes de retención de posiciones. |
+| **Integración GPS** | `gps.integration` | Cómo se recopilan las posiciones, más los reportes GPS. El elemento de menú **Integración GPS** permanece en ambos casos. |
 | **Historial de Posiciones GPS** | `gps.positionHistory` | El almacenamiento y la reproducción del recorrido pasado de una unidad (reproducción del historial). |
 | **Geocercado** | `geofencing` | Todo el elemento de menú **Geocercas** y las zonas del mapa. |
-| **Gestión de Viajes** | `trip-management` | Las capacidades de gestión de viajes y planificación de rutas. |
-| **Móvil del Conductor** | `driver-mobile` | La aplicación móvil para conductores de campo de su cuenta. |
+| **Gestión de Viajes** | `trip-management` | Reservada — nada cambia en la versión actual. |
+| **Móvil del Conductor** | `driver-mobile` | Reservada — nada cambia en el portal web. |
 | **Enlaces Públicos** | `public-links` | La creación de enlaces públicos para compartir. |
 | **Documentos** | `documents` | Las superficies de gestión de documentos (subir, compartir y hacer seguimiento de archivos). |
 | **Notificaciones** | `notifications` | Las reglas de notificación y la entrega de alertas. |
@@ -97,6 +97,8 @@ Las funcionalidades de cuenta son:
 | **Notificaciones por WhatsApp** | `notifications.whatsapp` | La entrega de notificaciones por WhatsApp. |
 
 La funcionalidad **Geocercado** es la que oculta un elemento completo del menú lateral: cuando está desactivada, **Geocercas** desaparece del menú para todos en la cuenta. Las demás funcionalidades operan a nivel de sección: cuando una funcionalidad está desactivada, su sección, sus botones o su canal de entrega quedan ocultos dentro de la pantalla correspondiente (por ejemplo, las secciones **Documentos** o **Enlaces Públicos** de Administración de Cuentas), en lugar de eliminar un elemento del menú.
+
+Para saber exactamente qué activa y desactiva cada funcionalidad, sus ajustes y qué ocurre con sus datos al desactivar una, vea el [Catálogo de funcionalidades](topic:feature-catalog).
 
 ## Estado de la cuenta: cómo se ve una cuenta suspendida
 

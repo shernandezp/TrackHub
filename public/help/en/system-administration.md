@@ -4,7 +4,7 @@ title: System Administration
 description: Platform-wide controls for super administrators — accounts, API clients, permissions, roles, unit types, geocoding, account features, and support access.
 category: administration
 screens: [systemAdmin]
-related: [roles-and-permissions, gps-integration, platform-status]
+related: [roles-and-permissions, gps-integration, platform-status, admin-platform-setup, feature-catalog]
 tags: [admin, accounts, clients, features, roles, policies, support]
 order: 70
 ---
@@ -23,7 +23,11 @@ Click the **+** icon to open the **Account Details** dialog and create an accoun
 - The first user for the account: **Email Address** (required), **Password** (required), **First Name** (required), **Last Name** (required). These fields appear only when creating a new account.
 - **Type** (required) and an **Active** checkbox.
 
-Press **Save**. Creating an account also creates its initial administrator user from those fields. Use **Edit** on a row to change an existing account's name, description, type, or active flag (the user fields are hidden when editing).
+Press **Save**. Creating an account also creates its first user from those fields, **with the Manager role** — that person administers their own account but has no platform-wide access. Use **Edit** on a row to change an existing account's name, description, type, or active flag (the user fields are hidden when editing).
+
+The **Active** checkbox decides the new account's starting status: ticked creates an **Active** account, unticked creates a **Suspended** one. **Trial** cannot be chosen here.
+
+For the whole onboarding sequence — creating an account, setting its status, and switching on its features — see [Initial platform setup](topic:admin-platform-setup).
 
 ### Changing an account's status
 
@@ -58,7 +62,7 @@ Fine-grained rules that say which client may perform which action on which resou
 
 ## Unit Types
 
-The categories of tracked units and the movement thresholds used to interpret their data. Click the **+** icon to open the **Unit Type Details** dialog, which collects:
+The categories of tracked units and the movement thresholds used to interpret their data. The catalogue of unit types is fixed — you cannot add or delete types here, only **Edit** the thresholds of an existing one. Click **Edit** on a row to open the **Unit Type Details** dialog, which collects:
 
 - **Stopped Gap (Minutes)** (required) — how long without movement counts as stopped.
 - **Max Time Gap (Minutes)** (required).
@@ -95,7 +99,9 @@ The list is grouped by account, showing each feature's **Account**, **Feature**,
 - **Tier** — the subscription tier (defaults to `default`).
 - A storage value for certain features: **Storing Interval (Seconds)** for GPS integration (default 360), or **Retention Days** for GPS position history (default 30).
 
-Manageable features include GPS integration, GPS position history, geofencing, trip management, driver mobile, public links, documents, notifications, email notifications, and WhatsApp notifications. When a feature is disabled for an account, its users do not see the related menu items and get a "feature not enabled" message if they try to use it (see [Troubleshooting](topic:troubleshooting)).
+There are exactly ten manageable features: GPS integration, GPS position history, geofencing, trip management, driver mobile, public links, documents, notifications, email notifications, and WhatsApp notifications. When a feature is disabled for an account, the related menu items, sections, buttons, delivery channels, and reports are hidden from its users, and anything that still reaches the server is refused with a "feature not enabled" message (see [Troubleshooting](topic:troubleshooting)). Disabling a feature never deletes data.
+
+What each feature actually turns on and off — key by key, including which reports and sections disappear — is set out in the [Feature catalogue](topic:feature-catalog).
 
 ## Support Grants
 

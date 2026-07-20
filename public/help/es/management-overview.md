@@ -4,7 +4,7 @@ title: Administración de Cuentas
 description: Donde un Gestor configura su propia cuenta — los seis grupos de secciones, cómo funcionan las secciones plegables y quién puede abrir la pantalla.
 category: administration
 screens: [manageAdmin]
-related: [users-roles-groups, units-devices, documents, public-links, alerts-notifications]
+related: [users-roles-groups, units-devices, documents, public-links, alerts-notifications, admin-account-setup]
 tags: [administración, cuenta, secciones, permisos]
 order: 10
 ---
@@ -14,6 +14,8 @@ order: 10
 **Administración de Cuentas** es donde configura todo lo relativo a su propia cuenta — usuarios, accesos, flota, alertas, documentos, personalización y monitoreo — desde una sola pantalla. Ábrala desde **Administración de Cuentas** en el menú lateral.
 
 Este tema es una orientación de la pantalla. Cada área enlaza a un tema más detallado cuando existe.
+
+Si su cuenta es nueva y está recorriéndola por primera vez, siga [Configuración de su cuenta](topic:admin-account-setup) en su lugar — pone estas secciones en el orden en que deben hacerse.
 
 ## Quién puede abrirla
 

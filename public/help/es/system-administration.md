@@ -4,7 +4,7 @@ title: Administración del Sistema
 description: Controles de toda la plataforma para superadministradores — cuentas, clientes API, permisos, roles, tipos de unidad, geocodificación, funciones y soporte.
 category: administration
 screens: [systemAdmin]
-related: [roles-and-permissions, gps-integration, platform-status]
+related: [roles-and-permissions, gps-integration, platform-status, admin-platform-setup, feature-catalog]
 tags: [admin, cuentas, clientes, funciones, roles, políticas, soporte]
 order: 70
 ---
@@ -23,7 +23,11 @@ Haga clic en el ícono **+** para abrir el diálogo **Detalle de la Cuenta** y c
 - El primer usuario de la cuenta: **Nombre de Usuario** (correo, obligatorio), **Contraseña** (obligatoria), **Nombre** (obligatorio), **Apellido** (obligatorio). Estos campos aparecen solo al crear una cuenta nueva.
 - **Tipo** (obligatorio) y una casilla **Activo**.
 
-Presione **Guardar**. Crear una cuenta también crea su usuario administrador inicial a partir de esos campos. Use **Editar** en una fila para cambiar el nombre, la descripción, el tipo o el estado activo de una cuenta existente (los campos de usuario se ocultan al editar).
+Presione **Guardar**. Crear una cuenta también crea su primer usuario a partir de esos campos, **con el rol Gestor** — esa persona administra su propia cuenta pero no tiene acceso a nivel de plataforma. Use **Editar** en una fila para cambiar el nombre, la descripción, el tipo o el estado activo de una cuenta existente (los campos de usuario se ocultan al editar).
+
+La casilla **Activo** decide el estado inicial de la cuenta nueva: marcada crea una cuenta **Activa**, sin marcar crea una **Suspendida**. **Prueba** no puede elegirse aquí.
+
+Para la secuencia completa de puesta en marcha —crear una cuenta, fijar su estado y activar sus funcionalidades— vea [Configuración inicial de la plataforma](topic:admin-platform-setup).
 
 ### Cambiar el estado de una cuenta
 
@@ -58,7 +62,7 @@ Reglas detalladas que indican qué cliente puede realizar qué acción sobre qu�
 
 ## Tipos de Unidades
 
-Las categorías de unidades rastreadas y los umbrales de movimiento usados para interpretar sus datos. Haga clic en el ícono **+** para abrir el diálogo **Detalle del Tipo de Unidad**, que recopila:
+Las categorías de unidades rastreadas y los umbrales de movimiento usados para interpretar sus datos. El catálogo de tipos de unidad es fijo — aquí no puede agregar ni eliminar tipos, solo **Editar** los umbrales de uno existente. Haga clic en **Editar** en una fila para abrir el diálogo **Detalle del Tipo de Unidad**, que recopila:
 
 - **Detenido (Minutos)** (obligatorio) — cuánto tiempo sin movimiento cuenta como detenido.
 - **Tiempo Máximo (Minutos)** (obligatorio).
@@ -95,7 +99,9 @@ La lista se agrupa por cuenta y muestra, por cada función, la **Cuenta**, la **
 - **Nivel** — el nivel de suscripción (predeterminado `default`).
 - Un valor de almacenamiento para ciertas funciones: **Intervalo de Almacenamiento (Segundos)** para la integración GPS (predeterminado 360), o **Días de Retención** para el historial de posiciones GPS (predeterminado 30).
 
-Las funciones administrables incluyen integración GPS, historial de posiciones GPS, geocercas, gestión de viajes, móvil del conductor, enlaces públicos, documentos, notificaciones, notificaciones por correo y notificaciones por WhatsApp. Cuando una función está deshabilitada para una cuenta, sus usuarios no ven los elementos de menú relacionados y reciben un mensaje de "función no habilitada" si intentan usarla (consulte [Solución de problemas](topic:troubleshooting)).
+Hay exactamente diez funcionalidades administrables: integración GPS, historial de posiciones GPS, geocercado, gestión de viajes, móvil del conductor, enlaces públicos, documentos, notificaciones, notificaciones por correo y notificaciones por WhatsApp. Cuando una funcionalidad está deshabilitada para una cuenta, los elementos de menú, secciones, botones, canales de entrega y reportes relacionados se ocultan a sus usuarios, y cualquier solicitud que aun así llegue al servidor se rechaza con un mensaje de "funcionalidad no habilitada" (consulte [Solución de problemas](topic:troubleshooting)). Deshabilitar una funcionalidad nunca elimina datos.
+
+Qué activa y desactiva realmente cada funcionalidad —clave por clave, incluyendo qué reportes y secciones desaparecen— se detalla en el [Catálogo de funcionalidades](topic:feature-catalog).
 
 ## Concesiones de Soporte
 

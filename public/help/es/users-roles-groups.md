@@ -4,7 +4,7 @@ title: Usuarios, roles y grupos
 description: Agregue las personas que inician sesión en su cuenta, asígneles roles y políticas, y organice unidades y usuarios en grupos.
 category: administration
 screens: [manageAdmin]
-related: [roles-and-permissions, management-overview]
+related: [roles-and-permissions, management-overview, admin-account-setup]
 tags: [usuarios, roles, políticas, grupos, permisos]
 order: 20
 ---
@@ -37,7 +37,7 @@ Acciones de fila:
 - **Contraseña** — el enlace en la columna **Contraseña** abre el diálogo **Actualizar Contraseña**; escriba una nueva contraseña y presione **Guardar**.
 - **Estado** — un usuario que no está bloqueado muestra **Activo**. Cuando un usuario está bloqueado (por ejemplo, tras demasiados intentos fallidos de inicio de sesión) la columna muestra un botón **Desbloquear**; haga clic para desbloquear la cuenta de inmediato.
 
-Los roles y las políticas que tiene un usuario se asignan en las secciones **Roles** y **Políticas**, no en este diálogo.
+Los roles y las políticas que tiene un usuario se asignan en las secciones **Roles** y **Políticas**, no en este diálogo. **Un usuario que cree aquí no tiene ningún rol hasta que le asigne uno** — vea [Configuración de su cuenta](topic:admin-account-setup) para saber qué hacer a continuación, y en qué orden.
 
 ## Roles
 

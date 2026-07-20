@@ -4,7 +4,7 @@ title: Estado de la Plataforma
 description: Verifique si TrackHub está funcionando — indicadores de servicio, qué hacer cuando algo está en rojo y anuncios de la plataforma.
 category: administration
 screens: [platformStatus]
-related: [troubleshooting, system-administration]
+related: [troubleshooting, system-administration, admin-platform-setup]
 tags: [estado, salud, caída, mantenimiento, anuncios, solución de problemas]
 order: 75
 ---

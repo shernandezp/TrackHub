@@ -4,7 +4,7 @@ title: Account Management
 description: Where a Manager configures their own account — the six section groups, how the collapsible sections work, and who can open the screen.
 category: administration
 screens: [manageAdmin]
-related: [users-roles-groups, units-devices, documents, public-links, alerts-notifications]
+related: [users-roles-groups, units-devices, documents, public-links, alerts-notifications, admin-account-setup]
 tags: [management, account, administration, sections, permissions]
 order: 10
 ---
@@ -14,6 +14,8 @@ order: 10
 **Account Management** is where you configure everything for your own account — users, access, fleet, alerts, documents, branding, and monitoring — from a single screen. Open it from **Account Management** in the left-hand menu.
 
 This topic is an orientation to the screen. Each area links to a more detailed topic where one exists.
+
+If your account is new and you are working through it for the first time, follow [Setting up your account](topic:admin-account-setup) instead — it puts these sections in the order they need to be done in.
 
 ## Who can open it
 
