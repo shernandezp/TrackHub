@@ -54,6 +54,11 @@ export interface ArgonTypographyProps
     | "white";
   fontWeight?: false | "light" | "regular" | "medium" | "bold";
   textTransform?: "none" | "capitalize" | "uppercase" | "lowercase";
+  /**
+   * react-router target, valid when `component` is a router `Link`. Declared on
+   * the control (rather than cast at each call site) per the portal's rule 13.
+   */
+  to?: string;
   verticalAlign?:
     | "unset"
     | "baseline"

@@ -35,6 +35,9 @@ export interface AuthContextValue {
   resetAuthError: () => void;
 }
 
+/** Public, no-auth route that must never be interrupted by the login flow (see routes.tsx). */
+const PUBLIC_STATUS_ROUTE = '/status';
+
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 // Custom hook to consume the authentication context
@@ -151,7 +154,13 @@ export const AuthProvider = ({ children, navigate }: AuthProviderProps) => {
         console.error('Token refresh failed:', refreshError);
       }
       setAuthError(true);
-      login();
+      // ...except on the public status page. A failing refresh is often caused by the very outage
+      // the visitor came to check (AuthorityServer down), and bouncing them into the login flow
+      // would defeat the one screen that is supposed to survive it. The page simply degrades to its
+      // anonymous tier.
+      if (window.location.pathname !== PUBLIC_STATUS_ROUTE) {
+        login();
+      }
       return undefined;
     }
   };

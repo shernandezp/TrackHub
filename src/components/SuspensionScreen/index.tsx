@@ -15,6 +15,7 @@
 */
 
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import ArgonBox from "components/ArgonBox";
 import ArgonTypography from "components/ArgonTypography";
 import { ACCOUNT_STATUS_I18N } from 'data/accountStatuses';
@@ -52,6 +53,11 @@ function SuspensionScreen({ status, branding }: SuspensionScreenProps) {
       </ArgonTypography>
       <ArgonTypography variant="button" color="text">
         {t('suspension.statusLabel')}: {statusKey ? t(statusKey) : status}
+      </ArgonTypography>
+      {/* "Is it my account or the platform?" is exactly the question this screen
+          raises — the status page answers it, and works signed out. */}
+      <ArgonTypography variant="button" component={Link} to="/status" mt={2}>
+        {t('platformStatus.viewStatus')}
       </ArgonTypography>
     </ArgonBox>
   );

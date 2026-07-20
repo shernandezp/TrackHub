@@ -138,7 +138,7 @@ function DefaultProjectCard({
           {action.type === "internal" ? (
             <ArgonTypography
               component={Link}
-              {...({ to: action.route } as Record<string, unknown>)}
+              to={action.route}
               variant="h5"
               textTransform="capitalize"
             >
@@ -167,7 +167,7 @@ function DefaultProjectCard({
           {action.type === "internal" ? (
             <ArgonButton
               component={Link}
-              {...({ to: action.route } as Record<string, unknown>)}
+              to={action.route}
               variant="outlined"
               size="small"
               color={action.color}

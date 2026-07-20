@@ -111,6 +111,8 @@ function Sidenav({
   const renderRoutes = routes
     .filter(({ key }) => !keysToFilterOut.includes(key))
     .filter((route) => {
+      // Public routes are visible to every principal type (see RouteDefinition.public).
+      if (route.public) return true;
       if (!currentPrincipal?.principalType) return true;
       const allowedPrincipalTypes = route.principalTypes || [PrincipalTypes.User];
       return allowedPrincipalTypes.includes(currentPrincipal.principalType);

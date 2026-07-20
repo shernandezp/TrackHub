@@ -42,6 +42,12 @@ export interface ArgonBoxProps extends Omit<BoxProps, "color" | "borderRadius"> 
   opacity?: number;
   borderRadius?: string;
   shadow?: string;
+  /**
+   * Image attributes, valid when `component="img"`. Declared on the control
+   * (rather than cast at each call site) per the portal's rule 13.
+   */
+  src?: string;
+  alt?: string;
 }
 
 const ArgonBox = forwardRef<HTMLDivElement, ArgonBoxProps>(

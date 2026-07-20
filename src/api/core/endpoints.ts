@@ -46,6 +46,50 @@ export const REST_ENDPOINTS = {
    * see TrackHub.Manager Web/Endpoints/Documents.cs.
    */
   managerDocuments: `${managerRestBase}documents`,
+  /**
+   * Anonymous platform announcements (Manager service, REST). Deliberately
+   * unauthenticated — the status page must show a maintenance banner to a
+   * visitor who cannot sign in. See TrackHub.Manager Web/Endpoints/PlatformStatus.cs.
+   */
+  managerPlatformAnnouncements: `${managerRestBase}api/PlatformStatus/announcements`,
+} as const;
+
+/**
+ * Anonymous `/health` probe URLs, one per backend, for the public status page.
+ *
+ * Lazy getters (like OAUTH_ENDPOINTS): production builds inline the process.env
+ * expressions, while tests can assign REACT_APP_* at runtime. A getter returns
+ * `undefined` when its backend is not configured, which the status page renders
+ * as "unknown" rather than "down".
+ */
+const toHealthUrl = (base: string | undefined): string | undefined =>
+  base ? `${base.replace(/graphql\/?$/, '').replace(/\/+$/, '')}/health` : undefined;
+
+export const HEALTH_ENDPOINTS = {
+  get authority() {
+    // The AuthorityServer base carries its /Identity path base; the token
+    // endpoint is the only configured URL that reliably points at it.
+    const token = process.env.REACT_APP_TOKEN_ENDPOINT;
+    return token ? `${token.replace(/\/+$/, '').replace(/\/[^/]*$/, '')}/health` : undefined;
+  },
+  get security() {
+    return toHealthUrl(process.env.REACT_APP_SECURITY_ENDPOINT);
+  },
+  get manager() {
+    return toHealthUrl(process.env.REACT_APP_MANAGER_ENDPOINT);
+  },
+  get router() {
+    return toHealthUrl(process.env.REACT_APP_ROUTER_ENDPOINT);
+  },
+  get telemetry() {
+    return toHealthUrl(process.env.REACT_APP_TELEMETRY_ENDPOINT);
+  },
+  get geofencing() {
+    return toHealthUrl(process.env.REACT_APP_GEOFENCING_ENDPOINT);
+  },
+  get reporting() {
+    return toHealthUrl(process.env.REACT_APP_REPORTING_ENDPOINT);
+  },
 } as const;
 
 /** Default map center (Bogotá) used before real positions load. */

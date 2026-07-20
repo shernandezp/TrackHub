@@ -90,7 +90,8 @@ function DefaultBlogCard({
           <Link to={action.route}>
             <ArgonBox
               component="img"
-              {...({ src: image, alt: title } as Record<string, unknown>)}
+              src={image}
+              alt={title}
               width="100%"
               borderRadius="lg"
             />
@@ -99,7 +100,8 @@ function DefaultBlogCard({
           <MuiLink href={action.route} target="_blank" rel="noreferrer">
             <ArgonBox
               component="img"
-              {...({ src: image, alt: title } as Record<string, unknown>)}
+              src={image}
+              alt={title}
               width="100%"
               borderRadius="lg"
             />
