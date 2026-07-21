@@ -45,6 +45,66 @@ export function formatDateTime(value: string | number | Date | null | undefined)
 }
 
 /**
+ * DateOnly (GraphQL `LocalDate`) handling.
+ *
+ * A DateOnly carries NO instant: `2027-03-04` is that calendar day everywhere.
+ * `new Date('2027-03-04')` however parses as UTC midnight, so reading local
+ * getters off it renders 03/03/2027 for any viewer west of UTC. These helpers
+ * work on the calendar parts directly and never construct an instant.
+ *
+ * DateTimeOffset values (which DO carry an instant and must be converted to the
+ * viewer's zone) keep using formatDate/formatDateTime — do not route them here.
+ */
+const DATE_ONLY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})/;
+
+interface DateParts {
+  year: number;
+  month: number;
+  day: number;
+}
+
+/** Parses the leading `YYYY-MM-DD` of a DateOnly value without building a Date. */
+function parseDateOnly(value: string | null | undefined): DateParts | null {
+  if (!value) return null;
+  const match = DATE_ONLY_PATTERN.exec(value.trim());
+  if (!match) return null;
+  const [, year, month, day] = match;
+  const parts = { year: Number(year), month: Number(month), day: Number(day) };
+  if (parts.month < 1 || parts.month > 12 || parts.day < 1 || parts.day > 31) return null;
+  return parts;
+}
+
+/**
+ * Formats a DateOnly (`YYYY-MM-DD`, optionally with a trailing time part) as
+ * MM/DD/YYYY. Timezone-stable: the rendered day always equals the stored day.
+ * Returns an empty string when the value is absent or unparseable.
+ */
+export function formatDateOnly(value: string | null | undefined): string {
+    const parts = parseDateOnly(value);
+    if (!parts) return '';
+    return `${parts.month.toString().padStart(2, '0')}/${parts.day.toString().padStart(2, '0')}/${parts.year}`;
+}
+
+/**
+ * Whole calendar days from *today* (in the viewer's timezone) until a DateOnly
+ * value; negative once the day has passed, 0 on the day itself. Both sides are
+ * reduced to calendar days before subtracting, so the result never shifts by one
+ * near midnight or for negative UTC offsets.
+ */
+export function daysUntilDateOnly(
+    value: string | null | undefined,
+    today: Date = new Date()
+): number | null {
+    const parts = parseDateOnly(value);
+    if (!parts) return null;
+    // Both endpoints are built as UTC midnights of their calendar day, so the
+    // difference is an exact whole number of days with no DST or offset drift.
+    const target = Date.UTC(parts.year, parts.month - 1, parts.day);
+    const start = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+    return Math.round((target - start) / 86_400_000);
+}
+
+/**
 * Converts a date value to an ISO string with timezone.
 */
 export function toISOStringWithTimezone(value: Date): string {

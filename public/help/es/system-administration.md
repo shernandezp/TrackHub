@@ -97,9 +97,9 @@ La lista se agrupa por cuenta y muestra, por cada función, la **Cuenta**, la **
 
 - **Habilitada** — el interruptor de encendido/apagado de esa función en esa cuenta.
 - **Nivel** — el nivel de suscripción (predeterminado `default`).
-- Un valor de almacenamiento para ciertas funciones: **Intervalo de Almacenamiento (Segundos)** para la integración GPS (predeterminado 360), o **Días de Retención** para el historial de posiciones GPS (predeterminado 30).
+- Un valor de almacenamiento para ciertas funciones: **Intervalo de Almacenamiento (Segundos)** para la integración GPS (predeterminado 360), **Días de Retención** para el historial de posiciones GPS (predeterminado 30), o **Bloquear la asignación cuando la licencia del conductor esté vencida** para personal (predeterminado desactivado).
 
-Hay exactamente diez funcionalidades administrables: integración GPS, historial de posiciones GPS, geocercado, gestión de viajes, móvil del conductor, enlaces públicos, documentos, notificaciones, notificaciones por correo y notificaciones por WhatsApp. Cuando una funcionalidad está deshabilitada para una cuenta, los elementos de menú, secciones, botones, canales de entrega y reportes relacionados se ocultan a sus usuarios, y cualquier solicitud que aun así llegue al servidor se rechaza con un mensaje de "funcionalidad no habilitada" (consulte [Solución de problemas](topic:troubleshooting)). Deshabilitar una funcionalidad nunca elimina datos.
+Hay exactamente once funcionalidades administrables: integración GPS, historial de posiciones GPS, geocercado, gestión de viajes, móvil del conductor, enlaces públicos, documentos, notificaciones, notificaciones por correo, notificaciones por WhatsApp y personal. Cuando una funcionalidad está deshabilitada para una cuenta, los elementos de menú, secciones, botones, canales de entrega y reportes relacionados se ocultan a sus usuarios, y cualquier solicitud que aun así llegue al servidor se rechaza con un mensaje de "funcionalidad no habilitada" (consulte [Solución de problemas](topic:troubleshooting)). Deshabilitar una funcionalidad nunca elimina datos.
 
 Qué activa y desactiva realmente cada funcionalidad —clave por clave, incluyendo qué reportes y secciones desaparecen— se detalla en el [Catálogo de funcionalidades](topic:feature-catalog).
 

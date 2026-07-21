@@ -4,14 +4,14 @@ title: Reports
 description: Pick a report from the catalog, set its filters, then preview it on screen or export to Excel or PDF.
 category: operation
 screens: [reports]
-related: [dashboard-trips-replay, units-devices]
+related: [dashboard-trips-replay, units-devices, drivers-workforce]
 tags: [reports, export, excel, pdf, preview, filters]
 order: 40
 ---
 
 # Reports
 
-Reports turn your fleet data — positions, geofence activity, GPS integration health, documents, and account administration — into a table you can preview on screen or download. Which reports you see, and the data inside them, depend on your account features, role, and groups, so you may see fewer than the full catalog. See [Roles and permissions](topic:roles-and-permissions).
+Reports turn your fleet data — positions, geofence activity, GPS integration health, documents, drivers, and account administration — into a table you can preview on screen or download. Which reports you see, and the data inside them, depend on your account features, role, and groups, so you may see fewer than the full catalog. See [Roles and permissions](topic:roles-and-permissions).
 
 ## Opening Reports
 
@@ -19,7 +19,7 @@ Open **Reports** from the left-hand menu. The screen has the report catalog on t
 
 ## Choosing a report
 
-The catalog groups reports into collapsible categories — **Operations**, **GPS**, **Documents**, and **Administration**. The first category is expanded for you; click a category heading to expand or collapse it.
+The catalog groups reports into collapsible categories — **Operations**, **GPS**, **Documents**, **Workforce**, and **Administration**. The first category is expanded for you; click a category heading to expand or collapse it.
 
 Each report is a card showing its name, a one-line description, and format badges: every report offers **XLSX** (Excel), and reports that also support PDF show a **PDF** badge. Click a report card to select it; its filter panel opens on the right. Nothing is selected until you click a report.
 
@@ -53,6 +53,14 @@ The reports TrackHub can offer include the following. The exact list is driven b
 - **Missing Required Documents** – units missing one or more required document types.
 - **Document Share Activity** – public-link share activity and access counts for documents.
 - **Document Upload Volume** – document upload counts by category over a date range.
+
+### Workforce
+
+- **Driver Registry** – complete driver registry with license, employee code and default unit.
+- **Qualification Expirations** – driver qualifications expiring within the selected number of days.
+- **Driver Assignment History** – time-bounded driver-to-unit assignment history over a date range.
+
+The whole **Workforce** category needs the workforce feature; without it the category is not in the catalog at all. **Qualification Expirations** is the only one of the three that offers PDF as well as Excel. These reports contain personal data, so running them is recorded in your account's audit trail. See [Drivers and workforce](topic:drivers-workforce).
 
 ### Administration
 

@@ -77,6 +77,12 @@ export const REPORT_FILTER_SPECS: Record<string, FilterFieldKind[]> = {
   'documents-missing-required': [],
   'documents-share-activity': [],
   'documents-upload-volume': ['from', 'to'],
+  // Workforce
+  'workforce-driver-registry': [],
+  'workforce-qualification-expirations': ['withinDays'],
+  // Transporter picker + window — the Reporting factory reads stringFilter1 as the transporter id,
+  // mirroring `gps.assignment-history`. There is no driver picker source, so no driver slot.
+  'workforce-assignment-history': ['transporter', 'from', 'to'],
   // Administration (manager-only)
   'accounts-by-status': ['status'],
   'feature-enablement-matrix': [],

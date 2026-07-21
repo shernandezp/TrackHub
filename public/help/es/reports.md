@@ -4,14 +4,14 @@ title: Reportes
 description: Elija un reporte del catálogo, ajuste sus filtros y véalo en pantalla o expórtelo a Excel o PDF.
 category: operation
 screens: [reports]
-related: [dashboard-trips-replay, units-devices]
+related: [dashboard-trips-replay, units-devices, drivers-workforce]
 tags: [reportes, exportar, excel, pdf, vista previa, filtros]
 order: 40
 ---
 
 # Reportes
 
-Los reportes convierten los datos de su flota —posiciones, actividad de geocercas, salud de la integración GPS, documentos y administración de cuentas— en una tabla que puede ver en pantalla o descargar. Qué reportes ve, y los datos que contienen, dependen de las funciones de su cuenta, su rol y sus grupos, por lo que es posible que vea menos que el catálogo completo. Consulte [Roles y permisos](topic:roles-and-permissions).
+Los reportes convierten los datos de su flota —posiciones, actividad de geocercas, salud de la integración GPS, documentos, conductores y administración de cuentas— en una tabla que puede ver en pantalla o descargar. Qué reportes ve, y los datos que contienen, dependen de las funciones de su cuenta, su rol y sus grupos, por lo que es posible que vea menos que el catálogo completo. Consulte [Roles y permisos](topic:roles-and-permissions).
 
 ## Abrir Reportes
 
@@ -19,7 +19,7 @@ Abra **Reportes** desde el menú de la izquierda. La pantalla tiene el catálogo
 
 ## Elegir un reporte
 
-El catálogo agrupa los reportes en categorías plegables — **Operaciones**, **GPS**, **Documentos** y **Administración**. La primera categoría aparece expandida; haga clic en el encabezado de una categoría para expandirla o contraerla.
+El catálogo agrupa los reportes en categorías plegables — **Operaciones**, **GPS**, **Documentos**, **Personal** y **Administración**. La primera categoría aparece expandida; haga clic en el encabezado de una categoría para expandirla o contraerla.
 
 Cada reporte es una tarjeta que muestra su nombre, una descripción de una línea y distintivos de formato: todos los reportes ofrecen **XLSX** (Excel), y los reportes que además admiten PDF muestran un distintivo **PDF**. Haga clic en la tarjeta de un reporte para seleccionarlo; su panel de filtros se abre a la derecha. Nada queda seleccionado hasta que hace clic en un reporte.
 
@@ -53,6 +53,14 @@ Los reportes que TrackHub puede ofrecer incluyen los siguientes. La lista exacta
 - **Documentos Requeridos Faltantes** – unidades a las que les falta uno o más tipos de documento requeridos.
 - **Actividad de Documentos Compartidos** – actividad de enlaces públicos y conteo de accesos de documentos.
 - **Volumen de Carga de Documentos** – conteo de carga de documentos por categoría en un rango de fechas.
+
+### Personal
+
+- **Registro de Conductores** – registro completo de conductores con licencia, código de empleado y unidad predeterminada.
+- **Vencimientos de Habilitaciones** – habilitaciones de conductores que vencen dentro del número de días seleccionado.
+- **Historial de Asignaciones de Conductores** – historial de asignaciones de conductor a unidad, acotado en el tiempo, sobre un rango de fechas.
+
+Toda la categoría **Personal** requiere la funcionalidad de personal; sin ella la categoría no aparece en el catálogo. **Vencimientos de Habilitaciones** es el único de los tres que ofrece PDF además de Excel. Estos reportes contienen datos personales, por lo que su ejecución queda registrada en la auditoría de su cuenta. Vea [Conductores y personal](topic:drivers-workforce).
 
 ### Administración
 

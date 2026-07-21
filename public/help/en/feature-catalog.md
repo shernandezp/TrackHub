@@ -1,24 +1,24 @@
 ---
 id: feature-catalog
 title: Feature catalogue
-description: The ten account features — what each one turns on or off, its settings, who can change it, and what happens when a feature is switched off.
+description: The eleven account features — what each one turns on or off, its settings, who can change it, and what happens when a feature is switched off.
 category: reference
 screens: []
-related: [roles-and-permissions, admin-platform-setup, admin-account-setup, system-administration]
+related: [roles-and-permissions, admin-platform-setup, admin-account-setup, system-administration, drivers-workforce]
 tags: [features, subscription, billing, entitlements, reference, catalogue]
 order: 15
 ---
 
 # Feature catalogue
 
-Every account has a set of **features**. A feature is a billing entitlement: it decides which parts of TrackHub exist for that account. There are exactly **ten** features, and this page is the reference for all of them.
+Every account has a set of **features**. A feature is a billing entitlement: it decides which parts of TrackHub exist for that account. There are exactly **eleven** features, and this page is the reference for all of them.
 
 Two rules apply to every feature:
 
 - **Only a platform administrator can change them**, in **System Admin → Account Features**. Managers see their own account's list read-only in **Account Management → Account Features**.
 - **Features are off unless they are switched on.** A feature that has never been provisioned for an account behaves exactly like one that was switched off. Nothing is enabled implicitly.
 
-## The ten features at a glance
+## The eleven features at a glance
 
 | Feature | Key | Settings | What it gates |
 |---|---|---|---|
@@ -32,11 +32,13 @@ Two rules apply to every feature:
 | WhatsApp Notifications | `notifications.whatsapp` | — | WhatsApp as a delivery channel |
 | GPS Integration | `gps.integration` | Storing Interval (Seconds) | How positions are collected, and nine GPS reports |
 | GPS Position History | `gps.positionHistory` | Retention Days | Stored history, replay, and one report |
+| Workforce | `workforce` | Block assignment when the driver's license is expired | Driver qualifications, assignment history, expiration alerts, and three reports |
 
 Dependencies to keep in mind:
 
 - **Email Notifications** and **WhatsApp Notifications** only matter while the base **Notifications** feature is on. With Notifications off, the screens where you would choose a channel are not there at all.
 - **GPS Position History** is normally paired with **GPS Integration**: history is built from the positions the integration collects.
+- **Workforce** extends a driver area that is otherwise core: the driver registry and driver credentials work without it.
 
 ## Geofencing
 
@@ -136,6 +138,24 @@ Controls whether a unit's past track is kept and can be replayed. When it is off
 **Retention Days** is how long positions are kept before the daily clean-up deletes them. Raising it keeps more history and uses more storage; lowering it is destructive, because positions older than the new limit are deleted on the next run.
 
 Managers can see both of these values, read-only, under **GPS Integration → Position Retention**.
+
+## Workforce
+
+**Key:** `workforce`. **Setting:** **Block assignment when the driver's license is expired**, default **off**.
+
+This feature does **not** control drivers as such. The **Drivers** registry and the **Driver Credentials & Devices** section are core platform: an authorised administrator can register drivers, and issue, activate, lock, reset, and revoke their mobile credentials, on every account, whether or not this feature is on. What Workforce adds is everything built *around* the driver.
+
+When it is off:
+
+- Three sections disappear from the **Fleet & Tracking** group: **Driver Qualifications**, **Driver Assignments**, and **Qualification Expirations (30 days)**.
+- Qualifications cannot be created, edited, or read, and assignment history cannot be recorded or queried.
+- The daily scan stops, so no **Driver Qualification Expiring** or **Driver Qualification Expired** alerts are raised for the account.
+- Three reports disappear from the report list: driver registry, qualification expirations, and driver assignment history — along with the whole **Workforce** report category, which has nothing else in it.
+- The driver's **Default Transporter** still works. It is a field on the driver record, not an assignment.
+
+Existing qualifications and assignments are not deleted; they simply cannot be reached until the feature is switched back on.
+
+The **Block assignment when the driver's license is expired** setting is the only per-account choice this feature carries, and it is off unless you turn it on. With it on, assigning a driver whose **License** qualification is expired or revoked is rejected with a validation error. Accounts differ on how strict they need to be, which is why this is a setting rather than a rule. Full detail is in [Drivers and workforce](topic:drivers-workforce).
 
 ## What a switched-off feature looks like
 

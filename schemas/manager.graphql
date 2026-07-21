@@ -73,6 +73,11 @@ type Query {
     @cost(weight: "10")
   validateDriverAssignment(query: ValidateDriverAssignmentQueryInput!): Boolean!
     @cost(weight: "10")
+  driverQualifications(query: GetDriverQualificationsQueryInput!): [DriverQualificationVm!]!
+    @cost(weight: "10")
+  driverAssignmentHistory(query: GetDriverAssignmentHistoryQueryInput!): [DriverTransporterAssignmentVm!]!
+    @cost(weight: "10")
+  myDriverProfile: MyDriverProfileVm! @cost(weight: "10")
   geocodingProviders: [GeocodingProviderVm!]! @cost(weight: "10")
   activeGeocodingProvider: GeocodingProviderTokenVm @cost(weight: "10")
   gpsIntegrationDashboard(query: GetGpsIntegrationDashboardQueryInput!): GpsIntegrationDashboardVm!
@@ -224,6 +229,16 @@ type Mutation {
     @cost(weight: "10")
   updateDriver(command: UpdateDriverCommandInput!): Boolean! @cost(weight: "10")
   deactivateDriver(command: DeactivateDriverCommandInput!): Boolean!
+    @cost(weight: "10")
+  createDriverQualification(command: CreateDriverQualificationCommandInput!): DriverQualificationVm!
+    @cost(weight: "10")
+  updateDriverQualification(command: UpdateDriverQualificationCommandInput!): Boolean!
+    @cost(weight: "10")
+  deleteDriverQualification(command: DeleteDriverQualificationCommandInput!): UUID!
+    @cost(weight: "10")
+  assignDriverToTransporter(command: AssignDriverToTransporterCommandInput!): DriverTransporterAssignmentVm!
+    @cost(weight: "10")
+  endDriverAssignment(command: EndDriverAssignmentCommandInput!): Boolean!
     @cost(weight: "10")
   createGeocodingProvider(command: CreateGeocodingProviderCommandInput!): GeocodingProviderVm!
     @cost(weight: "10")
@@ -629,6 +644,41 @@ type DriverAssignmentVm {
   resourceType: String!
   resourceId: String!
   active: Boolean!
+  startsAt: DateTime
+  endsAt: DateTime
+  assignmentType: String
+}
+
+type DriverQualificationVm {
+  driverQualificationId: UUID!
+  accountId: UUID!
+  driverId: UUID!
+  driverName: String!
+  qualificationType: String!
+  category: String
+  number: String
+  issuedAt: LocalDate
+  expiresAt: LocalDate
+  issuingAuthority: String
+  status: String!
+  documentId: UUID
+  notes: String
+  lastModified: DateTime!
+}
+
+type DriverTransporterAssignmentVm {
+  driverTransporterAssignmentId: UUID!
+  accountId: UUID!
+  driverId: UUID!
+  driverName: String!
+  transporterId: UUID!
+  transporterName: String!
+  startsAt: DateTime!
+  endsAt: DateTime
+  assignmentType: String!
+  status: String!
+  createdByPrincipal: String!
+  lastModified: DateTime!
 }
 
 type DriverVm {
@@ -698,6 +748,12 @@ type GroupVm {
   description: String!
   active: Boolean!
   accountId: UUID!
+}
+
+type MyDriverProfileVm {
+  driver: DriverVm!
+  qualifications: [DriverQualificationVm!]!
+  activeAssignments: [DriverTransporterAssignmentVm!]!
 }
 
 type MyNotificationVm {
@@ -1012,6 +1068,13 @@ input AssignDeviceToTransporterCommandInput {
   assignment: TransporterDeviceAssignmentDtoInput!
 }
 
+input AssignDriverToTransporterCommandInput {
+  driverId: UUID!
+  transporterId: UUID!
+  startsAt: DateTime!
+  assignmentType: String!
+}
+
 input AuditEventDtoInput {
   accountId: UUID!
   actorType: String!
@@ -1081,6 +1144,10 @@ input CreateDocumentMetadataCommandInput {
 
 input CreateDriverCommandInput {
   driver: DriverDtoInput!
+}
+
+input CreateDriverQualificationCommandInput {
+  qualification: DriverQualificationDtoInput!
 }
 
 input CreateGeocodingProviderCommandInput {
@@ -1154,6 +1221,10 @@ input DeleteAlertSubscriptionCommandInput {
 
 input DeleteDocumentReferenceCommandInput {
   documentId: UUID!
+}
+
+input DeleteDriverQualificationCommandInput {
+  driverQualificationId: UUID!
 }
 
 input DeleteNotificationTemplateCommandInput {
@@ -1271,6 +1342,20 @@ input DriverDtoInput {
   defaultTransporterId: UUID
 }
 
+input DriverQualificationDtoInput {
+  accountId: UUID!
+  driverId: UUID!
+  qualificationType: String!
+  category: String
+  number: String
+  issuedAt: LocalDate
+  expiresAt: LocalDate
+  issuingAuthority: String
+  status: String!
+  documentId: UUID
+  notes: String
+}
+
 input EmitExpiringCredentialAlertsCommandInput {
   withinDays: Int! = 7
 }
@@ -1278,6 +1363,11 @@ input EmitExpiringCredentialAlertsCommandInput {
 input EndDeviceTransporterAssignmentCommandInput {
   assignmentId: UUID!
   reason: String
+}
+
+input EndDriverAssignmentCommandInput {
+  driverTransporterAssignmentId: UUID!
+  endsAt: DateTime
 }
 
 input ExpireDocumentCommandInput {
@@ -1444,8 +1534,26 @@ input GetDocumentVersionsQueryInput {
   take: Int! = 50
 }
 
+input GetDriverAssignmentHistoryQueryInput {
+  accountId: UUID!
+  driverId: UUID
+  transporterId: UUID
+  from: DateTime
+  to: DateTime
+  skip: Int! = 0
+  take: Int! = 50
+}
+
 input GetDriverAssignmentsQueryInput {
   driverId: UUID!
+}
+
+input GetDriverQualificationsQueryInput {
+  accountId: UUID!
+  driverId: UUID
+  expiringWithinDays: Int
+  skip: Int! = 0
+  take: Int! = 50
 }
 
 input GetDriverQueryInput {
@@ -1840,6 +1948,11 @@ input UpdateCredentialDtoInput {
 input UpdateDriverCommandInput {
   driverId: UUID!
   driver: DriverDtoInput!
+}
+
+input UpdateDriverQualificationCommandInput {
+  driverQualificationId: UUID!
+  qualification: DriverQualificationDtoInput!
 }
 
 input UpdateGeocodingProviderCommandInput {

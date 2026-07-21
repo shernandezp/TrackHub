@@ -216,7 +216,8 @@
     "disable": "Deshabilitar",
     "config": {
       "storingIntervalSeconds": "Intervalo de Almacenamiento (Segundos)",
-      "retentionDays": "Días de Retención"
+      "retentionDays": "Días de Retención",
+      "blockAssignmentOnExpiredLicense": "Bloquear la asignación cuando la licencia del conductor esté vencida"
     }
   },
   "alertEvents": {
@@ -278,7 +279,9 @@
     "gpsOperatorPositionSyncFailed": "Fallo de Sincronización del Operador GPS",
     "documentExpiring": "Documento por Vencer",
     "documentExpired": "Documento Vencido",
-    "notificationDeliveryFailed": "Fallo de Entrega de Notificación"
+    "notificationDeliveryFailed": "Fallo de Entrega de Notificación",
+    "driverQualificationExpiring": "Habilitación del Conductor por Vencer",
+    "driverQualificationExpired": "Habilitación del Conductor Vencida"
   },
   "notificationChannels": {
     "inApp": "En la Aplicación",
@@ -479,6 +482,121 @@
     "defaultTransporter": "Transportador Predeterminado",
     "revokeDeviceRegistration": "Revocar Registro de Dispositivo"
   },
+  "workforce": {
+    "selectDriver": "Conductor",
+    "selectDriverPlaceholder": "Seleccione un conductor",
+    "selectDriverHint": "Seleccione un conductor para administrar sus credenciales, dispositivos, habilitaciones y asignaciones.",
+    "searchDriver": "Filtrar conductores",
+    "noDriverMatches": "Ningún conductor coincide con el filtro.",
+    "credentials": {
+      "title": "Credenciales y Dispositivos del Conductor",
+      "login": "Usuario",
+      "password": "Contraseña",
+      "newPassword": "Nueva Contraseña",
+      "resetRequired": "Requiere Cambio de Contraseña",
+      "failedAttempts": "Intentos Fallidos",
+      "lockedUntil": "Bloqueada Hasta",
+      "lockedUntilHelp": "El conductor no podrá iniciar sesión hasta ese momento.",
+      "lastLoginAt": "Último Ingreso",
+      "status": "Estado",
+      "create": "Crear Credencial",
+      "activate": "Activar",
+      "lock": "Bloquear",
+      "lockTitle": "Bloquear Credencial",
+      "reset": "Restablecer Contraseña",
+      "resetTitle": "Restablecer Credencial",
+      "revoke": "Revocar",
+      "revokeTitle": "Revocar Credencial",
+      "revokeConfirm": "¿Revocar esta credencial de conductor? El conductor no podrá iniciar sesión y las sesiones existentes dejarán de renovarse.",
+      "statusActive": "Activa",
+      "statusRevoked": "Revocada",
+      "statusLocked": "Bloqueada",
+      "statusPending": "Pendiente de Activación",
+      "empty": "Este conductor aún no tiene credencial."
+    },
+    "devices": {
+      "title": "Dispositivos Registrados",
+      "deviceName": "Nombre del Dispositivo",
+      "platform": "Plataforma",
+      "appVersion": "Versión de la App",
+      "pushToken": "Token Push (enmascarado)",
+      "lastSeenAt": "Última Actividad",
+      "revokeConfirm": "¿Revocar este registro de dispositivo? El dispositivo deberá registrarse nuevamente desde la aplicación del conductor.",
+      "empty": "Este conductor no tiene dispositivos registrados."
+    },
+    "qualifications": {
+      "title": "Habilitaciones del Conductor",
+      "type": "Tipo",
+      "category": "Categoría",
+      "number": "Número",
+      "issuedAt": "Fecha de Emisión",
+      "expiresAt": "Fecha de Vencimiento",
+      "issuingAuthority": "Autoridad Emisora",
+      "status": "Estado",
+      "documentId": "Documento Vinculado",
+      "documentIdHelp": "Documento de respaldo opcional, seleccionado entre los documentos de este conductor que aparecen abajo.",
+      "documentNone": "Sin documento vinculado",
+      "documentUnavailable": "Documento vinculado no disponible",
+      "documents": "Documentos del Conductor",
+      "notes": "Notas",
+      "create": "Crear Habilitación",
+      "update": "Actualizar Habilitación",
+      "deleteConfirm": "¿Eliminar esta habilitación? El registro se borra de forma permanente; su historial permanece en la auditoría.",
+      "empty": "Este conductor no tiene habilitaciones registradas.",
+      "types": {
+        "license": "Licencia",
+        "medicalexam": "Examen Médico",
+        "training": "Capacitación",
+        "backgroundcheck": "Verificación de Antecedentes",
+        "hazmatpermit": "Permiso de Materiales Peligrosos",
+        "other": "Otra"
+      },
+      "statuses": {
+        "valid": "Vigente",
+        "expired": "Vencida",
+        "revoked": "Revocada"
+      }
+    },
+    "assignments": {
+      "title": "Asignaciones del Conductor",
+      "active": "Asignaciones Activas",
+      "history": "Historial de Asignaciones",
+      "transporter": "Unidad",
+      "selectTransporter": "Seleccione una unidad",
+      "startsAt": "Inicia El",
+      "endsAt": "Finaliza El",
+      "type": "Tipo de Asignación",
+      "status": "Estado",
+      "createdBy": "Creada Por",
+      "assign": "Asignar Conductor",
+      "end": "Finalizar Asignación",
+      "endConfirm": "¿Finalizar esta asignación ahora? Las asignaciones finalizadas no se pueden modificar.",
+      "from": "Desde",
+      "to": "Hasta",
+      "search": "Buscar",
+      "empty": "Ninguna asignación coincide con los filtros actuales.",
+      "emptyActive": "Este conductor no tiene asignaciones activas.",
+      "defaultTransporter": "Unidad predeterminada",
+      "defaultTransporterHint": "Definida en la ficha del conductor",
+      "tooManyResults": "Mostrando las primeras {{count}} filas. Ajuste los filtros para ver el resto.",
+      "types": {
+        "regular": "Regular",
+        "temporary": "Temporal"
+      },
+      "statuses": {
+        "active": "Activa",
+        "ended": "Finalizada",
+        "cancelled": "Cancelada"
+      }
+    },
+    "expirations": {
+      "title": "Vencimientos de Habilitaciones (30 días)",
+      "driver": "Conductor",
+      "daysLeft": "Días Restantes",
+      "expired": "Vencida",
+      "empty": "No hay habilitaciones por vencer en los próximos 30 días."
+    }
+  },
   "geofence": {
     "title": "Geocercas",
     "singleTitle": "Geocerca",
@@ -674,7 +792,8 @@
     "operations": "Operaciones",
     "gps": "GPS",
     "documents": "Documentos",
-    "administration": "Administración"
+    "administration": "Administración",
+    "workforce": "Personal"
   },
   "reportList": {
     "liveReport": "Reporte de Unidades",
@@ -703,7 +822,10 @@
     "documentsUploadVolume": "Volumen de Carga de Documentos",
     "accountsByStatus": "Cuentas por Estado",
     "featureEnablementMatrix": "Matriz de Habilitación de Funcionalidades",
-    "groupMembershipExport": "Exportación de Membresía de Grupos"
+    "groupMembershipExport": "Exportación de Membresía de Grupos",
+    "workforceDriverRegistry": "Registro de Conductores",
+    "workforceQualificationExpirations": "Vencimientos de Habilitaciones",
+    "workforceAssignmentHistory": "Historial de Asignaciones de Conductores"
   },
   "reportDescriptions": {
     "liveReport": "Última posición conocida de cada unidad de su cuenta.",
@@ -726,7 +848,10 @@
     "documentsUploadVolume": "Conteo de carga de documentos por categoría en un rango de fechas.",
     "accountsByStatus": "Cuentas agrupadas por estado de ciclo de vida.",
     "featureEnablementMatrix": "Funcionalidades habilitadas y niveles en todas las cuentas.",
-    "groupMembershipExport": "Membresía de grupos de usuarios y unidades de su cuenta."
+    "groupMembershipExport": "Membresía de grupos de usuarios y unidades de su cuenta.",
+    "workforceDriverRegistry": "Registro completo de conductores con licencia, código de empleado y unidad predeterminada.",
+    "workforceQualificationExpirations": "Habilitaciones de conductores que vencen dentro del número de días seleccionado.",
+    "workforceAssignmentHistory": "Historial de asignaciones de conductor a unidad, acotado en el tiempo, sobre un rango de fechas."
   },
   "resources": {
     "accounts": "Cuentas",
@@ -772,7 +897,8 @@
     "notificationsEmail": "Notificaciones por Correo",
     "notificationsWhatsapp": "Notificaciones por WhatsApp",
     "gpsIntegration": "Integración GPS",
-    "gpsPositionHistory": "Historial de Posiciones GPS"
+    "gpsPositionHistory": "Historial de Posiciones GPS",
+    "workforce": "Personal"
   },
   "role": {
     "title": "Roles",

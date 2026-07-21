@@ -216,7 +216,8 @@
     "disable": "Disable",
     "config": {
       "storingIntervalSeconds": "Storing Interval (Seconds)",
-      "retentionDays": "Retention Days"
+      "retentionDays": "Retention Days",
+      "blockAssignmentOnExpiredLicense": "Block assignment when the driver's license is expired"
     }
   },
   "alertEvents": {
@@ -278,7 +279,9 @@
     "gpsOperatorPositionSyncFailed": "GPS Operator Sync Failed",
     "documentExpiring": "Document Expiring",
     "documentExpired": "Document Expired",
-    "notificationDeliveryFailed": "Notification Delivery Failed"
+    "notificationDeliveryFailed": "Notification Delivery Failed",
+    "driverQualificationExpiring": "Driver Qualification Expiring",
+    "driverQualificationExpired": "Driver Qualification Expired"
   },
   "notificationChannels": {
     "inApp": "In-App",
@@ -479,6 +482,121 @@
     "defaultTransporter": "Default Transporter",
     "revokeDeviceRegistration": "Revoke Device Registration"
   },
+  "workforce": {
+    "selectDriver": "Driver",
+    "selectDriverPlaceholder": "Select a driver",
+    "selectDriverHint": "Select a driver to manage their credentials, devices, qualifications and assignments.",
+    "searchDriver": "Filter drivers",
+    "noDriverMatches": "No driver matches the filter.",
+    "credentials": {
+      "title": "Driver Credentials & Devices",
+      "login": "Login",
+      "password": "Password",
+      "newPassword": "New Password",
+      "resetRequired": "Password Reset Required",
+      "failedAttempts": "Failed Attempts",
+      "lockedUntil": "Locked Until",
+      "lockedUntilHelp": "The driver cannot sign in until this moment.",
+      "lastLoginAt": "Last Login",
+      "status": "Status",
+      "create": "Create Credential",
+      "activate": "Activate",
+      "lock": "Lock",
+      "lockTitle": "Lock Credential",
+      "reset": "Reset Password",
+      "resetTitle": "Reset Credential",
+      "revoke": "Revoke",
+      "revokeTitle": "Revoke Credential",
+      "revokeConfirm": "Revoke this driver credential? The driver will no longer be able to sign in and existing sessions stop refreshing.",
+      "statusActive": "Active",
+      "statusRevoked": "Revoked",
+      "statusLocked": "Locked",
+      "statusPending": "Pending Activation",
+      "empty": "This driver has no credential yet."
+    },
+    "devices": {
+      "title": "Registered Devices",
+      "deviceName": "Device Name",
+      "platform": "Platform",
+      "appVersion": "App Version",
+      "pushToken": "Push Token (masked)",
+      "lastSeenAt": "Last Seen",
+      "revokeConfirm": "Revoke this device registration? The device must be enrolled again from the driver app.",
+      "empty": "This driver has no registered devices."
+    },
+    "qualifications": {
+      "title": "Driver Qualifications",
+      "type": "Type",
+      "category": "Category",
+      "number": "Number",
+      "issuedAt": "Issued At",
+      "expiresAt": "Expires At",
+      "issuingAuthority": "Issuing Authority",
+      "status": "Status",
+      "documentId": "Linked Document",
+      "documentIdHelp": "Optional supporting document, chosen from the documents held for this driver below.",
+      "documentNone": "No linked document",
+      "documentUnavailable": "Linked document unavailable",
+      "documents": "Driver Documents",
+      "notes": "Notes",
+      "create": "Create Qualification",
+      "update": "Update Qualification",
+      "deleteConfirm": "Delete this qualification? The record is removed permanently; its history stays in the audit trail.",
+      "empty": "No qualifications recorded for this driver.",
+      "types": {
+        "license": "License",
+        "medicalexam": "Medical Exam",
+        "training": "Training",
+        "backgroundcheck": "Background Check",
+        "hazmatpermit": "HAZMAT Permit",
+        "other": "Other"
+      },
+      "statuses": {
+        "valid": "Valid",
+        "expired": "Expired",
+        "revoked": "Revoked"
+      }
+    },
+    "assignments": {
+      "title": "Driver Assignments",
+      "active": "Active Assignments",
+      "history": "Assignment History",
+      "transporter": "Unit",
+      "selectTransporter": "Select a unit",
+      "startsAt": "Starts At",
+      "endsAt": "Ends At",
+      "type": "Assignment Type",
+      "status": "Status",
+      "createdBy": "Created By",
+      "assign": "Assign Driver",
+      "end": "End Assignment",
+      "endConfirm": "End this assignment now? Ended assignments cannot be modified.",
+      "from": "From",
+      "to": "To",
+      "search": "Search",
+      "empty": "No assignments match the current filters.",
+      "emptyActive": "This driver has no active assignments.",
+      "defaultTransporter": "Default unit",
+      "defaultTransporterHint": "Set on the driver record",
+      "tooManyResults": "Showing the first {{count}} rows. Narrow the filters to see the rest.",
+      "types": {
+        "regular": "Regular",
+        "temporary": "Temporary"
+      },
+      "statuses": {
+        "active": "Active",
+        "ended": "Ended",
+        "cancelled": "Cancelled"
+      }
+    },
+    "expirations": {
+      "title": "Qualification Expirations (30 days)",
+      "driver": "Driver",
+      "daysLeft": "Days Left",
+      "expired": "Expired",
+      "empty": "No qualifications expire within the next 30 days."
+    }
+  },
   "geofence": {
     "title": "Geofences",
     "singleTitle": "Geofence",
@@ -674,7 +792,8 @@
     "operations": "Operations",
     "gps": "GPS",
     "documents": "Documents",
-    "administration": "Administration"
+    "administration": "Administration",
+    "workforce": "Workforce"
   },
   "reportList": {
     "liveReport": "Units Report",
@@ -703,7 +822,10 @@
     "documentsUploadVolume": "Document Upload Volume",
     "accountsByStatus": "Accounts by Status",
     "featureEnablementMatrix": "Feature Enablement Matrix",
-    "groupMembershipExport": "Group Membership Export"
+    "groupMembershipExport": "Group Membership Export",
+    "workforceDriverRegistry": "Driver Registry",
+    "workforceQualificationExpirations": "Qualification Expirations",
+    "workforceAssignmentHistory": "Driver Assignment History"
   },
   "reportDescriptions": {
     "liveReport": "Latest known position of every unit in your account.",
@@ -726,7 +848,10 @@
     "documentsUploadVolume": "Document upload counts by category over a date range.",
     "accountsByStatus": "Accounts grouped by lifecycle status.",
     "featureEnablementMatrix": "Enabled features and tiers across all accounts.",
-    "groupMembershipExport": "Group membership of users and units for your account."
+    "groupMembershipExport": "Group membership of users and units for your account.",
+    "workforceDriverRegistry": "Complete driver registry with license, employee code and default unit.",
+    "workforceQualificationExpirations": "Driver qualifications expiring within the selected number of days.",
+    "workforceAssignmentHistory": "Time-bounded driver-to-unit assignment history over a date range."
   },
   "resources": {
     "accounts": "Accounts",
@@ -772,7 +897,8 @@
     "notificationsEmail": "Email Notifications",
     "notificationsWhatsapp": "WhatsApp Notifications",
     "gpsIntegration": "GPS Integration",
-    "gpsPositionHistory": "GPS Position History"
+    "gpsPositionHistory": "GPS Position History",
+    "workforce": "Workforce"
   },
   "role": {
     "title": "Roles",

@@ -42,7 +42,8 @@ const displayFeatures = [
   'documents',
   'notifications',
   'notifications.email',
-  'notifications.whatsapp'
+  'notifications.whatsapp',
+  'workforce'
 ];
 
 function TextCell({ children }: { children?: ReactNode }) {

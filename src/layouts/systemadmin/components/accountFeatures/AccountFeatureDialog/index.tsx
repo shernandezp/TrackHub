@@ -107,20 +107,29 @@ function AccountFeatureDialog({ open, setOpen, handleSubmit, values, handleChang
           errorMsg={errors.tier}
         />
 
-        {cfg && (
-          <CustomTextField
-            margin="dense"
-            name="configValue"
-            id="configValue"
-            label={t(cfg.labelKey as 'accountFeatures.config.retentionDays')}
-            type="number"
-            fullWidth
-            value={values.configValue ?? cfg.default}
-            onChange={handleChange}
-            inputProps={{ min: 0 }}
-            errorMsg={errors.configValue}
-          />
-        )}
+        {cfg && (cfg.kind === 'boolean'
+          ? (
+            <CustomCheckbox
+              name="configValue"
+              id="configValue"
+              value={Boolean(values.configValue ?? cfg.default)}
+              handleChange={handleChange}
+              label={t(cfg.labelKey as 'accountFeatures.config.retentionDays')} />
+          )
+          : (
+            <CustomTextField
+              margin="dense"
+              name="configValue"
+              id="configValue"
+              label={t(cfg.labelKey as 'accountFeatures.config.retentionDays')}
+              type="number"
+              fullWidth
+              value={Number(values.configValue ?? cfg.default)}
+              onChange={handleChange}
+              inputProps={{ min: 0 }}
+              errorMsg={errors.configValue}
+            />
+          ))}
       </form>
     </FormDialog>
   );

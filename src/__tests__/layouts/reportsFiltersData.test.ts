@@ -32,7 +32,7 @@ import {
 // Passthrough translator: returns the key so we can assert label wiring.
 const t = ((key: string) => key) as unknown as TFunction;
 
-// The 21 seeded report codes. Every one must have a strategy so the
+// The 24 seeded report codes. Every one must have a strategy so the
 // silent empty-filter fallback is gone.
 const SEEDED_CODES = [
   'LiveReport',
@@ -53,6 +53,9 @@ const SEEDED_CODES = [
   'documents-missing-required',
   'documents-share-activity',
   'documents-upload-volume',
+  'workforce-driver-registry',
+  'workforce-qualification-expirations',
+  'workforce-assignment-history',
   'accounts-by-status',
   'feature-enablement-matrix',
   'group-membership-export',
@@ -60,11 +63,26 @@ const SEEDED_CODES = [
 
 describe('report filter strategies', () => {
   test('every seeded report code has a registered strategy', () => {
-    expect(SEEDED_CODES).toHaveLength(21);
+    expect(SEEDED_CODES).toHaveLength(24);
     for (const code of SEEDED_CODES) {
       expect(REPORT_FILTER_SPECS[code]).toBeDefined();
     }
-    expect(Object.keys(REPORT_FILTER_SPECS)).toHaveLength(21);
+    expect(Object.keys(REPORT_FILTER_SPECS)).toHaveLength(24);
+  });
+
+  // The Reporting AssignmentHistoryReport reads stringFilter1 as the transporter id; a spec of
+  // just ['from','to'] would leave that filter permanently unreachable from the UI.
+  test('workforce assignment history exposes the transporter picker slot', () => {
+    expect(REPORT_FILTER_SPECS['workforce-assignment-history']).toEqual(['transporter', 'from', 'to']);
+    const data = buildFilterTableData(
+      REPORT_FILTER_SPECS['workforce-assignment-history'],
+      { transporters: [{ value: 't-1', label: 'Unit 1' }], operators: [] },
+      t
+    );
+    expect(data.stringFilter1.visible).toBe(true);
+    expect(data.stringFilter1.label).toBe('reports.transporter');
+    expect(data.stringFilter2.visible).toBe(false);
+    expect(getStringInputKinds(REPORT_FILTER_SPECS['workforce-assignment-history'])[0]).toBe('select');
   });
 
   test('unknown code yields the explicit date-range default', () => {
@@ -79,6 +97,7 @@ describe('report filter strategies', () => {
       'GeofenceEvents',
       'gps.assignment-history',
       'gps.position-history',
+      'workforce-assignment-history',
     ]);
   });
 

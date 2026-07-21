@@ -34,8 +34,12 @@ import { parseJson } from 'utils/jsonUtils';
 import { toCamelCase } from "utils/stringUtils";
 import { LoadingContext } from 'LoadingContext';
 
-/** Editable storage/cost configuration bound to a specific feature key. */
-export interface ConfigFieldDef { name: string; labelKey: string; default: number }
+/**
+ * Editable configuration bound to a specific feature key, stored inside the feature row's
+ * `configurationJson`. `kind` drives the control the dialog renders — storage/cost features carry a
+ * numeric value, policy opt-ins (e.g. workforce's `blockAssignmentOnExpiredLicense`) carry a boolean.
+ */
+export interface ConfigFieldDef { name: string; labelKey: string; kind: 'number' | 'boolean'; default: number | boolean }
 
 /**
  * SuperAdministrator editor state for a single account feature (loose until the
@@ -52,7 +56,7 @@ export interface FeatureFormValues {
   effectiveFrom?: string | null;
   effectiveTo?: string | null;
   existingConfigurationJson?: string | null;
-  configValue?: number;
+  configValue?: number | boolean;
 }
 
 /** Option row for the account/feature selects. */
@@ -69,13 +73,16 @@ const knownFeatures = [
   'documents',
   'notifications',
   'notifications.email',
-  'notifications.whatsapp'
+  'notifications.whatsapp',
+  'workforce'
 ];
 
-// Storage/cost features carry an editable configuration value stored in configurationJson.
+// Features carrying an editable configuration value stored in configurationJson.
 const configField: Record<string, ConfigFieldDef> = {
-  'gps.integration': { name: 'storingIntervalSeconds', labelKey: 'accountFeatures.config.storingIntervalSeconds', default: 360 },
-  'gps.positionHistory': { name: 'retentionDays', labelKey: 'accountFeatures.config.retentionDays', default: 30 }
+  'gps.integration': { name: 'storingIntervalSeconds', labelKey: 'accountFeatures.config.storingIntervalSeconds', kind: 'number', default: 360 },
+  'gps.positionHistory': { name: 'retentionDays', labelKey: 'accountFeatures.config.retentionDays', kind: 'number', default: 30 },
+  // Spec 09 §18.6: per-account opt-in, default false — accounts differ on strictness.
+  workforce: { name: 'blockAssignmentOnExpiredLicense', labelKey: 'accountFeatures.config.blockAssignmentOnExpiredLicense', kind: 'boolean', default: false }
 };
 
 const featureOptions: FeatureSelectOption[] = knownFeatures.map(key => ({ value: key, label: key }));
@@ -144,7 +151,7 @@ function SystemAccountFeatures() {
       effectiveFrom: feature.effectiveFrom,
       effectiveTo: feature.effectiveTo,
       existingConfigurationJson: feature.configurationJson,
-      configValue: cfg ? ((parseJson<Record<string, unknown>>(feature.configurationJson)[cfg.name] as number | undefined) ?? cfg.default) : undefined
+      configValue: cfg ? ((parseJson<Record<string, unknown>>(feature.configurationJson)[cfg.name] as number | boolean | undefined) ?? cfg.default) : undefined
     });
     setOpen(true);
   };
@@ -161,8 +168,13 @@ function SystemAccountFeatures() {
     setLoading(true);
     try {
       const cfg = configField[values.featureKey ?? ''];
+      const configuredValue = values.configValue ?? cfg?.default;
       const configurationJson = cfg
-        ? JSON.stringify({ [cfg.name]: parseInt(String(values.configValue ?? cfg.default), 10) || 0 })
+        ? JSON.stringify({
+          [cfg.name]: cfg.kind === 'boolean'
+            ? Boolean(configuredValue)
+            : parseInt(String(configuredValue), 10) || 0
+        })
         : values.existingConfigurationJson;
       await setAccountFeatureMaster({
         accountId: values.accountId,

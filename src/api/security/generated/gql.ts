@@ -21,6 +21,16 @@ type Documents = {
     "\n  mutation CreateClient($client: ClientDtoInput!) {\n    createClient(command: { client: $client }) {\n      ...ClientItem\n      secret\n    }\n  }\n": typeof types.CreateClientDocument,
     "\n  mutation UpdateClient($id: UUID!, $client: ClientUserDtoInput!) {\n    updateClient(id: $id, command: { client: $client })\n  }\n": typeof types.UpdateClientDocument,
     "\n  mutation DeleteClient($id: UUID!) {\n    deleteClient(id: $id)\n  }\n": typeof types.DeleteClientDocument,
+    "\n  fragment DriverCredentialItem on DriverCredentialVm {\n    driverCredentialId\n    driverId\n    accountId\n    normalizedLogin\n    failedAttempts\n    lockedUntil\n    verifiedAt\n    lastLoginAt\n    active\n    resetRequired\n    lastModified\n  }\n": typeof types.DriverCredentialItemFragmentDoc,
+    "\n  fragment DriverDeviceItem on DriverDeviceRegistrationVm {\n    driverDeviceRegistrationId\n    driverId\n    accountId\n    deviceId\n    deviceName\n    platform\n    appVersion\n    pushToken\n    active\n    registeredAt\n    lastSeenAt\n    revokedAt\n    revokedBy\n    lastModified\n  }\n": typeof types.DriverDeviceItemFragmentDoc,
+    "\n  query GetDriverCredentials($accountId: UUID!, $driverId: UUID, $skip: Int!, $take: Int!) {\n    driverCredentials(\n      query: { accountId: $accountId, driverId: $driverId, skip: $skip, take: $take }\n    ) {\n      ...DriverCredentialItem\n    }\n  }\n": typeof types.GetDriverCredentialsDocument,
+    "\n  query GetDriverDevices($accountId: UUID!, $driverId: UUID, $skip: Int!, $take: Int!) {\n    driverDevices(query: { accountId: $accountId, driverId: $driverId, skip: $skip, take: $take }) {\n      ...DriverDeviceItem\n    }\n  }\n": typeof types.GetDriverDevicesDocument,
+    "\n  mutation CreateDriverCredential($credential: DriverCredentialDtoInput!) {\n    createDriverCredential(command: { credential: $credential }) {\n      ...DriverCredentialItem\n    }\n  }\n": typeof types.CreateDriverCredentialDocument,
+    "\n  mutation ActivateDriverCredential($driverCredentialId: UUID!, $password: String!) {\n    activateDriverCredential(\n      command: { driverCredentialId: $driverCredentialId, password: $password }\n    )\n  }\n": typeof types.ActivateDriverCredentialDocument,
+    "\n  mutation LockDriverCredential($driverCredentialId: UUID!, $lockedUntil: DateTime!) {\n    lockDriverCredential(\n      command: { driverCredentialId: $driverCredentialId, lockedUntil: $lockedUntil }\n    )\n  }\n": typeof types.LockDriverCredentialDocument,
+    "\n  mutation ResetDriverCredential(\n    $driverCredentialId: UUID!\n    $password: String!\n    $resetRequired: Boolean!\n  ) {\n    resetDriverCredential(\n      command: {\n        driverCredentialId: $driverCredentialId\n        password: $password\n        resetRequired: $resetRequired\n      }\n    )\n  }\n": typeof types.ResetDriverCredentialDocument,
+    "\n  mutation RevokeDriverCredential($driverCredentialId: UUID!) {\n    revokeDriverCredential(command: { driverCredentialId: $driverCredentialId })\n  }\n": typeof types.RevokeDriverCredentialDocument,
+    "\n  mutation RevokeDriverDevice($driverDeviceRegistrationId: UUID!, $revokedBy: String!) {\n    revokeDriverDevice(\n      command: { driverDeviceRegistrationId: $driverDeviceRegistrationId, revokedBy: $revokedBy }\n    )\n  }\n": typeof types.RevokeDriverDeviceDocument,
     "\n  fragment PolicyItem on PolicyVm {\n    policyId\n    name\n  }\n": typeof types.PolicyItemFragmentDoc,
     "\n  fragment PolicyResourceTree on ResourceVm {\n    resourceId\n    resourceName\n    actions {\n      resourceId\n      actionName\n      actionId\n    }\n  }\n": typeof types.PolicyResourceTreeFragmentDoc,
     "\n  query GetPolicies {\n    policies {\n      ...PolicyItem\n    }\n  }\n": typeof types.GetPoliciesDocument,
@@ -69,6 +79,16 @@ const documents: Documents = {
     "\n  mutation CreateClient($client: ClientDtoInput!) {\n    createClient(command: { client: $client }) {\n      ...ClientItem\n      secret\n    }\n  }\n": types.CreateClientDocument,
     "\n  mutation UpdateClient($id: UUID!, $client: ClientUserDtoInput!) {\n    updateClient(id: $id, command: { client: $client })\n  }\n": types.UpdateClientDocument,
     "\n  mutation DeleteClient($id: UUID!) {\n    deleteClient(id: $id)\n  }\n": types.DeleteClientDocument,
+    "\n  fragment DriverCredentialItem on DriverCredentialVm {\n    driverCredentialId\n    driverId\n    accountId\n    normalizedLogin\n    failedAttempts\n    lockedUntil\n    verifiedAt\n    lastLoginAt\n    active\n    resetRequired\n    lastModified\n  }\n": types.DriverCredentialItemFragmentDoc,
+    "\n  fragment DriverDeviceItem on DriverDeviceRegistrationVm {\n    driverDeviceRegistrationId\n    driverId\n    accountId\n    deviceId\n    deviceName\n    platform\n    appVersion\n    pushToken\n    active\n    registeredAt\n    lastSeenAt\n    revokedAt\n    revokedBy\n    lastModified\n  }\n": types.DriverDeviceItemFragmentDoc,
+    "\n  query GetDriverCredentials($accountId: UUID!, $driverId: UUID, $skip: Int!, $take: Int!) {\n    driverCredentials(\n      query: { accountId: $accountId, driverId: $driverId, skip: $skip, take: $take }\n    ) {\n      ...DriverCredentialItem\n    }\n  }\n": types.GetDriverCredentialsDocument,
+    "\n  query GetDriverDevices($accountId: UUID!, $driverId: UUID, $skip: Int!, $take: Int!) {\n    driverDevices(query: { accountId: $accountId, driverId: $driverId, skip: $skip, take: $take }) {\n      ...DriverDeviceItem\n    }\n  }\n": types.GetDriverDevicesDocument,
+    "\n  mutation CreateDriverCredential($credential: DriverCredentialDtoInput!) {\n    createDriverCredential(command: { credential: $credential }) {\n      ...DriverCredentialItem\n    }\n  }\n": types.CreateDriverCredentialDocument,
+    "\n  mutation ActivateDriverCredential($driverCredentialId: UUID!, $password: String!) {\n    activateDriverCredential(\n      command: { driverCredentialId: $driverCredentialId, password: $password }\n    )\n  }\n": types.ActivateDriverCredentialDocument,
+    "\n  mutation LockDriverCredential($driverCredentialId: UUID!, $lockedUntil: DateTime!) {\n    lockDriverCredential(\n      command: { driverCredentialId: $driverCredentialId, lockedUntil: $lockedUntil }\n    )\n  }\n": types.LockDriverCredentialDocument,
+    "\n  mutation ResetDriverCredential(\n    $driverCredentialId: UUID!\n    $password: String!\n    $resetRequired: Boolean!\n  ) {\n    resetDriverCredential(\n      command: {\n        driverCredentialId: $driverCredentialId\n        password: $password\n        resetRequired: $resetRequired\n      }\n    )\n  }\n": types.ResetDriverCredentialDocument,
+    "\n  mutation RevokeDriverCredential($driverCredentialId: UUID!) {\n    revokeDriverCredential(command: { driverCredentialId: $driverCredentialId })\n  }\n": types.RevokeDriverCredentialDocument,
+    "\n  mutation RevokeDriverDevice($driverDeviceRegistrationId: UUID!, $revokedBy: String!) {\n    revokeDriverDevice(\n      command: { driverDeviceRegistrationId: $driverDeviceRegistrationId, revokedBy: $revokedBy }\n    )\n  }\n": types.RevokeDriverDeviceDocument,
     "\n  fragment PolicyItem on PolicyVm {\n    policyId\n    name\n  }\n": types.PolicyItemFragmentDoc,
     "\n  fragment PolicyResourceTree on ResourceVm {\n    resourceId\n    resourceName\n    actions {\n      resourceId\n      actionName\n      actionId\n    }\n  }\n": types.PolicyResourceTreeFragmentDoc,
     "\n  query GetPolicies {\n    policies {\n      ...PolicyItem\n    }\n  }\n": types.GetPoliciesDocument,
@@ -152,6 +172,46 @@ export function graphql(source: "\n  mutation UpdateClient($id: UUID!, $client: 
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation DeleteClient($id: UUID!) {\n    deleteClient(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeleteClient($id: UUID!) {\n    deleteClient(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  fragment DriverCredentialItem on DriverCredentialVm {\n    driverCredentialId\n    driverId\n    accountId\n    normalizedLogin\n    failedAttempts\n    lockedUntil\n    verifiedAt\n    lastLoginAt\n    active\n    resetRequired\n    lastModified\n  }\n"): (typeof documents)["\n  fragment DriverCredentialItem on DriverCredentialVm {\n    driverCredentialId\n    driverId\n    accountId\n    normalizedLogin\n    failedAttempts\n    lockedUntil\n    verifiedAt\n    lastLoginAt\n    active\n    resetRequired\n    lastModified\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  fragment DriverDeviceItem on DriverDeviceRegistrationVm {\n    driverDeviceRegistrationId\n    driverId\n    accountId\n    deviceId\n    deviceName\n    platform\n    appVersion\n    pushToken\n    active\n    registeredAt\n    lastSeenAt\n    revokedAt\n    revokedBy\n    lastModified\n  }\n"): (typeof documents)["\n  fragment DriverDeviceItem on DriverDeviceRegistrationVm {\n    driverDeviceRegistrationId\n    driverId\n    accountId\n    deviceId\n    deviceName\n    platform\n    appVersion\n    pushToken\n    active\n    registeredAt\n    lastSeenAt\n    revokedAt\n    revokedBy\n    lastModified\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query GetDriverCredentials($accountId: UUID!, $driverId: UUID, $skip: Int!, $take: Int!) {\n    driverCredentials(\n      query: { accountId: $accountId, driverId: $driverId, skip: $skip, take: $take }\n    ) {\n      ...DriverCredentialItem\n    }\n  }\n"): (typeof documents)["\n  query GetDriverCredentials($accountId: UUID!, $driverId: UUID, $skip: Int!, $take: Int!) {\n    driverCredentials(\n      query: { accountId: $accountId, driverId: $driverId, skip: $skip, take: $take }\n    ) {\n      ...DriverCredentialItem\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query GetDriverDevices($accountId: UUID!, $driverId: UUID, $skip: Int!, $take: Int!) {\n    driverDevices(query: { accountId: $accountId, driverId: $driverId, skip: $skip, take: $take }) {\n      ...DriverDeviceItem\n    }\n  }\n"): (typeof documents)["\n  query GetDriverDevices($accountId: UUID!, $driverId: UUID, $skip: Int!, $take: Int!) {\n    driverDevices(query: { accountId: $accountId, driverId: $driverId, skip: $skip, take: $take }) {\n      ...DriverDeviceItem\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateDriverCredential($credential: DriverCredentialDtoInput!) {\n    createDriverCredential(command: { credential: $credential }) {\n      ...DriverCredentialItem\n    }\n  }\n"): (typeof documents)["\n  mutation CreateDriverCredential($credential: DriverCredentialDtoInput!) {\n    createDriverCredential(command: { credential: $credential }) {\n      ...DriverCredentialItem\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation ActivateDriverCredential($driverCredentialId: UUID!, $password: String!) {\n    activateDriverCredential(\n      command: { driverCredentialId: $driverCredentialId, password: $password }\n    )\n  }\n"): (typeof documents)["\n  mutation ActivateDriverCredential($driverCredentialId: UUID!, $password: String!) {\n    activateDriverCredential(\n      command: { driverCredentialId: $driverCredentialId, password: $password }\n    )\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation LockDriverCredential($driverCredentialId: UUID!, $lockedUntil: DateTime!) {\n    lockDriverCredential(\n      command: { driverCredentialId: $driverCredentialId, lockedUntil: $lockedUntil }\n    )\n  }\n"): (typeof documents)["\n  mutation LockDriverCredential($driverCredentialId: UUID!, $lockedUntil: DateTime!) {\n    lockDriverCredential(\n      command: { driverCredentialId: $driverCredentialId, lockedUntil: $lockedUntil }\n    )\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation ResetDriverCredential(\n    $driverCredentialId: UUID!\n    $password: String!\n    $resetRequired: Boolean!\n  ) {\n    resetDriverCredential(\n      command: {\n        driverCredentialId: $driverCredentialId\n        password: $password\n        resetRequired: $resetRequired\n      }\n    )\n  }\n"): (typeof documents)["\n  mutation ResetDriverCredential(\n    $driverCredentialId: UUID!\n    $password: String!\n    $resetRequired: Boolean!\n  ) {\n    resetDriverCredential(\n      command: {\n        driverCredentialId: $driverCredentialId\n        password: $password\n        resetRequired: $resetRequired\n      }\n    )\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RevokeDriverCredential($driverCredentialId: UUID!) {\n    revokeDriverCredential(command: { driverCredentialId: $driverCredentialId })\n  }\n"): (typeof documents)["\n  mutation RevokeDriverCredential($driverCredentialId: UUID!) {\n    revokeDriverCredential(command: { driverCredentialId: $driverCredentialId })\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RevokeDriverDevice($driverDeviceRegistrationId: UUID!, $revokedBy: String!) {\n    revokeDriverDevice(\n      command: { driverDeviceRegistrationId: $driverDeviceRegistrationId, revokedBy: $revokedBy }\n    )\n  }\n"): (typeof documents)["\n  mutation RevokeDriverDevice($driverDeviceRegistrationId: UUID!, $revokedBy: String!) {\n    revokeDriverDevice(\n      command: { driverDeviceRegistrationId: $driverDeviceRegistrationId, revokedBy: $revokedBy }\n    )\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
