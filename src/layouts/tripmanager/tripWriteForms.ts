@@ -25,14 +25,17 @@
  * rendered dialog.
  */
 
+import { toDateTimeLocalInput, fromDateTimeLocalInput } from 'utils/dateUtils';
 import type { DeliveryDtoInput, ProofOfDeliveryDtoInput } from 'api/tripManagement/trips';
 
-/** `datetime-local` needs `YYYY-MM-DDTHH:mm`; the API speaks ISO-8601 UTC. */
-export const toLocalInput = (iso?: string | null): string =>
-  iso ? new Date(iso).toISOString().slice(0, 16) : '';
+/**
+ * `datetime-local` needs `YYYY-MM-DDTHH:mm` local wall time; the API speaks ISO-8601 UTC.
+ * Both directions delegate to the shared implementation in `utils/dateUtils`, so the trip planned
+ * times that TripDelayed and TripStartDue are evaluated against round-trip unchanged in any timezone.
+ */
+export const toLocalInput = (iso?: string | null): string => toDateTimeLocalInput(iso);
 
-export const toIso = (local?: string | null): string | null =>
-  local ? new Date(local).toISOString() : null;
+export const toIso = (local?: string | null): string | null => fromDateTimeLocalInput(local);
 
 /** RFC 4122 id used as an idempotency key by every progress/POD/outcome command. */
 export const newClientEventId = (): string => crypto.randomUUID();

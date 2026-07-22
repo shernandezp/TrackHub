@@ -128,6 +128,34 @@ export function toISOStringWithTimezone(value: Date): string {
 }
 
 /**
+ * Converts an ISO-8601 UTC instant into the `YYYY-MM-DDTHH:mm` shape an `<input type="datetime-local">`
+ * expects — which is **local wall time**, with no zone suffix.
+ *
+ * The browser interprets the control's value in the viewer's timezone, so the UTC instant is shifted
+ * by the local offset. This is the exact inverse of {@link fromDateTimeLocalInput}, which parses the
+ * field back as local time — the pair round-trips an instant unchanged in any timezone.
+ *
+ * Returns '' for null/undefined/unparseable input so a missing value renders as an empty control.
+ */
+export function toDateTimeLocalInput(value: string | number | Date | null | undefined): string {
+    if (!value) return '';
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return '';
+    const offsetMs = parsed.getTimezoneOffset() * 60_000;
+    return new Date(parsed.getTime() - offsetMs).toISOString().slice(0, 16);
+}
+
+/**
+ * Inverse of {@link toDateTimeLocalInput}: reads a `datetime-local` value as local wall time and
+ * returns the corresponding ISO-8601 UTC instant, or null when the field is empty/unparseable.
+ */
+export function fromDateTimeLocalInput(value: string | null | undefined): string | null {
+    if (!value) return null;
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+}
+
+/**
  * Formats a duration given in seconds into a string like "1h 23m".
  * Kept here for compatibility with older imports.
  */

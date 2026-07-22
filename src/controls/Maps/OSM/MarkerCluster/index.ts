@@ -17,6 +17,7 @@
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { formatDateTime } from "utils/dateUtils";
+import { escapeHtml } from 'utils/htmlUtils';
 
 import { useCallback, useEffect, useRef } from 'react';
 import { useMap } from 'react-leaflet';
@@ -53,8 +54,8 @@ const buildIcon = (data: MapMarker): L.DivIcon => L.divIcon({
 
 const buildTooltipContent = (data: MapMarker, t: TFunction): string => `
     <div style="font-size: 12px;">
-        <strong>${data.name}</strong><br/>
-        ${t('transporterMap.speed')}: ${data.speed} km/h<br/>
+        <strong>${escapeHtml(data.name)}</strong><br/>
+        ${t('transporterMap.speed')}: ${escapeHtml(data.speed)} km/h<br/>
         ${t('transporterMap.lastReport')}: ${formatDateTime(data.dateTime)}
         ${getRelativeTimeText(data.dateTime, t) ? `(${getRelativeTimeText(data.dateTime, t)})` : ''}
     </div>`;

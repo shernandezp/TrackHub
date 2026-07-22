@@ -249,10 +249,32 @@ describe('buildTollClassVariables', () => {
 });
 
 describe('datetime-local helpers', () => {
-  test('round-trip an ISO instant through the input format', () => {
-    expect(toLocalInput('2026-07-21T08:30:00.000Z')).toBe('2026-07-21T08:30');
+  // Timezone-INDEPENDENT by construction: asserting a fixed literal here would only hold when the
+  // runner sits in UTC, which is exactly the condition under which a dropped local offset is
+  // invisible. These assert the round-trip property instead, so they fail in any zone if it breaks.
+  test('an ISO instant survives a round-trip through the input format', () => {
+    const iso = '2026-07-21T08:30:00.000Z';
+    expect(toIso(toLocalInput(iso))).toBe(iso);
+  });
+
+  test('the input value is local wall time, not the UTC wall clock', () => {
+    const iso = '2026-07-21T08:30:00.000Z';
+    const local = toLocalInput(iso);
+    // Whatever the runner's zone, the rendered value must be the instant as the BROWSER would
+    // display it — i.e. shifted by the local offset. In UTC these coincide; elsewhere they must not.
+    const expected = new Date(
+      new Date(iso).getTime() - new Date(iso).getTimezoneOffset() * 60_000
+    )
+      .toISOString()
+      .slice(0, 16);
+    expect(local).toBe(expected);
+  });
+
+  test('empty and unparseable values mean "not supplied"', () => {
     expect(toLocalInput(null)).toBe('');
+    expect(toLocalInput('not-a-date')).toBe('');
     expect(toIso('')).toBeNull();
     expect(toIso(null)).toBeNull();
+    expect(toIso('not-a-date')).toBeNull();
   });
 });
