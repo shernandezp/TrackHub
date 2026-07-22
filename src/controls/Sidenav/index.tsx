@@ -106,7 +106,10 @@ function Sidenav({
     return () => window.removeEventListener("resize", handleMiniSidenav);
   }, [dispatch, location]);
 
-  const keysToFilterOut = ["authorize-redirect", "callback"];
+  // `tripTracking` is a real route (it needs a help topic and a <Route>), but it
+  // is an anonymous customer page reached only through a shared link token — a
+  // Sidenav entry would lead a portal user to an "invalid link" screen.
+  const keysToFilterOut = ["authorize-redirect", "callback", "tripTracking"];
   // Render all the routes (except keysToFilterOut) from the routes.js
   const renderRoutes = routes
     .filter(({ key }) => !keysToFilterOut.includes(key))

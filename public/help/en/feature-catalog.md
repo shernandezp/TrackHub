@@ -23,7 +23,7 @@ Two rules apply to every feature:
 | Feature | Key | Settings | What it gates |
 |---|---|---|---|
 | Geofencing | `geofencing` | — | The whole **Geofences** menu item, geofence alerts, and two reports |
-| Trip Management | `trip-management` | — | Nothing yet — reserved entitlement |
+| Trip Management | `trip-management` | — | The whole **Trips** menu item, customer tracking links, six reports, and two background jobs |
 | Driver Mobile | `driver-mobile` | — | Nothing in the portal — reserved entitlement |
 | Public Links | `public-links` | — | The **Public Links** section and creating new links |
 | Documents | `documents` | — | The **Documents** section and four document reports |
@@ -44,7 +44,7 @@ Dependencies to keep in mind:
 
 **Key:** `geofencing`. **Settings:** none.
 
-This is the only feature that removes a whole left-menu item. When it is off:
+This is one of the two features that remove a whole left-menu item — the other is Trip Management. When it is off:
 
 - **Geofences** disappears from the left menu, and its page cannot be opened.
 - Existing geofences are not evaluated, so no geofence entry or exit alerts are raised.
@@ -57,7 +57,21 @@ When it is switched back on, the geofences you drew before are still there.
 
 **Key:** `trip-management`. **Settings:** none.
 
-A reserved entitlement. It appears in both feature lists and can be switched on or off, but in the current release **nothing in the product changes** either way.
+The other feature that removes a whole left-menu item. When it is off:
+
+- **Trips** disappears from the left menu, and the dispatch board cannot be opened.
+- Everything behind the **Trips** resource is refused: trips and their stops, deliveries, proof of delivery, route planning, toll estimates, and the mapping of your own vehicles to toll classes.
+- Positions stop being matched against running trips — the **TripTracking** resource, which is how the tracking pipeline advances a trip, is refused too — so arrivals and departures are no longer detected automatically.
+- Customer tracking links stop resolving. The public tracking page is open to anyone with a link, so it does not disappear, but a link for the account answers as though it did not exist and the customer sees the "link is not valid" message. Nothing about the account is disclosed.
+- Six reports disappear from the report list — trip summary, trip stop detail, on-time performance, stop dwell, toll cost, and the proof-of-delivery register — along with the whole **Trips** report category, which has nothing else in it.
+- The two background jobs skip the account: **ETA refresh** (every 5 minutes) stops updating stop ETAs and stops raising trip-delay alerts, and **schedule reminder** (every 15 minutes) stops raising trip-start-due alerts.
+- The Trips and Customer trip tracking help topics are hidden from the help index.
+
+Trips, stops, deliveries, proof of delivery and issued tracking links are not deleted. Switching the feature back on restores the board exactly as it was.
+
+The platform's **toll catalog** — the stations, tariffs and vehicle classes behind the estimate — is **not** part of this feature. It is platform reference data held under the **TollCatalog** resource, maintained by a platform administrator in System Admin, and it stays exactly as it is whether or not any account has trip management. What the feature gates is the account's own use of it: the per-vehicle toll-class mapping and the estimate on a trip.
+
+Trip management also depends on **OpenRouteService**, an external routing service that supplies the driving route, the deviation corridor and the live ETAs. It is configured once for the deployment, not per account. When it is unreachable, route planning comes back as failed and ETAs fall back to the planned schedule — trips stay fully usable, just without live routing. Full detail is in [Trips and route planning](topic:trip-management).
 
 ## Driver Mobile
 

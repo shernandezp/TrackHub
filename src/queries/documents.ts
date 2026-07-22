@@ -19,8 +19,9 @@
  * these rather than the api layer directly.
  */
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from 'api/manager/documents';
+import type { DocumentUploadFields } from 'api/manager/documents';
 
 export const documentKeys = {
   all: ['documents'] as const,
@@ -43,6 +44,31 @@ export function useDocumentsForOwner(
     queryFn: () =>
       api.getDocumentsForOwner(accountId as string, ownerEntityType, ownerEntityId as string),
     enabled: (options.enabled ?? true) && !!accountId && !!ownerEntityId,
+  });
+}
+
+/**
+ * Uploads a file through the spec 04 multipart REST surface. There is no second
+ * upload endpoint anywhere in the platform — POD attachments reuse this one and
+ * are linked to the trip by document id (spec 11 §9, §11).
+ */
+export function useUploadDocument() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ file, fields }: { file: File; fields?: DocumentUploadFields }) =>
+      api.uploadDocument(file, fields ?? {}),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: documentKeys.all }),
+  });
+}
+
+/**
+ * Re-reads one document's metadata. Uploads land as `Pending` until the scanner
+ * finishes, and only a `Clean` document may be attached to a POD — this is how a
+ * screen refreshes that verdict without polling.
+ */
+export function useRefreshDocument() {
+  return useMutation({
+    mutationFn: (documentId: string) => api.getDocument(documentId),
   });
 }
 

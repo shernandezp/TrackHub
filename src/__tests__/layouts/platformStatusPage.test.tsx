@@ -27,6 +27,7 @@ import { initReactI18next } from 'react-i18next';
 import type { ReactNode } from 'react';
 
 import enTranslations from 'locales/en.json';
+import { PROBED_SERVICES } from 'api/core/healthProbe';
 import { TestWrapper } from '../components/testHelpers';
 
 const mockIsAdmin = vi.fn();
@@ -49,6 +50,7 @@ vi.mock('api/core/endpoints', () => ({
     telemetry: 'https://example.test/Telemetry/health',
     geofencing: 'https://example.test/Geofence/health',
     reporting: 'https://example.test/Reporting/health',
+    tripManagement: 'https://example.test/Trip/health',
   },
   GRAPHQL_ENDPOINTS: {},
   REST_ENDPOINTS: { managerPlatformAnnouncements: 'https://example.test/Manager/api/PlatformStatus/announcements' },
@@ -128,10 +130,10 @@ describe('/status with zero backends reachable', () => {
     await waitFor(() => {
       expect(screen.getByText(enTranslations.platformStatus.overall.down)).toBeInTheDocument();
     });
-    // Seven tiles, all down — a total outage must not blank the page.
+    // Every probed service tile is down — a total outage must not blank the page.
     await waitFor(() => {
       const tiles = screen.getAllByTestId('service-tile');
-      expect(tiles).toHaveLength(7);
+      expect(tiles).toHaveLength(PROBED_SERVICES.length);
       expect(tiles.every((tile) => tile.getAttribute('data-state') === 'down')).toBe(true);
     });
   });

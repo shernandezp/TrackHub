@@ -302,7 +302,7 @@ type Mutation {
     @cost(weight: "10")
   revokePublicLinkGrant(command: RevokePublicLinkGrantCommandInput!): Boolean!
     @cost(weight: "10")
-  recordPublicLinkAccess(command: RecordPublicLinkAccessCommandInput!): Boolean!
+  resolvePublicLinkGrant(command: ResolvePublicLinkGrantCommandInput!): PublicLinkResolutionVm!
     @cost(weight: "10")
   updateReport(id: UUID!, command: UpdateReportCommandInput!): Boolean!
     @cost(weight: "10")
@@ -900,6 +900,12 @@ type PublicLinkGrantVm {
   lastAccessedAt: DateTime
   lastModified: DateTime!
   token: String
+}
+
+type PublicLinkResolutionVm {
+  resolution: PublicLinkResolution!
+  publicLinkGrantId: UUID
+  resourceId: String
 }
 
 type ReportVm {
@@ -1798,10 +1804,6 @@ input RecordAlertEventCommandInput {
   alertEvent: AlertEventDtoInput!
 }
 
-input RecordPublicLinkAccessCommandInput {
-  publicLinkGrantId: UUID!
-}
-
 input ReplaceDocumentVersionCommandInput {
   documentId: UUID!
   newVersion: DocumentVersionDtoInput!
@@ -1809,6 +1811,15 @@ input ReplaceDocumentVersionCommandInput {
 
 input ResolveAlertEventCommandInput {
   alertEventId: UUID!
+}
+
+input ResolvePublicLinkGrantCommandInput {
+  publicLinkGrantId: UUID!
+  accountId: UUID!
+  resourceType: String!
+  resourceId: String!
+  scope: String!
+  token: String!
 }
 
 input RetryNotificationDeliveryCommandInput {
@@ -2237,6 +2248,12 @@ enum ProtocolType {
   WIALON
   PROTRACK
   METTAX
+}
+
+enum PublicLinkResolution {
+  FOUND
+  NOT_FOUND
+  EXPIRED
 }
 
 enum ReportType {

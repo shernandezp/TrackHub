@@ -42,6 +42,7 @@ export type ServiceClientPermissionDtoInput = {
   accountId?: string | null | undefined;
   action: string;
   active: boolean;
+  allowCrossAccount?: boolean;
   audience: string;
   clientId: string;
   effectiveFrom?: string | null | undefined;

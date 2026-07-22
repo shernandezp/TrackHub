@@ -23,7 +23,7 @@ Dos reglas se aplican a todas:
 | Funcionalidad | Clave | Ajustes | Qué controla |
 |---|---|---|---|
 | Geocercado | `geofencing` | — | Todo el elemento de menú **Geocercas**, las alertas de geocerca y dos reportes |
-| Gestión de Viajes | `trip-management` | — | Nada todavía — derecho reservado |
+| Gestión de Viajes | `trip-management` | — | Todo el elemento de menú **Viajes**, los enlaces de seguimiento para clientes, seis reportes y dos trabajos en segundo plano |
 | Móvil del Conductor | `driver-mobile` | — | Nada en el portal — derecho reservado |
 | Enlaces Públicos | `public-links` | — | La sección **Enlaces Públicos** y la creación de nuevos enlaces |
 | Documentos | `documents` | — | La sección **Documentos** y cuatro reportes de documentos |
@@ -44,7 +44,7 @@ Dependencias que conviene tener presentes:
 
 **Clave:** `geofencing`. **Ajustes:** ninguno.
 
-Es la única funcionalidad que elimina un elemento completo del menú lateral. Cuando está desactivada:
+Es una de las dos funcionalidades que eliminan un elemento completo del menú lateral — la otra es Gestión de Viajes. Cuando está desactivada:
 
 - **Geocercas** desaparece del menú lateral y su página no puede abrirse.
 - Las geocercas existentes no se evalúan, por lo que no se generan alertas de entrada ni de salida.
@@ -57,7 +57,21 @@ Cuando se vuelve a activar, las geocercas que dibujó antes siguen ahí.
 
 **Clave:** `trip-management`. **Ajustes:** ninguno.
 
-Un derecho reservado. Aparece en ambas listas de funcionalidades y puede activarse o desactivarse, pero en la versión actual **nada cambia en el producto** en ninguno de los dos casos.
+La otra funcionalidad que elimina un elemento completo del menú lateral. Cuando está desactivada:
+
+- **Viajes** desaparece del menú lateral y el tablero de despacho no puede abrirse.
+- Se rechaza todo lo que hay detrás del recurso **Trips**: los viajes y sus paradas, las entregas, las pruebas de entrega, la planificación de rutas, las estimaciones de peaje y la asignación de clases de peaje a sus propios vehículos.
+- Las posiciones dejan de compararse con los viajes en curso — el recurso **TripTracking**, que es como la tubería de seguimiento hace avanzar un viaje, también se rechaza —, por lo que las llegadas y las salidas ya no se detectan automáticamente.
+- Los enlaces de seguimiento para clientes dejan de resolverse. La página pública de seguimiento está abierta a cualquiera que tenga un enlace, así que no desaparece, pero un enlace de la cuenta responde como si no existiera y el cliente ve el mensaje de enlace no válido. No se revela nada sobre la cuenta.
+- Seis reportes desaparecen de la lista — resumen de viajes, detalle de paradas del viaje, cumplimiento de horarios, permanencia en paradas, costo de peajes y registro de pruebas de entrega — junto con toda la categoría de reportes **Viajes**, que no contiene nada más.
+- Los dos trabajos en segundo plano omiten la cuenta: la **actualización de ETA** (cada 5 minutos) deja de actualizar las ETA de las paradas y de generar alertas de viaje retrasado, y el **recordatorio de horario** (cada 15 minutos) deja de generar alertas de viaje por iniciar.
+- Los temas de ayuda de Viajes y de Seguimiento de viajes para clientes se ocultan del índice de ayuda.
+
+Los viajes, las paradas, las entregas, las pruebas de entrega y los enlaces de seguimiento emitidos no se eliminan. Volver a activar la funcionalidad restaura el tablero tal como estaba.
+
+El **catálogo de peajes** de la plataforma — las estaciones, las tarifas y las clases de vehículo detrás de la estimación — **no** forma parte de esta funcionalidad. Son datos de referencia de la plataforma, contenidos en el recurso **TollCatalog**, que mantiene un administrador de la plataforma en Administrador del Sistema, y permanecen igual tenga o no una cuenta la gestión de viajes. Lo que la funcionalidad controla es el uso que la cuenta hace de ellos: la asignación de clase de peaje por vehículo y la estimación en un viaje.
+
+La gestión de viajes también depende de **OpenRouteService**, un servicio de rutas externo que aporta la ruta de conducción, el corredor de desvío y las ETA en vivo. Se configura una sola vez para la instalación, no por cuenta. Cuando no está accesible, la planificación de ruta vuelve como fallida y las ETA recurren al horario planificado — los viajes siguen siendo plenamente utilizables, solo que sin rutas en vivo. El detalle completo está en [Viajes y planificación de rutas](topic:trip-management).
 
 ## Móvil del Conductor
 

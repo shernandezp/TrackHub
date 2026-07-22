@@ -91,8 +91,12 @@ import HelpProvider from "context/help";
 import { FeaturesContext, isFeatureActive } from "context/features";
 import AnnouncementBanner from "components/AnnouncementBanner";
 
-/** Public, chrome-less route (see routes.tsx `platformStatus`). */
-const STATUS_ROUTE = "/status";
+/**
+ * Public, chrome-less routes (see routes.tsx `platformStatus` / `tripTracking`).
+ * Both are reachable signed-out and render their own full-page shell, so the
+ * Sidenav, Configurator and announcement banner are all suppressed on them.
+ */
+const PUBLIC_ROUTES = ["/status", "/track"] as const;
 
 export default function App() {
   const [controller, dispatch] = useArgonController();
@@ -123,11 +127,12 @@ export default function App() {
     // Skip redirect if: on callback page, already logging in, on error page, or auth error occurred
     const isAuthRoute = pathname.startsWith("/authentication/");
     const isErrorPage = pathname === "/error";
-    // The platform status page is deliberately public: its whole purpose is to
-    // answer "can nobody sign in?", so it must never bounce to the login flow.
-    const isStatusPage = pathname === STATUS_ROUTE;
+    // The public pages must never bounce to the login flow: the status page's
+    // whole purpose is to answer "can nobody sign in?", and a customer following
+    // a trip tracking link has no account to sign in with at all.
+    const isPublicPage = (PUBLIC_ROUTES as readonly string[]).includes(pathname);
 
-    if (!isAuthenticated && !isLoggingIn && !isAuthRoute && !isErrorPage && !isStatusPage && !authError) {
+    if (!isAuthenticated && !isLoggingIn && !isAuthRoute && !isErrorPage && !isPublicPage && !authError) {
       login();
     }
 
@@ -203,9 +208,10 @@ export default function App() {
   // Operational statuses (Trial/Active) permit normal access; anything else renders a suspension shell.
   const accountOperational = !accountStatus || accountStatus === 'TRIAL' || accountStatus === 'ACTIVE';
 
-  // The status page renders chrome-less for everyone (signed in or not) and stays
-  // reachable on a suspended account — it is the screen you check when things break.
-  const onStatusPage = pathname === STATUS_ROUTE;
+  // The public pages render chrome-less for everyone (signed in or not) and stay
+  // reachable on a suspended account — the status page is the screen you check
+  // when things break, and a customer's tracking link is not an account surface.
+  const onPublicPage = (PUBLIC_ROUTES as readonly string[]).includes(pathname);
 
   // Shared with FeaturesContext consumers; matches the backend flag semantics
   // (missing row ⇒ disabled, effective window honoured).
@@ -285,12 +291,12 @@ export default function App() {
             under browser zoom, etc. must clip); wide content scrolls inside its own container. */}
         <GlobalStyles styles={{ html: { overflowX: "clip" }, body: { overflowX: "clip" } }} />
         <ErrorBoundary>
-          {isAuthenticated && !accountOperational && !onStatusPage ? (
+          {isAuthenticated && !accountOperational && !onPublicPage ? (
             <SuspensionScreen status={accountStatus} branding={branding} />
           ) : (
           <FeaturesContext.Provider value={{ features: accountFeatures, isFeatureEnabled: featureEnabled }}>
           <HelpProvider allowedScreens={allowedScreens} isFeatureEnabled={featureEnabled}>
-          {layout === "dashboard" && !onStatusPage && (
+          {layout === "dashboard" && !onPublicPage && (
           <>
             <Sidenav
               brand={darkMode ? brand : brandDark}
@@ -311,7 +317,7 @@ export default function App() {
         )}
         {/* Platform announcements reach every signed-in user on every screen; the
             status page renders its own copy, so it is skipped there. */}
-        {isAuthenticated && !onStatusPage && <AnnouncementBanner />}
+        {isAuthenticated && !onPublicPage && <AnnouncementBanner />}
         <Routes>
           {getRoutes(enabledRoutes)}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

@@ -22,7 +22,7 @@
 
 - Node.js 18+
 - npm or yarn
-- Access to TrackHub backend services (Authority Server, Manager, Router, Security, Geofencing, Reporting APIs)
+- Access to TrackHub backend services (Authority Server, Manager, Router, Security, Geofencing, Reporting, Trip Management APIs)
 
 ### Installation
 
@@ -177,6 +177,9 @@ The `.env` file contains the following environment variables used in the applica
 
 - **`REACT_APP_REPORTING_ENDPOINT=https://localhost/Reporting/`**
   Defines the REST endpoint for reporting-related operations. This endpoint retrieves Excel files in binary format based on user requests.
+
+- **`REACT_APP_TRIPMANAGEMENT_ENDPOINT=https://localhost/Trip/graphql`**
+  Specifies the GraphQL endpoint for trip management operations. This endpoint is used to plan trips and stops, request route plans and toll estimates, track trip progress, and manage public tracking links.
 
 These environment variables are critical for configuring various aspects of the application, including authentication, API calls, and system management.
 

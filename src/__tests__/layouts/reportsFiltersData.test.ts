@@ -32,7 +32,7 @@ import {
 // Passthrough translator: returns the key so we can assert label wiring.
 const t = ((key: string) => key) as unknown as TFunction;
 
-// The 24 seeded report codes. Every one must have a strategy so the
+// The 30 seeded report codes. Every one must have a strategy so the
 // silent empty-filter fallback is gone.
 const SEEDED_CODES = [
   'LiveReport',
@@ -56,6 +56,12 @@ const SEEDED_CODES = [
   'workforce-driver-registry',
   'workforce-qualification-expirations',
   'workforce-assignment-history',
+  'trip-summary',
+  'trip-detail',
+  'trip-on-time-performance',
+  'trip-stop-dwell',
+  'trip-toll-cost',
+  'trip-pod-export',
   'accounts-by-status',
   'feature-enablement-matrix',
   'group-membership-export',
@@ -63,11 +69,11 @@ const SEEDED_CODES = [
 
 describe('report filter strategies', () => {
   test('every seeded report code has a registered strategy', () => {
-    expect(SEEDED_CODES).toHaveLength(24);
+    expect(SEEDED_CODES).toHaveLength(30);
     for (const code of SEEDED_CODES) {
       expect(REPORT_FILTER_SPECS[code]).toBeDefined();
     }
-    expect(Object.keys(REPORT_FILTER_SPECS)).toHaveLength(24);
+    expect(Object.keys(REPORT_FILTER_SPECS)).toHaveLength(30);
   });
 
   // The Reporting AssignmentHistoryReport reads stringFilter1 as the transporter id; a spec of
@@ -98,6 +104,12 @@ describe('report filter strategies', () => {
       'gps.assignment-history',
       'gps.position-history',
       'workforce-assignment-history',
+      'trip-summary',
+      'trip-detail',
+      'trip-on-time-performance',
+      'trip-stop-dwell',
+      'trip-toll-cost',
+      'trip-pod-export',
     ]);
   });
 

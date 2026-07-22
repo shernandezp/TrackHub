@@ -24,16 +24,38 @@ export interface GraphQLErrorEntry {
 
 /**
  * Maps well-known backend error codes to user-facing i18n keys. Covers the
- * Reporting REST envelope codes plus the shared account/feature
- * codes so blob/JSON error responses surface as friendly localized toasts.
+ * Reporting REST envelope codes, the shared account/feature codes, and the
+ * TripManagement rejection codes (`TripErrorCodes`), so both blob/JSON REST
+ * responses and GraphQL error extensions surface as friendly localized toasts
+ * rather than raw server text.
+ *
+ * Codes with no entry fall through to the server's message — deliberately: an
+ * unmapped code is better shown verbatim than hidden behind a generic string.
  */
-const REST_ERROR_I18N: Record<string, string> = {
+const ERROR_CODE_I18N: Record<string, string> = {
   FEATURE_DISABLED: 'errors.featureDisabled',
   ACCOUNT_SUSPENDED: 'errors.accountSuspended',
   REPORT_ACCESS_DENIED: 'errors.reportAccessDenied',
   REPORT_NOT_FOUND: 'errors.reportNotFound',
   UNSUPPORTED_REPORT_FORMAT: 'errors.unsupportedReportFormat',
   REPORT_ROW_LIMIT_EXCEEDED: 'errors.reportRowLimitExceeded',
+  // TrackHub.TripManagement Domain/Constants/TripConstants.cs → TripErrorCodes
+  TRIP_NOT_ACTIVE: 'errors.tripNotActive',
+  TRIP_ALREADY_TERMINAL: 'errors.tripAlreadyTerminal',
+  TRIP_INVALID_TRANSITION: 'errors.tripInvalidTransition',
+  STOP_ALREADY_DEPARTED: 'errors.stopAlreadyDeparted',
+  STOP_NOT_ARRIVED: 'errors.stopNotArrived',
+  STOP_ALREADY_SKIPPED: 'errors.stopAlreadySkipped',
+  TRIP_STOPS_NOT_COMPLETE: 'errors.tripStopsNotComplete',
+  POD_DOCUMENT_NOT_CLEAN: 'errors.podDocumentNotClean',
+  TRIP_DUPLICATE_CODE: 'errors.tripDuplicateCode',
+  TRIP_DUPLICATE_EXTERNAL_REFERENCE: 'errors.tripDuplicateExternalReference',
+  TRIP_HAS_HISTORY: 'errors.tripHasHistory',
+  TRIP_DRIVER_NOT_ASSIGNABLE: 'errors.tripDriverNotAssignable',
+  ROUTING_NOT_CONFIGURED: 'errors.routingNotConfigured',
+  ROUTING_UNAVAILABLE: 'errors.routingUnavailable',
+  TOLL_OVERLAPPING_TARIFF: 'errors.tollOverlappingTariff',
+  TRIP_SHARE_REVOKED: 'errors.tripShareRevoked',
 };
 
 /**
@@ -107,13 +129,13 @@ export class ApiError extends Error {
     const codeOf = (e: GraphQLErrorEntry) => e.extensions?.code ?? e.code;
     const mapped = errors.find((e) => {
       const code = codeOf(e);
-      return code !== undefined && code in REST_ERROR_I18N;
+      return code !== undefined && code in ERROR_CODE_I18N;
     });
     const entry = mapped ?? errors[0];
     const code = entry ? codeOf(entry) : undefined;
     return new ApiError(entry?.message ?? fallbackMessage, {
       code,
-      i18nKey: code ? REST_ERROR_I18N[code] : undefined,
+      i18nKey: code ? ERROR_CODE_I18N[code] : undefined,
       status,
       graphQLErrors: errors,
     });
@@ -132,6 +154,20 @@ export class ApiError extends Error {
       return new ApiError('This feature is not enabled for your account.', {
         code: 'FEATURE_DISABLED',
         i18nKey: 'errors.featureDisabled',
+        graphQLErrors: errors,
+      });
+    }
+    // Any other mapped code (the TripManagement rejections, the report codes)
+    // wins over the first entry, so a localized explanation beats raw server text.
+    const mapped = errors.find((e) => {
+      const code = codeOf(e);
+      return code !== undefined && code in ERROR_CODE_I18N;
+    });
+    if (mapped) {
+      const code = codeOf(mapped) as string;
+      return new ApiError(mapped.message ?? code, {
+        code,
+        i18nKey: ERROR_CODE_I18N[code],
         graphQLErrors: errors,
       });
     }

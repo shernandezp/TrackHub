@@ -206,6 +206,7 @@ type ServiceClientPermissionVm {
   effectiveFrom: DateTime
   effectiveTo: DateTime
   lastModified: DateTime!
+  allowCrossAccount: Boolean!
 }
 
 type UserPolicyVm {
@@ -478,6 +479,7 @@ input ServiceClientPermissionDtoInput {
   active: Boolean!
   effectiveFrom: DateTime
   effectiveTo: DateTime
+  allowCrossAccount: Boolean! = false
 }
 
 input UpdateClientCommandInput {

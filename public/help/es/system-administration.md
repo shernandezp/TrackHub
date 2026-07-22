@@ -81,6 +81,52 @@ Los servicios usados para convertir coordenadas en direcciones; solo un proveedo
 
 Las acciones de fila le permiten **Editar** un proveedor, **Eliminarlo** o **Activar** uno que no esté activo actualmente (lo que desactiva el anterior).
 
+Solo hay un proveedor activo en toda la plataforma y se usa para geocodificación **inversa**: convertir una coordenada en una dirección. TrackHub no hace geocodificación directa (de dirección a coordenada) en ninguna parte, y por eso no existe un buscador de direcciones al ubicar una parada de viaje. **OpenRouteService** requiere una clave API; Nominatim no. La planificación de rutas de [Viajes](topic:trip-management) usa sus propias credenciales de ruteo y no se ve afectada por el proveedor que active aquí.
+
+## Catálogo de Peajes
+
+Datos de referencia de toda la plataforma para las estimaciones de peaje que se muestran en la pantalla de [Viajes](topic:trip-management). Pertenecen a la plataforma y no a una cuenta en particular: un administrador de cuenta puede leer las estimaciones resultantes, pero no puede modificar tarifas.
+
+TrackHub entrega este catálogo **vacío a propósito**. No existe una fuente tarifaria nacional incluida, así que cada operador carga las clases, estaciones y tarifas que sus rutas realmente atraviesan. Mientras no lo haga, los viajes informan *Sin estaciones* y ninguna estimación: nunca una cifra inventada y nunca un error.
+
+La sección tiene tres partes.
+
+### Clases de vehículo
+
+Las bandas tarifarias en las que están expresados sus precios; por ejemplo, un camión de dos ejes frente a un articulado de seis. Cada clase tiene un **Código** (obligatorio, el valor que se guarda en viajes y tarifas), un **Nombre** (obligatorio), una **Descripción** opcional y un **Orden** que determina su posición en los selectores.
+
+Las clases se **desactivan**, nunca se eliminan: las tarifas existentes y las estimaciones de viajes pasados siguen refiriéndose a ellas, así que borrar una clase dejaría ilegibles las estimaciones históricas. Una clase desactivada deja de ofrecerse en viajes nuevos.
+
+### Estaciones de peaje
+
+Una fila por caseta física. El diálogo **Detalle de la Estación de Peaje** recoge:
+
+- **Nombre** (obligatorio) y un **Código** opcional.
+- **Latitud** y **Longitud** (obligatorias). Presione **Elegir en el mapa** para marcar la posición en un mapa, o escriba las coordenadas directamente: ambos caminos completan los mismos dos campos.
+- **País**, **Región**, **Vía**, **Sentido**, **Operador** y **Notas**, todos opcionales, y útiles para distinguir casetas cercanas en el detalle que ve un despachador.
+
+Las estaciones se asocian a una ruta planeada por cercanía, de modo que las coordenadas deben quedar del lado correcto de una calzada doble según el sentido que usted busque. Las estaciones se **desactivan** en lugar de eliminarse; una estación desactivada deja de coincidir con rutas nuevas pero sigue vinculada a los viajes que ya la cruzaron.
+
+Use la acción **Tarifas** de la fila de una estación para cargar sus tarifas en el panel contiguo a la lista.
+
+### Tarifas
+
+Los precios tienen **vigencia por fechas**, con una fila por clase de vehículo y rango de fechas:
+
+- **Clase de vehículo** (obligatoria), elegida entre las clases activas.
+- **Valor** y **Moneda** (obligatorios).
+- **Vigente desde** (obligatorio) y **Vigente hasta**. Deje vacía la fecha de fin para el precio que rige actualmente.
+
+Por eso un cambio de precio se registra como una **fila nueva** con una fecha de inicio nueva, y no como una edición de la anterior: cerrar la ventana previa y abrir otra permite reproducir con el precio del trimestre pasado un viaje planeado en ese trimestre. El panel de tarifas lista todas las ventanas, de la más reciente a la más antigua, incluidas las reemplazadas.
+
+Dos ventanas de la misma estación y clase no pueden superponerse; el intento se rechaza. Si una ruta cruza una estación sin tarifa que cubra la clase y la fecha del viaje, la estimación se informa como **Parcial** y lista las estaciones sin precio, de modo que el faltante quede a la vista en lugar de contarse en silencio como cero.
+
+### Importación CSV
+
+**Importar CSV** admite un archivo —o texto pegado— con una fila por tarifa de estación, para poblar el catálogo de forma masiva.
+
+La importación nunca falla en bloque. Las filas válidas se aplican y el panel de resultado informa cuántas filas se leyeron, cuántas estaciones se crearon y actualizaron y cuántas tarifas se crearon. Las filas que no se pudieron aplicar se listan una por una con su **número de fila**, un **código** de error y un **mensaje**, para que corrija solo esas líneas y vuelva a importar. Reimportar una estación que ya existe la actualiza en lugar de duplicarla.
+
 ## Roles
 
 Los roles agrupan permisos que luego se asignan a los usuarios. Esta sección abre una matriz de permisos: elija un **Rol** del menú desplegable y luego una cuadrícula de **Recursos** (filas) y **Acciones** (columnas — Lectura, Edición, Exportar, Ejecutar, Escribir, Eliminar, Personalizado). Marque una casilla para otorgar esa acción sobre ese recurso al rol, o desmárquela para revocarla. Cada cambio se guarda a medida que lo hace.

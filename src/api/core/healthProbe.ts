@@ -60,6 +60,7 @@ export const PROBED_SERVICES = [
   'telemetry',
   'geofencing',
   'reporting',
+  'tripManagement',
 ] as const;
 
 export type ProbedService = (typeof PROBED_SERVICES)[number];
