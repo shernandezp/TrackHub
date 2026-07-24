@@ -32,13 +32,18 @@ export interface GraphQLErrorEntry {
  * Codes with no entry fall through to the server's message — deliberately: an
  * unmapped code is better shown verbatim than hidden behind a generic string.
  */
-const ERROR_CODE_I18N: Record<string, string> = {
+export const ERROR_CODE_I18N: Record<string, string> = {
   FEATURE_DISABLED: 'errors.featureDisabled',
   ACCOUNT_SUSPENDED: 'errors.accountSuspended',
   REPORT_ACCESS_DENIED: 'errors.reportAccessDenied',
   REPORT_NOT_FOUND: 'errors.reportNotFound',
   UNSUPPORTED_REPORT_FORMAT: 'errors.unsupportedReportFormat',
   REPORT_ROW_LIMIT_EXCEEDED: 'errors.reportRowLimitExceeded',
+  // Raised by the unpaged picker lookups past their 5000-row ceiling, and by the
+  // seeded permission catalogs past theirs. Both refuse to truncate, so the
+  // picker must say why it is empty rather than silently rendering nothing.
+  LOOKUP_LIMIT_EXCEEDED: 'errors.lookupLimitExceeded',
+  SEEDED_CATALOG_LIMIT_EXCEEDED: 'errors.seededCatalogLimitExceeded',
   // TrackHub.TripManagement Domain/Constants/TripConstants.cs → TripErrorCodes
   TRIP_NOT_ACTIVE: 'errors.tripNotActive',
   TRIP_ALREADY_TERMINAL: 'errors.tripAlreadyTerminal',
@@ -54,7 +59,11 @@ const ERROR_CODE_I18N: Record<string, string> = {
   TRIP_DRIVER_NOT_ASSIGNABLE: 'errors.tripDriverNotAssignable',
   ROUTING_NOT_CONFIGURED: 'errors.routingNotConfigured',
   ROUTING_UNAVAILABLE: 'errors.routingUnavailable',
+  ROUTING_INVALID_GEOMETRY: 'errors.routingInvalidGeometry',
   TOLL_OVERLAPPING_TARIFF: 'errors.tollOverlappingTariff',
+  TOLL_DUPLICATE_STATION: 'errors.tollDuplicateStation',
+  TOLL_DUPLICATE_VEHICLE_CLASS: 'errors.tollDuplicateVehicleClass',
+  UNKNOWN_VEHICLE_CLASS: 'errors.unknownVehicleClass',
   TRIP_SHARE_REVOKED: 'errors.tripShareRevoked',
 };
 

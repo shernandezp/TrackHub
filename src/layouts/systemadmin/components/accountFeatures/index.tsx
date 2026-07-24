@@ -14,7 +14,7 @@
 *  limitations under the License.
 */
 
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from '@mui/material/Icon';
@@ -25,13 +25,13 @@ import ArgonButton from "components/ArgonButton";
 import ArgonTypography from "components/ArgonTypography";
 import useForm from "controls/Dialogs/useForm";
 import AccountFeatureDialog from "layouts/systemadmin/components/accountFeatures/AccountFeatureDialog";
-import { getAccounts } from "api/manager/accounts";
+import { getAllAccounts } from "api/manager/accounts";
 import type { Account } from "api/manager/accounts";
 import { getAccountFeaturesMaster, setAccountFeatureMaster } from "api/manager/accountFeatures";
 import type { AccountFeature, AccountFeatureDtoInput } from "api/manager/accountFeatures";
 import { notifyApiError } from "api/core/errors";
 import { parseJson } from 'utils/jsonUtils';
-import { toCamelCase } from "utils/stringUtils";
+import { featureLabel } from "layouts/systemadmin/components/accountFeatures/featureLabel";
 import { LoadingContext } from 'LoadingContext';
 
 /**
@@ -85,7 +85,6 @@ const configField: Record<string, ConfigFieldDef> = {
   workforce: { name: 'blockAssignmentOnExpiredLicense', labelKey: 'accountFeatures.config.blockAssignmentOnExpiredLicense', kind: 'boolean', default: false }
 };
 
-const featureOptions: FeatureSelectOption[] = knownFeatures.map(key => ({ value: key, label: key }));
 
 function TextCell({ children }: { children?: ReactNode }) {
   return (
@@ -109,7 +108,8 @@ function SystemAccountFeatures() {
   const loadFeatures = async () => {
     setLoading(true);
     try {
-      const accountList = await getAccounts() || [];
+      // The feature matrix has one row per account, so every page is read.
+      const accountList = await getAllAccounts() || [];
       setAccounts(accountList);
       const map: Record<string, AccountFeature[]> = {};
       for (const account of accountList) {
@@ -197,10 +197,15 @@ function SystemAccountFeatures() {
 
   const accountOptions: FeatureSelectOption[] = accounts.map(account => ({ value: account.accountId, label: account.name }));
 
+  const featureOptions: FeatureSelectOption[] = useMemo(
+    () => knownFeatures.map(key => ({ value: key, label: featureLabel(t, key) })),
+    [t]
+  );
+
   const rows = accounts.flatMap(account =>
     (featuresByAccount[account.accountId] || []).map(feature => ({
       account: <TextCell>{account.name}</TextCell>,
-      feature: <TextCell>{t(`resources.${toCamelCase(feature.featureKey || '')}` as 'resources.geofencing', { defaultValue: feature.featureKey })}</TextCell>,
+      feature: <TextCell>{featureLabel(t, feature.featureKey || '')}</TextCell>,
       enabled: <ArgonBadge variant="gradient" color={feature.enabled ? 'success' : 'secondary'} size="xs" container badgeContent={feature.enabled ? t('generic.yes') : t('generic.no')} />,
       tier: <TextCell>{feature.tier}</TextCell>,
       source: <TextCell>{feature.source}</TextCell>,

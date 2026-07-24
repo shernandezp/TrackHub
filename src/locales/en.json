@@ -186,7 +186,8 @@
     "yes": "Yes",
     "no": "No",
     "total": "Total",
-    "confirmDelete": "Are you sure you want to delete this item?"
+    "confirmDelete": "Are you sure you want to delete this item?",
+    "showing": "Showing {{from}}–{{to}} of {{total}}"
   },
   "serviceClientPermissions": {
     "title": "Service Client Permissions",
@@ -477,8 +478,14 @@
     "tripDriverNotAssignable": "That driver cannot be assigned to this trip.",
     "routingNotConfigured": "Route planning is not configured on this platform. Ask your administrator to set up the routing service.",
     "routingUnavailable": "The routing service is not responding. The trip is unaffected — try planning again later.",
+    "routingInvalidGeometry": "The routing service returned a route that cannot be drawn or used as a corridor. Try planning again, or adjust the stops.",
     "tollOverlappingTariff": "A tariff already covers part of that date range for this station and vehicle class.",
-    "tripShareRevoked": "This tracking link has been revoked."
+    "tollDuplicateStation": "A toll station with that code already exists in this account.",
+    "tollDuplicateVehicleClass": "A vehicle class with that code already exists in this account.",
+    "unknownVehicleClass": "That vehicle class is not defined in this account.",
+    "tripShareRevoked": "This tracking link has been revoked.",
+    "lookupLimitExceeded": "This list is too large to load in full. Narrow it with a filter or search before selecting.",
+    "seededCatalogLimitExceeded": "This catalog has grown beyond the supported size. Contact your administrator."
   },
   "driver": {
     "name": "Name",
@@ -1177,15 +1184,19 @@
     "actions": {
       "sync": "Trigger Sync",
       "syncNotCompleted": "Sync did not complete. Check provider connectivity and try again.",
+      "syncCompleted": "Sync completed.",
+      "syncCompletedCounts": "Sync completed: {{seen}} devices seen — {{added}} added, {{updated}} updated, {{removed}} removed.",
+      "syncCompletedNoDevices": "Sync completed, but the provider returned no devices. Verify the credential and the provider account.",
       "ignore": "Ignore",
       "unignore": "Unignore",
       "endAssignment": "End Assignment",
       "showAll": "Show All",
       "showActive": "Show Active Only",
-      "bulkIgnore": "Bulk Ignore",
+      "bulkIgnore": "Bulk Ignore (this page)",
       "endAssignmentReasonPrompt": "Reason for ending assignment",
       "showUnassignedOnly": "Show unassigned only",
-      "bulkUnignore": "Bulk Unignore",
+      "bulkUnignore": "Bulk Unignore (this page)",
+      "bulkScopeHint": "Bulk actions apply to the devices on the current page.",
       "addDevice": "Add Device",
       "showRecentlyAddedOnly": "Show recently added only",
       "healthHistory": "View Health History",

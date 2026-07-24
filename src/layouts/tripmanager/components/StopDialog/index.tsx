@@ -28,7 +28,7 @@ import ArgonBox from 'components/ArgonBox';
 import ArgonTypography from 'components/ArgonTypography';
 import { reverseGeocode } from 'api/router/router';
 import type { FormChangeHandler } from 'controls/Dialogs/useForm';
-import type { PointOfInterest } from 'api/manager/pointsOfInterest';
+import type { PointOfInterestLookup } from 'api/manager/pointsOfInterest';
 import type { Geofence } from 'api/geofencing/geofencing';
 
 /** Dialog/form state for a trip stop. */
@@ -62,7 +62,7 @@ interface StopDialogProps {
   values: StopFormValues;
   handleChange: FormChangeHandler;
   errors: Record<string, string>;
-  pois: PointOfInterest[];
+  pois: PointOfInterestLookup[];
   geofences: Geofence[];
   /** Puts the planner map into stop-placement mode and closes this dialog until a click lands. */
   onPlaceOnMap: () => void;

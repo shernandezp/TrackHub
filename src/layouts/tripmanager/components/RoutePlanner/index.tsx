@@ -31,7 +31,7 @@ import type { MapProvider } from 'controls/Maps/core/MapProviderContext';
 import type { RoutePoint, RouteStop, RouteTollStation, MapPoi } from 'controls/Maps/core/mapTypes';
 import { stopColor } from 'controls/Maps/core/RouteLayer/routeStyles';
 import type { RoutePlan, TripStop } from 'api/tripManagement/trips';
-import type { PointOfInterest } from 'api/manager/pointsOfInterest';
+import type { PointOfInterestLookup } from 'api/manager/pointsOfInterest';
 
 /** Default corridor half-width offered before a trip has a plan of its own. */
 export const DEFAULT_CORRIDOR_METERS = 300;
@@ -39,7 +39,7 @@ export const DEFAULT_CORRIDOR_METERS = 300;
 interface RoutePlannerProps {
   stops: TripStop[];
   routePlan?: RoutePlan | null;
-  pois: PointOfInterest[];
+  pois: PointOfInterestLookup[];
   mapType?: MapProvider;
   mapKey?: string | null;
   darkMode?: boolean;

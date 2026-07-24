@@ -30,6 +30,12 @@ import enTranslations from 'locales/en.json';
 import { PROBED_SERVICES } from 'api/core/healthProbe';
 import { TestWrapper } from '../components/testHelpers';
 
+// TT-07: this file runs a real i18n.init and eleven render-and-waitFor cases whose probes each go
+// through the health-probe timeout path. Under vitest's 5s default it passes in isolation and
+// fails intermittently on a loaded machine — a flake, not a regression. The work is genuinely
+// slow rather than hung, so the file gets its own budget instead of the suite-wide default.
+vi.setConfig({ testTimeout: 30_000, hookTimeout: 30_000 });
+
 const mockIsAdmin = vi.fn();
 const mockIsManager = vi.fn();
 const mockIsAuthenticated = vi.fn();

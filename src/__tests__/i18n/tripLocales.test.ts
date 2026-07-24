@@ -14,6 +14,7 @@
  *  limitations under the License.
  */
 
+import { ERROR_CODE_I18N } from 'api/core/errors';
 import en from 'locales/en.json';
 import es from 'locales/es.json';
 
@@ -55,26 +56,46 @@ const SCAN_STATUSES = ['Pending', 'Clean', 'Infected', 'Failed', 'Skipped'];
 const TOLL_CLASS_TARGETS = ['transporterType', 'transporter'];
 
 /**
- * Backend rejection codes mapped to i18n keys in api/core/errors.ts. An
- * unmapped code falls back to raw server text, so every mapping needs a string.
+ * Every i18n key the real ERROR_CODE_I18N map points at — DERIVED from the map,
+ * never re-typed. A hand-copied list silently stops covering a code the moment
+ * one is added, which is how four TripManagement codes
+ * (ROUTING_INVALID_GEOMETRY, TOLL_DUPLICATE_STATION, TOLL_DUPLICATE_VEHICLE_CLASS,
+ * UNKNOWN_VEHICLE_CLASS) went untranslated. An unmapped code falls back to raw
+ * server text, so every mapping needs a string in both bundles.
  */
-const TRIP_ERROR_KEYS = [
-  'errors.tripNotActive',
-  'errors.tripAlreadyTerminal',
-  'errors.tripInvalidTransition',
-  'errors.stopAlreadyDeparted',
-  'errors.stopNotArrived',
-  'errors.stopAlreadySkipped',
-  'errors.tripStopsNotComplete',
-  'errors.podDocumentNotClean',
-  'errors.tripDuplicateCode',
-  'errors.tripDuplicateExternalReference',
-  'errors.tripHasHistory',
-  'errors.tripDriverNotAssignable',
-  'errors.routingNotConfigured',
-  'errors.routingUnavailable',
-  'errors.tollOverlappingTariff',
-  'errors.tripShareRevoked',
+const TRIP_ERROR_KEYS = Object.values(ERROR_CODE_I18N);
+
+/**
+ * The backend codes this map is expected to carry, mirroring
+ * TrackHub.TripManagement Domain/Constants/TripConstants.cs → TripErrorCodes.
+ * Listed here so a code the backend adds and the portal forgets fails loudly
+ * rather than silently degrading to English server text.
+ *
+ * Long-term this list should be generated alongside the SDLs rather than
+ * maintained by hand; until then this test is the only thing holding the two
+ * sides together.
+ */
+const BACKEND_TRIP_ERROR_CODES = [
+  'TRIP_NOT_ACTIVE',
+  'TRIP_ALREADY_TERMINAL',
+  'TRIP_INVALID_TRANSITION',
+  'STOP_ALREADY_DEPARTED',
+  'STOP_NOT_ARRIVED',
+  'STOP_ALREADY_SKIPPED',
+  'TRIP_STOPS_NOT_COMPLETE',
+  'POD_DOCUMENT_NOT_CLEAN',
+  'TRIP_DUPLICATE_CODE',
+  'TRIP_DUPLICATE_EXTERNAL_REFERENCE',
+  'TRIP_HAS_HISTORY',
+  'TRIP_DRIVER_NOT_ASSIGNABLE',
+  'ROUTING_NOT_CONFIGURED',
+  'ROUTING_UNAVAILABLE',
+  'ROUTING_INVALID_GEOMETRY',
+  'TOLL_OVERLAPPING_TARIFF',
+  'TOLL_DUPLICATE_STATION',
+  'TOLL_DUPLICATE_VEHICLE_CLASS',
+  'UNKNOWN_VEHICLE_CLASS',
+  'TRIP_SHARE_REVOKED',
 ];
 
 /** The six spec 11 §13 reports, owned by the reporting workstream — verified, not duplicated. */
@@ -138,6 +159,23 @@ describe('en/es key parity', () => {
     const missing = TRIP_ERROR_KEYS.filter(
       (key) => typeof resolveKey(bundles.es, key) !== typeof resolveKey(bundles.en, key)
     );
+    expect(missing).toEqual([]);
+  });
+});
+
+describe('backend error-code coverage', () => {
+  test('every TripManagement rejection code is mapped to an i18n key', () => {
+    const unmapped = BACKEND_TRIP_ERROR_CODES.filter((code) => !(code in ERROR_CODE_I18N));
+    expect(unmapped).toEqual([]);
+  });
+
+  test.each([
+    ['en', en],
+    ['es', es],
+  ])('every mapped key resolves to a string in %s', (_, bundle) => {
+    const missing = Object.entries(ERROR_CODE_I18N)
+      .filter(([, key]) => typeof resolveKey(bundle, key) !== 'string')
+      .map(([code, key]) => `${code} -> ${key}`);
     expect(missing).toEqual([]);
   });
 });

@@ -35,6 +35,22 @@ export const MAX_PAGE_SIZE = 500;
  */
 export const MAX_FETCH_ALL_ITEMS = 5000;
 
+/**
+ * Skip/take/search arguments shared by every paged Manager list query. The
+ * server requires the wrapping input object but each member is optional.
+ */
+export interface ListParams {
+  skip?: number | null;
+  take?: number | null;
+  search?: string | null;
+}
+
+/** One page of a `…PageVm` result: the rows plus the unfiltered-by-paging total. */
+export interface Page<T> {
+  items: T[];
+  totalCount: number;
+}
+
 export interface FetchAllOptions {
   /** Rows requested per round trip (clamped to the server ceiling). */
   pageSize?: number;

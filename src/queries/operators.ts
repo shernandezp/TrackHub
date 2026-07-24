@@ -30,12 +30,13 @@ import type {
   UpdateOperatorDtoInput,
   TriggerOperatorDeviceSyncCommandInput,
 } from 'api/manager/operators';
+import type { ListParams } from 'api/core/paging';
 
 /** Manager-backed operator data (CRUD, lists, enable/sync). */
 export const operatorKeys = {
   all: ['operators'] as const,
-  byAccount: () => [...operatorKeys.all, 'byAccount'] as const,
-  summary: () => [...operatorKeys.all, 'summary'] as const,
+  byAccount: (params: ListParams = {}) => [...operatorKeys.all, 'byAccount', params] as const,
+  lookup: () => [...operatorKeys.all, 'lookup'] as const,
   gps: () => [...operatorKeys.all, 'gps'] as const,
   detail: (id: string) => [...operatorKeys.all, 'detail', id] as const,
 };
@@ -52,26 +53,36 @@ export const operatorTelemetryKeys = {
 
 // --- Manager reads -------------------------------------------------------
 
-export function useOperatorsByCurrentAccount(options: { enabled?: boolean } = {}) {
+/** One server page of operators (`{ items, totalCount }`) for the operator list. */
+export function useOperatorsByCurrentAccount(
+  params: ListParams = {},
+  options: { enabled?: boolean } = {}
+) {
   return useQuery({
-    queryKey: operatorKeys.byAccount(),
-    queryFn: managerApi.getOperatorsByCurrentAccount,
+    queryKey: operatorKeys.byAccount(params),
+    queryFn: () => managerApi.getOperatorsByCurrentAccount(params),
     enabled: options.enabled ?? true,
   });
 }
 
-export function useOperators(options: { enabled?: boolean } = {}) {
+/** The account's operators as id + name, for the dashboard and report filters. */
+export function useOperatorLookup(options: { enabled?: boolean } = {}) {
   return useQuery({
-    queryKey: operatorKeys.summary(),
-    queryFn: managerApi.getOperators,
+    queryKey: operatorKeys.lookup(),
+    queryFn: managerApi.getOperatorLookup,
     enabled: options.enabled ?? true,
   });
 }
 
+/**
+ * Every operator with its sync metadata (all server pages drained). The GPS
+ * screens label and filter rows by operator and read fields the lookup does not
+ * carry, so they need the complete record set.
+ */
 export function useGpsOperators(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: operatorKeys.gps(),
-    queryFn: managerApi.getGpsOperators,
+    queryFn: managerApi.getAllGpsOperators,
     enabled: options.enabled ?? true,
   });
 }

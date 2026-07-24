@@ -22,7 +22,7 @@ type Query {
   accountSettingsMaster(query: GetAccountSettingsMasterQueryInput!): [AccountSettingsVm!]!
     @cost(weight: "10")
   accountSettingsByUser: AccountSettingsVm! @cost(weight: "10")
-  accounts: [AccountVm!]! @cost(weight: "10")
+  accounts(query: GetAccountsQueryInput!): AccountsPageVm! @cost(weight: "10")
   supportGrantStatus(query: GetSupportGrantStatusQueryInput!): AccountSupportGrantVm!
     @cost(weight: "10")
   accountSupportGrants(query: GetAccountSupportGrantsQueryInput!): [AccountSupportGrantVm!]!
@@ -38,7 +38,9 @@ type Query {
     @cost(weight: "10")
   token(query: GetTokenQueryInput!): TokenVm! @cost(weight: "10")
   device(query: GetDeviceQueryInput!): DeviceVm! @cost(weight: "10")
-  devicesByAccount: [DeviceVm!]! @cost(weight: "10")
+  devicesByAccount(query: GetDevicesByAccountQueryInput!): DevicesPageVm!
+    @cost(weight: "10")
+  deviceLookup: [DeviceLookupVm!]! @cost(weight: "10")
   deviceTransporterByUserByOperator(
     query: GetDeviceTransporterByUserByOperatorQueryInput!
   ): [DeviceTransporterVm!]! @cost(weight: "10")
@@ -83,8 +85,9 @@ type Query {
   gpsIntegrationDashboard(query: GetGpsIntegrationDashboardQueryInput!): GpsIntegrationDashboardVm!
     @cost(weight: "10")
   group(query: GetGroupQueryInput!): GroupVm! @cost(weight: "10")
-  groupsByAccount: [GroupVm!]! @cost(weight: "10")
-  groupsByUser: [GroupVm!]! @cost(weight: "10")
+  groupsByAccount(query: GetGroupByAccountQueryInput!): GroupsPageVm!
+    @cost(weight: "10")
+  groupLookup: [GroupLookupVm!]! @cost(weight: "10")
   validateGroupVisibility(query: ValidateGroupVisibilityQueryInput!): Boolean!
     @cost(weight: "10")
   notificationRules(query: GetNotificationRulesQueryInput!): [NotificationRuleVm!]!
@@ -104,14 +107,18 @@ type Query {
   operator(query: GetOperatorQueryInput!): OperatorVm! @cost(weight: "10")
   operatorsMaster(query: GetOperatorMasterQueryInput!): [OperatorVm!]!
     @cost(weight: "10")
-  operatorsByCurrentAccount: [OperatorVm!]! @cost(weight: "10")
+  operatorsByCurrentAccount(query: GetOperatorByCurrentAccountQueryInput!): OperatorsPageVm!
+    @cost(weight: "10")
+  operatorLookup: [OperatorLookupVm!]! @cost(weight: "10")
   operatorsByUser: [OperatorVm!]! @cost(weight: "10")
   operatorByTransporter(query: GetOperatorByTransporterQueryInput!): OperatorVm!
     @cost(weight: "10")
   platformAnnouncements(query: GetPlatformAnnouncementsQueryInput!): [PlatformAnnouncementVm!]!
     @cost(weight: "10")
   backgroundJobStatus: [BackgroundJobStatusVm!]! @cost(weight: "10")
-  pointsOfInterestByAccount: [PointOfInterestVm!]! @cost(weight: "10")
+  pointsOfInterestByAccount(query: GetPointsOfInterestByAccountQueryInput!): PointsOfInterestPageVm!
+    @cost(weight: "10")
+  pointOfInterestLookup: [PointOfInterestLookupVm!]! @cost(weight: "10")
   currentPrincipal: CurrentPrincipalVm! @cost(weight: "10")
   publicLinkGrant(query: GetPublicLinkGrantQueryInput!): PublicLinkGrantVm!
     @cost(weight: "10")
@@ -119,38 +126,38 @@ type Query {
     @cost(weight: "10")
   reports: [ReportVm!]! @cost(weight: "10")
   reportByCode(code: String!): ReportVm @cost(weight: "10")
-  synchronizedDevices(query: GetSynchronizedDevicesQueryInput!): [DeviceVm!]!
+  synchronizedDevices(query: GetSynchronizedDevicesQueryInput!): DevicesPageVm!
     @cost(weight: "10")
   unassignedSynchronizedDevices(
     query: GetUnassignedSynchronizedDevicesQueryInput!
-  ): [DeviceVm!]! @cost(weight: "10")
+  ): DevicesPageVm! @cost(weight: "10")
   assignedDeviceTransportersByOperator(
     query: GetAssignedDeviceTransportersByOperatorQueryInput!
   ): [DeviceTransporterVm!]! @cost(weight: "10")
   transporterDeviceAssignmentsByTransporter(
     query: GetTransporterDeviceAssignmentsByTransporterQueryInput!
-  ): [TransporterDeviceAssignmentVm!]! @cost(weight: "10")
-  transporterDeviceAssignmentsByDevice(
-    query: GetTransporterDeviceAssignmentsByDeviceQueryInput!
-  ): [TransporterDeviceAssignmentVm!]! @cost(weight: "10")
+  ): TransporterDeviceAssignmentsPageVm! @cost(weight: "10")
   transporterDeviceAssignmentsByAccount(
     query: GetTransporterDeviceAssignmentsByAccountQueryInput!
-  ): [TransporterDeviceAssignmentVm!]! @cost(weight: "10")
+  ): TransporterDeviceAssignmentsPageVm! @cost(weight: "10")
   transporter(query: GetTransporterQueryInput!): TransporterVm!
     @cost(weight: "10")
-  transportersByAccount: [TransporterVm!]! @cost(weight: "10")
-  transportersByGroup(query: GetTransporterByGroupQueryInput!): [TransporterVm!]!
+  transportersByAccount(query: GetTransportersByAccountQueryInput!): TransportersPageVm!
     @cost(weight: "10")
-  transportersByUser: [TransporterVm!]! @cost(weight: "10")
+  transportersByGroup(query: GetTransporterByGroupQueryInput!): TransportersPageVm!
+    @cost(weight: "10")
+  transportersByUser(query: GetTransporterByUserQueryInput!): TransportersPageVm!
+    @cost(weight: "10")
+  transporterLookupByAccount: [TransporterLookupVm!]! @cost(weight: "10")
+  transporterLookupByUser: [TransporterLookupVm!]! @cost(weight: "10")
   transporterType(query: GetTransporterTypeQueryInput!): TransporterTypeVm!
     @cost(weight: "10")
   transporterTypes: [TransporterTypeVm!]! @cost(weight: "10")
   user(query: GetUserQueryInput!): UserVm! @cost(weight: "10")
   userSettings: UserSettingsVm! @cost(weight: "10")
-  usersByAccount(query: GetUsersByAccountQueryInput!): [UserVm!]!
+  usersByGroup(query: GetUsersByGroupQueryInput!): UsersPageVm!
     @cost(weight: "10")
-  usersByGroup(query: GetUsersByGroupQueryInput!): [UserVm!]!
-    @cost(weight: "10")
+  userLookup: [UserLookupVm!]! @cost(weight: "10")
 }
 
 type Mutation {
@@ -171,6 +178,8 @@ type Mutation {
   updateAccountBranding(command: UpdateAccountBrandingCommandInput!): AccountBrandingVm!
     @cost(weight: "10")
   updateAccount(id: UUID!, command: UpdateAccountCommandInput!): Boolean!
+    @cost(weight: "10")
+  updateAccountMaster(id: UUID!, command: UpdateAccountMasterCommandInput!): Boolean!
     @cost(weight: "10")
   updateAccountSettings(id: UUID!, command: UpdateAccountSettingsCommandInput!): Boolean!
     @cost(weight: "10")
@@ -376,6 +385,11 @@ type AccountSettingsVm {
   refreshMapInterval: Int!
 }
 
+type AccountsPageVm {
+  items: [AccountVm!]!
+  totalCount: Int!
+}
+
 type AccountSupportGrantVm {
   accountSupportGrantId: UUID!
   accountId: UUID!
@@ -534,11 +548,22 @@ type DeliveryHealthVm {
   averageAttempts: Float!
 }
 
+type DeviceLookupVm {
+  deviceId: UUID!
+  name: String!
+  operatorId: UUID!
+}
+
 type DeviceProviderStatusCountVm {
   operatorId: UUID!
   operatorName: String!
   detectedStatus: DetectedStatus!
   count: Int!
+}
+
+type DevicesPageVm {
+  items: [DeviceVm!]!
+  totalCount: Int!
 }
 
 type DeviceTransporterVm {
@@ -742,6 +767,16 @@ type GpsIntegrationDashboardVm {
   deviceCountsByProviderStatus: [DeviceProviderStatusCountVm!]!
 }
 
+type GroupLookupVm {
+  groupId: Long!
+  name: String!
+}
+
+type GroupsPageVm {
+  items: [GroupVm!]!
+  totalCount: Int!
+}
+
 type GroupVm {
   groupId: Long!
   name: String!
@@ -812,6 +847,16 @@ type NotificationTemplateVm {
   lastModified: DateTime!
 }
 
+type OperatorLookupVm {
+  operatorId: UUID!
+  name: String!
+}
+
+type OperatorsPageVm {
+  items: [OperatorVm!]!
+  totalCount: Int!
+}
+
 type OperatorSyncRunVm {
   operatorSyncRunId: UUID!
   accountId: UUID!
@@ -871,6 +916,18 @@ type PlatformAnnouncementVm {
   lastModified: DateTime!
 }
 
+type PointOfInterestLookupVm {
+  pointOfInterestId: UUID!
+  name: String!
+  latitude: Float!
+  longitude: Float!
+  color: Short
+  type: Short!
+  description: String
+  address: String
+  active: Boolean!
+}
+
 type PointOfInterestVm {
   pointOfInterestId: UUID!
   accountId: UUID!
@@ -883,6 +940,11 @@ type PointOfInterestVm {
   color: Short
   groupId: Long
   active: Boolean!
+}
+
+type PointsOfInterestPageVm {
+  items: [PointOfInterestVm!]!
+  totalCount: Int!
 }
 
 type PublicLinkGrantVm {
@@ -929,6 +991,11 @@ type TokenVm {
   refreshTokenExpiration: DateTime
 }
 
+type TransporterDeviceAssignmentsPageVm {
+  items: [TransporterDeviceAssignmentVm!]!
+  totalCount: Int!
+}
+
 type TransporterDeviceAssignmentVm {
   transporterDeviceAssignmentId: UUID!
   accountId: UUID!
@@ -955,6 +1022,18 @@ type TransporterGroupVm {
   groupId: Long!
 }
 
+type TransporterLookupVm {
+  transporterId: UUID!
+  name: String!
+  transporterType: TransporterType!
+  transporterTypeId: Short!
+}
+
+type TransportersPageVm {
+  items: [TransporterVm!]!
+  totalCount: Int!
+}
+
 type TransporterTypeVm {
   transporterTypeId: Short!
   accBased: Boolean!
@@ -976,11 +1055,21 @@ type UserGroupVm {
   groupId: Long!
 }
 
+type UserLookupVm {
+  userId: UUID!
+  username: String!
+}
+
 type UserSettingsVm {
   language: String!
   style: String!
   navbar: String!
   userId: UUID!
+}
+
+type UsersPageVm {
+  items: [UserVm!]!
+  totalCount: Int!
 }
 
 type UserVm {
@@ -1425,6 +1514,12 @@ input GetAccountSettingsQueryInput {
   id: UUID!
 }
 
+input GetAccountsQueryInput {
+  skip: Int
+  take: Int
+  search: String
+}
+
 input GetAccountStatusQueryInput {
   accountId: UUID!
 }
@@ -1493,6 +1588,12 @@ input GetDeliveryHealthQueryInput {
 
 input GetDeviceQueryInput {
   id: UUID!
+}
+
+input GetDevicesByAccountQueryInput {
+  skip: Int
+  take: Int
+  search: String
 }
 
 input GetDeviceTransporterByIdQueryInput {
@@ -1582,6 +1683,12 @@ input GetGpsIntegrationDashboardQueryInput {
   accountId: UUID!
 }
 
+input GetGroupByAccountQueryInput {
+  skip: Int
+  take: Int
+  search: String
+}
+
 input GetGroupQueryInput {
   id: Long!
 }
@@ -1612,6 +1719,12 @@ input GetNotificationTemplatesQueryInput {
   accountId: UUID!
 }
 
+input GetOperatorByCurrentAccountQueryInput {
+  skip: Int
+  take: Int
+  search: String
+}
+
 input GetOperatorByTransporterQueryInput {
   transporterId: UUID!
 }
@@ -1633,6 +1746,12 @@ input GetPlatformAnnouncementsQueryInput {
   take: Int! = 50
 }
 
+input GetPointsOfInterestByAccountQueryInput {
+  skip: Int
+  take: Int
+  search: String
+}
+
 input GetPublicLinkGrantQueryInput {
   publicLinkGrantId: UUID!
 }
@@ -1651,6 +1770,11 @@ input GetSynchronizedDevicesQueryInput {
   accountId: UUID!
   detectedStatus: DetectedStatus
   operatorId: UUID
+  skip: Int
+  take: Int
+  search: String
+  unassignedOnly: Boolean! = false
+  recentOnly: Boolean! = false
 }
 
 input GetTokenQueryInput {
@@ -1659,21 +1783,29 @@ input GetTokenQueryInput {
 
 input GetTransporterByGroupQueryInput {
   groupId: Long!
+  skip: Int
+  take: Int
+  search: String
+}
+
+input GetTransporterByUserQueryInput {
+  skip: Int
+  take: Int
+  search: String
 }
 
 input GetTransporterDeviceAssignmentsByAccountQueryInput {
   accountId: UUID!
   activeOnly: Boolean! = false
-}
-
-input GetTransporterDeviceAssignmentsByDeviceQueryInput {
-  deviceId: UUID!
-  activeOnly: Boolean! = false
+  skip: Int
+  take: Int
 }
 
 input GetTransporterDeviceAssignmentsByTransporterQueryInput {
   transporterId: UUID!
   activeOnly: Boolean! = false
+  skip: Int
+  take: Int
 }
 
 input GetTransporterDocumentComplianceQueryInput {
@@ -1684,24 +1816,32 @@ input GetTransporterQueryInput {
   id: UUID!
 }
 
+input GetTransportersByAccountQueryInput {
+  skip: Int
+  take: Int
+  search: String
+}
+
 input GetTransporterTypeQueryInput {
   transporterTypeId: Short!
 }
 
 input GetUnassignedSynchronizedDevicesQueryInput {
   accountId: UUID!
+  skip: Int
+  take: Int
+  search: String
 }
 
 input GetUserQueryInput {
   id: UUID!
 }
 
-input GetUsersByAccountQueryInput {
-  accountId: UUID!
-}
-
 input GetUsersByGroupQueryInput {
   groupId: Long!
+  skip: Int
+  take: Int
+  search: String
 }
 
 input GroupDtoInput {
@@ -1932,6 +2072,10 @@ input UpdateAccountDtoInput {
 input UpdateAccountFeatureConfigurationCommandInput {
   accountFeatureId: UUID!
   configurationJson: String
+}
+
+input UpdateAccountMasterCommandInput {
+  account: UpdateAccountDtoInput!
 }
 
 input UpdateAccountSettingsCommandInput {

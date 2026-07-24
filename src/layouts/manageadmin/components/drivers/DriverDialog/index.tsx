@@ -21,7 +21,7 @@ import CustomCheckbox from 'controls/Dialogs/CustomCheckbox';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
 import CustomTextField from 'controls/Dialogs/CustomTextField';
 import type { FormChangeHandler } from 'controls/Dialogs/useForm';
-import { useTransportersByAccount } from 'queries/transporters';
+import { useTransporterLookupByAccount } from 'queries/transporters';
 
 /**
  * Dialog/form state for a driver. Merges an API {@link Driver} (when editing)
@@ -55,7 +55,7 @@ interface DriverDialogProps {
 function DriverDialog({ open, setOpen, handleSubmit, values, handleChange, errors }: DriverDialogProps) {
   const { t } = useTranslation();
   // The default transporter is picked from the account's units, not typed by hand.
-  const transportersQuery = useTransportersByAccount({ enabled: open });
+  const transportersQuery = useTransporterLookupByAccount({ enabled: open });
   const transporters = transportersQuery.data ?? [];
 
   return (

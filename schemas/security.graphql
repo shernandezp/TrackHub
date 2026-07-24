@@ -29,10 +29,15 @@ type Query {
   user(query: GetUserQueryInput!): UserVm! @cost(weight: "10")
   users(query: GetUsersQueryInput!): [UserVm!]! @cost(weight: "10")
   currentUser: UserVm! @cost(weight: "10")
-  usersByAccount(query: GetUsersByAccountQueryInput!): [UserVm!]!
+  usersByAccount(query: GetUsersByAccountQueryInput!): UsersPageVm!
     @cost(weight: "10")
   usersByRole(query: GetUsersByRoleQueryInput!): [UserVm!]! @cost(weight: "10")
   usersByPolicy(query: GetUsersByPolicyQueryInput!): [UserVm!]!
+    @cost(weight: "10")
+  userLookupByAccount: [UserLookupVm!]! @cost(weight: "10")
+  userLookupByRole(query: GetUserLookupByRoleQueryInput!): [UserLookupVm!]!
+    @cost(weight: "10")
+  userLookupByPolicy(query: GetUserLookupByPolicyQueryInput!): [UserLookupVm!]!
     @cost(weight: "10")
   authorizedActions(query: GetAuthorizedActionsQueryInput!): [ResourceActionVm!]!
     @cost(weight: "10")
@@ -209,6 +214,11 @@ type ServiceClientPermissionVm {
   allowCrossAccount: Boolean!
 }
 
+type UserLookupVm {
+  userId: UUID!
+  username: String!
+}
+
 type UserPolicyVm {
   userId: UUID!
   policyId: Int!
@@ -217,6 +227,11 @@ type UserPolicyVm {
 type UserRoleVm {
   userId: UUID!
   roleId: Int!
+}
+
+type UsersPageVm {
+  items: [UserVm!]!
+  totalCount: Int!
 }
 
 type UserVm {
@@ -387,6 +402,14 @@ input GetServiceClientPermissionsQueryInput {
   take: Int! = 50
 }
 
+input GetUserLookupByPolicyQueryInput {
+  policyId: Int!
+}
+
+input GetUserLookupByRoleQueryInput {
+  roleId: Int!
+}
+
 input GetUserNameQueryInput {
   userId: UUID!
 }
@@ -396,8 +419,9 @@ input GetUserQueryInput {
 }
 
 input GetUsersByAccountQueryInput {
-  skip: Int! = 0
-  take: Int! = 50
+  skip: Int
+  take: Int
+  search: String
 }
 
 input GetUsersByPolicyQueryInput {

@@ -186,7 +186,8 @@
     "yes": "Sí",
     "no": "No",
     "total": "Total",
-    "confirmDelete": "¿Está seguro de que desea eliminar este elemento?"
+    "confirmDelete": "¿Está seguro de que desea eliminar este elemento?",
+    "showing": "Mostrando {{from}}–{{to}} de {{total}}"
   },
   "serviceClientPermissions": {
     "title": "Permisos de Cliente de Servicio",
@@ -477,8 +478,14 @@
     "tripDriverNotAssignable": "Ese conductor no se puede asignar a este viaje.",
     "routingNotConfigured": "La planificación de rutas no está configurada en la plataforma. Solicite al administrador que configure el servicio de rutas.",
     "routingUnavailable": "El servicio de rutas no responde. El viaje no se ve afectado: intente planificar de nuevo más tarde.",
+    "routingInvalidGeometry": "El servicio de rutas devolvió una ruta que no se puede dibujar ni usar como corredor. Intente planificar de nuevo o ajuste las paradas.",
     "tollOverlappingTariff": "Ya existe una tarifa que cubre parte de ese rango de fechas para esta estación y clase de vehículo.",
-    "tripShareRevoked": "Este enlace de seguimiento fue revocado."
+    "tollDuplicateStation": "Ya existe una estación de peaje con ese código en esta cuenta.",
+    "tollDuplicateVehicleClass": "Ya existe una clase de vehículo con ese código en esta cuenta.",
+    "unknownVehicleClass": "Esa clase de vehículo no está definida en esta cuenta.",
+    "tripShareRevoked": "Este enlace de seguimiento fue revocado.",
+    "lookupLimitExceeded": "Esta lista es demasiado grande para cargarse completa. Redúzcala con un filtro o una búsqueda antes de seleccionar.",
+    "seededCatalogLimitExceeded": "Este catálogo superó el tamaño admitido. Comuníquese con su administrador."
   },
   "driver": {
     "name": "Nombre",
@@ -1177,15 +1184,19 @@
     "actions": {
       "sync": "Sincronizar",
       "syncNotCompleted": "La sincronización no se completó. Verifique la conectividad del proveedor e intente nuevamente.",
+      "syncCompleted": "Sincronización completada.",
+      "syncCompletedCounts": "Sincronización completada: {{seen}} dispositivos detectados — {{added}} agregados, {{updated}} actualizados, {{removed}} eliminados.",
+      "syncCompletedNoDevices": "La sincronización se completó, pero el proveedor no devolvió dispositivos. Verifique la credencial y la cuenta del proveedor.",
       "ignore": "Ignorar",
       "unignore": "No Ignorar",
       "endAssignment": "Finalizar Asignación",
       "showAll": "Mostrar Todo",
       "showActive": "Solo Activas",
-      "bulkIgnore": "Ignorar en Lote",
+      "bulkIgnore": "Ignorar en Lote (esta página)",
       "endAssignmentReasonPrompt": "Motivo para finalizar la asignación",
       "showUnassignedOnly": "Mostrar solo sin asignar",
-      "bulkUnignore": "No Ignorar en Lote",
+      "bulkUnignore": "No Ignorar en Lote (esta página)",
+      "bulkScopeHint": "Las acciones en lote se aplican a los dispositivos de la página actual.",
       "addDevice": "Agregar Dispositivo",
       "showRecentlyAddedOnly": "Mostrar solo recién agregados",
       "healthHistory": "Ver Historial de Salud",

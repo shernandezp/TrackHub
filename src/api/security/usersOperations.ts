@@ -83,10 +83,27 @@ export const GetIntegrationUsersDocument = graphql(`
 `);
 
 export const GetUsersByAccountDocument = graphql(`
-  query GetUsersByAccount($skip: Int!, $take: Int!) {
-    usersByAccount(query: { skip: $skip, take: $take }) {
-      ...UserDetail
-      lockedUntil
+  query GetUsersByAccount($skip: Int, $take: Int, $search: String) {
+    usersByAccount(query: { skip: $skip, take: $take, search: $search }) {
+      items {
+        ...UserDetail
+        lockedUntil
+      }
+      totalCount
+    }
+  }
+`);
+
+/**
+ * Id + username only, unpaged by design: the allocator dialogs subtract the
+ * assigned list from this one, and a truncated operand makes already-assigned
+ * users reappear as available. The server raises past its own ceiling.
+ */
+export const GetUserLookupByAccountDocument = graphql(`
+  query GetUserLookupByAccount {
+    userLookupByAccount {
+      userId
+      username
     }
   }
 `);

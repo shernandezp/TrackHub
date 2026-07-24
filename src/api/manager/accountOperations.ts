@@ -59,9 +59,12 @@ export const GetAccountByUserDocument = graphql(`
 `);
 
 export const GetAccountsDocument = graphql(`
-  query GetAccounts {
-    accounts {
-      ...AccountItem
+  query GetAccounts($skip: Int, $take: Int, $search: String) {
+    accounts(query: { skip: $skip, take: $take, search: $search }) {
+      items {
+        ...AccountItem
+      }
+      totalCount
     }
   }
 `);
@@ -77,6 +80,18 @@ export const CreateAccountDocument = graphql(`
 export const UpdateAccountDocument = graphql(`
   mutation UpdateAccount($id: UUID!, $account: UpdateAccountDtoInput!) {
     updateAccount(id: $id, command: { account: $account })
+  }
+`);
+
+/**
+ * Platform-side account edit used by the systemadmin console. `updateAccount` is
+ * the account-scoped twin an account administrator uses on its OWN account; only
+ * this one may target another account, and it is gated by the Administrator-only
+ * AccountsMaster/Edit permission.
+ */
+export const UpdateAccountMasterDocument = graphql(`
+  mutation UpdateAccountMaster($id: UUID!, $account: UpdateAccountDtoInput!) {
+    updateAccountMaster(id: $id, command: { account: $account })
   }
 `);
 

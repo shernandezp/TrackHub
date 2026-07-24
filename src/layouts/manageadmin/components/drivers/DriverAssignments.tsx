@@ -55,7 +55,7 @@ import {
   assignmentStatusLabel,
 } from 'layouts/manageadmin/components/drivers/qualificationConstants';
 import { useAccountByUser } from 'queries/accounts';
-import { useTransportersByAccount } from 'queries/transporters';
+import { useTransporterLookupByAccount } from 'queries/transporters';
 import {
   useDriversByAccount,
   useDriverAssignmentHistory,
@@ -110,7 +110,7 @@ function ManageDriverAssignments() {
   const accountId = accountQuery.data?.accountId;
   const driversQuery = useDriversByAccount(accountId, { enabled: expanded && !!accountId });
   const drivers = driversQuery.data ?? [];
-  const transportersQuery = useTransportersByAccount({ enabled: expanded });
+  const transportersQuery = useTransporterLookupByAccount({ enabled: expanded });
   const transporters = transportersQuery.data ?? [];
 
   // Active list: the server-side, unpaged, time-aware projection for the driver

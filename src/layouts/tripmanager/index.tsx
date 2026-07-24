@@ -38,9 +38,9 @@ import ArgonPagination from 'components/ArgonPagination';
 import ArgonTypography from 'components/ArgonTypography';
 import { useArgonController } from 'context';
 import { useAccountByUser } from 'queries/accounts';
-import { useTransportersByUser } from 'queries/transporters';
+import { useTransporterLookupByUser } from 'queries/transporters';
 import { useDriversByAccount } from 'queries/drivers';
-import { usePointsOfInterestByAccount } from 'queries/pointsOfInterest';
+import { usePointOfInterestLookup } from 'queries/pointsOfInterest';
 import { useAllGeofences } from 'queries/geofences';
 import {
   useTrips,
@@ -195,11 +195,15 @@ function TripManager() {
 
   const accountQuery = useAccountByUser();
   const accountId = accountQuery.data?.accountId;
-  const transportersQuery = useTransportersByUser();
+  // The transporter lookup carries the type columns TollClassDialog derives its
+  // transporter-TYPE list from, so the picker feed is enough — no full drain.
+  const transportersQuery = useTransporterLookupByUser();
   const transporters = useMemo(() => transportersQuery.data ?? [], [transportersQuery.data]);
   const driversQuery = useDriversByAccount(accountId, { enabled: !!accountId });
   const drivers = useMemo(() => driversQuery.data ?? [], [driversQuery.data]);
-  const poisQuery = usePointsOfInterestByAccount();
+  // The POI lookup carries the pin colour and the popup's type/description/address
+  // that RoutePlanner renders, so the picker feed is enough — no full drain.
+  const poisQuery = usePointOfInterestLookup();
   const pois = useMemo(() => poisQuery.data ?? [], [poisQuery.data]);
   const geofencesQuery = useAllGeofences(false, { active: true });
   const geofences = useMemo(() => geofencesQuery.data ?? [], [geofencesQuery.data]);

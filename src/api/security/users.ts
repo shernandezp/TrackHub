@@ -22,10 +22,12 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { ListParams, Page } from 'api/core/paging';
 import type {
   UserDetailFragment as UserDetailType,
   GetCurrentUserQuery,
   GetUsersByAccountQuery,
+  GetUserLookupByAccountQuery,
   GetIntegrationUsersQuery,
   CreateUserDtoInput,
   UpdateUserDtoInput,
@@ -36,6 +38,7 @@ import {
   GetCurrentUserDocument,
   GetIntegrationUsersDocument,
   GetUsersByAccountDocument,
+  GetUserLookupByAccountDocument,
   CreateUserDocument,
   CreateManagerDocument,
   UpdateUserDocument,
@@ -49,7 +52,9 @@ import {
 
 export type User = UserDetailType;
 export type CurrentUser = GetCurrentUserQuery['currentUser'];
-export type AccountUser = GetUsersByAccountQuery['usersByAccount'][number];
+export type AccountUser = GetUsersByAccountQuery['usersByAccount']['items'][number];
+export type AccountUsersPage = Page<AccountUser>;
+export type UserLookup = GetUserLookupByAccountQuery['userLookupByAccount'][number];
 export type IntegrationUser = GetIntegrationUsersQuery['users'][number];
 export type { CreateUserDtoInput, UpdateUserDtoInput, UpdateCurrentUserDtoInput };
 
@@ -69,9 +74,19 @@ export async function getUsers(): Promise<IntegrationUser[]> {
   return data.users;
 }
 
-export async function getUsersByAccount(skip = 0, take = 500): Promise<AccountUser[]> {
-  const data = await executeGraphQL('security', GetUsersByAccountDocument, { skip, take });
+export async function getUsersByAccount(params: ListParams = {}): Promise<AccountUsersPage> {
+  const data = await executeGraphQL('security', GetUsersByAccountDocument, {
+    skip: params.skip ?? null,
+    take: params.take ?? null,
+    search: params.search ?? null,
+  });
   return data.usersByAccount;
+}
+
+/** The account's users as id + username, for the allocator dialogs' pickers. */
+export async function getUserLookupByAccount(): Promise<UserLookup[]> {
+  const data = await executeGraphQL('security', GetUserLookupByAccountDocument);
+  return data.userLookupByAccount;
 }
 
 export async function createUser(user: CreateUserDtoInput): Promise<User> {
