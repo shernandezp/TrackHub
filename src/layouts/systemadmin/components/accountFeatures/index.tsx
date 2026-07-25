@@ -21,9 +21,12 @@ import Icon from '@mui/material/Icon';
 import Table from "controls/Tables/Table";
 import TableAccordion from "controls/Accordions/TableAccordion";
 import ArgonBadge from "components/ArgonBadge";
+import ArgonBox from "components/ArgonBox";
 import ArgonButton from "components/ArgonButton";
 import ArgonTypography from "components/ArgonTypography";
+import CustomSelect from "controls/Dialogs/CustomSelect";
 import useForm from "controls/Dialogs/useForm";
+import type { FormChangeHandler } from "controls/Dialogs/useForm";
 import AccountFeatureDialog from "layouts/systemadmin/components/accountFeatures/AccountFeatureDialog";
 import { getAllAccounts } from "api/manager/accounts";
 import type { Account } from "api/manager/accounts";
@@ -31,7 +34,7 @@ import { getAccountFeaturesMaster, setAccountFeatureMaster } from "api/manager/a
 import type { AccountFeature, AccountFeatureDtoInput } from "api/manager/accountFeatures";
 import { notifyApiError } from "api/core/errors";
 import { parseJson } from 'utils/jsonUtils';
-import { featureLabel } from "layouts/systemadmin/components/accountFeatures/featureLabel";
+import { featureLabel, sourceLabel, tierLabel } from "utils/featureLabels";
 import { LoadingContext } from 'LoadingContext';
 
 /**
@@ -99,23 +102,35 @@ function SystemAccountFeatures() {
   const { setLoading } = useContext(LoadingContext);
   const [expanded, setExpanded] = useState(false);
   const [accounts, setAccounts] = useState<Account[]>([]);
-  const [featuresByAccount, setFeaturesByAccount] = useState<Record<string, AccountFeature[]>>({});
+  const [accountId, setAccountId] = useState('');
+  const [features, setFeatures] = useState<AccountFeature[]>([]);
   const [open, setOpen] = useState(false);
   const [isAdd, setIsAdd] = useState(false);
   const loaded = useRef(false);
   const [values, handleChange, setValues, setErrors, , errors] = useForm<FeatureFormValues>({});
 
-  const loadFeatures = async () => {
+  const selectedAccount = accounts.find(account => account.accountId === accountId);
+
+  const loadAccounts = async () => {
     setLoading(true);
     try {
-      // The feature matrix has one row per account, so every page is read.
-      const accountList = await getAllAccounts() || [];
-      setAccounts(accountList);
-      const map: Record<string, AccountFeature[]> = {};
-      for (const account of accountList) {
-        map[account.accountId] = await getAccountFeaturesMaster(account.accountId) || [];
-      }
-      setFeaturesByAccount(map);
+      // Only the account picker needs the full list; features are read one account at a time.
+      setAccounts(await getAllAccounts() || []);
+    } catch (error) {
+      notifyApiError(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadFeatures = async (targetAccountId: string) => {
+    if (!targetAccountId) {
+      setFeatures([]);
+      return;
+    }
+    setLoading(true);
+    try {
+      setFeatures(await getAccountFeaturesMaster(targetAccountId) || []);
     } catch (error) {
       notifyApiError(error);
     } finally {
@@ -126,15 +141,22 @@ function SystemAccountFeatures() {
   useEffect(() => {
     if (expanded && !loaded.current) {
       loaded.current = true;
-      loadFeatures();
+      loadAccounts();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expanded]);
 
+  const handleAccountFilterChange: FormChangeHandler = (event) => {
+    const nextAccountId = String(event.target.value ?? '');
+    setAccountId(nextAccountId);
+    loadFeatures(nextAccountId);
+  };
+
   const handleAddClick = () => {
     setIsAdd(true);
     setErrors({});
-    setValues({ accountId: '', featureKey: '', enabled: true, tier: 'default', source: 'superadmin', configValue: undefined });
+    // Adding from a filtered view targets the account on screen by default.
+    setValues({ accountId, featureKey: '', enabled: true, tier: 'default', source: 'superadmin', configValue: undefined });
   };
 
   const handleEditClick = (account: Account, feature: AccountFeature) => {
@@ -187,7 +209,10 @@ function SystemAccountFeatures() {
         configurationJson
       } as AccountFeatureDtoInput);
       setOpen(false);
-      await loadFeatures();
+      // Follow the edit onto the account it targeted, which may differ from the filtered one.
+      const savedAccountId = values.accountId ?? '';
+      setAccountId(savedAccountId);
+      await loadFeatures(savedAccountId);
     } catch (error) {
       notifyApiError(error);
     } finally {
@@ -202,21 +227,20 @@ function SystemAccountFeatures() {
     [t]
   );
 
-  const rows = accounts.flatMap(account =>
-    (featuresByAccount[account.accountId] || []).map(feature => ({
-      account: <TextCell>{account.name}</TextCell>,
+  const rows = selectedAccount
+    ? features.map(feature => ({
       feature: <TextCell>{featureLabel(t, feature.featureKey || '')}</TextCell>,
       enabled: <ArgonBadge variant="gradient" color={feature.enabled ? 'success' : 'secondary'} size="xs" container badgeContent={feature.enabled ? t('generic.yes') : t('generic.no')} />,
-      tier: <TextCell>{feature.tier}</TextCell>,
-      source: <TextCell>{feature.source}</TextCell>,
+      tier: <TextCell>{tierLabel(t, feature.tier)}</TextCell>,
+      source: <TextCell>{sourceLabel(t, feature.source)}</TextCell>,
       action: (
-        <ArgonButton variant="text" color="dark" onClick={() => handleEditClick(account, feature)}>
+        <ArgonButton variant="text" color="dark" onClick={() => handleEditClick(selectedAccount, feature)}>
           <Icon>edit</Icon>&nbsp;{t('generic.edit')}
         </ArgonButton>
       ),
-      id: `${account.accountId}-${feature.featureKey}`
+      id: `${selectedAccount.accountId}-${feature.featureKey}`
     }))
-  );
+    : [];
 
   return (
     <>
@@ -227,19 +251,38 @@ function SystemAccountFeatures() {
         showAddIcon
         setOpen={setOpen}
         handleAddClick={handleAddClick}>
-        <Table
-          columns={[
-            { name: 'account', title: t('account.title'), align: 'left' },
-            { name: 'feature', title: t('accountFeatures.feature'), align: 'left' },
-            { name: 'enabled', title: t('accountFeatures.enabled'), align: 'center' },
-            { name: 'tier', title: t('accountFeatures.tier'), align: 'center' },
-            { name: 'source', title: t('accountFeatures.source'), align: 'center' },
-            { name: 'action', title: t('generic.action'), align: 'center' },
-            { name: 'id' }
-          ]}
-          rows={rows}
-          selectedField="feature"
-        />
+        <ArgonBox maxWidth="320px">
+          <CustomSelect
+            name="accountFilter"
+            id="accountFilter"
+            label={t('account.title')}
+            list={accountOptions}
+            value={accountId}
+            handleChange={handleAccountFilterChange}
+            numericValue={false}
+            placeholder={t('accountFeatures.selectAccount')}
+          />
+        </ArgonBox>
+        {selectedAccount
+          ? (
+            <Table
+              columns={[
+                { name: 'feature', title: t('accountFeatures.feature'), align: 'left' },
+                { name: 'enabled', title: t('accountFeatures.enabled'), align: 'center' },
+                { name: 'tier', title: t('accountFeatures.tier'), align: 'center' },
+                { name: 'source', title: t('accountFeatures.source'), align: 'center' },
+                { name: 'action', title: t('generic.action'), align: 'center' },
+                { name: 'id' }
+              ]}
+              rows={rows}
+              selectedField="feature"
+            />
+          )
+          : (
+            <ArgonTypography variant="button" color="text" fontWeight="regular">
+              {t('accountFeatures.selectAccount')}
+            </ArgonTypography>
+          )}
       </TableAccordion>
 
       <AccountFeatureDialog

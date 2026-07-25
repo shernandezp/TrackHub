@@ -62,8 +62,9 @@ export async function getAccounts(params: ListParams = {}): Promise<AccountsPage
 
 /**
  * Every account on the platform, all server pages drained. There is no account
- * lookup endpoint, and the systemadmin feature matrix needs one row per account,
- * so this is the one place an exhaustive account read is genuinely required.
+ * lookup endpoint, and the systemadmin account pickers (feature editor, …) must
+ * offer the whole platform, so this is the one place an exhaustive account read
+ * is genuinely required.
  */
 export async function getAllAccounts(): Promise<Account[]> {
   return fetchAllPages(async (skip, take) => (await getAccounts({ skip, take })).items);

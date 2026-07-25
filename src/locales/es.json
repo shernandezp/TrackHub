@@ -215,6 +215,21 @@
     "source": "Origen",
     "enable": "Habilitar",
     "disable": "Deshabilitar",
+    "selectAccount": "Seleccione una cuenta",
+    "tiers": {
+      "default": "Predeterminado",
+      "trial": "Prueba",
+      "basic": "Básico",
+      "standard": "Estándar",
+      "premium": "Premium",
+      "enterprise": "Empresarial"
+    },
+    "sources": {
+      "superadmin": "Superadministrador",
+      "billing": "Facturación",
+      "system": "Sistema",
+      "manual": "Manual"
+    },
     "config": {
       "storingIntervalSeconds": "Intervalo de Almacenamiento (Segundos)",
       "retentionDays": "Días de Retención",

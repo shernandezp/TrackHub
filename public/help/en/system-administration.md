@@ -139,7 +139,7 @@ Policies work the same way as roles but define reusable permission sets that can
 
 Turn optional features on or off per account and set their tier and storage settings. This is the master control; managers can only view their own account's features in Account Management.
 
-The list is grouped by account, showing each feature's **Account**, **Feature**, **Enabled** (Yes/No badge), **Tier**, and **Source**, with an **Edit** action. Click the **+** icon (**Add Feature to Account**) to choose an **Account** and a **Feature**, then set the options. Editing an existing row fixes the account and feature and lets you change:
+Pick an **Account** from the dropdown at the top of the section; the list then shows that account's features with **Feature**, **Enabled** (Yes/No badge), **Tier**, and **Source**, plus an **Edit** action. Click the **+** icon (**Add Feature to Account**) to choose an **Account** (the filtered one is preselected) and a **Feature**, then set the options. Editing an existing row fixes the account and feature and lets you change:
 
 - **Enabled** — the on/off switch for that feature on that account.
 - **Tier** — the subscription tier (defaults to `default`).

@@ -22,7 +22,7 @@ import CustomCheckbox from 'controls/Dialogs/CustomCheckbox';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
 import CustomReadOnly from 'controls/Dialogs/CustomReadOnly';
 import type { FormChangeHandler } from 'controls/Dialogs/useForm';
-import { featureLabel } from 'layouts/systemadmin/components/accountFeatures/featureLabel';
+import { featureLabel } from 'utils/featureLabels';
 import type {
   FeatureFormValues,
   ConfigFieldDef,

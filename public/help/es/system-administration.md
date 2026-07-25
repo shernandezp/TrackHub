@@ -139,7 +139,7 @@ Las políticas funcionan igual que los roles pero definen conjuntos de permisos 
 
 Active o desactive funciones opcionales por cuenta y configure su nivel y ajustes de almacenamiento. Este es el control maestro; los gestores solo pueden ver las funciones de su propia cuenta en Administración de Cuentas.
 
-La lista se agrupa por cuenta y muestra, por cada función, la **Cuenta**, la **Funcionalidad**, **Habilitada** (distintivo Sí/No), el **Nivel** y el **Origen**, con una acción **Editar**. Haga clic en el ícono **+** (**Agregar Funcionalidad a la Cuenta**) para elegir una **Cuenta** y una **Funcionalidad**, y luego configure las opciones. Editar una fila existente fija la cuenta y la función y le permite cambiar:
+Elija una **Cuenta** en el menú desplegable al inicio de la sección; la lista muestra entonces las funciones de esa cuenta con la **Funcionalidad**, **Habilitada** (distintivo Sí/No), el **Nivel** y el **Origen**, además de una acción **Editar**. Haga clic en el ícono **+** (**Agregar Funcionalidad a la Cuenta**) para elegir una **Cuenta** (la cuenta filtrada viene preseleccionada) y una **Funcionalidad**, y luego configure las opciones. Editar una fila existente fija la cuenta y la función y le permite cambiar:
 
 - **Habilitada** — el interruptor de encendido/apagado de esa función en esa cuenta.
 - **Nivel** — el nivel de suscripción (predeterminado `default`).

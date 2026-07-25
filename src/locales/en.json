@@ -215,6 +215,21 @@
     "source": "Source",
     "enable": "Enable",
     "disable": "Disable",
+    "selectAccount": "Select an account",
+    "tiers": {
+      "default": "Default",
+      "trial": "Trial",
+      "basic": "Basic",
+      "standard": "Standard",
+      "premium": "Premium",
+      "enterprise": "Enterprise"
+    },
+    "sources": {
+      "superadmin": "Super Administrator",
+      "billing": "Billing",
+      "system": "System",
+      "manual": "Manual"
+    },
     "config": {
       "storingIntervalSeconds": "Storing Interval (Seconds)",
       "retentionDays": "Retention Days",
