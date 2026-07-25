@@ -210,7 +210,7 @@ function Positions({ settings, showGeofence, geofences }: PositionsProps) {
 
   return (
     <ArgonBox py={1}>
-      <Grid container spacing={3} mb={1}>
+      <Grid container spacing={3} sx={{ mb: 1 }}>
         <Grid size={{xs:12, lg:12}}>
           <FilterNavbar
             list={transporters}

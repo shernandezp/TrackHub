@@ -47,14 +47,6 @@ export const transporterKeys = {
     [...transporterKeys.assignments, 'byTransporter', transporterId, activeOnly] as const,
 };
 
-export function useTransporter(transporterId: string | undefined) {
-  return useQuery({
-    queryKey: transporterKeys.detail(transporterId ?? ''),
-    queryFn: () => api.getTransporter(transporterId as string),
-    enabled: !!transporterId,
-  });
-}
-
 /** One server page of the account's transporters, for the admin list screen. */
 export function useTransportersByAccount(
   params: ListParams = {},
@@ -63,18 +55,6 @@ export function useTransportersByAccount(
   return useQuery({
     queryKey: transporterKeys.byAccount(params),
     queryFn: () => api.getTransportersByAccount(params),
-    enabled: options.enabled ?? true,
-  });
-}
-
-/** One server page of the transporters the signed-in user may track. */
-export function useTransportersByUser(
-  params: ListParams = {},
-  options: { enabled?: boolean } = {}
-) {
-  return useQuery({
-    queryKey: transporterKeys.byUser(params),
-    queryFn: () => api.getTransportersByUser(params),
     enabled: options.enabled ?? true,
   });
 }
@@ -153,18 +133,6 @@ export function useTransporterDeviceAssignmentsByAccount(
     queryFn: () =>
       api.getTransporterDeviceAssignmentsByAccount(accountId as string, { activeOnly, ...params }),
     enabled: !!accountId,
-  });
-}
-
-export function useTransporterDeviceAssignmentsByTransporter(
-  transporterId: string | undefined,
-  activeOnly = false
-) {
-  return useQuery({
-    queryKey: transporterKeys.assignmentsByTransporter(transporterId ?? '', activeOnly),
-    queryFn: () =>
-      api.getTransporterDeviceAssignmentsByTransporter(transporterId as string, { activeOnly }),
-    enabled: !!transporterId,
   });
 }
 

@@ -21,7 +21,7 @@ import CustomSelect from 'controls/Dialogs/CustomSelect';
 import type { SelectListItem } from 'controls/Dialogs/CustomSelect';
 import CustomTextField from 'controls/Dialogs/CustomTextField';
 import ArgonTypography from 'components/ArgonTypography';
-import type { FormChangeHandler } from 'controls/Dialogs/useForm';
+import type { FormChangeHandler, FormErrors } from 'controls/Dialogs/useForm';
 import type { DocumentVm } from 'api/manager/documents';
 import {
   QUALIFICATION_TYPES,
@@ -54,7 +54,8 @@ interface QualificationDialogProps {
   handleSubmit: () => void | Promise<void>;
   values: QualificationFormValues;
   handleChange: FormChangeHandler;
-  errors: Record<string, string>;
+  /** Per-field validation messages from the screen's `validate()` gate. */
+  errors: FormErrors;
   /** The driver's spec-04 documents (owner entity `Driver`), the link candidates. */
   documents: DocumentVm[];
 }
@@ -119,6 +120,7 @@ function QualificationDialog({
           handleChange={handleChange}
           numericValue={false}
           required
+          errorMsg={errors.qualificationType}
           placeholder={t('generic.selectItem')}
         />
         <CustomTextField
@@ -183,6 +185,7 @@ function QualificationDialog({
           handleChange={handleChange}
           numericValue={false}
           required
+          errorMsg={errors.status}
           placeholder={t('generic.selectItem')}
         />
         {/*

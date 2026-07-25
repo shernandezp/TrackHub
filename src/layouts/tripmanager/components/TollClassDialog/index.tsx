@@ -153,6 +153,7 @@ function TollClassDialog({
                 value={target}
                 numericValue={false}
                 required
+                errorMsg={errors.target}
               />
             </Grid>
             {target === 'transporterType' ? (
@@ -165,6 +166,7 @@ function TollClassDialog({
                   label={t('tolls.transporterClass.transporterType')}
                   value={values.transporterTypeId ?? 0}
                   required
+                  errorMsg={errors.transporterTypeId}
                 />
                 {errors.transporterTypeId && (
                   <ArgonTypography variant="caption" color="error">
@@ -183,6 +185,7 @@ function TollClassDialog({
                   value={values.transporterId ?? ''}
                   numericValue={false}
                   required
+                  errorMsg={errors.transporterId}
                 />
                 {errors.transporterId && (
                   <ArgonTypography variant="caption" color="error">
@@ -201,6 +204,7 @@ function TollClassDialog({
                 value={values.tollVehicleClassCode ?? ''}
                 numericValue={false}
                 required
+                errorMsg={errors.tollVehicleClassCode}
               />
               {errors.tollVehicleClassCode && (
                 <ArgonTypography variant="caption" color="error">

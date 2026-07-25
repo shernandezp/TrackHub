@@ -20,7 +20,6 @@ type Documents = {
     "\n  query GetAccountFeaturesMaster($accountId: UUID!) {\n    accountFeaturesMaster(query: { accountId: $accountId }) {\n      ...AccountFeatureItem\n    }\n  }\n": typeof types.GetAccountFeaturesMasterDocument,
     "\n  mutation SetAccountFeatureMaster($feature: AccountFeatureDtoInput!) {\n    setAccountFeatureMaster(command: { feature: $feature }) {\n      ...AccountFeatureItem\n    }\n  }\n": typeof types.SetAccountFeatureMasterDocument,
     "\n  fragment AccountItem on AccountVm {\n    accountId\n    name\n    description\n    type\n    typeId\n    status\n    statusId\n    active\n    lastModified\n  }\n": typeof types.AccountItemFragmentDoc,
-    "\n  query GetAccount($id: UUID!) {\n    account(query: { id: $id }) {\n      ...AccountItem\n    }\n  }\n": typeof types.GetAccountDocument,
     "\n  query GetAccountByUser {\n    accountByUser {\n      ...AccountItem\n    }\n  }\n": typeof types.GetAccountByUserDocument,
     "\n  query GetAccounts($skip: Int, $take: Int, $search: String) {\n    accounts(query: { skip: $skip, take: $take, search: $search }) {\n      items {\n        ...AccountItem\n      }\n      totalCount\n    }\n  }\n": typeof types.GetAccountsDocument,
     "\n  mutation CreateAccount($account: AccountDtoInput!) {\n    createAccount(command: { account: $account }) {\n      ...AccountItem\n    }\n  }\n": typeof types.CreateAccountDocument,
@@ -62,12 +61,8 @@ type Documents = {
     "\n  fragment DocumentSignatureFields on DocumentSignatureVm {\n    documentSignatureId\n    documentId\n    accountId\n    signerPrincipalType\n    signerPrincipalId\n    signerName\n    signatureImageDocumentId\n    legalTextAccepted\n    latitude\n    longitude\n    signedAt\n    createdAt\n  }\n": typeof types.DocumentSignatureFieldsFragmentDoc,
     "\n  query GetDocumentsForOwner(\n    $accountId: UUID!\n    $ownerEntityType: String!\n    $ownerEntityId: String!\n    $skip: Int!\n    $take: Int!\n  ) {\n    documentsForOwner(\n      query: {\n        accountId: $accountId\n        ownerEntityType: $ownerEntityType\n        ownerEntityId: $ownerEntityId\n        skip: $skip\n        take: $take\n      }\n    ) {\n      ...DocumentFields\n    }\n  }\n": typeof types.GetDocumentsForOwnerDocument,
     "\n  query GetDocument($documentId: UUID!) {\n    document(query: { documentId: $documentId }) {\n      ...DocumentFields\n    }\n  }\n": typeof types.GetDocumentDocument,
-    "\n  query GetDocumentVersions($documentId: UUID!, $skip: Int!, $take: Int!) {\n    documentVersions(query: { documentId: $documentId, skip: $skip, take: $take }) {\n      ...DocumentVersionFields\n    }\n  }\n": typeof types.GetDocumentVersionsDocument,
-    "\n  query GetDocumentSignatures($documentId: UUID!) {\n    documentSignatures(query: { documentId: $documentId }) {\n      ...DocumentSignatureFields\n    }\n  }\n": typeof types.GetDocumentSignaturesDocument,
-    "\n  query GetActiveDocumentByCategory(\n    $ownerEntityType: String!\n    $ownerEntityId: String!\n    $category: String!\n  ) {\n    activeDocumentByCategory(\n      query: { ownerEntityType: $ownerEntityType, ownerEntityId: $ownerEntityId, category: $category }\n    ) {\n      ...DocumentFields\n    }\n  }\n": typeof types.GetActiveDocumentByCategoryDocument,
     "\n  query SearchDocuments($filter: DocumentSearchFilterInput!, $skip: Int!, $take: Int!) {\n    searchDocuments(query: { filter: $filter, skip: $skip, take: $take }) {\n      ...DocumentFields\n    }\n  }\n": typeof types.SearchDocumentsDocument,
     "\n  query GetExpiringDocuments($withinDays: Int!, $skip: Int!, $take: Int!) {\n    expiringDocuments(query: { withinDays: $withinDays, skip: $skip, take: $take }) {\n      ...DocumentFields\n    }\n  }\n": typeof types.GetExpiringDocumentsDocument,
-    "\n  query GetDocumentShares($documentId: UUID!) {\n    documentShares(query: { documentId: $documentId }) {\n      ...PublicLinkGrantFields\n    }\n  }\n": typeof types.GetDocumentSharesDocument,
     "\n  query GetDocumentTypes($accountId: UUID!, $includeDisabled: Boolean!) {\n    documentTypes(query: { accountId: $accountId, includeDisabled: $includeDisabled }) {\n      ...DocumentTypeFields\n    }\n  }\n": typeof types.GetDocumentTypesDocument,
     "\n  mutation VoidDocument($documentId: UUID!, $reason: String!) {\n    voidDocument(command: { documentId: $documentId, reason: $reason })\n  }\n": typeof types.VoidDocumentDocument,
     "\n  mutation ExpireDocument($documentId: UUID!, $expiresAt: DateTime!) {\n    expireDocument(command: { documentId: $documentId, expiresAt: $expiresAt })\n  }\n": typeof types.ExpireDocumentDocument,
@@ -129,7 +124,6 @@ type Documents = {
     "\n  mutation DeleteNotificationTemplate($notificationTemplateId: UUID!) {\n    deleteNotificationTemplate(command: { notificationTemplateId: $notificationTemplateId })\n  }\n": typeof types.DeleteNotificationTemplateDocument,
     "\n  fragment OperatorDetail on OperatorVm {\n    operatorId\n    name\n    description\n    phoneNumber\n    emailAddress\n    address\n    contactName\n    protocolType\n    protocolTypeId\n    enabled\n    syncIntervalMinutes\n    healthStatus\n    lastSuccessfulSyncAt\n    lastFailedSyncAt\n    lastFailureCode\n    lastLatencyMs\n    lastDeviceSyncAt\n    lastPositionSyncAt\n    lastModified\n  }\n": typeof types.OperatorDetailFragmentDoc,
     "\n  fragment OperatorGps on OperatorVm {\n    operatorId\n    name\n    protocolType\n    enabled\n    lastDeviceSyncAt\n    lastPositionSyncAt\n    syncIntervalMinutes\n  }\n": typeof types.OperatorGpsFragmentDoc,
-    "\n  query GetOperator($id: UUID!) {\n    operator(query: { id: $id }) {\n      ...OperatorDetail\n    }\n  }\n": typeof types.GetOperatorDocument,
     "\n  query GetOperatorsByCurrentAccount($skip: Int, $take: Int, $search: String) {\n    operatorsByCurrentAccount(query: { skip: $skip, take: $take, search: $search }) {\n      items {\n        ...OperatorDetail\n      }\n      totalCount\n    }\n  }\n": typeof types.GetOperatorsByCurrentAccountDocument,
     "\n  query GetOperatorLookup {\n    operatorLookup {\n      operatorId\n      name\n    }\n  }\n": typeof types.GetOperatorLookupDocument,
     "\n  query GetGpsOperators($skip: Int, $take: Int, $search: String) {\n    operatorsByCurrentAccount(query: { skip: $skip, take: $take, search: $search }) {\n      items {\n        ...OperatorGps\n      }\n      totalCount\n    }\n  }\n": typeof types.GetGpsOperatorsDocument,
@@ -153,7 +147,6 @@ type Documents = {
     "\n  fragment CurrentPrincipalItem on CurrentPrincipalVm {\n    subjectId\n    principalType\n    userId\n    driverId\n    clientId\n    publicLinkGrantId\n    role\n    accountId\n    scopes\n    correlationId\n  }\n": typeof types.CurrentPrincipalItemFragmentDoc,
     "\n  query GetCurrentPrincipal {\n    currentPrincipal {\n      ...CurrentPrincipalItem\n    }\n  }\n": typeof types.GetCurrentPrincipalDocument,
     "\n  fragment PublicLinkGrantFields on PublicLinkGrantVm {\n    publicLinkGrantId\n    accountId\n    resourceType\n    resourceId\n    scopes\n    purpose\n    expiresAt\n    revokedAt\n    revokedBy\n    createdByPrincipalId\n    accessCount\n    lastAccessedAt\n    lastModified\n    token\n  }\n": typeof types.PublicLinkGrantFieldsFragmentDoc,
-    "\n  query GetPublicLinkGrant($publicLinkGrantId: UUID!) {\n    publicLinkGrant(query: { publicLinkGrantId: $publicLinkGrantId }) {\n      ...PublicLinkGrantFields\n    }\n  }\n": typeof types.GetPublicLinkGrantDocument,
     "\n  query GetPublicLinkGrantsByAccount($accountId: UUID!, $skip: Int!, $take: Int!) {\n    publicLinkGrantsByAccount(query: { accountId: $accountId, skip: $skip, take: $take }) {\n      ...PublicLinkGrantFields\n    }\n  }\n": typeof types.GetPublicLinkGrantsByAccountDocument,
     "\n  mutation CreatePublicLinkGrant($publicLinkGrant: PublicLinkGrantDtoInput!) {\n    createPublicLinkGrant(command: { publicLinkGrant: $publicLinkGrant }) {\n      ...PublicLinkGrantFields\n    }\n  }\n": typeof types.CreatePublicLinkGrantDocument,
     "\n  mutation RevokePublicLinkGrant($publicLinkGrantId: UUID!, $revokedBy: String!) {\n    revokePublicLinkGrant(command: { publicLinkGrantId: $publicLinkGrantId, revokedBy: $revokedBy })\n  }\n": typeof types.RevokePublicLinkGrantDocument,
@@ -167,15 +160,12 @@ type Documents = {
     "\n  mutation UpdateAccountSettings($id: UUID!, $accountSettings: AccountSettingsDtoInput!) {\n    updateAccountSettings(id: $id, command: { accountSettings: $accountSettings })\n  }\n": typeof types.UpdateAccountSettingsDocument,
     "\n  mutation UpdateUserSettings($id: UUID!, $userSettings: UserSettingsDtoInput!) {\n    updateUserSettings(id: $id, command: { userSettings: $userSettings })\n  }\n": typeof types.UpdateUserSettingsDocument,
     "\n  fragment AccountSupportGrantItem on AccountSupportGrantVm {\n    accountSupportGrantId\n    accountId\n    supportUserId\n    reason\n    ticketReference\n    approvedBy\n    approvedAt\n    accessLevel\n    startsAt\n    endsAt\n    revokedAt\n    revokedBy\n    lastModified\n  }\n": typeof types.AccountSupportGrantItemFragmentDoc,
-    "\n  query GetSupportGrantStatus($accountSupportGrantId: UUID!) {\n    supportGrantStatus(query: { accountSupportGrantId: $accountSupportGrantId }) {\n      ...AccountSupportGrantItem\n    }\n  }\n": typeof types.GetSupportGrantStatusDocument,
     "\n  query GetAccountSupportGrants($accountId: UUID, $skip: Int!, $take: Int!) {\n    accountSupportGrants(query: { accountId: $accountId, skip: $skip, take: $take }) {\n      ...AccountSupportGrantItem\n    }\n  }\n": typeof types.GetAccountSupportGrantsDocument,
     "\n  mutation CreateAccountSupportGrant($accountSupportGrant: AccountSupportGrantDtoInput!) {\n    createAccountSupportGrant(command: { accountSupportGrant: $accountSupportGrant }) {\n      ...AccountSupportGrantItem\n    }\n  }\n": typeof types.CreateAccountSupportGrantDocument,
     "\n  mutation ApproveAccountSupportGrant($accountSupportGrantId: UUID!, $approvedBy: String!) {\n    approveAccountSupportGrant(\n      command: { accountSupportGrantId: $accountSupportGrantId, approvedBy: $approvedBy }\n    )\n  }\n": typeof types.ApproveAccountSupportGrantDocument,
     "\n  mutation RevokeAccountSupportGrant($accountSupportGrantId: UUID!, $revokedBy: String!) {\n    revokeAccountSupportGrant(\n      command: { accountSupportGrantId: $accountSupportGrantId, revokedBy: $revokedBy }\n    )\n  }\n": typeof types.RevokeAccountSupportGrantDocument,
     "\n  fragment TransporterItem on TransporterVm {\n    transporterId\n    name\n    transporterType\n    transporterTypeId\n  }\n": typeof types.TransporterItemFragmentDoc,
-    "\n  query GetTransporter($id: UUID!) {\n    transporter(query: { id: $id }) {\n      ...TransporterItem\n    }\n  }\n": typeof types.GetTransporterDocument,
     "\n  query GetTransportersByAccount($skip: Int, $take: Int, $search: String) {\n    transportersByAccount(query: { skip: $skip, take: $take, search: $search }) {\n      items {\n        ...TransporterItem\n      }\n      totalCount\n    }\n  }\n": typeof types.GetTransportersByAccountDocument,
-    "\n  query GetTransportersByUser($skip: Int, $take: Int, $search: String) {\n    transportersByUser(query: { skip: $skip, take: $take, search: $search }) {\n      items {\n        ...TransporterItem\n      }\n      totalCount\n    }\n  }\n": typeof types.GetTransportersByUserDocument,
     "\n  query GetTransportersByGroup($groupId: Long!, $skip: Int, $take: Int, $search: String) {\n    transportersByGroup(\n      query: { groupId: $groupId, skip: $skip, take: $take, search: $search }\n    ) {\n      items {\n        ...TransporterItem\n      }\n      totalCount\n    }\n  }\n": typeof types.GetTransportersByGroupDocument,
     "\n  query GetTransporterLookupByAccount {\n    transporterLookupByAccount {\n      transporterId\n      name\n      transporterType\n      transporterTypeId\n    }\n  }\n": typeof types.GetTransporterLookupByAccountDocument,
     "\n  query GetTransporterLookupByUser {\n    transporterLookupByUser {\n      transporterId\n      name\n      transporterType\n      transporterTypeId\n    }\n  }\n": typeof types.GetTransporterLookupByUserDocument,
@@ -184,7 +174,6 @@ type Documents = {
     "\n  mutation DeleteTransporter($id: UUID!) {\n    deleteTransporter(id: $id)\n  }\n": typeof types.DeleteTransporterDocument,
     "\n  fragment AssignmentFields on TransporterDeviceAssignmentVm {\n    transporterDeviceAssignmentId\n    accountId\n    transporterId\n    deviceId\n    effectiveFrom\n    effectiveTo\n    priority\n    isPrimary\n    status\n    assignmentReason\n  }\n": typeof types.AssignmentFieldsFragmentDoc,
     "\n  query GetTransporterDeviceAssignmentsByAccount(\n    $accountId: UUID!\n    $activeOnly: Boolean!\n    $skip: Int\n    $take: Int\n  ) {\n    transporterDeviceAssignmentsByAccount(\n      query: { accountId: $accountId, activeOnly: $activeOnly, skip: $skip, take: $take }\n    ) {\n      items {\n        ...AssignmentFields\n        createdByPrincipalType\n        createdByPrincipalId\n      }\n      totalCount\n    }\n  }\n": typeof types.GetTransporterDeviceAssignmentsByAccountDocument,
-    "\n  query GetTransporterDeviceAssignmentsByTransporter(\n    $transporterId: UUID!\n    $activeOnly: Boolean!\n    $skip: Int\n    $take: Int\n  ) {\n    transporterDeviceAssignmentsByTransporter(\n      query: { transporterId: $transporterId, activeOnly: $activeOnly, skip: $skip, take: $take }\n    ) {\n      items {\n        ...AssignmentFields\n      }\n      totalCount\n    }\n  }\n": typeof types.GetTransporterDeviceAssignmentsByTransporterDocument,
     "\n  mutation AssignDeviceToTransporter($assignment: TransporterDeviceAssignmentDtoInput!) {\n    assignDeviceToTransporter(command: { assignment: $assignment }) {\n      transporterDeviceAssignmentId\n      deviceId\n      transporterId\n      effectiveFrom\n      isPrimary\n      status\n    }\n  }\n": typeof types.AssignDeviceToTransporterDocument,
     "\n  mutation EndDeviceTransporterAssignment($assignmentId: UUID!, $reason: String) {\n    endDeviceTransporterAssignment(command: { assignmentId: $assignmentId, reason: $reason })\n  }\n": typeof types.EndDeviceTransporterAssignmentDocument,
     "\n  fragment TransporterTypeItem on TransporterTypeVm {\n    transporterTypeId\n    accBased\n    stoppedGap\n    maxDistance\n    maxTimeGap\n    type\n  }\n": typeof types.TransporterTypeItemFragmentDoc,
@@ -198,7 +187,6 @@ const documents: Documents = {
     "\n  query GetAccountFeaturesMaster($accountId: UUID!) {\n    accountFeaturesMaster(query: { accountId: $accountId }) {\n      ...AccountFeatureItem\n    }\n  }\n": types.GetAccountFeaturesMasterDocument,
     "\n  mutation SetAccountFeatureMaster($feature: AccountFeatureDtoInput!) {\n    setAccountFeatureMaster(command: { feature: $feature }) {\n      ...AccountFeatureItem\n    }\n  }\n": types.SetAccountFeatureMasterDocument,
     "\n  fragment AccountItem on AccountVm {\n    accountId\n    name\n    description\n    type\n    typeId\n    status\n    statusId\n    active\n    lastModified\n  }\n": types.AccountItemFragmentDoc,
-    "\n  query GetAccount($id: UUID!) {\n    account(query: { id: $id }) {\n      ...AccountItem\n    }\n  }\n": types.GetAccountDocument,
     "\n  query GetAccountByUser {\n    accountByUser {\n      ...AccountItem\n    }\n  }\n": types.GetAccountByUserDocument,
     "\n  query GetAccounts($skip: Int, $take: Int, $search: String) {\n    accounts(query: { skip: $skip, take: $take, search: $search }) {\n      items {\n        ...AccountItem\n      }\n      totalCount\n    }\n  }\n": types.GetAccountsDocument,
     "\n  mutation CreateAccount($account: AccountDtoInput!) {\n    createAccount(command: { account: $account }) {\n      ...AccountItem\n    }\n  }\n": types.CreateAccountDocument,
@@ -240,12 +228,8 @@ const documents: Documents = {
     "\n  fragment DocumentSignatureFields on DocumentSignatureVm {\n    documentSignatureId\n    documentId\n    accountId\n    signerPrincipalType\n    signerPrincipalId\n    signerName\n    signatureImageDocumentId\n    legalTextAccepted\n    latitude\n    longitude\n    signedAt\n    createdAt\n  }\n": types.DocumentSignatureFieldsFragmentDoc,
     "\n  query GetDocumentsForOwner(\n    $accountId: UUID!\n    $ownerEntityType: String!\n    $ownerEntityId: String!\n    $skip: Int!\n    $take: Int!\n  ) {\n    documentsForOwner(\n      query: {\n        accountId: $accountId\n        ownerEntityType: $ownerEntityType\n        ownerEntityId: $ownerEntityId\n        skip: $skip\n        take: $take\n      }\n    ) {\n      ...DocumentFields\n    }\n  }\n": types.GetDocumentsForOwnerDocument,
     "\n  query GetDocument($documentId: UUID!) {\n    document(query: { documentId: $documentId }) {\n      ...DocumentFields\n    }\n  }\n": types.GetDocumentDocument,
-    "\n  query GetDocumentVersions($documentId: UUID!, $skip: Int!, $take: Int!) {\n    documentVersions(query: { documentId: $documentId, skip: $skip, take: $take }) {\n      ...DocumentVersionFields\n    }\n  }\n": types.GetDocumentVersionsDocument,
-    "\n  query GetDocumentSignatures($documentId: UUID!) {\n    documentSignatures(query: { documentId: $documentId }) {\n      ...DocumentSignatureFields\n    }\n  }\n": types.GetDocumentSignaturesDocument,
-    "\n  query GetActiveDocumentByCategory(\n    $ownerEntityType: String!\n    $ownerEntityId: String!\n    $category: String!\n  ) {\n    activeDocumentByCategory(\n      query: { ownerEntityType: $ownerEntityType, ownerEntityId: $ownerEntityId, category: $category }\n    ) {\n      ...DocumentFields\n    }\n  }\n": types.GetActiveDocumentByCategoryDocument,
     "\n  query SearchDocuments($filter: DocumentSearchFilterInput!, $skip: Int!, $take: Int!) {\n    searchDocuments(query: { filter: $filter, skip: $skip, take: $take }) {\n      ...DocumentFields\n    }\n  }\n": types.SearchDocumentsDocument,
     "\n  query GetExpiringDocuments($withinDays: Int!, $skip: Int!, $take: Int!) {\n    expiringDocuments(query: { withinDays: $withinDays, skip: $skip, take: $take }) {\n      ...DocumentFields\n    }\n  }\n": types.GetExpiringDocumentsDocument,
-    "\n  query GetDocumentShares($documentId: UUID!) {\n    documentShares(query: { documentId: $documentId }) {\n      ...PublicLinkGrantFields\n    }\n  }\n": types.GetDocumentSharesDocument,
     "\n  query GetDocumentTypes($accountId: UUID!, $includeDisabled: Boolean!) {\n    documentTypes(query: { accountId: $accountId, includeDisabled: $includeDisabled }) {\n      ...DocumentTypeFields\n    }\n  }\n": types.GetDocumentTypesDocument,
     "\n  mutation VoidDocument($documentId: UUID!, $reason: String!) {\n    voidDocument(command: { documentId: $documentId, reason: $reason })\n  }\n": types.VoidDocumentDocument,
     "\n  mutation ExpireDocument($documentId: UUID!, $expiresAt: DateTime!) {\n    expireDocument(command: { documentId: $documentId, expiresAt: $expiresAt })\n  }\n": types.ExpireDocumentDocument,
@@ -307,7 +291,6 @@ const documents: Documents = {
     "\n  mutation DeleteNotificationTemplate($notificationTemplateId: UUID!) {\n    deleteNotificationTemplate(command: { notificationTemplateId: $notificationTemplateId })\n  }\n": types.DeleteNotificationTemplateDocument,
     "\n  fragment OperatorDetail on OperatorVm {\n    operatorId\n    name\n    description\n    phoneNumber\n    emailAddress\n    address\n    contactName\n    protocolType\n    protocolTypeId\n    enabled\n    syncIntervalMinutes\n    healthStatus\n    lastSuccessfulSyncAt\n    lastFailedSyncAt\n    lastFailureCode\n    lastLatencyMs\n    lastDeviceSyncAt\n    lastPositionSyncAt\n    lastModified\n  }\n": types.OperatorDetailFragmentDoc,
     "\n  fragment OperatorGps on OperatorVm {\n    operatorId\n    name\n    protocolType\n    enabled\n    lastDeviceSyncAt\n    lastPositionSyncAt\n    syncIntervalMinutes\n  }\n": types.OperatorGpsFragmentDoc,
-    "\n  query GetOperator($id: UUID!) {\n    operator(query: { id: $id }) {\n      ...OperatorDetail\n    }\n  }\n": types.GetOperatorDocument,
     "\n  query GetOperatorsByCurrentAccount($skip: Int, $take: Int, $search: String) {\n    operatorsByCurrentAccount(query: { skip: $skip, take: $take, search: $search }) {\n      items {\n        ...OperatorDetail\n      }\n      totalCount\n    }\n  }\n": types.GetOperatorsByCurrentAccountDocument,
     "\n  query GetOperatorLookup {\n    operatorLookup {\n      operatorId\n      name\n    }\n  }\n": types.GetOperatorLookupDocument,
     "\n  query GetGpsOperators($skip: Int, $take: Int, $search: String) {\n    operatorsByCurrentAccount(query: { skip: $skip, take: $take, search: $search }) {\n      items {\n        ...OperatorGps\n      }\n      totalCount\n    }\n  }\n": types.GetGpsOperatorsDocument,
@@ -331,7 +314,6 @@ const documents: Documents = {
     "\n  fragment CurrentPrincipalItem on CurrentPrincipalVm {\n    subjectId\n    principalType\n    userId\n    driverId\n    clientId\n    publicLinkGrantId\n    role\n    accountId\n    scopes\n    correlationId\n  }\n": types.CurrentPrincipalItemFragmentDoc,
     "\n  query GetCurrentPrincipal {\n    currentPrincipal {\n      ...CurrentPrincipalItem\n    }\n  }\n": types.GetCurrentPrincipalDocument,
     "\n  fragment PublicLinkGrantFields on PublicLinkGrantVm {\n    publicLinkGrantId\n    accountId\n    resourceType\n    resourceId\n    scopes\n    purpose\n    expiresAt\n    revokedAt\n    revokedBy\n    createdByPrincipalId\n    accessCount\n    lastAccessedAt\n    lastModified\n    token\n  }\n": types.PublicLinkGrantFieldsFragmentDoc,
-    "\n  query GetPublicLinkGrant($publicLinkGrantId: UUID!) {\n    publicLinkGrant(query: { publicLinkGrantId: $publicLinkGrantId }) {\n      ...PublicLinkGrantFields\n    }\n  }\n": types.GetPublicLinkGrantDocument,
     "\n  query GetPublicLinkGrantsByAccount($accountId: UUID!, $skip: Int!, $take: Int!) {\n    publicLinkGrantsByAccount(query: { accountId: $accountId, skip: $skip, take: $take }) {\n      ...PublicLinkGrantFields\n    }\n  }\n": types.GetPublicLinkGrantsByAccountDocument,
     "\n  mutation CreatePublicLinkGrant($publicLinkGrant: PublicLinkGrantDtoInput!) {\n    createPublicLinkGrant(command: { publicLinkGrant: $publicLinkGrant }) {\n      ...PublicLinkGrantFields\n    }\n  }\n": types.CreatePublicLinkGrantDocument,
     "\n  mutation RevokePublicLinkGrant($publicLinkGrantId: UUID!, $revokedBy: String!) {\n    revokePublicLinkGrant(command: { publicLinkGrantId: $publicLinkGrantId, revokedBy: $revokedBy })\n  }\n": types.RevokePublicLinkGrantDocument,
@@ -345,15 +327,12 @@ const documents: Documents = {
     "\n  mutation UpdateAccountSettings($id: UUID!, $accountSettings: AccountSettingsDtoInput!) {\n    updateAccountSettings(id: $id, command: { accountSettings: $accountSettings })\n  }\n": types.UpdateAccountSettingsDocument,
     "\n  mutation UpdateUserSettings($id: UUID!, $userSettings: UserSettingsDtoInput!) {\n    updateUserSettings(id: $id, command: { userSettings: $userSettings })\n  }\n": types.UpdateUserSettingsDocument,
     "\n  fragment AccountSupportGrantItem on AccountSupportGrantVm {\n    accountSupportGrantId\n    accountId\n    supportUserId\n    reason\n    ticketReference\n    approvedBy\n    approvedAt\n    accessLevel\n    startsAt\n    endsAt\n    revokedAt\n    revokedBy\n    lastModified\n  }\n": types.AccountSupportGrantItemFragmentDoc,
-    "\n  query GetSupportGrantStatus($accountSupportGrantId: UUID!) {\n    supportGrantStatus(query: { accountSupportGrantId: $accountSupportGrantId }) {\n      ...AccountSupportGrantItem\n    }\n  }\n": types.GetSupportGrantStatusDocument,
     "\n  query GetAccountSupportGrants($accountId: UUID, $skip: Int!, $take: Int!) {\n    accountSupportGrants(query: { accountId: $accountId, skip: $skip, take: $take }) {\n      ...AccountSupportGrantItem\n    }\n  }\n": types.GetAccountSupportGrantsDocument,
     "\n  mutation CreateAccountSupportGrant($accountSupportGrant: AccountSupportGrantDtoInput!) {\n    createAccountSupportGrant(command: { accountSupportGrant: $accountSupportGrant }) {\n      ...AccountSupportGrantItem\n    }\n  }\n": types.CreateAccountSupportGrantDocument,
     "\n  mutation ApproveAccountSupportGrant($accountSupportGrantId: UUID!, $approvedBy: String!) {\n    approveAccountSupportGrant(\n      command: { accountSupportGrantId: $accountSupportGrantId, approvedBy: $approvedBy }\n    )\n  }\n": types.ApproveAccountSupportGrantDocument,
     "\n  mutation RevokeAccountSupportGrant($accountSupportGrantId: UUID!, $revokedBy: String!) {\n    revokeAccountSupportGrant(\n      command: { accountSupportGrantId: $accountSupportGrantId, revokedBy: $revokedBy }\n    )\n  }\n": types.RevokeAccountSupportGrantDocument,
     "\n  fragment TransporterItem on TransporterVm {\n    transporterId\n    name\n    transporterType\n    transporterTypeId\n  }\n": types.TransporterItemFragmentDoc,
-    "\n  query GetTransporter($id: UUID!) {\n    transporter(query: { id: $id }) {\n      ...TransporterItem\n    }\n  }\n": types.GetTransporterDocument,
     "\n  query GetTransportersByAccount($skip: Int, $take: Int, $search: String) {\n    transportersByAccount(query: { skip: $skip, take: $take, search: $search }) {\n      items {\n        ...TransporterItem\n      }\n      totalCount\n    }\n  }\n": types.GetTransportersByAccountDocument,
-    "\n  query GetTransportersByUser($skip: Int, $take: Int, $search: String) {\n    transportersByUser(query: { skip: $skip, take: $take, search: $search }) {\n      items {\n        ...TransporterItem\n      }\n      totalCount\n    }\n  }\n": types.GetTransportersByUserDocument,
     "\n  query GetTransportersByGroup($groupId: Long!, $skip: Int, $take: Int, $search: String) {\n    transportersByGroup(\n      query: { groupId: $groupId, skip: $skip, take: $take, search: $search }\n    ) {\n      items {\n        ...TransporterItem\n      }\n      totalCount\n    }\n  }\n": types.GetTransportersByGroupDocument,
     "\n  query GetTransporterLookupByAccount {\n    transporterLookupByAccount {\n      transporterId\n      name\n      transporterType\n      transporterTypeId\n    }\n  }\n": types.GetTransporterLookupByAccountDocument,
     "\n  query GetTransporterLookupByUser {\n    transporterLookupByUser {\n      transporterId\n      name\n      transporterType\n      transporterTypeId\n    }\n  }\n": types.GetTransporterLookupByUserDocument,
@@ -362,7 +341,6 @@ const documents: Documents = {
     "\n  mutation DeleteTransporter($id: UUID!) {\n    deleteTransporter(id: $id)\n  }\n": types.DeleteTransporterDocument,
     "\n  fragment AssignmentFields on TransporterDeviceAssignmentVm {\n    transporterDeviceAssignmentId\n    accountId\n    transporterId\n    deviceId\n    effectiveFrom\n    effectiveTo\n    priority\n    isPrimary\n    status\n    assignmentReason\n  }\n": types.AssignmentFieldsFragmentDoc,
     "\n  query GetTransporterDeviceAssignmentsByAccount(\n    $accountId: UUID!\n    $activeOnly: Boolean!\n    $skip: Int\n    $take: Int\n  ) {\n    transporterDeviceAssignmentsByAccount(\n      query: { accountId: $accountId, activeOnly: $activeOnly, skip: $skip, take: $take }\n    ) {\n      items {\n        ...AssignmentFields\n        createdByPrincipalType\n        createdByPrincipalId\n      }\n      totalCount\n    }\n  }\n": types.GetTransporterDeviceAssignmentsByAccountDocument,
-    "\n  query GetTransporterDeviceAssignmentsByTransporter(\n    $transporterId: UUID!\n    $activeOnly: Boolean!\n    $skip: Int\n    $take: Int\n  ) {\n    transporterDeviceAssignmentsByTransporter(\n      query: { transporterId: $transporterId, activeOnly: $activeOnly, skip: $skip, take: $take }\n    ) {\n      items {\n        ...AssignmentFields\n      }\n      totalCount\n    }\n  }\n": types.GetTransporterDeviceAssignmentsByTransporterDocument,
     "\n  mutation AssignDeviceToTransporter($assignment: TransporterDeviceAssignmentDtoInput!) {\n    assignDeviceToTransporter(command: { assignment: $assignment }) {\n      transporterDeviceAssignmentId\n      deviceId\n      transporterId\n      effectiveFrom\n      isPrimary\n      status\n    }\n  }\n": types.AssignDeviceToTransporterDocument,
     "\n  mutation EndDeviceTransporterAssignment($assignmentId: UUID!, $reason: String) {\n    endDeviceTransporterAssignment(command: { assignmentId: $assignmentId, reason: $reason })\n  }\n": types.EndDeviceTransporterAssignmentDocument,
     "\n  fragment TransporterTypeItem on TransporterTypeVm {\n    transporterTypeId\n    accBased\n    stoppedGap\n    maxDistance\n    maxTimeGap\n    type\n  }\n": types.TransporterTypeItemFragmentDoc,
@@ -408,10 +386,6 @@ export function graphql(source: "\n  mutation SetAccountFeatureMaster($feature: 
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  fragment AccountItem on AccountVm {\n    accountId\n    name\n    description\n    type\n    typeId\n    status\n    statusId\n    active\n    lastModified\n  }\n"): (typeof documents)["\n  fragment AccountItem on AccountVm {\n    accountId\n    name\n    description\n    type\n    typeId\n    status\n    statusId\n    active\n    lastModified\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  query GetAccount($id: UUID!) {\n    account(query: { id: $id }) {\n      ...AccountItem\n    }\n  }\n"): (typeof documents)["\n  query GetAccount($id: UUID!) {\n    account(query: { id: $id }) {\n      ...AccountItem\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -579,27 +553,11 @@ export function graphql(source: "\n  query GetDocument($documentId: UUID!) {\n  
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query GetDocumentVersions($documentId: UUID!, $skip: Int!, $take: Int!) {\n    documentVersions(query: { documentId: $documentId, skip: $skip, take: $take }) {\n      ...DocumentVersionFields\n    }\n  }\n"): (typeof documents)["\n  query GetDocumentVersions($documentId: UUID!, $skip: Int!, $take: Int!) {\n    documentVersions(query: { documentId: $documentId, skip: $skip, take: $take }) {\n      ...DocumentVersionFields\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  query GetDocumentSignatures($documentId: UUID!) {\n    documentSignatures(query: { documentId: $documentId }) {\n      ...DocumentSignatureFields\n    }\n  }\n"): (typeof documents)["\n  query GetDocumentSignatures($documentId: UUID!) {\n    documentSignatures(query: { documentId: $documentId }) {\n      ...DocumentSignatureFields\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  query GetActiveDocumentByCategory(\n    $ownerEntityType: String!\n    $ownerEntityId: String!\n    $category: String!\n  ) {\n    activeDocumentByCategory(\n      query: { ownerEntityType: $ownerEntityType, ownerEntityId: $ownerEntityId, category: $category }\n    ) {\n      ...DocumentFields\n    }\n  }\n"): (typeof documents)["\n  query GetActiveDocumentByCategory(\n    $ownerEntityType: String!\n    $ownerEntityId: String!\n    $category: String!\n  ) {\n    activeDocumentByCategory(\n      query: { ownerEntityType: $ownerEntityType, ownerEntityId: $ownerEntityId, category: $category }\n    ) {\n      ...DocumentFields\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
 export function graphql(source: "\n  query SearchDocuments($filter: DocumentSearchFilterInput!, $skip: Int!, $take: Int!) {\n    searchDocuments(query: { filter: $filter, skip: $skip, take: $take }) {\n      ...DocumentFields\n    }\n  }\n"): (typeof documents)["\n  query SearchDocuments($filter: DocumentSearchFilterInput!, $skip: Int!, $take: Int!) {\n    searchDocuments(query: { filter: $filter, skip: $skip, take: $take }) {\n      ...DocumentFields\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query GetExpiringDocuments($withinDays: Int!, $skip: Int!, $take: Int!) {\n    expiringDocuments(query: { withinDays: $withinDays, skip: $skip, take: $take }) {\n      ...DocumentFields\n    }\n  }\n"): (typeof documents)["\n  query GetExpiringDocuments($withinDays: Int!, $skip: Int!, $take: Int!) {\n    expiringDocuments(query: { withinDays: $withinDays, skip: $skip, take: $take }) {\n      ...DocumentFields\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  query GetDocumentShares($documentId: UUID!) {\n    documentShares(query: { documentId: $documentId }) {\n      ...PublicLinkGrantFields\n    }\n  }\n"): (typeof documents)["\n  query GetDocumentShares($documentId: UUID!) {\n    documentShares(query: { documentId: $documentId }) {\n      ...PublicLinkGrantFields\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -847,10 +805,6 @@ export function graphql(source: "\n  fragment OperatorGps on OperatorVm {\n    o
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query GetOperator($id: UUID!) {\n    operator(query: { id: $id }) {\n      ...OperatorDetail\n    }\n  }\n"): (typeof documents)["\n  query GetOperator($id: UUID!) {\n    operator(query: { id: $id }) {\n      ...OperatorDetail\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
 export function graphql(source: "\n  query GetOperatorsByCurrentAccount($skip: Int, $take: Int, $search: String) {\n    operatorsByCurrentAccount(query: { skip: $skip, take: $take, search: $search }) {\n      items {\n        ...OperatorDetail\n      }\n      totalCount\n    }\n  }\n"): (typeof documents)["\n  query GetOperatorsByCurrentAccount($skip: Int, $take: Int, $search: String) {\n    operatorsByCurrentAccount(query: { skip: $skip, take: $take, search: $search }) {\n      items {\n        ...OperatorDetail\n      }\n      totalCount\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
@@ -943,10 +897,6 @@ export function graphql(source: "\n  fragment PublicLinkGrantFields on PublicLin
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query GetPublicLinkGrant($publicLinkGrantId: UUID!) {\n    publicLinkGrant(query: { publicLinkGrantId: $publicLinkGrantId }) {\n      ...PublicLinkGrantFields\n    }\n  }\n"): (typeof documents)["\n  query GetPublicLinkGrant($publicLinkGrantId: UUID!) {\n    publicLinkGrant(query: { publicLinkGrantId: $publicLinkGrantId }) {\n      ...PublicLinkGrantFields\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
 export function graphql(source: "\n  query GetPublicLinkGrantsByAccount($accountId: UUID!, $skip: Int!, $take: Int!) {\n    publicLinkGrantsByAccount(query: { accountId: $accountId, skip: $skip, take: $take }) {\n      ...PublicLinkGrantFields\n    }\n  }\n"): (typeof documents)["\n  query GetPublicLinkGrantsByAccount($accountId: UUID!, $skip: Int!, $take: Int!) {\n    publicLinkGrantsByAccount(query: { accountId: $accountId, skip: $skip, take: $take }) {\n      ...PublicLinkGrantFields\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
@@ -999,10 +949,6 @@ export function graphql(source: "\n  fragment AccountSupportGrantItem on Account
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query GetSupportGrantStatus($accountSupportGrantId: UUID!) {\n    supportGrantStatus(query: { accountSupportGrantId: $accountSupportGrantId }) {\n      ...AccountSupportGrantItem\n    }\n  }\n"): (typeof documents)["\n  query GetSupportGrantStatus($accountSupportGrantId: UUID!) {\n    supportGrantStatus(query: { accountSupportGrantId: $accountSupportGrantId }) {\n      ...AccountSupportGrantItem\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
 export function graphql(source: "\n  query GetAccountSupportGrants($accountId: UUID, $skip: Int!, $take: Int!) {\n    accountSupportGrants(query: { accountId: $accountId, skip: $skip, take: $take }) {\n      ...AccountSupportGrantItem\n    }\n  }\n"): (typeof documents)["\n  query GetAccountSupportGrants($accountId: UUID, $skip: Int!, $take: Int!) {\n    accountSupportGrants(query: { accountId: $accountId, skip: $skip, take: $take }) {\n      ...AccountSupportGrantItem\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
@@ -1023,15 +969,7 @@ export function graphql(source: "\n  fragment TransporterItem on TransporterVm {
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query GetTransporter($id: UUID!) {\n    transporter(query: { id: $id }) {\n      ...TransporterItem\n    }\n  }\n"): (typeof documents)["\n  query GetTransporter($id: UUID!) {\n    transporter(query: { id: $id }) {\n      ...TransporterItem\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
 export function graphql(source: "\n  query GetTransportersByAccount($skip: Int, $take: Int, $search: String) {\n    transportersByAccount(query: { skip: $skip, take: $take, search: $search }) {\n      items {\n        ...TransporterItem\n      }\n      totalCount\n    }\n  }\n"): (typeof documents)["\n  query GetTransportersByAccount($skip: Int, $take: Int, $search: String) {\n    transportersByAccount(query: { skip: $skip, take: $take, search: $search }) {\n      items {\n        ...TransporterItem\n      }\n      totalCount\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  query GetTransportersByUser($skip: Int, $take: Int, $search: String) {\n    transportersByUser(query: { skip: $skip, take: $take, search: $search }) {\n      items {\n        ...TransporterItem\n      }\n      totalCount\n    }\n  }\n"): (typeof documents)["\n  query GetTransportersByUser($skip: Int, $take: Int, $search: String) {\n    transportersByUser(query: { skip: $skip, take: $take, search: $search }) {\n      items {\n        ...TransporterItem\n      }\n      totalCount\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -1064,10 +1002,6 @@ export function graphql(source: "\n  fragment AssignmentFields on TransporterDev
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query GetTransporterDeviceAssignmentsByAccount(\n    $accountId: UUID!\n    $activeOnly: Boolean!\n    $skip: Int\n    $take: Int\n  ) {\n    transporterDeviceAssignmentsByAccount(\n      query: { accountId: $accountId, activeOnly: $activeOnly, skip: $skip, take: $take }\n    ) {\n      items {\n        ...AssignmentFields\n        createdByPrincipalType\n        createdByPrincipalId\n      }\n      totalCount\n    }\n  }\n"): (typeof documents)["\n  query GetTransporterDeviceAssignmentsByAccount(\n    $accountId: UUID!\n    $activeOnly: Boolean!\n    $skip: Int\n    $take: Int\n  ) {\n    transporterDeviceAssignmentsByAccount(\n      query: { accountId: $accountId, activeOnly: $activeOnly, skip: $skip, take: $take }\n    ) {\n      items {\n        ...AssignmentFields\n        createdByPrincipalType\n        createdByPrincipalId\n      }\n      totalCount\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  query GetTransporterDeviceAssignmentsByTransporter(\n    $transporterId: UUID!\n    $activeOnly: Boolean!\n    $skip: Int\n    $take: Int\n  ) {\n    transporterDeviceAssignmentsByTransporter(\n      query: { transporterId: $transporterId, activeOnly: $activeOnly, skip: $skip, take: $take }\n    ) {\n      items {\n        ...AssignmentFields\n      }\n      totalCount\n    }\n  }\n"): (typeof documents)["\n  query GetTransporterDeviceAssignmentsByTransporter(\n    $transporterId: UUID!\n    $activeOnly: Boolean!\n    $skip: Int\n    $take: Int\n  ) {\n    transporterDeviceAssignmentsByTransporter(\n      query: { transporterId: $transporterId, activeOnly: $activeOnly, skip: $skip, take: $take }\n    ) {\n      items {\n        ...AssignmentFields\n      }\n      totalCount\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

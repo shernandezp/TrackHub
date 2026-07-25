@@ -42,14 +42,6 @@ export const AccountItemFragment = graphql(`
   }
 `);
 
-export const GetAccountDocument = graphql(`
-  query GetAccount($id: UUID!) {
-    account(query: { id: $id }) {
-      ...AccountItem
-    }
-  }
-`);
-
 export const GetAccountByUserDocument = graphql(`
   query GetAccountByUser {
     accountByUser {

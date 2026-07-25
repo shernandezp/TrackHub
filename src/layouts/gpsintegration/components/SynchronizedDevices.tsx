@@ -223,7 +223,7 @@ function ManageSynchronizedDevices() {
                   filters are server arguments now, so hiding them would strand
                   the user on a search that matched nothing. */}
               <ArgonBox mb={1}>
-                <Grid container spacing={1} alignItems="center">
+                <Grid container spacing={1} sx={{ alignItems: "center" }}>
                   <Grid size={{ xs: 12, lg: 4 }}>
                     <TextField
                       fullWidth

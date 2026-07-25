@@ -16,6 +16,9 @@
 
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
+// Must follow the vendor sheets above — it pins the cluster count colour they leave
+// inheriting from the page (invisible under the dark theme).
+import 'controls/Maps/css/markerCluster.css';
 import { formatDateTime } from "utils/dateUtils";
 import { escapeHtml } from 'utils/htmlUtils';
 

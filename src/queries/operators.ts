@@ -87,14 +87,6 @@ export function useGpsOperators(options: { enabled?: boolean } = {}) {
   });
 }
 
-export function useOperator(operatorId: string | undefined) {
-  return useQuery({
-    queryKey: operatorKeys.detail(operatorId ?? ''),
-    queryFn: () => managerApi.getOperator(operatorId as string),
-    enabled: !!operatorId,
-  });
-}
-
 // --- Manager mutations ---------------------------------------------------
 
 export function useCreateOperator() {
@@ -159,21 +151,5 @@ export function useOperatorSyncRuns(
     queryKey: operatorTelemetryKeys.syncRuns(accountId, operatorId, take),
     queryFn: () => telemetryApi.getOperatorSyncRuns(accountId, operatorId, take),
     enabled: (options.enabled ?? true) && !!accountId,
-  });
-}
-
-export function useOperatorHealth(operatorId: string | undefined) {
-  return useQuery({
-    queryKey: operatorTelemetryKeys.health(operatorId ?? ''),
-    queryFn: () => telemetryApi.getOperatorHealth(operatorId as string),
-    enabled: !!operatorId,
-  });
-}
-
-export function useOperatorHealthHistory(operatorId: string | undefined, take = 50) {
-  return useQuery({
-    queryKey: operatorTelemetryKeys.healthHistory(operatorId ?? '', take),
-    queryFn: () => telemetryApi.getOperatorHealthHistory(operatorId as string, take),
-    enabled: !!operatorId,
   });
 }

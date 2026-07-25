@@ -61,14 +61,6 @@ export const OperatorGpsFragment = graphql(`
   }
 `);
 
-export const GetOperatorDocument = graphql(`
-  query GetOperator($id: UUID!) {
-    operator(query: { id: $id }) {
-      ...OperatorDetail
-    }
-  }
-`);
-
 export const GetOperatorsByCurrentAccountDocument = graphql(`
   query GetOperatorsByCurrentAccount($skip: Int, $take: Int, $search: String) {
     operatorsByCurrentAccount(query: { skip: $skip, take: $take, search: $search }) {

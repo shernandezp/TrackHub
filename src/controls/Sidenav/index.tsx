@@ -32,8 +32,8 @@ Coded by www.creative-tim.com
 import { useEffect } from "react";
 import type { MouseEventHandler, ReactNode } from "react";
 
-// react-router-dom components
-import { useLocation, NavLink } from "react-router-dom";
+// react-router components
+import { useLocation, NavLink } from "react-router";
 
 // @mui material components
 import List from "@mui/material/List";
@@ -156,7 +156,7 @@ function Sidenav({
           </ArgonTypography>
         );
       } else if (type === "divider") {
-        returnValue = <Divider key={key} light={darkSidenav} />;
+        returnValue = <Divider key={key} className={darkSidenav ? "divider-light" : undefined} />;
       }
 
       if (key === "systemAdmin" && !isAdmin) {
@@ -204,7 +204,7 @@ function Sidenav({
           </ArgonBox>
         </ArgonBox>
       </ArgonBox>
-      <Divider light={darkSidenav} />
+      <Divider className={darkSidenav ? "divider-light" : undefined} />
       <List>{renderRoutes}</List>
     </SidenavRoot>
   );

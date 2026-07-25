@@ -276,7 +276,7 @@ function ManageDriverAssignments() {
       >
         {/* Assign form */}
         <ArgonBox mb={2}>
-          <Grid container spacing={1} alignItems="center">
+          <Grid container spacing={1} sx={{ alignItems: "center" }}>
             <Grid size={{ xs: 12, md: 4 }}>
               <DriverPicker
                 id="assignDriverId"
@@ -357,7 +357,7 @@ function ManageDriverAssignments() {
           </ArgonTypography>
         </ArgonBox>
         <ArgonBox mb={2}>
-          <Grid container spacing={1} alignItems="flex-end">
+          <Grid container spacing={1} sx={{ alignItems: "flex-end" }}>
             <Grid size={{ xs: 12, md: 3 }}>
               <DriverPicker
                 id="filterDriverId"

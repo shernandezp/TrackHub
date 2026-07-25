@@ -440,7 +440,7 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
 
   return (
     <ArgonBox py={1}>
-        <Grid container spacing={3} mb={1}>
+        <Grid container spacing={3} sx={{ mb: 1 }}>
             <Grid size={{xs: 12, md:6, lg:2.4}}>
                 <DetailedStatisticsCard
                     title={t("dashboard.totalTitle")}

@@ -32,7 +32,7 @@ import { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 
 // react-router components
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router";
 
 // @mui material components
 import { ThemeProvider } from "@mui/material/styles";
@@ -83,6 +83,7 @@ import type { AccountContext, AccountStatus } from "api/manager/accounts";
 import { getCurrentPrincipal } from "api/manager/principals";
 import type { CurrentPrincipal } from "api/manager/principals";
 import { notifyApiError } from "api/core/errors";
+import { isDarkStyle, isMiniSidenav, writeUiPreferences } from "utils/uiPreferences";
 import { useTranslation } from 'react-i18next';
 import ErrorBoundary from "components/ErrorBoundary";
 import SuspensionScreen from "components/SuspensionScreen";
@@ -140,35 +141,49 @@ export default function App() {
 
   useEffect(() => {
     const fetchPermissions = async () => {
-      if (isAuthenticated) {
-        // Graceful-null on failure (matches the old service's null fallback);
-        // routes fall back to the default principal type.
-        const principal = await getCurrentPrincipal().catch(() => null);
-        setCurrentPrincipal(principal);
-        // Silent ops: default to false on failure (matches the old service's
-        // handleSilentError — no toast, routes stay locked down).
-        const admin = await isAdmin().catch(() => false);
-        const manager = await isManager().catch(() => false);
-        const userSettings = await getUserSettings();
-        setUserIsAdmin(admin);
-        setUserIsManager(manager);
-        /* Initialize settings */
-        setDarkMode(dispatch, userSettings.style !== 'light');
-        setDarkSidenav(dispatch, userSettings.style !== 'light');
-        setMiniSidenav(dispatch, userSettings.navbar !== 'none');
+      if (!isAuthenticated) return;
+
+      // Appearance first, and on its own round trip: every other bootstrap read can
+      // land late without the user noticing, but the style has to be applied before
+      // the shell paints or a dark-profile user watches the screen flip from light.
+      // The result is mirrored to localStorage so the *next* sign-in paints correctly
+      // from the first frame (see utils/uiPreferences).
+      const userSettings = await getUserSettings().catch(() => null);
+      if (userSettings) {
+        setDarkMode(dispatch, isDarkStyle(userSettings.style));
+        setDarkSidenav(dispatch, isDarkStyle(userSettings.style));
+        setMiniSidenav(dispatch, isMiniSidenav(userSettings.navbar));
         if (userSettings.language) {
           i18n.changeLanguage(userSettings.language);
         }
-        const settings = await getAccountSettings();
-        setAccountSettings(settings);
+        writeUiPreferences(userSettings);
+      }
+
+      // The rest of the bootstrap is independent — fan out instead of chaining five
+      // sequential round trips behind each other.
+      // Graceful fallbacks on failure (matching the old services' silent handling):
+      // null principal ⇒ routes fall back to the default principal type, false roles
+      // ⇒ admin/manager routes stay locked down, no toast either way.
+      const [principal, admin, manager, settings, context] = await Promise.all([
+        getCurrentPrincipal().catch(() => null),
+        isAdmin().catch(() => false),
+        isManager().catch(() => false),
+        getAccountSettings().catch(() => null),
         // Single bootstrap read (status + branding + features); allowed on non-operational accounts
         // so the shell can render a suspension state instead of issuing operational queries.
-        const context = await getAccountContext().catch(() => null);
-        if (context) {
-          setAccountStatus(context.status);
-          setBranding(context.branding);
-          setAccountFeatures(context.features || []);
-        }
+        getAccountContext().catch(() => null),
+      ]);
+
+      setCurrentPrincipal(principal);
+      setUserIsAdmin(admin);
+      setUserIsManager(manager);
+      if (settings) {
+        setAccountSettings(settings);
+      }
+      if (context) {
+        setAccountStatus(context.status);
+        setBranding(context.branding);
+        setAccountFeatures(context.features || []);
       }
     };
     fetchPermissions();
@@ -196,6 +211,15 @@ export default function App() {
   // The Argon template's RTL support was dropped in this fork: the controller
   // has no `direction` state, so the app is LTR-only. The old effect wrote the
   // invalid dir="undefined" to <body>; it is intentionally gone.
+
+  // The snippet in index.html paints <html> from the mirrored preference before the
+  // bundle loads; take it over here so a mid-session theme switch also moves the
+  // backdrop and the native scrollbars/form controls with it.
+  useEffect(() => {
+    const activeTheme = darkMode ? themeDark : theme;
+    document.documentElement.style.backgroundColor = activeTheme.palette.background.default;
+    document.documentElement.style.colorScheme = darkMode ? "dark" : "light";
+  }, [darkMode]);
 
   // Setting page scroll to 0 when changing the route
   useEffect(() => {

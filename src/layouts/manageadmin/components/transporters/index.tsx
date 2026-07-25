@@ -25,16 +25,7 @@ import TransporterFormDialog from 'layouts/manageadmin/components/transporters/T
 import useForm from 'controls/Dialogs/useForm';
 import ConfirmDialog from 'controls/Dialogs/ConfirmDialog';
 import useTransporterTableData from "layouts/manageadmin/data/transportersTableData";
-import type {
-  TransporterFormValues,
-  TransporterTableColumn,
-  TransporterTableRow,
-} from "layouts/manageadmin/data/transportersTableData";
-
-// Change event shape emitted by the vendored dialog controls.
-type FormChangeHandler = (
-  event: { target: { name: string; value: string; type?: string; checked?: boolean } }
-) => void;
+import type { TransporterFormValues } from "layouts/manageadmin/data/transportersTableData";
 
 const PAGE_SIZE = 10;
 

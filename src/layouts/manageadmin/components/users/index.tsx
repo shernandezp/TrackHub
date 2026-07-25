@@ -29,14 +29,7 @@ import useUserTableData from "layouts/manageadmin/data/usersTableData";
 import type {
   UserFormValues,
   PasswordFormValues,
-  UserTableColumn,
-  UserTableRow,
 } from "layouts/manageadmin/data/usersTableData";
-
-// Change event shape emitted by the vendored dialog controls.
-type FormChangeHandler = (
-  event: { target: { name: string; value: string; type?: string; checked?: boolean } }
-) => void;
 
 const PAGE_SIZE = 10;
 

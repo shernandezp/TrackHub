@@ -34,7 +34,6 @@ import type {
   UpdateCurrentUserDtoInput,
 } from './generated/graphql';
 import {
-  GetUserDocument,
   GetCurrentUserDocument,
   GetIntegrationUsersDocument,
   GetUsersByAccountDocument,
@@ -57,11 +56,6 @@ export type AccountUsersPage = Page<AccountUser>;
 export type UserLookup = GetUserLookupByAccountQuery['userLookupByAccount'][number];
 export type IntegrationUser = GetIntegrationUsersQuery['users'][number];
 export type { CreateUserDtoInput, UpdateUserDtoInput, UpdateCurrentUserDtoInput };
-
-export async function getUser(userId: string): Promise<User> {
-  const data = await executeGraphQL('security', GetUserDocument, { id: userId });
-  return data.user;
-}
 
 export async function getCurrentUser(): Promise<CurrentUser> {
   const data = await executeGraphQL('security', GetCurrentUserDocument);

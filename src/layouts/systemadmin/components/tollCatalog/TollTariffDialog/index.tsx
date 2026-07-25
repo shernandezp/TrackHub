@@ -80,6 +80,7 @@ function TollTariffDialog({
           numericValue={false}
           placeholder={t('tolls.selectVehicleClass')}
           required
+          errorMsg={errors.tollVehicleClassCode}
         />
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, sm: 8 }}>

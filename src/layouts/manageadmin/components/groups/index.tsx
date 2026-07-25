@@ -27,7 +27,7 @@ import UserAllocatorDialog from 'layouts/manageadmin/components/groups/UserAlloc
 import useForm from 'controls/Dialogs/useForm';
 import ConfirmDialog from 'controls/Dialogs/ConfirmDialog';
 import useGroupTableData from "layouts/manageadmin/data/groupsTableData";
-import type { GroupFormValues, GroupColumn, GroupRow } from "layouts/manageadmin/data/groupsTableData";
+import type { GroupFormValues } from "layouts/manageadmin/data/groupsTableData";
 
 const PAGE_SIZE = 10;
 

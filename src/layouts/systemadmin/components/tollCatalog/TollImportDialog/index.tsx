@@ -101,7 +101,7 @@ function TollImportDialog({ open, setOpen }: TollImportDialogProps) {
           <ArgonTypography variant="h6" fontWeight="medium">
             {t('tolls.catalog.importResult')}
           </ArgonTypography>
-          <Grid container spacing={1} mt={1}>
+          <Grid container spacing={1} sx={{ mt: 1 }}>
             {[
               ['tolls.catalog.rowsRead', result.rowsRead],
               ['tolls.catalog.stationsCreated', result.stationsCreated],

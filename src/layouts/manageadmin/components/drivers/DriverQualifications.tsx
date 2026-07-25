@@ -183,7 +183,7 @@ function ManageDriverQualifications() {
         setExpanded={setExpanded}
       >
         <ArgonBox mb={2}>
-          <Grid container spacing={1} alignItems="center">
+          <Grid container spacing={1} sx={{ alignItems: "center" }}>
             <Grid size={{ xs: 12, md: 6 }}>
               <DriverPicker
                 id="qualificationDriverId"

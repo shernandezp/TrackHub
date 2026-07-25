@@ -25,12 +25,7 @@ import PoiFormDialog from 'layouts/manageadmin/components/pois/PoiDialog';
 import useForm from 'controls/Dialogs/useForm';
 import ConfirmDialog from 'controls/Dialogs/ConfirmDialog';
 import usePoiTableData from "layouts/manageadmin/data/poisTableData";
-import type { PoiFormValues, PoiColumn, PoiRow } from "layouts/manageadmin/data/poisTableData";
-
-// Change event shape emitted by the vendored dialog controls.
-type FormChangeHandler = (
-  event: { target: { name: string; value: string; type?: string; checked?: boolean } }
-) => void;
+import type { PoiFormValues } from "layouts/manageadmin/data/poisTableData";
 
 const PAGE_SIZE = 10;
 

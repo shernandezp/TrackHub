@@ -33,7 +33,6 @@ import type {
   TriggerOperatorDeviceSyncCommandInput,
 } from './generated/graphql';
 import {
-  GetOperatorDocument,
   GetOperatorsByCurrentAccountDocument,
   GetOperatorLookupDocument,
   GetGpsOperatorsDocument,
@@ -57,11 +56,6 @@ const DEFAULT_SYNC_INTERVAL_MINUTES = 30;
 function positiveIntOr(value: unknown, fallback: number): number {
   const parsed = Number.parseInt(value as string, 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
-}
-
-export async function getOperator(operatorId: string): Promise<Operator> {
-  const data = await executeGraphQL('manager', GetOperatorDocument, { id: operatorId });
-  return data.operator;
 }
 
 export async function getOperatorsByCurrentAccount(

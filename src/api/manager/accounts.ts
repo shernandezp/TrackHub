@@ -32,7 +32,6 @@ import type {
   GetAccountContextQuery,
 } from './generated/graphql';
 import {
-  GetAccountDocument,
   GetAccountByUserDocument,
   GetAccountsDocument,
   CreateAccountDocument,
@@ -46,11 +45,6 @@ export type Account = AccountItemType;
 export type AccountsPage = Page<Account>;
 export type AccountContext = GetAccountContextQuery['accountContext'];
 export type { AccountDtoInput, UpdateAccountDtoInput, AccountStatus };
-
-export async function getAccount(accountId: string): Promise<Account> {
-  const data = await executeGraphQL('manager', GetAccountDocument, { id: accountId });
-  return data.account;
-}
 
 export async function getAccountByUser(): Promise<Account> {
   const data = await executeGraphQL('manager', GetAccountByUserDocument);

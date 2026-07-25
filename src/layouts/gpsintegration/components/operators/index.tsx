@@ -30,8 +30,6 @@ import useOperatorTableData from "layouts/gpsintegration/data/operatorsTableData
 import type {
   OperatorFormValues,
   CredentialFormValues,
-  OperatorTableColumn,
-  OperatorTableRow,
 } from "layouts/gpsintegration/data/operatorsTableData";
 
 const PAGE_SIZE = 10;

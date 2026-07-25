@@ -54,14 +54,6 @@ export function useAccounts(params: ListParams = {}, options: { enabled?: boolea
   });
 }
 
-export function useAccount(accountId: string | undefined) {
-  return useQuery({
-    queryKey: accountKeys.detail(accountId ?? ''),
-    queryFn: () => api.getAccount(accountId as string),
-    enabled: !!accountId,
-  });
-}
-
 export function useCreateAccount() {
   const queryClient = useQueryClient();
   return useMutation({

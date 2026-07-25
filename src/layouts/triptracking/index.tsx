@@ -15,7 +15,7 @@
 */
 
 import { useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import Grid from '@mui/material/Grid';
 import Icon from '@mui/material/Icon';
@@ -202,7 +202,7 @@ function TripTracking() {
         )}
       </ArgonBox>
 
-      <Grid container spacing={3} mt={0}>
+      <Grid container spacing={3} sx={{ mt: 0 }}>
         {showMap && (
           <Grid size={{ xs: 12, md: 7 }}>
             <RouteMap

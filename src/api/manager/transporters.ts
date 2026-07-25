@@ -33,9 +33,7 @@ import type {
   GetTransporterLookupByAccountQuery,
 } from './generated/graphql';
 import {
-  GetTransporterDocument,
   GetTransportersByAccountDocument,
-  GetTransportersByUserDocument,
   GetTransportersByGroupDocument,
   GetTransporterLookupByAccountDocument,
   GetTransporterLookupByUserDocument,
@@ -43,7 +41,6 @@ import {
   UpdateTransporterDocument,
   DeleteTransporterDocument,
   GetTransporterDeviceAssignmentsByAccountDocument,
-  GetTransporterDeviceAssignmentsByTransporterDocument,
   AssignDeviceToTransporterDocument,
   EndDeviceTransporterAssignmentDocument,
 } from './transporterOperations';
@@ -63,11 +60,6 @@ export interface TransporterAssignmentFilters extends Omit<ListParams, 'search'>
   activeOnly?: boolean;
 }
 
-export async function getTransporter(transporterId: string): Promise<Transporter> {
-  const data = await executeGraphQL('manager', GetTransporterDocument, { id: transporterId });
-  return data.transporter;
-}
-
 export async function getTransportersByAccount(
   params: ListParams = {}
 ): Promise<TransportersPage> {
@@ -77,15 +69,6 @@ export async function getTransportersByAccount(
     search: params.search ?? null,
   });
   return data.transportersByAccount;
-}
-
-export async function getTransportersByUser(params: ListParams = {}): Promise<TransportersPage> {
-  const data = await executeGraphQL('manager', GetTransportersByUserDocument, {
-    skip: params.skip ?? null,
-    take: params.take ?? null,
-    search: params.search ?? null,
-  });
-  return data.transportersByUser;
 }
 
 export async function getTransportersByGroup(
@@ -175,23 +158,6 @@ export async function getAllTransporterDeviceAssignmentsByAccount(
     async (skip, take) =>
       (await getTransporterDeviceAssignmentsByAccount(accountId, { activeOnly, skip, take })).items
   );
-}
-
-export async function getTransporterDeviceAssignmentsByTransporter(
-  transporterId: string,
-  filters: TransporterAssignmentFilters = {}
-): Promise<Page<TransporterAssignment>> {
-  const data = await executeGraphQL(
-    'manager',
-    GetTransporterDeviceAssignmentsByTransporterDocument,
-    {
-      transporterId,
-      activeOnly: filters.activeOnly ?? false,
-      skip: filters.skip ?? null,
-      take: filters.take ?? null,
-    }
-  );
-  return data.transporterDeviceAssignmentsByTransporter;
 }
 
 export async function assignDeviceToTransporter(

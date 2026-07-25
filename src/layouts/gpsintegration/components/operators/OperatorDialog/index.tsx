@@ -129,6 +129,7 @@ function OperatorFormDialog({ open, setOpen, handleSubmit, values, handleChange,
             label={t('operator.type')}
             value={values.protocolTypeId}
             required
+            errorMsg={errors.protocolTypeId}
           />
           {errors.protocolTypeId && <p>{errors.protocolTypeId}</p>}
         </form>

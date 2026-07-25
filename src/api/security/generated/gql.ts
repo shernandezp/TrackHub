@@ -57,7 +57,6 @@ type Documents = {
     "\n  mutation UpdateServiceClientPermission(\n    $serviceClientPermissionId: UUID!\n    $permission: ServiceClientPermissionDtoInput!\n  ) {\n    updateServiceClientPermission(\n      command: {\n        serviceClientPermissionId: $serviceClientPermissionId\n        permission: $permission\n      }\n    )\n  }\n": typeof types.UpdateServiceClientPermissionDocument,
     "\n  mutation DeleteServiceClientPermission($serviceClientPermissionId: UUID!) {\n    deleteServiceClientPermission(\n      command: { serviceClientPermissionId: $serviceClientPermissionId }\n    )\n  }\n": typeof types.DeleteServiceClientPermissionDocument,
     "\n  fragment UserDetail on UserVm {\n    userId\n    username\n    emailAddress\n    firstName\n    secondName\n    lastName\n    secondSurname\n    dob\n    loginAttempts\n    accountId\n    active\n    integrationUser\n  }\n": typeof types.UserDetailFragmentDoc,
-    "\n  query GetUser($id: UUID!) {\n    user(query: { id: $id }) {\n      ...UserDetail\n    }\n  }\n": typeof types.GetUserDocument,
     "\n  query GetCurrentUser {\n    currentUser {\n      userId\n      username\n      emailAddress\n      firstName\n      secondName\n      lastName\n      secondSurname\n      dob\n      loginAttempts\n      accountId\n      active\n      roles {\n        roleId\n        name\n      }\n      profiles {\n        policyId\n        name\n      }\n    }\n  }\n": typeof types.GetCurrentUserDocument,
     "\n  query GetIntegrationUsers {\n    users(query: { filter: { filters: [{ key: \"IntegrationUser\", value: true }] } }) {\n      userId\n      username\n      emailAddress\n    }\n  }\n": typeof types.GetIntegrationUsersDocument,
     "\n  query GetUsersByAccount($skip: Int, $take: Int, $search: String) {\n    usersByAccount(query: { skip: $skip, take: $take, search: $search }) {\n      items {\n        ...UserDetail\n        lockedUntil\n      }\n      totalCount\n    }\n  }\n": typeof types.GetUsersByAccountDocument,
@@ -116,7 +115,6 @@ const documents: Documents = {
     "\n  mutation UpdateServiceClientPermission(\n    $serviceClientPermissionId: UUID!\n    $permission: ServiceClientPermissionDtoInput!\n  ) {\n    updateServiceClientPermission(\n      command: {\n        serviceClientPermissionId: $serviceClientPermissionId\n        permission: $permission\n      }\n    )\n  }\n": types.UpdateServiceClientPermissionDocument,
     "\n  mutation DeleteServiceClientPermission($serviceClientPermissionId: UUID!) {\n    deleteServiceClientPermission(\n      command: { serviceClientPermissionId: $serviceClientPermissionId }\n    )\n  }\n": types.DeleteServiceClientPermissionDocument,
     "\n  fragment UserDetail on UserVm {\n    userId\n    username\n    emailAddress\n    firstName\n    secondName\n    lastName\n    secondSurname\n    dob\n    loginAttempts\n    accountId\n    active\n    integrationUser\n  }\n": types.UserDetailFragmentDoc,
-    "\n  query GetUser($id: UUID!) {\n    user(query: { id: $id }) {\n      ...UserDetail\n    }\n  }\n": types.GetUserDocument,
     "\n  query GetCurrentUser {\n    currentUser {\n      userId\n      username\n      emailAddress\n      firstName\n      secondName\n      lastName\n      secondSurname\n      dob\n      loginAttempts\n      accountId\n      active\n      roles {\n        roleId\n        name\n      }\n      profiles {\n        policyId\n        name\n      }\n    }\n  }\n": types.GetCurrentUserDocument,
     "\n  query GetIntegrationUsers {\n    users(query: { filter: { filters: [{ key: \"IntegrationUser\", value: true }] } }) {\n      userId\n      username\n      emailAddress\n    }\n  }\n": types.GetIntegrationUsersDocument,
     "\n  query GetUsersByAccount($skip: Int, $take: Int, $search: String) {\n    usersByAccount(query: { skip: $skip, take: $take, search: $search }) {\n      items {\n        ...UserDetail\n        lockedUntil\n      }\n      totalCount\n    }\n  }\n": types.GetUsersByAccountDocument,
@@ -318,10 +316,6 @@ export function graphql(source: "\n  mutation DeleteServiceClientPermission($ser
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  fragment UserDetail on UserVm {\n    userId\n    username\n    emailAddress\n    firstName\n    secondName\n    lastName\n    secondSurname\n    dob\n    loginAttempts\n    accountId\n    active\n    integrationUser\n  }\n"): (typeof documents)["\n  fragment UserDetail on UserVm {\n    userId\n    username\n    emailAddress\n    firstName\n    secondName\n    lastName\n    secondSurname\n    dob\n    loginAttempts\n    accountId\n    active\n    integrationUser\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  query GetUser($id: UUID!) {\n    user(query: { id: $id }) {\n      ...UserDetail\n    }\n  }\n"): (typeof documents)["\n  query GetUser($id: UUID!) {\n    user(query: { id: $id }) {\n      ...UserDetail\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

@@ -379,7 +379,7 @@ function TripDetail({
             {t('pod.empty')}
           </ArgonTypography>
         ) : (
-          <Grid container spacing={1} mt={0.5}>
+          <Grid container spacing={1} sx={{ mt: 0.5 }}>
             {detail.proofsOfDelivery.map((pod) => {
               const stop = stops.find((candidate) => candidate.tripStopId === pod.tripStopId);
               return (

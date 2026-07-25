@@ -70,6 +70,7 @@ function AccountFeatureDialog({ open, setOpen, handleSubmit, values, handleChang
                 handleChange={handleChange}
                 numericValue={false}
                 required
+                errorMsg={errors.accountId}
               />
               <CustomSelect
                 name="featureKey"
@@ -80,6 +81,7 @@ function AccountFeatureDialog({ open, setOpen, handleSubmit, values, handleChang
                 handleChange={handleChange}
                 numericValue={false}
                 required
+                errorMsg={errors.featureKey}
               />
             </>
           )
@@ -128,7 +130,7 @@ function AccountFeatureDialog({ open, setOpen, handleSubmit, values, handleChang
               fullWidth
               value={Number(values.configValue ?? cfg.default)}
               onChange={handleChange}
-              inputProps={{ min: 0 }}
+              slotProps={{ htmlInput: { min: 0 } }}
               errorMsg={errors.configValue}
             />
           ))}

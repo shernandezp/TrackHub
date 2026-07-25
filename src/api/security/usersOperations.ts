@@ -38,14 +38,6 @@ export const UserDetailFragment = graphql(`
   }
 `);
 
-export const GetUserDocument = graphql(`
-  query GetUser($id: UUID!) {
-    user(query: { id: $id }) {
-      ...UserDetail
-    }
-  }
-`);
-
 export const GetCurrentUserDocument = graphql(`
   query GetCurrentUser {
     currentUser {

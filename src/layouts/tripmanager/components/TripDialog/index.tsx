@@ -130,6 +130,7 @@ function TripDialog({
               value={values.transporterId}
               numericValue={false}
               required
+              errorMsg={errors.transporterId}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>

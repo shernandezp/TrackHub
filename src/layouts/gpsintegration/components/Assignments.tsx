@@ -250,7 +250,7 @@ function ManageDeviceAssignments() {
               </ArgonButton>
             </ArgonBox>
             <ArgonBox mb={1}>
-              <Grid container spacing={1} alignItems="center">
+              <Grid container spacing={1} sx={{ alignItems: "center" }}>
                 <Grid size={{ xs: 12, md: 5 }}>
                   <CustomSelect
                     list={transporters.map(x => ({ value: x.transporterId, label: x.name }))}

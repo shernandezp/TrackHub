@@ -31,28 +31,9 @@ export const TransporterItemFragment = graphql(`
   }
 `);
 
-export const GetTransporterDocument = graphql(`
-  query GetTransporter($id: UUID!) {
-    transporter(query: { id: $id }) {
-      ...TransporterItem
-    }
-  }
-`);
-
 export const GetTransportersByAccountDocument = graphql(`
   query GetTransportersByAccount($skip: Int, $take: Int, $search: String) {
     transportersByAccount(query: { skip: $skip, take: $take, search: $search }) {
-      items {
-        ...TransporterItem
-      }
-      totalCount
-    }
-  }
-`);
-
-export const GetTransportersByUserDocument = graphql(`
-  query GetTransportersByUser($skip: Int, $take: Int, $search: String) {
-    transportersByUser(query: { skip: $skip, take: $take, search: $search }) {
       items {
         ...TransporterItem
       }
@@ -152,24 +133,6 @@ export const GetTransporterDeviceAssignmentsByAccountDocument = graphql(`
         ...AssignmentFields
         createdByPrincipalType
         createdByPrincipalId
-      }
-      totalCount
-    }
-  }
-`);
-
-export const GetTransporterDeviceAssignmentsByTransporterDocument = graphql(`
-  query GetTransporterDeviceAssignmentsByTransporter(
-    $transporterId: UUID!
-    $activeOnly: Boolean!
-    $skip: Int
-    $take: Int
-  ) {
-    transporterDeviceAssignmentsByTransporter(
-      query: { transporterId: $transporterId, activeOnly: $activeOnly, skip: $skip, take: $take }
-    ) {
-      items {
-        ...AssignmentFields
       }
       totalCount
     }

@@ -35,14 +35,6 @@ export const getStreetViewUrl = (lat: number, lng: number): string => {
 };
 
 /**
- * Formats a value with unit, returns null if value is not available
- */
-const formatWithUnit = (value: unknown, unit: string): string | null => {
-    if (value === undefined || value === null) return null;
-    return `${value} ${unit}`;
-};
-
-/**
  * Returns a localized relative time text (e.g. "5 min ago") for a date value.
  */
 export const getRelativeTimeText = (
