@@ -30,7 +30,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { getTripsByTransporter } from 'api/router/router';
 import type { Trip, PositionSourceType } from 'api/router/router';
 import { routerKeys } from 'queries/router';
-import { useTransportersByUser } from 'queries/transporters';
+import { useTransporterLookupByUser } from 'queries/transporters';
 import { getAccountFeatures } from 'api/manager/accountFeatures';
 import { notifyApiError } from 'api/core/errors';
 import useForm from 'controls/Dialogs/useForm';
@@ -86,7 +86,7 @@ function Positions({ settings, showGeofence, geofences }: PositionsProps) {
   const [loadedQuery, setLoadedQuery] = useState<LoadedQuery | null>(null);
   const [values, handleChange, setValues, setErrors, validate, errors] = useForm<PositionsFormValues>({});
 
-  const transportersQuery = useTransportersByUser({ enabled: isAuthenticated });
+  const transportersQuery = useTransporterLookupByUser({ enabled: isAuthenticated });
   const transporters = useMemo<FilterNavbarOption[]>(
     () => (transportersQuery.data ?? []).map(transporter => ({
       value: transporter.transporterId,
@@ -210,7 +210,7 @@ function Positions({ settings, showGeofence, geofences }: PositionsProps) {
 
   return (
     <ArgonBox py={1}>
-      <Grid container spacing={3} mb={1}>
+      <Grid container spacing={3} sx={{ mb: 1 }}>
         <Grid size={{xs:12, lg:12}}>
           <FilterNavbar
             list={transporters}

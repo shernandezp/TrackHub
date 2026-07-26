@@ -53,18 +53,20 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     if (this.state.hasError) {
       return (
         <Box
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          justifyContent="center"
-          minHeight="100vh"
-          textAlign="center"
-          p={3}
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: "100vh",
+            textAlign: "center",
+            p: 3,
+          }}
         >
           <Typography variant="h4" gutterBottom>
             Something went wrong
           </Typography>
-          <Typography variant="body1" color="text.secondary" mb={3}>
+          <Typography variant="body1" sx={{ color: "text.secondary", mb: 3 }}>
             An unexpected error occurred. Please try reloading the page.
           </Typography>
           <Button variant="contained" color="primary" onClick={this.handleReload}>

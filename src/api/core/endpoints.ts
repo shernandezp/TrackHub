@@ -25,6 +25,7 @@ export const GRAPHQL_ENDPOINTS = {
   geofencing: process.env.REACT_APP_GEOFENCING_ENDPOINT,
   router: process.env.REACT_APP_ROUTER_ENDPOINT,
   telemetry: process.env.REACT_APP_TELEMETRY_ENDPOINT,
+  tripManagement: process.env.REACT_APP_TRIPMANAGEMENT_ENDPOINT,
 } as const;
 
 export type GraphQLBackend = keyof typeof GRAPHQL_ENDPOINTS;
@@ -34,6 +35,9 @@ export type GraphQLBackend = keyof typeof GRAPHQL_ENDPOINTS;
  * fallback only matters under Vitest, where env vars are absent at load time.
  */
 const managerRestBase = (GRAPHQL_ENDPOINTS.manager ?? '').replace(/graphql\/?$/, '');
+
+/** TripManagement REST base — the anonymous public tracking snapshot lives outside GraphQL. */
+const tripManagementRestBase = (GRAPHQL_ENDPOINTS.tripManagement ?? '').replace(/graphql\/?$/, '');
 
 export const REST_ENDPOINTS = {
   /** Report generation — xlsx/pdf file bytes (Reporting service, REST). */
@@ -52,6 +56,13 @@ export const REST_ENDPOINTS = {
    * visitor who cannot sign in. See TrackHub.Manager Web/Endpoints/PlatformStatus.cs.
    */
   managerPlatformAnnouncements: `${managerRestBase}api/PlatformStatus/announcements`,
+  /**
+   * Anonymous customer trip tracking (TripManagement service, REST). Mapped at
+   * `~/public/trips/{publicLinkGrantId}` (no `api/` segment) — see
+   * TrackHub.TripManagement Web/Endpoints/PublicTrips.cs. Deliberately
+   * unauthenticated: the recipient of a shared link is not a platform principal.
+   */
+  tripManagementPublicTrips: `${tripManagementRestBase}public/trips`,
 } as const;
 
 /**
@@ -89,6 +100,9 @@ export const HEALTH_ENDPOINTS = {
   },
   get reporting() {
     return toHealthUrl(process.env.REACT_APP_REPORTING_ENDPOINT);
+  },
+  get tripManagement() {
+    return toHealthUrl(process.env.REACT_APP_TRIPMANAGEMENT_ENDPOINT);
   },
 } as const;
 

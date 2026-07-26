@@ -74,7 +74,7 @@ describe.each([
 });
 
 describe('en/es key parity', () => {
-  test.each(['manageAdmin', 'gpsIntegration'])('namespace %s keeps parity', (namespace) => {
+  test.each(['manageAdmin', 'gpsIntegration', 'accountFeatures'])('namespace %s keeps parity', (namespace) => {
     const bundles = { en, es } as unknown as Record<string, Record<string, Record<string, unknown>>>;
     expect(flatten(bundles.es[namespace] ?? {}).sort()).toEqual(
       flatten(bundles.en[namespace] ?? {}).sort()

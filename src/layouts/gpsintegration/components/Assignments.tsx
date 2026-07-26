@@ -20,6 +20,8 @@ import { useTranslation } from 'react-i18next';
 import Icon from '@mui/material/Icon';
 import Grid from '@mui/material/Grid';
 import Table from 'controls/Tables/Table';
+import ServerPagination from 'controls/Tables/ServerPagination';
+import useServerList, { useClampPage } from 'controls/Tables/useServerList';
 import TableAccordion from 'controls/Accordions/TableAccordion';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
 import ArgonBadge from 'components/ArgonBadge';
@@ -28,18 +30,21 @@ import ArgonButton from 'components/ArgonButton';
 import ArgonTypography from 'components/ArgonTypography';
 import { getAccountByUser } from 'api/manager/accounts';
 import {
-  useTransportersByAccount,
+  useTransporterLookupByAccount,
   useTransporterDeviceAssignmentsByAccount,
   useAssignDeviceToTransporter,
   useEndDeviceTransporterAssignment,
 } from 'queries/transporters';
 import type { TransporterAssignmentWithAudit } from 'api/manager/transporters';
-import { getSynchronizedDevices, getUnassignedSynchronizedDevices } from 'api/manager/devices';
+import { useDeviceLookup } from 'queries/devices';
+import { getAllUnassignedSynchronizedDevices } from 'api/manager/devices';
 import type { SynchronizedDevice } from 'api/manager/devices';
 import { notifyApiError } from 'api/core/errors';
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from 'utils/dateUtils';
 import { GPS_INTEGRATION_REFRESH_EVENT } from 'layouts/gpsintegration/gpsIntegrationEvents';
+
+const PAGE_SIZE = 10;
 
 function TextCell({ children }: { children?: ReactNode }) {
   return (
@@ -66,19 +71,30 @@ function ManageDeviceAssignments() {
   const [expanded, setExpanded] = useState(false);
   const [activeOnly, setActiveOnly] = useState(true);
   const [unassignedDevices, setUnassignedDevices] = useState<SynchronizedDevice[]>([]);
-  const [devices, setDevices] = useState<SynchronizedDevice[]>([]);
   const [selectedTransporterId, setSelectedTransporterId] = useState('');
   const [selectedDeviceId, setSelectedDeviceId] = useState('');
   const [accountId, setAccountId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const loaded = useRef(false);
 
-  const transportersQuery = useTransportersByAccount({ enabled: expanded });
+  // Both the assign-form picker and the transporterId->name map need the whole
+  // account, so they read the lookup rather than a page of the list query.
+  const transportersQuery = useTransporterLookupByAccount({ enabled: expanded });
   const transporters = transportersQuery.data ?? [];
-  // Assignments are keyed by (accountId, activeOnly); toggling the filter re-keys
-  // and refetches, and the assign/end mutations invalidate this query.
-  const assignmentsQuery = useTransporterDeviceAssignmentsByAccount(accountId ?? undefined, activeOnly);
-  const assignments = assignmentsQuery.data ?? [];
+  // deviceId->name map for the rows: the lookup covers every account device.
+  const deviceLookupQuery = useDeviceLookup({ enabled: expanded });
+  const deviceLookup = deviceLookupQuery.data ?? [];
+  // The assignment table is one SERVER page, keyed by (accountId, activeOnly,
+  // page); the assign/end mutations invalidate the whole assignments key.
+  const { page, setPage, params } = useServerList(PAGE_SIZE);
+  const assignmentsQuery = useTransporterDeviceAssignmentsByAccount(
+    accountId ?? undefined,
+    activeOnly,
+    { skip: params.skip, take: params.take }
+  );
+  const assignments = assignmentsQuery.data?.items ?? [];
+  const totalCount = assignmentsQuery.data?.totalCount ?? 0;
+  useClampPage(page, PAGE_SIZE, totalCount, setPage);
   const assignDevice = useAssignDeviceToTransporter();
   const endAssignment = useEndDeviceTransporterAssignment();
 
@@ -87,16 +103,15 @@ function ManageDeviceAssignments() {
     setLoading(transportersQuery.isFetching || assignmentsQuery.isFetching);
   }, [transportersQuery.isFetching, assignmentsQuery.isFetching, setLoading]);
 
-  // Device lists come from the (still legacy) device service; assignments come
-  // from the query above, so this only refreshes the device-side state.
+  // The assignable-device picker must offer EVERY unassigned device — there is
+  // no lookup for that subset, so drain the paged query instead of binding one
+  // page and silently hiding devices the operator could have assigned.
   const loadDevices = async (acct: string | null = accountId) => {
     if (!acct) return;
     setLoading(true);
     try {
-      const freeDevices = await getUnassignedSynchronizedDevices(acct);
+      const freeDevices = await getAllUnassignedSynchronizedDevices(acct);
       setUnassignedDevices(freeDevices || []);
-      const syncedDevices = await getSynchronizedDevices(acct);
-      setDevices(syncedDevices || []);
     } catch (e) {
       // Preserve the legacy toast-on-error behavior for device reads.
       notifyApiError(e);
@@ -123,7 +138,9 @@ function ManageDeviceAssignments() {
   }, [expanded]);
 
   const toggleActiveOnly = () => {
-    // Re-keys the assignments query, which refetches automatically.
+    // Re-keys the assignments query, which refetches automatically. The result
+    // set changes size, so restart from the first page.
+    setPage(0);
     setActiveOnly((prev) => !prev);
   };
 
@@ -164,8 +181,8 @@ function ManageDeviceAssignments() {
     return acc;
   }, {});
 
-  const deviceNames = devices.reduce<Record<string, string | number>>((acc, device) => {
-    acc[device.deviceId] = device.name || device.providerDisplayName || device.serial || device.identifier;
+  const deviceNames = deviceLookup.reduce<Record<string, string>>((acc, device) => {
+    acc[device.deviceId] = device.name;
     return acc;
   }, {});
 
@@ -233,7 +250,7 @@ function ManageDeviceAssignments() {
               </ArgonButton>
             </ArgonBox>
             <ArgonBox mb={1}>
-              <Grid container spacing={1} alignItems="center">
+              <Grid container spacing={1} sx={{ alignItems: "center" }}>
                 <Grid size={{ xs: 12, md: 5 }}>
                   <CustomSelect
                     list={transporters.map(x => ({ value: x.transporterId, label: x.name }))}
@@ -278,7 +295,8 @@ function ManageDeviceAssignments() {
             </ArgonBox>
             {assignments.length === 0 && loaded.current
               ? <ArgonTypography variant="caption" color="secondary">{t('gpsIntegration.empty.assignments')}</ArgonTypography>
-              : <Table
+              : <>
+                <Table
                   columns={[
                     { name: 'transporterId', title: t('transporter.title'), align: 'left' },
                     { name: 'deviceId', title: t('device.title'), align: 'left' },
@@ -292,7 +310,16 @@ function ManageDeviceAssignments() {
                   ]}
                   rows={rows}
                   selectedField="transporterId"
+                  serverPaged
                 />
+                <ServerPagination
+                  page={page}
+                  pageSize={PAGE_SIZE}
+                  totalCount={totalCount}
+                  pageLength={rows.length}
+                  onPageChange={setPage}
+                />
+                </>
             }
           </>
         )

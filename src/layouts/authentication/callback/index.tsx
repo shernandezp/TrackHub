@@ -15,8 +15,8 @@
 */
 
 import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
-import { useNavigate } from 'react-router-dom';
+import { useLocation } from "react-router";
+import { useNavigate } from 'react-router';
 import { exchangeAuthorizationCode } from "services/auth";
 import type { TokenResponse } from "services/auth";
 import { useAuth } from "AuthContext";
