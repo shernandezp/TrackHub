@@ -27,6 +27,7 @@ import type {
   PositionFieldsFragment as PositionFieldsType,
   TripFieldsFragment as TripFieldsType,
   AddressFieldsFragment as AddressFieldsType,
+  GetProviderCapabilitiesQuery,
   PositionSourceType,
 } from './generated/graphql';
 import {
@@ -34,12 +35,24 @@ import {
   GetDevicePositionsByUserDocument,
   GetTripsByTransporterDocument,
   ReverseGeocodeDocument,
+  GetProviderCapabilitiesDocument,
 } from './routerOperations';
 
 export type Position = PositionFieldsType;
 export type Trip = TripFieldsType;
 export type Address = AddressFieldsType;
+export type ProviderCapabilities = GetProviderCapabilitiesQuery['providerCapabilities'][number];
 export type { PositionSourceType };
+
+/**
+ * The deployment's provider capability matrix, declared by the Router's registered
+ * provider assemblies. Doubles as the provider list for operator screens — the portal
+ * carries no local protocol table.
+ */
+export async function getProviderCapabilities(): Promise<ProviderCapabilities[]> {
+  const data = await executeGraphQL('router', GetProviderCapabilitiesDocument);
+  return data.providerCapabilities;
+}
 
 /** Silent op: tests connectivity with an operator. Throws on transport failure. */
 export async function pingOperator(operatorId: string): Promise<boolean> {

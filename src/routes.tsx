@@ -67,6 +67,7 @@ import AuthorizeRedirect from "layouts/authentication/authorizeredirect";
 import ErrorPage from "layouts/authentication/error";
 import PrincipalTypes from "constants/principalTypes";
 import type { PrincipalType } from "constants/principalTypes";
+import { editionRoutes } from "edition/routes";
 
 // Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
@@ -246,6 +247,9 @@ const routes: RouteDefinition[] = [
     route: "/authentication/authorize",
     component: <AuthorizeRedirect />,
   },
+  // Edition extension point (src/edition/routes.ts): additional routes registered by
+  // distributions built on this codebase; empty in this repository.
+  ...editionRoutes,
   {
     type: "hidden",
     name: "Error",

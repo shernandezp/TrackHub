@@ -116,3 +116,17 @@ export const ReverseGeocodeDocument = graphql(`
     }
   }
 `);
+
+export const GetProviderCapabilitiesDocument = graphql(`
+  query GetProviderCapabilities {
+    providerCapabilities {
+      protocolTypeId
+      protocol
+      displayName
+      realTimePositions
+      positionHistory
+      deviceCatalog
+      connectivityPing
+    }
+  }
+`);

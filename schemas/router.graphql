@@ -75,6 +75,7 @@ type PositionVm {
 type ProviderCapabilitiesVm {
   protocolTypeId: Int!
   protocol: String!
+  displayName: String!
   realTimePositions: Boolean!
   positionHistory: Boolean!
   deviceCatalog: Boolean!
