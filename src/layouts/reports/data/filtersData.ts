@@ -16,8 +16,8 @@
 
 import { useEffect, useState, useContext } from "react";
 import type { TFunction } from "i18next";
-import { useTransportersByUser } from 'queries/transporters';
-import { useOperators } from 'queries/operators';
+import { useTransporterLookupByUser } from 'queries/transporters';
+import { useOperatorLookup } from 'queries/operators';
 import { buildTableData } from 'utils/reportUtils';
 import type { TableData } from 'utils/reportUtils';
 import type { SelectListItem } from 'controls/Dialogs/CustomSelect';
@@ -77,6 +77,21 @@ export const REPORT_FILTER_SPECS: Record<string, FilterFieldKind[]> = {
   'documents-missing-required': [],
   'documents-share-activity': [],
   'documents-upload-volume': ['from', 'to'],
+  // Workforce
+  'workforce-driver-registry': [],
+  'workforce-qualification-expirations': ['withinDays'],
+  // Transporter picker + window — the Reporting factory reads stringFilter1 as the transporter id,
+  // mirroring `gps.assignment-history`. There is no driver picker source, so no driver slot.
+  'workforce-assignment-history': ['transporter', 'from', 'to'],
+  // Trips (spec 11 §13). All six read stringFilter1 as the transporter id and dateTimeFilter1/2 as
+  // the period — the same slot mapping as `gps.assignment-history`. TripManagement's report feed also
+  // accepts a driverId, but there is no driver picker source in the portal, so no driver slot.
+  'trip-summary': ['transporter', 'from', 'to'],
+  'trip-detail': ['transporter', 'from', 'to'],
+  'trip-on-time-performance': ['transporter', 'from', 'to'],
+  'trip-stop-dwell': ['transporter', 'from', 'to'],
+  'trip-toll-cost': ['transporter', 'from', 'to'],
+  'trip-pod-export': ['transporter', 'from', 'to'],
   // Administration (manager-only)
   'accounts-by-status': ['status'],
   'feature-enablement-matrix': [],
@@ -206,8 +221,8 @@ function useFiltersData(reportCode: string): {
   const spec = getReportFilterSpec(reportCode);
   const needsTransporters = reportNeedsTransporters(reportCode);
   const needsOperators = reportNeedsOperators(reportCode);
-  const transportersQuery = useTransportersByUser({ enabled: isAuthenticated && needsTransporters });
-  const operatorsQuery = useOperators({ enabled: isAuthenticated && needsOperators });
+  const transportersQuery = useTransporterLookupByUser({ enabled: isAuthenticated && needsTransporters });
+  const operatorsQuery = useOperatorLookup({ enabled: isAuthenticated && needsOperators });
 
   // Keep the global spinner UX while the picker lists load.
   useEffect(() => {

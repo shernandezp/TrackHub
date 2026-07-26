@@ -20,6 +20,7 @@ declare namespace NodeJS {
     readonly REACT_APP_GEOFENCING_ENDPOINT: string;
     readonly REACT_APP_REPORTING_ENDPOINT: string;
     readonly REACT_APP_TELEMETRY_ENDPOINT: string;
+    readonly REACT_APP_TRIPMANAGEMENT_ENDPOINT: string;
     readonly REACT_APP_DEFAULT_LAT: string;
     readonly REACT_APP_DEFAULT_LNG: string;
   }

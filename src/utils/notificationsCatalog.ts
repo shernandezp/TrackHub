@@ -32,6 +32,8 @@ export const ALERT_EVENT_TYPES = [
   'DocumentExpiring',
   'DocumentExpired',
   'NotificationDeliveryFailed',
+  'DriverQualificationExpiring',
+  'DriverQualificationExpired',
 ] as const;
 
 /** Rule delivery channels. Push is not yet available and is intentionally hidden. */

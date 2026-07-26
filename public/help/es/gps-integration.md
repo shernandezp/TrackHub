@@ -4,7 +4,7 @@ title: Integración GPS
 description: Conecte sus proveedores GPS, sincronice la lista de dispositivos y vigile la salud — operadores, sincronizaciones, alertas, dispositivos y retención.
 category: administration
 screens: [gpsIntegration]
-related: [units-devices, system-administration, troubleshooting]
+related: [units-devices, system-administration, troubleshooting, admin-account-setup]
 tags: [gps, operadores, sincronización, dispositivos, credenciales, salud]
 order: 80
 ---
@@ -14,6 +14,8 @@ order: 80
 La página **Integración GPS** reúne todo lo relacionado con el vínculo entre TrackHub y sus proveedores GPS. En la parte superior hay un panel de salud; debajo hay secciones plegables para operadores, sincronizaciones, alertas, dispositivos, asignaciones y retención. Haga clic en el encabezado de una sección para expandirla; la sección de operadores tiene un ícono **Agregar** (**+**).
 
 Esta página es para gestores. Para que la integración obtenga datos, la función de integración GPS debe estar habilitada para su cuenta (se configura en [Administración del Sistema](topic:system-administration)). Consulte también [Solución de problemas](topic:troubleshooting).
+
+¿Está configurando un operador por primera vez? [Configuración de su cuenta](topic:admin-account-setup) lo recorre en orden — credenciales a mano, protocolo elegido y conexión probada **antes** de habilitarlo.
 
 ## El panel de integración
 

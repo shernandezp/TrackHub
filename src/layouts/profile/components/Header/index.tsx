@@ -105,7 +105,7 @@ function Header({ user }: HeaderProps) {
           boxShadow: ({ boxShadows: { md } }: Theme) => md,
         } as unknown as SxProps<Theme>}
       >
-        <Grid container spacing={3} alignItems="center">
+        <Grid container spacing={3} sx={{ alignItems: "center" }}>
           <Grid>
             <ArgonAvatar
               src={profileImage}

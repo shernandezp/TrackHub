@@ -4,7 +4,7 @@ title: Getting started
 description: Sign in to TrackHub, find your way around the screen, use the notification bell, and sign out safely.
 category: getting-started
 screens: []
-related: [roles-and-permissions, profile-and-settings, dashboard-live-map]
+related: [roles-and-permissions, profile-and-settings, dashboard-live-map, admin-platform-setup, admin-account-setup]
 tags: [sign in, layout, navigation, sign off, session]
 order: 10
 ---

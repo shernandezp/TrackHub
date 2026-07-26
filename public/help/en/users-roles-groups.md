@@ -4,7 +4,7 @@ title: Users, roles, and groups
 description: Add the people who sign in to your account, assign roles and policies, and organise units and users into groups.
 category: administration
 screens: [manageAdmin]
-related: [roles-and-permissions, management-overview]
+related: [roles-and-permissions, management-overview, admin-account-setup]
 tags: [users, roles, policies, groups, permissions]
 order: 20
 ---
@@ -37,7 +37,7 @@ Row actions:
 - **Password** — the link in the **Password** column opens the **Update Password** dialog; type a new password and **Save**.
 - **Status** — a user who is not locked shows **Active**. When a user is locked out (for example after too many failed sign-ins) the column shows an **Unlock** button; click it to unlock the account immediately.
 
-Which roles and policies a user holds are assigned in the **Roles** and **Policies** sections, not in this dialog.
+Which roles and policies a user holds are assigned in the **Roles** and **Policies** sections, not in this dialog. **A user you create here has no role until you assign one** — see [Setting up your account](topic:admin-account-setup) for what to do next, and in what order.
 
 ## Roles
 

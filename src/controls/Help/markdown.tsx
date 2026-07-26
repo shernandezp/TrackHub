@@ -184,12 +184,26 @@ export function buildMarkdownComponents(
         <Table size="small">{children}</Table>
       </TableContainer>
     ),
-    thead: ({ children }) => <TableHead>{children}</TableHead>,
+    // The app theme forces `display: block` on MuiTableHead (Argon template
+    // override, assets/theme*/components/table/tableHead.ts), which drops the
+    // header out of the table layout model so its cells no longer share the
+    // body's column grid. Restore it locally, as BackgroundJobsTable does.
+    thead: ({ children }) => (
+      <TableHead sx={{ display: 'table-header-group' }}>{children}</TableHead>
+    ),
     tbody: ({ children }) => <TableBody>{children}</TableBody>,
     tr: ({ children }) => <TableRow>{children}</TableRow>,
-    th: ({ children }) => (
-      <TableCell sx={{ fontWeight: 'bold', typography: 'caption' }}>{children}</TableCell>
+    // `style` carries the column alignment remark-gfm derives from the :---:
+    // markers; without forwarding it the author's alignment is silently lost.
+    th: ({ children, style }) => (
+      <TableCell style={style} sx={{ fontWeight: 'bold', typography: 'caption' }}>
+        {children}
+      </TableCell>
     ),
-    td: ({ children }) => <TableCell sx={{ typography: 'body2' }}>{children}</TableCell>,
+    td: ({ children, style }) => (
+      <TableCell style={style} sx={{ typography: 'body2' }}>
+        {children}
+      </TableCell>
+    ),
   };
 }

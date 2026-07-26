@@ -4,7 +4,7 @@ title: Platform Status
 description: Check whether TrackHub itself is working — service tiles, what to do when something is red, and platform announcements.
 category: administration
 screens: [platformStatus]
-related: [troubleshooting, system-administration]
+related: [troubleshooting, system-administration, admin-platform-setup]
 tags: [status, health, outage, maintenance, announcements, troubleshooting]
 order: 75
 ---

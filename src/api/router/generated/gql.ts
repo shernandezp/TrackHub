@@ -18,10 +18,8 @@ type Documents = {
     "\n  fragment TripFields on TripVm {\n    tripId\n    totalDistance\n    duration\n    averageSpeed\n    type\n    from\n    to\n    points {\n      latitude\n      longitude\n      deviceDateTime\n      speed\n      course\n      eventId\n    }\n  }\n": typeof types.TripFieldsFragmentDoc,
     "\n  fragment AddressFields on AddressVm {\n    address\n    city\n    state\n    country\n  }\n": typeof types.AddressFieldsFragmentDoc,
     "\n  query PingOperator($operatorId: UUID!) {\n    pingOperator(query: { operatorId: $operatorId })\n  }\n": typeof types.PingOperatorDocument,
-    "\n  query GetProviderDevicesByOperator($operatorId: UUID!) {\n    providerDevicesByOperator(query: { operatorId: $operatorId }) {\n      identifier\n      name\n      serial\n      deviceTypeId\n      transporterTypeId\n    }\n  }\n": typeof types.GetProviderDevicesByOperatorDocument,
     "\n  query GetDevicePositionsByUser {\n    devicePositionsByUser {\n      ...PositionFields\n    }\n  }\n": typeof types.GetDevicePositionsByUserDocument,
     "\n  query GetTripsByTransporter(\n    $transporterId: UUID!\n    $from: DateTime!\n    $to: DateTime!\n    $source: PositionSourceType!\n  ) {\n    tripsByTransporter(\n      query: { transporterId: $transporterId, from: $from, to: $to, source: $source }\n    ) {\n      ...TripFields\n    }\n  }\n": typeof types.GetTripsByTransporterDocument,
-    "\n  query GetPositionsByTransporter(\n    $transporterId: UUID!\n    $from: DateTime!\n    $to: DateTime!\n    $source: PositionSourceType!\n  ) {\n    positionsByTransporter(\n      query: { transporterId: $transporterId, from: $from, to: $to, source: $source }\n    ) {\n      ...PositionFields\n    }\n  }\n": typeof types.GetPositionsByTransporterDocument,
     "\n  query ReverseGeocode($latitude: Float!, $longitude: Float!, $transporterId: UUID) {\n    reverseGeocode(\n      query: { latitude: $latitude, longitude: $longitude, transporterId: $transporterId }\n    ) {\n      ...AddressFields\n    }\n  }\n": typeof types.ReverseGeocodeDocument,
 };
 const documents: Documents = {
@@ -29,10 +27,8 @@ const documents: Documents = {
     "\n  fragment TripFields on TripVm {\n    tripId\n    totalDistance\n    duration\n    averageSpeed\n    type\n    from\n    to\n    points {\n      latitude\n      longitude\n      deviceDateTime\n      speed\n      course\n      eventId\n    }\n  }\n": types.TripFieldsFragmentDoc,
     "\n  fragment AddressFields on AddressVm {\n    address\n    city\n    state\n    country\n  }\n": types.AddressFieldsFragmentDoc,
     "\n  query PingOperator($operatorId: UUID!) {\n    pingOperator(query: { operatorId: $operatorId })\n  }\n": types.PingOperatorDocument,
-    "\n  query GetProviderDevicesByOperator($operatorId: UUID!) {\n    providerDevicesByOperator(query: { operatorId: $operatorId }) {\n      identifier\n      name\n      serial\n      deviceTypeId\n      transporterTypeId\n    }\n  }\n": types.GetProviderDevicesByOperatorDocument,
     "\n  query GetDevicePositionsByUser {\n    devicePositionsByUser {\n      ...PositionFields\n    }\n  }\n": types.GetDevicePositionsByUserDocument,
     "\n  query GetTripsByTransporter(\n    $transporterId: UUID!\n    $from: DateTime!\n    $to: DateTime!\n    $source: PositionSourceType!\n  ) {\n    tripsByTransporter(\n      query: { transporterId: $transporterId, from: $from, to: $to, source: $source }\n    ) {\n      ...TripFields\n    }\n  }\n": types.GetTripsByTransporterDocument,
-    "\n  query GetPositionsByTransporter(\n    $transporterId: UUID!\n    $from: DateTime!\n    $to: DateTime!\n    $source: PositionSourceType!\n  ) {\n    positionsByTransporter(\n      query: { transporterId: $transporterId, from: $from, to: $to, source: $source }\n    ) {\n      ...PositionFields\n    }\n  }\n": types.GetPositionsByTransporterDocument,
     "\n  query ReverseGeocode($latitude: Float!, $longitude: Float!, $transporterId: UUID) {\n    reverseGeocode(\n      query: { latitude: $latitude, longitude: $longitude, transporterId: $transporterId }\n    ) {\n      ...AddressFields\n    }\n  }\n": types.ReverseGeocodeDocument,
 };
 
@@ -69,19 +65,11 @@ export function graphql(source: "\n  query PingOperator($operatorId: UUID!) {\n 
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query GetProviderDevicesByOperator($operatorId: UUID!) {\n    providerDevicesByOperator(query: { operatorId: $operatorId }) {\n      identifier\n      name\n      serial\n      deviceTypeId\n      transporterTypeId\n    }\n  }\n"): (typeof documents)["\n  query GetProviderDevicesByOperator($operatorId: UUID!) {\n    providerDevicesByOperator(query: { operatorId: $operatorId }) {\n      identifier\n      name\n      serial\n      deviceTypeId\n      transporterTypeId\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
 export function graphql(source: "\n  query GetDevicePositionsByUser {\n    devicePositionsByUser {\n      ...PositionFields\n    }\n  }\n"): (typeof documents)["\n  query GetDevicePositionsByUser {\n    devicePositionsByUser {\n      ...PositionFields\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query GetTripsByTransporter(\n    $transporterId: UUID!\n    $from: DateTime!\n    $to: DateTime!\n    $source: PositionSourceType!\n  ) {\n    tripsByTransporter(\n      query: { transporterId: $transporterId, from: $from, to: $to, source: $source }\n    ) {\n      ...TripFields\n    }\n  }\n"): (typeof documents)["\n  query GetTripsByTransporter(\n    $transporterId: UUID!\n    $from: DateTime!\n    $to: DateTime!\n    $source: PositionSourceType!\n  ) {\n    tripsByTransporter(\n      query: { transporterId: $transporterId, from: $from, to: $to, source: $source }\n    ) {\n      ...TripFields\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  query GetPositionsByTransporter(\n    $transporterId: UUID!\n    $from: DateTime!\n    $to: DateTime!\n    $source: PositionSourceType!\n  ) {\n    positionsByTransporter(\n      query: { transporterId: $transporterId, from: $from, to: $to, source: $source }\n    ) {\n      ...PositionFields\n    }\n  }\n"): (typeof documents)["\n  query GetPositionsByTransporter(\n    $transporterId: UUID!\n    $from: DateTime!\n    $to: DateTime!\n    $source: PositionSourceType!\n  ) {\n    positionsByTransporter(\n      query: { transporterId: $transporterId, from: $from, to: $to, source: $source }\n    ) {\n      ...PositionFields\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

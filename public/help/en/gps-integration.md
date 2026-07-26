@@ -4,7 +4,7 @@ title: GPS Integration
 description: Connect your GPS providers, sync the device list, and watch integration health — operators, sync runs, alerts, devices, assignments, and retention.
 category: administration
 screens: [gpsIntegration]
-related: [units-devices, system-administration, troubleshooting]
+related: [units-devices, system-administration, troubleshooting, admin-account-setup]
 tags: [gps, operators, sync, devices, credentials, health]
 order: 80
 ---
@@ -14,6 +14,8 @@ order: 80
 The **GPS Integration** page brings together everything about the link between TrackHub and your GPS provider(s). At the top is a health dashboard; below it are collapsible sections for operators, sync runs, alerts, devices, assignments, and retention. Click a section heading to expand it; the operators section has an **Add** (**+**) icon.
 
 This page is for managers. For the integration to pull data, the GPS integration feature must be enabled for your account (set in [System Administration](topic:system-administration)). See also [Troubleshooting](topic:troubleshooting).
+
+Setting up an operator for the first time? [Setting up your account](topic:admin-account-setup) walks through it in order — credentials ready, protocol chosen, connection tested **before** you enable it.
 
 ## The integration dashboard
 

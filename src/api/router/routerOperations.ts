@@ -84,18 +84,6 @@ export const PingOperatorDocument = graphql(`
   }
 `);
 
-export const GetProviderDevicesByOperatorDocument = graphql(`
-  query GetProviderDevicesByOperator($operatorId: UUID!) {
-    providerDevicesByOperator(query: { operatorId: $operatorId }) {
-      identifier
-      name
-      serial
-      deviceTypeId
-      transporterTypeId
-    }
-  }
-`);
-
 export const GetDevicePositionsByUserDocument = graphql(`
   query GetDevicePositionsByUser {
     devicePositionsByUser {
@@ -115,21 +103,6 @@ export const GetTripsByTransporterDocument = graphql(`
       query: { transporterId: $transporterId, from: $from, to: $to, source: $source }
     ) {
       ...TripFields
-    }
-  }
-`);
-
-export const GetPositionsByTransporterDocument = graphql(`
-  query GetPositionsByTransporter(
-    $transporterId: UUID!
-    $from: DateTime!
-    $to: DateTime!
-    $source: PositionSourceType!
-  ) {
-    positionsByTransporter(
-      query: { transporterId: $transporterId, from: $from, to: $to, source: $source }
-    ) {
-      ...PositionFields
     }
   }
 `);

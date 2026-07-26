@@ -22,6 +22,7 @@ import CustomCheckbox from 'controls/Dialogs/CustomCheckbox';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
 import CustomReadOnly from 'controls/Dialogs/CustomReadOnly';
 import type { FormChangeHandler } from 'controls/Dialogs/useForm';
+import { featureLabel } from 'utils/featureLabels';
 import type {
   FeatureFormValues,
   ConfigFieldDef,
@@ -47,10 +48,11 @@ interface AccountFeatureDialogProps {
 function AccountFeatureDialog({ open, setOpen, handleSubmit, values, handleChange, errors, isAdd, accountOptions, featureOptions, configField }: AccountFeatureDialogProps) {
   const { t } = useTranslation();
   const cfg = configField[values.featureKey ?? ''];
+  const featureName = values.featureKey ? featureLabel(t, values.featureKey) : '';
 
   return (
     <FormDialog
-      title={isAdd ? t('accountFeatures.addTitle') : `${values.accountName || ''} — ${values.featureKey || ''}`}
+      title={isAdd ? t('accountFeatures.addTitle') : `${values.accountName || ''} — ${featureName}`}
       handleSave={handleSubmit}
       open={open}
       setOpen={setOpen}
@@ -68,6 +70,7 @@ function AccountFeatureDialog({ open, setOpen, handleSubmit, values, handleChang
                 handleChange={handleChange}
                 numericValue={false}
                 required
+                errorMsg={errors.accountId}
               />
               <CustomSelect
                 name="featureKey"
@@ -78,13 +81,14 @@ function AccountFeatureDialog({ open, setOpen, handleSubmit, values, handleChang
                 handleChange={handleChange}
                 numericValue={false}
                 required
+                errorMsg={errors.featureKey}
               />
             </>
           )
           : (
             <>
               <CustomReadOnly label={t('account.title')} value={values.accountName} />
-              <CustomReadOnly label={t('accountFeatures.feature')} value={values.featureKey} />
+              <CustomReadOnly label={t('accountFeatures.feature')} value={featureName} />
             </>
           )}
 
@@ -107,20 +111,29 @@ function AccountFeatureDialog({ open, setOpen, handleSubmit, values, handleChang
           errorMsg={errors.tier}
         />
 
-        {cfg && (
-          <CustomTextField
-            margin="dense"
-            name="configValue"
-            id="configValue"
-            label={t(cfg.labelKey as 'accountFeatures.config.retentionDays')}
-            type="number"
-            fullWidth
-            value={values.configValue ?? cfg.default}
-            onChange={handleChange}
-            inputProps={{ min: 0 }}
-            errorMsg={errors.configValue}
-          />
-        )}
+        {cfg && (cfg.kind === 'boolean'
+          ? (
+            <CustomCheckbox
+              name="configValue"
+              id="configValue"
+              value={Boolean(values.configValue ?? cfg.default)}
+              handleChange={handleChange}
+              label={t(cfg.labelKey as 'accountFeatures.config.retentionDays')} />
+          )
+          : (
+            <CustomTextField
+              margin="dense"
+              name="configValue"
+              id="configValue"
+              label={t(cfg.labelKey as 'accountFeatures.config.retentionDays')}
+              type="number"
+              fullWidth
+              value={Number(values.configValue ?? cfg.default)}
+              onChange={handleChange}
+              slotProps={{ htmlInput: { min: 0 } }}
+              errorMsg={errors.configValue}
+            />
+          ))}
       </form>
     </FormDialog>
   );

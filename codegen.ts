@@ -1,7 +1,7 @@
 import type { CodegenConfig } from '@graphql-codegen/cli';
 
 /**
- * GraphQL codegen for the five TrackHub GraphQL backends (Reporting is
+ * GraphQL codegen for the six TrackHub GraphQL backends (Reporting is
  * REST-only). Schemas in schemas/<service>.graphql are exported by the
  * contract-test suite (TrackHub.IntegrationTests → SchemaSdlExport) — run
  * `dotnet test TrackHub.IntegrationTests/TrackHub.IntegrationTests.slnx`
@@ -28,7 +28,14 @@ const scalars = {
   JSON: 'unknown',
 };
 
-const backends = ['manager', 'security', 'geofencing', 'router', 'telemetry'] as const;
+const backends = [
+  'manager',
+  'security',
+  'geofencing',
+  'router',
+  'telemetry',
+  'tripManagement',
+] as const;
 
 const config: CodegenConfig = {
   generates: Object.fromEntries(

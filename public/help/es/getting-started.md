@@ -4,7 +4,7 @@ title: Primeros pasos
 description: Inicie sesión en TrackHub, oriéntese en la pantalla, use la campana de notificaciones y cierre sesión de forma segura.
 category: getting-started
 screens: []
-related: [roles-and-permissions, profile-and-settings, dashboard-live-map]
+related: [roles-and-permissions, profile-and-settings, dashboard-live-map, admin-platform-setup, admin-account-setup]
 tags: [iniciar sesión, disposición, navegación, cerrar sesión, sesión]
 order: 10
 ---
