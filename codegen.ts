@@ -1,3 +1,4 @@
+import { readdirSync } from 'node:fs';
 import type { CodegenConfig } from '@graphql-codegen/cli';
 
 /**
@@ -28,14 +29,12 @@ const scalars = {
   JSON: 'unknown',
 };
 
-const backends = [
-  'manager',
-  'security',
-  'geofencing',
-  'router',
-  'telemetry',
-  'tripManagement',
-] as const;
+// Discovered from schemas/ so registering a backend is just dropping its SDL export
+// there and creating src/api/<backend>/ — no config edit.
+const backends = readdirSync('schemas')
+  .filter((file) => file.endsWith('.graphql'))
+  .map((file) => file.replace(/\.graphql$/, ''))
+  .sort();
 
 const config: CodegenConfig = {
   generates: Object.fromEntries(
