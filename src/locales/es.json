@@ -1308,6 +1308,7 @@
     "backToPortal": "Volver al portal",
     "viewStatus": "Estado de la plataforma",
     "bookmarkHint": "Esta página funciona sin iniciar sesión — guárdela en favoritos para consultarla cuando no pueda ingresar.",
+    "portalBuild": "Versión del portal: {{build}}",
     "overall": {
       "up": "Todos los sistemas funcionan correctamente",
       "down": "Algunos sistemas presentan problemas",
