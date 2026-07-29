@@ -25,3 +25,11 @@ declare namespace NodeJS {
     readonly REACT_APP_DEFAULT_LNG: string;
   }
 }
+
+/**
+ * Build stamp injected by vite.config.ts `define`. Read only through
+ * src/constants/appVersion.ts, which guards against the (non-Vite) case where the
+ * replacement never happened.
+ */
+declare const __APP_VERSION__: string;
+declare const __BUILD_TIME__: string;
