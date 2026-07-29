@@ -1308,6 +1308,7 @@
     "backToPortal": "Back to the portal",
     "viewStatus": "Platform status",
     "bookmarkHint": "This page works without signing in — bookmark it so you can check it when you cannot log in.",
+    "portalBuild": "Portal build: {{build}}",
     "overall": {
       "up": "All systems operational",
       "down": "Some systems are having problems",

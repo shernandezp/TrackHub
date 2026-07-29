@@ -45,6 +45,7 @@ import {
 } from 'queries/platformStatus';
 import { useAuth } from 'AuthContext';
 import { isAdmin, isManager } from 'api/security/users';
+import { buildLabel } from 'constants/appVersion';
 import ServiceTile from './ServiceTile';
 import AnnouncementList from './AnnouncementList';
 import BackgroundJobsTable from './BackgroundJobsTable';
@@ -241,6 +242,11 @@ const PlatformStatus = () => {
         <ArgonBox mt={4} textAlign="center">
           <ArgonTypography variant="caption" color="text">
             {t('platformStatus.bookmarkHint')}
+          </ArgonTypography>
+          {/* The portal build, on the one page that renders without a session. After a
+              deployment or a rollback this is the check that needs no shell and no login. */}
+          <ArgonTypography variant="caption" color="text" display="block" mt={1}>
+            {t('platformStatus.portalBuild', { build: buildLabel() })}
           </ArgonTypography>
         </ArgonBox>
       </Container>
