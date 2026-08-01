@@ -16,6 +16,8 @@
 
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { usePermissions } from 'context/permissions';
+import { PermissionResources, PermissionActions } from 'constants/permissions';
 import Grid from '@mui/material/Grid';
 import Icon from '@mui/material/Icon';
 import ArgonBox from 'components/ArgonBox';
@@ -86,6 +88,9 @@ function TripDetail({
   section,
 }: TripDetailProps) {
   const { t } = useTranslation();
+  // Deleting a delivery is Trips/Delete, which the default User role does not hold.
+  const { can } = usePermissions();
+  const canDeleteDeliveries = can(PermissionResources.Trips, PermissionActions.Delete);
   const [replayEnabled, setReplayEnabled] = useState(false);
 
   const timelineQuery = useTripTimeline(detail.trip.tripId);
@@ -261,9 +266,11 @@ function TripDetail({
         <ArgonButton variant="text" color="success" onClick={() => onDeliveryOutcome(delivery)}>
           <Icon>fact_check</Icon>&nbsp;{t('trips.deliveries.outcome')}
         </ArgonButton>
-        <ArgonButton variant="text" color="error" onClick={() => onDeleteDelivery(delivery)}>
-          <Icon>delete</Icon>&nbsp;{t('generic.delete')}
-        </ArgonButton>
+        {canDeleteDeliveries && (
+          <ArgonButton variant="text" color="error" onClick={() => onDeleteDelivery(delivery)}>
+            <Icon>delete</Icon>&nbsp;{t('generic.delete')}
+          </ArgonButton>
+        )}
       </>
     ) : null,
     id: delivery.deliveryId,

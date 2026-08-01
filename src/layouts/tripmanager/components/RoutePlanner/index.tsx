@@ -17,6 +17,8 @@
 import { useMemo, useState } from 'react';
 import type { DragEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+import { usePermissions } from 'context/permissions';
+import { PermissionResources, PermissionActions } from 'constants/permissions';
 import Grid from '@mui/material/Grid';
 import Icon from '@mui/material/Icon';
 import IconButton from '@mui/material/IconButton';
@@ -83,6 +85,9 @@ function RoutePlanner({
   editable,
 }: RoutePlannerProps) {
   const { t } = useTranslation();
+  // Removing a stop is Trips/Delete, which the default User role does not hold.
+  const { can } = usePermissions();
+  const canRemoveStops = can(PermissionResources.Trips, PermissionActions.Delete);
   const [corridorMeters, setCorridorMeters] = useState<number | string>(
     routePlan?.corridorMeters ?? DEFAULT_CORRIDOR_METERS
   );
@@ -284,11 +289,13 @@ function RoutePlanner({
                           <Icon fontSize="small">edit</Icon>
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title={t('tripStops.actions.remove')}>
-                        <IconButton size="small" color="error" onClick={() => onRemoveStop(stop.tripStopId)}>
-                          <Icon fontSize="small">delete</Icon>
-                        </IconButton>
-                      </Tooltip>
+                      {canRemoveStops && (
+                        <Tooltip title={t('tripStops.actions.remove')}>
+                          <IconButton size="small" color="error" onClick={() => onRemoveStop(stop.tripStopId)}>
+                            <Icon fontSize="small">delete</Icon>
+                          </IconButton>
+                        </Tooltip>
+                      )}
                     </>
                   )}
                 </ArgonBox>
