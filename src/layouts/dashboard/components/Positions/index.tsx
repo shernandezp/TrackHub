@@ -31,8 +31,7 @@ import { getTripsByTransporter } from 'api/router/router';
 import type { Trip, PositionSourceType } from 'api/router/router';
 import { routerKeys } from 'queries/router';
 import { useTransporterLookupByUser } from 'queries/transporters';
-import { getAccountFeatures } from 'api/manager/accountFeatures';
-import { notifyApiError } from 'api/core/errors';
+import { useFeatures } from 'context/features';
 import useForm from 'controls/Dialogs/useForm';
 import { usePlayback } from 'layouts/dashboard/utils/playback';
 import type { TripPoint } from 'layouts/dashboard/utils/playback';
@@ -81,7 +80,12 @@ function Positions({ settings, showGeofence, geofences }: PositionsProps) {
   const { darkMode } = controller;
   const [trips, setTrips] = useState<Trip[]>([]);
   const [selectedTrip, setSelectedTrip] = useState<string | null>(null);
-  const [historyEnabled, setHistoryEnabled] = useState(false);
+  // Read from the shell's account-context bootstrap. Asking Manager for
+  // `accountFeatures` here would need AccountFeatures/Read — a grant the User
+  // role does not hold — so the replay tab failed closed for the very role it
+  // is built for. The context carries the same rows behind Accounts/Read.
+  const { isFeatureEnabled } = useFeatures();
+  const historyEnabled = isFeatureEnabled(POSITION_HISTORY_FEATURE_KEY);
   const [source, setSource] = useState<PositionSourceType>('PROVIDER');
   const [loadedQuery, setLoadedQuery] = useState<LoadedQuery | null>(null);
   const [values, handleChange, setValues, setErrors, validate, errors] = useForm<PositionsFormValues>({});
@@ -138,24 +142,6 @@ function Positions({ settings, showGeofence, geofences }: PositionsProps) {
     setErrors({});
     setLoading(false);
   };
-
-  const fetchFeatures = async () => {
-    if (!settings?.accountId) return;
-    try {
-      const features = await getAccountFeatures(settings.accountId);
-      const feature = features.find(item => item.featureKey === POSITION_HISTORY_FEATURE_KEY);
-      setHistoryEnabled(!!feature?.enabled);
-    } catch (error) {
-      notifyApiError(error);
-      setHistoryEnabled(false);
-    }
-  };
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchFeatures();
-    }
-  }, [isAuthenticated, settings?.accountId]);
 
   const handleSelected = (selected: string | null) => {
     setSelectedTrip(selected);
