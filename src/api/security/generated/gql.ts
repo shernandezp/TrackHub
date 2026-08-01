@@ -31,6 +31,7 @@ type Documents = {
     "\n  mutation ResetDriverCredential(\n    $driverCredentialId: UUID!\n    $password: String!\n    $resetRequired: Boolean!\n  ) {\n    resetDriverCredential(\n      command: {\n        driverCredentialId: $driverCredentialId\n        password: $password\n        resetRequired: $resetRequired\n      }\n    )\n  }\n": typeof types.ResetDriverCredentialDocument,
     "\n  mutation RevokeDriverCredential($driverCredentialId: UUID!) {\n    revokeDriverCredential(command: { driverCredentialId: $driverCredentialId })\n  }\n": typeof types.RevokeDriverCredentialDocument,
     "\n  mutation RevokeDriverDevice($driverDeviceRegistrationId: UUID!, $revokedBy: String!) {\n    revokeDriverDevice(\n      command: { driverDeviceRegistrationId: $driverDeviceRegistrationId, revokedBy: $revokedBy }\n    )\n  }\n": typeof types.RevokeDriverDeviceDocument,
+    "\n  query GetAuthorizedActions($userId: UUID!) {\n    authorizedActions(query: { userId: $userId }) {\n      resourceName\n      actionName\n    }\n  }\n": typeof types.GetAuthorizedActionsDocument,
     "\n  fragment PolicyItem on PolicyVm {\n    policyId\n    name\n  }\n": typeof types.PolicyItemFragmentDoc,
     "\n  fragment PolicyResourceTree on ResourceVm {\n    resourceId\n    resourceName\n    actions {\n      resourceId\n      actionName\n      actionId\n    }\n  }\n": typeof types.PolicyResourceTreeFragmentDoc,
     "\n  query GetPolicies {\n    policies {\n      ...PolicyItem\n    }\n  }\n": typeof types.GetPoliciesDocument,
@@ -89,6 +90,7 @@ const documents: Documents = {
     "\n  mutation ResetDriverCredential(\n    $driverCredentialId: UUID!\n    $password: String!\n    $resetRequired: Boolean!\n  ) {\n    resetDriverCredential(\n      command: {\n        driverCredentialId: $driverCredentialId\n        password: $password\n        resetRequired: $resetRequired\n      }\n    )\n  }\n": types.ResetDriverCredentialDocument,
     "\n  mutation RevokeDriverCredential($driverCredentialId: UUID!) {\n    revokeDriverCredential(command: { driverCredentialId: $driverCredentialId })\n  }\n": types.RevokeDriverCredentialDocument,
     "\n  mutation RevokeDriverDevice($driverDeviceRegistrationId: UUID!, $revokedBy: String!) {\n    revokeDriverDevice(\n      command: { driverDeviceRegistrationId: $driverDeviceRegistrationId, revokedBy: $revokedBy }\n    )\n  }\n": types.RevokeDriverDeviceDocument,
+    "\n  query GetAuthorizedActions($userId: UUID!) {\n    authorizedActions(query: { userId: $userId }) {\n      resourceName\n      actionName\n    }\n  }\n": types.GetAuthorizedActionsDocument,
     "\n  fragment PolicyItem on PolicyVm {\n    policyId\n    name\n  }\n": types.PolicyItemFragmentDoc,
     "\n  fragment PolicyResourceTree on ResourceVm {\n    resourceId\n    resourceName\n    actions {\n      resourceId\n      actionName\n      actionId\n    }\n  }\n": types.PolicyResourceTreeFragmentDoc,
     "\n  query GetPolicies {\n    policies {\n      ...PolicyItem\n    }\n  }\n": types.GetPoliciesDocument,
@@ -212,6 +214,10 @@ export function graphql(source: "\n  mutation RevokeDriverCredential($driverCred
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation RevokeDriverDevice($driverDeviceRegistrationId: UUID!, $revokedBy: String!) {\n    revokeDriverDevice(\n      command: { driverDeviceRegistrationId: $driverDeviceRegistrationId, revokedBy: $revokedBy }\n    )\n  }\n"): (typeof documents)["\n  mutation RevokeDriverDevice($driverDeviceRegistrationId: UUID!, $revokedBy: String!) {\n    revokeDriverDevice(\n      command: { driverDeviceRegistrationId: $driverDeviceRegistrationId, revokedBy: $revokedBy }\n    )\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query GetAuthorizedActions($userId: UUID!) {\n    authorizedActions(query: { userId: $userId }) {\n      resourceName\n      actionName\n    }\n  }\n"): (typeof documents)["\n  query GetAuthorizedActions($userId: UUID!) {\n    authorizedActions(query: { userId: $userId }) {\n      resourceName\n      actionName\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

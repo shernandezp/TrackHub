@@ -55,6 +55,7 @@ import { cleanString } from 'utils/stringUtils';
 import { LoadingContext } from 'LoadingContext';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "AuthContext";
+import { useFeatures } from 'context/features';
 import { useArgonController } from 'context';
 
 // Dashboard layout components
@@ -64,6 +65,7 @@ import MapControlStyle from 'controls/Maps/styles/MapControl';
 import { countRecentDevices, countDevicesInMovement, getPercentage, filterPositions } from 'layouts/dashboard/utils/dashboard';
 
 const TRAIL_LENGTH = 10;
+const GEOFENCING_FEATURE_KEY = 'geofencing';
 
 /** A per-type total shown as a chip / stat summary. */
 interface TypeSummaryItem { name: string; total: number; }
@@ -81,6 +83,13 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
   const queryClient = useQueryClient();
   const { setLoading } = useContext(LoadingContext);
   const { isAuthenticated } = useAuth();
+  // The live map is platform baseline and is never feature-gated (spec 07 §3).
+  // The in-geofence tile and the overlay toggle are the only geofencing-gated
+  // surfaces on this screen: without the feature the query answers
+  // FEATURE_DISABLED, so the tile is not rendered and the query never fires
+  // (spec 07 §16 acceptance 7).
+  const { isFeatureEnabled } = useFeatures();
+  const geofencingEnabled = isFeatureEnabled(GEOFENCING_FEATURE_KEY);
   const [controller] = useArgonController();
   const { darkMode } = controller;
   const [positions, setPositions] = useState<Position[]>([]);
@@ -226,6 +235,7 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
   };
 
   const calculateReference = async () => {
+    if (!geofencingEnabled) return;
     try {
       const result = await queryClient.fetchQuery({
         queryKey: geofenceKeys.transportersInGeofence,
@@ -438,10 +448,14 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
     return trails[key] || [];
   }, [selectedTransporter, positions, trails]);
 
+  // The row is 5-up with geofencing and 4-up without it; the lg width follows the
+  // tile count so dropping the geofence tile does not leave a gap in the row.
+  const statCardWidth = geofencingEnabled ? 2.4 : 3;
+
   return (
     <ArgonBox py={1}>
         <Grid container spacing={3} sx={{ mb: 1 }}>
-            <Grid size={{xs: 12, md:6, lg:2.4}}>
+            <Grid size={{xs: 12, md:6, lg:statCardWidth}}>
                 <DetailedStatisticsCard
                     title={t("dashboard.totalTitle")}
                     count={positions.length}
@@ -449,7 +463,7 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
                     percentage={{ color: "success", count: "", hide: true }}
                 />
             </Grid>
-            <Grid size={{xs: 12, md:6, lg:2.4}}>
+            <Grid size={{xs: 12, md:6, lg:statCardWidth}}>
                 <DetailedStatisticsCard
                     title={t("dashboard.activeTitle")}
                     count={active}
@@ -457,7 +471,7 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
                     percentage={{ color: "success", count: `${getPercentage(active, positions.length)}%`, hide: false }}
                 />
             </Grid>
-            <Grid size={{xs: 12, md:6, lg:2.4}}>
+            <Grid size={{xs: 12, md:6, lg:statCardWidth}}>
                 <DetailedStatisticsCard
                     title={t("dashboard.movementTitle")}
                     count={movement}
@@ -465,7 +479,8 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
                     percentage={{ color: "error", count: `${getPercentage(movement, positions.length)}%`, hide: false }}
                 />
             </Grid>
-            <Grid size={{xs: 12, md:6, lg:2.4}}>
+            {geofencingEnabled && (
+            <Grid size={{xs: 12, md:6, lg:statCardWidth}}>
                 <DetailedStatisticsCard
                     title={t("dashboard.inGeofence")}
                     count={inGeofence}
@@ -476,7 +491,8 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
                     percentage={{ color: "success", count: `${getPercentage(inGeofence, positions.length)}%`, hide: false }}
                 />
             </Grid>
-            <Grid size={{xs: 12, md:6, lg:2.4}}>
+            )}
+            <Grid size={{xs: 12, md:6, lg:statCardWidth}}>
                 <DetailedStatisticsCard
                     title={t("dashboard.criticalAlerts")}
                     count={criticalAlerts}

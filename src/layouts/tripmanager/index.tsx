@@ -37,6 +37,8 @@ import ArgonButton from 'components/ArgonButton';
 import ArgonPagination from 'components/ArgonPagination';
 import ArgonTypography from 'components/ArgonTypography';
 import { useArgonController } from 'context';
+import { usePermissions } from 'context/permissions';
+import { PermissionResources, PermissionActions } from 'constants/permissions';
 import { useAccountByUser } from 'queries/accounts';
 import { useTransporterLookupByUser } from 'queries/transporters';
 import { useDriversByAccount } from 'queries/drivers';
@@ -226,6 +228,15 @@ function TripManager() {
   useEffect(() => setWorkspaceTab('route'), [selectedTripId]);
   const detailQuery = useTripDetail(selectedTripId);
   const detail = detailQuery.data;
+
+  /* ---------------------------------------------------------- permissions */
+
+  // Trips/Delete is NOT in the default User role matrix (the dispatcher creates and
+  // runs trips; retiring one is a Manager action), so the three destructive controls
+  // on this screen are permission-gated rather than always rendered. A user elevated
+  // by a policy that grants Trips/Delete sees them.
+  const { can } = usePermissions();
+  const canDeleteTrips = can(PermissionResources.Trips, PermissionActions.Delete);
 
   /* ---------------------------------------------------------- mutations */
 
@@ -1012,7 +1023,7 @@ function TripManager() {
                       )}
                     </>
                   )}
-                  {detail.trip.status === 'Created' && (
+                  {detail.trip.status === 'Created' && canDeleteTrips && (
                     <ArgonButton variant="text" color="error" size="small" onClick={() => setConfirmDelete(true)}>
                       <Icon>delete</Icon>&nbsp;{t('trips.actions.delete')}
                     </ArgonButton>

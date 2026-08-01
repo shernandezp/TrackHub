@@ -28,7 +28,7 @@ Coded by www.creative-tim.com
 
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { ReactNode } from 'react';
 
 // react-router components
@@ -90,6 +90,9 @@ import SuspensionScreen from "components/SuspensionScreen";
 import PrincipalTypes from "constants/principalTypes";
 import HelpProvider from "context/help";
 import { FeaturesContext, isFeatureActive } from "context/features";
+import { PermissionsContext, buildPermissionIndex } from "context/permissions";
+import { getAuthorizedActions } from "api/security/permissions";
+import type { AuthorizedAction } from "api/security/permissions";
 import AnnouncementBanner from "components/AnnouncementBanner";
 
 /**
@@ -119,6 +122,8 @@ export default function App() {
   const [userIsManager, setUserIsManager] = useState(true);
   const [accountSettings, setAccountSettings] = useState<Partial<AccountSettings>>({});
   const [accountFeatures, setAccountFeatures] = useState<AccountContext['features']>([]);
+  const [authorizedActions, setAuthorizedActions] = useState<AuthorizedAction[]>([]);
+  const [permissionsLoaded, setPermissionsLoaded] = useState(false);
   const [accountStatus, setAccountStatus] = useState<AccountStatus | null>(null);
   const [branding, setBranding] = useState<AccountContext['branding'] | null>(null);
   const [currentPrincipal, setCurrentPrincipal] = useState<CurrentPrincipal | null>(null);
@@ -177,6 +182,20 @@ export default function App() {
       setCurrentPrincipal(principal);
       setUserIsAdmin(admin);
       setUserIsManager(manager);
+
+      // The caller's effective permission set (roles UNION policies), used to gate
+      // actions the way `featureEnabled` gates screens. Needs the principal's user
+      // id, so it follows the fan-out rather than joining it. A failure leaves the
+      // set unloaded, and `can` then answers true — UI gating is UX only and the
+      // backend re-checks every call, so degrading OPEN shows a toast on a denied
+      // click instead of silently hiding controls the user actually has.
+      if (principal?.userId) {
+        const actions = await getAuthorizedActions(principal.userId).catch(() => null);
+        if (actions) {
+          setAuthorizedActions(actions);
+          setPermissionsLoaded(true);
+        }
+      }
       if (settings) {
         setAccountSettings(settings);
       }
@@ -241,6 +260,12 @@ export default function App() {
   // (missing row ⇒ disabled, effective window honoured).
   const featureEnabled = (featureKey?: string | null): boolean =>
     isFeatureActive(accountFeatures, featureKey);
+
+  // Permission gate for ACTIONS (the feature flags above gate SCREENS). Open until the
+  // set has loaded — see the note on PermissionsContext.
+  const permissionIndex = useMemo(() => buildPermissionIndex(authorizedActions), [authorizedActions]);
+  const can = (resource: string, action: string): boolean =>
+    !permissionsLoaded || permissionIndex.has(`${resource}.${action}`);
 
   const filterRoutesByFeatures = (allRoutes: RouteDefinition[]): RouteDefinition[] =>
     allRoutes
@@ -319,6 +344,7 @@ export default function App() {
             <SuspensionScreen status={accountStatus} branding={branding} />
           ) : (
           <FeaturesContext.Provider value={{ features: accountFeatures, isFeatureEnabled: featureEnabled }}>
+          <PermissionsContext.Provider value={{ actions: authorizedActions, can, loaded: permissionsLoaded }}>
           <HelpProvider allowedScreens={allowedScreens} isFeatureEnabled={featureEnabled}>
           {layout === "dashboard" && !onPublicPage && (
           <>
@@ -347,6 +373,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
           </HelpProvider>
+          </PermissionsContext.Provider>
           </FeaturesContext.Provider>
           )}
         </ErrorBoundary>
