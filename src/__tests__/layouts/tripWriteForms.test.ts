@@ -17,17 +17,28 @@
 import {
   buildDeliveryPayload,
   buildPodPayload,
+  buildStopPayloadFromDestination,
   buildTollClassVariables,
+  deriveTripType,
+  destinationsFromStops,
   isCleanAttachment,
   podDocumentFields,
+  returnToOriginStop,
   toIso,
   toLocalInput,
   normalizeStopCity,
   isStopCityWithinLimit,
+  normalizeStopActivity,
+  hasException,
+  DEFAULT_ARRIVAL_RADIUS_METERS,
   DELIVERY_STATUSES,
   STOP_CITY_MAX_LENGTH,
 } from 'layouts/tripmanager/tripWriteForms';
-import type { PodAttachment } from 'layouts/tripmanager/tripWriteForms';
+import type {
+  PodAttachment,
+  RouteSourceStop,
+  TripDestinationDraft,
+} from 'layouts/tripmanager/tripWriteForms';
 
 const STOP_ID = '11111111-1111-1111-1111-111111111111';
 const DOC_ID = '22222222-2222-2222-2222-222222222222';
@@ -276,5 +287,213 @@ describe('datetime-local helpers', () => {
     expect(toIso('')).toBeNull();
     expect(toIso(null)).toBeNull();
     expect(toIso('not-a-date')).toBeNull();
+  });
+});
+
+describe('trip creation destinations', () => {
+  const GEOFENCE_ID = '66666666-6666-6666-6666-666666666666';
+
+  const destination = (overrides: Partial<TripDestinationDraft> = {}): TripDestinationDraft => ({
+    name: 'Warehouse',
+    latitude: 4.6,
+    longitude: -74.08,
+    geofenceId: null,
+    arrivalRadiusMeters: 150,
+    activity: 'Unload',
+    requiresPod: false,
+    priority: 0,
+    ...overrides,
+  });
+
+  const stop = (overrides: Partial<RouteSourceStop> = {}): RouteSourceStop => ({
+    sequence: 1,
+    name: 'Warehouse',
+    latitude: 4.6,
+    longitude: -74.08,
+    geofenceId: null,
+    arrivalRadiusMeters: 150,
+    requiresPod: false,
+    priority: 0,
+    ...overrides,
+  });
+
+  test('buildStopPayloadFromDestination normalizes blanks and keeps the geofence link', () => {
+    const payload = buildStopPayloadFromDestination(
+      destination({ name: '  Depot  ', address: '   ', city: '', geofenceId: GEOFENCE_ID })
+    );
+    expect(payload.name).toBe('Depot');
+    expect(payload.address).toBeNull();
+    expect(payload.city).toBeNull();
+    expect(payload.geofenceId).toBe(GEOFENCE_ID);
+    expect(payload.arrivalRadiusMeters).toBe(DEFAULT_ARRIVAL_RADIUS_METERS);
+    expect(payload.plannedArrivalFrom).toBeNull();
+    expect(payload.plannedArrivalTo).toBeNull();
+  });
+
+  test('a zeroed arrival radius falls back to the default rather than sending 0', () => {
+    const payload = buildStopPayloadFromDestination(destination({ arrivalRadiusMeters: 0 }));
+    expect(payload.arrivalRadiusMeters).toBe(DEFAULT_ARRIVAL_RADIUS_METERS);
+  });
+
+  test('returnToOriginStop carries the origin geofence so detection uses the real shape', () => {
+    const returnStop = returnToOriginStop('Plant', 4.6, -74.08, GEOFENCE_ID);
+    expect(returnStop.name).toBe('Plant');
+    expect(returnStop.latitude).toBe(4.6);
+    expect(returnStop.geofenceId).toBe(GEOFENCE_ID);
+    expect(returnToOriginStop('Plant', 4.6, -74.08).geofenceId).toBeNull();
+  });
+
+  test('deriveTripType: one stop is single, several are multi', () => {
+    expect(deriveTripType(4.6, -74.08, [])).toBe('single');
+    expect(deriveTripType(4.6, -74.08, [stop({ latitude: 4.7 })])).toBe('single');
+    expect(
+      deriveTripType(4.6, -74.08, [
+        stop({ sequence: 1, latitude: 4.7 }),
+        stop({ sequence: 2, latitude: 4.8 }),
+      ])
+    ).toBe('multi');
+  });
+
+  test('deriveTripType: a trailing stop back at the origin makes it a round trip', () => {
+    const stops = [
+      stop({ sequence: 1, latitude: 4.7 }),
+      // Return stop within the 6-decimal rounding pickers apply.
+      stop({ sequence: 2, latitude: 4.600004, longitude: -74.080004 }),
+    ];
+    expect(deriveTripType(4.6, -74.08, stops)).toBe('round');
+    // Sequence order decides which stop is "last", not array order.
+    expect(deriveTripType(4.6, -74.08, [...stops].reverse())).toBe('round');
+  });
+
+  test('deriveTripType: a lone stop at the origin is NOT a round trip', () => {
+    expect(deriveTripType(4.6, -74.08, [stop({ latitude: 4.6, longitude: -74.08 })])).toBe(
+      'single'
+    );
+  });
+
+  test('destinationsFromStops drops the return stop of a round trip and keeps its geofence', () => {
+    const template = destinationsFromStops(
+      [
+        stop({ sequence: 1, name: 'Client', latitude: 4.7 }),
+        stop({ sequence: 2, name: 'Plant', latitude: 4.6, geofenceId: GEOFENCE_ID }),
+      ],
+      4.6,
+      -74.08
+    );
+    expect(template.tripType).toBe('round');
+    expect(template.destinations).toHaveLength(1);
+    expect(template.destinations[0].name).toBe('Client');
+    expect(template.originGeofenceId).toBe(GEOFENCE_ID);
+  });
+
+  test('destinationsFromStops keeps every stop of a multi-destination route in sequence order', () => {
+    const template = destinationsFromStops(
+      [
+        stop({ sequence: 2, name: 'Second', latitude: 4.8 }),
+        stop({ sequence: 1, name: 'First', latitude: 4.7 }),
+      ],
+      4.6,
+      -74.08
+    );
+    expect(template.tripType).toBe('multi');
+    expect(template.destinations.map((entry) => entry.name)).toEqual(['First', 'Second']);
+    expect(template.originGeofenceId).toBeNull();
+  });
+});
+
+/**
+ * Spec 11a §4.2: what a stop is FOR. The normalizer has to be forgiving in one
+ * direction only — an omitted or unrecognised value becomes `Unload`, so a client
+ * that predates the field keeps working, while a real value is never rewritten.
+ */
+describe('stop activity', () => {
+  test('recognised values pass through unchanged', () => {
+    expect(normalizeStopActivity('Load')).toBe('Load');
+    expect(normalizeStopActivity('Unload')).toBe('Unload');
+    expect(normalizeStopActivity('Other')).toBe('Other');
+  });
+
+  test('anything unrecognised, empty or absent falls back to unloading', () => {
+    expect(normalizeStopActivity(null)).toBe('Unload');
+    expect(normalizeStopActivity(undefined)).toBe('Unload');
+    expect(normalizeStopActivity('')).toBe('Unload');
+    expect(normalizeStopActivity('Collect')).toBe('Unload');
+  });
+
+  test("a round trip's return leg is Other, not Unload", () => {
+    // Parking back at the depot is neither loading nor unloading; calling it either
+    // would put a fictional duration into the dwell reports.
+    expect(returnToOriginStop('Plant 3', 4.6, -74.08).activity).toBe('Other');
+  });
+
+  test('the stop payload carries the activity through to the server', () => {
+    const payload = buildStopPayloadFromDestination({
+      name: 'Plant 3',
+      latitude: 4.6,
+      longitude: -74.08,
+      geofenceId: null,
+      arrivalRadiusMeters: 150,
+      activity: 'Load',
+      requiresPod: false,
+      priority: 0,
+    });
+    expect(payload.activity).toBe('Load');
+  });
+});
+
+/**
+ * Spec 11a §10: dispatcher attention is exception-driven. Every answer is derived
+ * from a fact the row already carries, never a stored flag — which is what lets the
+ * filter run over the page the board already fetched.
+ */
+describe('board exceptions', () => {
+  const trip = (overrides: Partial<Parameters<typeof hasException>[0]> = {}) => ({
+    phase: 'InTransit',
+    status: 'InProgress',
+    deviationOpenedAt: null,
+    pendingStopCount: 1,
+    phaseDelayed: false,
+    ...overrides,
+  });
+
+  test('overdue reads the derived phase, not the status', () => {
+    // The trip is still Created — Overdue is a READING, and the queue stays blocked
+    // until a dispatcher decides.
+    expect(hasException(trip({ phase: 'Overdue', status: 'Created' }), 'overdue')).toBe(true);
+    expect(hasException(trip({ phase: 'Scheduled', status: 'Created' }), 'overdue')).toBe(false);
+  });
+
+  test('off corridor is an open deviation episode', () => {
+    expect(hasException(trip({ deviationOpenedAt: '2026-08-03T10:00:00Z' }), 'offCorridor')).toBe(true);
+    expect(hasException(trip(), 'offCorridor')).toBe(false);
+  });
+
+  test('delayed is the backend verdict, so the badge and the alert cannot disagree', () => {
+    // The portal used to re-derive this as "next-stop ETA later than the trip's planned
+    // END", which is a looser rule than the one raising TripDelayed (that stop's own
+    // window plus delayThresholdMinutes) — two answers to one word on one screen.
+    expect(hasException(trip({ phaseDelayed: true }), 'delayed')).toBe(true);
+    expect(hasException(trip({ phaseDelayed: false }), 'delayed')).toBe(false);
+  });
+
+  test('stalled at the final stop is a running trip at a stop with nowhere left to go', () => {
+    expect(hasException(trip({ phase: 'AtStop', pendingStopCount: 0 }), 'stalledFinalStop')).toBe(true);
+    // Still has destinations ahead, so it is simply working.
+    expect(hasException(trip({ phase: 'AtStop', pendingStopCount: 2 }), 'stalledFinalStop')).toBe(false);
+    expect(
+      hasException(trip({ phase: 'AtStop', pendingStopCount: 0, status: 'Paused' }), 'stalledFinalStop')
+    ).toBe(false);
+  });
+
+  /**
+   * The regression that made this filter useless: the resolver never sets an ETA on the
+   * AtStop branch — an estimate to a stop you are already parked at is meaningless — so
+   * the old `!phaseEtaAt` test was ALWAYS true and every truck unloading anywhere was
+   * reported as stalled at its final stop.
+   */
+  test('a truck unloading mid-route is not reported as stalled just because it has no ETA', () => {
+    expect(
+      hasException(trip({ phase: 'AtStop', pendingStopCount: 3 }), 'stalledFinalStop')
+    ).toBe(false);
   });
 });

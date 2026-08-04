@@ -65,6 +65,7 @@ import {
   useDeleteDelivery,
   useRecordProofOfDelivery,
   useSetTransporterTollClass,
+  useDeclareTripInTransit,
 } from 'queries/trips';
 import { useUploadDocument, useRefreshDocument } from 'queries/documents';
 import { getAccountSettings } from 'api/manager/settings';
@@ -73,12 +74,14 @@ import { formatDateTime } from 'utils/dateUtils';
 import { MAP_PROVIDERS } from 'controls/Maps/core/MapProviderContext';
 import type { MapProvider } from 'controls/Maps/core/MapProviderContext';
 import type { RoutePoint } from 'controls/Maps/core/mapTypes';
+import { getTripDetail } from 'api/tripManagement/trips';
 import type {
   TripListFilters,
   TripStopDtoInput,
   TripDtoInput,
   TripDelivery,
   TransporterTollClass,
+  Trip,
 } from 'api/tripManagement/trips';
 import {
   toIso,
@@ -86,11 +89,19 @@ import {
   newClientEventId,
   buildDeliveryPayload,
   buildPodPayload,
+  buildStopPayloadFromDestination,
   buildTollClassVariables,
+  DEFAULT_ARRIVAL_RADIUS_METERS,
+  deriveTripType,
+  destinationsFromStops,
   podDocumentFields,
   normalizeStopCity,
   isStopCityWithinLimit,
+  returnToOriginStop,
+  hasException,
+  normalizeStopActivity,
   STOP_CITY_MAX_LENGTH,
+  TRIP_EXCEPTIONS,
   DELIVERY_REQUIRED_FIELDS,
   POD_REQUIRED_FIELDS,
 } from './tripWriteForms';
@@ -100,6 +111,8 @@ import type {
   PodAttachment,
   PodFormValues,
   TollClassFormValues,
+  TripDestinationDraft,
+  TripException,
 } from './tripWriteForms';
 import TripDialog from './components/TripDialog';
 import type { TripFormValues } from './components/TripDialog';
@@ -114,9 +127,25 @@ import DeliveryDialog from './components/DeliveryDialog';
 import DeliveryOutcomeDialog from './components/DeliveryOutcomeDialog';
 import PodDialog from './components/PodDialog';
 import TollClassDialog from './components/TollClassDialog';
+import TripImportDialog from './components/TripImportDialog';
 
 const PAGE_SIZE = 10;
 const ALL = 'all';
+
+/**
+ * How many trips the board scans when an exception filter is on. Exceptions are derived
+ * client-side, so the wider window is what makes the answer trustworthy; it is bounded
+ * because "every trip ever" is not a board, and the other filters (status, unit, dates)
+ * still narrow it first.
+ */
+const EXCEPTION_SCAN_SIZE = 200;
+
+/**
+ * Feed for the create dialog's "reuse a previous route" picker. A stable
+ * reference so the query key never churns; 50 recent trips is plenty for a
+ * dispatcher re-running known routes (full templates are spec 11 slice 2).
+ */
+const COPY_SOURCE_FILTERS: TripListFilters = { take: 50 };
 const TRIP_STATUSES = ['Created', 'InProgress', 'Paused', 'Completed', 'Cancelled', 'Aborted'] as const;
 
 /** Statuses whose trips are still being planned — stops and routes stay editable. */
@@ -173,11 +202,14 @@ function TripManager() {
 
   const [page, setPage] = useState(0);
   const [status, setStatus] = useState<string>(ALL);
+  const [exception, setException] = useState<string>(ALL);
   const [transporterFilter, setTransporterFilter] = useState<string>(ALL);
   const [driverFilter, setDriverFilter] = useState<string>(ALL);
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [search, setSearch] = useState('');
+
+  const filteringExceptions = exception !== ALL;
 
   const filters = useMemo<TripListFilters>(
     () => ({
@@ -187,10 +219,15 @@ function TripManager() {
       transporterId: transporterFilter === ALL ? null : transporterFilter,
       driverId: driverFilter === ALL ? null : driverFilter,
       search: search.trim() || null,
-      skip: page * PAGE_SIZE,
-      take: PAGE_SIZE,
+      // Exceptions are DERIVED from the phase and the measured timestamps, so the server
+      // cannot filter on them in SQL — the phase does not exist until the rows are read.
+      // Filtering ten rows at a time would therefore be a trap: a dispatcher asking "what
+      // is overdue?" would be told "nothing" while page two was full of it. So the
+      // exception view fetches one wide page and pages through it here instead.
+      skip: filteringExceptions ? 0 : page * PAGE_SIZE,
+      take: filteringExceptions ? EXCEPTION_SCAN_SIZE : PAGE_SIZE,
     }),
-    [status, from, to, transporterFilter, driverFilter, search, page]
+    [status, from, to, transporterFilter, driverFilter, search, page, filteringExceptions]
   );
 
   /* --------------------------------------------------------------- data */
@@ -265,6 +302,43 @@ function TripManager() {
   const [tripOpen, setTripOpen] = useState(false);
   const [tripValues, tripChange, setTripValues, setTripErrors, validateTrip, tripErrors] =
     useForm<TripFormValues>({});
+  // Destinations queued in the create dialog; they become stops right after the
+  // trip header is created (the create command owns only the header, §7.3).
+  const [tripDestinations, setTripDestinations] = useState<TripDestinationDraft[]>([]);
+
+  // Reusable-route feed for the create dialog, fetched only while it is open.
+  const copySourcesQuery = useTrips(COPY_SOURCE_FILTERS, {
+    enabled: tripOpen && !tripValues.tripId,
+  });
+  const copySources = useMemo(
+    () => copySourcesQuery.data?.items ?? [],
+    [copySourcesQuery.data]
+  );
+
+  /** Prefills origin, route shape and toll class from an existing trip. */
+  const applyTripTemplate = async (sourceTripId: string) => {
+    try {
+      const source = await getTripDetail(sourceTripId);
+      const template = destinationsFromStops(
+        source.stops,
+        source.trip.originLatitude,
+        source.trip.originLongitude
+      );
+      setTripValues((previous) => ({
+        ...previous,
+        originName: source.trip.originName,
+        originLatitude: source.trip.originLatitude,
+        originLongitude: source.trip.originLongitude,
+        originGeofenceId: template.originGeofenceId,
+        originPoiId: null,
+        tollVehicleClass: source.trip.tollVehicleClass ?? previous.tollVehicleClass,
+        tripType: template.tripType,
+      }));
+      setTripDestinations(template.destinations);
+    } catch (error) {
+      notifyApiError(error);
+    }
+  };
 
   const openTrip = (edit = false) => {
     if (edit && detail) {
@@ -278,29 +352,53 @@ function TripManager() {
         originName: detail.trip.originName,
         originLatitude: detail.trip.originLatitude,
         originLongitude: detail.trip.originLongitude,
+        // Seeded from the STORED column now that the origin zone is real: leaving it
+        // blank would save the trip back with its geofence link dropped, and the
+        // origin would silently fall from the plant's real shape to a 150 m circle.
+        originGeofenceId: detail.trip.originGeofenceId,
         plannedStartAt: toLocalInput(detail.trip.plannedStartAt),
         plannedEndAt: toLocalInput(detail.trip.plannedEndAt),
         notes: detail.trip.notes,
         tollVehicleClass: detail.trip.tollVehicleClass,
       });
     } else {
-      setTripValues({ plannedStartAt: toLocalInput(new Date().toISOString()) });
+      setTripValues({
+        plannedStartAt: toLocalInput(new Date().toISOString()),
+        tripType: 'single',
+      });
     }
+    setTripDestinations([]);
     setTripErrors({});
     setTripOpen(true);
   };
 
   const saveTrip = async () => {
-    if (
-      !validateTrip([
-        'code',
-        'transporterId',
-        'originName',
-        'originLatitude',
-        'originLongitude',
-        'plannedStartAt',
-      ])
-    ) {
+    if (!validateTrip(['code', 'transporterId', 'originName', 'plannedStartAt'])) {
+      return;
+    }
+    const creating = !tripValues.tripId;
+    const tripType = tripValues.tripType ?? 'single';
+    // Places, not fields: the origin must have been PICKED (geofence or POI),
+    // and a new trip is a route — it needs at least one destination. Extra stop
+    // detail (arrival windows, POD flags, reordering) belongs to the planner.
+    const originLatitude = Number(tripValues.originLatitude);
+    const originLongitude = Number(tripValues.originLongitude);
+    const hasOrigin =
+      Number.isFinite(originLatitude) &&
+      Number.isFinite(originLongitude) &&
+      (originLatitude !== 0 || originLongitude !== 0);
+    const placementErrors: Record<string, string> = {};
+    if (!hasOrigin) {
+      placementErrors.origin = t('trips.origin.required');
+    }
+    if (creating && tripDestinations.length === 0) {
+      placementErrors.destinations = t('trips.destinations.required');
+    }
+    if (creating && tripType === 'single' && tripDestinations.length > 1) {
+      placementErrors.destinations = t('trips.destinations.singleLimit');
+    }
+    if (Object.keys(placementErrors).length > 0) {
+      setTripErrors(placementErrors);
       return;
     }
     const payload: TripDtoInput = {
@@ -313,6 +411,8 @@ function TripManager() {
       originName: tripValues.originName as string,
       originLatitude: Number(tripValues.originLatitude),
       originLongitude: Number(tripValues.originLongitude),
+      originGeofenceId: tripValues.originGeofenceId || null,
+      originRadiusMeters: DEFAULT_ARRIVAL_RADIUS_METERS,
       plannedStartAt: toIso(tripValues.plannedStartAt) as string,
       plannedEndAt: toIso(tripValues.plannedEndAt),
       notes: tripValues.notes || null,
@@ -323,6 +423,30 @@ function TripManager() {
         await updateTrip.mutateAsync({ tripId: tripValues.tripId, trip: payload });
       } else {
         const created = await createTrip.mutateAsync(payload);
+        // The queued destinations become stops one by one, in list order; a
+        // round trip closes with an auto-appended return stop at the origin.
+        // A failed stop surfaces in the global toast but does not abandon the
+        // rest — the trip gets selected either way, so the planner shows
+        // exactly what landed.
+        const queued = [...tripDestinations];
+        if (tripType === 'round') {
+          queued.push(
+            returnToOriginStop(
+              payload.originName,
+              payload.originLatitude,
+              payload.originLongitude,
+              tripValues.originGeofenceId
+            )
+          );
+        }
+        for (const destination of queued) {
+          await addStop
+            .mutateAsync({
+              tripId: created.tripId,
+              stop: buildStopPayloadFromDestination(destination),
+            })
+            .catch(() => undefined);
+        }
         setSelectedTripId(created.tripId);
       }
       setTripOpen(false);
@@ -359,13 +483,14 @@ function TripManager() {
             longitude: existing.longitude,
             geofenceId: existing.geofenceId,
             arrivalRadiusMeters: existing.arrivalRadiusMeters,
+            activity: normalizeStopActivity(existing.activity),
             plannedArrivalFrom: toLocalInput(existing.plannedArrivalFrom),
             plannedArrivalTo: toLocalInput(existing.plannedArrivalTo),
             requiresPod: existing.requiresPod,
             priority: existing.priority,
             observations: existing.observations,
           }
-        : { arrivalRadiusMeters: 150, priority: 0, requiresPod: false }
+        : { arrivalRadiusMeters: 150, activity: 'Unload', priority: 0, requiresPod: false }
     );
     setStopErrors({});
     setPlacing(false);
@@ -407,6 +532,7 @@ function TripManager() {
       longitude: Number(stopValues.longitude),
       geofenceId: stopValues.geofenceId || null,
       arrivalRadiusMeters: Number(stopValues.arrivalRadiusMeters) || 150,
+      activity: normalizeStopActivity(stopValues.activity),
       plannedArrivalFrom: toIso(stopValues.plannedArrivalFrom),
       plannedArrivalTo: toIso(stopValues.plannedArrivalTo),
       requiresPod: !!stopValues.requiresPod,
@@ -593,6 +719,7 @@ function TripManager() {
   /* -------------------------------------------- transporter toll classes */
 
   const [tollClassOpen, setTollClassOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [
     tollClassValues,
     tollClassChange,
@@ -644,6 +771,11 @@ function TripManager() {
   const [reason, setReason] = useState('');
   const [completeOpen, setCompleteOpen] = useState(false);
   const [forceComplete, setForceComplete] = useState(false);
+  // The manual verbs live behind one affordance now — see the Override group below.
+  const [overrideOpen, setOverrideOpen] = useState(false);
+  const [inTransitOpen, setInTransitOpen] = useState(false);
+  const [inTransitStartedAt, setInTransitStartedAt] = useState('');
+  const declareInTransit = useDeclareTripInTransit();
   const [skipStopId, setSkipStopId] = useState<string | null>(null);
   const [skipReason, setSkipReason] = useState('');
   const [shareOpen, setShareOpen] = useState(false);
@@ -703,6 +835,17 @@ function TripManager() {
     [drivers, t]
   );
 
+  const exceptionOptions = useMemo(
+    () => [
+      { value: ALL, label: t('trips.exceptions.all') },
+      ...TRIP_EXCEPTIONS.map((value) => ({
+        value,
+        label: t(`trips.exceptions.${value}` as 'trips.exceptions.overdue'),
+      })),
+    ],
+    [t]
+  );
+
   const statusColor = (value: string) =>
     value === 'InProgress'
       ? 'info'
@@ -714,9 +857,50 @@ function TripManager() {
             ? 'primary'
             : 'secondary';
 
+  /**
+   * The phase, in the dispatcher's words: "Loading at Plant 3", "In transit → Client X
+   * (ETA 11:05)", "Unloading at Client Y", "Overdue". The backend hands over the phase
+   * plus the stop it concerns; the sentence is built here because it is a UI reading of
+   * those facts, not a stored string (spec 11a §10).
+   */
+  const phaseLabel = (trip: Trip): string => {
+    const phase = t(`trips.phases.${trip.phase}` as 'trips.phases.Scheduled');
+    if (!trip.phaseStopName) return phase;
+    const eta = trip.phaseEtaAt ? ` (${t('trips.eta')} ${formatDateTime(trip.phaseEtaAt)})` : '';
+    return `${phase} · ${trip.phaseStopName}${eta}`;
+  };
+
+  const phaseColor = (phase: string) =>
+    phase === 'Overdue'
+      ? 'error'
+      : phase === 'InTransit'
+        ? 'info'
+        : phase === 'AtOrigin' || phase === 'AtStop'
+          ? 'warning'
+          : phase === 'Completed'
+            ? 'success'
+            : 'secondary';
+
+  /**
+   * The exception filter runs here, over the wide window {@link EXCEPTION_SCAN_SIZE}
+   * fetched for it, and then this component pages the survivors ten at a time.
+   */
+  const matchingTrips = useMemo(
+    () => (filteringExceptions ? trips.filter((trip) => hasException(trip, exception as TripException)) : trips),
+    [trips, exception, filteringExceptions]
+  );
+
+  const visibleTrips = useMemo(
+    () => (filteringExceptions ? matchingTrips.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE) : matchingTrips),
+    [matchingTrips, page, filteringExceptions]
+  );
+
   // The board spans the FULL width, so it can afford the columns a dispatcher
   // actually scans by — who is carrying it and who is driving — without the
   // crowding that made a one-third-width board collide with itself.
+  //
+  // Phase leads the status badge: a column of rows all reading "InProgress" is
+  // precisely why a dispatcher used to have to open each one.
   const columns = [
     { name: 'code', title: t('trips.code'), align: 'left' as const },
     { name: 'customer', title: t('trips.customerName'), align: 'left' as const },
@@ -724,11 +908,12 @@ function TripManager() {
     { name: 'driver', title: t('trips.driver'), align: 'left' as const },
     { name: 'plannedStart', title: t('trips.plannedStart'), align: 'left' as const },
     { name: 'stops', title: t('trips.stops'), align: 'center' as const },
+    { name: 'phase', title: t('trips.phase'), align: 'left' as const },
     { name: 'status', title: t('trips.status'), align: 'center' as const },
     { name: 'id' },
   ];
 
-  const rows = trips.map((trip) => ({
+  const rows = visibleTrips.map((trip) => ({
     code: <Name name={trip.code} />,
     customer: <Description description={trip.customerName ?? '-'} />,
     transporter: (
@@ -746,6 +931,15 @@ function TripManager() {
     ),
     plannedStart: <Description description={formatDateTime(trip.plannedStartAt)} />,
     stops: <Name name={trip.stopCount} />,
+    phase: (
+      <ArgonBadge
+        variant="gradient"
+        color={phaseColor(trip.phase)}
+        size="xs"
+        container
+        badgeContent={phaseLabel(trip)}
+      />
+    ),
     status: (
       <ArgonBox display="flex" alignItems="center" justifyContent="center" gap={0.5}>
         <ArgonBadge
@@ -769,16 +963,20 @@ function TripManager() {
     id: trip.tripId,
   }));
 
-  // Deleting the last row of a page shrinks totalCount below the page start.
-  useEffect(() => {
-    if (page > 0 && page * PAGE_SIZE >= totalCount) {
-      setPage(Math.max(0, Math.ceil(totalCount / PAGE_SIZE) - 1));
-    }
-  }, [totalCount, page]);
+  // With an exception filter on, the counter has to describe what SURVIVED the filter,
+  // not what the server returned — otherwise it reports "1–10 of 200" over four rows.
+  const rowTotal = filteringExceptions ? matchingTrips.length : totalCount;
 
-  const pageStart = totalCount === 0 ? 0 : page * PAGE_SIZE + 1;
-  const pageEnd = Math.min((page + 1) * PAGE_SIZE, totalCount);
-  const hasNext = pageEnd < totalCount;
+  // Deleting the last row of a page shrinks the total below the page start.
+  useEffect(() => {
+    if (page > 0 && page * PAGE_SIZE >= rowTotal) {
+      setPage(Math.max(0, Math.ceil(rowTotal / PAGE_SIZE) - 1));
+    }
+  }, [rowTotal, page]);
+
+  const pageStart = rowTotal === 0 ? 0 : page * PAGE_SIZE + 1;
+  const pageEnd = Math.min((page + 1) * PAGE_SIZE, rowTotal);
+  const hasNext = pageEnd < rowTotal;
 
   const editable = !!detail && EDITABLE_STATUSES.has(detail.trip.status);
   const running = detail?.trip.status === 'InProgress';
@@ -808,6 +1006,19 @@ function TripManager() {
                 onChange={(_, value) => {
                   setPage(0);
                   setStatus(String(value));
+                }}
+              />
+              {/* Exception-driven attention (spec 11a §10): the system runs the
+                  ordinary lifecycle, so what a dispatcher needs on screen is the
+                  short list of trips that are NOT going to plan. */}
+              <CompactSelect
+                name="exception"
+                value={exception}
+                options={exceptionOptions}
+                label={t('trips.exceptions.label')}
+                onChange={(_, value) => {
+                  setPage(0);
+                  setException(String(value));
                 }}
               />
               <CompactSelect
@@ -860,6 +1071,17 @@ function TripManager() {
               </ArgonBox>
               <ArgonButton variant="gradient" color="info" size="small" onClick={() => openTrip(false)}>
                 <Icon>add</Icon>&nbsp;{t('trips.newTrip')}
+              </ArgonButton>
+              {/* Bulk planning is the input side of zero-touch: a dispatcher who no
+                  longer starts trips one by one must not have to create them one by
+                  one either (spec 11a §9.1). */}
+              <ArgonButton
+                variant="outlined"
+                color="info"
+                size="small"
+                onClick={() => setImportOpen(true)}
+              >
+                <Icon>upload_file</Icon>&nbsp;{t('trips.import.action')}
               </ArgonButton>
               {/* Account-scoped transporter → toll-class mapping. It sits here,
                   not in the SuperAdministrator toll catalog: it is tenant data
@@ -953,6 +1175,31 @@ function TripManager() {
                       `trips.statuses.${detail.trip.status}` as 'trips.statuses.Created'
                     )}
                   />
+                  {/* Derived from the stops, not stored: the shape of a trip IS its route. */}
+                  {detail.stops.length > 0 && (
+                    <ArgonBadge
+                      variant="gradient"
+                      color="dark"
+                      size="sm"
+                      container
+                      badgeContent={t(
+                        `trips.type.${deriveTripType(
+                          detail.trip.originLatitude,
+                          detail.trip.originLongitude,
+                          detail.stops
+                        )}` as 'trips.type.single'
+                      )}
+                    />
+                  )}
+                  {/* The phase chip: what this trip is actually doing right now,
+                      derived from the measured origin and stop timestamps. */}
+                  <ArgonBadge
+                    variant="gradient"
+                    color={phaseColor(detail.trip.phase)}
+                    size="sm"
+                    container
+                    badgeContent={phaseLabel(detail.trip)}
+                  />
                   {detail.trip.deviationOpenedAt && (
                     <ArgonTypography variant="caption" color="error">
                       {t('trips.deviationSince', {
@@ -961,18 +1208,84 @@ function TripManager() {
                     </ArgonTypography>
                   )}
                   <ArgonBox flexGrow={1} />
-                  {detail.trip.status === 'Created' && (
-                    <ArgonButton variant="gradient" color="success" size="small" onClick={() => runLifecycle('start')}>
-                      <Icon>play_arrow</Icon>&nbsp;{t('trips.actions.start')}
+                  <ArgonButton variant="outlined" color="dark" size="small" onClick={() => openTrip(true)}>
+                    <Icon>edit</Icon>&nbsp;{t('generic.edit')}
+                  </ArgonButton>
+                  <ArgonButton variant="outlined" color="info" size="small" onClick={() => setShareOpen(true)}>
+                    <Icon>share</Icon>&nbsp;{t('trips.actions.share')}
+                  </ArgonButton>
+                  {/* The manual lifecycle verbs are OVERRIDES now, and they are grouped
+                      to say so (spec 11a §10). The system starts, advances and closes a
+                      trip from the zones; these exist for the exceptions — a dead
+                      tracker, a dispatcher correction — and putting them behind one
+                      affordance is what stops the screen from inviting the manual flow
+                      the module no longer runs on. Permissions are unchanged. */}
+                  <ArgonButton
+                    variant={overrideOpen ? 'gradient' : 'outlined'}
+                    color="secondary"
+                    size="small"
+                    onClick={() => setOverrideOpen((open) => !open)}
+                  >
+                    <Icon>build</Icon>&nbsp;{t('trips.override.action')}
+                  </ArgonButton>
+                  {detail.trip.status === 'Created' && canDeleteTrips && (
+                    <ArgonButton variant="text" color="error" size="small" onClick={() => setConfirmDelete(true)}>
+                      <Icon>delete</Icon>&nbsp;{t('trips.actions.delete')}
                     </ArgonButton>
                   )}
-                  {running && (
-                    <>
+                </ArgonBox>
+
+                {overrideOpen && (
+                  <ArgonBox
+                    display="flex"
+                    alignItems="center"
+                    gap={1}
+                    flexWrap="wrap"
+                    mb={2}
+                    p={1.5}
+                    borderRadius="md"
+                    sx={{ border: '1px dashed', borderColor: 'secondary.main' }}
+                  >
+                    <ArgonTypography variant="caption" color="secondary">
+                      {t('trips.override.hint')}
+                    </ArgonTypography>
+                    {detail.trip.status === 'Created' && (
+                      <>
+                        <ArgonButton variant="outlined" color="success" size="small" onClick={() => runLifecycle('start')}>
+                          <Icon>play_arrow</Icon>&nbsp;{t('trips.actions.start')}
+                        </ArgonButton>
+                        {/* The trip whose truck left before anyone wrote it down.
+                            Backfill from Geofencing's record wins over the declared
+                            time whenever there is one (spec 11a §5.4). */}
+                        <ArgonButton
+                          variant="outlined"
+                          color="info"
+                          size="small"
+                          onClick={() => {
+                            setInTransitStartedAt('');
+                            setInTransitOpen(true);
+                          }}
+                        >
+                          <Icon>history</Icon>&nbsp;{t('trips.inTransit.action')}
+                        </ArgonButton>
+                      </>
+                    )}
+                    {running && (
                       <ArgonButton variant="outlined" color="warning" size="small" onClick={() => runLifecycle('pause')}>
                         <Icon>pause</Icon>&nbsp;{t('trips.actions.pause')}
                       </ArgonButton>
+                    )}
+                    {detail.trip.status === 'Paused' && (
+                      <ArgonButton variant="outlined" color="info" size="small" onClick={() => runLifecycle('resume')}>
+                        <Icon>play_arrow</Icon>&nbsp;{t('trips.actions.resume')}
+                      </ArgonButton>
+                    )}
+                    {/* Complete works from Paused too: a dispatcher who took control of
+                        a finished trip should not have to hand it back to automation
+                        just to close it (spec 11a §5.1). */}
+                    {(running || detail.trip.status === 'Paused') && (
                       <ArgonButton
-                        variant="gradient"
+                        variant="outlined"
                         color="success"
                         size="small"
                         onClick={() => {
@@ -982,53 +1295,37 @@ function TripManager() {
                       >
                         <Icon>flag</Icon>&nbsp;{t('trips.actions.complete')}
                       </ArgonButton>
-                    </>
-                  )}
-                  {detail.trip.status === 'Paused' && (
-                    <ArgonButton variant="gradient" color="info" size="small" onClick={() => runLifecycle('resume')}>
-                      <Icon>play_arrow</Icon>&nbsp;{t('trips.actions.resume')}
-                    </ArgonButton>
-                  )}
-                  <ArgonButton variant="outlined" color="dark" size="small" onClick={() => openTrip(true)}>
-                    <Icon>edit</Icon>&nbsp;{t('generic.edit')}
-                  </ArgonButton>
-                  <ArgonButton variant="outlined" color="info" size="small" onClick={() => setShareOpen(true)}>
-                    <Icon>share</Icon>&nbsp;{t('trips.actions.share')}
-                  </ArgonButton>
-                  {['Created', 'InProgress', 'Paused'].includes(detail.trip.status) && (
-                    <>
-                      <ArgonButton
-                        variant="outlined"
-                        color="secondary"
-                        size="small"
-                        onClick={() => {
-                          setReason('');
-                          setReasonAction('cancel');
-                        }}
-                      >
-                        {t('trips.actions.cancel')}
-                      </ArgonButton>
-                      {running && (
+                    )}
+                    {['Created', 'InProgress', 'Paused'].includes(detail.trip.status) && (
+                      <>
                         <ArgonButton
                           variant="outlined"
-                          color="error"
+                          color="secondary"
                           size="small"
                           onClick={() => {
                             setReason('');
-                            setReasonAction('abort');
+                            setReasonAction('cancel');
                           }}
                         >
-                          {t('trips.actions.abort')}
+                          {t('trips.actions.cancel')}
                         </ArgonButton>
-                      )}
-                    </>
-                  )}
-                  {detail.trip.status === 'Created' && canDeleteTrips && (
-                    <ArgonButton variant="text" color="error" size="small" onClick={() => setConfirmDelete(true)}>
-                      <Icon>delete</Icon>&nbsp;{t('trips.actions.delete')}
-                    </ArgonButton>
-                  )}
-                </ArgonBox>
+                        {running && (
+                          <ArgonButton
+                            variant="outlined"
+                            color="error"
+                            size="small"
+                            onClick={() => {
+                              setReason('');
+                              setReasonAction('abort');
+                            }}
+                          >
+                            {t('trips.actions.abort')}
+                          </ArgonButton>
+                        )}
+                      </>
+                    )}
+                  </ArgonBox>
+                )}
 
                 <Tabs
                   value={workspaceTab}
@@ -1146,6 +1443,12 @@ function TripManager() {
         transporters={transporters}
         drivers={drivers}
         vehicleClasses={vehicleClasses}
+        pois={pois}
+        geofences={geofences}
+        destinations={tripDestinations}
+        setDestinations={setTripDestinations}
+        copySources={copySources}
+        onCopyFrom={applyTripTemplate}
       />
 
       <StopDialog
@@ -1225,6 +1528,8 @@ function TripManager() {
         uploading={uploadDocument.isPending}
       />
 
+      <TripImportDialog open={importOpen} setOpen={setImportOpen} />
+
       <TollClassDialog
         open={tollClassOpen}
         setOpen={setTollClassOpen}
@@ -1303,6 +1608,39 @@ function TripManager() {
           value={forceComplete}
           label={t('trips.forceComplete')}
           handleChange={(event) => setForceComplete(!!event.target.checked)}
+        />
+      </FormDialog>
+
+      {/* "This trip is already under way" (spec 11a §5.4).
+
+          The date-time is the FALLBACK, not the input: when Geofencing recorded the
+          vehicle leaving the origin zone, those measurements win and the field is
+          ignored. It is left optional here for exactly that reason — requiring it
+          would make a dispatcher invent a time the system can measure better. */}
+      <FormDialog
+        title={t('trips.inTransit.title')}
+        open={inTransitOpen}
+        setOpen={setInTransitOpen}
+        handleSave={async () => {
+          if (!selectedTripId) return;
+          await declareInTransit
+            .mutateAsync({ tripId: selectedTripId, startedAt: toIso(inTransitStartedAt) })
+            .catch(() => undefined);
+          setInTransitOpen(false);
+        }}
+      >
+        <ArgonTypography variant="caption" color="secondary">
+          {t('trips.inTransit.message')}
+        </ArgonTypography>
+        <CustomTextField
+          margin="dense"
+          name="startedAt"
+          id="startedAt"
+          label={t('trips.inTransit.startedAt')}
+          type="datetime-local"
+          slotProps={{ inputLabel: { shrink: true } }}
+          value={inTransitStartedAt}
+          onChange={(event) => setInTransitStartedAt(event.target.value)}
         />
       </FormDialog>
 

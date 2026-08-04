@@ -24,6 +24,8 @@ import ServerPagination from 'controls/Tables/ServerPagination';
 import useServerList, { useClampPage } from 'controls/Tables/useServerList';
 import TableAccordion from 'controls/Accordions/TableAccordion';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
+import CustomTextField from 'controls/Dialogs/CustomTextField';
+import FormDialog from 'controls/Dialogs/FormDialog';
 import ArgonBadge from 'components/ArgonBadge';
 import ArgonBox from 'components/ArgonBox';
 import ArgonButton from 'components/ArgonButton';
@@ -75,6 +77,9 @@ function ManageDeviceAssignments() {
   const [selectedDeviceId, setSelectedDeviceId] = useState('');
   const [accountId, setAccountId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // End-assignment dialog: the row being ended (null = closed) and the typed reason.
+  const [endTarget, setEndTarget] = useState<TransporterAssignmentWithAudit | null>(null);
+  const [endReason, setEndReason] = useState('');
   const loaded = useRef(false);
 
   // Both the assign-form picker and the transporterId->name map need the whole
@@ -144,15 +149,24 @@ function ManageDeviceAssignments() {
     setActiveOnly((prev) => !prev);
   };
 
-  const handleEnd = async (a: TransporterAssignmentWithAudit) => {
+  const handleEnd = (a: TransporterAssignmentWithAudit) => {
+    setEndReason('');
+    setEndTarget(a);
+  };
+
+  const confirmEnd = async () => {
+    if (!endTarget) return;
     setLoading(true);
     try {
-      const reason = window.prompt(t('gpsIntegration.actions.endAssignmentReasonPrompt'), 'portal') || 'portal';
-      await endAssignment.mutateAsync({ assignmentId: a.transporterDeviceAssignmentId, reason });
+      await endAssignment.mutateAsync({
+        assignmentId: endTarget.transporterDeviceAssignmentId,
+        reason: endReason.trim() || 'portal',
+      });
+      setEndTarget(null);
       // Assignments refetch via query invalidation; refresh the device lists too.
       await loadDevices();
     } catch {
-      // Failure is surfaced by the global toast.
+      // Failure is surfaced by the global toast; keep the dialog open for a retry.
     } finally { setLoading(false); }
   };
 
@@ -238,6 +252,7 @@ function ManageDeviceAssignments() {
   }));
 
   return (
+    <>
     <TableAccordion title={t('gpsIntegration.sections.assignments')} expanded={expanded} setExpanded={setExpanded}>
       {error
         ? <ArgonBox><ArgonTypography variant="button" color="error">{error}</ArgonTypography></ArgonBox>
@@ -325,6 +340,26 @@ function ManageDeviceAssignments() {
         )
       }
     </TableAccordion>
+    <FormDialog
+      title={t('gpsIntegration.actions.endAssignment')}
+      open={!!endTarget}
+      setOpen={(next) => {
+        const open = typeof next === 'function' ? next(!!endTarget) : next;
+        if (!open) setEndTarget(null);
+      }}
+      handleSave={confirmEnd}
+      maxWidth="xs"
+    >
+      <CustomTextField
+        name="endAssignmentReason"
+        id="endAssignmentReason"
+        label={t('gpsIntegration.actions.endAssignmentReasonPrompt')}
+        value={endReason}
+        onChange={(e) => setEndReason(e.target.value)}
+        placeholder="portal"
+      />
+    </FormDialog>
+    </>
   );
 }
 

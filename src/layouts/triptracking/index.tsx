@@ -167,7 +167,14 @@ function TripTracking() {
           }
           size="sm"
           container
-          badgeContent={t(`trips.statuses.${trip.status}` as 'trips.statuses.Created')}
+          // A customer reads "Created" as a system noise word; what they are being told is
+          // that their delivery is SCHEDULED (spec 11a §10). The status itself is unchanged
+          // — only the word this page shows for it.
+          badgeContent={
+            trip.status === 'Created'
+              ? t('tripTracking.scheduled')
+              : t(`trips.statuses.${trip.status}` as 'trips.statuses.Created')
+          }
         />
         <ArgonBox flexGrow={1} />
         <ArgonButton

@@ -16,6 +16,7 @@
 
 import { Component } from "react";
 import type { ErrorInfo, ReactNode } from "react";
+import i18n from "i18next";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
@@ -64,13 +65,13 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
           }}
         >
           <Typography variant="h4" gutterBottom>
-            Something went wrong
+            {i18n.t("errorBoundary.title")}
           </Typography>
           <Typography variant="body1" sx={{ color: "text.secondary", mb: 3 }}>
-            An unexpected error occurred. Please try reloading the page.
+            {i18n.t("errorBoundary.message")}
           </Typography>
           <Button variant="contained" color="primary" onClick={this.handleReload}>
-            Reload Page
+            {i18n.t("errorBoundary.reload")}
           </Button>
         </Box>
       );

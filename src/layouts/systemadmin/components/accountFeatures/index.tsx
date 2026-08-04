@@ -45,6 +45,12 @@ import { LoadingContext } from 'LoadingContext';
 export interface ConfigFieldDef { name: string; labelKey: string; kind: 'number' | 'boolean'; default: number | boolean }
 
 /**
+ * The form key a config field is edited under. Values are held as `config.<name>` rather than in a
+ * nested object because `useForm` writes flat keys straight off `event.target.name`.
+ */
+export const configFieldKey = (field: ConfigFieldDef): string => `config.${field.name}`;
+
+/**
  * SuperAdministrator editor state for a single account feature (loose until the
  * add-mode guard / save). In "add" mode account+feature are chosen; in "edit"
  * mode they are fixed.
@@ -59,7 +65,8 @@ export interface FeatureFormValues {
   effectiveFrom?: string | null;
   effectiveTo?: string | null;
   existingConfigurationJson?: string | null;
-  configValue?: number | boolean;
+  /** One entry per {@link configFieldKey}; a feature may carry several (see `trip-management`). */
+  [configKey: string]: unknown;
 }
 
 /** Option row for the account/feature selects. */
@@ -80,12 +87,29 @@ const knownFeatures = [
   'workforce'
 ];
 
-// Features carrying an editable configuration value stored in configurationJson.
-const configField: Record<string, ConfigFieldDef> = {
-  'gps.integration': { name: 'storingIntervalSeconds', labelKey: 'accountFeatures.config.storingIntervalSeconds', kind: 'number', default: 360 },
-  'gps.positionHistory': { name: 'retentionDays', labelKey: 'accountFeatures.config.retentionDays', kind: 'number', default: 30 },
+// Features carrying editable configuration values stored in configurationJson. A feature may carry
+// SEVERAL: trip-management's zero-touch lifecycle is tuned per account (spec 11a §8), and one value
+// per feature could not express it.
+//
+// Every default here MIRRORS the backend's own fallback. They are not the source of truth — the
+// service falls back to these values on its own when a key is absent or malformed — but a dialog
+// that offered a different number would present the operator with a change they did not make.
+const configFields: Record<string, ConfigFieldDef[]> = {
+  'gps.integration': [{ name: 'storingIntervalSeconds', labelKey: 'accountFeatures.config.storingIntervalSeconds', kind: 'number', default: 360 }],
+  'gps.positionHistory': [{ name: 'retentionDays', labelKey: 'accountFeatures.config.retentionDays', kind: 'number', default: 30 }],
   // Spec 09 §18.6: per-account opt-in, default false — accounts differ on strictness.
-  workforce: { name: 'blockAssignmentOnExpiredLicense', labelKey: 'accountFeatures.config.blockAssignmentOnExpiredLicense', kind: 'boolean', default: false }
+  workforce: [{ name: 'blockAssignmentOnExpiredLicense', labelKey: 'accountFeatures.config.blockAssignmentOnExpiredLicense', kind: 'boolean', default: false }],
+  'trip-management': [
+    // The kill switch first: an account without reliable GPS turns the whole zero-touch lifecycle
+    // off and runs the manual flow, and the rest of these stop mattering.
+    { name: 'autoLifecycle', labelKey: 'accountFeatures.config.autoLifecycle', kind: 'boolean', default: true },
+    { name: 'activationLeadMinutes', labelKey: 'accountFeatures.config.activationLeadMinutes', kind: 'number', default: 60 },
+    { name: 'overdueGraceMinutes', labelKey: 'accountFeatures.config.overdueGraceMinutes', kind: 'number', default: 120 },
+    { name: 'finalStopCompletionMinutes', labelKey: 'accountFeatures.config.finalStopCompletionMinutes', kind: 'number', default: 30 },
+    { name: 'backfillLookbackHours', labelKey: 'accountFeatures.config.backfillLookbackHours', kind: 'number', default: 24 },
+    { name: 'delayThresholdMinutes', labelKey: 'accountFeatures.config.delayThresholdMinutes', kind: 'number', default: 15 },
+    { name: 'scheduleLeadMinutes', labelKey: 'accountFeatures.config.scheduleLeadMinutes', kind: 'number', default: 60 },
+  ],
 };
 
 
@@ -156,11 +180,21 @@ function SystemAccountFeatures() {
     setIsAdd(true);
     setErrors({});
     // Adding from a filtered view targets the account on screen by default.
-    setValues({ accountId, featureKey: '', enabled: true, tier: 'default', source: 'superadmin', configValue: undefined });
+    setValues({ accountId, featureKey: '', enabled: true, tier: 'default', source: 'superadmin' });
+  };
+
+  /** Seeds one form key per configured field, falling back to the documented default. */
+  const seedConfigValues = (featureKey: string, configurationJson?: string | null): Record<string, number | boolean> => {
+    const stored = parseJson<Record<string, unknown>>(configurationJson);
+    return Object.fromEntries(
+      (configFields[featureKey] ?? []).map(field => [
+        configFieldKey(field),
+        (stored[field.name] as number | boolean | undefined) ?? field.default,
+      ])
+    );
   };
 
   const handleEditClick = (account: Account, feature: AccountFeature) => {
-    const cfg = configField[feature.featureKey];
     setIsAdd(false);
     setErrors({});
     setValues({
@@ -173,7 +207,7 @@ function SystemAccountFeatures() {
       effectiveFrom: feature.effectiveFrom,
       effectiveTo: feature.effectiveTo,
       existingConfigurationJson: feature.configurationJson,
-      configValue: cfg ? ((parseJson<Record<string, unknown>>(feature.configurationJson)[cfg.name] as number | boolean | undefined) ?? cfg.default) : undefined
+      ...seedConfigValues(feature.featureKey, feature.configurationJson)
     });
     setOpen(true);
   };
@@ -189,15 +223,16 @@ function SystemAccountFeatures() {
 
     setLoading(true);
     try {
-      const cfg = configField[values.featureKey ?? ''];
-      const configuredValue = values.configValue ?? cfg?.default;
-      const configurationJson = cfg
-        ? JSON.stringify({
-          [cfg.name]: cfg.kind === 'boolean'
-            ? Boolean(configuredValue)
-            : parseInt(String(configuredValue), 10) || 0
-        })
-        : values.existingConfigurationJson;
+      const fields = configFields[values.featureKey ?? ''] ?? [];
+
+      // A feature with no registered fields keeps whatever json it already had: this dialog only
+      // owns the keys it knows about, and rewriting the object would drop anything else stored there.
+      const configurationJson = fields.length === 0
+        ? values.existingConfigurationJson
+        : JSON.stringify(Object.fromEntries(fields.map(field => {
+          const raw = values[configFieldKey(field)] ?? field.default;
+          return [field.name, field.kind === 'boolean' ? Boolean(raw) : parseInt(String(raw), 10) || 0];
+        })));
       await setAccountFeatureMaster({
         accountId: values.accountId,
         featureKey: values.featureKey,
@@ -295,7 +330,7 @@ function SystemAccountFeatures() {
         isAdd={isAdd}
         accountOptions={accountOptions}
         featureOptions={featureOptions}
-        configField={configField}
+        configFields={configFields}
       />
     </>
   );

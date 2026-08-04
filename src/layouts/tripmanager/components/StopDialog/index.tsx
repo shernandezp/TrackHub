@@ -30,6 +30,7 @@ import { reverseGeocode } from 'api/router/router';
 import type { FormChangeHandler } from 'controls/Dialogs/useForm';
 import type { PointOfInterestLookup } from 'api/manager/pointsOfInterest';
 import type { Geofence } from 'api/geofencing/geofencing';
+import { DEFAULT_STOP_ACTIVITY, STOP_ACTIVITIES } from '../../tripWriteForms';
 
 /** Dialog/form state for a trip stop. */
 export interface StopFormValues {
@@ -47,6 +48,12 @@ export interface StopFormValues {
   longitude?: number | string;
   geofenceId?: string | null;
   arrivalRadiusMeters?: number | string;
+  /**
+   * What the vehicle does here — `Load`, `Unload` or `Other`. It is what turns the
+   * dwell between arrival and departure from an anonymous number of minutes into
+   * loading or unloading time in the reports (spec 11a §4.2).
+   */
+  activity?: string | null;
   plannedArrivalFrom?: string | null;
   plannedArrivalTo?: string | null;
   requiresPod?: boolean;
@@ -303,6 +310,20 @@ function StopDialog({
               onChange={handleChange}
               errorMsg={errors.arrivalRadiusMeters}
               helperText={t('tripStops.arrivalRadiusHint')}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 4 }}>
+            <CustomSelect
+              list={STOP_ACTIVITIES.map((activity) => ({
+                value: activity,
+                label: t(`tripStops.activity.${activity}` as 'tripStops.activity.Unload'),
+              }))}
+              handleChange={handleChange}
+              name="activity"
+              id="activity"
+              label={t('tripStops.activity.label')}
+              value={values.activity ?? DEFAULT_STOP_ACTIVITY}
+              numericValue={false}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>

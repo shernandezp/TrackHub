@@ -242,7 +242,9 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
         queryFn: () => getTransportersInGeofence(),
         staleTime: 0,
       });
-      setInGeofence(result.length);
+      // The query returns one row per (geofence, unit) pair; the tile counts units,
+      // and a unit inside two overlapping geofences is still one unit.
+      setInGeofence(new Set(result.map((item) => item.transporterId)).size);
     } catch(e) {
       // Failure is surfaced by the global toast; keep the previous count.
       console.error(e);

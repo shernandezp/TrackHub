@@ -62,6 +62,12 @@ export interface CustomSelectProps {
     required?: boolean;
     fullWidth?: boolean;
     placeholder?: string;
+    /**
+     * Makes the empty option a real, selectable choice (labeled via `placeholder`,
+     * e.g. "All") instead of a disabled prompt — for optional filters where empty
+     * means "no filter" and the user must be able to return to it.
+     */
+    allowEmpty?: boolean;
     /** Validation message for this field; mirrors CustomTextField's `errorMsg`. */
     errorMsg?: string;
 }
@@ -77,6 +83,7 @@ function CustomSelect({
     required = false,
     fullWidth = true,
     placeholder,
+    allowEmpty = false,
     errorMsg,
 }: CustomSelectProps) {
     const { t } = useTranslation();
@@ -114,7 +121,7 @@ function CustomSelect({
                     }
                     sx={selectSx}
                 >
-                    <MenuItem value={emptyValue} disabled>
+                    <MenuItem value={emptyValue} disabled={!allowEmpty}>
                         {placeholder || t('generic.selectItem')}
                     </MenuItem>
                     {list.map((item, index) => (

@@ -42,6 +42,8 @@ import type {
   EstimateTollsQuery,
   AssignTripMutation,
   ImportTollCatalogMutation,
+  ImportTripsCsvMutation,
+  DeclareTripInTransitMutation,
   TripDtoInput,
   TripStopDtoInput,
   DeliveryDtoInput,
@@ -96,6 +98,8 @@ import {
   UpdateTollTariffDocument,
   DeleteTollTariffDocument,
   ImportTollCatalogDocument,
+  ImportTripsCsvDocument,
+  DeclareTripInTransitDocument,
 } from './tripsOperations';
 
 export type Trip = TripSummaryFieldsFragment;
@@ -119,6 +123,8 @@ export type TollStationsPage = GetTollStationsQuery['tollStations'];
 export type TollStationDetail = GetTollStationDetailQuery['tollStationDetail'];
 export type TollEstimate = EstimateTollsQuery['estimateTolls'];
 export type TollCatalogImportResult = ImportTollCatalogMutation['importTollCatalog'];
+export type TripCsvImportResult = ImportTripsCsvMutation['importTripsCsv'];
+export type TripStartBackfillResult = DeclareTripInTransitMutation['declareTripInTransit'];
 export type {
   TripDtoInput,
   TripStopDtoInput,
@@ -598,4 +604,25 @@ export async function deleteTollTariff(tollTariffId: string): Promise<string> {
 export async function importTollCatalog(csv: string): Promise<TollCatalogImportResult> {
   const data = await executeGraphQL('tripManagement', ImportTollCatalogDocument, { csv });
   return data.importTollCatalog;
+}
+
+/**
+ * Bulk trip planning (spec 11a §9.1). Same contract as the toll upload: valid rows
+ * land, rejected ones come back with their line number and reason.
+ */
+export async function importTripsCsv(csv: string): Promise<TripCsvImportResult> {
+  const data = await executeGraphQL('tripManagement', ImportTripsCsvDocument, { csv });
+  return data.importTripsCsv;
+}
+
+/**
+ * Declares a freshly planned trip already under way (spec 11a §5.4). `startedAt` is
+ * only used when Geofencing has no record of the vehicle leaving the origin zone.
+ */
+export async function declareTripInTransit(
+  tripId: string,
+  startedAt: string | null
+): Promise<TripStartBackfillResult> {
+  const data = await executeGraphQL('tripManagement', DeclareTripInTransitDocument, { tripId, startedAt });
+  return data.declareTripInTransit;
 }
