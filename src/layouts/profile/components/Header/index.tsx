@@ -30,6 +30,7 @@ Coded by www.creative-tim.com
 */
 
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 // @mui material components
 import Card from "@mui/material/Card";
@@ -57,6 +58,7 @@ interface HeaderProps {
 }
 
 function Header({ user }: HeaderProps) {
+  const { t } = useTranslation();
   const [tabsOrientation, setTabsOrientation] = useState("horizontal");
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -109,7 +111,7 @@ function Header({ user }: HeaderProps) {
           <Grid>
             <ArgonAvatar
               src={profileImage}
-              alt="profile-image"
+              alt={t("userprofile.avatarAlt")}
               variant="rounded"
               size="xl"
               shadow="sm"

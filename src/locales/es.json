@@ -13,6 +13,11 @@
     "goBack": "Volver",
     "waitNote": "Por favor, espere antes de reintentar para evitar sobrecargar el servicio de autenticación."
   },
+  "errorBoundary": {
+    "title": "Algo salió mal",
+    "message": "Ocurrió un error inesperado. Intente recargar la página.",
+    "reload": "Recargar Página"
+  },
   "accountType": {
     "personal": "Personal",
     "business": "Empresarial",
@@ -233,7 +238,14 @@
     "config": {
       "storingIntervalSeconds": "Intervalo de Almacenamiento (Segundos)",
       "retentionDays": "Días de Retención",
-      "blockAssignmentOnExpiredLicense": "Bloquear la asignación cuando la licencia del conductor esté vencida"
+      "blockAssignmentOnExpiredLicense": "Bloquear la asignación cuando la licencia del conductor esté vencida",
+      "autoLifecycle": "Iniciar y completar los viajes automáticamente con las zonas",
+      "activationLeadMinutes": "Empezar a vigilar un viaje estos minutos antes de su inicio planeado",
+      "overdueGraceMinutes": "Minutos después del inicio planeado antes de marcar el viaje como sin iniciar a tiempo",
+      "finalStopCompletionMinutes": "Minutos estacionado en la última parada antes de que el viaje se cierre solo",
+      "backfillLookbackHours": "Cuántas horas atrás buscar una salida registrada",
+      "delayThresholdMinutes": "Minutos después de la ventana prometida antes de contar una parada como retrasada",
+      "scheduleLeadMinutes": "Minutos antes del inicio planeado para enviar el recordatorio"
     }
   },
   "alertEvents": {
@@ -241,7 +253,12 @@
     "type": "Tipo",
     "status": "Estado",
     "acknowledge": "Reconocer Alerta",
-    "resolve": "Resolver Alerta"
+    "resolve": "Resolver Alerta",
+    "statuses": {
+      "Open": "Abierto",
+      "Acknowledged": "Reconocido",
+      "Resolved": "Resuelto"
+    }
   },
   "auditTrail": {
     "title": "Auditoría",
@@ -297,7 +314,17 @@
     "documentExpired": "Documento Vencido",
     "notificationDeliveryFailed": "Fallo de Entrega de Notificación",
     "driverQualificationExpiring": "Habilitación del Conductor por Vencer",
-    "driverQualificationExpired": "Habilitación del Conductor Vencida"
+    "driverQualificationExpired": "Habilitación del Conductor Vencida",
+    "tripAssigned": "Viaje Asignado",
+    "tripStarted": "Viaje Iniciado",
+    "tripStopArrived": "Llegada a Parada",
+    "tripStopDeparted": "Salida de Parada",
+    "tripDelayed": "Viaje Retrasado",
+    "tripRouteDeviation": "Desviación de Ruta",
+    "tripPodSubmitted": "Comprobante de Entrega Enviado",
+    "tripCompleted": "Viaje Completado",
+    "tripCancelled": "Viaje Cancelado",
+    "tripStartDue": "Inicio de Viaje Vencido"
   },
   "notificationChannels": {
     "inApp": "En la Aplicación",
@@ -491,6 +518,9 @@
     "tripDuplicateExternalReference": "Ya existe otro viaje en esta cuenta con esa referencia externa.",
     "tripHasHistory": "El viaje tiene actividad registrada y no se puede eliminar. Cancélelo en su lugar.",
     "tripDriverNotAssignable": "Ese conductor no se puede asignar a este viaje.",
+    "tripTransporterBusy": "Esa unidad ya está corriendo otro viaje. Complételo o cancélelo primero.",
+    "tripArmed": "Este viaje está en curso, así que su unidad y su origen ya no se pueden cambiar. Cancélelo y planifique uno nuevo.",
+    "tripStartEvidenceRequired": "No se encontró una salida registrada del origen, así que se requiere una hora de inicio.",
     "routingNotConfigured": "La planificación de rutas no está configurada en la plataforma. Solicite al administrador que configure el servicio de rutas.",
     "routingUnavailable": "El servicio de rutas no responde. El viaje no se ve afectado: intente planificar de nuevo más tarde.",
     "routingInvalidGeometry": "El servicio de rutas devolvió una ruta que no se puede dibujar ni usar como corredor. Intente planificar de nuevo o ajuste las paradas.",
@@ -751,6 +781,9 @@
     "searchText": "Escribe aquí...",
     "signOff": "Cerrar Sesión"
   },
+  "sidenav": {
+    "brandAlt": "Logo de TrackHub"
+  },
   "operator": {
     "title": "Operadores",
     "singleTitle": "Operador",
@@ -772,7 +805,7 @@
   "policy": {
     "title": "Políticas",
     "singleTitle": "Política",
-    "resources": "Resources",
+    "resources": "Recursos",
     "assignPolicy": "Asignar Política"
   },
   "poi": {
@@ -813,7 +846,9 @@
     "to": "Hasta",
     "transporter": "Unidad",
     "operator": "Operador",
+    "geofence": "Geocerca",
     "device": "ID de Dispositivo",
+    "all": "Todos",
     "preview": "Vista Previa",
     "exportExcel": "Exportar Excel",
     "exportPdf": "Exportar PDF",
@@ -949,7 +984,10 @@
     "notificationsWhatsapp": "Notificaciones por WhatsApp",
     "gpsIntegration": "Integración GPS",
     "gpsPositionHistory": "Historial de Posiciones GPS",
-    "workforce": "Personal"
+    "workforce": "Personal",
+    "tollCatalog": "Catálogo de Peajes",
+    "trips": "Viajes",
+    "tripTracking": "Seguimiento de Viaje"
   },
   "role": {
     "title": "Roles",
@@ -1130,7 +1168,8 @@
     "sidenav": "Contraer Barra Lateral",
     "language": "Idioma",
     "info": "Información del Perfil",
-    "partOf": "Parte de"
+    "partOf": "Parte de",
+    "avatarAlt": "Foto de perfil"
   },
   "utilsmap": {
     "hideStatistics": "Ocultar Estadísticas",
@@ -1452,6 +1491,41 @@
     "originName": "Origen",
     "originLatitude": "Latitud del origen",
     "originLongitude": "Longitud del origen",
+    "route": {
+      "title": "Ruta",
+      "hint": "El origen y los destinos son lugares existentes: una geocerca (las llegadas usan su forma real) o un punto de interés. Los puntos sueltos y el ajuste fino de paradas están en el planificador de ruta."
+    },
+    "extras": {
+      "title": "Información adicional"
+    },
+    "origin": {
+      "byGeofence": "Geocerca de origen",
+      "byPoi": "Punto de interés de origen",
+      "chosen": "Origen fijado en {{lat}}, {{lng}}",
+      "none": "Aún no se ha elegido el origen",
+      "required": "Elija el origen desde una geocerca o un punto de interés."
+    },
+    "type": {
+      "label": "Tipo de viaje",
+      "single": "Destino único",
+      "round": "Ida y vuelta",
+      "multi": "Multidestino"
+    },
+    "destinations": {
+      "title": "Destinos",
+      "hint": "Agregue cada destino desde una geocerca o un punto de interés. Las ventanas de llegada, la prueba de entrega y el orden se afinan después en el planificador de ruta.",
+      "byGeofence": "Agregar geocerca",
+      "byPoi": "Agregar punto de interés",
+      "empty": "Aún no hay destinos.",
+      "required": "Agregue al menos un destino.",
+      "singleLimit": "Un viaje de destino único admite exactamente un destino — elimine los sobrantes o cambie el tipo de viaje.",
+      "remove": "Quitar destino",
+      "returnNote": "Al crear el viaje se agrega automáticamente una parada de regreso al origen."
+    },
+    "copyFrom": {
+      "label": "Reutilizar una ruta anterior",
+      "placeholder": "Copiar origen y destinos de…"
+    },
     "plannedStart": "Inicio planeado",
     "plannedEnd": "Fin planeado",
     "actualStart": "Inicio real",
@@ -1491,6 +1565,54 @@
       "Completed": "Completado",
       "Cancelled": "Cancelado",
       "Aborted": "Abortado"
+    },
+    "phase": "Fase",
+    "eta": "ETA",
+    "phases": {
+      "Scheduled": "Programado",
+      "Armed": "Esperando en",
+      "AtOrigin": "Cargando en",
+      "InTransit": "En tránsito hacia",
+      "AtStop": "En parada",
+      "Overdue": "Sin iniciar a tiempo",
+      "Paused": "Pausado",
+      "Completed": "Completado",
+      "Cancelled": "Cancelado",
+      "Aborted": "Abortado"
+    },
+    "exceptions": {
+      "label": "Excepciones",
+      "all": "Todos los viajes",
+      "overdue": "Sin iniciar a tiempo",
+      "delayed": "Con retraso",
+      "offCorridor": "Fuera de corredor",
+      "stalledFinalStop": "Detenido en la última parada"
+    },
+    "override": {
+      "action": "Intervenir",
+      "hint": "El sistema inicia, avanza y completa los viajes con las zonas. Esto es para las excepciones: un GPS sin señal, una corrección."
+    },
+    "inTransit": {
+      "action": "Ya está en ruta",
+      "title": "Viaje ya iniciado",
+      "message": "Registra que este viaje ya comenzó. Si la salida de la unidad desde la zona de origen quedó registrada, se usan esos tiempos medidos y el campo de abajo se ignora.",
+      "startedAt": "Hora de inicio (solo si no hay salida registrada)"
+    },
+    "import": {
+      "action": "Carga masiva",
+      "title": "Cargar viajes",
+      "hint": "Un viaje por línea. Los lugares se nombran, no se escriben como coordenadas: el origen y los destinos se buscan entre las geocercas de la cuenta y luego entre sus puntos de interés. Descarga la plantilla para ver el orden de las columnas.",
+      "file": "Elegir archivo",
+      "template": "Descargar plantilla",
+      "paste": "O pega el CSV aquí",
+      "result": "Resultado de la carga",
+      "rowsRead": "Filas leídas",
+      "tripsCreated": "Viajes creados",
+      "errors": "Filas rechazadas",
+      "noErrors": "Todas las filas fueron aceptadas.",
+      "row": "Fila",
+      "errorCode": "Código",
+      "message": "Motivo"
     },
     "actions": {
       "start": "Iniciar",
@@ -1545,7 +1667,39 @@
       "event": "Evento",
       "occurredAt": "Cuándo",
       "source": "Origen",
-      "empty": "Aún no ha ocurrido nada en este viaje."
+      "empty": "Aún no ha ocurrido nada en este viaje.",
+      "events": {
+        "TripCreated": "Viaje creado",
+        "TripUpdated": "Viaje actualizado",
+        "TripAssigned": "Conductor asignado",
+        "TripAssignmentAcknowledged": "Asignación confirmada",
+        "TripStarted": "Viaje iniciado",
+        "TripOriginDeparted": "Salió del origen",
+        "TripPaused": "Viaje pausado",
+        "TripResumed": "Viaje reanudado",
+        "TripStopArrived": "Llegó a la parada",
+        "TripStopDeparted": "Salió de la parada",
+        "TripStopSkipped": "Parada omitida",
+        "TripRouteDeviation": "Fuera del corredor planeado",
+        "TripDelayed": "Con retraso",
+        "TripPodSubmitted": "Prueba de entrega capturada",
+        "TripDeliveryOutcomeRecorded": "Resultado de entrega registrado",
+        "TripCompleted": "Viaje completado",
+        "TripCancelled": "Viaje cancelado",
+        "TripAborted": "Viaje abortado",
+        "TripShared": "Enlace de seguimiento creado",
+        "TripShareRevoked": "Enlace de seguimiento revocado",
+        "TripRoutePlanned": "Ruta planificada",
+        "TripRoutePlanFailed": "Falló la planificación de ruta",
+        "TripStartDue": "Se acerca la hora de inicio"
+      },
+      "sources": {
+        "Detection": "Medido",
+        "Portal": "Portal",
+        "Driver": "App del conductor",
+        "Job": "Revisión programada",
+        "ServiceClient": "Integración"
+      }
     },
     "deliveries": {
       "title": "Entregas",
@@ -1596,6 +1750,12 @@
     "longitude": "Longitud",
     "arrivalRadius": "Radio de llegada (m)",
     "arrivalRadiusHint": "Qué tan cerca debe estar el vehículo para detectar la llegada automáticamente.",
+    "activity": {
+      "label": "Actividad",
+      "Load": "Cargue",
+      "Unload": "Descargue",
+      "Other": "Otra"
+    },
     "plannedFrom": "Planeada desde",
     "plannedTo": "Planeada hasta",
     "status": "Estado",
@@ -1705,7 +1865,7 @@
       "Clean": "Limpio",
       "Infected": "Infectado",
       "Failed": "Análisis fallido",
-      "Skipped": "Análisis omitido"
+      "Quarantined": "En Cuarentena"
     },
     "kinds": {
       "Signature": "Firma",
@@ -1822,6 +1982,7 @@
     "title": "Seguimiento del viaje",
     "loading": "Cargando su viaje…",
     "trip": "Viaje",
+    "scheduled": "Programado",
     "vehicle": "Vehículo",
     "driver": "Conductor",
     "plannedStart": "Salida planeada",

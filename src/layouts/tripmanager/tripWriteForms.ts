@@ -26,7 +26,11 @@
  */
 
 import { toDateTimeLocalInput, fromDateTimeLocalInput } from 'utils/dateUtils';
-import type { DeliveryDtoInput, ProofOfDeliveryDtoInput } from 'api/tripManagement/trips';
+import type {
+  DeliveryDtoInput,
+  ProofOfDeliveryDtoInput,
+  TripStopDtoInput,
+} from 'api/tripManagement/trips';
 
 /**
  * `datetime-local` needs `YYYY-MM-DDTHH:mm` local wall time; the API speaks ISO-8601 UTC.
@@ -73,6 +77,247 @@ export const normalizeStopCity = (city?: string | null): string | null => {
 
 export const isStopCityWithinLimit = (city?: string | null): boolean =>
   (normalizeStopCity(city) ?? '').length <= STOP_CITY_MAX_LENGTH;
+
+/* ------------------------------------------- trip creation: destinations  */
+
+/**
+ * How the dispatcher shapes a new trip. This is a FORM concept, not a stored
+ * column: the backend derives nothing from it, and an existing trip's type is
+ * re-derived from its stops (see {@link deriveTripType}). `round` appends a
+ * return stop at the origin when the trip is created.
+ */
+export const TRIP_TYPES = ['single', 'round', 'multi'] as const;
+
+export type TripType = (typeof TRIP_TYPES)[number];
+
+/**
+ * A destination queued in the create-trip dialog before the trip exists.
+ * Coordinates always come from a picker (map click, POI, geofence) — never
+ * typed by hand (spec 11 §8). Address/city are left for the reverse geocoder
+ * when the stop is later edited in the planner.
+ */
+export interface TripDestinationDraft {
+  name: string;
+  latitude: number;
+  longitude: number;
+  /** Kept so arrival detection snapshots the real geofence shape at arming. */
+  geofenceId: string | null;
+  address?: string | null;
+  city?: string | null;
+  arrivalRadiusMeters: number;
+  /** What the vehicle does here — it is what gives this stop's dwell a meaning. */
+  activity: StopActivity;
+  requiresPod: boolean;
+  priority: number;
+}
+
+export const DEFAULT_ARRIVAL_RADIUS_METERS = 150;
+
+/**
+ * What a stop is FOR (spec 11a §4.2). Without it a dwell figure is an anonymous
+ * number of minutes; with it the same measurement reads as loading time at a plant
+ * and unloading time at a client.
+ */
+export const STOP_ACTIVITIES = ['Load', 'Unload', 'Other'] as const;
+
+export type StopActivity = (typeof STOP_ACTIVITIES)[number];
+
+/** A delivery run is the overwhelmingly common case, so a destination unloads by default. */
+export const DEFAULT_STOP_ACTIVITY: StopActivity = 'Unload';
+
+export const normalizeStopActivity = (value?: string | null): StopActivity =>
+  STOP_ACTIVITIES.find((activity) => activity === value) ?? DEFAULT_STOP_ACTIVITY;
+
+/** Builds the AddTripStop payload for a queued destination. */
+export function buildStopPayloadFromDestination(
+  destination: TripDestinationDraft
+): TripStopDtoInput {
+  return {
+    name: destination.name.trim(),
+    address: trimmedOrNull(destination.address),
+    city: normalizeStopCity(destination.city),
+    latitude: destination.latitude,
+    longitude: destination.longitude,
+    geofenceId: destination.geofenceId || null,
+    arrivalRadiusMeters: destination.arrivalRadiusMeters || DEFAULT_ARRIVAL_RADIUS_METERS,
+    activity: normalizeStopActivity(destination.activity),
+    plannedArrivalFrom: null,
+    plannedArrivalTo: null,
+    requiresPod: destination.requiresPod,
+    priority: destination.priority,
+  };
+}
+
+/**
+ * The auto-appended final stop of a round trip: back to the origin. When the
+ * origin was picked from a geofence its id travels along, so arrival detection
+ * uses the real shape instead of the fallback radius.
+ */
+export function returnToOriginStop(
+  originName: string,
+  latitude: number,
+  longitude: number,
+  geofenceId?: string | null
+): TripDestinationDraft {
+  return {
+    name: originName,
+    latitude,
+    longitude,
+    geofenceId: geofenceId || null,
+    arrivalRadiusMeters: DEFAULT_ARRIVAL_RADIUS_METERS,
+    // `Other`, not `Unload`: parking back at the depot is neither loading nor
+    // unloading, and labelling it either would put a fictional duration into the
+    // dwell reports.
+    activity: 'Other',
+    requiresPod: false,
+    priority: 0,
+  };
+}
+
+/**
+ * Two points are "the same spot" within ~11 m — wide enough to survive the
+ * 6-decimal rounding pickers apply, narrow enough that a genuine nearby
+ * destination is never mistaken for the origin.
+ */
+const SAME_SPOT_EPSILON_DEGREES = 1e-4;
+
+export const isSameSpot = (
+  latitudeA: number,
+  longitudeA: number,
+  latitudeB: number,
+  longitudeB: number
+): boolean =>
+  Math.abs(latitudeA - latitudeB) <= SAME_SPOT_EPSILON_DEGREES &&
+  Math.abs(longitudeA - longitudeB) <= SAME_SPOT_EPSILON_DEGREES;
+
+/** The stop fields route reuse and type derivation read — structural so tests and Vm rows both fit. */
+export interface RouteSourceStop {
+  sequence: number;
+  name: string;
+  address?: string | null;
+  city?: string | null;
+  latitude: number;
+  longitude: number;
+  geofenceId?: string | null;
+  arrivalRadiusMeters: number;
+  activity?: string | null;
+  requiresPod: boolean;
+  priority: number;
+}
+
+/** An existing trip's shape, re-derived from its stops rather than stored. */
+export function deriveTripType(
+  originLatitude: number,
+  originLongitude: number,
+  stops: RouteSourceStop[]
+): TripType {
+  if (stops.length === 0) return 'single';
+  const ordered = [...stops].sort((a, b) => a.sequence - b.sequence);
+  const last = ordered[ordered.length - 1];
+  // A one-stop trip ending at the origin is a round trip with no outbound
+  // destination — nonsensical, so it only counts as round past one stop.
+  if (ordered.length > 1 && isSameSpot(last.latitude, last.longitude, originLatitude, originLongitude)) {
+    return 'round';
+  }
+  return ordered.length > 1 ? 'multi' : 'single';
+}
+
+export interface RouteTemplate {
+  tripType: TripType;
+  destinations: TripDestinationDraft[];
+  /** The source trip's return-stop geofence, if its route was a round trip. */
+  originGeofenceId: string | null;
+}
+
+/**
+ * Turns an existing trip's stops into a reusable route for the create dialog
+ * (slice 2's "recurring trip templates", in its light form). A detected round
+ * trip drops the trailing return stop — the dialog re-appends it at save time —
+ * so the copied route passes through the form without duplicating the origin
+ * stop.
+ */
+export function destinationsFromStops(
+  stops: RouteSourceStop[],
+  originLatitude: number,
+  originLongitude: number
+): RouteTemplate {
+  const ordered = [...stops].sort((a, b) => a.sequence - b.sequence);
+  const tripType = deriveTripType(originLatitude, originLongitude, ordered);
+  const returnStop = tripType === 'round' ? ordered[ordered.length - 1] : null;
+  const outbound = returnStop ? ordered.slice(0, -1) : ordered;
+  return {
+    tripType,
+    originGeofenceId: returnStop?.geofenceId || null,
+    destinations: outbound.map((stop) => ({
+      name: stop.name,
+      latitude: stop.latitude,
+      longitude: stop.longitude,
+      geofenceId: stop.geofenceId || null,
+      address: stop.address ?? null,
+      city: stop.city ?? null,
+      arrivalRadiusMeters: stop.arrivalRadiusMeters || DEFAULT_ARRIVAL_RADIUS_METERS,
+      activity: normalizeStopActivity(stop.activity),
+      requiresPod: stop.requiresPod,
+      priority: stop.priority,
+    })),
+  };
+}
+
+/* ------------------------------------------------- board: phase & exceptions */
+
+/**
+ * The exception filters the board leads with (spec 11a §10). Dispatcher attention
+ * is exception-driven now: the system runs the ordinary lifecycle, so what a human
+ * needs is the short list of trips that are NOT going to plan.
+ */
+export const TRIP_EXCEPTIONS = ['overdue', 'delayed', 'offCorridor', 'stalledFinalStop'] as const;
+
+export type TripException = (typeof TRIP_EXCEPTIONS)[number];
+
+/** The trip fields an exception is judged from — structural, so tests and Vm rows both fit. */
+export interface ExceptionCandidateTrip {
+  phase: string;
+  status: string;
+  deviationOpenedAt?: string | null;
+  pendingStopCount?: number | null;
+  phaseDelayed?: boolean | null;
+}
+
+/**
+ * Whether a trip is currently showing the named exception.
+ *
+ * Each answer comes from a recorded fact rather than a stored flag: `Overdue` is
+ * the derived phase, off-corridor is an open deviation episode, "delayed" is an
+ * ETA already past the planned end, and a stalled final stop is a running trip
+ * the board can see has nowhere left to go.
+ */
+export function hasException(trip: ExceptionCandidateTrip, exception: TripException): boolean {
+  switch (exception) {
+    case 'overdue':
+      return trip.phase === 'Overdue';
+    case 'offCorridor':
+      return !!trip.deviationOpenedAt;
+    case 'delayed':
+      // The backend's answer, not a second opinion. This used to compare the next stop's
+      // ETA against the TRIP's planned end — a looser rule than the one that raises
+      // TripDelayed (that stop's own window plus `delayThresholdMinutes`), so the board
+      // and the alert disagreed about which trips were late, on the same screen.
+      return !!trip.phaseDelayed;
+    case 'stalledFinalStop':
+      // Running, standing at a stop, and nothing left on the route: the truck arrived
+      // at its last destination and never measurably departed, so auto-completion has
+      // nothing to close on.
+      //
+      // The discriminator is `pendingStopCount`, not `!phaseEtaAt`. The resolver never
+      // sets an ETA on the AtStop branch — an ETA to a stop you are already parked at is
+      // meaningless — so that test was always true and the filter matched every truck
+      // unloading anywhere. An exception list that returns the whole board is noise, and
+      // noise is what the dispatcher was promised relief from.
+      return trip.status === 'InProgress' && trip.phase === 'AtStop' && trip.pendingStopCount === 0;
+    default:
+      return false;
+  }
+}
 
 /* ------------------------------------------------------------- deliveries */
 

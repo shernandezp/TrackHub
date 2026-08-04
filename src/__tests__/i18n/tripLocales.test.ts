@@ -46,12 +46,14 @@ const SCREEN_KEYS = ['screen.tripManager', 'screen.tripTracking'];
  */
 const TRIP_STATUSES = ['Created', 'InProgress', 'Paused', 'Completed', 'Cancelled', 'Aborted'];
 const STOP_STATUSES = ['Pending', 'Arrived', 'Departed', 'Skipped'];
+/** Form-only trip shapes (tripWriteForms TRIP_TYPES) — labels are built as `trips.type.${type}`. */
+const TRIP_FORM_TYPES = ['single', 'round', 'multi'];
 const ETA_SOURCES = ['Ors', 'Planned', 'Unavailable'];
 const TOLL_STATUSES = ['Computed', 'PartialNoTariff', 'NoStations', 'NotComputed'];
 const POD_KINDS = ['Signature', 'Photo', 'Manifest', 'BillOfLading', 'Receipt', 'Other'];
 const DELIVERY_STATUSES = ['Pending', 'Delivered', 'PartiallyDelivered', 'Rejected'];
 /** Manager `ScanStatus` values a POD attachment can report while it is queued. */
-const SCAN_STATUSES = ['Pending', 'Clean', 'Infected', 'Failed', 'Skipped'];
+const SCAN_STATUSES = ['Pending', 'Clean', 'Infected', 'Failed', 'Quarantined'];
 /** The two keys `setTransporterTollClass` accepts. */
 const TOLL_CLASS_TARGETS = ['transporterType', 'transporter'];
 
@@ -88,6 +90,9 @@ const BACKEND_TRIP_ERROR_CODES = [
   'TRIP_DUPLICATE_EXTERNAL_REFERENCE',
   'TRIP_HAS_HISTORY',
   'TRIP_DRIVER_NOT_ASSIGNABLE',
+  'TRIP_TRANSPORTER_BUSY',
+  'TRIP_ARMED',
+  'TRIP_START_EVIDENCE_REQUIRED',
   'ROUTING_NOT_CONFIGURED',
   'ROUTING_UNAVAILABLE',
   'ROUTING_INVALID_GEOMETRY',
@@ -112,6 +117,7 @@ const DYNAMIC_KEYS = [
   ...SCREEN_KEYS,
   ...TRIP_ERROR_KEYS,
   ...TRIP_STATUSES.map((status) => `trips.statuses.${status}`),
+  ...TRIP_FORM_TYPES.map((type) => `trips.type.${type}`),
   ...STOP_STATUSES.map((status) => `tripStops.statuses.${status}`),
   ...ETA_SOURCES.map((source) => `tripStops.etaSources.${source}`),
   ...TOLL_STATUSES.map((status) => `tolls.statuses.${status}`),

@@ -40,10 +40,25 @@ export const TripSummaryFieldsFragment = graphql(`
     originName
     originLatitude
     originLongitude
+    originGeofenceId
+    originRadiusMeters
     plannedStartAt
     plannedEndAt
     actualStartAt
     actualEndAt
+    armedAt
+    originArrivedAt
+    originDepartedAt
+    # The derived phase (spec 11a §10). It is what the board leads with: a column of
+    # rows all reading "InProgress" is exactly why a dispatcher used to have to open
+    # each one to find out what was actually happening.
+    phase
+    phaseStopName
+    phaseStopActivity
+    phaseEtaAt
+    # Decided by the backend, from the same stop-level threshold that raises TripDelayed —
+    # so the badge, the exception filter and the alert cannot disagree about the word.
+    phaseDelayed
     notes
     lastPositionAt
     lastLatitude
@@ -53,6 +68,10 @@ export const TripSummaryFieldsFragment = graphql(`
     deviationOpenedAt
     cancellationReason
     stopCount
+    # How much of the route is still ahead. "Stalled at final stop" needs to tell a truck
+    # unloading at stop 2 of 5 from one parked at the last stop with nowhere left to go,
+    # and the phase alone cannot — both read AtStop.
+    pendingStopCount
     lastModified
   }
 `);
@@ -122,6 +141,9 @@ export const TripStopFieldsFragment = graphql(`
     longitude
     geofenceId
     arrivalRadiusMeters
+    # What the vehicle does here. It is what turns the dwell between arrival and
+    # departure from an anonymous number of minutes into loading or unloading time.
+    activity
     plannedArrivalFrom
     plannedArrivalTo
     status
@@ -752,6 +774,41 @@ export const UpdateTollTariffDocument = graphql(`
 export const DeleteTollTariffDocument = graphql(`
   mutation DeleteTollTariff($id: UUID!) {
     deleteTollTariff(id: $id)
+  }
+`);
+
+/**
+ * Bulk trip planning from a spreadsheet (spec 11a §9.1). Per-row results: one bad
+ * row never fails the batch, and the dialog renders the rejected rows so the
+ * operator fixes those lines rather than guessing which of three hundred was wrong.
+ */
+export const ImportTripsCsvDocument = graphql(`
+  mutation ImportTripsCsv($csv: String!) {
+    importTripsCsv(command: { csv: $csv }) {
+      rowsRead
+      tripsCreated
+      errors {
+        rowNumber
+        errorCode
+        message
+      }
+    }
+  }
+`);
+
+/**
+ * "This trip is already under way" (spec 11a §5.4). `startedAt` is the FALLBACK,
+ * not the input: when Geofencing recorded the vehicle leaving the origin zone,
+ * those measurements win and `backfilled` comes back true.
+ */
+export const DeclareTripInTransitDocument = graphql(`
+  mutation DeclareTripInTransit($tripId: UUID!, $startedAt: DateTime) {
+    declareTripInTransit(command: { tripId: $tripId, startedAt: $startedAt }) {
+      started
+      backfilled
+      startedAt
+      stopsReplayed
+    }
   }
 `);
 

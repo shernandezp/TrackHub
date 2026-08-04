@@ -63,9 +63,13 @@ type Mutation {
   deleteTrip(id: UUID!): UUID! @cost(weight: "10")
   assignTrip(command: AssignTripCommandInput!): TripAssignmentVm!
     @cost(weight: "10")
+  importTripsCsv(command: ImportTripsCsvCommandInput!): TripCsvImportResultVm!
+    @cost(weight: "10")
   planTripRoute(command: PlanTripRouteCommandInput!): RoutePlanVm!
     @cost(weight: "10")
   startTrip(id: UUID!): Boolean! @cost(weight: "10")
+  declareTripInTransit(command: DeclareTripInTransitCommandInput!): TripStartBackfillResultVm!
+    @cost(weight: "10")
   pauseTrip(id: UUID!): Boolean! @cost(weight: "10")
   resumeTrip(id: UUID!): Boolean! @cost(weight: "10")
   completeTrip(command: CompleteTripCommandInput!): Boolean! @cost(weight: "10")
@@ -264,6 +268,18 @@ type TripAssignmentVm {
   endedAt: DateTime
 }
 
+type TripCsvImportErrorVm {
+  rowNumber: Int!
+  errorCode: String!
+  message: String!
+}
+
+type TripCsvImportResultVm {
+  rowsRead: Int!
+  tripsCreated: Int!
+  errors: [TripCsvImportErrorVm!]!
+}
+
 type TripDetailVm {
   trip: TripVm!
   stops: [TripStopVm!]!
@@ -356,6 +372,11 @@ type TripReportRowVm {
   plannedEndAt: DateTime
   actualStartAt: DateTime
   actualEndAt: DateTime
+  originArrivedAt: DateTime
+  originDepartedAt: DateTime
+  loadingMinutes: Int
+  transitMinutes: Int
+  totalMinutes: Int
   notes: String
   lastPositionAt: DateTime
   lastLatitude: Float
@@ -396,6 +417,13 @@ type TripsPageVm {
   totalCount: Int!
 }
 
+type TripStartBackfillResultVm {
+  started: Boolean!
+  backfilled: Boolean!
+  startedAt: DateTime
+  stopsReplayed: Int!
+}
+
 type TripStopReportPageVm {
   items: [TripStopReportRowVm!]!
   totalCount: Int!
@@ -412,6 +440,7 @@ type TripStopReportRowVm {
   customerName: String
   sequence: Int!
   name: String!
+  activity: String!
   status: String!
   plannedArrivalFrom: DateTime
   plannedArrivalTo: DateTime
@@ -435,6 +464,7 @@ type TripStopVm {
   longitude: Float!
   geofenceId: UUID
   arrivalRadiusMeters: Int!
+  activity: String!
   plannedArrivalFrom: DateTime
   plannedArrivalTo: DateTime
   status: String!
@@ -491,10 +521,20 @@ type TripVm {
   originName: String!
   originLatitude: Float!
   originLongitude: Float!
+  originGeofenceId: UUID
+  originRadiusMeters: Int!
   plannedStartAt: DateTime!
   plannedEndAt: DateTime
   actualStartAt: DateTime
   actualEndAt: DateTime
+  armedAt: DateTime
+  originArrivedAt: DateTime
+  originDepartedAt: DateTime
+  phase: String!
+  phaseStopName: String
+  phaseStopActivity: String
+  phaseEtaAt: DateTime
+  phaseDelayed: Boolean!
   notes: String
   lastPositionAt: DateTime
   lastLatitude: Float
@@ -504,6 +544,7 @@ type TripVm {
   deviationOpenedAt: DateTime
   cancellationReason: String
   stopCount: Int!
+  pendingStopCount: Int!
   lastModified: DateTime!
 }
 
@@ -552,6 +593,11 @@ input CreateTollVehicleClassCommandInput {
 
 input CreateTripCommandInput {
   trip: TripDtoInput!
+}
+
+input DeclareTripInTransitCommandInput {
+  tripId: UUID!
+  startedAt: DateTime
 }
 
 input DeliveryDtoInput {
@@ -654,6 +700,10 @@ input ImportTollCatalogCommandInput {
 input ImportTripsCommandInput {
   accountId: UUID!
   trips: [TripImportDtoInput!]!
+}
+
+input ImportTripsCsvCommandInput {
+  csv: String!
 }
 
 input PlanTripRouteCommandInput {
@@ -780,6 +830,8 @@ input TripDtoInput {
   originName: String!
   originLatitude: Float!
   originLongitude: Float!
+  originGeofenceId: UUID
+  originRadiusMeters: Int!
   plannedStartAt: DateTime!
   plannedEndAt: DateTime
   notes: String
@@ -795,8 +847,10 @@ input TripImportDtoInput {
   originName: String!
   originLatitude: Float!
   originLongitude: Float!
+  originGeofenceId: UUID
   plannedStartAt: DateTime!
   plannedEndAt: DateTime
+  startedAt: DateTime
   notes: String
   stops: [TripStopDtoInput!]!
 }
@@ -824,6 +878,7 @@ input TripStopDtoInput {
   longitude: Float!
   geofenceId: UUID
   arrivalRadiusMeters: Int!
+  activity: String
   plannedArrivalFrom: DateTime
   plannedArrivalTo: DateTime
   requiresPod: Boolean!

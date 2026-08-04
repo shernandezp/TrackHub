@@ -169,7 +169,7 @@ function Sidenav({
     });
 
   const brandLinkProps = { component: NavLink, to: "/" };
-  const brandImgProps = { component: "img" as const, src: brand, alt: "Argon Logo" };
+  const brandImgProps = { component: "img" as const, src: brand, alt: t("sidenav.brandAlt") };
 
   return (
     <SidenavRoot {...rest} variant="permanent" ownerState={{ darkSidenav, miniSidenav, layout }}>

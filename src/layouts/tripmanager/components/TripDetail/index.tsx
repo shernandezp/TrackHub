@@ -104,6 +104,9 @@ function TripDetail({
   const stopColumns = [
     { name: 'sequence', title: t('tripStops.sequence'), align: 'center' as const, width: '48px' },
     { name: 'name', title: t('tripStops.name'), align: 'left' as const },
+    // Next to the arrival/departure pair it explains: the gap between them is loading time at a
+    // Load stop and unloading time at an Unload one (spec 11a §4.2).
+    { name: 'activity', title: t('tripStops.activity.label'), align: 'left' as const },
     { name: 'window', title: t('tripStops.plannedFrom'), align: 'left' as const },
     { name: 'eta', title: t('tripStops.eta'), align: 'left' as const },
     { name: 'arrival', title: t('tripStops.actualArrival'), align: 'left' as const },
@@ -116,6 +119,13 @@ function TripDetail({
   const stopRows = stops.map((stop) => ({
     sequence: <Name name={stop.sequence} />,
     name: <Description description={stop.name} />,
+    activity: (
+      <Description
+        description={t(`tripStops.activity.${stop.activity}` as 'tripStops.activity.Unload', {
+          defaultValue: stop.activity,
+        })}
+      />
+    ),
     window: (
       <Description
         description={
@@ -285,8 +295,24 @@ function TripDetail({
   ];
   const eventRows = events.map((event) => ({
     occurredAt: <Name name={formatDateTime(event.occurredAt)} />,
-    event: <Description description={event.eventType} />,
-    source: <Description description={event.source} />,
+    // Falls back to the raw literal rather than rendering a missing-key placeholder: the
+    // timeline is a record, and a type this build has no label for must still be readable.
+    event: (
+      <Description
+        description={t(`trips.timeline.events.${event.eventType}` as 'trips.timeline.events.TripStarted', {
+          defaultValue: event.eventType,
+        })}
+      />
+    ),
+    // The source is what tells a MEASURED start from a dispatcher's override (spec 11a §5.3),
+    // so it is worth a word rather than an enum name.
+    source: (
+      <Description
+        description={t(`trips.timeline.sources.${event.source}` as 'trips.timeline.sources.Detection', {
+          defaultValue: event.source,
+        })}
+      />
+    ),
     id: event.tripEventId,
   }));
 
