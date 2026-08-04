@@ -16,13 +16,43 @@ A **trip** is one vehicle's journey through an ordered list of **stops**, from a
 
 Trips are available only when the trip management feature is enabled for your account. If you cannot see **Trips** in the left-hand menu, the feature is off — ask your account administrator, and see [Feature catalog](topic:feature-catalog).
 
+## You plan; the system measures
+
+**You do not start or finish trips by hand.** You say what is supposed to happen — which unit, from where, to where, when — and TrackHub works out what actually happened from the vehicle's positions:
+
+- A trip **starts itself** when its unit reaches the **origin zone**, in the order you planned them for that vehicle.
+- **Loading time** is measured from the moment it arrives at the origin to the moment it leaves.
+- **Arrivals and departures** at each stop are measured the same way.
+- The trip **completes itself** when its route is done.
+
+Nobody has to watch a screen for this to work, and nobody has to click **Start** three hundred times a week. Your attention goes to the **exceptions** instead — the trips that are not going to plan.
+
+The manual buttons are still there, grouped under **Override**. They are for the cases measurement cannot cover: a tracker with no signal, an indoor dock, a correction after the fact. See *Overriding the automatic lifecycle* below.
+
 ## The dispatch board
 
-Open **Trips** from the left-hand menu. The left column is the dispatch board: one row per trip, showing its **code**, **customer**, **unit**, **planned start**, **stop count** and **status**. A red **Off corridor** badge marks a trip whose vehicle has strayed from its planned route.
+Open **Trips** from the left-hand menu. The board is one row per trip, showing its **code**, **customer**, **unit**, **planned start**, **stop count**, **phase** and **status**.
 
-The filters across the top — status, unit, driver, date from, date to — and the search box in the top bar are all applied by the server, so the list is a true page of matching trips rather than a filtered view of the first few. Use the arrows below the board to move between pages; the counter tells you which rows you are looking at.
+The **phase** is the column to read. Status tells you a trip is "in progress"; phase tells you what it is *doing* — *Loading at Plant 3*, *In transit to Client X (ETA 11:05)*, *At stop · Client Y*, *Overdue to start*. It is worked out fresh on every refresh from the times actually measured, so it is never a stale label somebody forgot to update.
 
-Click a row to open that trip in the workspace on the right.
+The board **refreshes itself every 30 seconds**, and again the moment you come back to the tab. It has to: trips now change state without anyone here pressing anything.
+
+Use the **Exceptions** filter to cut the board down to what needs a human:
+
+| Exception | What it means |
+|---|---|
+| Overdue to start | The unit never turned up at the origin. The trip stays queued — decide whether to cancel it or re-plan it. |
+| Delayed | The current estimate is already past the planned end. |
+| Off corridor | The vehicle has strayed from the planned route. |
+| Stalled at final stop | It arrived at the last stop and the route has nowhere left to go. |
+
+The other filters — status, unit, driver, date from, date to — and the search box in the top bar are applied by the server, so the list is a true page of matching trips rather than a filtered view of the first few. Use the arrows below the board to move between pages; the counter tells you which rows you are looking at.
+
+Click a row to open that trip in the workspace below.
+
+### A trip that never left
+
+An overdue trip is **not** skipped, and the next trip for that vehicle does **not** jump the queue. That is deliberate: running Thursday's trip before anyone noticed Monday's never left is a decision for a dispatcher, not a guess for the system. Cancel it or re-plan it and the queue moves on.
 
 ## Trip statuses
 
@@ -44,11 +74,38 @@ Click **New trip** and fill in the dialog:
 - **Trip code** (required) — your own reference. It must be unique within the account; reusing a code is rejected.
 - **Customer** — shown to the customer on the tracking page.
 - **Unit** (required) and **Driver** — the vehicle doing the work, and who is driving it.
-- **Origin**, **origin latitude** and **origin longitude** (required) — where the trip begins.
+- **Origin** (required) — an existing **place**: one of your geofences, or a point of interest. There is no coordinate box, on purpose. The origin is what the automatic start is measured against, so a geofence is better than a point: the trip is judged against the plant's real shape instead of a 150 m circle around a pin.
+- **Destinations** (at least one) and the **activity** at them — see below.
 - **Planned start** (required) and **planned end**.
 - **External reference** — the id this trip carries in your own TMS or ERP.
 - **Toll vehicle class** — which tariff band this vehicle falls into, used for the toll estimate.
 - **Notes** — internal only. Notes are never shown to the customer.
+
+### What the vehicle does at each stop
+
+Every destination carries an **activity**: **loading**, **unloading** or **other**. Set it before you add the destinations — a delivery run is normally *unloading* for all of them.
+
+This is what gives a dwell figure a meaning. Ninety minutes at a stop is an anonymous number; ninety minutes at an *unloading* stop is ninety minutes of unloading, and that is what the reports add up. The return leg of a round trip is filed as **other**, because parking back at the depot is neither.
+
+Time at the **origin** is always loading time — that is what the origin is.
+
+## Planning a week at a time
+
+**Bulk upload** takes a spreadsheet and creates the trips in it. Press it, download the **template** to see the column order, fill it in and upload the file (or paste the CSV straight into the box).
+
+Places are **named**, never typed as coordinates: write `Plant 3` and `Client X;Client Y`, and TrackHub matches those names against your account's geofences first and then its points of interest. A name it cannot find is that row's error.
+
+One bad row never fails the batch. Every good row lands, and the rejected ones come back with their line number and the reason, so you fix those lines and upload again.
+
+`tripType=round` appends the return leg to the origin for you. Leave `startedAt` empty unless the trip has already begun — see below.
+
+## A trip that has already begun
+
+Real planning happens after the fact: a bulk upload lands on Monday morning for trucks that rolled on Sunday night. Open the trip, press **Override → Already in transit**.
+
+TrackHub looks for the vehicle's recorded departure from the origin zone. If it finds one, **those measured times are used** — arrival, departure, and any stops already visited are filled in from what actually happened, and the time you typed is ignored. Only when there is no such record does your **start time** stand in, and then the loading time is left blank rather than invented.
+
+In a bulk upload, the `startedAt` column does the same thing for each row.
 
 ## Adding stops
 
@@ -65,7 +122,8 @@ There is deliberately **no address search box**. All three sources already give 
 Each stop also takes:
 
 - **Name** (required), the resulting **address**, and the **city**.
-- **Arrival radius** — how close the vehicle must get for an arrival to be detected automatically. Widen it for large yards, narrow it for street-side deliveries.
+- **Arrival radius** — how close the vehicle must get for an arrival to be detected automatically. Widen it for large yards, narrow it for street-side deliveries. It is only used when the stop is a plain point; a stop linked to a geofence uses the zone's real shape.
+- **Activity** — loading, unloading or other. See *What the vehicle does at each stop* above.
 - **Planned from** / **planned to** — the window you promised.
 - **Proof of delivery required** — flags the stop as one that must be signed for.
 - **Priority** and **observations**.
@@ -118,15 +176,35 @@ The assignment panel shows who is currently assigned, on which unit, when they w
 
 ## Running the trip
 
-Press **Start** when the vehicle sets off. While a trip is in progress:
+You do not have to do anything. Once the planned start is within about an hour, TrackHub begins watching that vehicle for its next planned trip; when the unit reaches the origin zone the trip starts itself, and from there positions are matched against each stop.
 
-- Positions arriving from the vehicle are matched against each stop's arrival area, marking arrivals and departures automatically.
-- You can also record them by hand from the stop table with **Record arrival**, **Record departure** and **Skip** — useful when GPS is weak, the dock is indoors, or the device is off. A manual entry always wins over automatic detection, and recording the same thing twice never creates a duplicate.
-- **Pause** and **Resume** cover planned stand-downs.
-- **Complete** finishes the trip. If stops are still pending, tick **Complete even though stops are still pending** to force it.
+While a trip is in progress the phase tells you where it is, and the workspace fills in as it goes.
+
+### Overriding the automatic lifecycle
+
+Press **Override** in the trip header for the manual controls. They exist for the exceptions — weak GPS, an indoor dock, a device that was off, a correction after the fact — not for everyday running:
+
+- **Start** forces a trip to begin now. It is refused if that vehicle is already running another trip: one unit runs one trip at a time.
+- **Already in transit** records a trip that started before you wrote it down. See above.
+- **Pause** and **Resume** cover planned stand-downs. **Pause also suspends automatic detection** — it is how you take control of a trip. Nothing is measured until you resume.
+- **Complete** finishes the trip. If stops are still pending, tick **Complete even though stops are still pending** to force it. It works on a paused trip too, so you do not have to hand a finished trip back to automation just to close it.
 - **Cancel** and **Abort** both need a reason and both keep everything already recorded.
 
-A trip that has any recorded activity cannot be deleted — cancel it instead. Only a freshly created trip with no history can be deleted.
+You can also record stop progress by hand from the stop table with **Record arrival**, **Record departure** and **Skip** — including while the trip is paused, which is exactly when you need them. A manual entry always wins over automatic detection, and recording the same thing twice never creates a duplicate.
+
+The trip's **History** tab shows where every event came from, so a measured start and a typed one are always told apart.
+
+A trip that has any recorded activity cannot be deleted — cancel it instead. Only a freshly created trip with no history can be deleted, and simply being watched does not count as history.
+
+### Editing a trip that is being watched
+
+While a trip is still planned you can change anything, including its unit and its origin — TrackHub just re-reads the new zones on its next check.
+
+Once it is **running**, its unit and its origin are frozen. Everything else — customer, notes, planned times, toll class — stays editable. Re-pointing a trip mid-flight would change the meaning of measurements already taken, so cancel it and plan a fresh one instead.
+
+### Turning the automation off
+
+An account whose vehicles do not report reliably can switch the automatic lifecycle off entirely, and every trip then runs exactly the manual way described under **Override**. It is an account setting — ask your administrator.
 
 ## Trip detail
 
@@ -196,9 +274,19 @@ The customer's view is described in [Customer trip tracking](topic:public-trip-t
 
 Six trip reports are available on the [Reports](topic:reports) screen: trip summary, trip stop detail, on-time performance, stop dwell, toll cost and the proof-of-delivery register. They respect the same group visibility as the board, so you only ever see trips for units in your groups.
 
+**Trip summary** carries the measured durations: time at the origin, time in transit, and total trip time, next to the planned figures they should be compared with. **Trip stop detail** and **stop dwell** carry each stop's activity, so the same dwell figure reads as loading time at a plant and unloading time at a client.
+
+A blank duration means the measurement behind it was never taken — usually a trip whose start was typed in rather than measured. That is deliberate: a blank says "not measured", where a zero would claim the truck spent no time loading.
+
 ## If something looks wrong
 
 - **No Trips entry in the menu** — the feature is not enabled for your account.
+- **A trip never started by itself** — the unit has to be reporting positions, and it has to actually reach the origin zone. Check it on the [live map](topic:dashboard-live-map), and check the origin: a point of interest is only a 150 m circle, so pick a geofence for a large yard.
+- **The phase says Overdue** — the unit never arrived at the origin. Cancel the trip or re-plan it; the rest of that vehicle's queue is waiting behind it.
+- **Start says the unit is busy** — that vehicle already has a trip in progress. Complete or cancel it first.
+- **A trip finished but never closed itself** — its last stop was probably skipped by hand, or its tracker went quiet before it left. A background check closes trips that sit at their final stop; otherwise close it from **Override → Complete**.
+- **The trip's unit or origin cannot be changed** — it is running. Cancel it and plan a new one.
+- **A bulk upload rejected a row** — read the reason on that line. Almost always it is a place name that does not match any geofence or point of interest in this account.
 - **Plan route does nothing** — the trip needs at least one stop.
 - **"Route planning is not configured"** — the platform's routing service has no credentials. This is a platform setting, not an account one; contact your administrator.
 - **The estimate says "Partial"** — that is the catalog telling you it does not have a tariff for every station on this route, not an error.

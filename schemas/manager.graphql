@@ -982,6 +982,7 @@ type ReportVm {
   managerOnly: Boolean!
   supportsPdf: Boolean!
   sortOrder: Int!
+  filters: String
 }
 
 type TokenVm {

@@ -13,6 +13,11 @@
     "goBack": "Go Back",
     "waitNote": "Please wait before retrying to avoid overloading the authentication service."
   },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "message": "An unexpected error occurred. Please try reloading the page.",
+    "reload": "Reload Page"
+  },
   "accountType": {
     "personal": "Personal",
     "business": "Business",
@@ -233,7 +238,14 @@
     "config": {
       "storingIntervalSeconds": "Storing Interval (Seconds)",
       "retentionDays": "Retention Days",
-      "blockAssignmentOnExpiredLicense": "Block assignment when the driver's license is expired"
+      "blockAssignmentOnExpiredLicense": "Block assignment when the driver's license is expired",
+      "autoLifecycle": "Start and complete trips automatically from the zones",
+      "activationLeadMinutes": "Start watching a trip this many minutes before its planned start",
+      "overdueGraceMinutes": "Minutes past the planned start before a trip reads as overdue",
+      "finalStopCompletionMinutes": "Minutes parked at the final stop before the trip closes itself",
+      "backfillLookbackHours": "How many hours back to search for a recorded departure",
+      "delayThresholdMinutes": "Minutes past the promised window before a stop counts as delayed",
+      "scheduleLeadMinutes": "Minutes before a planned start to send the reminder"
     }
   },
   "alertEvents": {
@@ -241,7 +253,12 @@
     "type": "Type",
     "status": "Status",
     "acknowledge": "Acknowledge Alert",
-    "resolve": "Resolve Alert"
+    "resolve": "Resolve Alert",
+    "statuses": {
+      "Open": "Open",
+      "Acknowledged": "Acknowledged",
+      "Resolved": "Resolved"
+    }
   },
   "auditTrail": {
     "title": "Audit Trail",
@@ -297,7 +314,17 @@
     "documentExpired": "Document Expired",
     "notificationDeliveryFailed": "Notification Delivery Failed",
     "driverQualificationExpiring": "Driver Qualification Expiring",
-    "driverQualificationExpired": "Driver Qualification Expired"
+    "driverQualificationExpired": "Driver Qualification Expired",
+    "tripAssigned": "Trip Assigned",
+    "tripStarted": "Trip Started",
+    "tripStopArrived": "Trip Stop Arrived",
+    "tripStopDeparted": "Trip Stop Departed",
+    "tripDelayed": "Trip Delayed",
+    "tripRouteDeviation": "Trip Route Deviation",
+    "tripPodSubmitted": "Trip POD Submitted",
+    "tripCompleted": "Trip Completed",
+    "tripCancelled": "Trip Cancelled",
+    "tripStartDue": "Trip Start Due"
   },
   "notificationChannels": {
     "inApp": "In-App",
@@ -491,6 +518,9 @@
     "tripDuplicateExternalReference": "Another trip in this account already uses that external reference.",
     "tripHasHistory": "This trip has recorded activity and cannot be deleted. Cancel it instead.",
     "tripDriverNotAssignable": "That driver cannot be assigned to this trip.",
+    "tripTransporterBusy": "That unit is already running another trip. Complete or cancel it first.",
+    "tripArmed": "This trip is running, so its unit and origin can no longer be changed. Cancel it and plan a new one.",
+    "tripStartEvidenceRequired": "No recorded departure from the origin was found, so a start time is required.",
     "routingNotConfigured": "Route planning is not configured on this platform. Ask your administrator to set up the routing service.",
     "routingUnavailable": "The routing service is not responding. The trip is unaffected — try planning again later.",
     "routingInvalidGeometry": "The routing service returned a route that cannot be drawn or used as a corridor. Try planning again, or adjust the stops.",
@@ -751,6 +781,9 @@
     "searchText": "Type here...",
     "signOff": "Sign off"
   },
+  "sidenav": {
+    "brandAlt": "TrackHub logo"
+  },
   "operator": {
     "title": "Operators",
     "singleTitle": "Operator",
@@ -813,7 +846,9 @@
     "to": "To",
     "transporter": "Unit",
     "operator": "Operator",
+    "geofence": "Geofence",
     "device": "Device ID",
+    "all": "All",
     "preview": "Preview",
     "exportExcel": "Export Excel",
     "exportPdf": "Export PDF",
@@ -949,7 +984,10 @@
     "notificationsWhatsapp": "WhatsApp Notifications",
     "gpsIntegration": "GPS Integration",
     "gpsPositionHistory": "GPS Position History",
-    "workforce": "Workforce"
+    "workforce": "Workforce",
+    "tollCatalog": "Toll Catalog",
+    "trips": "Trips",
+    "tripTracking": "Trip Tracking"
   },
   "role": {
     "title": "Roles",
@@ -1130,7 +1168,8 @@
     "sidenav": "Sidenav Mini",
     "language": "Language",
     "info": "Profile Information",
-    "partOf": "Part of"
+    "partOf": "Part of",
+    "avatarAlt": "Profile picture"
   },
   "utilsmap": {
     "hideStatistics": "Hide Statistics",
@@ -1452,6 +1491,41 @@
     "originName": "Origin",
     "originLatitude": "Origin latitude",
     "originLongitude": "Origin longitude",
+    "route": {
+      "title": "Route",
+      "hint": "Origin and destinations are existing places: a geofence (arrivals use its real shape) or a point of interest. Ad-hoc points and stop fine-tuning live in the route planner."
+    },
+    "extras": {
+      "title": "Additional information"
+    },
+    "origin": {
+      "byGeofence": "Origin geofence",
+      "byPoi": "Origin point of interest",
+      "chosen": "Origin set at {{lat}}, {{lng}}",
+      "none": "No origin chosen yet",
+      "required": "Choose the origin from a geofence or a point of interest."
+    },
+    "type": {
+      "label": "Trip type",
+      "single": "Single destination",
+      "round": "Round trip",
+      "multi": "Multi-destination"
+    },
+    "destinations": {
+      "title": "Destinations",
+      "hint": "Add each destination from a geofence or a point of interest. Arrival windows, POD flags and ordering are fine-tuned later in the route planner.",
+      "byGeofence": "Add geofence",
+      "byPoi": "Add point of interest",
+      "empty": "No destinations yet.",
+      "required": "Add at least one destination.",
+      "singleLimit": "A single-destination trip takes exactly one destination — remove the extras or change the trip type.",
+      "remove": "Remove destination",
+      "returnNote": "A return stop at the origin is added automatically when the trip is created."
+    },
+    "copyFrom": {
+      "label": "Reuse a previous route",
+      "placeholder": "Copy origin and destinations from…"
+    },
     "plannedStart": "Planned start",
     "plannedEnd": "Planned end",
     "actualStart": "Actual start",
@@ -1491,6 +1565,54 @@
       "Completed": "Completed",
       "Cancelled": "Cancelled",
       "Aborted": "Aborted"
+    },
+    "phase": "Phase",
+    "eta": "ETA",
+    "phases": {
+      "Scheduled": "Scheduled",
+      "Armed": "Waiting at",
+      "AtOrigin": "Loading at",
+      "InTransit": "In transit to",
+      "AtStop": "At stop",
+      "Overdue": "Overdue to start",
+      "Paused": "Paused",
+      "Completed": "Completed",
+      "Cancelled": "Cancelled",
+      "Aborted": "Aborted"
+    },
+    "exceptions": {
+      "label": "Exceptions",
+      "all": "All trips",
+      "overdue": "Overdue to start",
+      "delayed": "Delayed",
+      "offCorridor": "Off corridor",
+      "stalledFinalStop": "Stalled at final stop"
+    },
+    "override": {
+      "action": "Override",
+      "hint": "The system starts, advances and completes trips from the zones. These are for the exceptions — a dead tracker, a correction."
+    },
+    "inTransit": {
+      "action": "Already in transit",
+      "title": "Trip already under way",
+      "message": "Record that this trip has already started. If the unit's departure from the origin zone was recorded, those measured times are used and the field below is ignored.",
+      "startedAt": "Start time (only if there is no recorded departure)"
+    },
+    "import": {
+      "action": "Bulk upload",
+      "title": "Upload trips",
+      "hint": "One trip per line. Places are named, not typed as coordinates: origin and destinations are matched against this account's geofences and then its points of interest. Download the template for the column order.",
+      "file": "Choose file",
+      "template": "Download template",
+      "paste": "Or paste the CSV here",
+      "result": "Upload result",
+      "rowsRead": "Rows read",
+      "tripsCreated": "Trips created",
+      "errors": "Rejected rows",
+      "noErrors": "Every row was accepted.",
+      "row": "Row",
+      "errorCode": "Code",
+      "message": "Reason"
     },
     "actions": {
       "start": "Start",
@@ -1545,7 +1667,39 @@
       "event": "Event",
       "occurredAt": "When",
       "source": "Source",
-      "empty": "Nothing has happened on this trip yet."
+      "empty": "Nothing has happened on this trip yet.",
+      "events": {
+        "TripCreated": "Trip created",
+        "TripUpdated": "Trip updated",
+        "TripAssigned": "Driver assigned",
+        "TripAssignmentAcknowledged": "Assignment acknowledged",
+        "TripStarted": "Trip started",
+        "TripOriginDeparted": "Left the origin",
+        "TripPaused": "Trip paused",
+        "TripResumed": "Trip resumed",
+        "TripStopArrived": "Arrived at stop",
+        "TripStopDeparted": "Left stop",
+        "TripStopSkipped": "Stop skipped",
+        "TripRouteDeviation": "Off the planned corridor",
+        "TripDelayed": "Running late",
+        "TripPodSubmitted": "Proof of delivery captured",
+        "TripDeliveryOutcomeRecorded": "Delivery outcome recorded",
+        "TripCompleted": "Trip completed",
+        "TripCancelled": "Trip cancelled",
+        "TripAborted": "Trip aborted",
+        "TripShared": "Tracking link created",
+        "TripShareRevoked": "Tracking link revoked",
+        "TripRoutePlanned": "Route planned",
+        "TripRoutePlanFailed": "Route planning failed",
+        "TripStartDue": "Start time approaching"
+      },
+      "sources": {
+        "Detection": "Measured",
+        "Portal": "Portal",
+        "Driver": "Driver app",
+        "Job": "Scheduled check",
+        "ServiceClient": "Integration"
+      }
     },
     "deliveries": {
       "title": "Deliveries",
@@ -1596,6 +1750,12 @@
     "longitude": "Longitude",
     "arrivalRadius": "Arrival radius (m)",
     "arrivalRadiusHint": "How close the vehicle must get for an automatic arrival to be detected.",
+    "activity": {
+      "label": "Activity",
+      "Load": "Loading",
+      "Unload": "Unloading",
+      "Other": "Other"
+    },
     "plannedFrom": "Planned from",
     "plannedTo": "Planned to",
     "status": "Status",
@@ -1705,7 +1865,7 @@
       "Clean": "Clean",
       "Infected": "Infected",
       "Failed": "Scan failed",
-      "Skipped": "Scan skipped"
+      "Quarantined": "Quarantined"
     },
     "kinds": {
       "Signature": "Signature",
@@ -1822,6 +1982,7 @@
     "title": "Trip tracking",
     "loading": "Loading your trip…",
     "trip": "Trip",
+    "scheduled": "Scheduled",
     "vehicle": "Vehicle",
     "driver": "Driver",
     "plannedStart": "Planned start",

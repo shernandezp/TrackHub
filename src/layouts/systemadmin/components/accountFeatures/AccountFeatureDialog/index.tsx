@@ -23,6 +23,7 @@ import CustomSelect from 'controls/Dialogs/CustomSelect';
 import CustomReadOnly from 'controls/Dialogs/CustomReadOnly';
 import type { FormChangeHandler } from 'controls/Dialogs/useForm';
 import { featureLabel } from 'utils/featureLabels';
+import { configFieldKey } from 'layouts/systemadmin/components/accountFeatures';
 import type {
   FeatureFormValues,
   ConfigFieldDef,
@@ -39,15 +40,15 @@ interface AccountFeatureDialogProps {
   isAdd?: boolean;
   accountOptions?: FeatureSelectOption[];
   featureOptions?: FeatureSelectOption[];
-  configField: Record<string, ConfigFieldDef>;
+  configFields: Record<string, ConfigFieldDef[]>;
 }
 
 // SuperAdministrator editor for a single account feature. In "add" mode the account and feature
 // are chosen; in "edit" mode they are fixed. Feature enablement, tier and the storage/cost
 // configuration are billing-owned and only editable here.
-function AccountFeatureDialog({ open, setOpen, handleSubmit, values, handleChange, errors, isAdd, accountOptions, featureOptions, configField }: AccountFeatureDialogProps) {
+function AccountFeatureDialog({ open, setOpen, handleSubmit, values, handleChange, errors, isAdd, accountOptions, featureOptions, configFields }: AccountFeatureDialogProps) {
   const { t } = useTranslation();
-  const cfg = configField[values.featureKey ?? ''];
+  const fields = configFields[values.featureKey ?? ''] ?? [];
   const featureName = values.featureKey ? featureLabel(t, values.featureKey) : '';
 
   return (
@@ -111,29 +112,36 @@ function AccountFeatureDialog({ open, setOpen, handleSubmit, values, handleChang
           errorMsg={errors.tier}
         />
 
-        {cfg && (cfg.kind === 'boolean'
-          ? (
+        {/* A feature may carry several settings — trip-management's zero-touch lifecycle is tuned
+            per account — so this renders the whole registered list rather than one control. */}
+        {fields.map((field) => {
+          const key = configFieldKey(field);
+          const label = t(field.labelKey as 'accountFeatures.config.retentionDays');
+
+          return field.kind === 'boolean' ? (
             <CustomCheckbox
-              name="configValue"
-              id="configValue"
-              value={Boolean(values.configValue ?? cfg.default)}
+              key={key}
+              name={key}
+              id={key}
+              value={Boolean(values[key] ?? field.default)}
               handleChange={handleChange}
-              label={t(cfg.labelKey as 'accountFeatures.config.retentionDays')} />
-          )
-          : (
+              label={label} />
+          ) : (
             <CustomTextField
+              key={key}
               margin="dense"
-              name="configValue"
-              id="configValue"
-              label={t(cfg.labelKey as 'accountFeatures.config.retentionDays')}
+              name={key}
+              id={key}
+              label={label}
               type="number"
               fullWidth
-              value={Number(values.configValue ?? cfg.default)}
+              value={Number(values[key] ?? field.default)}
               onChange={handleChange}
               slotProps={{ htmlInput: { min: 0 } }}
-              errorMsg={errors.configValue}
+              errorMsg={errors[key]}
             />
-          ))}
+          );
+        })}
       </form>
     </FormDialog>
   );

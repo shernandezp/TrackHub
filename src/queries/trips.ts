@@ -59,11 +59,29 @@ export const tripKeys = {
 /* ------------------------------------------------------------------ trips */
 
 /** Server-paged dispatch board. Every filter travels to the server — nothing is filtered client-side. */
+/**
+ * How often the dispatch board re-reads itself.
+ *
+ * Polling is not a nicety here, it is a requirement of zero-touch: trips now start,
+ * advance and complete without any mutation of this dispatcher's making, so nothing
+ * invalidates the cache on their behalf. Without it the board would show a truck as
+ * "scheduled" for as long as the tab stayed open (spec 11a §10).
+ *
+ * 30 s rather than the status page's 60 s — this is an operational screen someone
+ * watches while making decisions, not a health dashboard.
+ */
+export const TRIP_BOARD_POLL_MS = 30_000;
+
 export function useTrips(filters: TripListFilters = {}, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: tripKeys.list(filters),
     queryFn: () => api.getTrips(filters),
     enabled: options.enabled ?? true,
+    refetchInterval: TRIP_BOARD_POLL_MS,
+    // A backgrounded tab stops hitting the backend; the focus refetch below is what
+    // makes coming back to it show the truth immediately rather than up to 30 s late.
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -72,6 +90,11 @@ export function useTripDetail(tripId: string | null | undefined) {
     queryKey: tripKeys.detail(tripId ?? ''),
     queryFn: () => api.getTripDetail(tripId as string),
     enabled: !!tripId,
+    // The workspace tracks one trip in flight — its stops close without anyone here
+    // pressing anything, so it polls on the same cadence as the board.
+    refetchInterval: TRIP_BOARD_POLL_MS,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -532,6 +555,25 @@ export function useImportTollCatalog() {
   return useMutation({
     mutationFn: (csv: string) => api.importTollCatalog(csv),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: tripKeys.tolls }),
+  });
+}
+
+/** Bulk trip planning (spec 11a §9.1). Row-level failures come back in the result, never as a throw. */
+export function useImportTripsCsv() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (csv: string) => api.importTripsCsv(csv),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: tripKeys.all }),
+  });
+}
+
+/** "This trip is already under way" (spec 11a §5.4). */
+export function useDeclareTripInTransit() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ tripId, startedAt }: { tripId: string; startedAt: string | null }) =>
+      api.declareTripInTransit(tripId, startedAt),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: tripKeys.all }),
   });
 }
 
