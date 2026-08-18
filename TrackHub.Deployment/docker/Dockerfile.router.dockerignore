@@ -22,9 +22,6 @@
 **/TestResults/
 **/*.user
 
-# Stale host-built TrackHubCommon packages (unused — Common is a ProjectReference now)
-TrackHubCommon/NugetPackages/
-
 # Node / React build artifacts and dependencies
 **/node_modules/
 **/build/

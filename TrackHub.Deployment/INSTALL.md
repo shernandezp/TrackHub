@@ -301,7 +301,7 @@ For a private deployment, point it at your own copy:
 
 ```bash
 GITHUB_OWNER=your-account
-GITHUB_REPO=TrackHub.Commercial
+GITHUB_REPO=TrackHub.Private
 GITHUB_USER=your-username
 GITHUB_PASSWORD=ghp_your_personal_access_token
 ```
