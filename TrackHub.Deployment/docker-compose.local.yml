@@ -1,0 +1,185 @@
+# =============================================================================
+# TrackHub - LOCAL Docker Desktop (Windows) development overlay
+# =============================================================================
+# Additive overlay for docker-compose.backend.yml.
+# It changes NOTHING production uses: the base compose files, nginx.backend.conf,
+# .env, deploy.sh and generate-appsettings.sh are untouched. Every local-only
+# artifact lives in this file, .env.local, nginx/nginx.local.conf and scripts/local/.
+#
+#   docker compose --env-file .env.local \
+#     -f docker-compose.backend.yml \
+#     -f docker-compose.local.yml up -d
+#
+# scripts/local/Start-TrackHubLocal.ps1 wraps that call.
+#
+# WHY EACH OVERRIDE EXISTS
+#
+#  1. IIS owns :80 and :443 on this machine and keeps them - it serves non-TrackHub
+#     sites. Compose merges "ports" by APPENDING, so the base nginx cannot be moved
+#     off 80/443 by an override; it is disabled by profile instead and replaced by
+#     nginx-local on 8080/8443.
+#
+#  2. Every API publishes its container port on 600x so a service running under the
+#     Visual Studio debugger can call its Docker peers. 600x and not 500x because
+#     launchSettings.json already binds 5002-5005 for F5 runs.
+#
+#  3. extra_hosts pins trackhub.local to the Docker host gateway. AuthorityServer:Authority
+#     is used for three things at once - the JWT ValidIssuer, the OIDC discovery fetch and
+#     the {Authority}/token URL in GraphQLClientFactory - so ONE string has to resolve
+#     both in the browser and inside a container. "localhost" cannot: inside a container
+#     it is the container. trackhub.local resolves to the host from both sides.
+#
+#  4. SSL_CERT_FILE points at a CA bundle that carries the local trackhub.local cert,
+#     so containers trust https://trackhub.local:8443 with NO Dockerfile change.
+#     The bundle is the stock Debian bundle plus that one cert, so calls out to the
+#     real internet (OpenRouteService, Firebase, ...) keep working.
+#
+#  5. db-init is neutered. The local databases are already seeded and re-running the
+#     seeder has clobbered manager_client before. authority depends on it with
+#     service_completed_successfully, so it is replaced by /bin/true rather than removed.
+#
+#  6. appsettings mounts are redirected to local/generated/ so the production
+#     generated/ directory is never written to from this clone.
+# =============================================================================
+
+# Distinct compose project name per edition. Both editions use the same container
+# names and host ports, so only ONE local stack can run at a time. With separate
+# project names the second one fails loudly on a name/port clash instead of
+# silently reconfiguring the containers of the other edition.
+name: trackhub-local-public
+
+x-local-service: &local-service
+  extra_hosts:
+    - "trackhub.local:host-gateway"
+    - "host.docker.internal:host-gateway"
+  environment:
+    # Development enables detailed errors. Verified safe: every appsettings.Development.json
+    # in this repo only sets Microsoft.Extensions logging levels (plus the Manager
+    # AllowPrivateCredentialHosts flag, which is desirable locally). None of them touch
+    # Serilog or ConnectionStrings, and environment variables outrank all JSON anyway.
+    - ASPNETCORE_ENVIRONMENT=Development
+    - SSL_CERT_FILE=/app/ssl/ca-bundle.crt
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # Production nginx: disabled locally (it hard-binds 80/443, which IIS owns).
+  # A profile nobody enables is the only way to stop a base service from starting.
+  # ---------------------------------------------------------------------------
+  nginx:
+    profiles: ["disabled-use-nginx-local"]
+
+  # ---------------------------------------------------------------------------
+  # Local reverse proxy: same path layout as production, on 8080/8443.
+  # ---------------------------------------------------------------------------
+  nginx-local:
+    image: nginx:alpine
+    container_name: trackhub-nginx-local
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+      - "8443:443"
+    volumes:
+      - ./nginx/nginx.local.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/local.d:/etc/nginx/local.d:ro
+      - ./certificates:/etc/nginx/ssl:ro
+    extra_hosts:
+      # Lets a location be redirected to a service running in Visual Studio.
+      - "host.docker.internal:host-gateway"
+    networks:
+      - trackhub-network
+    depends_on:
+      - authority
+      - security
+      - manager
+
+  # ---------------------------------------------------------------------------
+  # One-shot seeder: made a no-op. See note 5 above.
+  # ---------------------------------------------------------------------------
+  db-init:
+    entrypoint: ["/bin/true"]
+    volumes:
+      - ./local/clients.json:/app/clients.json:ro
+
+  # ---------------------------------------------------------------------------
+  # APIs
+  # ---------------------------------------------------------------------------
+  authority:
+    <<: *local-service
+    ports:
+      - "6001:8080"
+    volumes:
+      - ./local/ca-bundle.crt:/app/ssl/ca-bundle.crt:ro
+      - ./local/generated/appsettings.authority.json:/app/appsettings.json:ro
+
+  security:
+    <<: *local-service
+    ports:
+      - "6002:8080"
+    volumes:
+      - ./local/ca-bundle.crt:/app/ssl/ca-bundle.crt:ro
+      - ./local/generated/appsettings.security.json:/app/appsettings.json:ro
+
+  manager:
+    <<: *local-service
+    ports:
+      - "6003:8080"
+    volumes:
+      - ./local/ca-bundle.crt:/app/ssl/ca-bundle.crt:ro
+      - ./local/generated/appsettings.manager.json:/app/appsettings.json:ro
+
+  router:
+    <<: *local-service
+    ports:
+      - "6004:8080"
+    volumes:
+      - ./local/ca-bundle.crt:/app/ssl/ca-bundle.crt:ro
+      - ./local/generated/appsettings.router.json:/app/appsettings.json:ro
+
+  geofencing:
+    <<: *local-service
+    ports:
+      - "6005:8080"
+    volumes:
+      - ./local/ca-bundle.crt:/app/ssl/ca-bundle.crt:ro
+      - ./local/generated/appsettings.geofencing.json:/app/appsettings.json:ro
+
+  tripmanagement:
+    <<: *local-service
+    ports:
+      - "6006:8080"
+    volumes:
+      - ./local/ca-bundle.crt:/app/ssl/ca-bundle.crt:ro
+      - ./local/generated/appsettings.tripmanagement.json:/app/appsettings.json:ro
+
+  telemetry:
+    <<: *local-service
+    ports:
+      - "6007:8080"
+    volumes:
+      - ./local/ca-bundle.crt:/app/ssl/ca-bundle.crt:ro
+      - ./local/generated/appsettings.telemetry.json:/app/appsettings.json:ro
+
+  reporting:
+    <<: *local-service
+    ports:
+      - "6008:8080"
+    volumes:
+      - ./local/ca-bundle.crt:/app/ssl/ca-bundle.crt:ro
+      - ./local/generated/appsettings.reporting.json:/app/appsettings.json:ro
+
+  # ---------------------------------------------------------------------------
+  # Background poller: off by default (needs live provider credentials, and it is
+  # noisy while debugging). Enable with:  --profile workers
+  # ---------------------------------------------------------------------------
+  syncworker:
+    profiles: ["workers"]
+    extra_hosts:
+      - "trackhub.local:host-gateway"
+      - "host.docker.internal:host-gateway"
+    environment:
+      - DOTNET_ENVIRONMENT=Development
+      - SSL_CERT_FILE=/app/ssl/ca-bundle.crt
+    volumes:
+      - ./local/ca-bundle.crt:/app/ssl/ca-bundle.crt:ro
+      - ./local/generated/appsettings.syncworker.json:/app/appsettings.json:ro
