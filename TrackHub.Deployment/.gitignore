@@ -14,6 +14,12 @@ certbot/
 # Generated appsettings.json files (created by scripts/sync-config.sh / generate-appsettings.sh)
 generated/
 
+# Local Docker Desktop development (docker-compose.local.yml).
+# .env.local is deliberately TRACKED - like appsettings.json, this repo commits its local
+# dev values so a new environment works with no setup. Only generated output is ignored:
+# local/ holds the generated appsettings, the container CA bundle and the local clients.json.
+/local/
+
 # Certificates
 certificates/*.pem
 certificates/*.pfx

@@ -54,6 +54,8 @@ Full detail: **[Frontend](https://github.com/shernandezp/TrackHub/wiki/Frontend)
 
    This produces `ca.key` / `ca.crt` and `cert.key` / `cert.crt` in the project root. Vite picks them up automatically when both `cert.crt` and `cert.key` exist. They are gitignored — never commit them. Your browser will warn about the self-signed certificate; that is expected in development.
 
+   > Skip this step if you run the backend on local Docker: `TrackHub.Deployment/scripts/local/Setup-TrackHubLocal.ps1` installs `cert.crt` / `cert.key` here itself. That certificate also covers `trackhub.local`, which the mkcert one does not — see `TrackHub.Deployment/LOCAL-DOCKER.md`.
+
 4. **Run**
 
    ```bash
