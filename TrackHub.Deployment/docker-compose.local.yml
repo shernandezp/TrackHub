@@ -42,11 +42,12 @@
 #     generated/ directory is never written to from this clone.
 # =============================================================================
 
-# Distinct compose project name per edition. Both editions use the same container
-# names and host ports, so only ONE local stack can run at a time. With separate
-# project names the second one fails loudly on a name/port clash instead of
-# silently reconfiguring the containers of the other edition.
-name: trackhub-local-public
+# Pin the compose project name. Without this compose derives it from the directory
+# (TrackHub.Deployment -> "trackhubdeployment"), so the image, volume and network names
+# depend on where the repo happens to be cloned, and a second clone silently builds a
+# parallel copy of the whole stack instead of reusing this one. Pinning keeps them stable:
+# trackhub-local-<service> images, trackhub-local_<volume> volumes.
+name: trackhub-local
 
 x-local-service: &local-service
   extra_hosts:

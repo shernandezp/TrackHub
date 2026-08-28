@@ -72,11 +72,11 @@ cannot do that: inside a container `localhost` is the container itself.
 
 600x rather than 500x on purpose: `launchSettings.json` already binds 5002–5005 for F5 runs.
 
-**Only one edition can run its local stack at a time.** Both use the same host ports,
-the same container names and the same local database. The compose project names differ
-(`trackhub-local-commercial` / `trackhub-local-public`) so the second one fails on a name
-clash instead of silently reconfiguring the other, but you still have to stop the commercial
-stack first with `Start-TrackHubLocal.ps1 down` in that workspace.
+**The compose project name is pinned** to `trackhub-local` rather than derived from the
+directory. That is what makes the names predictable wherever you cloned the repo -
+`trackhub-manager` containers, `trackhub-local-manager` images,
+`trackhub-local_manager-documents` volumes - and it keeps a second clone from quietly
+building a parallel copy of the whole stack under a different prefix.
 
 ---
 
@@ -99,6 +99,16 @@ certificate):
 ```
 
 Restart the browser afterwards so it picks up the new root certificate.
+
+**Already have a trusted certificate?** `-CertFrom` copies `trackhub-local.crt`/`.key` from a
+TrackHub.Deployment directory that already has them, instead of generating a new pair:
+
+```powershell
+.\scripts\local\Setup-TrackHubLocal.ps1 -CertFrom <path to>\TrackHub\TrackHub.Deployment
+```
+
+Worth doing when the certificate is already imported into `LocalMachine\Root`, since keeping
+it means `-AdminTasks` has nothing left to import and the browser needs no new trust prompt.
 
 ---
 
