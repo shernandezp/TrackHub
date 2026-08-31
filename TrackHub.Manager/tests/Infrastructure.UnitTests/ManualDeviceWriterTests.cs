@@ -36,7 +36,13 @@ public class ManualDeviceWriterTests
     private const short DeviceTypeId = 4; // Cellular
 
     private static ApplicationDbContext NewContext(string name)
-        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).Options);
+        => new(new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(name)
+            // Mirrors the service registration. On the EF default a fixture TRACKS, so a writer that
+            // mutates a loaded entity passes here while persisting nothing in the running service —
+            // the context is NoTracking there and the entity comes back detached.
+            .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
+            .Options);
 
     private static ICurrentPrincipal Principal(Guid accountId)
     {

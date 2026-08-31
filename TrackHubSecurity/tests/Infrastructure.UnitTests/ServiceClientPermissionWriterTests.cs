@@ -29,7 +29,13 @@ namespace Infrastructure.UnitTests;
 public class ServiceClientPermissionWriterTests
 {
     private static ApplicationDbContext NewContext(string name)
-        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).Options);
+        => new(new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(name)
+            // Mirrors the service registration. On the EF default a fixture TRACKS, so a writer that
+            // mutates a loaded entity passes here while persisting nothing in the running service —
+            // the context is NoTracking there and the entity comes back detached.
+            .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
+            .Options);
 
     private static ServiceClientPermissionDto Dto(string action)
         => new("security_client", null, "Audit", action, "service_scope", "trackhub_api", true, null, null);
