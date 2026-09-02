@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Domain.Time;
 using Common.Application.Interfaces;
 using Common.Domain.Enums;
 using TrackHub.Manager.Infrastructure.Interfaces;
@@ -47,6 +48,7 @@ public sealed class AccountReader(IApplicationDbContext context, ICurrentPrincip
                 (AccountStatus)a.Status,
                 a.Status,
                 a.Active,
+                a.TimeZoneId,
                 a.LastModified))
             .FirstAsync(cancellationToken);
     }
@@ -84,9 +86,19 @@ public sealed class AccountReader(IApplicationDbContext context, ICurrentPrincip
                 (AccountStatus)a.Status,
                 a.Status,
                 a.Active,
+                a.TimeZoneId,
                 a.LastModified))
             .ToListAsync(cancellationToken);
 
         return new AccountsPageVm(items, totalCount);
+    }
+
+    public async Task<string> GetTimeZoneAsync(Guid accountId, CancellationToken cancellationToken)
+    {
+        var scopedAccountId = RequireAccountAccess(accountId);
+        return await Context.Accounts
+            .Where(a => a.AccountId == scopedAccountId)
+            .Select(a => a.TimeZoneId)
+            .FirstOrDefaultAsync(cancellationToken) ?? AccountTimeZone.DefaultId;
     }
 }

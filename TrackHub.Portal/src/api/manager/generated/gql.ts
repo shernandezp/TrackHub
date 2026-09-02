@@ -19,7 +19,7 @@ type Documents = {
     "\n  mutation SetAccountFeature($feature: AccountFeatureDtoInput!) {\n    setAccountFeature(command: { feature: $feature }) {\n      ...AccountFeatureItem\n    }\n  }\n": typeof types.SetAccountFeatureDocument,
     "\n  query GetAccountFeaturesMaster($accountId: UUID!) {\n    accountFeaturesMaster(query: { accountId: $accountId }) {\n      ...AccountFeatureItem\n    }\n  }\n": typeof types.GetAccountFeaturesMasterDocument,
     "\n  mutation SetAccountFeatureMaster($feature: AccountFeatureDtoInput!) {\n    setAccountFeatureMaster(command: { feature: $feature }) {\n      ...AccountFeatureItem\n    }\n  }\n": typeof types.SetAccountFeatureMasterDocument,
-    "\n  fragment AccountItem on AccountVm {\n    accountId\n    name\n    description\n    type\n    typeId\n    status\n    statusId\n    active\n    lastModified\n  }\n": typeof types.AccountItemFragmentDoc,
+    "\n  fragment AccountItem on AccountVm {\n    accountId\n    name\n    description\n    type\n    typeId\n    status\n    statusId\n    active\n    timeZoneId\n    lastModified\n  }\n": typeof types.AccountItemFragmentDoc,
     "\n  query GetAccountByUser {\n    accountByUser {\n      ...AccountItem\n    }\n  }\n": typeof types.GetAccountByUserDocument,
     "\n  query GetAccounts($skip: Int, $take: Int, $search: String) {\n    accounts(query: { skip: $skip, take: $take, search: $search }) {\n      items {\n        ...AccountItem\n      }\n      totalCount\n    }\n  }\n": typeof types.GetAccountsDocument,
     "\n  mutation CreateAccount($account: AccountDtoInput!) {\n    createAccount(command: { account: $account }) {\n      ...AccountItem\n    }\n  }\n": typeof types.CreateAccountDocument,
@@ -187,7 +187,7 @@ const documents: Documents = {
     "\n  mutation SetAccountFeature($feature: AccountFeatureDtoInput!) {\n    setAccountFeature(command: { feature: $feature }) {\n      ...AccountFeatureItem\n    }\n  }\n": types.SetAccountFeatureDocument,
     "\n  query GetAccountFeaturesMaster($accountId: UUID!) {\n    accountFeaturesMaster(query: { accountId: $accountId }) {\n      ...AccountFeatureItem\n    }\n  }\n": types.GetAccountFeaturesMasterDocument,
     "\n  mutation SetAccountFeatureMaster($feature: AccountFeatureDtoInput!) {\n    setAccountFeatureMaster(command: { feature: $feature }) {\n      ...AccountFeatureItem\n    }\n  }\n": types.SetAccountFeatureMasterDocument,
-    "\n  fragment AccountItem on AccountVm {\n    accountId\n    name\n    description\n    type\n    typeId\n    status\n    statusId\n    active\n    lastModified\n  }\n": types.AccountItemFragmentDoc,
+    "\n  fragment AccountItem on AccountVm {\n    accountId\n    name\n    description\n    type\n    typeId\n    status\n    statusId\n    active\n    timeZoneId\n    lastModified\n  }\n": types.AccountItemFragmentDoc,
     "\n  query GetAccountByUser {\n    accountByUser {\n      ...AccountItem\n    }\n  }\n": types.GetAccountByUserDocument,
     "\n  query GetAccounts($skip: Int, $take: Int, $search: String) {\n    accounts(query: { skip: $skip, take: $take, search: $search }) {\n      items {\n        ...AccountItem\n      }\n      totalCount\n    }\n  }\n": types.GetAccountsDocument,
     "\n  mutation CreateAccount($account: AccountDtoInput!) {\n    createAccount(command: { account: $account }) {\n      ...AccountItem\n    }\n  }\n": types.CreateAccountDocument,
@@ -387,7 +387,7 @@ export function graphql(source: "\n  mutation SetAccountFeatureMaster($feature: 
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  fragment AccountItem on AccountVm {\n    accountId\n    name\n    description\n    type\n    typeId\n    status\n    statusId\n    active\n    lastModified\n  }\n"): (typeof documents)["\n  fragment AccountItem on AccountVm {\n    accountId\n    name\n    description\n    type\n    typeId\n    status\n    statusId\n    active\n    lastModified\n  }\n"];
+export function graphql(source: "\n  fragment AccountItem on AccountVm {\n    accountId\n    name\n    description\n    type\n    typeId\n    status\n    statusId\n    active\n    timeZoneId\n    lastModified\n  }\n"): (typeof documents)["\n  fragment AccountItem on AccountVm {\n    accountId\n    name\n    description\n    type\n    typeId\n    status\n    statusId\n    active\n    timeZoneId\n    lastModified\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

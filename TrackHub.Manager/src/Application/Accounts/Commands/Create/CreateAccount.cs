@@ -30,7 +30,10 @@ public class CreateAccountCommandHandler(IAccountWriter writer, ISecurityWriter 
         await securityWriter.CreateUserAsync(new CreateUserDto
         (
             account.AccountId,
-            Roles.Manager,
+            // The username is the email address: the account form has no username field, and this used
+            // to pass the literal role name, which collides on Security's unique username index from the
+            // second account onwards (the account row was created, the manager user never was).
+            request.Account.EmailAddress,
             request.Account.Password,
             request.Account.EmailAddress,
             request.Account.FirstName,

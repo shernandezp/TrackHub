@@ -48,6 +48,8 @@
     "details": "Detalle de la Cuenta",
     "name": "Nombre",
     "description": "Descripción",
+    "timeZone": "Zona horaria",
+    "timeZoneHint": "Cada fecha que la plataforma calcula para esta cuenta (hoy, totales diarios, rangos de informes) se interpreta en esta zona.",
     "type": "Tipo",
     "active": "Activo",
     "addUser": "Agregar Usuario",

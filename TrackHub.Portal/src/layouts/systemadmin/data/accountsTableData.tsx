@@ -61,6 +61,7 @@ export interface AccountFormValues {
   lastName?: string;
   emailAddress?: string;
   lastModified?: string;
+  timeZoneId?: string | null;
 }
 
 /** Dialog/form state for the "add manager" flow (loose until the validate() gate). */
@@ -129,10 +130,12 @@ function useAccountsTableData(
           description: account.description,
           typeId: account.typeId,
           active: account.active,
+          timeZoneId: account.timeZoneId,
         } as { accountId: string } & Omit<UpdateAccountDtoInput, 'accountId'>);
       } else {
         await createAccount.mutateAsync({
           active: account.active,
+          timeZoneId: account.timeZoneId,
           typeId: account.typeId,
           password: account.password,
           name: account.name,

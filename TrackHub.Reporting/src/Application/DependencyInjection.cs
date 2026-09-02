@@ -55,7 +55,7 @@ public static class DependencyInjection
         services.AddScoped<IReport, TripStopDwellReport>();
         services.AddScoped<IReport, TripTollCostReport>();
         services.AddScoped<IReport, TripPodExportReport>();
-        services.AddSingleton<IReportFactory, ReportFactory>();
+        services.AddScoped<IReportFactory, ReportFactory>();
         services.AddSingleton<IExcelHelper, ExcelHelper>();
         services.AddSingleton<IPdfReportBuilder, PdfReportBuilder>();
 

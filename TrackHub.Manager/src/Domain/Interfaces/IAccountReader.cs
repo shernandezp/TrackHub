@@ -18,4 +18,7 @@ public interface IAccountReader
 {
     Task<AccountVm> GetAccountAsync(Guid id, CancellationToken cancellationToken);
     Task<AccountsPageVm> GetAccountsAsync(int skip, int take, string? search, CancellationToken cancellationToken);
+
+    /// <summary>The IANA zone the account keeps its calendar in.</summary>
+    Task<string> GetTimeZoneAsync(Guid accountId, CancellationToken cancellationToken);
 }

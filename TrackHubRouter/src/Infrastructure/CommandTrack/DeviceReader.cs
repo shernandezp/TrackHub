@@ -38,7 +38,7 @@ public sealed class DeviceReader(ICredentialHttpClientFactory httpClientFactory,
     // Retrieves a single device asynchronously
     public async Task<IEnumerable<DeviceVm>> GetDevicesAsync(IEnumerable<DeviceTransporterVm> devices, CancellationToken cancellationToken)
     {
-        var url = $"DataConnectAPI/api/Devices{devices.GetIdsQueryString()}";
+        var url = $"DataConnectAPI/api/Devices?{devices.GetIdsQueryString()}";
         var result = await HttpClientService.GetAsync<IEnumerable<DevicePosition>>(url, Header, cancellationToken);
         if (result is null)
         {

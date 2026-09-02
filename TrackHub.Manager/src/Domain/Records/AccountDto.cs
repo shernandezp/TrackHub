@@ -23,5 +23,6 @@ public readonly record struct AccountDto(
     string Password,
     string EmailAddress,
     string FirstName,
-    string LastName
+    string LastName,
+    string? TimeZoneId = null
     );

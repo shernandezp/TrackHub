@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Domain.Time;
 namespace TrackHub.Manager.Application.Accounts.Commands.Update;
 
 public sealed class UpdateAccountValidator : AbstractValidator<UpdateAccountCommand>
@@ -30,5 +31,10 @@ public sealed class UpdateAccountValidator : AbstractValidator<UpdateAccountComm
 
         RuleFor(v => v.Account.TypeId)
             .NotEmpty();
+
+        RuleFor(v => v.Account.TimeZoneId)
+            .Must(AccountTimeZone.IsValid)
+            .When(v => !string.IsNullOrWhiteSpace(v.Account.TimeZoneId))
+            .WithMessage("Unknown time zone; use an IANA name such as America/Bogota.");
     }
 }

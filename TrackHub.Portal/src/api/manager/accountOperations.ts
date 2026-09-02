@@ -38,6 +38,7 @@ export const AccountItemFragment = graphql(`
     status
     statusId
     active
+    timeZoneId
     lastModified
   }
 `);

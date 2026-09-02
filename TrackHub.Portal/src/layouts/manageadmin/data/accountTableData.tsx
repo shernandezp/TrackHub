@@ -41,6 +41,7 @@ export interface AccountFormValues {
   typeId?: number;
   active?: boolean;
   lastModified?: string;
+  timeZoneId?: string | null;
 }
 
 /** A column descriptor / rendered row for the vendored accounts `Table`. */
@@ -74,6 +75,7 @@ function useAccountTableData(fetchData: boolean, handleEditClick: (account: Acco
         description: account.description,
         typeId: account.typeId,
         active: account.active,
+        timeZoneId: account.timeZoneId,
       } as { accountId: string } & Omit<UpdateAccountDtoInput, 'accountId'>);
       setOpen(false);
     } catch {

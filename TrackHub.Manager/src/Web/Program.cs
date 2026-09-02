@@ -23,6 +23,8 @@ using TrackHub.Manager.Web.BackgroundServices;
 using TrackHub.Manager.Web.Endpoints;
 using TrackHub.Manager.Web.GraphQL.Mutation;
 using TrackHub.Manager.Web.GraphQL.Query;
+using Common.Domain.Time;
+using TrackHub.Manager.Infrastructure.ManagerDB.Readers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +37,9 @@ Guard.Against.Null(allowedCORSOrigins, message: $"Allowed Origins configuration 
 builder.Services.AddApplicationServices();
 builder.Services.AddApplicationDbContext(builder.Configuration);
 builder.Services.AddInfrastructureServices(builder.Configuration);
+// Manager owns the accounts table: its calendar lookups read it directly instead of calling itself
+// over GraphQL. Registered after the shared infrastructure so this one wins.
+builder.Services.AddScoped<IAccountTimeZoneResolver, AccountTimeZoneResolver>();
 builder.Services.AddAppSecurityContext();
 builder.Services.AddAppRouterContext(builder.Configuration);
 builder.Services.AddWebServices();

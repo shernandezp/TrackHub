@@ -53,6 +53,14 @@ describe('formatISODuration', () => {
     expect(formatISODuration('')).toBe('');
   });
 
+  test('formats a multi-day duration the way Router serialises a TimeSpan', () => {
+    expect(formatISODuration('P1DT2H5M')).toBe('1 d 2 hr 5 min');
+  });
+
+  test('rounds fractional seconds', () => {
+    expect(formatISODuration('PT5M3.25S')).toBe('5 min 3 s');
+  });
+
   test('handles PT0H0M0S edge case', () => {
     // PT with no values - the regex won't match any groups with digits
     expect(formatISODuration('PT')).toBe('');

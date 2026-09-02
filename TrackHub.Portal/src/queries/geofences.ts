@@ -21,7 +21,7 @@
  * is read imperatively (live-map refresh) via the key here + fetchQuery.
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from 'api/geofencing/geofencing';
 import type {
   GeofenceDtoInput,
@@ -49,6 +49,9 @@ export function useGeofencesByAccount(
     queryKey: geofenceKeys.byAccount(enableCaching, filters),
     queryFn: () => api.getGeofencesByAccount(enableCaching, filters),
     enabled: options.enabled ?? true,
+    // A page change swaps the query key; without a placeholder the list reads as EMPTY
+    // (totalCount 0) while the next page loads, and the page clamp snaps it back to page one.
+    placeholderData: keepPreviousData,
   });
 }
 

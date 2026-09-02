@@ -34,7 +34,11 @@ public sealed class CreateManagerCommandValidator : AbstractValidator<CreateMana
 
         RuleFor(v => v.User.Username)
             .MaximumLength(ColumnMetadata.DefaultUserNameLength)
-            .NotEmpty();
+            .NotEmpty()
+            // Usernames carry a global unique index (ix_users_username); without this rule a duplicate
+            // surfaced as a raw database error instead of a validation message.
+            .MustAsync(ValidateUsername)
+            .WithMessage("Username already in use");
 
         // Validate the minimum and maximum length, and non-empty of the password
         RuleFor(v => v.User.Password)
@@ -54,5 +58,9 @@ public sealed class CreateManagerCommandValidator : AbstractValidator<CreateMana
     // Asynchronously validate the uniqueness of the email address
     private async Task<bool> ValidateEmailAddress(string emailAddress, CancellationToken cancellationToken)
         => await _userReader.ValidateEmailAddressAsync(emailAddress, cancellationToken);
+
+    // Asynchronously validate the uniqueness of the username (no user is excluded on create)
+    private async Task<bool> ValidateUsername(string username, CancellationToken cancellationToken)
+        => await _userReader.ValidateUsernameAsync(Guid.Empty, username, cancellationToken);
 
 }

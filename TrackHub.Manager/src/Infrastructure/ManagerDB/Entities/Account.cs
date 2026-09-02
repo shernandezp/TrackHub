@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Domain.Time;
 using Common.Domain.Enums;
 using Common.Infrastructure;
 
@@ -27,6 +28,8 @@ public class Account(string name, string? description, short type, bool active) 
     public string? Description { get; set; } = description;
 
     public short Type { get; set; } = type;
+    /// <summary>IANA zone the account keeps its calendar in; every "today" the platform computes for it reads this.</summary>
+    public string TimeZoneId { get; set; } = AccountTimeZone.DefaultId;
 
     // Legacy on/off flag, retained as a derived compatibility surface: Active == Status ∈ {Trial, Active}.
     public bool Active { get; set; } = active;

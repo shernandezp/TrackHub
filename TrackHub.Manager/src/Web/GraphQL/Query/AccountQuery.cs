@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using TrackHub.Manager.Application.Accounts.Queries.GetTimeZone;
 using TrackHub.Manager.Application.Accounts.Queries.Get;
 using TrackHub.Manager.Application.Accounts.Queries.GetAll;
 using TrackHub.Manager.Application.Accounts.Queries.GetBranding;
@@ -35,6 +36,9 @@ public partial class Query
         => await sender.Send(new GetAccountContextQuery(), cancellationToken);
 
     public async Task<short> GetAccountStatus([Service] ISender sender, [AsParameters] GetAccountStatusQuery query, CancellationToken cancellationToken)
+        => await sender.Send(query, cancellationToken);
+
+    public async Task<string> GetAccountTimeZone([Service] ISender sender, [AsParameters] GetAccountTimeZoneQuery query, CancellationToken cancellationToken)
         => await sender.Send(query, cancellationToken);
 
     public async Task<AccountVm> GetAccountByUser([Service] ISender sender, CancellationToken cancellationToken)

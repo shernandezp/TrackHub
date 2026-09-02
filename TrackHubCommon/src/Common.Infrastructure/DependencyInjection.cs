@@ -13,6 +13,8 @@
 //  limitations under the License.
 //
 
+using Common.Infrastructure.Time;
+using Common.Domain.Time;
 using Common.Infrastructure.Interceptors;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -79,11 +81,15 @@ public static class DependencyInjection
 
         services.AddSingleton(TimeProvider.System);
 
+
         if (isGraphQLClient)
         {
             // Identity client runs queries only — full resilience (incl. retry) is safe.
             services.AddGraphQLClient(Clients.Identity, resilience: GraphQLClientResilience.WithRetry);
             services.AddMemoryCache();
+            // The calendar of the account a request serves, read from Manager and cached (Manager
+            // itself overrides this with a database-backed resolver).
+            services.AddScoped<IAccountTimeZoneResolver, ManagerAccountTimeZoneResolver>();
             services.AddSingleton<IGraphQLClientFactory, GraphQLClientFactory>();
             services.AddScoped<IIdentityService, IdentityService>();
         }

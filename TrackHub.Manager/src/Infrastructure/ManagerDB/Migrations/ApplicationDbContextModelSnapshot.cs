@@ -68,6 +68,15 @@ namespace TrackHub.Manager.Infrastructure.Migrations
                         .HasColumnName("statuschangedat")
                         .HasComment("Timestamp of the last status transition; null until the first transition.");
 
+                    b.Property<string>("TimeZoneId")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasDefaultValue("UTC")
+                        .HasColumnName("timezoneid")
+                        .HasComment("IANA time zone the account keeps its calendar in.");
+
                     b.Property<short>("Type")
                         .HasColumnType("smallint")
                         .HasColumnName("type")

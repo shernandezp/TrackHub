@@ -41,6 +41,16 @@ export const toLocalInput = (iso?: string | null): string => toDateTimeLocalInpu
 
 export const toIso = (local?: string | null): string | null => fromDateTimeLocalInput(local);
 
+/**
+ * A date-only board filter as the inclusive bounds of that viewer-local day. The reader compares
+ * `PlannedStartAt` against instants, so a bare `yyyy-MM-dd` parsed as an instant is UTC midnight —
+ * which excluded the whole "to" day from the board.
+ */
+export const dayStartIso = (value?: string | null): string | null =>
+  value ? fromDateTimeLocalInput(`${value}T00:00`) : null;
+export const dayEndIso = (value?: string | null): string | null =>
+  value ? fromDateTimeLocalInput(`${value}T23:59:59.999`) : null;
+
 /** RFC 4122 id used as an idempotency key by every progress/POD/outcome command. */
 export const newClientEventId = (): string => crypto.randomUUID();
 

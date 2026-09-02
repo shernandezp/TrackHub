@@ -98,13 +98,20 @@ public class GetDevicesQueryHandler(
         CancellationToken cancellationToken)
     {
         Guard.Against.Null(EncryptionKey, message: "Credential key not found.");
-        var @operator = operators.FirstOrDefault(o => (ProtocolType)o.ProtocolTypeId == reader.Protocol);
-        if (@operator.Credential is not null)
+        // Several operators may share the same protocol (two providers of the same brand); each is
+        // queried in turn with its own credential and catalog. Previously only the first operator of
+        // the protocol was read, so the others' devices never reached the caller.
+        var allDevices = new List<DeviceVm>();
+        foreach (var @operator in operators.Where(o => (ProtocolType)o.ProtocolTypeId == reader.Protocol))
         {
+            if (@operator.Credential is null)
+            {
+                continue;
+            }
             await reader.Init(@operator.Credential.Value.Decrypt(EncryptionKey), cancellationToken);
             var devices = await deviceReader.GetVisibleDeviceTransportersByOperatorAsync(@operator.OperatorId, cancellationToken);
-            return await reader.GetDevicesAsync(devices, cancellationToken);
+            allDevices.AddRange(await reader.GetDevicesAsync(devices, cancellationToken));
         }
-        return [];
+        return allDevices;
     }
 }

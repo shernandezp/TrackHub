@@ -75,7 +75,9 @@ public static class TripLifecycleTransition
             eventType,
             source,
             idempotencyKey,
-            reason is null ? null : $$"""{"reason":"{{reason}}","forced":{{(force ? "true" : "false")}}}""",
+            // Serialized, not string-built: a reason containing a quote or a backslash produced an
+            // invalid JSON payload on the timeline row.
+            reason is null ? null : System.Text.Json.JsonSerializer.Serialize(new { reason, forced = force }),
             reason,
             force,
             measuredAt,
