@@ -19,13 +19,17 @@
 * Returns the formatted duration string (e.g., "2 hr 30 min 15 s") or an empty string if the input is invalid.
 */
 export function formatISODuration(value: string): string {
-    const match = value.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-    if (!match) return ""; // Return empty if format is invalid
+    // Router serialises a TimeSpan the .NET way: a trip of a day or more reads `P1DT2H`, and the
+    // seconds may carry a fraction (`PT5M3.25S`). Anchoring on the literal `PT` blanked every
+    // multi-day duration, so the day component and the fraction are parsed too.
+    const match = (value || '').match(/^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?)?$/);
+    if (!match || match[0] === 'P' || match[0] === 'PT') return ""; // Return empty if format is invalid
 
     const parts: string[] = [];
-    if (match[1]) parts.push(`${match[1]} hr`);
-    if (match[2]) parts.push(`${match[2]} min`);
-    if (match[3]) parts.push(`${match[3]} s`);
+    if (match[1]) parts.push(`${match[1]} d`);
+    if (match[2]) parts.push(`${match[2]} hr`);
+    if (match[3]) parts.push(`${match[3]} min`);
+    if (match[4]) parts.push(`${Math.round(Number(match[4]))} s`);
 
     return parts.join(" ");
 }

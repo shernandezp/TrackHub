@@ -47,19 +47,21 @@ const TripStatsPanel = ({ trips = [], selectedTrip }: TripStatsPanelProps) => {
     const parseDurationToSeconds = (d: unknown): number => {
       if (!d && d !== 0) return 0;
       if (typeof d === 'number') return d;
-      const m = String(d).match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+      const m = String(d).match(/^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?)?$/);
       if (!m) return 0;
-      const h = Number(m[1] || 0);
-      const mm = Number(m[2] || 0);
-      const s = Number(m[3] || 0);
-      return h * 3600 + mm * 60 + s;
+      const days = Number(m[1] || 0);
+      const h = Number(m[2] || 0);
+      const mm = Number(m[3] || 0);
+      const s = Math.round(Number(m[4] || 0));
+      return days * 86400 + h * 3600 + mm * 60 + s;
     };
 
     const secondsToISODuration = (secs: number): string => {
-      const h = Math.floor(secs / 3600);
+      const days = Math.floor(secs / 86400);
+      const h = Math.floor((secs % 86400) / 3600);
       const m = Math.floor((secs % 3600) / 60);
       const s = secs % 60;
-      return `PT${h}H${m}M${s}S`;
+      return `P${days > 0 ? `${days}D` : ''}T${h}H${m}M${s}S`;
     };
 
     if (selectedTrip) {

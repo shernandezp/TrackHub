@@ -40,6 +40,13 @@
     Path to the existing OpenIddict signing certificate. Defaults to the one the IIS
     apps use.
 
+.PARAMETER CertFrom
+    Reuse an existing trackhub.local certificate instead of generating a new one: the path to
+    a TrackHub.Deployment directory that already has certificates/trackhub-local.crt + .key.
+    Useful when one is already imported into LocalMachine\Root - from an earlier install, a
+    backup, or another clone on this machine - since keeping it means step 9 of -AdminTasks
+    has nothing left to import and the browser needs no new trust prompt.
+
 .PARAMETER Force
     Regenerate the TLS certificate and CA bundle even if they already exist.
 
@@ -51,6 +58,7 @@
 param(
     [switch] $AdminTasks,
     [string] $PfxSource = 'C:\Certificates\certificate.pfx',
+    [string] $CertFrom,
     [switch] $Force
 )
 
@@ -159,6 +167,18 @@ Write-Step "TLS certificate for $HostName"
 New-Item -ItemType Directory -Force -Path $CertDir | Out-Null
 if ((Test-Path $CrtPath) -and (Test-Path $KeyPath) -and -not $Force) {
     Write-Skip "certificates/trackhub-local.crt already exists (use -Force to regenerate)"
+} elseif ($CertFrom) {
+    # Reuse rather than mint. The certificate is referenced from three places at once - nginx
+    # serves it, the containers trust it through ca-bundle.crt, and LocalMachine\Root trusts
+    # it - so replacing a working one costs a new trust import everywhere it is already known.
+    $srcCrt = Join-Path $CertFrom 'certificates\trackhub-local.crt'
+    $srcKey = Join-Path $CertFrom 'certificates\trackhub-local.key'
+    if (-not (Test-Path $srcCrt) -or -not (Test-Path $srcKey)) {
+        throw "-CertFrom '$CertFrom' has no certificates\trackhub-local.crt (+ .key). Point it at a TrackHub.Deployment directory that has them, or drop -CertFrom to generate a new certificate."
+    }
+    Copy-Item $srcCrt $CrtPath -Force
+    Copy-Item $srcKey $KeyPath -Force
+    Write-Ok "copied the shared certificate from $CertFrom (already trusted - no -AdminTasks import needed)"
 } else {
     docker run --rm -v "${ProjectDirU}/certificates:/out" alpine/openssl `
         req -x509 -nodes -newkey rsa:2048 -days 825 `

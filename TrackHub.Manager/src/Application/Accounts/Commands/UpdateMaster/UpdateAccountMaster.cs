@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Domain.Time;
 namespace TrackHub.Manager.Application.Accounts.Commands.UpdateMaster;
 
 // Platform-side account edit, used by the systemadmin console to maintain ANY account. The
@@ -46,5 +47,10 @@ public sealed class UpdateAccountMasterValidator : AbstractValidator<UpdateAccou
 
         RuleFor(v => v.Account.TypeId)
             .NotEmpty();
+
+        RuleFor(v => v.Account.TimeZoneId)
+            .Must(AccountTimeZone.IsValid)
+            .When(v => !string.IsNullOrWhiteSpace(v.Account.TimeZoneId))
+            .WithMessage("Unknown time zone; use an IANA name such as America/Bogota.");
     }
 }

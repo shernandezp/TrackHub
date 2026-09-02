@@ -22,7 +22,7 @@
  * Components consume these — not the api layer directly.
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as managerApi from 'api/manager/operators';
 import * as telemetryApi from 'api/telemetry/operatorHealth';
 import type {
@@ -62,6 +62,9 @@ export function useOperatorsByCurrentAccount(
     queryKey: operatorKeys.byAccount(params),
     queryFn: () => managerApi.getOperatorsByCurrentAccount(params),
     enabled: options.enabled ?? true,
+    // A page change swaps the query key; without a placeholder the list reads as EMPTY
+    // (totalCount 0) while the next page loads, and the page clamp snaps it back to page one.
+    placeholderData: keepPreviousData,
   });
 }
 

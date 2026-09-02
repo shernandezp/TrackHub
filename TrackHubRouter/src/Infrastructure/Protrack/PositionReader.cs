@@ -72,7 +72,8 @@ public sealed class PositionReader(
             return [];
         }
 
-        var devicesDictionary = devicesList.ToDictionary(device => device.Serial, device => device);
+        // Serials are not unique in the catalog; the first row wins rather than the whole read failing.
+        var devicesDictionary = devicesList.GroupBy(device => device.Serial).ToDictionary(group => group.Key, group => group.First());
         return result.Record.MapToPositionVm(devicesDictionary).Distinct();
     }
 
@@ -108,7 +109,7 @@ public sealed class PositionReader(
 
             // For the next page, use the last record's gpstime as the new begintime
             var lastPosition = positions[^1];
-            beginTime = lastPosition.DeviceDateTime.ToUnixTimeSeconds();
+            beginTime = lastPosition.DeviceDateTime.ToUnixTimeSeconds() + 1;
         }
 
         return allPositions;

@@ -90,8 +90,10 @@ function toFilters(state: FilterState): DriverAssignmentHistoryFilters {
   return {
     driverId: state.driverId || null,
     transporterId: state.transporterId || null,
-    from: state.from ? new Date(state.from).toISOString() : null,
-    to: state.to ? new Date(state.to).toISOString() : null,
+    // The pickers give calendar days in the viewer's zone; parsing the bare `yyyy-MM-dd` would
+    // read them as UTC midnight, and an instant "to" bound excluded the whole last day.
+    from: state.from ? new Date(`${state.from}T00:00`).toISOString() : null,
+    to: state.to ? new Date(`${state.to}T23:59:59.999`).toISOString() : null,
   };
 }
 

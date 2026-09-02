@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Domain.Time;
 using Common.Domain.Constants;
 using Common.Domain.Enums;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -37,6 +38,9 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
         builder.Property(x => x.AccountId).HasColumnName("id");
         builder.Property(x => x.Name).HasColumnName("name");
         builder.Property(x => x.Description).HasColumnName("description");
+        builder.Property(x => x.TimeZoneId).HasColumnName("timezoneid").HasMaxLength(64).IsRequired()
+            .HasDefaultValue(AccountTimeZone.DefaultId)
+            .HasComment("IANA time zone the account keeps its calendar in.");
         builder.Property(x => x.Type).HasColumnName("type")
             .HasComment(EnumColumn.Comment<AccountType>("Commercial classification of the tenant."));
         builder.Property(x => x.Active).HasColumnName("active")

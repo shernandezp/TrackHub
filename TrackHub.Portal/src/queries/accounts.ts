@@ -24,7 +24,7 @@
  * cached indefinitely (staleTime: Infinity) and refetched only on invalidation.
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from 'api/manager/accounts';
 import type { AccountDtoInput, UpdateAccountDtoInput, AccountStatus } from 'api/manager/accounts';
 import type { ListParams } from 'api/core/paging';
@@ -51,6 +51,9 @@ export function useAccounts(params: ListParams = {}, options: { enabled?: boolea
     queryKey: accountKeys.list(params),
     queryFn: () => api.getAccounts(params),
     enabled: options.enabled ?? true,
+    // A page change swaps the query key; without a placeholder the list reads as EMPTY
+    // (totalCount 0) while the next page loads, and the page clamp snaps it back to page one.
+    placeholderData: keepPreviousData,
   });
 }
 

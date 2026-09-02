@@ -59,7 +59,7 @@ public class NavixyReaderBase
     /// Formats a DateTimeOffset to Navixy date format.
     /// </summary>
     protected static string FormatNavixyDate(DateTimeOffset date)
-        => date.ToString(NavixyDateFormat);
+        => date.UtcDateTime.ToString(NavixyDateFormat, System.Globalization.CultureInfo.InvariantCulture);
 
     protected NavixyReaderBase(
         ICredentialHttpClientFactory httpClientFactory,

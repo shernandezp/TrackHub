@@ -44,7 +44,8 @@ public sealed class PositionReader(ICredentialHttpClientFactory httpClientFactor
         {
             return [];
         }
-        var devicesDictionary = devices.ToDictionary(device => device.Name, device => device);
+        // Names are not unique in the catalog; the first row wins rather than the whole read failing.
+        var devicesDictionary = devices.GroupBy(device => device.Name).ToDictionary(group => group.Key, group => group.First());
         return positions.MapToPositionVm(devicesDictionary).Distinct();
     }
 

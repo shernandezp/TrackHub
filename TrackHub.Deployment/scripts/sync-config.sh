@@ -127,7 +127,7 @@ show_config() {
 
 # Generate React .env file
 generate_frontend_env() {
-    local output_file="${1:-$PROJECT_DIR/../TrackHub/.env}"
+    local output_file="${1:-$PROJECT_DIR/../TrackHub.Portal/.env}"
     
     cat > "$output_file" << EOF
 REACT_APP_DEFAULT_LAT=${REACT_APP_DEFAULT_LAT:-4.624335}

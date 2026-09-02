@@ -1,10 +1,12 @@
+using Common.Domain.Time;
 using Common.Application.Interfaces;
 using TrackHub.Manager.Infrastructure.Interfaces;
 
 namespace TrackHub.Manager.Infrastructure.ManagerDB.Readers;
 
-public sealed class DriverQualificationReader(IApplicationDbContext context, ICurrentPrincipal principal) : AccountScopedDataAccess(context, principal), IDriverQualificationReader
+public sealed class DriverQualificationReader(IApplicationDbContext context, ICurrentPrincipal principal, IAccountTimeZoneResolver? zones = null) : AccountScopedDataAccess(context, principal), IDriverQualificationReader
 {
+    private readonly IAccountTimeZoneResolver _zones = zones ?? UtcAccountTimeZoneResolver.Instance;
     private static int PageSize(int take) => Math.Clamp(take <= 0 ? 50 : take, 1, 500);
     private static int Offset(int skip) => Math.Max(0, skip);
 
@@ -21,7 +23,7 @@ public sealed class DriverQualificationReader(IApplicationDbContext context, ICu
         if (expiringWithinDays.HasValue)
         {
             // Past-due rows always qualify — the window is an upper bound, not a band.
-            var cutoff = DateOnly.FromDateTime(DateTimeOffset.UtcNow.UtcDateTime).AddDays(Math.Max(0, expiringWithinDays.Value));
+            var cutoff = (await _zones.ResolveAsync(scopedAccountId, cancellationToken)).Today().AddDays(Math.Max(0, expiringWithinDays.Value));
             query = query.Where(x => x.ExpiresAt != null && x.ExpiresAt <= cutoff);
         }
 

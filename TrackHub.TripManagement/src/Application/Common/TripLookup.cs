@@ -29,25 +29,32 @@ public static class TripLookup
 {
     private const int ProbePageSize = 200;
 
-    public static async Task<TripVm?> FindByCodeAsync(ITripReader reader, Guid accountId, string code, CancellationToken cancellationToken)
-    {
-        var page = await reader.GetTripsPageAsync(accountId, null, null, null, null, null, null, null, code, 0, ProbePageSize, cancellationToken);
-        foreach (var trip in page.Items)
-        {
-            if (string.Equals(trip.Code, code, StringComparison.OrdinalIgnoreCase))
-                return trip;
-        }
+    // The search is a substring match, so a short value can sit behind hundreds of longer ones
+    // ("TRIP-1" behind TRIP-10 ... TRIP-199). One page was not enough to be sure the exact match
+    // is absent; the probe walks the matches until a short page ends them.
+    private const int MaxProbePages = 25;
 
-        return null;
-    }
+    public static Task<TripVm?> FindByCodeAsync(ITripReader reader, Guid accountId, string code, CancellationToken cancellationToken)
+        => ProbeAsync(reader, accountId, code, trip => trip.Code, cancellationToken);
 
-    public static async Task<TripVm?> FindByExternalReferenceAsync(ITripReader reader, Guid accountId, string externalReference, CancellationToken cancellationToken)
+    public static Task<TripVm?> FindByExternalReferenceAsync(ITripReader reader, Guid accountId, string externalReference, CancellationToken cancellationToken)
+        => ProbeAsync(reader, accountId, externalReference, trip => trip.ExternalReference, cancellationToken);
+
+    private static async Task<TripVm?> ProbeAsync(
+        ITripReader reader, Guid accountId, string value, Func<TripVm, string?> projected, CancellationToken cancellationToken)
     {
-        var page = await reader.GetTripsPageAsync(accountId, null, null, null, null, null, null, null, externalReference, 0, ProbePageSize, cancellationToken);
-        foreach (var trip in page.Items)
+        for (var page = 0; page < MaxProbePages; page++)
         {
-            if (string.Equals(trip.ExternalReference, externalReference, StringComparison.OrdinalIgnoreCase))
-                return trip;
+            var result = await reader.GetTripsPageAsync(
+                accountId, null, null, null, null, null, null, null, value, page * ProbePageSize, ProbePageSize, cancellationToken);
+            foreach (var trip in result.Items)
+            {
+                if (string.Equals(projected(trip), value, StringComparison.OrdinalIgnoreCase))
+                    return trip;
+            }
+
+            if (result.Items.Count < ProbePageSize)
+                break;
         }
 
         return null;

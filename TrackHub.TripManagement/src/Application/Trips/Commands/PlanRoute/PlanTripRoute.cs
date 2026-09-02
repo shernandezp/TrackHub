@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Domain.Time;
 using System.Text.Json;
 using Common.Application.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -50,7 +51,8 @@ public sealed class PlanTripRouteCommandHandler(
     IAccountFeatureReader accountFeatureReader,
     IUserReader userReader,
     IUser user,
-    ILogger<PlanTripRouteCommandHandler> logger) : IRequestHandler<PlanTripRouteCommand, RoutePlanVm>
+    ILogger<PlanTripRouteCommandHandler> logger,
+    IAccountTimeZoneResolver? zones = null) : IRequestHandler<PlanTripRouteCommand, RoutePlanVm>
 {
     private const int DefaultCorridorMeters = 500;
     private const int MinCorridorMeters = 100;
@@ -138,7 +140,7 @@ public sealed class PlanTripRouteCommandHandler(
             return await tollEstimationService.EstimateAsync(
                 route.Geometry,
                 vehicleClass,
-                DateOnly.FromDateTime(trip.PlannedStartAt.UtcDateTime),
+                (await (zones ?? UtcAccountTimeZoneResolver.Instance).ResolveAsync(trip.AccountId, cancellationToken)).DateOf(trip.PlannedStartAt),
                 config.TollMatchToleranceMeters,
                 cancellationToken);
         }

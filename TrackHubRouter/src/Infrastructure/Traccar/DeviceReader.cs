@@ -36,7 +36,11 @@ public sealed class DeviceReader(
     public async Task<DeviceVm> GetDeviceAsync(DeviceTransporterVm deviceDto, CancellationToken cancellationToken)
     {
         var url = $"api/devices?id={deviceDto.Identifier}";
-        var device = await HttpClientService.GetAsync<Device>(url, cancellationToken: cancellationToken);
+        // Traccar answers `api/devices?id=` with an ARRAY even for one id; reading it as a single
+        // object failed to deserialise.
+        var devices = await HttpClientService.GetAsync<IEnumerable<Device>>(url, cancellationToken: cancellationToken);
+        var device = devices?.FirstOrDefault()
+            ?? throw new InvalidOperationException($"Traccar returned no device for id {deviceDto.Identifier}.");
         return device.MapToDeviceVm(deviceDto);
     }
 

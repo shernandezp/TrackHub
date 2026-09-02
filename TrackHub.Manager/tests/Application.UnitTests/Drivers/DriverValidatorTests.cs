@@ -38,12 +38,13 @@ public class DriverValidatorTests
     }
 
     [Test]
-    public void CreateDriver_RejectsPastLicenseExpiry_ButUpdateAllowsIt()
+    public async Task CreateDriver_RejectsPastLicenseExpiry_ButUpdateAllowsIt()
     {
         var past = DateOnly.FromDateTime(DateTimeOffset.UtcNow.UtcDateTime).AddDays(-1);
 
-        // Onboarding on an already-expired license is a data-entry error...
-        Assert.That(new CreateDriverCommandValidator().Validate(new CreateDriverCommand(ValidDriver(licenseExpiresAt: past))).IsValid, Is.False);
+        // Onboarding on an already-expired license is a data-entry error... (the rule asks the account
+        // calendar, so it is asynchronous; without a principal it judges on the UTC day)
+        Assert.That((await new CreateDriverCommandValidator().ValidateAsync(new CreateDriverCommand(ValidDriver(licenseExpiresAt: past)))).IsValid, Is.False);
         // ...but an existing record must remain editable while its license lapses.
         Assert.That(new UpdateDriverCommandValidator().Validate(new UpdateDriverCommand(Guid.NewGuid(), ValidDriver(licenseExpiresAt: past))).IsValid, Is.True);
     }

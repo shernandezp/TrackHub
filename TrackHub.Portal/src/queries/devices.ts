@@ -21,7 +21,7 @@
  * reads/mutations are called imperatively from the GPS-integration screens.
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from 'api/manager/devices';
 import type { ListParams } from 'api/core/paging';
 
@@ -37,6 +37,9 @@ export function useDevicesByAccount(params: ListParams = {}, options: { enabled?
     queryKey: deviceKeys.byAccount(params),
     queryFn: () => api.getDevicesByAccount(params),
     enabled: options.enabled ?? true,
+    // A page change swaps the query key; without a placeholder the list reads as EMPTY
+    // (totalCount 0) while the next page loads, and the page clamp snaps it back to page one.
+    placeholderData: keepPreviousData,
   });
 }
 

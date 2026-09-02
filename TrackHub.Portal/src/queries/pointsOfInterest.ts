@@ -19,7 +19,7 @@
  * layer directly.
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from 'api/manager/pointsOfInterest';
 import type {
   PointOfInterestDtoInput,
@@ -42,6 +42,9 @@ export function usePointsOfInterestByAccount(
     queryKey: poiKeys.byAccount(params),
     queryFn: () => api.getPointsOfInterestByAccount(params),
     enabled: options.enabled ?? true,
+    // A page change swaps the query key; without a placeholder the list reads as EMPTY
+    // (totalCount 0) while the next page loads, and the page clamp snaps it back to page one.
+    placeholderData: keepPreviousData,
   });
 }
 

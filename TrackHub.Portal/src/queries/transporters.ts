@@ -20,7 +20,7 @@
  * surface in the global toast via the query client's error handlers.
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from 'api/manager/transporters';
 import type {
   TransporterDtoInput,
@@ -56,6 +56,9 @@ export function useTransportersByAccount(
     queryKey: transporterKeys.byAccount(params),
     queryFn: () => api.getTransportersByAccount(params),
     enabled: options.enabled ?? true,
+    // A page change swaps the query key; without a placeholder the list reads as EMPTY
+    // (totalCount 0) while the next page loads, and the page clamp snaps it back to page one.
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -133,6 +136,9 @@ export function useTransporterDeviceAssignmentsByAccount(
     queryFn: () =>
       api.getTransporterDeviceAssignmentsByAccount(accountId as string, { activeOnly, ...params }),
     enabled: !!accountId,
+    // A page change swaps the query key; without a placeholder the list reads as EMPTY
+    // (totalCount 0) while the next page loads, and the page clamp snaps it back to page one.
+    placeholderData: keepPreviousData,
   });
 }
 

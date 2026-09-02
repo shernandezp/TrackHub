@@ -117,7 +117,7 @@ public sealed class CredentialReader(IApplicationDbContext context, ICurrentPrin
             token.RefreshTokenExpiration);
     }
 
-    public async Task<CredentialMetadataVm?> GetMetadataByOperatorAsync(Guid operatorId, CancellationToken cancellationToken)
+    public async Task<CredentialMetadataVm?> GetMetadataByOperatorAsync(Guid operatorId, string key, CancellationToken cancellationToken)
     {
         var c = await Context.Credentials
             .Where(x => x.OperatorId == operatorId)
@@ -151,7 +151,7 @@ public sealed class CredentialReader(IApplicationDbContext context, ICurrentPrin
             c.CredentialId,
             c.OperatorId,
             c.Uri,
-            MaskUsername(c.Username, key: null, salt: c.Salt),
+            MaskUsername(c.Username, key, Convert.FromBase64String(c.Salt)),
             c.HasPassword,
             c.HasKey,
             c.HasKey2,
@@ -182,13 +182,19 @@ public sealed class CredentialReader(IApplicationDbContext context, ICurrentPrin
             .ToListAsync(cancellationToken);
     }
 
-    private static string MaskUsername(string encryptedUsername, string? key, string salt)
+    /// <summary>
+    /// The DECRYPTED username with only its tail showing: enough for the operator to recognise
+    /// which login the credential holds, never enough to reuse it. Masking the ciphertext, as
+    /// this once did, showed four meaningless characters.
+    /// </summary>
+    private static string MaskUsername(string encryptedUsername, string key, byte[] salt)
     {
         if (string.IsNullOrEmpty(encryptedUsername))
         {
             return string.Empty;
         }
-        var hint = encryptedUsername.Length > 4 ? encryptedUsername[^4..] : encryptedUsername;
-        return $"***{hint}";
+        var username = encryptedUsername.DecryptData(key, salt);
+        var visible = Math.Min(4, username.Length / 2);
+        return $"***{username[^visible..]}";
     }
 }

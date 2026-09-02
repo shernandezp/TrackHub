@@ -24,6 +24,8 @@ import CustomPasswordField from 'controls/Dialogs/CustomPasswordField';
 import accountTypes from 'data/accountTypes';
 import type { FormChangeHandler } from 'controls/Dialogs/useForm';
 import type { AccountFormValues } from 'layouts/systemadmin/data/accountsTableData';
+import ArgonTypography from 'components/ArgonTypography';
+import { DEFAULT_TIME_ZONE, timeZoneOptions } from 'utils/timeZones';
 
 interface AccountsFormDialogProps {
   open: boolean;
@@ -68,6 +70,21 @@ function AccountsFormDialog({ open, setOpen, handleSubmit, values, handleChange,
             value={values.description || ''}
             onChange={handleChange}
           />
+          {/* Every date the platform computes for the account (today, day totals, report ranges) is
+              read in this zone; the servers themselves run on UTC. */}
+          <CustomSelect
+            list={timeZoneOptions(values.timeZoneId)}
+            handleChange={handleChange}
+            name="timeZoneId"
+            id="timeZoneId"
+            label={t('account.timeZone')}
+            value={values.timeZoneId || DEFAULT_TIME_ZONE}
+            numericValue={false}
+            required
+          />
+          <ArgonTypography variant="caption" color="secondary">
+            {t('account.timeZoneHint')}
+          </ArgonTypography>
 
           {!values.accountId && (
             <CustomTextField

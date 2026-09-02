@@ -86,6 +86,8 @@ import type {
 import {
   toIso,
   toLocalInput,
+  dayStartIso,
+  dayEndIso,
   newClientEventId,
   buildDeliveryPayload,
   buildPodPayload,
@@ -214,8 +216,8 @@ function TripManager() {
   const filters = useMemo<TripListFilters>(
     () => ({
       statuses: status === ALL ? null : [status],
-      from: toIso(from),
-      to: toIso(to),
+      from: dayStartIso(from),
+      to: dayEndIso(to),
       transporterId: transporterFilter === ALL ? null : transporterFilter,
       driverId: driverFilter === ALL ? null : driverFilter,
       search: search.trim() || null,
@@ -1138,7 +1140,7 @@ function TripManager() {
             )}
             <ArgonBox display="flex" justifyContent="space-between" alignItems="center" mt={1}>
               <ArgonTypography variant="caption" color="secondary">
-                {t('trips.showing', { from: pageStart, to: pageEnd, total: totalCount })}
+                {t('trips.showing', { from: pageStart, to: pageEnd, total: rowTotal })}
               </ArgonTypography>
               <ArgonPagination>
                 <ArgonPagination item onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}>

@@ -16,6 +16,8 @@ type Query {
     @cost(weight: "10")
   accountContext: AccountContextVm! @cost(weight: "10")
   accountStatus(query: GetAccountStatusQueryInput!): Short! @cost(weight: "10")
+  accountTimeZone(query: GetAccountTimeZoneQueryInput!): String!
+    @cost(weight: "10")
   accountByUser: AccountVm! @cost(weight: "10")
   accountSettings(query: GetAccountSettingsQueryInput!): AccountSettingsVm!
     @cost(weight: "10")
@@ -417,6 +419,7 @@ type AccountVm {
   status: AccountStatus!
   statusId: Short!
   active: Boolean!
+  timeZoneId: String!
   lastModified: DateTime!
 }
 
@@ -1099,6 +1102,7 @@ input AccountDtoInput {
   emailAddress: String!
   firstName: String!
   lastName: String!
+  timeZoneId: String
 }
 
 input AccountFeatureDtoInput {
@@ -1531,6 +1535,10 @@ input GetAccountSupportGrantsQueryInput {
   accountId: UUID
   skip: Int! = 0
   take: Int! = 50
+}
+
+input GetAccountTimeZoneQueryInput {
+  accountId: UUID!
 }
 
 input GetActiveDocumentByCategoryQueryInput {
@@ -2075,6 +2083,7 @@ input UpdateAccountDtoInput {
   description: String
   typeId: Short!
   active: Boolean!
+  timeZoneId: String
 }
 
 input UpdateAccountFeatureConfigurationCommandInput {

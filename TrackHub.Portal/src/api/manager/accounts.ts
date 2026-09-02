@@ -77,6 +77,7 @@ export async function createAccount(account: AccountDtoInput): Promise<Account> 
       description: account.description,
       typeId: account.typeId,
       active: account.active,
+      timeZoneId: account.timeZoneId ?? null,
       password: account.password,
       emailAddress: account.emailAddress,
       firstName: account.firstName,
@@ -98,6 +99,7 @@ export async function updateAccount(
       description: account.description,
       typeId: account.typeId,
       active: account.active,
+      timeZoneId: account.timeZoneId ?? null,
     },
   });
   return data.updateAccount;
@@ -119,6 +121,7 @@ export async function updateAccountMaster(
       description: account.description,
       typeId: account.typeId,
       active: account.active,
+      timeZoneId: account.timeZoneId ?? null,
     },
   });
   return data.updateAccountMaster;

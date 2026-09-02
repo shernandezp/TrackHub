@@ -21,7 +21,7 @@ public class GetAccountsQueryTests
     [Test]
     public async Task Handle_ReturnsAccountsPage()
     {
-        var list = new List<AccountVm> { new(Guid.NewGuid(), "A", null, default, 1, Common.Domain.Enums.AccountStatus.Active, 2, true, DateTimeOffset.UtcNow) };
+        var list = new List<AccountVm> { new(Guid.NewGuid(), "A", null, default, 1, Common.Domain.Enums.AccountStatus.Active, 2, true, "UTC", DateTimeOffset.UtcNow) };
         var page = new AccountsPageVm(list, 1);
         _readerMock.Setup(r => r.GetAccountsAsync(0, 50, null, CancellationToken.None)).ReturnsAsync(page);
 

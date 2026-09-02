@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Domain.Time;
 using Ardalis.GuardClauses;
 using Common.Application.Interfaces;
 using TrackHub.TripManagement.Application.Common;
@@ -38,7 +39,8 @@ public sealed class EstimateTollsQueryHandler(
     ITollEstimationService tollEstimationService,
     IAccountFeatureReader accountFeatureReader,
     IUserReader userReader,
-    IUser user) : IRequestHandler<EstimateTollsQuery, TollEstimateVm>
+    IUser user,
+    IAccountTimeZoneResolver? zones = null) : IRequestHandler<EstimateTollsQuery, TollEstimateVm>
 {
     private Guid UserId { get; } = TripVisibility.RequireUserId(user);
 
@@ -68,7 +70,7 @@ public sealed class EstimateTollsQueryHandler(
             // panel and the persisted figure disagree for the same vehicle class whenever a tariff
             // changed between planning and departure, with nothing on screen saying which date was
             // used. Tariffs are temporal (§6.2), so the date is part of the answer.
-            DateOnly.FromDateTime(trip.PlannedStartAt.UtcDateTime),
+            (await (zones ?? UtcAccountTimeZoneResolver.Instance).ResolveAsync(trip.AccountId, cancellationToken)).DateOf(trip.PlannedStartAt),
             config.TollMatchToleranceMeters,
             cancellationToken);
     }

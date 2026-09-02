@@ -26,6 +26,7 @@ import AccountStatusDialog from 'layouts/systemadmin/components/accounts/Account
 import UserFormDialog from 'layouts/manageadmin/components/users/UserDialog';
 import useForm from 'controls/Dialogs/useForm';
 import useAccountsTableData from 'layouts/systemadmin/data/accountsTableData';
+import { browserTimeZone } from 'utils/timeZones';
 import type {
   AccountFormValues,
   AccountUserFormValues,
@@ -40,7 +41,7 @@ const PAGE_SIZE = 10;
 function ManageAccounts() {
   const { t } = useTranslation();
   const handleAddClick = () => {
-    setAccountValues({ active: true, typeId: 0 });
+    setAccountValues({ active: true, typeId: 0, timeZoneId: browserTimeZone() });
     setAccountErrors({});
   };
 

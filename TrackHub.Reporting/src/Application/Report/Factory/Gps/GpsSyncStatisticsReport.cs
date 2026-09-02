@@ -1,3 +1,4 @@
+using Common.Domain.Time;
 using Common.Application.Interfaces;
 using Common.Domain.Constants;
 using TrackHub.Reporting.Domain.Interfaces;
@@ -15,7 +16,8 @@ public sealed class GpsSyncStatisticsReport(
     IAccountFeatureReader features,
     IGpsManagerReader manager,
     IGpsTelemetryReader telemetry,
-    ReportingLimitsOptions limits) : IReport
+    ReportingLimitsOptions limits,
+    IAccountTimeZoneResolver? zones = null) : IReport
 {
     public string ReportCode => Reports.GpsSyncStatistics;
 
@@ -33,11 +35,16 @@ public sealed class GpsSyncStatisticsReport(
         if (filters.GetDate(FilterNames.To) is { } to)
             filtered = filtered.Where(r => r.StartedAt <= to);
 
+        var calendar = await (zones ?? UtcAccountTimeZoneResolver.Instance).ResolveAsync(accountId, cancellationToken);
         var rows = filtered
-            .GroupBy(r => new { Date = new DateTimeOffset(r.StartedAt.UtcDateTime.Date, TimeSpan.Zero), r.OperatorId })
+            .GroupBy(r => new { Date = calendar.StartOf(calendar.DateOf(r.StartedAt)), r.OperatorId })
             .Select(g =>
             {
-                var successes = g.Count(x => string.Equals(x.Result, "SUCCESS", StringComparison.OrdinalIgnoreCase));
+                // Telemetry's OperatorSyncResult enum travels as SUCCEEDED / PARTIALLY_SUCCEEDED on the wire;
+                // the old "SUCCESS" literal matched nothing, so every run was counted as a failure.
+                var successes = g.Count(x =>
+                    string.Equals(x.Result, "SUCCEEDED", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(x.Result, "PARTIALLY_SUCCEEDED", StringComparison.OrdinalIgnoreCase));
                 var durations = g
                     .Where(x => x.CompletedAt.HasValue)
                     .Select(x => (x.CompletedAt!.Value - x.StartedAt).TotalMilliseconds)

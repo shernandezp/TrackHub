@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Domain.Time;
 using Common.Domain.Enums;
 using TrackHub.Manager.Infrastructure.Entities;
 using TrackHub.Manager.Infrastructure.Interfaces;
@@ -36,6 +37,7 @@ public sealed class AccountWriter(IApplicationDbContext context) : IAccountWrite
             accountDto.TypeId,
             accountDto.Active);
 
+        account.TimeZoneId = AccountTimeZone.Normalize(accountDto.TimeZoneId);
         await context.Accounts.AddAsync(account, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
 
@@ -48,6 +50,7 @@ public sealed class AccountWriter(IApplicationDbContext context) : IAccountWrite
             (AccountStatus)account.Status,
             account.Status,
             account.Active,
+            account.TimeZoneId,
             account.LastModified);
     }
 
@@ -65,6 +68,8 @@ public sealed class AccountWriter(IApplicationDbContext context) : IAccountWrite
         account.Name = accountDto.Name;
         account.Description = accountDto.Description;
         account.Type = accountDto.TypeId;
+        // A blank zone keeps the current one: the field is optional on the wire.
+        account.TimeZoneId = AccountTimeZone.Normalize(accountDto.TimeZoneId, account.TimeZoneId);
 
         // The legacy `active` flag can no longer change lifecycle state:
         // suspend/cancel/archive and re-activation all require ChangeAccountStatus. Keep Active as the

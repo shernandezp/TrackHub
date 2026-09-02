@@ -176,9 +176,10 @@ public static class TripMapper
             }
             else
             {
-                // Add the first point based on speed
-                points.Add(position.CastPoint(position.Speed > 0));
-                prevStatus = position.Speed > 0;
+                // Add the first point based on speed. The status is carried through
+                // currentStatus so the assignment below does not reset it to false.
+                currentStatus = position.Speed > 0;
+                points.Add(position.CastPoint(currentStatus));
             }
             prevStatus = currentStatus;
             previousPosition = position;

@@ -1,3 +1,4 @@
+using Common.Domain.Time;
 using System.Text.Json;
 using Common.Application.Exceptions;
 using Common.Application.Interfaces;
@@ -10,8 +11,9 @@ using TrackHub.Manager.Infrastructure.Interfaces;
 
 namespace TrackHub.Manager.Infrastructure.ManagerDB.Writers;
 
-public sealed class DriverAssignmentWriter(IApplicationDbContext context, ICurrentPrincipal principal) : AccountScopedDataAccess(context, principal), IDriverAssignmentWriter
+public sealed class DriverAssignmentWriter(IApplicationDbContext context, ICurrentPrincipal principal, IAccountTimeZoneResolver? zones = null) : AccountScopedDataAccess(context, principal), IDriverAssignmentWriter
 {
+    private readonly IAccountTimeZoneResolver _zones = zones ?? UtcAccountTimeZoneResolver.Instance;
     public async Task<DriverTransporterAssignmentVm> AssignDriverToTransporterAsync(Guid driverId, Guid transporterId, DateTimeOffset startsAt, string assignmentType, CancellationToken cancellationToken)
     {
         var driver = await Context.Drivers
@@ -125,7 +127,7 @@ public sealed class DriverAssignmentWriter(IApplicationDbContext context, ICurre
             return;
         }
 
-        var today = DateOnly.FromDateTime(DateTimeOffset.UtcNow.UtcDateTime);
+        var today = (await _zones.ResolveAsync(accountId, cancellationToken)).Today();
         var licenses = Context.DriverQualifications.Where(x =>
             x.AccountId == accountId
             && x.DriverId == driverId

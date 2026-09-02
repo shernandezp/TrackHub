@@ -20,7 +20,7 @@
  * also surface in the global toast via the query client's error handlers.
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from 'api/security/users';
 import type {
   CreateUserDtoInput,
@@ -55,6 +55,9 @@ export function useUsersByAccount(params: ListParams = {}, options: { enabled?: 
     queryKey: userKeys.byAccount(params),
     queryFn: () => api.getUsersByAccount(params),
     enabled: options.enabled ?? true,
+    // A page change swaps the query key; without a placeholder the list reads as EMPTY
+    // (totalCount 0) while the next page loads, and the page clamp snaps it back to page one.
+    placeholderData: keepPreviousData,
   });
 }
 

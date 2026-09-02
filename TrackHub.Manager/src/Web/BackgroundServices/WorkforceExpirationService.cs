@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Domain.Time;
 using System.Text.Json;
 using Common.Domain.Constants;
 using Microsoft.EntityFrameworkCore;
@@ -60,8 +61,11 @@ public sealed class WorkforceExpirationService(
         var evaluator = scope.ServiceProvider.GetRequiredService<IAlertRuleEvaluator>();
 
         var now = DateTimeOffset.UtcNow;
-        var today = DateOnly.FromDateTime(now.UtcDateTime);
-        var horizon = today.AddDays(WorkforceLimits.ExpirationThresholdsDays.Max());
+        var zones = scope.ServiceProvider.GetRequiredService<IAccountTimeZoneResolver>();
+        // The candidate scan uses a UTC day with one day of slack; the band each qualification
+        // crossed is decided against ITS account's calendar below.
+        var today = AccountTimeZone.Utc.DateOf(now);
+        var horizon = today.AddDays(WorkforceLimits.ExpirationThresholdsDays.Max() + 1);
 
         // Billing gate: qualification alerting is a `workforce` capability, so accounts without it are
         // skipped entirely (AC6).
@@ -94,7 +98,8 @@ public sealed class WorkforceExpirationService(
             // Raise only the nearest crossed band. Idempotency makes it exactly-once per band, and
             // picking the minimum stops a qualification that entered the 7-day window from later
             // back-firing the 15/30-day alerts.
-            var daysLeft = qualification.ExpiresAt.DayNumber - today.DayNumber;
+            var accountToday = (await zones.ResolveAsync(qualification.AccountId, cancellationToken)).Today();
+            var daysLeft = qualification.ExpiresAt.DayNumber - accountToday.DayNumber;
             var crossed = WorkforceLimits.ExpirationThresholdsDays.Where(t => daysLeft <= t).ToList();
             if (crossed.Count == 0)
             {

@@ -1,3 +1,5 @@
+using Common.Application.Interfaces;
+using Common.Domain.Time;
 using System.Text.RegularExpressions;
 
 namespace TrackHub.Manager.Application.Drivers.Commands;
@@ -36,13 +38,20 @@ public class CreateDriverCommandHandler(IDriverWriter writer) : IRequestHandler<
 }
 public class CreateDriverCommandValidator : AbstractValidator<CreateDriverCommand>
 {
-    public CreateDriverCommandValidator()
+    public CreateDriverCommandValidator(ICurrentPrincipal? principal = null, IAccountTimeZoneResolver? zones = null)
     {
         DriverRules.ApplyTo(this, x => x.Driver);
         // Create-only: onboarding a driver on an already-expired license is a data-entry error. Update
         // must stay permissive so an existing record can be corrected or left alone while it lapses.
         RuleFor(x => x.Driver.LicenseExpiresAt)
-            .GreaterThanOrEqualTo(_ => DateOnly.FromDateTime(DateTimeOffset.UtcNow.UtcDateTime))
+            .MustAsync(async (expiresAt, cancellationToken) =>
+            {
+                // "Already past" is judged on the account's calendar, not the server's UTC day.
+                var calendar = principal?.AccountId is { } accountId && zones is not null
+                    ? await zones.ResolveAsync(accountId, cancellationToken)
+                    : AccountTimeZone.Utc;
+                return expiresAt!.Value >= calendar.Today();
+            })
             .When(x => x.Driver.LicenseExpiresAt.HasValue)
             .WithMessage("The license expiration date is already past.");
     }

@@ -88,7 +88,7 @@ public class CredentialReaderTests
         var reader = new CredentialReader(context as IApplicationDbContext, Principal(Guid.NewGuid()));
 
         Assert.ThrowsAsync<ForbiddenAccessException>(async () =>
-            await reader.GetMetadataByOperatorAsync(@operator.OperatorId, CancellationToken.None));
+            await reader.GetMetadataByOperatorAsync(@operator.OperatorId, "key", CancellationToken.None));
     }
 
     [Test]

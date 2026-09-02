@@ -22,7 +22,7 @@ public class GetAccountQueryTests
     public async Task Handle_WhenAccountExists_ReturnsAccountVm()
     {
         var id = Guid.NewGuid();
-        var vm = new AccountVm(id, "Name", null, default, 1, Common.Domain.Enums.AccountStatus.Active, 2, true, DateTimeOffset.UtcNow);
+        var vm = new AccountVm(id, "Name", null, default, 1, Common.Domain.Enums.AccountStatus.Active, 2, true, "UTC", DateTimeOffset.UtcNow);
         _readerMock.Setup(r => r.GetAccountAsync(id, CancellationToken.None)).ReturnsAsync(vm);
 
         var result = await _handler.Handle(new GetAccountQuery(id), CancellationToken.None);

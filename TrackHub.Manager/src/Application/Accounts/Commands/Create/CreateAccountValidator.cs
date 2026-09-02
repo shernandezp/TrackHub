@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Domain.Time;
 namespace TrackHub.Manager.Application.Accounts.Commands.Create;
 public sealed class CreateAccountValidator : AbstractValidator<CreateAccountCommand>
 {
@@ -26,5 +27,10 @@ public sealed class CreateAccountValidator : AbstractValidator<CreateAccountComm
 
         RuleFor(v => v.Account.TypeId)
             .NotEmpty();
+
+        RuleFor(v => v.Account.TimeZoneId)
+            .Must(AccountTimeZone.IsValid)
+            .When(v => !string.IsNullOrWhiteSpace(v.Account.TimeZoneId))
+            .WithMessage("Unknown time zone; use an IANA name such as America/Bogota.");
     }
 }

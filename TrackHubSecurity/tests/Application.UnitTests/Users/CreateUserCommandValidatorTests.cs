@@ -28,6 +28,10 @@ public class CreateUserCommandValidatorTests
     public void SetUp()
     {
         _userReaderMock = new Mock<IUserReader>();
+        // The validator now checks username uniqueness too; treat every username as free unless a
+        // test says otherwise.
+        _userReaderMock.Setup(x => x.ValidateUsernameAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
         _validator = new CreateUserCommandValidator(_userReaderMock.Object);
     }
 

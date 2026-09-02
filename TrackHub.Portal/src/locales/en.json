@@ -48,6 +48,8 @@
     "details": "Account Details",
     "name": "Name",
     "description": "Description",
+    "timeZone": "Time zone",
+    "timeZoneHint": "Every date the platform computes for this account (today, daily totals, report ranges) is read in this zone.",
     "type": "Type",
     "active": "Active",
     "addUser": "Add User",

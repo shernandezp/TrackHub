@@ -267,7 +267,13 @@ internal class ApplicationDbContextInitializer(ILogger<ApplicationDbContextIniti
         {
             foreach (var (resource, action) in grants)
             {
-                var existing = await context.ServiceClientPermissions.FirstOrDefaultAsync(p =>
+                // AsTracking is load-bearing. This context is registered with
+                // QueryTrackingBehavior.NoTracking globally, so without it the row below comes back
+                // DETACHED: the upgrade-path assignment is accepted, SaveChangesAsync writes nothing
+                // and reports no error. The effect was that a permission seeded before
+                // AllowCrossAccount existed kept the default `false` however often db-init was
+                // re-run, and the only symptom is a cross-account call refused for no visible reason.
+                var existing = await context.ServiceClientPermissions.AsTracking().FirstOrDefaultAsync(p =>
                         p.ClientId == clientId
                         && p.Resource == resource
                         && p.Action == action

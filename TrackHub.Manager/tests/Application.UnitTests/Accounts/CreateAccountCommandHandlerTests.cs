@@ -51,6 +51,7 @@ public class CreateAccountCommandHandlerTests
             Common.Domain.Enums.AccountStatus.Active,
             2,
             accountDto.Active,
+            "UTC",
             DateTimeOffset.UtcNow);
 
         _accountWriterMock.Setup(w => w.CreateAccountAsync(It.IsAny<AccountDto>(), CancellationToken.None))
