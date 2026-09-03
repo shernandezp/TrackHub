@@ -2,6 +2,9 @@
 
   <PropertyGroup>
     <IsPackable>false</IsPackable>
+    <!-- xunit.v3 4.x flags the project as a Microsoft.Testing.Platform app, which the .NET 10 SDK refuses
+         under the classic dotnet test runner. Keep the VSTest path so the whole solution runs under one runner. -->
+    <IsTestingPlatformApplication>false</IsTestingPlatformApplication>
   </PropertyGroup>
 
   <ItemGroup>

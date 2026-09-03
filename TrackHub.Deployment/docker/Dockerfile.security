@@ -8,7 +8,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Central build configuration, shared by every project.
-COPY global.json Directory.Packages.props ./
+COPY global.json Directory.Build.props Directory.Packages.props ./
 
 # Project files first: this layer only changes when a dependency changes,
 # so the restore below stays cached across ordinary source edits.
@@ -21,7 +21,6 @@ COPY TrackHubCommon/tests/Common.Application.Tests/Common.Application.Tests.cspr
 COPY TrackHubCommon/tests/Common.Domain.Tests/Common.Domain.Tests.csproj TrackHubCommon/tests/Common.Domain.Tests/
 COPY TrackHubCommon/tests/Common.Infrastructure.Tests/Common.Infrastructure.Tests.csproj TrackHubCommon/tests/Common.Infrastructure.Tests/
 COPY TrackHubCommon/tests/Common.Web.Tests/Common.Web.Tests.csproj TrackHubCommon/tests/Common.Web.Tests/
-COPY TrackHubSecurity/Directory.Build.props TrackHubSecurity/
 COPY TrackHubSecurity/src/Application/Application.csproj TrackHubSecurity/src/Application/
 COPY TrackHubSecurity/src/DBInitializer/DBInitializer.csproj TrackHubSecurity/src/DBInitializer/
 COPY TrackHubSecurity/src/Domain/Domain.csproj TrackHubSecurity/src/Domain/
