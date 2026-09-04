@@ -21,6 +21,7 @@ public static class DependencyInjection
         services.AddGraphQLClient(Clients.Manager);
         services.AddGraphQLClient(Clients.Telemetry, resilience: GraphQLClientResilience.WithRetry);
         services.AddGraphQLClient(Clients.TripManagement, resilience: GraphQLClientResilience.WithRetry);
+        services.AddGraphQLServiceClient(Clients.Manager);
 
         services.AddScoped<IRouterReader, RouterReader>();
         services.AddScoped<IGeofenceReader, GeofenceReader>();

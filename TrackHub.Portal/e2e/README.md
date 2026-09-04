@@ -273,25 +273,17 @@ test that seeds data:
   token would invalidate the session every other test in the worker signs in
   with; the portal path under test (`handleRefreshToken` → auth error → restart
   login) is identical either way.
-- **Blocked by defects, not by the suite.** Report preview/export (§7.9) cannot
-  be asserted beyond the failure while the Reporting service answers HTTP 500;
-  units cannot be created from the portal (§7.4), so every test needing one seeds
-  it through the API; a user created through the UI is never marked verified, so
-  the "Add is absent without write permission" proof and the lock/unlock flow
-  skip with that reason rather than assert a false pass.
-- **Found by this suite, pinned as `test.fail()`.** Trip create and edit never
-  reach the trip history (`TripWriter` raises the domain event but appends no
-  `TripEvent` row, so the History tab omits both while the portal ships a label
-  for each); and the document panel is never handed the account's document types
-  (`DriverQualifications` mounts `DocumentPanel` without `categories`, which
-  defaults to `[]`), so its upload dialog degrades to a free-text category and
-  the Document Types section governs nothing.
+- **Blocked by defects, not by the suite.** A user created through the UI is never
+  marked verified, so the "Add is absent without write permission" proof and the
+  lock/unlock flow skip with that reason rather than assert a false pass.
 - **Not covered.** Branding logo upload and its reflection in the shell, the
   >500-geofence page drain, the report truncation notice (needs data), the
   document panel's version/signature surfaces, and per-feature sidenav proof for
   all six feature keys (one is proven; the rest need `E2E_CREATE_ACCOUNT`).
 
-Tests marked `test.fail()` are **known defects**: the assertion states the
-correct behaviour, the annotation keeps the suite usable as a gate, and Playwright
-turns the run red the moment the behaviour is fixed and the annotation goes
-stale. Each one names its finding in a comment at the top of the test.
+**A portal defect fails the run.** No test is pinned with `test.fail()` or
+`test.fixme()`, and none asserts the broken behaviour "for now": every assertion
+states what the screen is supposed to do, so a defect surfaces as a failure in
+the Playwright report and nowhere else. A pinned test counts as passed in the
+summary and paints green in the HTML report — the customer would be the one to
+find it.

@@ -48,6 +48,7 @@ import ConfiguratorRoot from "controls/Configurator/ConfiguratorRoot";
 import { useTranslation } from "react-i18next";
 import CustomSelect from "controls/Dialogs/CustomSelect";
 import { LoadingContext } from "LoadingContext";
+import { notifyApiError } from "api/core/errors";
 import maps from "data/maps";
 import type { FormChangeEvent } from "controls/Dialogs/useForm";
 import type { AccountSettings, AccountSettingsDtoInput } from "api/manager/settings";
@@ -55,24 +56,41 @@ import type { AccountSettings, AccountSettingsDtoInput } from "api/manager/setti
 // Argon Dashboard 2 MUI context
 import { useArgonController, setOpenConfigurator } from "context";
 
-// Local, deliberately loose form state: number fields are stored as raw input
-// strings (the native inputs emit strings) until persisted, matching the legacy
-// runtime behavior.
 interface ConfiguratorState {
-  maps?: string;
-  mapsKey?: string | null;
-  onlineInterval?: string | number;
-  refreshMap?: boolean;
-  refreshMapInterval?: string | number;
   accountId?: string;
+  maps: string;
+  mapsKey: string | null;
+  onlineInterval: string;
+  refreshMap: boolean;
+  refreshMapInterval: string;
 }
+
+const DEFAULT_INTERVAL_SECONDS = 60;
+
+// Mirrors UpdateAccountSettingsValidator (Manager).
+const MIN_ONLINE_INTERVAL = 5;
+const MIN_REFRESH_MAP_INTERVAL = 60;
+
+interface ConfiguratorErrors {
+  onlineInterval?: string;
+  refreshMapInterval?: string;
+}
+
+const toFormState = (settings: Partial<AccountSettings>): ConfiguratorState => ({
+  accountId: settings.accountId,
+  maps: settings.maps ?? "OSM",
+  mapsKey: settings.mapsKey ?? null,
+  onlineInterval: String(settings.onlineInterval ?? DEFAULT_INTERVAL_SECONDS),
+  refreshMap: settings.refreshMap ?? false,
+  refreshMapInterval: String(settings.refreshMapInterval ?? DEFAULT_INTERVAL_SECONDS),
+});
 
 export interface ConfiguratorProps {
   settings: Partial<AccountSettings>;
   updateSettings: (
     accountId: string,
     settings: Omit<AccountSettingsDtoInput, "accountId">
-  ) => void;
+  ) => Promise<unknown>;
 }
 
 function Configurator({ settings, updateSettings }: ConfiguratorProps) {
@@ -82,18 +100,14 @@ function Configurator({ settings, updateSettings }: ConfiguratorProps) {
   const { t } = useTranslation();
   const mapOptions = maps.map((type) => ({ value: type, label: type }));
 
-  const [accountSettings, setAccountSettings] = useState<ConfiguratorState>({
-    maps: "OSM",
-    refreshMap: false,
-  });
+  const [accountSettings, setAccountSettings] = useState<ConfiguratorState>(() =>
+    toFormState({})
+  );
+  const [errors, setErrors] = useState<ConfiguratorErrors>({});
   const handleCloseConfigurator = () => setOpenConfigurator(dispatch, false);
 
   useEffect(() => {
-    const fetchAccountSettings = async () => {
-      if (settings && settings.maps) setAccountSettings(settings);
-    };
-
-    fetchAccountSettings();
+    if (settings.maps) setAccountSettings(toFormState(settings));
   }, [settings]);
 
   function handleMapsChange(e: FormChangeEvent) {
@@ -122,7 +136,7 @@ function Configurator({ settings, updateSettings }: ConfiguratorProps) {
   function handleRefreshMapChange() {
     setAccountSettings((prevSettings) => ({
       ...prevSettings,
-      refreshMap: !settings.refreshMap,
+      refreshMap: !prevSettings.refreshMap,
     }));
   }
 
@@ -136,13 +150,37 @@ function Configurator({ settings, updateSettings }: ConfiguratorProps) {
   };
 
   async function onSaveSettings() {
+    if (!accountSettings.accountId) return;
+
+    const onlineInterval = Number.parseInt(accountSettings.onlineInterval, 10);
+    const refreshMapInterval = Number.parseInt(accountSettings.refreshMapInterval, 10);
+    const found: ConfiguratorErrors = {};
+    if (!(onlineInterval >= MIN_ONLINE_INTERVAL)) {
+      found.onlineInterval = t("settings.validation.onlineInterval", { min: MIN_ONLINE_INTERVAL });
+    }
+    if (!(refreshMapInterval >= MIN_REFRESH_MAP_INTERVAL)) {
+      found.refreshMapInterval = t("settings.validation.refreshMapInterval", {
+        min: MIN_REFRESH_MAP_INTERVAL,
+      });
+    }
+    setErrors(found);
+    if (found.onlineInterval || found.refreshMapInterval) return;
+
     setLoading(true);
-    updateSettings(
-      accountSettings.accountId as string,
-      accountSettings as Omit<AccountSettingsDtoInput, "accountId">
-    );
-    setLoading(false);
-    alert(t("settings.saveMessage"));
+    try {
+      await updateSettings(accountSettings.accountId, {
+        maps: accountSettings.maps,
+        mapsKey: accountSettings.mapsKey,
+        onlineInterval,
+        refreshMap: accountSettings.refreshMap,
+        refreshMapInterval,
+      });
+      alert(t("settings.saveMessage"));
+    } catch (error) {
+      notifyApiError(error);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -207,7 +245,7 @@ function Configurator({ settings, updateSettings }: ConfiguratorProps) {
               label={t("settings.mapsKey")}
               type="text"
               fullWidth
-              value={accountSettings.mapsKey || ""}
+              value={accountSettings.mapsKey ?? ""}
               onChange={handleMapsKeyChange}
             />
           </ArgonBox>
@@ -221,8 +259,10 @@ function Configurator({ settings, updateSettings }: ConfiguratorProps) {
             label={t("settings.onlineInterval")}
             type="number"
             fullWidth
-            value={accountSettings.onlineInterval || 60}
+            value={accountSettings.onlineInterval}
             onChange={handleOnlineIntervalChange}
+            slotProps={{ htmlInput: { min: MIN_ONLINE_INTERVAL } }}
+            errorMsg={errors.onlineInterval}
           />
         </ArgonBox>
 
@@ -239,8 +279,10 @@ function Configurator({ settings, updateSettings }: ConfiguratorProps) {
             label={t("settings.refreshMapInterval")}
             type="number"
             fullWidth
-            value={accountSettings.refreshMapInterval || 60}
+            value={accountSettings.refreshMapInterval}
             onChange={handleRefreshMapIntervalChange}
+            slotProps={{ htmlInput: { min: MIN_REFRESH_MAP_INTERVAL } }}
+            errorMsg={errors.refreshMapInterval}
           />
         </ArgonBox>
 

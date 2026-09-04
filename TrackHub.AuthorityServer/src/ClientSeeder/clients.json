@@ -39,7 +39,7 @@
     {
       "clientId": "web_client",
       "uri": "https://localhost:3000/authentication/callback",
-      "postLogoutUri": "https://localhost:3000/authentication/callback",
+      "postLogoutUri": "https://localhost:3000/",
       "scope": "web_scope"
     }
   ],
@@ -67,6 +67,11 @@
     {
       "clientId": "trip_client",
       "clientSecret": "96cd18c9-d1b6-424b-9e29-b17842046d01",
+      "scope": "service_scope"
+    },
+    {
+      "clientId": "reporting_client",
+      "clientSecret": "8d47b2e1-3f95-4c60-b18a-6e02d75a9f34",
       "scope": "service_scope"
     }
   ]

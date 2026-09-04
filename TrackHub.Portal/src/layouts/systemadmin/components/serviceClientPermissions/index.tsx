@@ -132,6 +132,8 @@ function ManageServiceClientPermissions() {
     setLoading(true);
     try {
       await deletePermission.mutateAsync(toDelete);
+      setToDelete(null);
+      setConfirmOpen(false);
     } catch {
       // Failure is surfaced by the global toast.
     } finally {

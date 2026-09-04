@@ -5,26 +5,11 @@
  * A preview returns rows only when the account has data for that report, so the
  * assertion is "the preview answered" — rows or the explicit no-rows message —
  * never a row count.
- *
- * KNOWN DEFECT (finding: "the Reporting service cannot build any report").
- * Building a report reads its data through the five service-to-service GraphQL
- * clients Reporting registers (Router, Geofence, Manager, Telemetry,
- * TripManagement). `GraphQLClientFactory.GetClientCredentialsTokenAsync` guards
- * `AuthorityServer:ClientId`/`ClientSecret` non-null, and Reporting is the one
- * service given neither — not in its own `appsettings.json`, and not by
- * `docker-compose.backend.yml`, where Security, Router and Geofence each get a
- * pair. Every preview and export therefore throws
- * `ArgumentNullException: Setting 'ClientId' not found` and answers HTTP 500
- * (confirmed in the running service's log for `GetReportPreviewQuery` and
- * `GetReportQuery` in both xlsx and pdf). The three tests that exercise those
- * paths are declared expected-failures so the suite stays a usable gate and
- * turns red as soon as the configuration is fixed.
  */
 
 import fs from 'node:fs';
 import { test, expect } from '../fixtures';
 import { Section } from '../pages/tableAccordion';
-import { toCamelCase } from './support/text';
 import {
   catalogOf,
   chooseReport,
@@ -60,32 +45,24 @@ test.describe('reports', () => {
       await section.expand();
       for (const report of reports) {
         await expect(
-          section.root.getByText(reportLabel(t, report.code), { exact: true })
+          section.root.getByText(reportLabel(t, report), { exact: true })
         ).toBeVisible();
       }
     }
   });
 
-  test('every report in the catalog has a localized name and description', async ({ api, t }) => {
-    // KNOWN DEFECT (finding: "most catalog reports have no portal name").
-    // `reportList`/`reportDescriptions` cover only the modules whose portal work
-    // shipped, so the screen falls back to the raw i18n key for the rest — at
-    // the time of writing 46 of the 62 rows the Manager returns. The set is
-    // computed from the LIVE catalog rather than a pinned number, so the test
-    // stays true as the catalog grows.
-    test.fail();
-
+  test('no report is offered under a raw translation key', async ({ shell, page, t, api }) => {
     const catalog = await catalogOf(api);
-    const missing = catalog.reports.filter((report) => {
-      try {
-        t(`reportList.${toCamelCase(report.code)}`);
-        t(`reportDescriptions.${toCamelCase(report.code)}`);
-        return false;
-      } catch {
-        return true;
-      }
-    });
-    expect(missing.map((report) => report.code)).toEqual([]);
+    const categories = new Set(catalog.reports.map((report) => report.category.toLowerCase()));
+
+    await shell.open('reports');
+
+    for (const category of categories) {
+      const section = new Section(page, `report-category-${category}`, t);
+      await expect(section.root).toBeVisible({ timeout: 60_000 });
+      await section.expand();
+      await expect(section.root.getByText(/^report(List|Descriptions)\./)).toHaveCount(0);
+    }
   });
 
   test('choosing a report renders the filters its catalog row declares', async ({
@@ -143,23 +120,19 @@ test.describe('reports', () => {
     t,
     api,
   }) => {
-    test.fail(); // see the file header: Reporting cannot construct any report.
-
     const catalog = await catalogOf(api);
     await shell.open('reports');
     await chooseReport(page, t, catalog.reports[0]);
 
     await page.getByRole('button', { name: t('reports.preview') }).click();
-    // Deliberately shorter than the test timeout: an expected failure has to be
-    // an assertion failure, because a test TIMEOUT is not absorbed by test.fail().
+    // Bounded well under the test timeout: a preview that never answers should
+    // report a failed assertion, not burn the whole 120 s budget.
     await expect(
       page.getByText(/Total rows:/).or(page.getByText(t('reports.noPreviewRows'))).first()
     ).toBeVisible({ timeout: 30_000 });
   });
 
   test('Excel export downloads a real workbook', async ({ shell, page, t, api }, testInfo) => {
-    test.fail(); // see the file header: Reporting cannot construct any report.
-
     const catalog = await catalogOf(api);
     await shell.open('reports');
     await chooseReport(page, t, catalog.reports[0]);
@@ -176,8 +149,6 @@ test.describe('reports', () => {
   });
 
   test('PDF export downloads a real PDF', async ({ shell, page, t, api }, testInfo) => {
-    test.fail(); // see the file header: Reporting cannot construct any report.
-
     const catalog = await catalogOf(api);
     const report = catalog.reports.find((candidate) => candidate.supportsPdf);
     expect(report, 'no report advertises PDF support').toBeDefined();

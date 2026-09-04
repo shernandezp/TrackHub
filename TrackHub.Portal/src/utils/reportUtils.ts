@@ -14,8 +14,31 @@
 *  limitations under the License.
 */
 
+import type { TFunction } from 'i18next';
+import type { Report } from 'api/manager/reports';
 import type { ReportPreview, ReportPreviewCell } from 'api/reporting/reports';
 import type { TableColumn, TableRowData } from 'controls/Tables/Table';
+import { toCamelCase } from 'utils/stringUtils';
+
+/**
+ * The screen name of a catalog report and the sentence under it. Falls back to the
+ * row's own description, so a report this build has no translation for is still
+ * named rather than shown as a raw key.
+ */
+export function reportLabels(
+  t: TFunction,
+  report: Pick<Report, 'code' | 'description'>
+): { name: string; description: string } {
+  const key = toCamelCase(report.code);
+  return {
+    name: t(`reportList.${key}` as 'reportList.liveReport', {
+      defaultValue: report.description || report.code,
+    }),
+    description: t(`reportDescriptions.${key}` as 'reportDescriptions.liveReport', {
+      defaultValue: '',
+    }),
+  };
+}
 
 /**
  * Maps a preview payload's positional rows onto the {@link Table} shape: each

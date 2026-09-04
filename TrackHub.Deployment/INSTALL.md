@@ -549,6 +549,8 @@ ROUTER_CLIENT_SECRET=your-router-client-secret
 SECURITY_CLIENT_SECRET=your-security-client-secret
 GEOFENCE_CLIENT_SECRET=your-geofence-client-secret
 TRIP_CLIENT_SECRET=your-trip-client-secret
+REPORTING_CLIENT_ID=reporting_client
+REPORTING_CLIENT_SECRET=your-reporting-client-secret
 
 # Route planning (spec 11) — REQUIRED before the trip module can be released
 ORS_API_KEY=your-openrouteservice-api-key
@@ -652,7 +654,7 @@ Edit `config/clients.json`:
     {
       "clientId": "web_client",
       "uri": "https://trackhub.example.com/authentication/callback",
-      "postLogoutUri": "https://trackhub.example.com/authentication/callback",
+      "postLogoutUri": "https://trackhub.example.com/",
       "scope": "web_scope"
     },
     {
@@ -845,6 +847,7 @@ The master template at `config/appsettings.template.json` shows all configurable
 | `${SYNCWORKER_CLIENT_ID}` / `${SYNCWORKER_CLIENT_SECRET}` | SyncWorker | `syncworker_client` service credentials |
 | `${GEOFENCE_CLIENT_ID}` / `${GEOFENCE_CLIENT_SECRET}` | Geofencing | `geofence_client` service credentials (alert emission + dwell-evaluator job runs toward Manager) |
 | `${TRIP_CLIENT_ID}` / `${TRIP_CLIENT_SECRET}` | TripManagement | `trip_client` service credentials (alerts, job runs, public links, driver/transporter validation toward Manager; position history toward Telemetry) |
+| `${REPORTING_CLIENT_ID}` / `${REPORTING_CLIENT_SECRET}` | Reporting | `reporting_client` service credentials — reads the account's time zone from Manager so report day boundaries are the account's. Without them every preview and export fails at start-up with `Setting 'ClientId' not found` |
 | `${ROUTING_PROVIDER}` / `${ORS_BASE_URL}` / `${ORS_API_KEY}` / `${ORS_PROFILE}` / `${ORS_REQUESTS_PER_SECOND}` / `${ORS_TIMEOUT_SECONDS}` / `${ORS_MAX_WAYPOINTS}` | TripManagement | `AppSettings:Routing` — OpenRouteService directions/matrix. **Required per deployment**, see [OpenRouteService provisioning](#openrouteservice-provisioning-required) |
 | `${ORS_INTERACTIVE_TIMEOUT_SECONDS}` / `${ORS_BACKGROUND_REQUESTS_PER_WINDOW}` / `${ORS_BACKGROUND_WINDOW_SECONDS}` | TripManagement | `AppSettings:Routing` admission control — how long an interactive caller waits for a slot (default 15s) and the background ETA-refresh budget per rolling window (defaults 250 per 300s) |
 | `${DOCUMENT_STORAGE_PROVIDER}` / `${DOCUMENT_STORAGE_LOCAL_ROOT}` / `${DOCUMENT_RETENTION_DAYS}` | Manager | Document management storage |
@@ -891,6 +894,8 @@ Regenerate appsettings when you change:
 | `GEOFENCE_CLIENT_SECRET` | Geofencing OAuth client secret | `your-secret` |
 | `TRIP_CLIENT_ID` | TripManagement OAuth client ID | `trip_client` |
 | `TRIP_CLIENT_SECRET` | TripManagement OAuth client secret | `your-secret` |
+| `REPORTING_CLIENT_ID` | Reporting OAuth client ID | `reporting_client` |
+| `REPORTING_CLIENT_SECRET` | Reporting OAuth client secret | `your-secret` |
 | `ROUTING_PROVIDER` | Routing provider name (`AppSettings:Routing:Provider`) | `OpenRouteService` |
 | `ORS_BASE_URL` | ORS base URL — public API or your self-hosted instance | `https://api.openrouteservice.org` |
 | `ORS_API_KEY` | ORS API key. **Required**; empty ⇒ `RoutePlan.Failed` + `ROUTING_NOT_CONFIGURED` | `your-ors-key` |
@@ -1462,6 +1467,7 @@ Keys that are **new or changed** and required by this release:
 | `SYNCWORKER_CLIENT_ID` | **Change** to `syncworker_client`. |
 | `GEOFENCE_CLIENT_ID` / `GEOFENCE_CLIENT_SECRET` | **Add**. Geofencing now emits alert events and job runs to Manager; must match the `geofence_client` in `clients.json`. |
 | `TRIP_CLIENT_ID` / `TRIP_CLIENT_SECRET` | **Add**. TripManagement calls Manager (alerts, job runs, public links, driver/transporter validation) and Telemetry; must match the `trip_client` in `clients.json`. |
+| `REPORTING_CLIENT_ID` / `REPORTING_CLIENT_SECRET` | **Add**. Reporting reads the account's time zone from Manager; must match the `reporting_client` in `clients.json`. Reports fail with HTTP 500 without them. |
 | `GRAPHQL_TRIP_SERVICE` | **Add** (`http://tripmanagement:8080/graphql/`). Consumed by Router (`processTripPositions`) and Reporting (trip report data). |
 | `REACT_APP_TRIPMANAGEMENT_ENDPOINT` | **Add** (`https://<domain>/Trip/graphql`). Baked in at frontend build time. |
 | `ROUTING_PROVIDER` / `ORS_BASE_URL` / `ORS_API_KEY` / `ORS_PROFILE` / `ORS_REQUESTS_PER_SECOND` / `ORS_TIMEOUT_SECONDS` / `ORS_MAX_WAYPOINTS` | **Add.** Required before releasing the trip module — see [OpenRouteService Provisioning](#openrouteservice-provisioning-required). |

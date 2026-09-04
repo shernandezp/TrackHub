@@ -1016,7 +1016,11 @@
     "storingInterval": "Storing Interval (Seconds)",
     "refreshMap": "Refresh Map",
     "refreshMapInterval": "Refresh Map Interval (Seconds)",
-    "saveMessage": "Some settings may require a page refresh to take effect"
+    "saveMessage": "Some settings may require a page refresh to take effect",
+    "validation": {
+      "onlineInterval": "Online interval must be at least {{min}} minutes",
+      "refreshMapInterval": "Map refresh interval must be at least {{min}} seconds"
+    }
   },
   "screen": {
     "account": "Account",

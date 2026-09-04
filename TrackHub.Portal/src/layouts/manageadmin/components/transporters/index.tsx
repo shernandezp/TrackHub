@@ -32,6 +32,11 @@ const PAGE_SIZE = 10;
 function ManageTransporters() {
   const { t } = useTranslation();
 
+  const handleAddClick = () => {
+    setValues({});
+    setErrors({});
+  };
+
   const handleEditClick = (rowData: TransporterFormValues) => {
     setValues(rowData);
     setErrors({});
@@ -67,8 +72,10 @@ function ManageTransporters() {
     <>
       <TableAccordion sectionKey="transporters"
         title={t('transporter.title')}
+        showAddIcon={true}
         expanded={expanded}
         setOpen={setOpen}
+        handleAddClick={handleAddClick}
         setExpanded={setExpanded}>
         <ServerSearch value={searchDraft} onChange={setSearchDraft} />
         <Table columns={columns} rows={rows} selectedField='name' serverPaged />

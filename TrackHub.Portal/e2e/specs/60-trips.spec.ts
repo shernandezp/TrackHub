@@ -370,20 +370,6 @@ test.describe('trips', () => {
     // While a trip is only planned, everything is editable — including its unit
     // and its origin. Both freeze once it is running, because re-pointing a trip
     // mid-flight would change the meaning of measurements already taken.
-    //
-    // KNOWN DEFECT (finding: "trip create and edit never reach the trip
-    // history"). `TripWriter.CreateAsync` and `UpdateAsync` raise a
-    // `TripDomainEvent` (`TripCreated`/`TripUpdated`) for alert emission and
-    // audit forwarding, but neither appends a `TripEvent` row — only the
-    // transition, assignment, stop and delivery paths call
-    // `TripEvents.AddAsync`/`tripEventWriter.AppendAsync`. So the History tab,
-    // which the help topic describes as "every event on the trip, with when it
-    // happened and whether it came from the portal, the driver, automatic
-    // detection or a background job", silently omits both — while the portal
-    // ships a translated label for each (`trips.timeline.events.TripCreated`
-    // and `.TripUpdated`). Expected-failure so the suite turns red when the
-    // write path starts recording them.
-    test.fail();
 
     const code = `e2e-trip-${unique()}`;
     await shell.open('tripManager');

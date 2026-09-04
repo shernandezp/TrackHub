@@ -27,7 +27,8 @@ import DocumentUploadDialog from "layouts/manageadmin/components/documents/Docum
 import type { UploadPayload } from "layouts/manageadmin/components/documents/DocumentUploadDialog";
 import ShareDialog from "layouts/manageadmin/components/documents/ShareDialog";
 import { getDocumentsForOwner, uploadDocument, uploadDocumentVersion, downloadDocument, voidDocument, deleteDocumentReference } from "api/manager/documents";
-import type { DocumentVm, DocumentTypeVm } from "api/manager/documents";
+import type { DocumentVm } from "api/manager/documents";
+import { useDocumentTypes } from "queries/documents";
 import { notifyApiError } from "api/core/errors";
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from "utils/dateUtils";
@@ -49,7 +50,6 @@ interface DocumentPanelProps {
   ownerEntityType: string;
   ownerEntityId?: string | null;
   canManage?: boolean;
-  categories?: DocumentTypeVm[];
   /** Fired after every (re)load so an embedding screen can refresh its own
    *  document-derived state — e.g. the driver qualification document picker. */
   onDocumentsChanged?: (documents: DocumentVm[]) => void;
@@ -58,7 +58,7 @@ interface DocumentPanelProps {
 // Reusable, owner-scoped document panel. Lists an owner's documents and provides upload
 // (drag-drop), download, new-version, void, remove-reference, and share. Embeddable on any owner detail
 // surface; gated by the OWNER module's feature (pass canManage), not the `documents` feature.
-function DocumentPanel({ accountId = null, ownerEntityType, ownerEntityId = null, canManage = true, categories = [], onDocumentsChanged }: DocumentPanelProps) {
+function DocumentPanel({ accountId = null, ownerEntityType, ownerEntityId = null, canManage = true, onDocumentsChanged }: DocumentPanelProps) {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
   const [docs, setDocs] = useState<DocumentVm[]>([]);
@@ -67,6 +67,7 @@ function DocumentPanel({ accountId = null, ownerEntityType, ownerEntityId = null
   const [shareOpen, setShareOpen] = useState(false);
   const [confirm, setConfirm] = useState<ConfirmState>({ open: false });
   const [active, setActive] = useState<DocumentVm | null>(null);
+  const { data: categories = [] } = useDocumentTypes(accountId);
   const changedRef = useRef(onDocumentsChanged);
   changedRef.current = onDocumentsChanged;
 

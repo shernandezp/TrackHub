@@ -27,7 +27,26 @@ export const documentKeys = {
   all: ['documents'] as const,
   forOwner: (accountId: string, ownerEntityType: string, ownerEntityId: string) =>
     [...documentKeys.all, 'forOwner', accountId, ownerEntityType, ownerEntityId] as const,
+  types: (accountId: string, includeDisabled: boolean) =>
+    [...documentKeys.all, 'types', accountId, includeDisabled] as const,
 };
+
+/**
+ * The account's configured document types. Every surface that files a document
+ * reads them from here, so a type the account configured — and its Required /
+ * Tracks Expiration flags — governs the upload wherever it happens.
+ */
+export function useDocumentTypes(
+  accountId: string | null | undefined,
+  options: { enabled?: boolean; includeDisabled?: boolean } = {}
+) {
+  const includeDisabled = options.includeDisabled ?? false;
+  return useQuery({
+    queryKey: documentKeys.types(accountId ?? '', includeDisabled),
+    queryFn: () => api.getDocumentTypes(accountId as string, includeDisabled),
+    enabled: (options.enabled ?? true) && !!accountId,
+  });
+}
 
 /**
  * Documents owned by one entity (spec 04 owner scoping — `Driver` is the owner

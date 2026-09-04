@@ -29,7 +29,7 @@ import type { ReportFilterValues, ReportPreview } from "api/reporting/reports";
 import { useTranslation } from 'react-i18next';
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
-import { toCamelCase } from 'utils/stringUtils';
+import { reportLabels } from 'utils/reportUtils';
 
 function Reports() {
   const { t } = useTranslation();
@@ -57,7 +57,7 @@ function Reports() {
 
   const handleRun = async (values: ReportFilterValues, action: ReportAction) => {
     if (!selected) return;
-    const reportName = t(`reportList.${toCamelCase(selected.code)}` as 'reportList.liveReport');
+    const { name: reportName } = reportLabels(t, selected);
     const args = { reportCode: selected.code, reportName, filters: values };
     if (action === 'preview') {
       previewMutation.mutate(args, { onSuccess: setPreview });
