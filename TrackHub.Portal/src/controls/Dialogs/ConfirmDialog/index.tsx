@@ -34,6 +34,7 @@ const ConfirmDialog = ({ title, message, open, setOpen, onConfirm }: ConfirmDial
       onClose={() => setOpen(false)}
       aria-labelledby="alert-dialog-title"
       aria-describedby="alert-dialog-description"
+      data-testid="dialog-confirm"
     >
       <DialogTitle id="alert-dialog-title">{title}</DialogTitle>
       <DialogContent>

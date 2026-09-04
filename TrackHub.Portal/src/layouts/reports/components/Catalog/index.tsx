@@ -117,6 +117,7 @@ function ReportCatalog({ reports, selectedReport, onSelect }: ReportCatalogProps
         return (
           <TableAccordion
             key={category}
+            sectionKey={`report-category-${category.toLowerCase()}`}
             title={t(categoryKey)}
             expanded={expanded === category}
             setExpanded={(isOpen) => setExpanded(isOpen ? category : null)}

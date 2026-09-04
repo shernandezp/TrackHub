@@ -226,6 +226,7 @@ function RoutePlanner({
               {ordered.map((stop, index) => (
                 <ArgonBox
                   key={stop.tripStopId}
+                  data-testid={`stop-${stop.sequence}`}
                   draggable={editable}
                   onDragStart={() => setDragIndex(index)}
                   onDragOver={(event: DragEvent<HTMLDivElement>) => event.preventDefault()}
@@ -268,7 +269,12 @@ function RoutePlanner({
                     <>
                       <Tooltip title={t('tripStops.actions.moveUp')}>
                         <span>
-                          <IconButton size="small" disabled={index === 0} onClick={() => move(index, index - 1)}>
+                          <IconButton
+                            size="small"
+                            aria-label={t('tripStops.actions.moveUp')}
+                            disabled={index === 0}
+                            onClick={() => move(index, index - 1)}
+                          >
                             <Icon fontSize="small">arrow_upward</Icon>
                           </IconButton>
                         </span>
@@ -277,6 +283,7 @@ function RoutePlanner({
                         <span>
                           <IconButton
                             size="small"
+                            aria-label={t('tripStops.actions.moveDown')}
                             disabled={index === ordered.length - 1}
                             onClick={() => move(index, index + 1)}
                           >
@@ -285,13 +292,22 @@ function RoutePlanner({
                         </span>
                       </Tooltip>
                       <Tooltip title={t('generic.edit')}>
-                        <IconButton size="small" onClick={() => onEditStop(stop.tripStopId)}>
+                        <IconButton
+                          size="small"
+                          aria-label={t('generic.edit')}
+                          onClick={() => onEditStop(stop.tripStopId)}
+                        >
                           <Icon fontSize="small">edit</Icon>
                         </IconButton>
                       </Tooltip>
                       {canRemoveStops && (
                         <Tooltip title={t('tripStops.actions.remove')}>
-                          <IconButton size="small" color="error" onClick={() => onRemoveStop(stop.tripStopId)}>
+                          <IconButton
+                            size="small"
+                            color="error"
+                            aria-label={t('tripStops.actions.remove')}
+                            onClick={() => onRemoveStop(stop.tripStopId)}
+                          >
                             <Icon fontSize="small">delete</Icon>
                           </IconButton>
                         </Tooltip>

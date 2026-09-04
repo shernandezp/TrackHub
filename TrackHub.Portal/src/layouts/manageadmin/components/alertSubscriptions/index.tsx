@@ -200,7 +200,7 @@ function ManageAlertSubscriptions() {
 
   return (
     <>
-      <TableAccordion
+      <TableAccordion sectionKey="alert-subscriptions"
         title={t('alertSubscriptions.title')}
         showAddIcon={notificationsEnabled}
         expanded={expanded}

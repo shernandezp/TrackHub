@@ -93,7 +93,7 @@ function ManageAlertEvents() {
   };
 
   return (
-    <TableAccordion title={t('alertEvents.title')} expanded={expanded} setExpanded={setExpanded}>
+    <TableAccordion sectionKey="alert-events" title={t('alertEvents.title')} expanded={expanded} setExpanded={setExpanded}>
       <Table
         columns={[
           { name: 'type', title: t('alertEvents.type'), align: 'left' },

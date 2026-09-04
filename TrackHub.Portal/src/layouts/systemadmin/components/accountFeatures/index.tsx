@@ -279,7 +279,7 @@ function SystemAccountFeatures() {
 
   return (
     <>
-      <TableAccordion
+      <TableAccordion sectionKey="system-account-features"
         title={t('accountFeatures.title')}
         expanded={expanded}
         setExpanded={setExpanded}

@@ -154,7 +154,7 @@ const OSMClusteredMap = ({
     const tile = darkMode ? OSM_DARK_TILE : OSM_LIGHT_TILE;
 
     return (
-        <div style={{ height, width: "100%" }}>
+        <div data-selected-marker={selectedMarker ?? ""} style={{ height, width: "100%" }}>
             <UserLocation setUserLocation={setUserLocation} />
             <MapProviderContext.Provider value={OSM_PROVIDER}>
                 {/* MapContainer props are immutable after mount, so the reactive height lives on

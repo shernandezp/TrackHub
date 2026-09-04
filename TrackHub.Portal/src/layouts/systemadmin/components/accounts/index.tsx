@@ -105,7 +105,7 @@ function ManageAccounts() {
 
   return (
     <>
-      <TableAccordion
+      <TableAccordion sectionKey="accounts"
         title={t('account.title')}
         showAddIcon={true}
         expanded={expanded}

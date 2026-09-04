@@ -141,7 +141,7 @@ function PlatformSettings() {
   }
 
   return (
-    <Card>
+    <Card data-testid="card-platform-settings">
       <ArgonBox pt={2} px={2}>
         <ArgonTypography variant="h6" fontWeight="medium" textTransform="capitalize">
           {t('userprofile.title')}
@@ -153,7 +153,11 @@ function PlatformSettings() {
         </ArgonTypography>
         <ArgonBox display="flex" py={1} mb={0.25}>
           <ArgonBox mt={0.25}>
-            <Switch checked={style} onChange={handleStyleChange} />
+            <Switch
+              checked={style}
+              onChange={handleStyleChange}
+              slotProps={{ input: { 'aria-label': t('userprofile.style') } }}
+            />
           </ArgonBox>
           <ArgonBox width="80%" ml={2}>
             <ArgonTypography variant="button" fontWeight="regular" color="text">
@@ -163,7 +167,11 @@ function PlatformSettings() {
         </ArgonBox>
         <ArgonBox display="flex" py={1} mb={0.25}>
           <ArgonBox mt={0.25}>
-            <Switch checked={sideNav} onChange={handleNavbarChange} />
+            <Switch
+              checked={sideNav}
+              onChange={handleNavbarChange}
+              slotProps={{ input: { 'aria-label': t('userprofile.sidenav') } }}
+            />
           </ArgonBox>
           <ArgonBox width="80%" ml={2}>
             <ArgonTypography variant="button" fontWeight="regular" color="text">

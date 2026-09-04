@@ -83,7 +83,7 @@ function ReportFilters({ selectedReport, filtersJson, supportsPdf = false, runni
     t(definition.labelKey as 'reports.from', { defaultValue: definition.name });
 
   return (
-    <Card>
+    <Card data-testid="card-report-filters">
       <ArgonBox pt={1.5} pb={2} px={2} lineHeight={1.25}>
         {definitions.map((definition) => (
           <ArgonBox display="flex" py={1} mb={0.25} key={definition.name}>

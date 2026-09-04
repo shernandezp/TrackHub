@@ -330,6 +330,7 @@ export default function App() {
       color="dark"
       sx={{ cursor: "pointer" }}
       onClick={handleConfiguratorOpen}
+      data-testid="configurator-toggle"
     >
       <Icon color="inherit">
         settings

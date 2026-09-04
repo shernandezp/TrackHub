@@ -90,7 +90,7 @@ function OpenAlerts() {
   }));
 
   return (
-    <TableAccordion title={t('gpsIntegration.sections.openAlerts')} expanded={expanded} setExpanded={setExpanded}>
+    <TableAccordion sectionKey="gps-open-alerts" title={t('gpsIntegration.sections.openAlerts')} expanded={expanded} setExpanded={setExpanded}>
       {error
         ? <ArgonBox><ArgonTypography variant="button" color="error">{error}</ArgonTypography></ArgonBox>
         : alerts.length === 0 && loaded.current

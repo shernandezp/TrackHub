@@ -64,7 +64,7 @@ function ManageBackgroundJobs() {
   }, [expanded]);
 
   return (
-    <TableAccordion title={t('backgroundJobs.title')} expanded={expanded} setExpanded={setExpanded}>
+    <TableAccordion sectionKey="background-jobs" title={t('backgroundJobs.title')} expanded={expanded} setExpanded={setExpanded}>
       <Table
         columns={[
           { name: 'job', title: t('backgroundJobs.job'), align: 'left' },

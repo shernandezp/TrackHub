@@ -118,7 +118,7 @@ function ManageDrivers() {
 
   return (
     <>
-      <TableAccordion
+      <TableAccordion sectionKey="drivers"
         title={t('driver.title')}
         showAddIcon={true}
         expanded={expanded}

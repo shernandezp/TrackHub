@@ -194,7 +194,7 @@ function ManageDriverCredentials() {
 
   return (
     <>
-      <TableAccordion
+      <TableAccordion sectionKey="driver-credentials"
         title={t('workforce.credentials.title')}
         expanded={expanded}
         setExpanded={setExpanded}

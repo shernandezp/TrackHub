@@ -90,7 +90,7 @@ function ManageBranding() {
   const previewColor = HEX_COLOR.test(values.primaryColor || '') ? values.primaryColor : 'transparent';
 
   return (
-    <TableAccordion
+    <TableAccordion sectionKey="branding"
         title={t('branding.title')}
         expanded={expanded}
         setExpanded={setExpanded}>

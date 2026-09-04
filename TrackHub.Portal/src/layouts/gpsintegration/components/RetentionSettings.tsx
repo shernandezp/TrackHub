@@ -70,7 +70,7 @@ function RetentionSettings() {
   }, [expanded]);
 
   return (
-    <TableAccordion title={t('gpsIntegration.sections.retention')} expanded={expanded} setExpanded={setExpanded}>
+    <TableAccordion sectionKey="gps-retention" title={t('gpsIntegration.sections.retention')} expanded={expanded} setExpanded={setExpanded}>
       {error
         ? <ArgonTypography variant="button" color="error">{error}</ArgonTypography>
         : (

@@ -141,7 +141,7 @@ function ManageServiceClientPermissions() {
 
   return (
     <>
-      <TableAccordion
+      <TableAccordion sectionKey="service-client-permissions"
         title={t('serviceClientPermissions.title')}
         showAddIcon={true}
         expanded={expanded}

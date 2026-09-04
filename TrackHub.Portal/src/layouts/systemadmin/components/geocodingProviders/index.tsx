@@ -68,7 +68,7 @@ function ManageGeocodingProviders() {
 
   return (
     <>
-      <TableAccordion
+      <TableAccordion sectionKey="geocoding-providers"
         title={t('geocodingProviders.title')}
         showAddIcon={true}
         expanded={expanded}

@@ -25,7 +25,7 @@ function ManagePolicies() {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <TableAccordion
+    <TableAccordion sectionKey="system-policies"
         title={t('policy.title')}
         expanded={expanded}
         setExpanded={setExpanded}>

@@ -42,3 +42,9 @@ cert.key
 cert.crt
 
 /.github/copilot
+
+# Playwright end-to-end suite (spec 30)
+/e2e/.env.e2e
+/e2e/.auth
+/playwright-report
+/test-results

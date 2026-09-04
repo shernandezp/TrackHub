@@ -44,7 +44,7 @@ function ManageAccount() {
 
   return (
     <>
-      <TableAccordion
+      <TableAccordion sectionKey="account"
         title={t('account.title')}
         expanded={expanded}
         setExpanded={setExpanded}>

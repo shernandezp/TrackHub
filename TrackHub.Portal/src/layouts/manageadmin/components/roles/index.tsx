@@ -37,7 +37,7 @@ function ManageRoles() {
 
   return (
     <>
-      <TableAccordion
+      <TableAccordion sectionKey="roles"
         title={t('role.title')}
         expanded={expanded}
         setOpen={setOpen}

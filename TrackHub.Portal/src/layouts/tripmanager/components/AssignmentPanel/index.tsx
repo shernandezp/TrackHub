@@ -58,7 +58,7 @@ function AssignmentPanel({
     transporters.find((transporter) => transporter.transporterId === id)?.name ?? '-';
 
   return (
-    <ArgonBox>
+    <ArgonBox data-testid="panel-assignment">
       {assignment ? (
         <ArgonBox display="flex" gap={2} flexWrap="wrap" alignItems="center" mb={1}>
           <ArgonBox>

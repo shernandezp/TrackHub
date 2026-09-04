@@ -107,6 +107,7 @@ function FilterBar({
           label={t('dashboard.poiLayer')}
           size="small"
           clickable
+          aria-pressed={showPois}
           color={showPois ? 'primary' : 'default'}
           variant="outlined"
           onClick={onTogglePois}
@@ -116,6 +117,7 @@ function FilterBar({
           size="small"
           clickable
           disabled={followDisabled}
+          aria-pressed={followMode}
           color={followMode ? 'primary' : 'default'}
           variant="outlined"
           onClick={onToggleFollow}
@@ -124,6 +126,7 @@ function FilterBar({
           label={t('dashboard.trail')}
           size="small"
           clickable
+          aria-pressed={showTrail}
           color={showTrail ? 'primary' : 'default'}
           variant="outlined"
           onClick={onToggleTrail}

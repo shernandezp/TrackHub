@@ -253,7 +253,7 @@ function ManageDeviceAssignments() {
 
   return (
     <>
-    <TableAccordion title={t('gpsIntegration.sections.assignments')} expanded={expanded} setExpanded={setExpanded}>
+    <TableAccordion sectionKey="gps-assignments" title={t('gpsIntegration.sections.assignments')} expanded={expanded} setExpanded={setExpanded}>
       {error
         ? <ArgonBox><ArgonTypography variant="button" color="error">{error}</ArgonTypography></ArgonBox>
         : (

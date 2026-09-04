@@ -18,7 +18,7 @@
          localhost and 127.0.0.1, so ONE certificate serves both nginx on :8443 and
          the Vite dev server on :3000, and one trust import covers both.
       3b. Install that same certificate into TrackHub.Portal as cert.crt/cert.key.
-      4. Copy the OpenIddict signing certificate.pfx that the IIS apps already use,
+      4. Copy the OpenIddict signing certificate.pfx from C:\Certificates,
          so tokens minted in Docker validate the same way everywhere.
       5. Build local/ca-bundle.crt = the stock Debian CA bundle + the trackhub.local
          cert, mounted into every container as SSL_CERT_FILE. That is what lets a
@@ -37,8 +37,8 @@
     this switch; the script prints the exact command when the steps are outstanding.
 
 .PARAMETER PfxSource
-    Path to the existing OpenIddict signing certificate. Defaults to the one the IIS
-    apps use.
+    Path to the existing OpenIddict signing certificate. Defaults to
+    C:\Certificates\certificate.pfx.
 
 .PARAMETER CertFrom
     Reuse an existing trackhub.local certificate instead of generating a new one: the path to
@@ -234,7 +234,7 @@ if (Test-Path $pfxDest) {
     Write-Ok "copied from $PfxSource"
 } else {
     Write-Warn2 "$PfxSource not found. Services validate tokens against this certificate;"
-    Write-Warn2 "copy the one your IIS apps use into certificates\certificate.pfx."
+    Write-Warn2 "copy your OpenIddict signing certificate into certificates\certificate.pfx."
 }
 
 # =============================================================================

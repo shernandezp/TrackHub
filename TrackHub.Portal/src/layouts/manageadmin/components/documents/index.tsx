@@ -159,11 +159,11 @@ function ManageDocuments() {
   return (
     <>
       {/* Document library / global search */}
-      <TableAccordion title={t('documentManagement.library')} expanded={ctx.library} setExpanded={(v) => setCtx({ ...ctx, library: v })}>
+      <TableAccordion sectionKey="documents-library" title={t('documentManagement.library')} expanded={ctx.library} setExpanded={(v) => setCtx({ ...ctx, library: v })}>
         <ArgonBox display="flex" gap={2} mb={1} alignItems="flex-end" flexWrap="wrap">
           <CustomTextField margin="none" name="category" id="filterCategory" label={t('documentManagement.category')} type="text" value={filters.category || ''} onChange={handleFilterChange} />
           <CustomTextField margin="none" name="status" id="filterStatus" label={t('documentManagement.status')} type="text" value={filters.status || ''} onChange={handleFilterChange} />
-          <ArgonButton color="primary" size="small" onClick={loadLibrary}><Icon>search</Icon></ArgonButton>
+          <ArgonButton color="primary" size="small" onClick={loadLibrary} aria-label={t('filters.search')}><Icon>search</Icon></ArgonButton>
         </ArgonBox>
         <Table
           columns={[
@@ -193,7 +193,7 @@ function ManageDocuments() {
       </TableAccordion>
 
       {/* Expiration dashboard */}
-      <TableAccordion title={t('documentManagement.expiring')} expanded={ctx.expiring} setExpanded={(v) => setCtx({ ...ctx, expiring: v })}>
+      <TableAccordion sectionKey="documents-expiring" title={t('documentManagement.expiring')} expanded={ctx.expiring} setExpanded={(v) => setCtx({ ...ctx, expiring: v })}>
         <Table
           columns={[
             { name: 'category', title: t('documentManagement.category'), align: 'left' },
@@ -214,7 +214,7 @@ function ManageDocuments() {
       </TableAccordion>
 
       {/* Document-type configuration */}
-      <TableAccordion title={t('documentManagement.types')} expanded={ctx.types} showAddIcon={enabled} setOpen={setTypeOpen} handleAddClick={handleAddType} setExpanded={(v) => setCtx({ ...ctx, types: v })}>
+      <TableAccordion sectionKey="document-types" title={t('documentManagement.types')} expanded={ctx.types} showAddIcon={enabled} setOpen={setTypeOpen} handleAddClick={handleAddType} setExpanded={(v) => setCtx({ ...ctx, types: v })}>
         <Table
           columns={[
             { name: 'category', title: t('documentManagement.category'), align: 'left' },

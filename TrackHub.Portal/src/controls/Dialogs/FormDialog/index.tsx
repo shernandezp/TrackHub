@@ -47,7 +47,13 @@ const FormDialog = ({
     };
 
     return (
-        <Dialog open={open} onClose={handleClose} maxWidth={maxWidth} fullWidth={fullWidth}>
+        <Dialog
+            open={open}
+            onClose={handleClose}
+            maxWidth={maxWidth}
+            fullWidth={fullWidth}
+            data-testid="dialog-form"
+        >
             <DialogTitle>{title}</DialogTitle>
             <DialogContent>
                 {children}

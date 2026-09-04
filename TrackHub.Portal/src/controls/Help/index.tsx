@@ -114,6 +114,7 @@ function HelpDialog() {
       fullWidth
       fullScreen={fullScreen}
       aria-labelledby="help-dialog-title"
+      data-testid="dialog-help"
     >
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, pr: 1 }}>
         {entries.length > 1 && (

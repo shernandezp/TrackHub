@@ -106,7 +106,7 @@ function ManageAccountFeatures() {
   });
 
   return (
-    <TableAccordion title={t('accountFeatures.title')} expanded={expanded} setExpanded={setExpanded}>
+    <TableAccordion sectionKey="account-features" title={t('accountFeatures.title')} expanded={expanded} setExpanded={setExpanded}>
       <Table
         columns={[
           { name: 'feature', title: t('accountFeatures.feature'), align: 'left' },

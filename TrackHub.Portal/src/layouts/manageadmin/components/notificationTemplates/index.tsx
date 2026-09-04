@@ -159,7 +159,7 @@ function ManageNotificationTemplates() {
 
   return (
     <>
-      <TableAccordion
+      <TableAccordion sectionKey="notification-templates"
         title={t('notificationTemplates.title')}
         showAddIcon={notificationsEnabled}
         expanded={expanded}

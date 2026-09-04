@@ -400,7 +400,7 @@ function ManageTollCatalog() {
 
   return (
     <>
-      <TableAccordion
+      <TableAccordion sectionKey="toll-catalog"
         title={t('tolls.catalog.title')}
         expanded={expanded}
         setExpanded={setExpanded}
@@ -448,12 +448,14 @@ function ManageTollCatalog() {
                 {t('tolls.catalog.emptyStations')}
               </ArgonTypography>
             ) : (
-              <Table
-                columns={stationData.columns}
-                rows={stationData.rows}
-                compact
-                selectedField="name"
-              />
+              <ArgonBox data-testid="toll-stations">
+                <Table
+                  columns={stationData.columns}
+                  rows={stationData.rows}
+                  compact
+                  selectedField="name"
+                />
+              </ArgonBox>
             )}
           </Grid>
 

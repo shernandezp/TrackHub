@@ -63,7 +63,7 @@ function ManageClients() {
 
   return (
     <>
-      <TableAccordion
+      <TableAccordion sectionKey="clients"
         title={t('clients.title')}
         showAddIcon={true}
         expanded={expanded}

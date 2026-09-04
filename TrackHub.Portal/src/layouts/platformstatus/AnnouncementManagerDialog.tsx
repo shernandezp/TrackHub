@@ -169,7 +169,10 @@ const AnnouncementManagerDialog = ({ open, setOpen, announcements }: Announcemen
               multiline
               rows={3}
               value={draft.messageEn}
-              inputProps={{ maxLength: MESSAGE_MAX_LENGTH }}
+              inputProps={{
+                maxLength: MESSAGE_MAX_LENGTH,
+                'aria-label': t('platformStatus.manage.messageEn'),
+              }}
               onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
                 setDraft({ ...draft, messageEn: event.target.value })
               }
@@ -183,7 +186,10 @@ const AnnouncementManagerDialog = ({ open, setOpen, announcements }: Announcemen
               multiline
               rows={3}
               value={draft.messageEs}
-              inputProps={{ maxLength: MESSAGE_MAX_LENGTH }}
+              inputProps={{
+                maxLength: MESSAGE_MAX_LENGTH,
+                'aria-label': t('platformStatus.manage.messageEs'),
+              }}
               onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
                 setDraft({ ...draft, messageEs: event.target.value })
               }
@@ -216,6 +222,7 @@ const AnnouncementManagerDialog = ({ open, setOpen, announcements }: Announcemen
             </ArgonTypography>
             <ArgonInput
               type="datetime-local"
+              inputProps={{ 'aria-label': t('platformStatus.manage.startsAt') }}
               value={draft.startsAt}
               onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
                 setDraft({ ...draft, startsAt: event.target.value })
@@ -228,6 +235,7 @@ const AnnouncementManagerDialog = ({ open, setOpen, announcements }: Announcemen
             </ArgonTypography>
             <ArgonInput
               type="datetime-local"
+              inputProps={{ 'aria-label': t('platformStatus.manage.endsAt') }}
               value={draft.endsAt}
               onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
                 setDraft({ ...draft, endsAt: event.target.value })

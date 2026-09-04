@@ -55,6 +55,7 @@ function Breadcrumbs({ icon, title, route, light = false }: BreadcrumbsProps) {
   return (
     <ArgonBox mr={{ xs: 0, xl: 8 }}>
       <MuiBreadcrumbs
+        aria-label="breadcrumb"
         sx={{
           "& .MuiBreadcrumbs-separator": {
             color: ({ palette: { white, grey } }) => (light ? white.main : grey[600]),

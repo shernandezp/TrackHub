@@ -64,7 +64,7 @@ function ManageAuditTrail() {
   }, [expanded]);
 
   return (
-    <TableAccordion title={t('auditTrail.title')} expanded={expanded} setExpanded={setExpanded}>
+    <TableAccordion sectionKey="audit-trail" title={t('auditTrail.title')} expanded={expanded} setExpanded={setExpanded}>
       <Table
         columns={[
           { name: 'action', title: t('generic.action'), align: 'left' },

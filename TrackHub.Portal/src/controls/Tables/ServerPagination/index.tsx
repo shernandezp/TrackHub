@@ -61,10 +61,22 @@ function ServerPagination({
         {t('generic.showing', { from, to, total: totalCount })}
       </ArgonTypography>
       <ArgonPagination>
-        <ArgonPagination item onClick={() => onPageChange(Math.max(0, page - 1))} disabled={page === 0}>
+        {/* MUI marks its Icon aria-hidden, so these buttons carry no accessible
+            name; the test ids are how an end-to-end test addresses them. */}
+        <ArgonPagination
+          item
+          data-testid="pagination-previous"
+          onClick={() => onPageChange(Math.max(0, page - 1))}
+          disabled={page === 0}
+        >
           <Icon>keyboard_arrow_left</Icon>
         </ArgonPagination>
-        <ArgonPagination item onClick={() => hasNext && onPageChange(page + 1)} disabled={!hasNext}>
+        <ArgonPagination
+          item
+          data-testid="pagination-next"
+          onClick={() => hasNext && onPageChange(page + 1)}
+          disabled={!hasNext}
+        >
           <Icon>keyboard_arrow_right</Icon>
         </ArgonPagination>
       </ArgonPagination>

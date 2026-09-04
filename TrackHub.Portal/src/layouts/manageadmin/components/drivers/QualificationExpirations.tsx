@@ -61,7 +61,7 @@ function QualificationExpirations() {
   }, [expiringQuery.isFetching, setLoading]);
 
   return (
-    <TableAccordion
+    <TableAccordion sectionKey="qualification-expirations"
       title={t('workforce.expirations.title')}
       expanded={expanded}
       setExpanded={setExpanded}

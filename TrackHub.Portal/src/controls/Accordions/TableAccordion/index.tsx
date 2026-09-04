@@ -52,6 +52,13 @@ const summarySx = {
 
 export interface TableAccordionProps {
   title: string;
+  /**
+   * Stable, language-independent identifier for the section, rendered as
+   * `data-testid="section-<key>"`. Screens stack many structurally identical
+   * sections, so an end-to-end test needs a handle that does not move with the
+   * locale or the section order.
+   */
+  sectionKey?: string;
   expanded: boolean;
   showAddIcon?: boolean;
   setOpen?: (open: boolean) => void;
@@ -62,6 +69,7 @@ export interface TableAccordionProps {
 
 const TableAccordion = ({
   title,
+  sectionKey,
   expanded,
   showAddIcon = false,
   setOpen,
@@ -83,6 +91,7 @@ const TableAccordion = ({
       onChange={() => setExpanded(!expanded)}
       slots={{ heading: "div" }}
       sx={accordionSx}
+      data-testid={sectionKey ? `section-${sectionKey}` : undefined}
     >
       <AccordionSummary
         component="div"
@@ -90,6 +99,7 @@ const TableAccordion = ({
         aria-controls={`${title}-content`}
         id={`${title}-header`}
         sx={summarySx}
+        data-testid={sectionKey ? `section-${sectionKey}-header` : undefined}
       >
         <ArgonBox display="flex" alignItems="center" justifyContent="space-between" width="100%">
           <ArgonTypography variant="h6" fontWeight="medium">
@@ -102,6 +112,7 @@ const TableAccordion = ({
                 color="primary"
                 onClick={handleOpen}
                 aria-label={t("generic.add", { defaultValue: "Add" })}
+                data-testid={sectionKey ? `section-${sectionKey}-add` : undefined}
                 sx={{ mr: 1 }}
               >
                 <AddIcon fontSize="small" />

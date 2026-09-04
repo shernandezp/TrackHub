@@ -351,7 +351,10 @@ const OSMGeofenceEditor = ({
   const tile = darkMode ? OSM_DARK_TILE : OSM_LIGHT_TILE;
 
   return (
-    <div className={MAP_CONTAINER_CLASS} style={{ height, width: "100%" }}>
+    <div
+      className={MAP_CONTAINER_CLASS}
+      data-selected-geofence={selectedPolygon ?? ""}
+      style={{ height, width: "100%" }}>
       <UserLocation setUserLocation={setUserLocation} />
       <MapContainer
         center={userLocation}

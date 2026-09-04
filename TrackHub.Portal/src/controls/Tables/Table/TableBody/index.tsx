@@ -151,6 +151,7 @@ const TableBody = ({
           return (
             <TableRow
               key={rowKey}
+              data-testid={`row-${rowKey}`}
               onClick={() => handleRowSelection(rowKey)}
               selected={selected === selectedValue}
               ref={(el) => {
