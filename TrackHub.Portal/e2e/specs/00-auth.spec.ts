@@ -47,16 +47,6 @@ test.describe('authentication', () => {
   });
 
   test('signing off ends the session and returns to the login page', async ({ page, shell }) => {
-    // KNOWN DEFECT (finding: "Sign off does not end the session").
-    // `logoff()` revokes the access token and POSTs to `~/logout`, but that POST
-    // is cross-site (localhost:3000 → trackhub.local:8443), so the SameSite=Lax
-    // AuthorityServer cookie is neither sent with it nor cleared by its
-    // response. The `login()` that follows therefore gets a silent 302 back from
-    // `/authorize` with a fresh code, and the user is returned to the dashboard,
-    // signed in. Declared as an expected failure so the suite stays usable as a
-    // gate AND turns red the moment the behaviour is fixed.
-    test.fail();
-
     await shell.enter();
     await shell.signOff();
 
@@ -69,14 +59,6 @@ test.describe('authentication', () => {
   test('a deep link opened while signed out returns to the requested screen after signing in', async ({
     anonPage,
   }) => {
-    // KNOWN DEFECT (finding: "a deep link is lost across sign-in").
-    // `layouts/authentication/callback` navigates to /dashboard unconditionally,
-    // so the route the user actually asked for is discarded — they sign in and
-    // land somewhere else. Nothing records the requested path across the OAuth
-    // round trip. Declared expected-failure so the suite stays a gate and turns
-    // red as soon as the requested route is honoured.
-    test.fail();
-
     const form = loginForm(anonPage);
     await anonPage.goto('/manageAdmin');
     await expect(form.email).toBeVisible({ timeout: 60_000 });

@@ -449,6 +449,8 @@ services:
       - AuthorityServer__ValidateAudience=true
       - AuthorityServer__ValidateIssuer=true
       - AuthorityServer__ValidateIssuerSigningKey=true
+      - AuthorityServer__ClientId=${REPORTING_CLIENT_ID}
+      - AuthorityServer__ClientSecret=${REPORTING_CLIENT_SECRET}
       - AppSettings__GraphQLIdentityService=${GRAPHQL_IDENTITY_SERVICE}
       - AppSettings__GraphQLRouterService=${GRAPHQL_ROUTER_SERVICE}
       - AppSettings__GraphQLGeofenceService=${GRAPHQL_GEOFENCE_SERVICE}

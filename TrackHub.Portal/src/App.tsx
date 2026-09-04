@@ -82,7 +82,6 @@ import { getAccountContext } from "api/manager/accounts";
 import type { AccountContext, AccountStatus } from "api/manager/accounts";
 import { getCurrentPrincipal } from "api/manager/principals";
 import type { CurrentPrincipal } from "api/manager/principals";
-import { notifyApiError } from "api/core/errors";
 import { isDarkStyle, isMiniSidenav, writeUiPreferences } from "utils/uiPreferences";
 import { useTranslation } from 'react-i18next';
 import ErrorBoundary from "components/ErrorBoundary";
@@ -110,12 +109,10 @@ export default function App() {
   const { pathname } = useLocation();
   const { i18n } = useTranslation();
 
-  // Account settings save is fire-and-forget from the Configurator; keep the
-  // legacy toast-on-failure semantics (the new api function throws).
   const saveAccountSettings = (
     accountId: string,
     settings: Omit<AccountSettingsDtoInput, 'accountId'>
-  ) => updateAccountSettings(accountId, settings).catch(notifyApiError);
+  ) => updateAccountSettings(accountId, settings);
 
   const [loading, setLoading] = useState(false);
   const [userIsAdmin, setUserIsAdmin] = useState(true);

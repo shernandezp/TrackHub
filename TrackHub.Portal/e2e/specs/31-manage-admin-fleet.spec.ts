@@ -37,13 +37,6 @@ async function selectFirstMatching(
 
 test.describe('account management — fleet & tracking', () => {
   test('a manager can add a unit from Account Management', async ({ page, shell, t }) => {
-    // KNOWN DEFECT (finding: "Units cannot be created from the portal"). The
-    // Units section renders no Add affordance — `TableAccordion` is mounted
-    // without `showAddIcon`/`handleAddClick` — even though the create mutation,
-    // the query hook (`useCreateTransporter`) and the create branch of
-    // `onSave` all exist. A fleet cannot get its first vehicle in the UI.
-    test.fail();
-
     const units = new CrudFlow(page, 'transporters', t);
     await shell.open('manageAdmin');
     await units.open();

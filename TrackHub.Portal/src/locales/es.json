@@ -1016,7 +1016,11 @@
     "storingInterval": "Intervalo de Almacenamiento (Segundos)",
     "refreshMap": "Actualizar Mapa",
     "refreshMapInterval": "Intervalo de Actualización de Mapa (Segundos)",
-    "saveMessage": "Algunas configuraciones pueden requerir recargar la página para que los cambios surtan efecto"
+    "saveMessage": "Algunas configuraciones pueden requerir recargar la página para que los cambios surtan efecto",
+    "validation": {
+      "onlineInterval": "El intervalo en línea debe ser de al menos {{min}} minutos",
+      "refreshMapInterval": "El intervalo de actualización de mapa debe ser de al menos {{min}} segundos"
+    }
   },
   "screen": {
     "account": "Cuenta",

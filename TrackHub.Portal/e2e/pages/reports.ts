@@ -16,6 +16,8 @@ export interface CatalogReport {
   category: string;
   supportsPdf: boolean;
   requiredFeatureKey?: string | null;
+  /** The row's own sentence, which names the report when the bundle has no key. */
+  description?: string | null;
   /** The catalog row's filter definitions, seeded as a JSON string. */
   filters?: string | null;
 }
@@ -30,24 +32,19 @@ export interface ReportFilterDefinition {
 export const filtersOf = (report: CatalogReport): ReportFilterDefinition[] =>
   report.filters ? (JSON.parse(report.filters) as ReportFilterDefinition[]) : [];
 
-/**
- * What the catalog row actually READS on screen. i18next falls back to the raw
- * key when a report has no `reportList` entry, and 41 of the 62 seeded reports
- * currently have none (reported as a finding, pinned by its own test).
- */
-export const reportLabel = (t: (key: string) => string, code: string): string => {
-  const key = `reportList.${toCamelCase(code)}`;
+/** What the catalog row reads on screen (mirrors `utils/reportUtils.reportLabels`). */
+export const reportLabel = (t: (key: string) => string, report: CatalogReport): string => {
   try {
-    return t(key);
+    return t(`reportList.${toCamelCase(report.code)}`);
   } catch {
-    return key;
+    return report.description || report.code;
   }
 };
 
 export const catalogOf = (api: { gql: <T>(b: 'manager', q: string) => Promise<T> }) =>
   api.gql<{ reports: CatalogReport[] }>(
     'manager',
-    'query { reports { code category supportsPdf requiredFeatureKey filters } }'
+    'query { reports { code category description supportsPdf requiredFeatureKey filters } }'
   );
 
 /** The card holding the selected report's filter controls. */
@@ -61,5 +58,5 @@ export async function chooseReport(
 ): Promise<void> {
   const section = new Section(page, `report-category-${report.category.toLowerCase()}`, t);
   await section.expand();
-  await page.getByText(reportLabel(t, report.code), { exact: true }).first().click();
+  await page.getByText(reportLabel(t, report), { exact: true }).first().click();
 }

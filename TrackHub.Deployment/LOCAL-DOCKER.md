@@ -137,15 +137,41 @@ Regenerate:
 .\scripts\local\Start-TrackHubLocal.ps1 restart
 ```
 
+### Seeding
+
+`db-init` runs locally, the same way it does in a deployment: ClientSeeder, then the
+Security and Manager DBInitializers. All three are **additive** - create-or-update for the
+clients listed in `clients.json`, add-if-missing for resources, roles and service-client
+grants, upsert for the report catalog. None of them enumerate or delete, so seed rows this
+repo does not know about (the `manager_client` / `telemetry_client` family) are left
+alone. Change a seed - a client, an RBAC grant, a catalog row - and it reaches the local
+databases by re-running the seeder, with no hand-written SQL.
+
+Two things make that safe, and both matter:
+
+* **It seeds from `local/clients.json`, which the setup script copies from
+  `TrackHub.AuthorityServer/src/ClientSeeder/clients.json`** - the committed dev seed,
+  **not** `config/clients.json.example`. The example is a production template full of
+  `<<GENERATE_A_SECURE_SECRET>>` and `<<YOUR_DOMAIN>>`, and the seeder *updates* a client
+  that already exists: seeding from it rewrites every service-client secret and the portal's
+  redirect URIs with those literal strings, and the whole stack 401s. That is the failure
+  this file used to describe as "the seeder clobbered `manager_client`".
+* **Step 4 of `init-databases.sh` - the one-time User/Account ID sync - is destructive**
+  and is the only step that is. It is guarded by `/app/flags/db-initialized` on the
+  `db-init-flag` volume, so it runs at most once per environment. On an already-seeded
+  local database it must never run; create the flag before the first seeder run on a clone
+  whose databases were seeded some other way:
+
+  ```powershell
+  docker run --rm -v trackhub-local_db-init-flag:/flags alpine touch /flags/db-initialized
+  ```
+
+The client secrets in `.env.local` must match `local/clients.json`. They do: both are
+committed with working dev values, the same way `appsettings.json` carries the local DB
+password. There is no template to fill in - clone and run.
+
 ### What the setup deliberately does NOT do
 
-* **It does not re-seed the database.** The local `TrackHub` / `TrackHubSecurity`
-  databases are already seeded, and re-running the seeder has clobbered `manager_client`
-  before. `db-init` is replaced by `/bin/true` in the local overlay.
-  The client secrets in `.env.local` must therefore match what is already in the
-  database. They do: `.env.local` is committed with working values, the same way
-  `appsettings.json` carries the local DB password and client secrets. There is no
-  template to fill in - clone and run.
 * **It does not start Postgres in a container.** The native Postgres 14 service keeps its
   data, and it is already reachable from Docker (`listen_addresses = '*'` plus a
   `host all all 172.16.0.0/12` rule in `pg_hba.conf`).

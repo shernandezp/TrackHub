@@ -20,6 +20,7 @@ import { useNavigate } from 'react-router';
 import { exchangeAuthorizationCode } from "services/auth";
 import type { TokenResponse } from "services/auth";
 import { useAuth } from "AuthContext";
+import { takeReturnPath } from "utils/returnPath";
 
 // Helpers for the stale-callback recovery below. A browser that blocks
 // sessionStorage (strict privacy mode) can never pass the state check;
@@ -99,8 +100,7 @@ const CallbackPage = () => {
         resetAuthError(); // Reset error state on successful auth
         sessionStorage.removeItem('auth_error');
         sessionStorage.removeItem(RESTART_COUNT_KEY); // successful sign-in resets the stale-callback restart budget
-        // Redirect to dashboard
-        navigate("/dashboard", { replace: true });
+        navigate(takeReturnPath() ?? "/dashboard", { replace: true });
       })
       .catch((error: unknown) => {
         if (process.env.NODE_ENV !== 'production') {

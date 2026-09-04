@@ -29,6 +29,7 @@ public readonly record struct UpdateTripCommand(Guid TripId, TripDto Trip) : IRe
 public sealed class UpdateTripCommandHandler(
     ITripWriter writer,
     ITripReader reader,
+    ITripEventWriter tripEventWriter,
     IUserReader userReader,
     IUser user,
     IManagerValidationClient managerValidationClient,
@@ -66,6 +67,12 @@ public sealed class UpdateTripCommandHandler(
         }
 
         await writer.UpdateTripAsync(request.TripId, request.Trip, caller.AccountId, cancellationToken);
+
+        var occurredAt = DateTimeOffset.UtcNow;
+        await tripEventWriter.AppendAsync(
+            caller.AccountId, request.TripId, null, TripEventTypes.TripUpdated,
+            occurredAt, TripEventSources.Portal, null,
+            $"trip-update:{request.TripId:N}:{occurredAt.UtcTicks}", cancellationToken);
     }
 }
 

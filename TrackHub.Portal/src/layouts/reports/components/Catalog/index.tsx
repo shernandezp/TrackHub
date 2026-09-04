@@ -22,7 +22,7 @@ import ArgonBadge from "components/ArgonBadge";
 import ArgonTypography from "components/ArgonTypography";
 import TableAccordion from "controls/Accordions/TableAccordion";
 import type { Report } from "api/manager/reports";
-import { toCamelCase } from 'utils/stringUtils';
+import { reportLabels } from 'utils/reportUtils';
 
 interface ReportCatalogProps {
   reports: Report[];
@@ -54,8 +54,7 @@ function ReportRow({
   onSelect: (report: Report) => void;
 }) {
   const { t } = useTranslation();
-  const nameKey = `reportList.${toCamelCase(report.code)}` as 'reportList.liveReport';
-  const descriptionKey = `reportDescriptions.${toCamelCase(report.code)}` as 'reportDescriptions.liveReport';
+  const { name, description } = reportLabels(t, report);
 
   return (
     <ArgonBox
@@ -76,10 +75,10 @@ function ReportRow({
       <ArgonBox display="flex" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={1}>
         <ArgonBox>
           <ArgonTypography variant="button" fontWeight="medium">
-            {t(nameKey)}
+            {name}
           </ArgonTypography>
           <ArgonTypography variant="caption" color="secondary" display="block">
-            {t(descriptionKey)}
+            {description}
           </ArgonTypography>
         </ArgonBox>
         <ArgonBox display="flex" gap={0.5}>

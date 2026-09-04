@@ -127,14 +127,6 @@ test.describe('shell', () => {
     page,
     t,
   }) => {
-    // KNOWN DEFECT (finding: "Configurator Save silently discards every numeric
-    // change"). The numeric inputs keep their raw string value, so the mutation
-    // sends `refreshMapInterval: "45"` for an `Int!` and the Manager answers
-    // HTTP 400 "Int cannot coerce the given value ... String". The alert that
-    // claims success is raised BEFORE the fire-and-forget save resolves, so the
-    // user is told it worked. Expected-failure so the suite stays a usable gate.
-    test.fail();
-
     // The Save handler calls window.alert; a dialog left unhandled blocks the page.
     const alerts: string[] = [];
     page.on('dialog', (dialog) => {
@@ -148,11 +140,13 @@ test.describe('shell', () => {
 
     const interval = page.getByRole('spinbutton', { name: t('settings.refreshMapInterval') });
     const original = await interval.inputValue();
-    const changed = original === '45' ? '50' : '45';
+    const changed = original === '90' ? '120' : '90';
 
     await interval.fill(changed);
+    const saved = settingsSaved(page);
     await page.getByRole('button', { name: t('generic.save') }).last().click();
     await expect.poll(() => alerts).toContain(t('settings.saveMessage'));
+    await saved;
 
     await shell.reloadTo('dashboard');
     await shell.configuratorButton.click();
@@ -160,8 +154,38 @@ test.describe('shell', () => {
 
     // Leave the account setting as it was found.
     await interval.fill(original);
+    const restored = settingsSaved(page);
     await page.getByRole('button', { name: t('generic.save') }).last().click();
     await expect.poll(() => alerts.length).toBeGreaterThan(1);
+    await restored;
+  });
+
+  test('the configurator refuses a refresh interval below the platform minimum', async ({
+    shell,
+    page,
+    t,
+  }) => {
+    const alerts: string[] = [];
+    page.on('dialog', (dialog) => {
+      alerts.push(dialog.message());
+      void dialog.accept();
+    });
+
+    await shell.enter();
+    await shell.configuratorButton.click();
+    await expect(shell.configuratorTitle).toBeInViewport();
+
+    const interval = page.getByRole('spinbutton', { name: t('settings.refreshMapInterval') });
+    const original = await interval.inputValue();
+    await interval.fill('45');
+    await page.getByRole('button', { name: t('generic.save') }).last().click();
+
+    await expect(
+      page.getByText(t('settings.validation.refreshMapInterval', { min: 60 }))
+    ).toBeVisible();
+    expect(alerts).toEqual([]);
+
+    await interval.fill(original);
   });
 
   test('every screen names itself in the breadcrumb it navigated to', async ({ shell }) => {
@@ -207,8 +231,6 @@ test.describe('shell', () => {
     const saved = settingsSaved(page);
     await page.getByRole('button', { name: t('generic.save') }).last().click();
     await expect.poll(() => alerts).toContain(t('settings.saveMessage'));
-    // `onSaveSettings` alerts BEFORE the mutation resolves and never awaits it,
-    // so reloading on the alert alone would cancel the request in flight.
     await saved;
 
     await shell.reloadTo('dashboard');

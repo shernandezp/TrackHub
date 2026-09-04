@@ -256,15 +256,19 @@ if ((Test-Path $BundlePath) -and -not $Force) {
 }
 
 # =============================================================================
-# 6. clients.json (mount target only - db-init is disabled locally)
+# 6. clients.json (db-init seeds from this file)
 # =============================================================================
+# The committed dev seed, NOT config/clients.json.example: the example carries
+# <<GENERATE_A_SECURE_SECRET>> / <<YOUR_DOMAIN>> placeholders, and the seeder
+# updates an existing client from whatever it is given.
 Write-Step "local/clients.json"
 $clientsPath = Join-Path $LocalDir 'clients.json'
-if (Test-Path $clientsPath) {
+$devClients = Join-Path $ProjectDir '..\TrackHub.AuthorityServer\src\ClientSeeder\clients.json'
+if ((Test-Path $clientsPath) -and -not $Force) {
     Write-Skip "already exists"
 } else {
-    Copy-Item (Join-Path $ProjectDir 'config\clients.json.example') $clientsPath
-    Write-Ok "created from config/clients.json.example"
+    Copy-Item $devClients $clientsPath -Force
+    Write-Ok "created from TrackHub.AuthorityServer/src/ClientSeeder/clients.json"
 }
 
 # =============================================================================

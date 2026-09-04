@@ -21,7 +21,7 @@
     {
       "clientId": "web_client",
       "uri": "https://<<YOUR_DOMAIN>>/authentication/callback",
-      "postLogoutUri": "https://<<YOUR_DOMAIN>>/authentication/callback",
+      "postLogoutUri": "https://<<YOUR_DOMAIN>>/",
       "scope": "web_scope"
     },
     {
@@ -60,6 +60,11 @@
     },
     {
       "clientId": "trip_client",
+      "clientSecret": "<<GENERATE_A_SECURE_SECRET>>",
+      "scope": "service_scope"
+    },
+    {
+      "clientId": "reporting_client",
       "clientSecret": "<<GENERATE_A_SECURE_SECRET>>",
       "scope": "service_scope"
     }

@@ -478,11 +478,7 @@ test.describe('system admin', () => {
       .click();
     await expect(permissions.section.row(resource)).toHaveCount(0, { timeout: 45_000 });
 
-    // KNOWN DEFECT (finding: "the service-client permission delete confirmation
-    // never closes"). `handleDelete` deletes the row but never calls
-    // setConfirmOpen(false), so the dialog stays on screen over an empty result.
-    await expect(permissions.confirm.root).toBeVisible();
-    await page.keyboard.press('Escape');
+    await expect(permissions.confirm.root).toBeHidden();
   });
 
   test('the account features section lists the platform entitlements', async ({

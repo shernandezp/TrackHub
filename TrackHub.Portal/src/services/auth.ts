@@ -120,24 +120,15 @@ export async function revokeAccessToken(accessToken: string | null): Promise<voi
 }
 
 /**
- * Ends the server-side session (cookie-based). Failures are logged
- * (non-production) and swallowed.
+ * Ends the AuthorityServer session (RP-initiated logout) by navigating the
+ * browser to the end-session endpoint.
+ *
+ * It has to be a navigation: the session cookie is `SameSite=Lax` and does not
+ * travel with a cross-site background request.
  */
-export async function logout(): Promise<void> {
-  try {
-    await axios.post(
-      OAUTH_ENDPOINTS.logout,
-      {},
-      {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        withCredentials: true,
-      }
-    );
-  } catch (error) {
-    if (process.env.NODE_ENV !== 'production') {
-      console.error('Error during logout:', error instanceof Error ? error.message : error);
-    }
-  }
+export function logout(): void {
+  const params = new URLSearchParams({
+    post_logout_redirect_uri: OAUTH_ENDPOINTS.postLogoutRedirect,
+  });
+  window.location.assign(`${OAUTH_ENDPOINTS.logout}?${params.toString()}`);
 }

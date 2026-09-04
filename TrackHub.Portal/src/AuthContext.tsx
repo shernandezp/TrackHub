@@ -19,6 +19,7 @@ import { generateCodeVerifier, generateCodeChallenge } from 'utils/authutils';
 import { refreshAccessToken, revokeAccessToken, logout } from 'services/auth';
 import { tokenStore } from 'api/core/tokenStore';
 import { OAUTH_ENDPOINTS } from 'api/core/endpoints';
+import { rememberReturnPath } from 'utils/returnPath';
 
 export interface AuthContextValue {
   isAuthenticated: boolean;
@@ -104,6 +105,9 @@ export const AuthProvider = ({ children, navigate }: AuthProviderProps) => {
       loginAttemptsRef.current.count += 1;
       loginAttemptsRef.current.lastAttempt = now;
 
+      const { pathname, search, hash } = window.location;
+      rememberReturnPath(`${pathname}${search}${hash}`);
+
       if (!codeVerifierRef.current) {
         codeVerifierRef.current = generateCodeVerifier();
         sessionStorage.setItem('code_verifier', codeVerifierRef.current);
@@ -132,14 +136,12 @@ export const AuthProvider = ({ children, navigate }: AuthProviderProps) => {
 
   const logoff = async (): Promise<void> => {
     await revokeAccessToken(accessToken);
-    await logout();
 
     // Clear any stored tokens or user information
     setAccessToken('');
     setRefreshToken('');
 
-    // Redirect to the login page
-    login();
+    logout();
   };
 
   const handleRefreshToken = async (): Promise<string | undefined> => {

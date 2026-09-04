@@ -136,26 +136,19 @@ describe('revokeAccessToken', () => {
 });
 
 describe('logout', () => {
-  test('sends logout request with credentials', async () => {
-    vi.mocked(axios.post).mockResolvedValue({});
+  test('navigates to the end-session endpoint so the session cookie travels with the request', () => {
+    const assign = vi.fn();
+    vi.spyOn(window, 'location', 'get').mockReturnValue({
+      ...window.location,
+      origin: 'https://app.example.com',
+      assign,
+    } as unknown as Location);
 
-    await logout();
+    logout();
 
-    expect(axios.post).toHaveBeenCalledWith(
-      MOCK_LOGOUT_ENDPOINT,
-      {},
-      expect.objectContaining({
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        withCredentials: true,
-      })
+    expect(axios.post).not.toHaveBeenCalled();
+    expect(assign).toHaveBeenCalledWith(
+      `${MOCK_LOGOUT_ENDPOINT}?post_logout_redirect_uri=${encodeURIComponent('https://app.example.com/')}`
     );
-  });
-
-  test('does not throw on failure, logs error instead', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    vi.mocked(axios.post).mockRejectedValue(new Error('Logout failed'));
-
-    await expect(logout()).resolves.not.toThrow();
-    expect(consoleSpy).toHaveBeenCalled();
   });
 });

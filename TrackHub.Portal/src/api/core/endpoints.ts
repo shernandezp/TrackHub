@@ -147,6 +147,10 @@ export const OAUTH_ENDPOINTS = {
   get logout() {
     return process.env.REACT_APP_LOGOUT_ENDPOINT;
   },
+  /** Must match the `web_client` post-logout redirect URI in `clients.json`. */
+  get postLogoutRedirect() {
+    return `${window.location.origin}/`;
+  },
   get callback() {
     return process.env.REACT_APP_CALLBACK_ENDPOINT;
   },

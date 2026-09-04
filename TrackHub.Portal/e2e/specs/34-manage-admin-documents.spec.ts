@@ -195,16 +195,6 @@ test.describe('account management — documents & sharing', () => {
     api,
     cleanup,
   }) => {
-    // KNOWN DEFECT (finding: "the document panel is never given its document
-    // types"). `DocumentPanel` takes a `categories` prop that defaults to `[]`,
-    // and `DriverQualifications` — the only screen that mounts it — passes
-    // none. So `DocumentUploadDialog` always takes its `categoryOptions.length
-    // === 0` branch and renders a free-text Type field instead of the account's
-    // configured types. The Document Types section, and the Required /
-    // Tracks Expiration flags on each type, therefore govern nothing: a
-    // document can be filed under any category a user cares to type.
-    test.fail();
-
     const driverName = uniqueName('driver');
     const driverId = await api.createDriver(driverName);
     cleanup.add(`driver ${driverName}`, () => api.deactivateDriver(driverId));

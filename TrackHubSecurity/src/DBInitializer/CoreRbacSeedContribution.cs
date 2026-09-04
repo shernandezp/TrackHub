@@ -199,7 +199,7 @@ internal sealed class CoreRbacSeedContribution : IRbacSeedContribution
         };
 
     public IReadOnlyList<string> ServiceClientNames { get; } =
-        ["router_client", "syncworker_client", "security_client", "geofence_client", "trip_client"];
+        ["router_client", "syncworker_client", "security_client", "geofence_client", "trip_client", "reporting_client"];
 
     public IReadOnlyList<(string[] Clients, (string Resource, string Action)[] Grants)> ServiceClientGrants { get; } =
     [
@@ -281,6 +281,12 @@ internal sealed class CoreRbacSeedContribution : IRbacSeedContribution
         (["router_client", "syncworker_client"],
         [
             (Common.Domain.Constants.Resources.TripTracking, Actions.Custom),
+        ]),
+        // The reporting_client reads the account's time zone from Manager; every other Reporting
+        // feed travels on the requesting user's token.
+        (["reporting_client"],
+        [
+            (Common.Domain.Constants.Resources.AccountFeatures, Actions.Read),
         ]),
     ];
 }
