@@ -269,7 +269,7 @@ function ManageSynchronizedDevices() {
 
   return (
     <>
-    <TableAccordion
+    <TableAccordion sectionKey="gps-devices"
       title={t('gpsIntegration.sections.devices')}
       expanded={expanded}
       setExpanded={setExpanded}

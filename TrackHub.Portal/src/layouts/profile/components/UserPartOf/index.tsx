@@ -64,7 +64,7 @@ function UserPartOf({ user }: UserPartOfProps) {
   }, [user]);
 
   return (
-    <Card sx={{ height: "100%" }}>
+    <Card data-testid="card-user-part-of" sx={{ height: "100%" }}>
       <ArgonBox pt={2} px={2}>
         <ArgonTypography variant="h6" fontWeight="medium" textTransform="capitalize">
           {t('role.title')}

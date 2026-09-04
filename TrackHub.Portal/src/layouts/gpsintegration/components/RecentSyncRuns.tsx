@@ -119,7 +119,7 @@ function RecentSyncRuns() {
   }));
 
   return (
-    <TableAccordion title={t('gpsIntegration.sections.recentSyncRuns')} expanded={expanded} setExpanded={setExpanded}>
+    <TableAccordion sectionKey="gps-sync-runs" title={t('gpsIntegration.sections.recentSyncRuns')} expanded={expanded} setExpanded={setExpanded}>
       {error
         ? <ArgonBox><ArgonTypography variant="button" color="error">{error}</ArgonTypography></ArgonBox>
         : runs.length === 0 && syncRunsQuery.isFetched

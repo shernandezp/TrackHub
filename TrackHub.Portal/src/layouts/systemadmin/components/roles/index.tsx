@@ -25,7 +25,7 @@ function ManageRoles() {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <TableAccordion
+    <TableAccordion sectionKey="system-roles"
         title={t('role.title')}
         expanded={expanded}
         setExpanded={setExpanded}>

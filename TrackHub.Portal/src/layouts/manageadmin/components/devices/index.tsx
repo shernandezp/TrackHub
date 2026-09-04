@@ -47,7 +47,7 @@ function ManageDevices() {
 
   return (
     <>
-      <TableAccordion
+      <TableAccordion sectionKey="devices"
         title={t('device.title')}
         expanded={expanded}
         setExpanded={setExpanded}>

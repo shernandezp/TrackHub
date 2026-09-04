@@ -1,0 +1,15 @@
+{
+  // The end-to-end suite lives OUTSIDE src/ (the Vitest include and the ESLint
+  // TypeScript-only guard both scope to src/), so it gets its own project. Run
+  // by `npm run typecheck`, which checks the portal and this suite together.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "noEmit": true,
+    // e2e imports resolve relatively; the src/* fallback the portal uses would
+    // only mask a typo in a fixture path.
+    "paths": {}
+  },
+  "include": ["e2e", "playwright.config.ts"],
+  "exclude": ["node_modules", "build"]
+}

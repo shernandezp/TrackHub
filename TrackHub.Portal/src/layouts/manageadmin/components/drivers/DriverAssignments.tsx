@@ -271,7 +271,7 @@ function ManageDriverAssignments() {
 
   return (
     <>
-      <TableAccordion
+      <TableAccordion sectionKey="driver-assignments"
         title={t('workforce.assignments.title')}
         expanded={expanded}
         setExpanded={setExpanded}

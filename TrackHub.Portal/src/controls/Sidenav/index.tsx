@@ -132,7 +132,7 @@ function Sidenav({
           );
         } else {
           returnValue = (
-            <NavLink to={route!} key={key}>
+            <NavLink to={route!} key={key} data-testid={`nav-${key}`}>
               <SidenavItem name={t(name as never)} icon={icon} active={key === itemName} />
             </NavLink>
           );

@@ -162,22 +162,22 @@ function DocumentPanel({ accountId = null, ownerEntityType, ownerEntityId = null
     action: (
       <ArgonBox display="flex" justifyContent="center" flexWrap="wrap">
         {doc.downloadUrl && (
-          <ArgonButton variant="text" color="dark" onClick={() => handleDownload(doc)}>
+          <ArgonButton variant="text" color="dark" aria-label={t('documentManagement.download')} onClick={() => handleDownload(doc)}>
             <Icon>download</Icon>
           </ArgonButton>
         )}
         {canManage && (
           <>
-            <ArgonButton variant="text" color="info" onClick={() => { setActive(doc); setReplaceOpen(true); }}>
+            <ArgonButton variant="text" color="info" aria-label={t('documentManagement.replace')} onClick={() => { setActive(doc); setReplaceOpen(true); }}>
               <Icon>upload_file</Icon>
             </ArgonButton>
-            <ArgonButton variant="text" color="secondary" onClick={() => { setActive(doc); setShareOpen(true); }}>
+            <ArgonButton variant="text" color="secondary" aria-label={t('documentManagement.share')} onClick={() => { setActive(doc); setShareOpen(true); }}>
               <Icon>share</Icon>
             </ArgonButton>
-            <ArgonButton variant="text" color="warning" onClick={() => { setActive(doc); setConfirm({ open: true, kind: 'void' }); }}>
+            <ArgonButton variant="text" color="warning" aria-label={t('documentManagement.void')} onClick={() => { setActive(doc); setConfirm({ open: true, kind: 'void' }); }}>
               <Icon>block</Icon>
             </ArgonButton>
-            <ArgonButton variant="text" color="error" onClick={() => { setActive(doc); setConfirm({ open: true, kind: 'delete' }); }}>
+            <ArgonButton variant="text" color="error" aria-label={t('documentManagement.delete')} onClick={() => { setActive(doc); setConfirm({ open: true, kind: 'delete' }); }}>
               <Icon>delete</Icon>
             </ArgonButton>
           </>

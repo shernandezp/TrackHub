@@ -145,7 +145,7 @@ function ManageNotificationDeliveries() {
   ];
 
   return (
-    <TableAccordion
+    <TableAccordion sectionKey="notification-deliveries"
       title={t('notificationDeliveries.title')}
       expanded={expanded}
       setExpanded={setExpanded}>

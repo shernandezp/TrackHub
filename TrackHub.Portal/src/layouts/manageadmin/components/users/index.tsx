@@ -99,7 +99,7 @@ function ManageUsers() {
 
   return (
     <>
-      <TableAccordion
+      <TableAccordion sectionKey="users"
         title={t('user.title')}
         showAddIcon={true}
         expanded={expanded}

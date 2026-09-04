@@ -146,7 +146,7 @@ function ManagePublicLinks() {
 
   return (
     <>
-      <TableAccordion
+      <TableAccordion sectionKey="public-links"
         title={t('publicLinks.title')}
         showAddIcon={createEnabled}
         expanded={expanded}

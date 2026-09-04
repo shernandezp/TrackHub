@@ -49,7 +49,7 @@ function ManageTransporterTypes() {
 
   return (
     <>
-      <TableAccordion
+      <TableAccordion sectionKey="transporter-types"
         title={t('transporterType.title')}
         expanded={expanded}
         setOpen={setOpen}

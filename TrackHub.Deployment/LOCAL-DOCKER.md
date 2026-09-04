@@ -1,6 +1,6 @@
 # TrackHub on local Docker Desktop (Windows)
 
-Runs the backend services in Docker instead of IIS, while the portal keeps running on the
+Runs the backend services in Docker, while the portal keeps running on the
 Vite dev server and any single service can be pulled out into the Visual Studio debugger.
 
 **IIS is not touched.** It keeps ports 80 and 443 for its other sites; the TrackHub proxy
@@ -88,7 +88,7 @@ cd TrackHub\TrackHub.Deployment
 ```
 
 That generates the TLS certificate, installs it into the portal, copies the OpenIddict
-signing certificate the IIS apps already use, builds the container CA bundle, and generates
+signing certificate from `C:\Certificates\certificate.pfx`, builds the container CA bundle, and generates
 `local/generated/appsettings.*.json`.
 
 It then prints a command to finish in an **elevated** shell (hosts entry + trusting the
@@ -126,8 +126,8 @@ cannot serve `trackhub.local`. The script warns and keeps any `cert.crt` that di
 the generated one; `-Force` replaces it.
 
 **`certificate.pfx` — OpenIddict token signing, not TLS.** Copied from
-`C:\Certificates\certificate.pfx`, the same file the IIS apps use. Docker and IIS must
-share it, or tokens minted by one are rejected by the other with a bare 401.
+`C:\Certificates\certificate.pfx`. Every process that mints or validates tokens on this
+machine must use the same file, or tokens minted by one are rejected by another with a bare 401.
 
 Regenerate:
 
@@ -170,8 +170,8 @@ npm start                      # https://localhost:3000
 ```
 
 The portal picks up `TrackHub.Portal/.env.local`, which points every endpoint at
-`https://trackhub.local:8443/...`. The committed `.env` still points at IIS, so
-**deleting `.env.local` switches the portal back to the IIS stack** with no other change.
+`https://trackhub.local:8443/...`. The committed `.env` points at the same stack, so
+`.env.local` is only needed for machine-specific overrides.
 
 > The Vite dev server only serves HTTPS when `cert.crt` and `cert.key` exist in
 > `TrackHub.Portal/`. Without them it silently falls back to HTTP and the OAuth callback

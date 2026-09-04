@@ -65,7 +65,7 @@ function ProviderStatusBreakdown({ items }: ProviderStatusBreakdownProps) {
   }));
 
   return (
-    <TableAccordion
+    <TableAccordion sectionKey="gps-provider-status"
       title={`${t('gpsIntegration.dashboard.deviceCountsByProviderStatus')} (${rows.length})`}
       expanded={expanded}
       setExpanded={setExpanded}

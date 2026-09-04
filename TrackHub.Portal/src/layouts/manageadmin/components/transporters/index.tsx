@@ -65,7 +65,7 @@ function ManageTransporters() {
 
   return (
     <>
-      <TableAccordion
+      <TableAccordion sectionKey="transporters"
         title={t('transporter.title')}
         expanded={expanded}
         setOpen={setOpen}

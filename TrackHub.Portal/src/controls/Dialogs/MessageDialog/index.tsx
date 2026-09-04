@@ -37,6 +37,7 @@ function MessageDialog({ title, message, open, setOpen }: MessageDialogProps) {
       onClose={handleClose}
       aria-labelledby="alert-dialog-title"
       aria-describedby="alert-dialog-description"
+      data-testid="dialog-message"
     >
       <DialogTitle id="alert-dialog-title">{title}</DialogTitle>
       <DialogContent>

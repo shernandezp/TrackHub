@@ -147,7 +147,7 @@ function ManageAccountSupportGrants() {
 
   return (
     <>
-      <TableAccordion
+      <TableAccordion sectionKey="support-grants"
         title={t('supportGrants.title')}
         showAddIcon={true}
         expanded={expanded}

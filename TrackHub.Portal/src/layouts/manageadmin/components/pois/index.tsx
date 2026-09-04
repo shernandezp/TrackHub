@@ -89,7 +89,7 @@ function ManagePois() {
 
   return (
     <>
-      <TableAccordion
+      <TableAccordion sectionKey="pois"
         title={t('poi.title')}
         showAddIcon={true}
         expanded={expanded}

@@ -87,7 +87,7 @@ function ManageGroups() {
 
   return (
     <>
-      <TableAccordion
+      <TableAccordion sectionKey="groups"
         title={t('group.title')}
         showAddIcon={true}
         expanded={expanded}

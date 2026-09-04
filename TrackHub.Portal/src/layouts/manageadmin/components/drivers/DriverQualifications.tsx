@@ -174,7 +174,7 @@ function ManageDriverQualifications() {
 
   return (
     <>
-      <TableAccordion
+      <TableAccordion sectionKey="driver-qualifications"
         title={t('workforce.qualifications.title')}
         expanded={expanded}
         showAddIcon={hasDriver}

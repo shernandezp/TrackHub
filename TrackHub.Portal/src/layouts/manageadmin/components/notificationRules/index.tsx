@@ -152,7 +152,7 @@ function ManageNotificationRules() {
 
   return (
     <>
-      <TableAccordion
+      <TableAccordion sectionKey="notification-rules"
         title={t('notificationRules.title')}
         showAddIcon={notificationsEnabled}
         expanded={expanded}

@@ -13,7 +13,19 @@ import globals from "globals";
 // is the gate for TypeScript files. Re-check on each typescript-eslint release.
 export default [
   {
-    ignores: ["build/**", "node_modules/**", "coverage/**", "public/**", "**/*.ts", "**/*.tsx"],
+    // Playwright writes a bundled HTML report and per-test traces; linting the
+    // vendored JS inside them takes minutes and reports nothing about this code.
+    ignores: [
+      "build/**",
+      "node_modules/**",
+      "coverage/**",
+      "public/**",
+      "playwright-report/**",
+      "test-results/**",
+      "e2e/.auth/**",
+      "**/*.ts",
+      "**/*.tsx",
+    ],
   },
   react.configs.flat.recommended,
   prettierRecommended,

@@ -81,7 +81,7 @@ const DynamicTableDialog = ({
     };
 
     return (
-        <Dialog open={open} onClose={onClose}>
+        <Dialog open={open} onClose={onClose} data-testid="dialog-dynamic-table">
             <DialogTitle>{title}</DialogTitle>
                 <DialogContent>
                     {children}

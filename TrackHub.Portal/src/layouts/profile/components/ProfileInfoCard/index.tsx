@@ -78,7 +78,7 @@ function ProfileInfoCard({ user, updateCurrentUser, updatePassword }: ProfileInf
 
   return (
     <>
-      <Card sx={{ height: "100%" }}>
+      <Card data-testid="card-profile-info" sx={{ height: "100%" }}>
         <ArgonBox display="flex" justifyContent="space-between" alignItems="center" pt={2} px={2}>
           <ArgonTypography variant="h6" fontWeight="medium" textTransform="capitalize">
             {t('userprofile.info')}

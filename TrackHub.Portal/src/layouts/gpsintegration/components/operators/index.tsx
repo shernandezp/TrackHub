@@ -94,7 +94,7 @@ function ManageOperators() {
 
   return (
     <>
-      <TableAccordion
+      <TableAccordion sectionKey="gps-operators"
         title={t('gpsIntegration.sections.operators')}
         showAddIcon={true}
         expanded={expanded}

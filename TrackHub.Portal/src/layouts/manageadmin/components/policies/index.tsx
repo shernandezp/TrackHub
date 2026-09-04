@@ -37,7 +37,7 @@ function ManagePolicies() {
 
   return (
     <>
-      <TableAccordion
+      <TableAccordion sectionKey="policies"
         title={t('policy.title')}
         expanded={expanded}
         setOpen={setOpen}
