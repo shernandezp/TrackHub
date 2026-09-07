@@ -14,6 +14,10 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
+# Same as deploy.sh: one image at a time
+export COMPOSE_BAKE=false
+export COMPOSE_PARALLEL_LIMIT="${DEPLOY_BUILD_PARALLEL:-1}"
+
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'

@@ -16,6 +16,10 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 # Source repository settings (GITHUB_OWNER / GITHUB_REPO / credentials)
 source "$SCRIPT_DIR/repo-config.sh"
 
+
+export COMPOSE_BAKE=false
+export COMPOSE_PARALLEL_LIMIT="${DEPLOY_BUILD_PARALLEL:-1}"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'

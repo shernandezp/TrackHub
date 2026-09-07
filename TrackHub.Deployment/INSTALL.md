@@ -111,7 +111,7 @@ outside PostgreSQL: back it up separately.
 | Requirement | Minimum | Recommended |
 |-------------|---------|-------------|
 | CPU | 2 cores | 4+ cores |
-| RAM | 4 GB | 8+ GB |
+| RAM | 4 GB + 4 GB swap (image builds) | 8+ GB |
 | Storage | 20 GB | 50+ GB SSD |
 | OS | Ubuntu 22.04 LTS | Ubuntu 24.04.4 LTS |
 
@@ -1479,6 +1479,7 @@ Bring your `clients.json` in line with `config/clients.json.example`:
 - **scopes:** add `driver_mobile_scope` and `service_scope` (`resource: trackhub_api`); remove any `sec_scope`.
 - **PKCEClients:** add `mobile_client` and `driver_mobile_client` if you run the mobile/driver apps.
 - **serviceClients:** add `router_client`, `security_client`, `geofence_client`, and `trip_client`, and give **every** service client `"scope": "service_scope"`. Each `clientSecret` must equal the matching `*_CLIENT_SECRET` in `.env`.
+- **`web_client.postLogoutUri`:** change to `https://<domain>/` (was `.../authentication/callback`). Logout from the portal lands on a 404 otherwise.
 
 > After changing `clients.json` you must **re-run `db-init`** — it is what registers the
 > clients and seeds the resource/role matrix. Skipping it leaves `trip_client` unregistered
@@ -1502,6 +1503,13 @@ migration bundle). This step is required on every upgrade that adds migrations.
 | `AddTripDetectionState` (TripDB) | TripManagement | `trip.trips.consecutiveoutsidefixes` and `trip.trip_stops.outsidesinceat` — the persisted arrival/departure detection state. | Trip tracking ingestion fails; automatic stop arrival/departure detection never advances. |
 | `AddPublicShareDisclosureAndTollIntegrity` (TripDB) | TripManagement | `trip.trip_stops.city` and `trip.trip_shares.includeroute` (public-share disclosure control), plus the toll-catalog integrity constraints: unique `toll_vehicle_classes.code`, the reworked `transporter_toll_classes` uniqueness/XOR check, and the `toll_tariffs` / `transporter_toll_classes` foreign keys to the vehicle-class code. | Public share links ignore the route/city disclosure settings; the toll catalog accepts duplicate and orphaned class rows. |
 | `AddTollStationNameUniqueness` (TripDB) | TripManagement | Replaces the `(name, code)` unique index on `trip.toll_stations` with two partial indexes — one for coded stations, one for code-less ones. `code` is nullable and PostgreSQL treats NULLs as distinct, so the original index allowed unlimited duplicate code-less stations. | An operator can enter the same code-less station twice; route matching then finds both and charges its toll twice in every estimate. |
+| `AddZeroTouchLifecycle` (TripDB) | TripManagement | Origin geofence / arming columns on `trip.trips` and the `origingeom` GiST index. | Zero-touch trip start never arms; trips stay Planned until started by hand. |
+
+**No EF tooling on the server?** Generate the schema as plain SQL on a workstation and run it in
+pgAdmin as the application role. `dotnet ef migrations script 0 <last-applied-migration>` (per
+service) reproduces what production has, `dotnet ef migrations script` (no range) the full model;
+diffing the two `information_schema` dumps gives the exact catch-up. Keep the resulting file with
+your other operator scripts so the next upgrade starts from a known state.
 | `AddServiceClientPermissionAllowCrossAccount` | Security | `security.service_client_permissions.allowcrossaccount`, and back-fills it to `TRUE` for every account-less (`accountid IS NULL`) permission row. | **Every Security permission read fails** — the column is mapped by EF, so the query errors out. Service-to-service authorization breaks platform-wide, not just for the trip module. |
 
 > **`db-init` must be re-run after this migration, on existing deployments too.** The
@@ -1536,6 +1544,11 @@ cd /opt/trackhub/TrackHub.Deployment
 `router_client`/`security_client` and any new scopes/permissions — and force-recreates
 every container (so the Authority picks up the new `OPENIDDICT_SCOPES`). The one-time
 User/Account ID sync is skipped because its flag already exists.
+
+Images build **one at a time** (`COMPOSE_PARALLEL_LIMIT=1`, set by the script): the parallel
+build is OOM-killed on a 4 GB host. Expect well over an hour for a full rebuild; already-built
+images are cached, so a re-run after a failure resumes where it stopped. Set
+`DEPLOY_BUILD_PARALLEL=4` on a large host to speed it up.
 
 ### 7. Verify
 
@@ -1869,6 +1882,31 @@ htop
 ## Troubleshooting
 
 ### Common Issues
+
+#### Every API answers 404 through nginx, but works when called directly
+
+nginx resolves the container names in its `upstream` blocks once, at startup, and open-source
+nginx never re-resolves them. If backend containers were restarted by hand (`docker compose
+restart`, `docker restart`, a crash loop), they may have new IPs and nginx keeps proxying to the
+old ones - `/Identity/health` returns 404 from whichever container inherited the address, and
+`docker compose ps` shows nginx unhealthy. Fix: restart nginx so it resolves again.
+
+```bash
+docker compose restart nginx
+```
+
+`deploy.sh` never hits this: it recreates nginx together with the services.
+
+#### Build dies with "failed to execute bake: signal: killed"
+
+The kernel OOM-killed the parallel image build. `deploy.sh` and `update-service.sh` now build one
+image at a time (`COMPOSE_PARALLEL_LIMIT=1`); if it still dies, add swap before deploying:
+
+```bash
+fallocate -l 4G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
+```
+
+Already-built images are cached, so re-running the deploy resumes where it stopped.
 
 #### Services won't start
 

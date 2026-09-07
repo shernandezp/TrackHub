@@ -42,11 +42,12 @@ else
     printf "%-26s cloning...  " "$GITHUB_REPO"
 fi
 
-if monorepo_clone_or_update "$WORKSPACE_DIR" >/dev/null 2>&1; then
+if update_output="$(monorepo_clone_or_update "$WORKSPACE_DIR" 2>&1)"; then
     echo "ok"
 else
     echo "FAILED"
     print_error "Could not update $(monorepo_url_clean)"
+    echo "$update_output" | sed "s/^/    /"
     print_info "For a private repository set GITHUB_USER and GITHUB_PASSWORD in .env."
     print_info "GITHUB_PASSWORD must be a Personal Access Token, not your account password."
     exit 1
