@@ -106,7 +106,7 @@ internal class Seeder(IServiceProvider serviceProvider)
     {
         foreach (var pkceClient in pkceClients)
         {
-            await PopulatePKCEApp(scopeService, pkceClient.ClientId, pkceClient.Uri, pkceClient.PostLogoutUri, pkceClient.Scope, cancellationToken);
+            await PopulatePKCEApp(scopeService, pkceClient.ClientId, pkceClient.Uri, pkceClient.PostLogoutUri, pkceClient.Scope, pkceClient.PasswordGrant, cancellationToken);
         }
 
         foreach (var serviceClient in serviceClients)
@@ -120,6 +120,7 @@ internal class Seeder(IServiceProvider serviceProvider)
         string uri,
         string postLogoutUri,
         string scope,
+        bool passwordGrant,
         CancellationToken cancellationToken)
     {
         var appManager = scopeService.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
@@ -145,6 +146,11 @@ internal class Seeder(IServiceProvider serviceProvider)
                         OpenIddictConstants.Permissions.ResponseTypes.Code
                     }
         };
+
+        if (passwordGrant)
+        {
+            appDescriptor.Permissions.Add(OpenIddictConstants.Permissions.GrantTypes.Password);
+        }
 
         var client = await appManager.FindByClientIdAsync(appDescriptor.ClientId, cancellationToken);
 

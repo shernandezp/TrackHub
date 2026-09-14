@@ -20,6 +20,10 @@ using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
 using TrackHub.AuthorityServer.Domain.Interfaces;
 using TrackHub.AuthorityServer.Domain.Models;
+using System.Security.Authentication;
+using Common.Application.Exceptions;
+using Common.Mediator;
+using TrackHub.AuthorityServer.Application.Users.Queries.GetUsers;
 
 namespace TrackHub.AuthorityServer.Web.Endpoints;
 
@@ -148,6 +152,10 @@ public sealed class TokenHandler(
             // Return the result based on the claims principal
             return Results.SignIn(principal, properties: null, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
         }
+        else if (request.IsPasswordGrantType())
+        {
+            return await ExchangePasswordAsync(context, request);
+        }
         else
         {
             throw new InvalidOperationException("The specified grant type is not supported.");
@@ -251,4 +259,57 @@ public sealed class TokenHandler(
             && user.Active
             && (user.LockedUntil is null || user.LockedUntil <= DateTimeOffset.UtcNow);
     }
+
+    private async Task<IResult> ExchangePasswordAsync(HttpContext context, OpenIddictRequest request)
+    {
+        UserVm user;
+        try
+        {
+            var sender = context.RequestServices.GetRequiredService<ISender>();
+            user = await sender.Send(new GetUsersQuery(request.Username ?? string.Empty, request.Password ?? string.Empty));
+        }
+        catch (Exception ex) when (ex is AuthenticationException or ValidationException)
+        {
+            return Results.Forbid(
+                authenticationSchemes: [OpenIddictServerAspNetCoreDefaults.AuthenticationScheme],
+                properties: new AuthenticationProperties(new Dictionary<string, string?>
+                {
+                    [OpenIddictServerAspNetCoreConstants.Properties.Error] = OpenIddictConstants.Errors.InvalidGrant,
+                    [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] =
+                        ex is AuthenticationException ? ex.Message : "The email address or password is invalid."
+                }));
+        }
+
+        var role = await userReader.GetUserRoleAsync(user.UserId, context.RequestAborted);
+        var principal = CreateUserPrincipal(user, role);
+        principal.SetScopes(request.GetScopes());
+
+        var scopeManager = context.RequestServices.GetRequiredService<IOpenIddictScopeManager>();
+        principal.SetResources(await scopeManager.ListResourcesAsync(principal.GetScopes()).ToListAsync());
+
+        return Results.SignIn(principal, properties: null, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+    }
+
+    // Same claims the authorize endpoint issues for a user, so refresh and the resource services see one shape.
+    internal static ClaimsPrincipal CreateUserPrincipal(UserVm user, string? role)
+    {
+        var subject = user.UserId.ToString();
+        var claims = new List<Claim>
+        {
+            AccessTokenClaim(OpenIddictConstants.Claims.Subject, subject),
+            AccessTokenClaim("principal_type", "User"),
+            AccessTokenClaim("user_id", subject),
+            AccessTokenClaim("account_id", user.AccountId.ToString())
+        };
+
+        if (!string.IsNullOrEmpty(role))
+        {
+            claims.Add(AccessTokenClaim(ClaimTypes.Role, role));
+        }
+
+        return new ClaimsPrincipal(new ClaimsIdentity(claims, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme));
+    }
+
+    private static Claim AccessTokenClaim(string type, string value)
+        => new Claim(type, value).SetDestinations(OpenIddictConstants.Destinations.AccessToken);
 }

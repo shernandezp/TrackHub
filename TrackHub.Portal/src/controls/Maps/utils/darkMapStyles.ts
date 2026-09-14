@@ -28,11 +28,9 @@ export const OSM_LIGHT_TILE: OsmTileConfig = {
     className: ''
 };
 
-// The CARTO dark_all raster is too dark on its own; th-dark-tiles applies a
-// CSS brightness/contrast correction (see controls/Maps/css/map.css).
 export const OSM_DARK_TILE: OsmTileConfig = {
-    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
     className: 'th-dark-tiles'
 };
 

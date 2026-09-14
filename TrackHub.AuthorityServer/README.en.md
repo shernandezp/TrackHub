@@ -10,7 +10,7 @@ It also hosts the ASP.NET login UI, and owns the OpenIddict tables in the `Track
 
 ## What it provides
 
-- **Authorization Code Flow with PKCE** for public clients — web, mobile and driver mobile
+- **Authorization Code Flow with PKCE** for public clients — web and driver mobile — plus the **password grant** for the first-party mobile app (`mobile_client`, in-app sign-in page)
 - **Client Credentials Flow** for backend services and partner integrations, with automatic tenant derivation
 - **Token management** — issue, refresh and revoke, with audience-based scoping
 - **A customizable login UI** with branding support
