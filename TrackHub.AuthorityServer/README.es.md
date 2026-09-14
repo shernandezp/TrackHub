@@ -10,7 +10,7 @@ También aloja la UI de login de ASP.NET y es propietario de las tablas de OpenI
 
 ## Qué proporciona
 
-- **Flujo de Código de Autorización con PKCE** para clientes públicos — web, móvil y móvil de conductor
+- **Flujo de Código de Autorización con PKCE** para clientes públicos — web y móvil de conductor — más el **password grant** para la app móvil propia (`mobile_client`, página de inicio de sesión integrada)
 - **Flujo de Credenciales de Cliente** para servicios backend e integraciones con socios, con derivación automática del tenant
 - **Gestión de tokens** — emisión, renovación y revocación, con delimitación basada en audiencia
 - **Una UI de login personalizable** con soporte de marca

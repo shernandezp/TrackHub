@@ -62,8 +62,9 @@ usage() {
     echo ""
     echo "Deployment Types:"
     echo "  full      - Deploy frontend and all backend services (default)"
-    echo "  frontend  - Deploy only the frontend"
-    echo "  backend   - Deploy only the backend services"
+    echo "  portal    - Rebuild only the portal on a full-stack server (nothing else is touched)"
+    echo "  frontend  - Deploy only the frontend (split deployment: frontend-only server)"
+    echo "  backend   - Deploy only the backend services (split deployment: backend-only server)"
     echo ""
     echo "Options:"
     echo "  --build     - Build images locally using Docker layer cache (default)"
@@ -76,6 +77,7 @@ usage() {
     echo ""
     echo "Examples:"
     echo "  $0 full --build"
+    echo "  $0 portal"
     echo "  $0 frontend"
     echo "  $0 backend --build"
     echo "  $0 full --build --skip-init  # For migrating to new server"
@@ -182,7 +184,7 @@ check_configuration() {
 
 select_compose_file() {
     case $DEPLOYMENT_TYPE in
-        "full")
+        "full"|"portal")
             COMPOSE_FILE="$PROJECT_DIR/docker-compose.yml"
             ;;
         "frontend")
@@ -204,6 +206,23 @@ select_compose_file() {
     fi
     
     print_info "Using compose file: $COMPOSE_FILE"
+}
+
+check_split_target() {
+    # The split compose files describe half a stack. On a host that runs the other half in
+    # the same compose project, "down --remove-orphans" deletes that half and the split nginx
+    # config has no routes for it, so every API path serves index.html and sign-in loops.
+    local other
+    case $DEPLOYMENT_TYPE in
+        frontend) other="trackhub-manager" ;;
+        backend)  other="trackhub-frontend" ;;
+        *) return 0 ;;
+    esac
+    if docker ps -a --format '{{.Names}}' | grep -qx "$other"; then
+        print_error "'$DEPLOYMENT_TYPE' is for a split deployment, but this host runs the full stack ($other exists)."
+        print_info "Use '$0 portal' to redeploy only the portal, or '$0 full --skip-init' for everything."
+        exit 1
+    fi
 }
 
 ensure_trackhubcommon() {
@@ -259,7 +278,29 @@ tag_rollback_point() {
     done < <(docker compose -f "$COMPOSE_FILE" config --services)
 }
 
+deploy_portal() {
+    # Rebuild and recreate only the portal image and nginx (its upstream volume consumer).
+    # No "down", no db-init, no other service is recreated.
+    print_info "Rebuilding the portal..."
+    cd "$PROJECT_DIR"
+    "$SCRIPT_DIR/rollback.sh" tag frontend previous "$COMPOSE_FILE" > /dev/null 2>&1 \
+        || print_warning "No current image for frontend — nothing to roll back to"
+    if [ "$NO_CACHE" = true ]; then
+        docker compose -f "$COMPOSE_FILE" build --no-cache frontend
+    else
+        docker compose -f "$COMPOSE_FILE" build frontend
+    fi
+    docker compose -f "$COMPOSE_FILE" up -d --force-recreate --no-build --no-deps frontend
+    docker compose -f "$COMPOSE_FILE" up -d --force-recreate --no-build --no-deps nginx
+    print_success "Portal deployment complete!"
+}
+
 deploy() {
+    if [ "$DEPLOYMENT_TYPE" = "portal" ]; then
+        deploy_portal
+        return 0
+    fi
+
     print_info "Starting deployment..."
 
     cd "$PROJECT_DIR"
@@ -371,7 +412,7 @@ show_status() {
 # Parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
-        full|frontend|backend)
+        full|portal|frontend|backend)
             DEPLOYMENT_TYPE="$1"
             shift
             ;;
@@ -409,5 +450,6 @@ check_prerequisites
 check_deployment_freshness
 check_configuration
 select_compose_file
+check_split_target
 deploy
 show_status

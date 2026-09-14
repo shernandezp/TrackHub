@@ -46,6 +46,7 @@ public static class DependencyInjection
             {
                 _.AllowClientCredentialsFlow();
                 _.AllowRefreshTokenFlow();
+                _.AllowPasswordFlow();
                 _.AllowAuthorizationCodeFlow().RequireProofKeyForCodeExchange();
 
                 _.SetAuthorizationEndpointUris("authorize");

@@ -661,7 +661,8 @@ Edit `config/clients.json`:
       "clientId": "mobile_client",
       "uri": "trackhubmobile://callback",
       "postLogoutUri": "trackhubmobile://callback",
-      "scope": "mobile_scope"
+      "scope": "mobile_scope",
+      "passwordGrant": true
     },
     {
       "clientId": "driver_mobile_client",
@@ -1478,6 +1479,7 @@ Bring your `clients.json` in line with `config/clients.json.example`:
 
 - **scopes:** add `driver_mobile_scope` and `service_scope` (`resource: trackhub_api`); remove any `sec_scope`.
 - **PKCEClients:** add `mobile_client` and `driver_mobile_client` if you run the mobile/driver apps.
+- **`mobile_client.passwordGrant` (2026-09):** set to `true`. The mobile app signs in through an in-app page with the OAuth 2.0 password grant and gets `unauthorized_client` without it. Only `mobile_client` carries the flag; every other public client stays on code + PKCE.
 - **serviceClients:** add `router_client`, `security_client`, `geofence_client`, and `trip_client`, and give **every** service client `"scope": "service_scope"`. Each `clientSecret` must equal the matching `*_CLIENT_SECRET` in `.env`.
 - **`web_client.postLogoutUri`:** change to `https://<domain>/` (was `.../authentication/callback`). Logout from the portal lands on a 404 otherwise.
 

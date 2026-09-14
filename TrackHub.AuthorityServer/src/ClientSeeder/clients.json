@@ -28,7 +28,8 @@
       "clientId": "mobile_client",
       "uri": "trackhubmobile://callback",
       "postLogoutUri": "trackhubmobile://logoutcallback",
-      "scope": "mobile_scope"
+      "scope": "mobile_scope",
+      "passwordGrant": true
     },
     {
       "clientId": "driver_mobile_client",

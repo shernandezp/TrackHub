@@ -84,6 +84,7 @@ internal class PKCEClient
     public string Uri { get; set; } = "";
     public string PostLogoutUri { get; set; } = "";
     public string Scope { get; set; } = "";
+    public bool PasswordGrant { get; set; }
 }
 
 internal class ServiceClient
