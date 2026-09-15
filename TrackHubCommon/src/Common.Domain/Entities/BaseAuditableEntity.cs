@@ -13,7 +13,7 @@
 //  limitations under the License.
 //
 
-namespace Common.Infrastructure;
+namespace Common.Domain.Entities;
 
 public abstract class BaseAuditableEntity : BaseEntity
 {

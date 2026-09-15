@@ -1,7 +1,7 @@
-using Common.Infrastructure;
+using Common.Domain.Entities;
 using FluentAssertions;
 
-namespace Common.Infrastructure.Tests;
+namespace Common.Domain.Tests.Entities;
 
 public class BaseEventTests
 {

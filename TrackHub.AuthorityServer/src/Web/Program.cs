@@ -28,8 +28,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddTrackHubSerilog();
 
-var allowedCORSOrigins = builder.Configuration.GetSection("AllowedCorsOrigins").Get<string>();
-Guard.Against.Null(allowedCORSOrigins, message: $"Allowed Origins configuration for CORS not loaded");
+var allowedCORSOrigins = builder.Configuration.GetAllowedCorsOrigins();
+Guard.Against.NullOrEmpty(allowedCORSOrigins, message: $"Allowed Origins configuration for CORS not loaded");
 
 builder.Services.AddCors(options => options
     .AddPolicy("AllowFrontend",

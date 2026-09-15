@@ -110,6 +110,7 @@ public static class DependencyInjection
         services.AddScoped<INotificationTemplateReader, NotificationTemplateReader>();
         services.AddScoped<INotificationTemplateWriter, NotificationTemplateWriter>();
         services.AddScoped<IAlertRuleEvaluator, TrackHub.Manager.Infrastructure.ManagerDB.Services.AlertRuleEvaluator>();
+        services.AddScoped<IAlertEvaluationStore, TrackHub.Manager.Infrastructure.ManagerDB.Jobs.AlertEvaluationStore>();
 
         // Notification channel providers. Push is contract-only for now.
         services.Configure<SmtpOptions>(configuration.GetSection(SmtpOptions.SectionName));

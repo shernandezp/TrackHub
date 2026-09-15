@@ -1248,6 +1248,7 @@
       "syncCompleted": "Sincronización completada.",
       "syncCompletedCounts": "Sincronización completada: {{seen}} dispositivos detectados — {{added}} agregados, {{updated}} actualizados, {{removed}} eliminados.",
       "syncCompletedNoDevices": "La sincronización se completó, pero el proveedor no devolvió dispositivos. Verifique la credencial y la cuenta del proveedor.",
+      "syncStarted": "Sincronización iniciada. Aún está en curso: consulte el historial de sincronización del operador en unos momentos para ver el resultado.",
       "ignore": "Ignorar",
       "unignore": "No Ignorar",
       "endAssignment": "Finalizar Asignación",

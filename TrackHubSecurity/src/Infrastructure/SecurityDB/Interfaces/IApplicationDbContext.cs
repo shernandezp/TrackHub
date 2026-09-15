@@ -29,6 +29,7 @@ public interface IApplicationDbContext
     public DbSet<ResourceActionPolicy> ResourceActionPolicy { get; set; }
     public DbSet<ResourceActionRole> ResourceActionRole { get; set; }
     public DbSet<Role> Roles { get; set; }
+    public DbSet<OutboxMessage> OutboxMessages { get; set; }
     public DbSet<ServiceClientPermission> ServiceClientPermissions { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<UserRole> UserRoles { get; set; }

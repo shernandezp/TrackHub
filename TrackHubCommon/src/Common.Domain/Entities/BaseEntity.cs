@@ -15,7 +15,7 @@
 
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Common.Infrastructure;
+namespace Common.Domain.Entities;
 
 public abstract class BaseEntity
 {

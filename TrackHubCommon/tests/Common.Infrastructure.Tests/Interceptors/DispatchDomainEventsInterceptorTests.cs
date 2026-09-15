@@ -1,3 +1,4 @@
+using Common.Domain.Entities;
 using Common.Infrastructure;
 using Common.Infrastructure.Interceptors;
 using Common.Mediator;

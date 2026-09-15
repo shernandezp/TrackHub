@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Domain.Entities;
 using Common.Mediator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;

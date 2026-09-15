@@ -39,6 +39,7 @@ namespace Common.Domain.Constants;
 ///   <item><term>workforce-expiration-scan</term><description>Manager WorkforceExpirationService — only per raised qualification-expiration alert.</description></item>
 ///   <item><term>trip-eta-refresh</term><description>TripManagement TripEtaRefreshService — only when it refreshed an ETA for at least one in-progress trip, OR auto-completed a trip whose tracker went quiet; the cycle carries both because the auto-completion sweep is a fallback on this schedule rather than one of its own (spec 11a §5.2), and the recorded payload is <c>refreshed/completed</c>.</description></item>
 ///   <item><term>trip-schedule-reminder</term><description>TripManagement TripScheduleReminderService — only when it raised a start-due reminder.</description></item>
+///   <item><term>router-sync-worker</term><description>Router SyncWorker — a heartbeat on EVERY cycle (5 min); the process has no other liveness surface.</description></item>
 /// </list>
 /// <para>
 /// Net result: <c>alert-evaluation</c> is the ONLY key with a guaranteed recording floor, and that
@@ -62,6 +63,13 @@ public static partial class BackgroundJobKeys
     public const string TripScheduleReminder = "trip-schedule-reminder";
 
     /// <summary>
+    /// Router SyncWorker liveness. The worker is a separate process with no HTTP surface, so a
+    /// missing recent row is the only evidence that it died — which is why, unlike the jobs above,
+    /// it IS in <see cref="RecordsEveryCycle"/>.
+    /// </summary>
+    public const string RouterSyncWorkerHeartbeat = "router-sync-worker";
+
+    /// <summary>
     /// Keys whose producer writes a row on a guaranteed schedule, so a missing recent row is a real
     /// signal. <c>alert-evaluation</c> records unconditionally once per day; its staleness threshold
     /// is therefore measured in days, never in minutes.
@@ -69,6 +77,7 @@ public static partial class BackgroundJobKeys
     public static readonly IReadOnlySet<string> RecordsEveryCycle = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
         AlertEvaluation,
+        RouterSyncWorkerHeartbeat,
     };
 
     /// <summary>Hours after which a <see cref="RecordsEveryCycle"/> job counts as stale.</summary>

@@ -70,9 +70,10 @@ public class SynchronizeOperatorDevicesCommandHandler(
             .Select(kvp => kvp.Value)
             .ToList();
 
+        var autoAssign = default(AutoAssignOutcome);
         if (request.AutoAssignNewDevices ?? true)
         {
-            await AutoAssignNewDevicesAsync(request.AccountId, newlyAddedDevices, cancellationToken);
+            autoAssign = await AutoAssignNewDevicesAsync(request.AccountId, newlyAddedDevices, cancellationToken);
         }
 
         var duplicates = new List<(string Serial, Guid OtherOperatorId)>();
@@ -86,7 +87,7 @@ public class SynchronizeOperatorDevicesCommandHandler(
             duplicates = dupRows.Select(d => (d.Serial, d.OperatorId)).ToList();
         }
 
-        await EmitDeviceAlertsAsync(request, newlyAdded, removed, duplicates, cancellationToken);
+        await EmitDeviceAlertsAsync(request, newlyAdded, removed, duplicates, autoAssign, cancellationToken);
 
         var finishedAt = DateTimeOffset.UtcNow;
         var triggerType = ResolveTriggerType(request.TriggerType);
@@ -123,6 +124,7 @@ public class SynchronizeOperatorDevicesCommandHandler(
         IReadOnlyCollection<DeviceDto> newlyAdded,
         IReadOnlyCollection<DeviceVm> removed,
         IReadOnlyCollection<(string Serial, Guid OtherOperatorId)> duplicates,
+        AutoAssignOutcome autoAssign,
         CancellationToken cancellationToken)
     {
         try
@@ -169,6 +171,20 @@ public class SynchronizeOperatorDevicesCommandHandler(
                     DeduplicationKey: $"gps-duplicate-device:{serial}:{request.AccountId:N}"),
                     cancellationToken);
             }
+            if (autoAssign is { Provisioned: > 0, Ambiguous: true })
+            {
+                await alertWriter.RecordAlertEventAsync(new AlertEventDto(
+                    request.AccountId,
+                    EventType: "GpsAutoAssignGroupAmbiguous",
+                    Severity: "Warning",
+                    SourceModule: "GpsIntegration",
+                    ResourceType: "Operator",
+                    ResourceId: request.OperatorId.ToString(),
+                    Status: "Open",
+                    PayloadJson: JsonSerializer.Serialize(new { request.OperatorId, autoAssign.Provisioned, GroupMetadata.DefaultGroupName, request.CorrelationId }),
+                    DeduplicationKey: $"gps-autoassign-group-ambiguous:{request.OperatorId:N}"),
+                    cancellationToken);
+            }
         }
         catch (Exception ex)
         {
@@ -178,17 +194,18 @@ public class SynchronizeOperatorDevicesCommandHandler(
         }
     }
 
-    private async Task AutoAssignNewDevicesAsync(
+    private async Task<AutoAssignOutcome> AutoAssignNewDevicesAsync(
         Guid accountId,
         IReadOnlyCollection<(DeviceDto Incoming, DeviceVm Device)> devices,
         CancellationToken cancellationToken)
     {
         if (devices.Count == 0)
         {
-            return;
+            return default;
         }
 
-        var defaultGroupId = await ResolveDefaultGroupIdAsync(accountId, cancellationToken);
+        var target = await AutoProvisionGroups.ResolveAsync(groupReader, groupWriter, accountId, cancellationToken);
+        var provisioned = 0;
 
         foreach (var (incoming, device) in devices)
         {
@@ -209,13 +226,15 @@ public class SynchronizeOperatorDevicesCommandHandler(
                         accountId),
                     cancellationToken);
                 transporterId = transporter.TransporterId;
+                provisioned++;
 
-                // Place every auto-provisioned transporter into the account's default group so plain
-                // (group-scoped) users can see it on the live map. Manual group management can move it
-                // later; the sync never moves it again.
-                await transporterGroupWriter.CreateTransporterGroupAsync(
-                    new TransporterGroupDto(transporterId, defaultGroupId),
-                    cancellationToken);
+                // Manual group management can move it later; the sync never moves it again.
+                foreach (var groupId in target.GroupIds)
+                {
+                    await transporterGroupWriter.CreateTransporterGroupAsync(
+                        new TransporterGroupDto(transporterId, groupId),
+                        cancellationToken);
+                }
             }
 
             await assignmentWriter.AssignAsync(
@@ -230,27 +249,8 @@ public class SynchronizeOperatorDevicesCommandHandler(
                         : "Initial provider sync (adopted existing transporter)"),
                 cancellationToken);
         }
-    }
 
-    // Resolves the account's default group by name, creating it (Active) on first use.
-    private async Task<long> ResolveDefaultGroupIdAsync(Guid accountId, CancellationToken cancellationToken)
-    {
-        // Search by name rather than scanning the account's groups: the account read is paged, and a
-        // scan of page 1 would miss an existing default group and create a duplicate every sync.
-        var groups = await groupReader.GetGroupsByAccountAsync(
-            accountId, 0, PageRequest.MaxPageSize, GroupMetadata.DefaultGroupName, cancellationToken);
-        var existing = groups.Items.FirstOrDefault(g =>
-            string.Equals(g.Name, GroupMetadata.DefaultGroupName, StringComparison.OrdinalIgnoreCase));
-        if (existing.GroupId != 0)
-        {
-            return existing.GroupId;
-        }
-
-        var created = await groupWriter.CreateGroupAsync(
-            new GroupDto(GroupMetadata.DefaultGroupName, GroupMetadata.DefaultGroupDescription, Active: true),
-            accountId,
-            cancellationToken);
-        return created.GroupId;
+        return new AutoAssignOutcome(provisioned, target.Ambiguous);
     }
 
     private static string ResolveTransporterName(DeviceDto device)

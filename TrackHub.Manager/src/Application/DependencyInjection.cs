@@ -15,6 +15,7 @@
 
 using System.Reflection;
 using Common.Application;
+using TrackHub.Manager.Application.BackgroundJobs;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using TrackHub.Manager.Application.GpsIntegration;
 using TrackHub.Manager.Domain.Interfaces;
@@ -29,6 +30,7 @@ public static class DependencyInjection
         services.AddApplicationServices(assembly);
         services.AddDistributedMemoryCache();
         services.TryAddScoped<ISyncDispatcher, NoopSyncDispatcher>();
+        services.AddScoped<AlertEvaluationJob>();
         return services;
     }
 }

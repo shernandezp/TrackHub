@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Domain.Constants;
 using Common.Mediator;
 using TrackHub.Router.Application.DevicePositions.Commands.Health;
 using TrackHub.Router.Application.DevicePositions.Commands.Sync;
@@ -27,6 +28,10 @@ public class Worker(ILogger<Worker> logger, IServiceProvider serviceProvider) : 
     private static readonly TimeSpan DeviceSyncCheckInterval = TimeSpan.FromMinutes(1);
     private static readonly TimeSpan HealthCheckInterval = TimeSpan.FromMinutes(1);
 
+    // The worker is a separate process with no HTTP surface: this per-cycle job run is the only
+    // evidence that it is alive.
+    private static readonly TimeSpan HeartbeatInterval = TimeSpan.FromMinutes(5);
+
     private readonly ILogger<Worker> _logger = logger;
     private readonly IServiceProvider _serviceProvider = serviceProvider;
 
@@ -36,7 +41,9 @@ public class Worker(ILogger<Worker> logger, IServiceProvider serviceProvider) : 
         var deviceLoop = RunLoopAsync("device-sync", DeviceSyncCheckInterval, RunDeviceSyncAsync, stoppingToken);
         var healthLoop = RunLoopAsync("operator-health", HealthCheckInterval, RunHealthCheckAsync, stoppingToken);
 
-        await Task.WhenAll(positionLoop, deviceLoop, healthLoop);
+        var heartbeatLoop = RunLoopAsync("heartbeat", HeartbeatInterval, RunHeartbeatAsync, stoppingToken);
+
+        await Task.WhenAll(positionLoop, deviceLoop, healthLoop, heartbeatLoop);
     }
 
     private async Task RunLoopAsync(string name, TimeSpan interval, Func<CancellationToken, Task> action, CancellationToken stoppingToken)
@@ -66,6 +73,22 @@ public class Worker(ILogger<Worker> logger, IServiceProvider serviceProvider) : 
                 break;
             }
         }
+    }
+
+    private async Task RunHeartbeatAsync(CancellationToken stoppingToken)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var recorder = scope.ServiceProvider.GetRequiredService<IBackgroundJobRunRecorder>();
+        var now = DateTimeOffset.UtcNow;
+
+        await recorder.RecordAsync(
+            BackgroundJobKeys.RouterSyncWorkerHeartbeat,
+            $"{BackgroundJobKeys.RouterSyncWorkerHeartbeat}:{now:yyyyMMddHHmmss}",
+            "Succeeded",
+            now,
+            DateTimeOffset.UtcNow,
+            null,
+            stoppingToken);
     }
 
     private async Task RunPositionSyncAsync(CancellationToken stoppingToken)

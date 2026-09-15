@@ -50,15 +50,7 @@ public class LoginController(ISender sender, IStringLocalizer<LoginController> l
     /// </summary>
     private string? PlatformStatusUrl()
     {
-        var configured = configuration.GetSection("AllowedCorsOrigins").Get<string>();
-        if (string.IsNullOrWhiteSpace(configured))
-        {
-            return null;
-        }
-
-        // The setting is a single origin today, but its name is plural — take the
-        // first entry so a comma-separated value can never produce a malformed URL.
-        var origin = configured.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).FirstOrDefault();
+        var origin = configuration.GetAllowedCorsOrigins().FirstOrDefault();
 
         return Uri.TryCreate(origin, UriKind.Absolute, out var baseUri)
             ? new Uri(baseUri, "/status").ToString()

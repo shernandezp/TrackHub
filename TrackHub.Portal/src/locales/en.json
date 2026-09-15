@@ -1248,6 +1248,7 @@
       "syncCompleted": "Sync completed.",
       "syncCompletedCounts": "Sync completed: {{seen}} devices seen — {{added}} added, {{updated}} updated, {{removed}} removed.",
       "syncCompletedNoDevices": "Sync completed, but the provider returned no devices. Verify the credential and the provider account.",
+      "syncStarted": "Sync started. It is still running — check the operator's sync history in a moment for the result.",
       "ignore": "Ignore",
       "unignore": "Unignore",
       "endAssignment": "End Assignment",

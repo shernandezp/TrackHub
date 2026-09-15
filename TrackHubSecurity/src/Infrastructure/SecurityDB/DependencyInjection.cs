@@ -51,6 +51,8 @@ public static class DependencyInjection
         services.AddScoped<IClientWriter, ClientWriter>();
         services.AddScoped<IDriverIdentityReader, DriverIdentityReader>();
         services.AddScoped<IDriverIdentityWriter, DriverIdentityWriter>();
+        services.AddScoped<IOutboxReader, OutboxReader>();
+        services.AddScoped<IOutboxWriter, OutboxWriter>();
         services.AddScoped<IPolicyReader, PolicyReader>();
         services.AddScoped<IResourceReader, ResourceReader>();
         services.AddScoped<IResourceActionPolicyWriter, ResourceActionPolicyWriter>();

@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Sergio Hernandez. All rights reserved.
+﻿// Copyright (c) 2026 Sergio Hernandez. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License").
 //  You may not use this file except in compliance with the License.
@@ -13,45 +13,37 @@
 //  limitations under the License.
 //
 
+using System.Text.Json;
+using TrackHub.Security.Application.Outbox;
 using TrackHub.Security.Application.Users.Events;
+using TrackHub.Security.Domain.Constants;
 
 namespace Application.UnitTests.Events;
 
 [TestFixture]
 public class UserUpdatedEventTests
 {
-    private Mock<IManagerWriter> _managerWriterMock;
-
-    [SetUp]
-    public void SetUp()
-    {
-        _managerWriterMock = new Mock<IManagerWriter>();
-    }
-
     [Test]
-    public async Task Handle_ValidNotification_CallsUpdateUserAsync()
+    public async Task Handle_EnqueuesUserUpdatedWithIdAndPayload()
     {
+        var outbox = new Mock<IOutboxWriter>();
         var userId = Guid.NewGuid();
-        var updateDto = new UpdateUserShrankDto(userId, "updated_user", true);
-        var handler = new UserUpdated.Notification.EventHandler(_managerWriterMock.Object);
+        var user = new UpdateUserShrankDto(userId, "updated", true);
+        string? payload = null;
+        outbox.Setup(w => w.EnqueueAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .Callback<string, string, string?, CancellationToken>((_, json, _, _) => payload = json);
 
-        await handler.Handle(new UserUpdated.Notification(userId, updateDto), CancellationToken.None);
+        await new UserUpdated.Notification.EventHandler(outbox.Object)
+            .Handle(new UserUpdated.Notification(userId, user), CancellationToken.None);
 
-        _managerWriterMock.Verify(w => w.UpdateUserAsync(userId, updateDto, It.IsAny<CancellationToken>()), Times.Once);
-    }
+        outbox.Verify(w => w.EnqueueAsync(
+            OutboxMessageTypes.UserUpdated, It.IsAny<string>(), userId.ToString(), It.IsAny<CancellationToken>()), Times.Once);
 
-    [Test]
-    public async Task Handle_PassesBothIdAndDto()
-    {
-        var userId = Guid.NewGuid();
-        var updateDto = new UpdateUserShrankDto(userId, "user", false);
-        var handler = new UserUpdated.Notification.EventHandler(_managerWriterMock.Object);
-
-        await handler.Handle(new UserUpdated.Notification(userId, updateDto), CancellationToken.None);
-
-        _managerWriterMock.Verify(w => w.UpdateUserAsync(
-            userId,
-            It.Is<UpdateUserShrankDto>(d => d.Username == "user" && d.Active == false),
-            It.IsAny<CancellationToken>()), Times.Once);
+        var restored = JsonSerializer.Deserialize<UserMirrorUpdate>(payload!);
+        Assert.Multiple(() =>
+        {
+            Assert.That(restored.UserId, Is.EqualTo(userId));
+            Assert.That(restored.User.Username, Is.EqualTo("updated"));
+        });
     }
 }

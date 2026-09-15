@@ -91,6 +91,13 @@ public sealed class GroupReader(IApplicationDbContext context, ICurrentPrincipal
             .Select(g => new GroupLookupVm(g.GroupId, g.Name))
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyCollection<long>> GetGroupIdsWithUsersAsync(Guid accountId, CancellationToken cancellationToken)
+        => await ByAccount(accountId)
+            .Where(g => g.Active && g.Users.Any())
+            .OrderBy(g => g.GroupId)
+            .Select(g => g.GroupId)
+            .ToListAsync(cancellationToken);
+
     // Filtered directly on Groups rather than joined through Accounts: the join was equivalent (a
     // group has exactly one account) but forced a Distinct to undo the fan-out it created.
     private IQueryable<Entities.Group> ByAccount(Guid accountId)

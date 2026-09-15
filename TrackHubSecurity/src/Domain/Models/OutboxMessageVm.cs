@@ -13,10 +13,10 @@
 //  limitations under the License.
 //
 
-using Common.Mediator;
+namespace TrackHub.Security.Domain.Models;
 
-namespace Common.Infrastructure;
-
-public abstract class BaseEvent : INotification
-{
-}
+public readonly record struct OutboxMessageVm(
+    Guid OutboxMessageId,
+    string MessageType,
+    string PayloadJson,
+    int AttemptCount);

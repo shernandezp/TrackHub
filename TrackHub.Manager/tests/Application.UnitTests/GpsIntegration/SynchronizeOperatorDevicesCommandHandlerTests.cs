@@ -43,6 +43,8 @@ public class SynchronizeOperatorDevicesCommandHandlerTests
         _deviceReader.Setup(x => x.FindDuplicateSerialsAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
         // No existing groups -> the default "General" group is created on first use.
+        _groupReader.Setup(x => x.GetGroupIdsWithUsersAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
         _groupReader.Setup(x => x.GetGroupsByAccountAsync(
                 It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new GroupsPageVm([], 0));
@@ -324,5 +326,87 @@ public class SynchronizeOperatorDevicesCommandHandlerTests
                     It.IsAny<CancellationToken>()),
                 Times.Once);
         });
+    }
+    [Test]
+    public async Task Handle_AccountUsersInOneGroup_AssignsThatGroupInsteadOfDefault()
+    {
+        var accountId = Guid.NewGuid();
+        var operatorId = Guid.NewGuid();
+        const long usersGroupId = 77;
+        var device = ArrangeNewDevice(accountId, operatorId);
+
+        _groupReader.Setup(x => x.GetGroupIdsWithUsersAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([usersGroupId]);
+
+        await CreateHandler().Handle(
+            new SynchronizeOperatorDevicesCommand(accountId, operatorId, [device], "corr-4", "MANUAL"),
+            CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            _transporterGroupWriter.Verify(
+                x => x.CreateTransporterGroupAsync(
+                    It.Is<TransporterGroupDto>(dto => dto.GroupId == usersGroupId),
+                    It.IsAny<CancellationToken>()),
+                Times.Once,
+                "a unit auto-provisioned into a group no user belongs to is invisible on the live map");
+            _groupWriter.Verify(
+                x => x.CreateGroupAsync(It.IsAny<GroupDto>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+        });
+    }
+
+    [Test]
+    public async Task Handle_AccountUsersSpreadOverSeveralGroups_UsesDefaultGroupAndRaisesAlert()
+    {
+        var accountId = Guid.NewGuid();
+        var operatorId = Guid.NewGuid();
+        var device = ArrangeNewDevice(accountId, operatorId);
+
+        _groupReader.Setup(x => x.GetGroupIdsWithUsersAsync(accountId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([11L, 12L]);
+
+        await CreateHandler().Handle(
+            new SynchronizeOperatorDevicesCommand(accountId, operatorId, [device], "corr-5", "MANUAL"),
+            CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            _transporterGroupWriter.Verify(
+                x => x.CreateTransporterGroupAsync(
+                    It.Is<TransporterGroupDto>(dto => dto.GroupId == DefaultGroupId),
+                    It.IsAny<CancellationToken>()),
+                Times.Once);
+            _alertWriter.Verify(
+                x => x.RecordAlertEventAsync(
+                    It.Is<AlertEventDto>(e => e.EventType == "GpsAutoAssignGroupAmbiguous"),
+                    It.IsAny<CancellationToken>()),
+                Times.Once,
+                "an ambiguous default-group placement must not be silent");
+        });
+    }
+
+    private DeviceDto ArrangeNewDevice(Guid accountId, Guid operatorId)
+    {
+        var deviceId = Guid.NewGuid();
+        var transporterId = Guid.NewGuid();
+        var device = new DeviceDto(
+            accountId, operatorId, "SER-9", "Device 9", 109, "Truck 109",
+            (short)DeviceType.OBDScanner, null, "hash", "ACTIVE");
+
+        _deviceWriter.Setup(x => x.UpsertSynchronizedDeviceAsync(device, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DeviceVm(
+                deviceId, accountId, operatorId, device.Serial, device.Name, device.Identifier,
+                device.ProviderDisplayName, DeviceType.OBDScanner, device.DeviceTypeId, device.Description,
+                device.ProviderMetadataHash, device.ProviderStatus, DetectedStatus.New,
+                DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, null, null));
+        _transporterWriter.Setup(x => x.CreateTransporterAsync(It.IsAny<TransporterDto>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TransporterVm(transporterId, "Truck 109", TransporterType.FleetVehicle, (short)TransporterType.FleetVehicle));
+        _assignmentWriter.Setup(x => x.AssignAsync(It.IsAny<TransporterDeviceAssignmentDto>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TransporterDeviceAssignmentDto dto, CancellationToken _) => new TransporterDeviceAssignmentVm(
+                Guid.NewGuid(), dto.AccountId, dto.TransporterId, dto.DeviceId, DateTimeOffset.UtcNow, null,
+                dto.Priority, dto.IsPrimary, AssignmentStatus.Active, dto.AssignmentReason, "ServiceClient", "syncworker_client"));
+
+        return device;
     }
 }
