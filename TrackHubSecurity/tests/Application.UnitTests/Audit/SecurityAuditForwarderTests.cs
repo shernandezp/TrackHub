@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sergio Hernandez. All rights reserved.
+﻿// Copyright (c) 2026 Sergio Hernandez. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License").
 //  You may not use this file except in compliance with the License.
@@ -15,60 +15,42 @@
 
 using Microsoft.Extensions.Logging;
 using TrackHub.Security.Application.Audit.Events;
+using TrackHub.Security.Domain.Constants;
 
 namespace Application.UnitTests.Audit;
 
-// Security audit forwarding to Manager is post-commit, best-effort. A transport
-// failure (Manager down) or a missing security_client identity must be logged and swallowed so the
-// originating security command still succeeds — audit transport failure != authorization failure.
+// Audit forwarding is recorded in the outbox and dispatched later: a Manager outage must cost the
+// originating command nothing, and must not cost the audit row either.
 [TestFixture]
 public class SecurityAuditForwarderTests
 {
     private static SecurityAuditForwarder.Notification MakeNotification()
         => new(new SecurityAuditEventDto(Guid.NewGuid(), "User", "actor", "CreateUser", "User", Guid.NewGuid().ToString(), null, "newvalues", "corr"));
 
-    private static SecurityAuditForwarder.Notification.EventHandler MakeHandler(IServiceProvider provider)
-        => new(provider, new Mock<ILogger<SecurityAuditForwarder.Notification.EventHandler>>().Object);
+    private static SecurityAuditForwarder.Notification.EventHandler MakeHandler(IOutboxWriter outbox)
+        => new(outbox, new Mock<ILogger<SecurityAuditForwarder.Notification.EventHandler>>().Object);
 
     [Test]
-    public void Handle_WriterThrows_DoesNotBubble()
+    public async Task Handle_RecordsTheEventOnce()
     {
-        var writer = new Mock<IManagerAuditWriter>();
-        writer.Setup(w => w.ForwardAuditEventAsync(It.IsAny<SecurityAuditEventDto>(), It.IsAny<CancellationToken>()))
-              .ThrowsAsync(new InvalidOperationException("Manager down"));
-        var provider = new Mock<IServiceProvider>();
-        provider.Setup(p => p.GetService(typeof(IManagerAuditWriter))).Returns(writer.Object);
+        var outbox = new Mock<IOutboxWriter>();
 
-        var handler = MakeHandler(provider.Object);
+        await MakeHandler(outbox.Object).Handle(MakeNotification(), CancellationToken.None);
 
-        Assert.DoesNotThrowAsync(async () => await handler.Handle(MakeNotification(), CancellationToken.None));
-        writer.Verify(w => w.ForwardAuditEventAsync(It.IsAny<SecurityAuditEventDto>(), It.IsAny<CancellationToken>()), Times.Once);
+        // Null key: audit rows are independent, so a stuck user mirror never holds them up.
+        outbox.Verify(w => w.EnqueueAsync(
+            OutboxMessageTypes.AuditEvent, It.IsAny<string>(), null, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
-    public void Handle_WriterResolutionFails_DoesNotBubble()
+    public void Handle_OutboxThrows_DoesNotBubble()
     {
-        // security_client not registered in OpenIddict / DI resolution throws synchronously —
-        // must still be swallowed (regression guard for the ctor-injection resilience bug).
-        var provider = new Mock<IServiceProvider>();
-        provider.Setup(p => p.GetService(typeof(IManagerAuditWriter))).Returns((object?)null);
+        var outbox = new Mock<IOutboxWriter>();
+        outbox.Setup(w => w.EnqueueAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+              .ThrowsAsync(new InvalidOperationException("database down"));
 
-        var handler = MakeHandler(provider.Object);
+        var handler = MakeHandler(outbox.Object);
 
         Assert.DoesNotThrowAsync(async () => await handler.Handle(MakeNotification(), CancellationToken.None));
-    }
-
-    [Test]
-    public async Task Handle_Success_ForwardsEventOnce()
-    {
-        var writer = new Mock<IManagerAuditWriter>();
-        var provider = new Mock<IServiceProvider>();
-        provider.Setup(p => p.GetService(typeof(IManagerAuditWriter))).Returns(writer.Object);
-        var notification = MakeNotification();
-
-        var handler = MakeHandler(provider.Object);
-        await handler.Handle(notification, CancellationToken.None);
-
-        writer.Verify(w => w.ForwardAuditEventAsync(notification.AuditEvent, It.IsAny<CancellationToken>()), Times.Once);
     }
 }

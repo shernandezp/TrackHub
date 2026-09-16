@@ -18,6 +18,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TrackHub.Security.Domain.Interfaces;
 using TrackHub.Security.Domain.Records;
+using System.Text.Json;
+using TrackHub.Security.Domain.Constants;
 
 namespace TrackHub.Security.Application.Audit.Events;
 
@@ -51,29 +53,32 @@ public static class SecurityAudit
     }
 }
 
-// Post-commit, best-effort forwarding of a security audit event to Manager. A transport failure
-// (Manager down) is logged with the payload and never fails the originating command.
+// Records a security audit event for forwarding to Manager. Recorded rather than sent inline: the
+// outbound writer acquires the security_client token synchronously, so a missing identity or a
+// Manager outage would otherwise cost the audit row entirely.
 public sealed class SecurityAuditForwarder
 {
     public readonly record struct Notification(SecurityAuditEventDto AuditEvent) : INotification
     {
-        // Resolves the outbound audit writer lazily inside the try/catch: constructing it acquires the
-        // security_client service token synchronously, so a missing/misconfigured identity must be
-        // swallowed here rather than bubble up and fail the originating security command.
-        public class EventHandler(IServiceProvider serviceProvider, ILogger<EventHandler> logger) : INotificationHandler<Notification>
+        public class EventHandler(IOutboxWriter outbox, ILogger<EventHandler> logger) : INotificationHandler<Notification>
         {
             public async Task Handle(Notification notification, CancellationToken cancellationToken)
             {
                 try
                 {
-                    var auditWriter = serviceProvider.GetRequiredService<IManagerAuditWriter>();
-                    await auditWriter.ForwardAuditEventAsync(notification.AuditEvent, cancellationToken);
+                    await outbox.EnqueueAsync(
+                        OutboxMessageTypes.AuditEvent,
+                        JsonSerializer.Serialize(notification.AuditEvent),
+                        // Audit rows are independent of each other: no ordering key, so one stuck
+                        // user mirror never holds up the audit trail.
+                        null,
+                        cancellationToken);
                 }
                 catch (Exception ex)
                 {
                     logger.LogWarning(
                         ex,
-                        "Failed to forward security audit event {Action} on {ResourceType} {ResourceId}; the originating command still succeeded. Payload account={AccountId} actor={ActorId}.",
+                        "Failed to record security audit event {Action} on {ResourceType} {ResourceId}; the originating command still succeeded. Payload account={AccountId} actor={ActorId}.",
                         notification.AuditEvent.Action,
                         notification.AuditEvent.ResourceType,
                         notification.AuditEvent.ResourceId,

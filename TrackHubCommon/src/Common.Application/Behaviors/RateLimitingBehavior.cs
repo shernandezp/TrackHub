@@ -19,12 +19,15 @@ using Common.Application.Attributes;
 using Common.Application.Exceptions;
 using Common.Application.Interfaces;
 using Common.Mediator;
+using Microsoft.Extensions.Logging;
 
 namespace Common.Application.Behaviors;
 
-public class RateLimitingBehavior<TRequest, TResponse>(IUser user) 
+public class RateLimitingBehavior<TRequest, TResponse>(IUser user, ILogger<RateLimitingBehavior<TRequest, TResponse>> logger)
     : IPipelineBehavior<TRequest, TResponse> where TRequest : notnull
 {
+    private const string UnidentifiedPartition = "unidentified";
+
     private static readonly ConcurrentDictionary<string, RateLimitInfo> _rateLimitStore = new();
     private static readonly Lock CleanupLock = new();
     private static DateTimeOffset LastCleanup = DateTimeOffset.UtcNow;
@@ -39,10 +42,6 @@ public class RateLimitingBehavior<TRequest, TResponse>(IUser user)
         }
 
         var partitionKey = GetPartitionKey(rateLimitAttribute.PartitionKey);
-        if (string.IsNullOrEmpty(partitionKey))
-        {
-            return await next();
-        }
 
         var requestType = typeof(TRequest).Name;
         var key = $"{requestType}:{rateLimitAttribute.PartitionKey}:{partitionKey}";
@@ -67,15 +66,29 @@ public class RateLimitingBehavior<TRequest, TResponse>(IUser user)
         return await next();
     }
 
-    private string? GetPartitionKey(string partitionKeyType)
+    private string GetPartitionKey(string partitionKeyType)
     {
-        return partitionKeyType.ToLowerInvariant() switch
+        var requested = partitionKeyType.ToLowerInvariant() switch
         {
             "user" => user.Id,
             "client" => user.Client,
             "endpoint" => typeof(TRequest).Name,
             _ => user.Id
         };
+
+        if (!string.IsNullOrEmpty(requested))
+        {
+            return requested;
+        }
+
+        // Falling back rather than skipping: a "client" partition evaluated on a user token used
+        // to resolve nothing and bypass the limit entirely, silently.
+        var fallback = user.Id ?? user.Client ?? user.SubjectId;
+        logger.LogWarning(
+            "Rate limit partition '{PartitionKey}' resolved no value for {Request}; falling back to {Fallback}.",
+            partitionKeyType, typeof(TRequest).Name, fallback is null ? "a shared bucket" : "the caller subject");
+
+        return fallback ?? UnidentifiedPartition;
     }
 
     private static void PerformCleanup()

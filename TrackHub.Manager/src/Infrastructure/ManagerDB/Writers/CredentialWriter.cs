@@ -35,7 +35,7 @@ public sealed class CredentialWriter(IApplicationDbContext context, ICurrentPrin
     /// <returns>The created credential view model</returns>
     public async Task<CredentialVm> CreateCredentialAsync(CredentialDto credentialDto, byte[] salt, string key, CancellationToken cancellationToken)
     {
-        await RequireOperatorAccessAsync(credentialDto.OperatorId, cancellationToken);
+        var accountId = await RequireOperatorAccessAsync(credentialDto.OperatorId, cancellationToken);
         var credential = new Credential(
             credentialDto.Uri,
             credentialDto.Username.EncryptData(key, salt),
@@ -46,6 +46,9 @@ public sealed class CredentialWriter(IApplicationDbContext context, ICurrentPrin
             credentialDto.OperatorId);
 
         await Context.Credentials.AddAsync(credential, cancellationToken);
+        // Credential material never reaches the audit payload; the operator and endpoint do.
+        AddAuditEvent(accountId, "CreateCredential", "Credential", $"{credential.CredentialId}", null,
+            $$"""{"operatorId":"{{credential.OperatorId}}","uri":{{AuditJson.Quote(credential.Uri)}}}""");
         await Context.SaveChangesAsync(cancellationToken);
 
         return new CredentialVm(
@@ -67,13 +70,13 @@ public sealed class CredentialWriter(IApplicationDbContext context, ICurrentPrin
     /// <exception cref="NotFoundException"></exception>
     public async Task UpdateCredentialAsync(UpdateCredentialDto credentialDto, byte[] salt, string key, CancellationToken cancellationToken)
     {
-        var credential = await Context.Credentials.Include(c => c.Operator)
+        var credential = await Context.Credentials
+            .AsTracking().Include(c => c.Operator)
             .FirstOrDefaultAsync(c => c.CredentialId == credentialDto.CredentialId, cancellationToken)
             ?? throw new NotFoundException(nameof(Credential), $"{credentialDto.CredentialId}");
         RequireAccountWriteAccess(credential.Operator.AccountId);
 
-        Context.Credentials.Attach(credential);
-
+        var previousUri = credential.Uri;
         credential.Uri = credentialDto.Uri;
         credential.Username = credentialDto.Username.EncryptData(key, salt);
         credential.Password = credentialDto.Password.EncryptData(key, salt);
@@ -91,6 +94,9 @@ public sealed class CredentialWriter(IApplicationDbContext context, ICurrentPrin
         // No health-rollup reset needed: operator health is derived from the latest health
         // check, so the next check after rotation reflects reality on its own.
 
+        AddAuditEvent(credential.Operator.AccountId, "RotateCredential", "Credential", $"{credential.CredentialId}",
+            $$"""{"uri":{{AuditJson.Quote(previousUri)}},"credentialVersion":{{credential.CredentialVersion - 1}}}""",
+            $$"""{"uri":{{AuditJson.Quote(credential.Uri)}},"credentialVersion":{{credential.CredentialVersion}}}""");
         await Context.SaveChangesAsync(cancellationToken);
     }
 
@@ -103,12 +109,11 @@ public sealed class CredentialWriter(IApplicationDbContext context, ICurrentPrin
     /// <exception cref="NotFoundException"></exception>
     public async Task UpdateTokenAsync(UpdateTokenDto credentialDto, string key, CancellationToken cancellationToken)
     {
-        var credential = await Context.Credentials.Include(c => c.Operator)
+        var credential = await Context.Credentials
+            .AsTracking().Include(c => c.Operator)
             .FirstOrDefaultAsync(c => c.CredentialId == credentialDto.CredentialId, cancellationToken)
             ?? throw new NotFoundException(nameof(Credential), $"{credentialDto.CredentialId}");
         RequireAccountWriteAccess(credential.Operator.AccountId);
-
-        Context.Credentials.Attach(credential);
 
         var salt = Convert.FromBase64String(credential.Salt);
         credential.Token = credentialDto.Token?.EncryptData(key, salt);
@@ -116,6 +121,8 @@ public sealed class CredentialWriter(IApplicationDbContext context, ICurrentPrin
         credential.RefreshToken = credentialDto.RefreshToken?.EncryptData(key, salt);
         credential.RefreshTokenExpiration = credentialDto.RefreshTokenExpiration;
 
+        AddAuditEvent(credential.Operator.AccountId, "RefreshCredentialToken", "Credential", $"{credential.CredentialId}", null,
+            $$"""{"tokenExpiration":{{AuditJson.Quote(credentialDto.TokenExpiration?.ToString("O"))}}}""");
         await Context.SaveChangesAsync(cancellationToken);
     }
 
@@ -127,13 +134,14 @@ public sealed class CredentialWriter(IApplicationDbContext context, ICurrentPrin
     /// <exception cref="NotFoundException"></exception>
     public async Task DeleteCredentialAsync(Guid credentialId, CancellationToken cancellationToken)
     {
-        var credential = await Context.Credentials.Include(c => c.Operator)
+        var credential = await Context.Credentials
+            .AsTracking().Include(c => c.Operator)
             .FirstOrDefaultAsync(c => c.CredentialId == credentialId, cancellationToken)
             ?? throw new NotFoundException(nameof(Credential), $"{credentialId}");
         RequireAccountWriteAccess(credential.Operator.AccountId);
 
-        Context.Credentials.Attach(credential);
-
+        AddAuditEvent(credential.Operator.AccountId, "DeleteCredential", "Credential", $"{credential.CredentialId}",
+            $$"""{"operatorId":"{{credential.OperatorId}}","uri":{{AuditJson.Quote(credential.Uri)}}}""", null);
         Context.Credentials.Remove(credential);
         await Context.SaveChangesAsync(cancellationToken);
     }
@@ -144,7 +152,8 @@ public sealed class CredentialWriter(IApplicationDbContext context, ICurrentPrin
     // nothing about the row). Absence is not an error here.
     public async Task DeleteCredentialByOperatorAsync(Guid operatorId, CancellationToken cancellationToken)
     {
-        var credential = await Context.Credentials.Include(c => c.Operator)
+        var credential = await Context.Credentials
+            .AsTracking().Include(c => c.Operator)
             .FirstOrDefaultAsync(c => c.OperatorId == operatorId, cancellationToken);
         if (credential is null)
         {
@@ -152,11 +161,13 @@ public sealed class CredentialWriter(IApplicationDbContext context, ICurrentPrin
         }
         RequireAccountWriteAccess(credential.Operator.AccountId);
 
+        AddAuditEvent(credential.Operator.AccountId, "DeleteCredential", "Credential", $"{credential.CredentialId}",
+            $$"""{"operatorId":"{{credential.OperatorId}}","uri":{{AuditJson.Quote(credential.Uri)}}}""", null);
         Context.Credentials.Remove(credential);
         await Context.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task RequireOperatorAccessAsync(Guid operatorId, CancellationToken cancellationToken)
+    private async Task<Guid> RequireOperatorAccessAsync(Guid operatorId, CancellationToken cancellationToken)
     {
         var accountId = await Context.Operators
             .Where(o => o.OperatorId == operatorId)
@@ -164,6 +175,7 @@ public sealed class CredentialWriter(IApplicationDbContext context, ICurrentPrin
             .FirstOrDefaultAsync(cancellationToken)
             ?? throw new NotFoundException(nameof(Operator), $"{operatorId}");
         RequireAccountWriteAccess(accountId);
+        return accountId;
     }
 
     private string ResolveActorId()

@@ -24,7 +24,7 @@ internal static class TestDb
 {
     public static ApplicationDbContext NewContext()
         => new(new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase($"telemetry-{Guid.NewGuid()}")
+            .UseInMemoryDatabase($"telemetry-{Guid.NewGuid()}").UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
             .Options);
 
     // A service-client principal scoped to a single account: passes RequireAccountAccess for that

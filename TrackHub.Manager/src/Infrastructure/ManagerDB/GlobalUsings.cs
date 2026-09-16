@@ -24,3 +24,4 @@ global using TrackHub.Manager.Domain.Models;
 global using TrackHub.Manager.Infrastructure.ManagerDB;
 global using TrackHub.Manager.Infrastructure.ManagerDB.Readers;
 global using TrackHub.Manager.Infrastructure.ManagerDB.Writers;
+global using Common.Domain.Entities;

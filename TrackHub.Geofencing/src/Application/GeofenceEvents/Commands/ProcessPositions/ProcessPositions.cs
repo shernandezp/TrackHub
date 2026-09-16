@@ -17,7 +17,7 @@ using TrackHub.Geofencing.Application.GeofenceEvents.Services.Interfaces;
 
 namespace TrackHub.Geofencing.Application.GeofenceEvents.Commands.ProcessPositions;
 
-[Authorize(Resource = Resources.Geofencing, Action = Actions.Custom)]
+[Authorize(Resource = Resources.Geofencing, Action = Actions.Custom, PrincipalTypes = "ServiceClient")]
 [AllowCrossAccount("Router/SyncWorker position feed: one global router_client/syncworker_client identity iterates every account and pushes that account's position batch into geofence detection. The token carries no account claim.")]
 public readonly record struct ProcessPositionsCommand(
     Guid AccountId,

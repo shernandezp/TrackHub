@@ -15,10 +15,11 @@
 
 using TrackHub.Manager.Infrastructure.Entities;
 using TrackHub.Manager.Infrastructure.Interfaces;
+using Common.Application.Interfaces;
 
 namespace TrackHub.Manager.Infrastructure.Writers;
 
-public sealed class TransporterTypeWriter(IApplicationDbContext context) : ITransporterTypeWriter
+public sealed class TransporterTypeWriter(IApplicationDbContext context, ICurrentPrincipal principal) : ITransporterTypeWriter
 {
 
     /// <summary>
@@ -35,11 +36,18 @@ public sealed class TransporterTypeWriter(IApplicationDbContext context) : ITran
 
         context.TransporterTypes.Attach(transporterType);
 
+        var previous = Describe(transporterType);
         transporterType.AccBased = transporterTypeDto.AccBased;
         transporterType.StoppedGap = transporterTypeDto.StoppedGap;
         transporterType.MaxDistance = transporterTypeDto.MaxDistance;
         transporterType.MaxTimeGap = transporterTypeDto.MaxTimeGap;
 
+        // Transporter types are platform-wide, so the audit row carries the platform account.
+        context.AuditEvents.Add(AuditTrail.Create(principal, Guid.Empty, "UpdateTransporterType", nameof(TransporterType),
+            $"{transporterType.TransporterTypeId}", previous, Describe(transporterType)));
         await context.SaveChangesAsync(cancellationToken);
     }
+
+    private static string Describe(TransporterType transporterType)
+        => $$"""{"accBased":{{transporterType.AccBased.ToString().ToLowerInvariant()}},"stoppedGap":{{AuditJson.Number(transporterType.StoppedGap)}},"maxDistance":{{AuditJson.Number(transporterType.MaxDistance)}},"maxTimeGap":{{AuditJson.Number(transporterType.MaxTimeGap)}}}""";
 }

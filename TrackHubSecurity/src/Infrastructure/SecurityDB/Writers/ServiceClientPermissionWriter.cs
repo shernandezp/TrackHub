@@ -47,12 +47,12 @@ public sealed class ServiceClientPermissionWriter(IApplicationDbContext context)
     public async Task UpdateServiceClientPermissionAsync(Guid serviceClientPermissionId, ServiceClientPermissionDto permission, CancellationToken cancellationToken)
     {
         var entity = await context.ServiceClientPermissions
+            .AsTracking()
             .FirstOrDefaultAsync(x => x.ServiceClientPermissionId == serviceClientPermissionId, cancellationToken)
             ?? throw new NotFoundException(nameof(ServiceClientPermission), $"{serviceClientPermissionId}");
 
         await GuardAgainstDuplicateAsync(permission, serviceClientPermissionId, cancellationToken);
 
-        context.ServiceClientPermissions.Attach(entity);
         entity.ClientId = permission.ClientId;
         entity.AccountId = permission.AccountId;
         entity.Resource = permission.Resource;
@@ -70,6 +70,7 @@ public sealed class ServiceClientPermissionWriter(IApplicationDbContext context)
     public async Task<Guid> DeleteServiceClientPermissionAsync(Guid serviceClientPermissionId, CancellationToken cancellationToken)
     {
         var entity = await context.ServiceClientPermissions
+            .AsTracking()
             .FirstOrDefaultAsync(x => x.ServiceClientPermissionId == serviceClientPermissionId, cancellationToken)
             ?? throw new NotFoundException(nameof(ServiceClientPermission), $"{serviceClientPermissionId}");
 

@@ -203,10 +203,9 @@ function GeofenceManager() {
   };
 
   const handleDelete = async () => {
-    if (removeRef.current) {
-      await onDelete(toDelete!)
-      removeRef.current(toDelete!);
-    }
+    if (!toDelete) return;
+    await onDelete(toDelete);
+    removeRef.current?.(toDelete);
   };
 
   const handleEdit = async () => {

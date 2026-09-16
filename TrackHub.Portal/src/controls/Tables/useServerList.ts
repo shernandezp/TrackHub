@@ -16,9 +16,9 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ListParams } from 'api/core/paging';
+import { SEARCH_DEBOUNCE_MS } from 'utils/useDebouncedValue';
 
-/** Milliseconds of quiet before a search draft is pushed to the server query. */
-const SEARCH_DEBOUNCE_MS = 350;
+
 
 export interface UseServerListResult {
   /** Zero-based page index. */

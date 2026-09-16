@@ -1,11 +1,10 @@
 /**
  * Role gates, feature gates and the error paths the UI is designed to show.
  *
- * The role-scoped halves need a second, non-administrator principal. The setup
- * project creates one through the real Account Management screens, but a user
- * created that way can never sign in — nothing in the platform ever sets
- * `security.users.verified` (reported as a finding) — so those tests SKIP with a
- * message naming the env vars that supply an existing, verified account.
+ * The role-scoped halves need a second, non-administrator principal. The setup project creates one
+ * through the real Account Management screens; if the platform then refuses it, these tests FAIL
+ * naming that refusal, because a principal the product cannot sign in is a defect, not a missing
+ * fixture.
  */
 
 import { test, expect, flag } from '../fixtures';

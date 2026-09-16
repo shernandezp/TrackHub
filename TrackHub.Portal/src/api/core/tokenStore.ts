@@ -32,10 +32,17 @@ let refreshHandler: RefreshHandler | null = null;
 /** Module-level mutex so concurrent requests trigger a single refresh. */
 let refreshPromise: Promise<string> | null = null;
 
+/**
+ * Treated as already expired this many seconds before it actually is. Without the buffer a token
+ * that the browser clock still calls valid is regularly rejected by the server — clock skew, or a
+ * request issued in the last moments of its life.
+ */
+const EXPIRY_SKEW_SECONDS = 45;
+
 function isTokenValid(token: string): boolean {
   try {
     const { exp } = jwtDecode(token);
-    return exp !== undefined && exp >= Date.now() / 1000;
+    return exp !== undefined && exp - EXPIRY_SKEW_SECONDS >= Date.now() / 1000;
   } catch {
     return false;
   }
@@ -84,6 +91,16 @@ export const tokenStore = {
         refreshPromise = null;
       });
     return refreshPromise;
+  },
+
+  /**
+   * Forces a refresh: the held token was rejected by the server even though it looked valid here
+   * (a revoked grant, an authority restart, skew beyond the buffer). Shares the same single-flight
+   * promise, so concurrent 401s still refresh once.
+   */
+  async forceRefreshAccessToken(): Promise<string> {
+    accessToken = null;
+    return this.acquireValidAccessToken();
   },
 
   /** Test/logout hook: drop all state. */

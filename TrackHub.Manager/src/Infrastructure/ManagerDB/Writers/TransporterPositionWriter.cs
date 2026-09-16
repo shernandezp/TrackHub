@@ -26,11 +26,11 @@ public sealed class TransporterPositionWriter(IApplicationDbContext context) : I
     /// </summary>
     public async Task DeleteTransporterPositionAsync(Guid transporterId, CancellationToken cancellationToken)
     {
-        var position = await context.TransporterPositions.FirstOrDefaultAsync(t => t.TransporterId == transporterId, cancellationToken);
+        var position = await context.TransporterPositions
+            .AsTracking().FirstOrDefaultAsync(t => t.TransporterId == transporterId, cancellationToken);
 
         if (position is not null)
         {
-            context.TransporterPositions.Attach(position);
 
             context.TransporterPositions.Remove(position);
             await context.SaveChangesAsync(cancellationToken);

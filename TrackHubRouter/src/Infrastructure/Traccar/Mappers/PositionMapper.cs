@@ -17,6 +17,12 @@ namespace TrackHub.Router.Infrastructure.Traccar.Mappers;
 
 internal static class PositionMapper
 {
+    // Traccar carries speed in KNOTS: its position model takes speed-over-ground straight from the
+    // NMEA RMC sentence, and its own UI converts for display. PositionVm is km/h platform-wide (the
+    // Samsara provider normalizes mph the same way), so the conversion belongs here. Exact by
+    // definition: a nautical mile is 1852 m.
+    private const double KnotsToKmh = 1.852;
+
 
     /// <summary>
     /// Maps a Position object to a PositionVm object
@@ -34,7 +40,7 @@ internal static class PositionMapper
             Math.Round(position.Altitude),
             position.DeviceTime,
             position.ServerTime,
-            Math.Round(position.Speed), //It assumes speed is in km/h
+            Math.Round(position.Speed * KnotsToKmh),
             position.Course,
             null,
             position.Address,

@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Amazon;
@@ -22,6 +23,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Npgsql;
+using Common.Infrastructure.Http;
 using TrackHub.Manager.Domain.Interfaces;
 using TrackHub.Manager.Infrastructure;
 using TrackHub.Manager.Infrastructure.Interfaces;
@@ -110,11 +112,30 @@ public static class DependencyInjection
         services.AddScoped<INotificationTemplateReader, NotificationTemplateReader>();
         services.AddScoped<INotificationTemplateWriter, NotificationTemplateWriter>();
         services.AddScoped<IAlertRuleEvaluator, TrackHub.Manager.Infrastructure.ManagerDB.Services.AlertRuleEvaluator>();
+        services.AddScoped<IAccountFeatureGate, TrackHub.Manager.Infrastructure.ManagerDB.Jobs.AccountFeatureGate>();
+        services.AddScoped<INotificationRenderer, TrackHub.Manager.Infrastructure.ManagerDB.Jobs.NotificationRenderer>();
+        services.AddScoped<IAlertEvaluationStore, TrackHub.Manager.Infrastructure.ManagerDB.Jobs.AlertEvaluationStore>();
+        services.AddScoped<IDeliveryRetentionStore, TrackHub.Manager.Infrastructure.ManagerDB.Jobs.DeliveryRetentionStore>();
+        services.AddScoped<IPlatformRetentionStore, TrackHub.Manager.Infrastructure.ManagerDB.Jobs.PlatformRetentionStore>();
+        services.AddScoped<IDocumentRetentionStore, TrackHub.Manager.Infrastructure.ManagerDB.Jobs.DocumentRetentionStore>();
+        services.AddScoped<IDocumentScanStore, TrackHub.Manager.Infrastructure.ManagerDB.Jobs.DocumentScanStore>();
+        services.AddScoped<IDocumentExpirationStore, TrackHub.Manager.Infrastructure.ManagerDB.Jobs.DocumentExpirationStore>();
+        services.AddScoped<IWorkforceExpirationStore, TrackHub.Manager.Infrastructure.ManagerDB.Jobs.WorkforceExpirationStore>();
+        services.AddScoped<ITrialExpirationStore, TrackHub.Manager.Infrastructure.ManagerDB.Jobs.TrialExpirationStore>();
+        services.AddScoped<INotificationDigestStore, TrackHub.Manager.Infrastructure.ManagerDB.Jobs.NotificationDigestStore>();
+        services.AddScoped<INotificationDispatchStore, TrackHub.Manager.Infrastructure.ManagerDB.Jobs.NotificationDispatchStore>();
 
         // Notification channel providers. Push is contract-only for now.
         services.Configure<SmtpOptions>(configuration.GetSection(SmtpOptions.SectionName));
         services.Configure<WhatsAppOptions>(configuration.GetSection(WhatsAppOptions.SectionName));
-        services.AddHttpClient(WebhookNotificationProvider.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(10));
+        // A 3xx from a tenant-controlled endpoint must not be followed to an internal target, and
+        // the connect callback refuses a non-routable address even if DNS changes after validation.
+        services.AddHttpClient(WebhookNotificationProvider.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(10))
+            .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+            {
+                AllowAutoRedirect = false,
+                ConnectCallback = NonRoutableAddressGuard.ConnectCallback()
+            });
         services.AddHttpClient(WhatsAppNotificationProvider.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(30));
         services.AddScoped<INotificationChannelProvider, InAppNotificationProvider>();
         services.AddScoped<INotificationChannelProvider, EmailNotificationProvider>();

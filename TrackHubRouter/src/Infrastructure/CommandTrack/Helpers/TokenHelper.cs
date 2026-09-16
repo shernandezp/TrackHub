@@ -48,6 +48,14 @@ internal class TokenHelper(ICredentialWriter credentialWriter, IProviderSessionS
         return await RefreshTokenAsync(httpClient, credential, token);
     }
 
+    // Drops both caches and authenticates again. Used when the provider rejects the stored token
+    // with 401 before its recorded expiry — a server-side revocation the expiry cannot predict.
+    public async Task<string> ForceRefreshTokenAsync(HttpClient httpClient, CredentialTokenDto credential, CancellationToken token)
+    {
+        sessionStore.Invalidate(credential.CredentialId);
+        return await RefreshTokenAsync(httpClient, credential, token);
+    }
+
     // Refreshes the token asynchronously
     private async Task<string> RefreshTokenAsync(HttpClient httpClient, CredentialTokenDto credential, CancellationToken token)
     {
@@ -97,6 +105,9 @@ internal class TokenHelper(ICredentialWriter credentialWriter, IProviderSessionS
     }
 
     // Checks if the token has expired
+    // A null expiry means the provider never said when the token dies. Treat that as expired: the
+    // lifted comparison would otherwise be false forever and pin a token the provider may already
+    // have dropped, leaving the operator failing 401 until someone rotates the credential by hand.
     private static bool IsTokenExpired(CredentialTokenDto token)
-        => DateTimeOffset.UtcNow >= token.TokenExpiration;
+        => token.TokenExpiration is not { } expiration || DateTimeOffset.UtcNow >= expiration;
 }

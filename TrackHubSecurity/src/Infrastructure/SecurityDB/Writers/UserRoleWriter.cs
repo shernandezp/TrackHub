@@ -30,6 +30,7 @@ public sealed class UserRoleWriter(IApplicationDbContext context, ICurrentPrinci
     public async Task<UserRoleVm> CreateUserRoleAsync(UserRoleDto userRoleDto, CancellationToken cancellationToken)
     {
         await RequireTargetUserAccessAsync(userRoleDto.UserId, cancellationToken);
+        await RequireGrantableRoleAsync(userRoleDto.RoleId, cancellationToken);
 
         var userRole = new UserRole
         {
@@ -62,6 +63,6 @@ public sealed class UserRoleWriter(IApplicationDbContext context, ICurrentPrinci
     {
         var target = await Context.Users.FindAsync([userId], cancellationToken)
             ?? throw new NotFoundException(nameof(User), $"{userId}");
-        RequireAccountAccess(target.AccountId);
+        await RequireAccountAccessAsync(target.AccountId, cancellationToken);
     }
 }

@@ -6,7 +6,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { test, expect, unique } from '../fixtures';
+import { test, expect, flag, unique } from '../fixtures';
 import { NAV_KEYS, NAV_ROUTES } from '../pages/shell';
 import type { NavKey } from '../pages/shell';
 import { PORTAL_ROOT } from '../fixtures/env';
@@ -39,7 +39,7 @@ test.describe('shell', () => {
 
     // The seeded administrator holds Administrator + Manager and the account has
     // every feature on, so the full route table is reachable.
-    expect(await shell.visibleNavKeys()).toEqual([...NAV_KEYS]);
+    await expect.poll(() => shell.visibleNavKeys(), { timeout: 30_000 }).toEqual([...NAV_KEYS]);
 
     for (const key of NAV_KEYS) {
       if (key === 'platformStatus') continue; // chrome-less: covered by its own spec
@@ -127,12 +127,8 @@ test.describe('shell', () => {
     page,
     t,
   }) => {
-    // The Save handler calls window.alert; a dialog left unhandled blocks the page.
-    const alerts: string[] = [];
-    page.on('dialog', (dialog) => {
-      alerts.push(dialog.message());
-      void dialog.accept();
-    });
+    // Saving confirms through the app's own toast, not a native dialog.
+    const saveToast = page.getByRole('alert').filter({ hasText: t('settings.saveMessage') });
 
     await shell.enter();
     await shell.configuratorButton.click();
@@ -145,7 +141,7 @@ test.describe('shell', () => {
     await interval.fill(changed);
     const saved = settingsSaved(page);
     await page.getByRole('button', { name: t('generic.save') }).last().click();
-    await expect.poll(() => alerts).toContain(t('settings.saveMessage'));
+    await expect(saveToast).toBeVisible();
     await saved;
 
     await shell.reloadTo('dashboard');
@@ -156,7 +152,7 @@ test.describe('shell', () => {
     await interval.fill(original);
     const restored = settingsSaved(page);
     await page.getByRole('button', { name: t('generic.save') }).last().click();
-    await expect.poll(() => alerts.length).toBeGreaterThan(1);
+    await expect(saveToast).toBeVisible();
     await restored;
   });
 
@@ -165,11 +161,8 @@ test.describe('shell', () => {
     page,
     t,
   }) => {
-    const alerts: string[] = [];
-    page.on('dialog', (dialog) => {
-      alerts.push(dialog.message());
-      void dialog.accept();
-    });
+    // A refused save must not confirm: the success toast never appears.
+    const saveToast = page.getByRole('alert').filter({ hasText: t('settings.saveMessage') });
 
     await shell.enter();
     await shell.configuratorButton.click();
@@ -183,7 +176,7 @@ test.describe('shell', () => {
     await expect(
       page.getByText(t('settings.validation.refreshMapInterval', { min: 60 }))
     ).toBeVisible();
-    expect(alerts).toEqual([]);
+    await expect(saveToast).toBeHidden();
 
     await interval.fill(original);
   });
@@ -211,12 +204,16 @@ test.describe('shell', () => {
     page,
     t,
   }) => {
-    // The Save handler calls window.alert; a dialog left unhandled blocks the page.
-    const alerts: string[] = [];
-    page.on('dialog', (dialog) => {
-      alerts.push(dialog.message());
-      void dialog.accept();
-    });
+    // Switching the account to Google renders every map screen against the Google Maps
+    // API: without a key authorized for the portal's origin the map is broken until the
+    // setting is put back, so the flip is only driven where the environment can serve it.
+    test.skip(
+      !flag('E2E_GOOGLE_MAPS'),
+      'Set E2E_GOOGLE_MAPS=1 when the stack has a Maps key authorized for the portal origin.'
+    );
+
+    // Saving confirms through the app's own toast, not a native dialog.
+    const saveToast = page.getByRole('alert').filter({ hasText: t('settings.saveMessage') });
 
     await shell.enter();
     await shell.configuratorButton.click();
@@ -230,7 +227,7 @@ test.describe('shell', () => {
     await page.getByRole('option', { name: target, exact: true }).click();
     const saved = settingsSaved(page);
     await page.getByRole('button', { name: t('generic.save') }).last().click();
-    await expect.poll(() => alerts).toContain(t('settings.saveMessage'));
+    await expect(saveToast).toBeVisible();
     await saved;
 
     await shell.reloadTo('dashboard');
@@ -245,7 +242,7 @@ test.describe('shell', () => {
     await page.getByRole('option', { name: original, exact: true }).click();
     const restored = settingsSaved(page);
     await page.getByRole('button', { name: t('generic.save') }).last().click();
-    await expect.poll(() => alerts.length).toBeGreaterThan(1);
+    await expect(saveToast).toBeVisible();
     await restored;
     await shell.reloadTo('dashboard');
     await shell.configuratorButton.click();

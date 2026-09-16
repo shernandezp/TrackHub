@@ -14,6 +14,7 @@
 //
 
 using Common.Application.Interfaces;
+using Common.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;

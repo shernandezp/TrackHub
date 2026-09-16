@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using TrackHub.AuthorityServer.Web.Helpers;
 using System.Security.Claims;
 using Moq;
 using OpenIddict.Abstractions;
@@ -37,8 +38,8 @@ public class TokenHandlerRoleClaimTests
         _handler = new TokenHandler(
             Mock.Of<IClientReader>(),
             _userReader.Object,
-            Mock.Of<IDriverCredentialReader>(),
-            Mock.Of<IServiceClientPermissionReader>());
+            Mock.Of<IServiceClientPermissionReader>(),
+            new SubjectValidity(_userReader.Object, Mock.Of<IDriverCredentialReader>()));
     }
 
     private static ClaimsPrincipal UserPrincipal(Guid userId, string? currentRoleClaim)

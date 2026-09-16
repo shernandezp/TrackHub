@@ -14,7 +14,8 @@ public sealed class AccountFeatureMasterWriter(IApplicationDbContext context, IC
 {
     public async Task<AccountFeatureVm> SetAccountFeatureAsync(AccountFeatureDto feature, CancellationToken cancellationToken)
     {
-        var entity = await Context.AccountFeatures.FirstOrDefaultAsync(x => x.AccountId == feature.AccountId && x.FeatureKey == feature.FeatureKey, cancellationToken);
+        var entity = await Context.AccountFeatures
+            .AsTracking().FirstOrDefaultAsync(x => x.AccountId == feature.AccountId && x.FeatureKey == feature.FeatureKey, cancellationToken);
         string? oldValues = null;
         if (entity is null)
         {
@@ -24,7 +25,6 @@ public sealed class AccountFeatureMasterWriter(IApplicationDbContext context, IC
         else
         {
             oldValues = AuditValues(entity);
-            Context.AccountFeatures.Attach(entity);
             entity.Enabled = feature.Enabled;
             entity.Tier = feature.Tier;
             entity.Source = feature.Source;

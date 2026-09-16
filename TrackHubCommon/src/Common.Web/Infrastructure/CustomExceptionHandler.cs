@@ -37,6 +37,7 @@ public class CustomExceptionHandler : IExceptionHandler
                 { typeof(TooManyRequestsException), HandleTooManyRequestsException },
                 { typeof(ConflictException), HandleConflictException },
                 { typeof(AccountSuspendedException), HandleAccountSuspendedException },
+                { typeof(FeatureDisabledException), HandleFeatureDisabledException },
             };
     }
 
@@ -44,12 +45,15 @@ public class CustomExceptionHandler : IExceptionHandler
     // It returns true if the exception was handled successfully, otherwise false.
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
-        var exceptionType = exception.GetType();
-
-        if (_exceptionHandlers.TryGetValue(exceptionType, out Func<HttpContext, Exception, Task>? value))
+        // Walking the hierarchy rather than matching the exact type, so a subclass of a mapped
+        // exception keeps its contract instead of falling through to a 500.
+        for (var type = exception.GetType(); type is not null; type = type.BaseType)
         {
-            await value.Invoke(httpContext, exception);
-            return true;
+            if (_exceptionHandlers.TryGetValue(type, out Func<HttpContext, Exception, Task>? value))
+            {
+                await value.Invoke(httpContext, exception);
+                return true;
+            }
         }
 
         // Fallback: return 500 for any unhandled exception type
@@ -91,6 +95,26 @@ public class CustomExceptionHandler : IExceptionHandler
             Detail = exception.Message,
             Type = "https://tools.ietf.org/html/rfc7231#section-6.5.3"
         });
+    }
+
+    // HandleFeatureDisabledException mirrors the GraphQL filter's FEATURE_DISABLED contract, so a
+    // REST caller can tell "not entitled" from "server broken".
+    private async Task HandleFeatureDisabledException(HttpContext httpContext, Exception ex)
+    {
+        var exception = (FeatureDisabledException)ex;
+        httpContext.Response.StatusCode = StatusCodes.Status403Forbidden;
+
+        var problem = new ProblemDetails
+        {
+            Status = StatusCodes.Status403Forbidden,
+            Title = "Feature not enabled",
+            Detail = exception.Message,
+            Type = "https://tools.ietf.org/html/rfc7231#section-6.5.3"
+        };
+        problem.Extensions["code"] = "FEATURE_DISABLED";
+        problem.Extensions["featureKey"] = exception.FeatureKey;
+
+        await httpContext.Response.WriteAsJsonAsync(problem);
     }
 
     // HandleValidationException method handles the ValidationException by setting the response status code to 400 (Bad Request)

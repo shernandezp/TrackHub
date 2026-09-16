@@ -21,7 +21,7 @@ namespace TrackHub.Reporting.Infrastructure.GraphQLApi;
 // Reads Manager account status via GraphQL. Backs the cached
 // IAccountOperationalStatusService consumed by AccountStatusBehavior. Returns null for 0 (unknown).
 public class AccountOperationalStatusReader(IGraphQLClientFactory graphQLClient)
-    : GraphQLService(graphQLClient.CreateClient(Clients.Manager)), IAccountOperationalStatusReader
+    : GraphQLService(graphQLClient.CreateClient(Clients.Manager, asService: true)), IAccountOperationalStatusReader
 {
     internal const string AccountStatusQuery = @"
                 query($accountId: UUID!) {

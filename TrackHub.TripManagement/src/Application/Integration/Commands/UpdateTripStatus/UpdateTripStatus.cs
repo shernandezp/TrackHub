@@ -48,10 +48,10 @@ public sealed class UpdateTripStatusCommandHandler(
             {
                 results.Add(await ApplyAsync(request.AccountId, update, cancellationToken));
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 logger.LogError(ex, "Trip status update failed for external reference {ExternalReference}", update.ExternalReference);
-                results.Add(new TripImportResultVm(update.ExternalReference, false, null, "TRIP_STATUS_UPDATE_FAILED", ex.Message));
+                results.Add(PartnerErrorResult.Describe(ex, update.ExternalReference, null, "TRIP_STATUS_UPDATE_FAILED"));
             }
         }
 

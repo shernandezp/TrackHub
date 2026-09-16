@@ -26,36 +26,3 @@ declare module 'leaflet-fullscreen/dist/Leaflet.fullscreen.js';
 // instead of shadowing it — a `declare module 'leaflet'` inside this script file
 // would replace the package's own types.
 
-declare module '@pathofdev/react-tag-input' {
-  import * as React from 'react';
-
-  export interface ReactTagInputProps {
-    tags: string[];
-    onChange: (tags: string[]) => void;
-    placeholder?: string;
-    maxTags?: number;
-    editable?: boolean;
-    readOnly?: boolean;
-    removeOnBackspace?: boolean;
-    validator?: (value: string) => boolean;
-  }
-
-  const ReactTagInput: React.FC<ReactTagInputProps>;
-  export default ReactTagInput;
-}
-
-declare module 'react-github-btn' {
-  import * as React from 'react';
-
-  export interface GitHubButtonProps {
-    href: string;
-    'data-icon'?: string;
-    'data-size'?: string;
-    'data-show-count'?: boolean | string;
-    'aria-label'?: string;
-    children?: React.ReactNode;
-  }
-
-  const GitHubButton: React.FC<GitHubButtonProps>;
-  export default GitHubButton;
-}

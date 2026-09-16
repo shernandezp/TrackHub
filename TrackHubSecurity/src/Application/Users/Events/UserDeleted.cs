@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2025 Sergio Hernandez. All rights reserved.
+﻿// Copyright (c) 2026 Sergio Hernandez. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License").
 //  You may not use this file except in compliance with the License.
@@ -13,19 +13,23 @@
 //  limitations under the License.
 //
 
+using System.Text.Json;
+using TrackHub.Security.Domain.Constants;
+
 namespace TrackHub.Security.Application.Users.Events;
 
 public sealed class UserDeleted
 {
-    // Represents a notification for a user deletion event
     public readonly record struct Notification(Guid Id) : INotification
     {
-        // Event handler for the user deletion notification
-        public class EventHandler(IManagerWriter managerWriter) : INotificationHandler<Notification>
+        public class EventHandler(IOutboxWriter outbox) : INotificationHandler<Notification>
         {
-            // Handles the user deletion notification by calling the manager writer to delete the user asynchronously
             public async Task Handle(Notification notification, CancellationToken cancellationToken)
-                => await managerWriter.DeleteUserAsync(notification.Id, cancellationToken);
+                => await outbox.EnqueueAsync(
+                    OutboxMessageTypes.UserDeleted,
+                    JsonSerializer.Serialize(notification.Id),
+                    notification.Id.ToString(),
+                    cancellationToken);
         }
     }
 }

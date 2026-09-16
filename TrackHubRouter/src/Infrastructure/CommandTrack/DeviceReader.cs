@@ -18,6 +18,7 @@ using TrackHub.Router.Domain.Interfaces;
 using TrackHub.Router.Infrastructure.CommandTrack.Mappers;
 using TrackHub.Router.Domain.Interfaces.Manager;
 using TrackHub.Router.Domain.Interfaces.Operator;
+using TrackHub.Router.Domain.Helpers;
 
 namespace TrackHub.Router.Infrastructure.CommandTrack;
 
@@ -30,29 +31,37 @@ public sealed class DeviceReader(ICredentialHttpClientFactory httpClientFactory,
 {
     public async Task<DeviceVm> GetDeviceAsync(DeviceTransporterVm deviceDto, CancellationToken cancellationToken)
     {
-        var url = $"DataConnectAPI/api/Device?id={deviceDto.Identifier}";
-        var device = await HttpClientService.GetAsync<DevicePosition>(url, Header, cancellationToken);
+        var device = await WithReauthenticationAsync(
+            () => HttpClientService.GetAsync<DevicePosition>($"DataConnectAPI/api/Device?id={deviceDto.Identifier}", Header, cancellationToken),
+            cancellationToken);
         return device.MapToDeviceVm(deviceDto);
     }
 
     // Retrieves a single device asynchronously
     public async Task<IEnumerable<DeviceVm>> GetDevicesAsync(IEnumerable<DeviceTransporterVm> devices, CancellationToken cancellationToken)
     {
-        var url = $"DataConnectAPI/api/Devices?{devices.GetIdsQueryString()}";
-        var result = await HttpClientService.GetAsync<IEnumerable<DevicePosition>>(url, Header, cancellationToken);
-        if (result is null)
+        var devicesDictionary = devices.ToDeviceLookup(device => device.Identifier);
+        var results = new List<DeviceVm>();
+        foreach (var chunk in devicesDictionary.Values.Chunk(ProviderBatching.MaxIdsPerRequest))
         {
-            return [];
+            var ids = chunk.GetIdsQueryString();
+            var result = await WithReauthenticationAsync(
+                () => HttpClientService.GetAsync<IEnumerable<DevicePosition>>($"DataConnectAPI/api/Devices?{ids}", Header, cancellationToken),
+                cancellationToken);
+            if (result is not null)
+            {
+                results.AddRange(result.MapToDeviceVm(devicesDictionary));
+            }
         }
-        var devicesDictionary = devices.ToDictionary(device => device.Identifier, device => device);
-        return result.MapToDeviceVm(devicesDictionary);
+        return results;
     }
 
     // Retrieves multiple devices asynchronously
     public async Task<IEnumerable<DeviceVm>> GetDevicesAsync(CancellationToken cancellationToken)
     {
-        var url = "DataConnectAPI/api/AllDevices";
-        var devices = await HttpClientService.GetAsync<IEnumerable<DevicePosition>>(url, Header, cancellationToken);
+        var devices = await WithReauthenticationAsync(
+            () => HttpClientService.GetAsync<IEnumerable<DevicePosition>>("DataConnectAPI/api/AllDevices", Header, cancellationToken),
+            cancellationToken);
         return devices is null ? [] : devices.MapToDeviceVm().Distinct();
     }
 }

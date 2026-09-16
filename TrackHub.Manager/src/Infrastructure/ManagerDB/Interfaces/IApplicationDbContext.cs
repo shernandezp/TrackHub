@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using TrackHub.Manager.Infrastructure.Entities;
 
 namespace TrackHub.Manager.Infrastructure.Interfaces;
@@ -58,6 +59,9 @@ public interface IApplicationDbContext
     DbSet<User> Users { get; set; }
     DbSet<UserGroup> UsersGroup { get; set; }
     DbSet<UserSettings> UserSettings { get; set; }
+
+    /// <summary>Lets a per-item job write start from a clean slate, so a failed item cannot be flushed under the next one.</summary>
+    ChangeTracker ChangeTracker { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

@@ -43,7 +43,12 @@ public sealed class ReverseGeocodingService(
     private static DateTimeOffset _cacheExpiresAt = DateTimeOffset.MinValue;
 
     private static readonly SemaphoreSlim ThrottleGate = new(1, 1);
-    private static DateTimeOffset _lastRequestAt = DateTimeOffset.MinValue;
+    private static DateTimeOffset _nextSlotAt = DateTimeOffset.MinValue;
+
+    // How far ahead background enrichment may reserve a slot. Enrichment is best-effort and runs in
+    // batches, so without this a cycle's worth of reservations would sit in front of every user
+    // request for the whole batch; past the horizon the enrichment call is simply skipped.
+    private static readonly TimeSpan BackgroundReservationHorizon = TimeSpan.FromSeconds(2);
 
     public async Task<AddressVm?> ResolveAsync(double latitude, double longitude, CancellationToken cancellationToken)
     {
@@ -53,7 +58,7 @@ public sealed class ReverseGeocodingService(
         var geocoder = geocoders.FirstOrDefault(g => (short)g.Type == connection.Type)
             ?? throw new GeocodingUnavailableException($"No geocoding adapter is registered for provider type {connection.Type}.");
 
-        await ThrottleAsync(connection.RequestsPerSecond, cancellationToken);
+        await ThrottleAsync(connection.RequestsPerSecond, interactive: true, cancellationToken);
 
         try
         {
@@ -70,7 +75,18 @@ public sealed class ReverseGeocodingService(
     {
         try
         {
-            return await ResolveAsync(latitude, longitude, cancellationToken);
+            if (await GetActiveConnectionAsync(cancellationToken) is not { } connection)
+            {
+                return null;
+            }
+
+            var geocoder = geocoders.FirstOrDefault(g => (short)g.Type == connection.Type);
+            if (geocoder is null || !await ThrottleAsync(connection.RequestsPerSecond, interactive: false, cancellationToken))
+            {
+                return null;
+            }
+
+            return await geocoder.ResolveAsync(connection, latitude, longitude, cancellationToken);
         }
         catch (GeocodingUnavailableException)
         {
@@ -78,6 +94,11 @@ public sealed class ReverseGeocodingService(
         }
         catch (OperationCanceledException)
         {
+            return null;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Reverse geocoding enrichment failed for ({Latitude}, {Longitude}).", latitude, longitude);
             return null;
         }
     }
@@ -180,23 +201,39 @@ public sealed class ReverseGeocodingService(
         return apiKey.DecryptData(key, Convert.FromBase64String(salt));
     }
 
-    private static async Task ThrottleAsync(int requestsPerSecond, CancellationToken cancellationToken)
+    /// <summary>
+    /// Reserves the caller's slot in the provider's request rate and waits for it OUTSIDE the gate:
+    /// holding the gate across the delay serialised every geocoding call in the process behind the
+    /// slowest one. Returns false when a background caller would have to wait beyond
+    /// <see cref="BackgroundReservationHorizon"/>, which leaves the slot for interactive work.
+    /// </summary>
+    private static async Task<bool> ThrottleAsync(int requestsPerSecond, bool interactive, CancellationToken cancellationToken)
     {
         var minInterval = TimeSpan.FromSeconds(1d / Math.Max(1, requestsPerSecond));
+        TimeSpan wait;
 
         await ThrottleGate.WaitAsync(cancellationToken);
         try
         {
-            var wait = _lastRequestAt + minInterval - DateTimeOffset.UtcNow;
-            if (wait > TimeSpan.Zero)
+            var now = DateTimeOffset.UtcNow;
+            var slot = _nextSlotAt < now ? now : _nextSlotAt;
+            wait = slot - now;
+            if (!interactive && wait > BackgroundReservationHorizon)
             {
-                await Task.Delay(wait, cancellationToken);
+                return false;
             }
-            _lastRequestAt = DateTimeOffset.UtcNow;
+
+            _nextSlotAt = slot + minInterval;
         }
         finally
         {
             ThrottleGate.Release();
         }
+
+        if (wait > TimeSpan.Zero)
+        {
+            await Task.Delay(wait, cancellationToken);
+        }
+        return true;
     }
 }

@@ -37,7 +37,8 @@ public sealed class PointOfInterestReader(IApplicationDbContext context, ICurren
                 p.Color,
                 p.GroupId,
                 p.Active))
-            .FirstAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken);
+        ReaderResults.EnsureFound(poi, nameof(Entities.PointOfInterest), id.ToString());
 
         RequireAccountAccess(poi.AccountId);
         return poi;

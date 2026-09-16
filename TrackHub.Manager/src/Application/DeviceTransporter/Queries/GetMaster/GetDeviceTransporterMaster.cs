@@ -15,6 +15,7 @@
 
 using Common.Application.Extensions;
 using Common.Application.GraphQL.Inputs;
+using TrackHub.Manager.Domain.Constants;
 
 namespace TrackHub.Manager.Application.DeviceTransporter.Queries.GetMaster;
 
@@ -25,6 +26,6 @@ public readonly record struct GetDeviceTransporterMasterQuery(FiltersInput Filte
 public class GetDeviceTransporterQueryHandler(IDeviceTransporterReader reader) : IRequestHandler<GetDeviceTransporterMasterQuery, IReadOnlyCollection<DeviceTransporterVm>>
 {
     public async Task<IReadOnlyCollection<DeviceTransporterVm>> Handle(GetDeviceTransporterMasterQuery request, CancellationToken cancellationToken)
-        => await reader.GetDeviceTransportersAsync(request.Filter.GetFilters(), cancellationToken);
+        => await reader.GetDeviceTransportersAsync(request.Filter.GetFilters(MasterQueryFilters.DeviceTransporters), cancellationToken);
 
 }

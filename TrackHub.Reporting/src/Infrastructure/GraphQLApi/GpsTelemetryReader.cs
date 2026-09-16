@@ -74,8 +74,8 @@ public class GpsTelemetryReader(IGraphQLClientFactory graphQLClient)
                 }";
 
     internal const string PositionHistoryQuery = @"
-                query($accountId: UUID!, $transporterId: UUID, $deviceId: UUID, $take: Int!) {
-                    positionHistory(query: { accountId: $accountId, transporterId: $transporterId, deviceId: $deviceId, take: $take }) {
+                query($accountId: UUID!, $transporterId: UUID, $deviceId: UUID, $take: Int!, $from: DateTime, $to: DateTime) {
+                    positionHistory(query: { accountId: $accountId, transporterId: $transporterId, deviceId: $deviceId, take: $take, from: $from, to: $to }) {
                         transporterPositionHistoryId
                         accountId
                         operatorId
@@ -123,7 +123,7 @@ public class GpsTelemetryReader(IGraphQLClientFactory graphQLClient)
         return await QueryAsync<List<ManagerTransporterPositionVm>>(request, cancellationToken);
     }
 
-    public async Task<IReadOnlyCollection<ManagerTransporterPositionHistoryVm>> GetPositionHistoryAsync(Guid accountId, Guid? transporterId, Guid? deviceId, int take, CancellationToken cancellationToken)
+    public async Task<IReadOnlyCollection<ManagerTransporterPositionHistoryVm>> GetPositionHistoryAsync(Guid accountId, Guid? transporterId, Guid? deviceId, int take, DateTimeOffset? from, DateTimeOffset? to, CancellationToken cancellationToken)
     {
         var request = new GraphQLRequest
         {
@@ -133,7 +133,9 @@ public class GpsTelemetryReader(IGraphQLClientFactory graphQLClient)
                 accountId,
                 transporterId,
                 deviceId,
-                take
+                take,
+                from,
+                to
             }
         };
         return await QueryAsync<List<ManagerTransporterPositionHistoryVm>>(request, cancellationToken);

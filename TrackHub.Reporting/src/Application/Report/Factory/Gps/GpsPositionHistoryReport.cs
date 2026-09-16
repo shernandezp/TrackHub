@@ -23,13 +23,14 @@ public sealed class GpsPositionHistoryReport(
         Guid? transporterId = filters.GetGuid(FilterNames.Transporter);
         Guid? deviceId = filters.GetGuid(FilterNames.Device);
         var take = GpsReportSupport.ResolveTake(filters, limits);
-        var history = await telemetry.GetPositionHistoryAsync(accountId, transporterId, deviceId, take, cancellationToken);
-        IEnumerable<Domain.Models.Manager.ManagerTransporterPositionHistoryVm> filtered = history;
-        if (filters.GetDate(FilterNames.From) is { } from)
-            filtered = filtered.Where(p => p.SourceTimestamp >= from);
-        if (filters.GetDate(FilterNames.To) is { } to)
-            filtered = filtered.Where(p => p.SourceTimestamp <= to);
-        var rows = filtered
+        // The window goes to the SOURCE: filtering here intersected the caller's range with the
+        // newest N rows the reader had already truncated to, so an older period exported almost
+        // nothing on an active fleet.
+        var from = filters.GetDate(FilterNames.From);
+        var to = filters.GetDate(FilterNames.To);
+        var history = await telemetry.GetPositionHistoryAsync(accountId, transporterId, deviceId, take, from, to, cancellationToken);
+
+        var rows = history
             .OrderByDescending(p => p.SourceTimestamp)
             .Select(p => new GpsPositionHistoryRowVm(
                 p.TransporterId,

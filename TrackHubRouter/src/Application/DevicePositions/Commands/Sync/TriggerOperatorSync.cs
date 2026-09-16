@@ -14,6 +14,7 @@
 //
 
 using Common.Application.Attributes;
+using Common.Application.Exceptions;
 using Common.Domain.Constants;
 using Microsoft.Extensions.Logging;
 using TrackHub.Router.Domain.Exceptions;
@@ -40,7 +41,7 @@ public readonly record struct TriggerOperatorSyncCommand(
 public class TriggerOperatorSyncCommandHandler(
     IOperatorReader operatorReader,
     IOperatorSystemReader operatorSystemReader,
-    ISender sender,
+    ISyncDispatchQueue dispatchQueue,
     ILogger<TriggerOperatorSyncCommandHandler> logger) : IRequestHandler<TriggerOperatorSyncCommand, bool>
 {
     public async Task<bool> Handle(TriggerOperatorSyncCommand request, CancellationToken cancellationToken)
@@ -73,11 +74,21 @@ public class TriggerOperatorSyncCommandHandler(
         // service identity so the device sync receives the decrypted credential.
         var authorized = await operatorSystemReader.GetOperatorAsync(op.OperatorId, cancellationToken);
 
-        return await sender.Send(new SyncOperatorDevicesCommand(
+        // Accepted, not awaited: the provider read, the device write-back, the run record, the
+        // health probe and the alerts all happen off the request. operator_sync_runs is where the
+        // caller reads what actually happened.
+        var accepted = dispatchQueue.TryEnqueue(new SyncDispatchRequest(
             authorized,
             request.TriggerType,
             request.CorrelationId,
             request.ResetDeviceCatalog,
-            request.AutoAssignNewDevices ?? true), cancellationToken);
+            request.AutoAssignNewDevices ?? true));
+
+        if (!accepted)
+        {
+            throw new TooManyRequestsException("Too many syncs are already queued. Try again shortly.");
+        }
+
+        return true;
     }
 }

@@ -41,21 +41,6 @@ public sealed class ServiceClientPermissionReader(IApplicationDbContext context)
                 x.AllowCrossAccount))
             .ToListAsync(cancellationToken);
 
-    public async Task<bool> HasPermissionAsync(string clientId, string resource, string action, CancellationToken cancellationToken)
-    {
-        var now = DateTimeOffset.UtcNow;
-
-        return await context.ServiceClientPermissions
-            .AnyAsync(permission =>
-                permission.Active
-                && permission.ClientId == clientId
-                && permission.Resource == resource
-                && permission.Action == action
-                && (!permission.EffectiveFrom.HasValue || permission.EffectiveFrom <= now)
-                && (!permission.EffectiveTo.HasValue || permission.EffectiveTo >= now),
-                cancellationToken);
-    }
-
     // Account matching, explicit (replaces the old "NULL AccountId matches anything" wildcard):
     //   * AllowCrossAccount        -> a declared platform-wide grant; matches any token account.
     //   * AccountId == token account -> the grant is bound to exactly that tenant.
@@ -79,8 +64,8 @@ public sealed class ServiceClientPermissionReader(IApplicationDbContext context)
                 && (permission.AllowCrossAccount
                     || (permission.AccountId.HasValue && permission.AccountId == accountId)
                     || (!permission.AccountId.HasValue && !tokenHasAccount))
-                && scopes.Contains(permission.Scope)
-                && audiences.Contains(permission.Audience)
+                && (permission.Scope == "" || scopes.Contains(permission.Scope))
+                && (permission.Audience == "" || audiences.Contains(permission.Audience))
                 && (!permission.EffectiveFrom.HasValue || permission.EffectiveFrom <= now)
                 && (!permission.EffectiveTo.HasValue || permission.EffectiveTo >= now),
                 cancellationToken);

@@ -286,18 +286,7 @@ test.describe('account management — users & access', () => {
     const row = await users.section.findRowAnyPage(email);
     const unlock = row.getByRole('button', { name: t('user.unlock') });
 
-    if ((await unlock.count()) === 0) {
-      // A user created through the portal is never marked verified
-      // (`security.users.verified`), and an unverified sign-in is refused before
-      // the password is ever checked — so the failure counter never moves and
-      // there is nothing to unlock. Reported as a finding; skipped rather than
-      // asserted, because the lockout itself is a backend behaviour this screen
-      // only surfaces.
-      test.skip(
-        true,
-        'The created user never locked: sign-in is refused for being unverified before the password is checked.'
-      );
-    }
+    await expect(unlock).toBeVisible({ timeout: 45_000 });
 
     await unlock.click();
     await expect

@@ -54,6 +54,7 @@ import sidenavLogoLabel from "controls/Sidenav/styles/sidenav";
 
 // Argon Dashboard 2 MUI context
 import { useArgonController, setMiniSidenav } from "context";
+import { activateOnKeyboard } from 'utils/keyboard';
 import { useTranslation } from "react-i18next";
 import PrincipalTypes from "constants/principalTypes";
 import type { RouteDefinition } from "routes";
@@ -180,7 +181,11 @@ function Sidenav({
           top={0}
           right={0}
           p={1.625}
+          role="button"
+          tabIndex={0}
+          aria-label={t("generic.close")}
           onClick={closeSidenav}
+          onKeyDown={activateOnKeyboard(closeSidenav)}
           sx={{ cursor: "pointer" }}
         >
           <ArgonTypography variant="h6" color="secondary">

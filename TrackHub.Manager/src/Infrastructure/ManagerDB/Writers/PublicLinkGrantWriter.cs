@@ -23,9 +23,9 @@ public sealed class PublicLinkGrantWriter(IApplicationDbContext context, ICurren
 
     public async Task RevokePublicLinkGrantAsync(Guid publicLinkGrantId, string revokedBy, CancellationToken cancellationToken)
     {
-        var entity = await Context.PublicLinkGrants.FirstAsync(x => x.PublicLinkGrantId == publicLinkGrantId, cancellationToken);
+        var entity = await Context.PublicLinkGrants
+            .AsTracking().FirstAsync(x => x.PublicLinkGrantId == publicLinkGrantId, cancellationToken);
         RequireAccountWriteAccess(entity.AccountId);
-        Context.PublicLinkGrants.Attach(entity);
         var oldValues = AuditValues(entity);
         entity.RevokedAt = DateTimeOffset.UtcNow;
         entity.RevokedBy = revokedBy;
@@ -43,7 +43,8 @@ public sealed class PublicLinkGrantWriter(IApplicationDbContext context, ICurren
     private static string GeneratePublicLinkToken()
         => Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)).TrimEnd('=').Replace('+', '-').Replace('/', '_');
 
+    // resourceType, resourceId, scopes and purpose are caller-supplied free text on create.
     private static string AuditValues(PublicLinkGrant grant)
-        => $$"""{"resourceType":"{{grant.ResourceType}}","resourceId":"{{grant.ResourceId}}","scopes":"{{grant.Scopes}}","purpose":"{{grant.Purpose}}","expiresAt":{{Quote(grant.ExpiresAt)}},"revokedAt":{{Quote(grant.RevokedAt)}},"revokedBy":{{Quote(grant.RevokedBy)}},"accessCount":{{grant.AccessCount}},"lastAccessedAt":{{Quote(grant.LastAccessedAt)}}}""";
+        => $$"""{"resourceType":{{Quote(grant.ResourceType)}},"resourceId":{{Quote(grant.ResourceId)}},"scopes":{{Quote(grant.Scopes)}},"purpose":{{Quote(grant.Purpose)}},"expiresAt":{{Quote(grant.ExpiresAt)}},"revokedAt":{{Quote(grant.RevokedAt)}},"revokedBy":{{Quote(grant.RevokedBy)}},"accessCount":{{grant.AccessCount}},"lastAccessedAt":{{Quote(grant.LastAccessedAt)}}}""";
 
 }

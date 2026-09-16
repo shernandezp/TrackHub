@@ -20,6 +20,9 @@ import { Table as MuiTable, TableContainer } from "@mui/material";
 import TableHeader from "./TableHeader";
 import TableBody from "./TableBody";
 import TablePagination from "./TablePagination";
+import { useTranslation } from "react-i18next";
+import ArgonBox from "components/ArgonBox";
+import ArgonTypography from "components/ArgonTypography";
 
 /** A single column descriptor for {@link Table}. */
 export interface TableColumn {
@@ -27,6 +30,11 @@ export interface TableColumn {
   title?: string;
   align?: "left" | "right" | "center";
   width?: string | number;
+  /**
+   * The value this column sorts on. Cells hold rendered elements, so without it a column sorts by
+   * the text inside them: speeds order 100 < 12 < 9 and dates by their formatted MM/DD/YYYY string.
+   */
+  sortValue?: (row: TableRowData) => number | string | Date | null | undefined;
 }
 
 /** A table row: known control fields plus arbitrary keyed cell values. */
@@ -44,6 +52,27 @@ const extractValue = (obj: unknown): string => {
   return (el?.props?.children || el?.props?.name || el?.props?.description || "") as string;
 };
 
+/**
+ * Orders two cell values: numbers and dates compare as themselves, text compares with the user's
+ * collation, and a value that reads as a number is compared as one so "9" does not follow "100".
+ */
+const compareCellValues = (a: unknown, b: unknown): number => {
+  if (a == null || a === "") return b == null || b === "" ? 0 : 1;
+  if (b == null || b === "") return -1;
+
+  if (a instanceof Date || b instanceof Date) {
+    return new Date(a as Date).getTime() - new Date(b as Date).getTime();
+  }
+
+  const aNumber = typeof a === "number" ? a : Number(a);
+  const bNumber = typeof b === "number" ? b : Number(b);
+  if (!Number.isNaN(aNumber) && !Number.isNaN(bNumber)) {
+    return aNumber - bNumber;
+  }
+
+  return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: "base" });
+};
+
 export interface TableProps {
   columns?: TableColumn[];
   rows?: TableRowData[];
@@ -57,6 +86,8 @@ export interface TableProps {
    *  (for wide datasets, e.g. report previews). Default keeps the fixed 100%-width layout. */
   horizontalScroll?: boolean;
   maxHeight?: string;
+  /** Rows rendered in scrollable mode before the list is truncated. */
+  maxScrollableRows?: number;
   defaultRowsPerPage?: number;
   /**
    * The rows are one SERVER page. Turns off the client-side pager, the
@@ -79,9 +110,11 @@ function Table({
   scrollable = false,
   horizontalScroll = false,
   maxHeight = "600px",
+  maxScrollableRows = 100,
   defaultRowsPerPage = 10,
   serverPaged = false,
 }: TableProps) {
+  const { t } = useTranslation();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(defaultRowsPerPage);
   const [order, setOrder] = useState<"asc" | "desc">("asc");
@@ -126,20 +159,29 @@ function Table({
 
   const sortedRows = useMemo(() => {
     if (orderBy && !serverPaged) {
+      const column = columns.find((candidate) => candidate.name === orderBy);
+      const valueOf = (row: TableRowData) =>
+        column?.sortValue ? column.sortValue(row) : extractValue(row[orderBy]);
+
       return [...filteredRows].sort((a, b) => {
-        const aValue = extractValue(a[orderBy]);
-        const bValue = extractValue(b[orderBy]);
-        if (aValue < bValue) {
-          return order === "asc" ? -1 : 1;
-        }
-        if (aValue > bValue) {
-          return order === "asc" ? 1 : -1;
-        }
-        return 0;
+        const result = compareCellValues(valueOf(a), valueOf(b));
+        return order === "asc" ? result : -result;
       });
     }
     return filteredRows;
-  }, [filteredRows, order, orderBy, serverPaged]);
+  }, [filteredRows, columns, order, orderBy, serverPaged]);
+
+  // How many rows the scroller renders. The cap keeps a thousand-unit fleet from mounting five
+  // thousand cells on every refresh, but the SELECTED row always stays inside the window: picking a
+  // unit on the map has to highlight and scroll to its row even when that row sits past the cap, and
+  // a server-paged table never has more rows in hand than its page anyway.
+  const selectedRowIndex = selected == null
+    ? -1
+    : sortedRows.findIndex((row) => extractValue(row[selectedField]) === selected);
+  const scrollableRowCount = Math.max(
+    Math.min(sortedRows.length, maxScrollableRows),
+    selectedRowIndex + 1
+  );
 
   // Auto-scroll to selected row in scrollable mode
   useEffect(() => {
@@ -186,11 +228,26 @@ function Table({
           selectedField={selectedField}
           handleRowSelection={handleRowSelection}
           page={scrollable || serverPaged ? 0 : page}
-          rowsPerPage={scrollable || serverPaged ? sortedRows.length : rowsPerPage}
+          // A scrollable table has no pager, so it used to mount every row: a thousand-unit fleet
+          // rebuilt five thousand cells on each map refresh. The cap keeps the scroller honest.
+          rowsPerPage={
+            scrollable
+              ? scrollableRowCount
+              : serverPaged
+                ? sortedRows.length
+                : rowsPerPage
+          }
           compact={compact}
           rowRefs={rowRefs}
         />
       </MuiTable>
+      {scrollable && sortedRows.length > scrollableRowCount && (
+        <ArgonBox p={1} textAlign="center">
+          <ArgonTypography variant="caption" color="secondary">
+            {t("table.moreRows", { count: sortedRows.length - scrollableRowCount })}
+          </ArgonTypography>
+        </ArgonBox>
+      )}
       {!scrollable && !serverPaged && filteredRows.length > 10 && (
         <TablePagination
           count={filteredRows.length}

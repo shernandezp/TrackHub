@@ -23,3 +23,4 @@ global using TrackHub.Geofencing.Domain.Models;
 global using TrackHub.Geofencing.Infrastructure.Readers;
 global using TrackHub.Geofencing.Infrastructure.Writers;
 
+global using Common.Domain.Entities;

@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using TrackHub.Reporting.Domain.Exceptions;
 using Common.Application.Attributes;
 using Common.Application.Interfaces;
 using Common.Domain.Constants;
@@ -58,6 +59,13 @@ public class GetReportPreviewQueryHandler(
         var columns = dataset.Columns
             .Select(c => new ReportPreviewColumn(c.PropertyName, ReportHeaderResolver.Resolve(c.PropertyName, culture)))
             .ToArray();
+
+        // The preview runs the same report as the export, so it must answer to the same governed
+        // ceiling; without this, asking for a preview was a way around MaxExportRows entirely.
+        if (dataset.RowCount > limits.MaxExportRows)
+        {
+            throw new ReportLimitExceededException(limits.MaxExportRows);
+        }
 
         var rows = dataset.Rows.Take(limits.PreviewRows).ToArray();
         var total = dataset.RowCount;

@@ -18,7 +18,7 @@ namespace TrackHub.Manager.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.10")
+                .HasAnnotation("ProductVersion", "10.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -405,7 +405,10 @@ namespace TrackHub.Manager.Infrastructure.Migrations
 
                     b.HasKey("AlertEventId");
 
-                    b.HasIndex("DeduplicationKey");
+                    b.HasIndex("AccountId", "DeduplicationKey")
+                        .IsUnique()
+                        .HasDatabaseName("ix_alert_events_open_dedup")
+                        .HasFilter("status <> 'Resolved'");
 
                     b.HasIndex("AccountId", "Status", "LastSeenAt");
 
@@ -2621,6 +2624,8 @@ namespace TrackHub.Manager.Infrastructure.Migrations
 
                     b.HasIndex("IdempotencyKey")
                         .IsUnique();
+
+                    b.HasIndex("AccountId", "DeviceId", "SourceTimestamp");
 
                     b.HasIndex("AccountId", "OperatorId", "SourceTimestamp");
 

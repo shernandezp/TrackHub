@@ -18,6 +18,7 @@ using Ardalis.GuardClauses;
 using Common.Application;
 using Common.Web.Transformers;
 using Scalar.AspNetCore;
+using TrackHub.Router.Web.BackgroundServices;
 using TrackHub.Router.Web.GraphQL;
 using TrackHub.Router.Web.GraphQL.Mutation;
 using TrackHub.Router.Web.GraphQL.Query;
@@ -26,8 +27,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddTrackHubSerilog();
 
-var allowedCORSOrigins = builder.Configuration.GetSection("AllowedCorsOrigins").Get<string>();
-Guard.Against.Null(allowedCORSOrigins, message: $"Allowed Origins configuration for CORS not loaded");
+var allowedCORSOrigins = builder.Configuration.GetAllowedCorsOrigins();
+Guard.Against.NullOrEmpty(allowedCORSOrigins, message: $"Allowed Origins configuration for CORS not loaded");
 
 // Add services to the container.
 builder.Services.AddApplicationServices();
@@ -64,11 +65,17 @@ builder.Services.AddHsts(options =>
     options.Preload = true;
 });
 
+// Runs the manual syncs the trigger accepts, off the request thread.
+builder.Services.AddHostedService<SyncDispatchService>();
+
 var app = builder.Build();
 
-//Add Scalar API
-app.MapOpenApi();
-app.MapScalarApiReference();
+// The REST surface description and its interactive explorer are development aids only.
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+    app.MapScalarApiReference();
+}
 
 app.UseHeaderPropagation();
 
@@ -93,6 +100,6 @@ app.UseAuthorization();
 app.UseExceptionHandler(options => { });
 app.MapEndpoints(Assembly.GetExecutingAssembly());
 
-app.MapGraphQL();
+app.MapGraphQL().RequireAuthorization();
 
 app.Run();

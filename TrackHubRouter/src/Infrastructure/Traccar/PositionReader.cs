@@ -17,6 +17,7 @@ using Common.Domain.Extensions;
 using TrackHub.Router.Infrastructure.Traccar.Mappers;
 using TrackHub.Router.Domain.Extensions;
 using TrackHub.Router.Domain.Interfaces;
+using TrackHub.Router.Domain.Helpers;
 
 namespace TrackHub.Router.Infrastructure.Traccar;
 
@@ -48,20 +49,29 @@ public sealed class PositionReader(
     {
         //Traccar does not have a method to retrieve the last position of multiple devices at once
         //So we need to retrieve the position id from the devices first
-        var url = $"api/devices?{devices.GetIdsQueryString()}";
-        var result = await HttpClientService.GetAsync<IEnumerable<Device>>(url, cancellationToken: cancellationToken);
-        if (result is null)
+        var devicesDictionary = devices.ToDeviceLookup(device => device.Identifier);
+        var positionIds = new List<int>();
+        foreach (var chunk in devicesDictionary.Values.Chunk(ProviderBatching.MaxIdsPerRequest))
         {
-            return [];
+            var url = $"api/devices?{chunk.GetIdsQueryString()}";
+            var result = await HttpClientService.GetAsync<IEnumerable<Device>>(url, cancellationToken: cancellationToken);
+            if (result is not null)
+            {
+                positionIds.AddRange(result.Select(x => x.PositionId));
+            }
         }
-        url = $"api/positions?{result.Select(x => x.PositionId).GetIdsQueryString()}";
-        var positions = await HttpClientService.GetAsync<IEnumerable<Position>>(url, cancellationToken: cancellationToken);
-        if (positions is null)
+
+        var results = new List<PositionVm>();
+        foreach (var chunk in positionIds.Chunk(ProviderBatching.MaxIdsPerRequest))
         {
-            return [];
+            var url = $"api/positions?{chunk.GetIdsQueryString()}";
+            var positions = await HttpClientService.GetAsync<IEnumerable<Position>>(url, cancellationToken: cancellationToken);
+            if (positions is not null)
+            {
+                results.AddRange(positions.MapToPositionVm(devicesDictionary));
+            }
         }
-        var devicesDictionary = devices.ToDictionary(device => device.Identifier, device => device);
-        return positions.MapToPositionVm(devicesDictionary).Distinct();
+        return results.Distinct();
     }
 
     /// <summary>

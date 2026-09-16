@@ -35,7 +35,7 @@ namespace Infrastructure.UnitTests;
 public class AccountScopeGuardTests
 {
     private static ApplicationDbContext NewContext(string name)
-        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).Options);
+        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking).Options);
 
     private static ICurrentPrincipal Principal(PrincipalType type, Guid? accountId, string? role = null, Guid? userId = null)
     {

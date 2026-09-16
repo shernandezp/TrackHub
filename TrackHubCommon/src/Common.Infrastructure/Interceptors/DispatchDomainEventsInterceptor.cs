@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Domain.Entities;
 using Common.Mediator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -50,10 +51,17 @@ public class DispatchDomainEventsInterceptor(IPublisher publisher) : SaveChanges
         return base.SavingChangesAsync(eventData, result, cancellationToken);
     }
 
-    // Dispatches domain events after the database save completes successfully (synchronous path).
+    // The synchronous save path cannot publish without blocking a thread-pool thread inside EF's
+    // own callback. Non-async database operations are forbidden platform-wide, so a save that
+    // produced events on this path is a defect; refuse it rather than block or drop them silently.
     public override int SavedChanges(SaveChangesCompletedEventData eventData, int result)
     {
-        PublishPendingAsync().GetAwaiter().GetResult();
+        if (_pending.Count > 0)
+        {
+            _pending.Clear();
+            throw new NotSupportedException(
+                "Domain events were raised by a synchronous SaveChanges. Use SaveChangesAsync so the events can be dispatched.");
+        }
 
         return base.SavedChanges(eventData, result);
     }

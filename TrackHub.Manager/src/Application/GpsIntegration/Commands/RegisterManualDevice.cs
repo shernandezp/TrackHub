@@ -66,10 +66,13 @@ public class RegisterManualDeviceCommandHandler(
                 cancellationToken);
             transporterId = transporter.TransporterId;
 
-            var defaultGroupId = await ResolveDefaultGroupIdAsync(device.AccountId, cancellationToken);
-            await transporterGroupWriter.CreateTransporterGroupAsync(
-                new TransporterGroupDto(transporterId, defaultGroupId),
-                cancellationToken);
+            var target = await AutoProvisionGroups.ResolveAsync(groupReader, groupWriter, device.AccountId, cancellationToken);
+            foreach (var groupId in target.GroupIds)
+            {
+                await transporterGroupWriter.CreateTransporterGroupAsync(
+                    new TransporterGroupDto(transporterId, groupId),
+                    cancellationToken);
+            }
         }
 
         await assignmentWriter.AssignAsync(
@@ -83,26 +86,6 @@ public class RegisterManualDeviceCommandHandler(
                     ? "Manual registration"
                     : "Manual registration (adopted existing transporter)"),
             cancellationToken);
-    }
-
-    // Resolves the account's default group by name, creating it (Active) on first use — same
-    // rationale as the sync path: the account read is paged, so search by name.
-    private async Task<long> ResolveDefaultGroupIdAsync(Guid accountId, CancellationToken cancellationToken)
-    {
-        var groups = await groupReader.GetGroupsByAccountAsync(
-            accountId, 0, PageRequest.MaxPageSize, GroupMetadata.DefaultGroupName, cancellationToken);
-        var existing = groups.Items.FirstOrDefault(g =>
-            string.Equals(g.Name, GroupMetadata.DefaultGroupName, StringComparison.OrdinalIgnoreCase));
-        if (existing.GroupId != 0)
-        {
-            return existing.GroupId;
-        }
-
-        var created = await groupWriter.CreateGroupAsync(
-            new GroupDto(GroupMetadata.DefaultGroupName, GroupMetadata.DefaultGroupDescription, Active: true),
-            accountId,
-            cancellationToken);
-        return created.GroupId;
     }
 
     private static string FirstNonEmpty(params string?[] values)

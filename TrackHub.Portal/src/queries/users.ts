@@ -118,8 +118,8 @@ export function useUpdateCurrentUser() {
 
 export function useUpdatePassword() {
   return useMutation({
-    mutationFn: ({ userId, password }: { userId: string; password: string }) =>
-      api.updatePassword(userId, password),
+    mutationFn: ({ userId, password, currentPassword }: { userId: string; password: string; currentPassword?: string }) =>
+      api.updatePassword(userId, password, currentPassword),
   });
 }
 

@@ -75,7 +75,7 @@ function Footer({
         px={1.5}
       >
         &copy; {new Date().getFullYear()},
-        <Link href={href} target="_blank">
+        <Link href={href} target="_blank" rel="noopener noreferrer">
           <ArgonTypography variant="button" fontWeight="medium">
             &nbsp;{name}&nbsp;
           </ArgonTypography>

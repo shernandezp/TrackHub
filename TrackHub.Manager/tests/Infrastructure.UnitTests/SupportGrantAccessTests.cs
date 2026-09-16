@@ -32,7 +32,7 @@ namespace Infrastructure.UnitTests;
 public class SupportGrantAccessTests
 {
     private static ApplicationDbContext NewContext(string name)
-        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).Options);
+        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking).Options);
 
     // A support engineer: Administrator role, their OWN account differs from the target account, so the
     // only possible basis for accessing the target account is an AccountSupportGrant.

@@ -45,7 +45,8 @@ public sealed class TransporterReader(IApplicationDbContext context, ICurrentPri
                     (TransporterType)d.TransporterTypeId,
                     d.TransporterTypeId)
             })
-            .FirstAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken);
+        ReaderResults.EnsureFound(row, nameof(Entities.Transporter), id.ToString());
 
         RequireAccountAccess(row.AccountId);
         return row.Vm;

@@ -15,7 +15,7 @@
 */
 
 import axios, { AxiosError, type AxiosRequestConfig } from 'axios';
-import { ApiError, extractRestErrorEntries } from './errors';
+import { UNEXPECTED_ERROR_I18N_KEY, ApiError, extractRestErrorEntries } from './errors';
 import { tokenStore } from './tokenStore';
 import { REQUEST_TIMEOUT_MS } from './graphqlClient';
 
@@ -28,7 +28,19 @@ export const FILE_TIMEOUT_MS = 60000;
  * mutex — with the GraphQL client.
  */
 export async function restRequest<T>(config: AxiosRequestConfig): Promise<T> {
-  const token = await tokenStore.acquireValidAccessToken();
+  try {
+    return await sendRest<T>(config, await tokenStore.acquireValidAccessToken());
+  } catch (error) {
+    // The server rejected a token this client still considered valid (revoked grant, authority
+    // restart, clock skew). Refresh once and replay; a second 401 is a real authentication failure.
+    if (!(error instanceof ApiError) || error.status !== 401) {
+      throw error;
+    }
+    return await sendRest<T>(config, await tokenStore.forceRefreshAccessToken());
+  }
+}
+
+async function sendRest<T>(config: AxiosRequestConfig, token: string): Promise<T> {
   try {
     const response = await axios.request<T>({
       timeout: FILE_TIMEOUT_MS,
@@ -43,15 +55,17 @@ export async function restRequest<T>(config: AxiosRequestConfig): Promise<T> {
     // it so well-known codes (FEATURE_DISABLED, REPORT_ROW_LIMIT_EXCEEDED, …)
     // surface as friendly localized toasts instead of a raw transport message.
     const entries = await extractRestErrorEntries(axiosError.response?.data);
-    if (entries.length > 0) {
+    if (entries.length > 0 && axiosError.response?.status !== 401) {
       throw ApiError.fromRestErrors(
         entries,
         `Request to ${config.url} failed: ${axiosError.message}`,
         axiosError.response?.status
       );
     }
+    // The transport message names the endpoint and the axios failure; the user gets the generic line.
     throw new ApiError(`Request to ${config.url} failed: ${axiosError.message}`, {
       status: axiosError.response?.status,
+      i18nKey: UNEXPECTED_ERROR_I18N_KEY,
       cause: error,
     });
   }

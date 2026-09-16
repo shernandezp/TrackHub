@@ -40,7 +40,7 @@ public class UpdatePasswordCommandHandler(IUserWriter writer, IUserReader reader
         if (request.User.UserId == UserId || isManager)
         {
             // Update the user asynchronously
-            await writer.UpdatePasswordAsync(request.User, cancellationToken);
+            await writer.UpdatePasswordAsync(request.User, verifyCurrentPassword: !isManager, cancellationToken);
 
             // UpdatePasswordAsync also sets the subject active. When a MANAGER sets/resets a
             // subject's password (the invite-activation flow), propagate that activation to the

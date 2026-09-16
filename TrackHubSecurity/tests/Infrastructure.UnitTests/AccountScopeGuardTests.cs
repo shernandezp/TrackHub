@@ -36,7 +36,7 @@ namespace Infrastructure.UnitTests;
 internal class AccountScopeGuardTests
 {
     private static ApplicationDbContext NewContext(string name)
-        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).Options);
+        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking).Options);
 
     private static User NewUser(Guid accountId, string username)
         => new(username, "pw", $"{username}@mail.com", "first", null, "last", null, null, true, 0, accountId);
@@ -123,7 +123,7 @@ internal class AccountScopeGuardTests
         var writer = new UserWriter(context, ForeignUser());
 
         Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.UpdatePasswordAsync(
-            new UserPasswordDto(target.UserId, "newPassword1!"), CancellationToken.None));
+            new UserPasswordDto(target.UserId, "newPassword1!"), verifyCurrentPassword: false, CancellationToken.None));
     }
 
     [Test]
@@ -203,5 +203,113 @@ internal class AccountScopeGuardTests
 
         Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.CreateUserPolicyAsync(
             new UserPolicyDto(target.UserId, 1), CancellationToken.None));
+    }
+
+    private static async Task<(Role Administrator, Role Manager, Role User)> SeedRoleHierarchyAsync(ApplicationDbContext context)
+    {
+        var administrator = new Role { RoleId = 1, Name = Roles.Administrator, Description = string.Empty };
+        var manager = new Role { RoleId = 2, Name = Roles.Manager, Description = string.Empty, ParentRoleId = administrator.RoleId };
+        var user = new Role { RoleId = 3, Name = Roles.User, Description = string.Empty, ParentRoleId = manager.RoleId };
+        await context.Roles.AddRangeAsync(administrator, manager, user);
+        await context.SaveChangesAsync(CancellationToken.None);
+        return (administrator, manager, user);
+    }
+
+    [Test]
+    public async Task RoleWriter_Manager_CannotGrantAdministrator()
+    {
+        await using var context = NewContext(nameof(RoleWriter_Manager_CannotGrantAdministrator));
+        var accountId = Guid.NewGuid();
+        var target = NewUser(accountId, "target");
+        await context.Users.AddAsync(target);
+        var (administrator, _, _) = await SeedRoleHierarchyAsync(context);
+
+        var writer = new UserRoleWriter(context, Principal(PrincipalType.User, accountId, Roles.Manager));
+
+        Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.CreateUserRoleAsync(
+            new UserRoleDto(target.UserId, administrator.RoleId), CancellationToken.None));
+    }
+
+    [Test]
+    public async Task RoleWriter_Manager_CanGrantASubordinateRole()
+    {
+        await using var context = NewContext(nameof(RoleWriter_Manager_CanGrantASubordinateRole));
+        var accountId = Guid.NewGuid();
+        var target = NewUser(accountId, "target");
+        await context.Users.AddAsync(target);
+        var (_, _, user) = await SeedRoleHierarchyAsync(context);
+
+        var writer = new UserRoleWriter(context, Principal(PrincipalType.User, accountId, Roles.Manager));
+        var granted = await writer.CreateUserRoleAsync(new UserRoleDto(target.UserId, user.RoleId), CancellationToken.None);
+
+        Assert.That(granted.RoleId, Is.EqualTo(user.RoleId));
+    }
+
+    [Test]
+    public async Task RoleWriter_Administrator_CanGrantAdministrator()
+    {
+        await using var context = NewContext(nameof(RoleWriter_Administrator_CanGrantAdministrator));
+        var accountId = Guid.NewGuid();
+        var target = NewUser(accountId, "target");
+        await context.Users.AddAsync(target);
+        var (administrator, _, _) = await SeedRoleHierarchyAsync(context);
+
+        var writer = new UserRoleWriter(context, Principal(PrincipalType.User, accountId, Roles.Administrator));
+        var granted = await writer.CreateUserRoleAsync(new UserRoleDto(target.UserId, administrator.RoleId), CancellationToken.None);
+
+        Assert.That(granted.RoleId, Is.EqualTo(administrator.RoleId));
+    }
+
+    [Test]
+    public async Task PolicyWriter_Manager_CannotGrantAPolicyCarryingUnheldResourceActions()
+    {
+        await using var context = NewContext(nameof(PolicyWriter_Manager_CannotGrantAPolicyCarryingUnheldResourceActions));
+        var accountId = Guid.NewGuid();
+        var target = NewUser(accountId, "target");
+        await context.Users.AddAsync(target);
+        await SeedRoleHierarchyAsync(context);
+        await context.ResourceActionPolicy.AddAsync(new ResourceActionPolicy { ResourceActionPolicyId = 1, PolicyId = 7, ResourceId = 42, ActionId = 1 });
+        await context.SaveChangesAsync(CancellationToken.None);
+
+        var writer = new UserPolicyWriter(context, Principal(PrincipalType.User, accountId, Roles.Manager));
+
+        Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.CreateUserPolicyAsync(
+            new UserPolicyDto(target.UserId, 7), CancellationToken.None));
+    }
+
+    [Test]
+    public async Task PolicyWriter_Administrator_CannotGrantThePlatformOperatorPolicy()
+    {
+        await using var context = NewContext(nameof(PolicyWriter_Administrator_CannotGrantThePlatformOperatorPolicy));
+        var accountId = Guid.NewGuid();
+        var target = NewUser(accountId, "target");
+        await context.Users.AddAsync(target);
+        var (administrator, _, _) = await SeedRoleHierarchyAsync(context);
+        await context.ResourceActionPolicy.AddAsync(new ResourceActionPolicy { ResourceActionPolicyId = 1, PolicyId = 9, ResourceId = 77, ActionId = 1 });
+        await context.ResourceActionRole.AddAsync(new ResourceActionRole { ResourceActionRoleId = 1, RoleId = administrator.RoleId, ResourceId = 5, ActionId = 1 });
+        await context.SaveChangesAsync(CancellationToken.None);
+
+        var writer = new UserPolicyWriter(context, Principal(PrincipalType.User, accountId, Roles.Administrator));
+
+        Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.CreateUserPolicyAsync(
+            new UserPolicyDto(target.UserId, 9), CancellationToken.None));
+    }
+
+    [Test]
+    public async Task PolicyWriter_Manager_CanGrantAPolicyWithinItsOwnResourceActions()
+    {
+        await using var context = NewContext(nameof(PolicyWriter_Manager_CanGrantAPolicyWithinItsOwnResourceActions));
+        var accountId = Guid.NewGuid();
+        var target = NewUser(accountId, "target");
+        await context.Users.AddAsync(target);
+        var (_, manager, _) = await SeedRoleHierarchyAsync(context);
+        await context.ResourceActionPolicy.AddAsync(new ResourceActionPolicy { ResourceActionPolicyId = 1, PolicyId = 7, ResourceId = 42, ActionId = 1 });
+        await context.ResourceActionRole.AddAsync(new ResourceActionRole { ResourceActionRoleId = 1, RoleId = manager.RoleId, ResourceId = 42, ActionId = 1 });
+        await context.SaveChangesAsync(CancellationToken.None);
+
+        var writer = new UserPolicyWriter(context, Principal(PrincipalType.User, accountId, Roles.Manager));
+        var granted = await writer.CreateUserPolicyAsync(new UserPolicyDto(target.UserId, 7), CancellationToken.None);
+
+        Assert.That(granted.PolicyId, Is.EqualTo(7));
     }
 }

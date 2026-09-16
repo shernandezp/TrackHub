@@ -21,6 +21,7 @@ import { useTranslation } from "react-i18next";
 
 // Shared shape of the password-change form values (also consumed by ProfileInfoCard).
 export interface PasswordFormValues {
+  currentPassword?: string;
   password?: string;
   confirmPassword?: string;
   userId?: string;
@@ -55,6 +56,18 @@ function PasswordChangeForm({
         setOpen={setOpen}
         maxWidth="md">
         <form>
+            <CustomPasswordField
+                name="currentPassword"
+                id="currentPassword"
+                label={t("user.currentPassword")}
+                // Required only: this is whatever the account already has, and the server verifies
+                // it. Holding it to the NEW password policy would lock out every user whose
+                // existing password predates that policy.
+                validationRule="text"
+                fullWidth
+                value={values.currentPassword || ''}
+                onChange={handleChange}
+                errorMsg={errors.currentPassword}/>
             <CustomPasswordField
                 name="password"
                 id="password"

@@ -29,10 +29,10 @@ public static class GraphQLServerServiceCollectionExtensions
     /// <typeparam name="TQuery">The service's root query type.</typeparam>
     /// <typeparam name="TMutation">The service's root mutation type.</typeparam>
     /// <param name="services">The service collection.</param>
-    /// <param name="includeExceptionDetails">True to include exception details in errors (development only).</param>
+    /// <param name="isDevelopment">True in development: exposes exception details and introspection.</param>
     /// <returns>The request executor builder, for per-service additions.</returns>
     public static IRequestExecutorBuilder AddTrackHubGraphQLServer<TQuery, TMutation>(
-        this IServiceCollection services, bool includeExceptionDetails)
+        this IServiceCollection services, bool isDevelopment)
         where TQuery : class
         where TMutation : class
         => services
@@ -40,7 +40,8 @@ public static class GraphQLServerServiceCollectionExtensions
             .AddAuthorization()
             .AddMaxExecutionDepthRule(15)
             .AddErrorFilter<TrackHubGraphQLErrorFilter>()
-            .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = includeExceptionDetails)
+            .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = isDevelopment)
+            .DisableIntrospection(disable: !isDevelopment)
             .AddQueryType<TQuery>()
             .AddMutationType<TMutation>();
 }

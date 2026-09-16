@@ -1,3 +1,5 @@
+using TrackHub.Manager.Domain.Constants;
+
 namespace TrackHub.Manager.Application.AccountFeatures.Queries.GetMaster;
 
 [Authorize(Resource = Resources.AccountFeaturesMaster, Action = Actions.Read)]
@@ -16,10 +18,10 @@ public class GetAccountFeaturesMasterQueryHandler(IAccountFeatureMasterReader re
 /// </summary>
 [Authorize(Resource = Resources.AccountFeaturesMaster, Action = Actions.Read)]
 [AllowCrossAccount("Cross-account feature snapshot for the SyncWorker device-sync loop and cross-account reports, called under global service identities with no account claim. The AccountFeaturesMaster resource gates access.")]
-public readonly record struct GetAllAccountFeaturesMasterQuery() : IRequest<IReadOnlyCollection<AccountFeatureVm>>;
+public readonly record struct GetAllAccountFeaturesMasterQuery(int Skip = 0, int Take = MasterPaging.MaxPageSize) : IRequest<IReadOnlyCollection<AccountFeatureVm>>;
 
 public class GetAllAccountFeaturesMasterQueryHandler(IAccountFeatureMasterReader reader) : IRequestHandler<GetAllAccountFeaturesMasterQuery, IReadOnlyCollection<AccountFeatureVm>>
 {
     public async Task<IReadOnlyCollection<AccountFeatureVm>> Handle(GetAllAccountFeaturesMasterQuery request, CancellationToken cancellationToken)
-        => await reader.GetAllAccountFeaturesAsync(cancellationToken);
+        => await reader.GetAllAccountFeaturesAsync(request.Skip, request.Take, cancellationToken);
 }

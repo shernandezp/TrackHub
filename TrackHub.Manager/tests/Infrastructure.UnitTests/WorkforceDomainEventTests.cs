@@ -31,7 +31,7 @@ public class WorkforceDomainEventTests
             .Returns(Task.CompletedTask);
 
         return new ApplicationDbContext(new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(name)
+            .UseInMemoryDatabase(name).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
             .AddInterceptors(new DispatchDomainEventsInterceptor(publisher.Object))
             .Options);
     }

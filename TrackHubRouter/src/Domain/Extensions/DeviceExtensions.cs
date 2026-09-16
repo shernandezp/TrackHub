@@ -50,4 +50,17 @@ public static class DeviceExtensions
         return stringBuilder.ToString();
     }
 
+    /// <summary>
+    /// Indexes devices by a provider key (serial, identifier, plate). The key is assignment data, not
+    /// a provider-enforced unique value: two assignments may share one, and the duplicate must cost a
+    /// single row rather than fail the whole operator read with ArgumentException.
+    /// </summary>
+    public static Dictionary<TKey, DeviceTransporterVm> ToDeviceLookup<TKey>(
+        this IEnumerable<DeviceTransporterVm> devices,
+        Func<DeviceTransporterVm, TKey> keySelector,
+        IEqualityComparer<TKey>? comparer = null)
+        where TKey : notnull
+        => devices
+            .GroupBy(keySelector, comparer)
+            .ToDictionary(group => group.Key, group => group.First(), comparer);
 }

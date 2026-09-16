@@ -15,6 +15,7 @@
 
 using TrackHub.Router.Infrastructure.Flespi.Mappers;
 using TrackHub.Router.Domain.Interfaces;
+using TrackHub.Router.Domain.Extensions;
 
 namespace TrackHub.Router.Infrastructure.Flespi;
 
@@ -53,7 +54,7 @@ public sealed class DeviceReader(
             return [];
         }
 
-        var devicesDictionary = devices.ToDictionary(device => device.Identifier, device => device);
+        var devicesDictionary = devices.ToDeviceLookup(device => device.Identifier);
         return result.Result
             .Where(d => devicesDictionary.ContainsKey((int)d.Id))
             .MapToDeviceVm(devicesDictionary);

@@ -27,10 +27,9 @@ public sealed class AccountStatusWriter(IApplicationDbContext context, ICurrentP
     public async Task<(AccountVm Account, AccountStatus PreviousStatus)> ChangeStatusAsync(
         Guid accountId, AccountStatus targetStatus, string? reason, CancellationToken cancellationToken)
     {
-        var account = await Context.Accounts.FirstOrDefaultAsync(a => a.AccountId == accountId, cancellationToken)
+        var account = await Context.Accounts
+            .AsTracking().FirstOrDefaultAsync(a => a.AccountId == accountId, cancellationToken)
             ?? throw new NotFoundException(nameof(Account), $"{accountId}");
-
-        Context.Accounts.Attach(account);
 
         var previous = (AccountStatus)account.Status;
         account.Status = (short)targetStatus;

@@ -222,7 +222,11 @@ function ManageNotificationTemplates() {
                   </ArgonButton>
                 </>
               ) : null,
-              id: template.notificationTemplateId
+              // Platform defaults are synthesized, not stored: they all carry an empty id,
+              // so the row is keyed by what actually addresses one.
+              id: isDefault
+                ? `${template.templateKey}|${template.channel}|${template.locale}`
+                : template.notificationTemplateId
             };
           })}
           selectedField="templateKey"

@@ -92,7 +92,7 @@ public class GetPositionsRecordQueryTests : TestsContext
         var readerMock = new Mock<IPositionReader>();
         readerMock.SetupGet(r => r.Protocol).Returns(ProtocolType.CommandTrack);
         readerMock.Setup(r => r.Init(It.IsAny<CredentialTokenDto>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
-        readerMock.Setup(r => r.GetPositionAsync(from, to, device, It.IsAny<CancellationToken>())).ReturnsAsync([new PositionVm { TransporterId = transporterId, DeviceDateTime = DateTimeOffset.UtcNow }]);
+        readerMock.Setup(r => r.GetPositionAsync(from, to, device, It.IsAny<CancellationToken>())).ReturnsAsync([new PositionVm { TransporterId = transporterId, DeviceDateTime = DateTimeOffset.UtcNow, Latitude = 4.65, Longitude = -74.05 }]);
 
         _operatorReaderMock.Setup(x => x.GetOperatorByTransporterAsync(transporterId, It.IsAny<CancellationToken>())).ReturnsAsync(operatorVm);
         _operatorReaderMock.Setup(x => x.GetOperatorAsync(operatorVm.OperatorId, It.IsAny<CancellationToken>())).ReturnsAsync(operatorVm);

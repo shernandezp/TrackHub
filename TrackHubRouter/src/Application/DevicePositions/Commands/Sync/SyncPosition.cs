@@ -16,6 +16,7 @@
 using Common.Application.Attributes;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using TrackHub.Router.Application.Sync;
 using TrackHub.Router.Application.DevicePositions.Events;
 using TrackHub.Router.Domain.Models;
 
@@ -31,14 +32,7 @@ public class UpdateTransporterCommandHandler(IAccountReader reader,
     IConfiguration configuration,
     ILogger<UpdateTransporterCommandHandler> logger) : IRequestHandler<SyncPositionCommand, bool>
 {
-    // Global cap on concurrent per-operator provider fetches across ALL accounts in one cycle, so
-    // account-level parallelism can never overwhelm the Router or the providers (router-audit A-11).
-    // Configurable; defaults to 10 — the previous per-account fan-out width — so load is unchanged
-    // until explicitly raised.
-    private readonly int _maxConcurrentOperatorSyncs =
-        int.TryParse(configuration["AppSettings:MaxConcurrentOperatorSyncs"], out var configured) && configured > 0
-            ? configured
-            : 10;
+    private readonly int _maxConcurrentOperatorSyncs = OperatorSyncConcurrency.Resolve(configuration);
 
     public async Task<bool> Handle(SyncPositionCommand request, CancellationToken cancellationToken)
     {

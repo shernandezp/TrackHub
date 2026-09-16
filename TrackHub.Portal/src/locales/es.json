@@ -503,6 +503,7 @@
     "approvedAt": "Aprobado"
   },
   "errors": {
+    "unexpected": "No se pudo completar la solicitud. Inténtelo de nuevo.",
     "featureDisabled": "Esta funcionalidad no está habilitada para su cuenta.",
     "accountSuspended": "Esta cuenta no está operativa actualmente.",
     "reportAccessDenied": "No tiene permiso para ejecutar este reporte.",
@@ -1159,6 +1160,7 @@
     "username": "Nombre de Usuario",
     "password": "Contraseña",
     "confirmPassword": "Confirmar Contraseña",
+    "currentPassword": "Contraseña Actual",
     "emailAddress": "Correo Electrónico",
     "phone": "Número de Teléfono",
     "dob": "Fecha de Nacimiento",
@@ -1248,6 +1250,7 @@
       "syncCompleted": "Sincronización completada.",
       "syncCompletedCounts": "Sincronización completada: {{seen}} dispositivos detectados — {{added}} agregados, {{updated}} actualizados, {{removed}} eliminados.",
       "syncCompletedNoDevices": "La sincronización se completó, pero el proveedor no devolvió dispositivos. Verifique la credencial y la cuenta del proveedor.",
+      "syncStarted": "Sincronización iniciada. Aún está en curso: consulte el historial de sincronización del operador en unos momentos para ver el resultado.",
       "ignore": "Ignorar",
       "unignore": "No Ignorar",
       "endAssignment": "Finalizar Asignación",
@@ -1264,7 +1267,8 @@
       "resetSync": "Reiniciar Sincronización",
       "resetSyncConfirm": "Esto eliminará los dispositivos sincronizados de este operador y las unidades que solo existían para esos dispositivos, luego iniciará una nueva sincronización. ¿Continuar?",
       "deleteDeviceConfirm": "¿Eliminar este dispositivo sincronizado? El historial de asignación quedará disponible en los registros de auditoría.",
-      "assignDevice": "Asignar Dispositivo"
+      "assignDevice": "Asignar Dispositivo",
+      "deleteDevice": "Eliminar dispositivo"
     },
     "health": {
       "unknown": "Desconocido",
@@ -2020,5 +2024,8 @@
     "invalidLinkBody": "Falta una parte del enlace. Abra el enlace completo, tal como se lo enviaron.",
     "unavailableTitle": "El seguimiento no está disponible por ahora",
     "unavailableBody": "No pudimos comunicarnos con el servicio de seguimiento. Intente de nuevo en unos minutos."
+  },
+  "table": {
+    "moreRows": "{{count}} filas más no mostradas"
   }
 }

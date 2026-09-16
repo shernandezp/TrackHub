@@ -74,38 +74,58 @@ public sealed class PositionRetentionPurgeService(
         using var scope = scopeFactory.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-        var features = await context.AccountFeatures
-            .Where(f => f.FeatureKey == PositionHistoryFeatureKey && f.Enabled)
-            .Select(f => new { f.AccountId, f.ConfigurationJson })
+        var now = DateTimeOffset.UtcNow;
+
+        // Driven by the accounts that actually HOLD history, not by the accounts that still have an
+        // enabled feature row. Enumerating feature rows meant a downgraded, expired or cancelled
+        // account was never visited again, so its movement traces were retained forever.
+        var accountIds = await context.TransporterPositionHistory
+            .Select(x => x.AccountId)
+            .Distinct()
             .ToListAsync(cancellationToken);
 
-        var now = DateTimeOffset.UtcNow;
+        var retentionByAccount = (await context.AccountFeatures
+                .Where(f => f.FeatureKey == PositionHistoryFeatureKey
+                    && f.Enabled
+                    && (f.EffectiveFrom == null || f.EffectiveFrom <= now)
+                    && (f.EffectiveTo == null || f.EffectiveTo >= now))
+                .Select(f => new { f.AccountId, f.ConfigurationJson, f.EffectiveFrom })
+                .ToListAsync(cancellationToken))
+            .GroupBy(f => f.AccountId)
+            .ToDictionary(
+                g => g.Key,
+                g => ResolveRetentionDays(g
+                    .OrderByDescending(f => f.EffectiveFrom ?? DateTimeOffset.MinValue)
+                    .First().ConfigurationJson));
+
         var totalPurged = 0;
 
-        foreach (var feature in features)
+        foreach (var accountId in accountIds)
         {
-            var retentionDays = ResolveRetentionDays(feature.ConfigurationJson);
+            var retentionDays = retentionByAccount.TryGetValue(accountId, out var configured)
+                ? configured
+                : DefaultRetentionDays;
             var cutoff = now.AddDays(-retentionDays);
             try
             {
                 var purged = await context.TransporterPositionHistory
-                    .Where(x => x.AccountId == feature.AccountId && x.SourceTimestamp < cutoff)
+                    .Where(x => x.AccountId == accountId && x.SourceTimestamp < cutoff)
                     .ExecuteDeleteAsync(cancellationToken);
                 totalPurged += purged;
                 if (purged > 0)
                 {
                     logger.LogInformation(
                         "Retention purge removed {Count} position-history row(s) for account {AccountId} older than {Cutoff:O} ({RetentionDays}d).",
-                        purged, feature.AccountId, cutoff, retentionDays);
+                        purged, accountId, cutoff, retentionDays);
                 }
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                logger.LogError(ex, "Retention purge failed for account {AccountId}.", feature.AccountId);
+                logger.LogError(ex, "Retention purge failed for account {AccountId}.", accountId);
             }
         }
 
-        logger.LogInformation("Retention purge cycle complete: {Accounts} account(s) processed, {Total} row(s) removed.", features.Count, totalPurged);
+        logger.LogInformation("Retention purge cycle complete: {Accounts} account(s) processed, {Total} row(s) removed.", accountIds.Count, totalPurged);
     }
 
     private static int ResolveRetentionDays(string? configurationJson)

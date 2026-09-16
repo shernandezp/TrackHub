@@ -33,6 +33,10 @@ public class TransporterPositionHistoryConfiguration : IEntityTypeConfiguration<
 
         builder.HasIndex(e => new { e.AccountId, e.TransporterId, e.SourceTimestamp });
         builder.HasIndex(e => new { e.AccountId, e.OperatorId, e.SourceTimestamp });
+        // The history feed reads a window per DEVICE; without this the only usable index is the
+        // transporter one and the scan falls back to the account. Declared here because this context
+        // owns the table — Telemetry maps it too, but carries no migrations of its own.
+        builder.HasIndex(e => new { e.AccountId, e.DeviceId, e.SourceTimestamp });
         builder.HasIndex(e => e.IdempotencyKey).IsUnique();
     }
 }

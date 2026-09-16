@@ -503,6 +503,7 @@
     "approvedAt": "Approved At"
   },
   "errors": {
+    "unexpected": "The request could not be completed. Please try again.",
     "featureDisabled": "This feature is not enabled for your account.",
     "accountSuspended": "This account is not currently operational.",
     "reportAccessDenied": "You do not have permission to run this report.",
@@ -1159,6 +1160,7 @@
     "username": "Username",
     "password": "Password",
     "confirmPassword": "Confirm Password",
+    "currentPassword": "Current Password",
     "emailAddress": "Email Address",
     "phone": "Phone",
     "dob": "Date of Birth",
@@ -1248,6 +1250,7 @@
       "syncCompleted": "Sync completed.",
       "syncCompletedCounts": "Sync completed: {{seen}} devices seen — {{added}} added, {{updated}} updated, {{removed}} removed.",
       "syncCompletedNoDevices": "Sync completed, but the provider returned no devices. Verify the credential and the provider account.",
+      "syncStarted": "Sync started. It is still running — check the operator's sync history in a moment for the result.",
       "ignore": "Ignore",
       "unignore": "Unignore",
       "endAssignment": "End Assignment",
@@ -1264,7 +1267,8 @@
       "resetSync": "Reset Sync",
       "resetSyncConfirm": "This will delete the synchronized devices for this operator and any units that only existed for those devices, then start a new sync. Continue?",
       "deleteDeviceConfirm": "Delete this synchronized device? Assignment history remains available in audit logs.",
-      "assignDevice": "Assign Device"
+      "assignDevice": "Assign Device",
+      "deleteDevice": "Delete device"
     },
     "health": {
       "unknown": "Unknown",
@@ -2020,5 +2024,8 @@
     "invalidLinkBody": "Part of the link is missing. Open the full link exactly as it was sent to you.",
     "unavailableTitle": "Tracking is temporarily unavailable",
     "unavailableBody": "We could not reach the tracking service. Please try again in a few minutes."
+  },
+  "table": {
+    "moreRows": "{{count}} more rows not shown"
   }
 }

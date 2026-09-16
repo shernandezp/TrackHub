@@ -83,7 +83,7 @@ public sealed class DeviceTransporterReader(IApplicationDbContext context, ICurr
 
         RequireAccountAccess(transporterAccountId);
 
-        return await Context.TransporterDeviceAssignments
+        var found = await Context.TransporterDeviceAssignments
             .Where(a => a.TransporterId == transporterId && a.Status == (int)AssignmentStatus.Active)
             .OrderByDescending(a => a.IsPrimary)
             .ThenBy(a => a.Priority)
@@ -94,6 +94,8 @@ public sealed class DeviceTransporterReader(IApplicationDbContext context, ICurr
                 a.Transporter.Name,
                 (TransporterType)a.Transporter.TransporterTypeId,
                 a.Transporter.TransporterTypeId))
-            .FirstAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken);
+        ReaderResults.EnsureFound(found, nameof(Entities.TransporterDeviceAssignment), transporterId.ToString());
+        return found;
     }
 }

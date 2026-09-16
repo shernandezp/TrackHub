@@ -13,12 +13,14 @@
 //  limitations under the License.
 //
 
+using Common.Application.Interfaces;
 using TrackHub.Telemetry.Infrastructure.TelemetryDB.Entities;
 using TrackHub.Telemetry.Infrastructure.TelemetryDB.Interfaces;
 
 namespace TrackHub.Telemetry.Infrastructure.TelemetryDB.Writers;
 
-public sealed class TransporterPositionWriter(IApplicationDbContext context) : ITransporterPositionWriter
+public sealed class TransporterPositionWriter(IApplicationDbContext context, ICurrentPrincipal principal)
+    : AccountScopedDataAccess(context, principal), ITransporterPositionWriter
 {
 
     /// <summary>
@@ -36,7 +38,25 @@ public sealed class TransporterPositionWriter(IApplicationDbContext context) : I
         }
 
         var transporterIds = incoming.Select(p => p.TransporterId).Distinct().ToArray();
-        var existingByTransporter = await context.TransporterPositions
+
+        // The DTO carries no AccountId, so AccountScopeBehavior finds nothing to compare and lets
+        // the batch through: without this an account-bound service client could overwrite the live
+        // map position of any transporter in any tenant, given only its id.
+        if (!CanAccessAllAccounts)
+        {
+            var owners = await Context.Transporters
+                .Where(t => transporterIds.Contains(t.TransporterId))
+                .Select(t => new { t.TransporterId, t.AccountId })
+                .ToDictionaryAsync(t => t.TransporterId, t => t.AccountId, cancellationToken);
+
+            foreach (var transporterId in transporterIds)
+            {
+                RequireAccountAccess(owners.TryGetValue(transporterId, out var owner) ? owner : Guid.Empty);
+            }
+        }
+
+        var existingByTransporter = await Context.TransporterPositions
+            .AsTracking()
             .Where(p => transporterIds.Contains(p.TransporterId))
             .ToDictionaryAsync(p => p.TransporterId, cancellationToken);
 
@@ -69,11 +89,11 @@ public sealed class TransporterPositionWriter(IApplicationDbContext context) : I
                 positionDto.Country,
                 MapAttributes(positionDto.Attributes));
 
-            await context.TransporterPositions.AddAsync(created, cancellationToken);
+            await Context.TransporterPositions.AddAsync(created, cancellationToken);
             existingByTransporter[positionDto.TransporterId] = created;
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await Context.SaveChangesAsync(cancellationToken);
     }
 
     /// <summary>
@@ -85,10 +105,10 @@ public sealed class TransporterPositionWriter(IApplicationDbContext context) : I
     /// <exception cref="NotFoundException">if the transporter position is not found</exception>
     public async Task UpdateTransporterPositionAsync(TransporterPositionDto positionDto, CancellationToken cancellationToken)
     {
-        var position = await context.TransporterPositions.FirstOrDefaultAsync(t => t.TransporterId == positionDto.TransporterId, cancellationToken)
+        var position = await Context.TransporterPositions
+            .AsTracking()
+            .FirstOrDefaultAsync(t => t.TransporterId == positionDto.TransporterId, cancellationToken)
             ?? throw new NotFoundException(nameof(TransporterPosition), $"{positionDto.TransporterId}");
-
-        context.TransporterPositions.Attach(position);
 
         position.GeometryId = positionDto.GeometryId;
         position.Latitude = positionDto.Latitude;
@@ -111,7 +131,7 @@ public sealed class TransporterPositionWriter(IApplicationDbContext context) : I
             positionDto.Attributes?.Extra
         );
 
-        await context.SaveChangesAsync(cancellationToken);
+        await Context.SaveChangesAsync(cancellationToken);
     }
 
     private static void Apply(TransporterPosition position, TransporterPositionDto positionDto)
@@ -148,14 +168,14 @@ public sealed class TransporterPositionWriter(IApplicationDbContext context) : I
     /// <returns></returns>
     public async Task DeleteTransporterPositionAsync(Guid transporterId, CancellationToken cancellationToken)
     {
-        var position = await context.TransporterPositions.FirstOrDefaultAsync(t => t.TransporterId == transporterId, cancellationToken);
+        var position = await Context.TransporterPositions
+            .AsTracking()
+            .FirstOrDefaultAsync(t => t.TransporterId == transporterId, cancellationToken);
 
         if (position is not null)
         {
-            context.TransporterPositions.Attach(position);
-
-            context.TransporterPositions.Remove(position);
-            await context.SaveChangesAsync(cancellationToken);
+            Context.TransporterPositions.Remove(position);
+            await Context.SaveChangesAsync(cancellationToken);
         }
     }
 }

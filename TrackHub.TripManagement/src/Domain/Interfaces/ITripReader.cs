@@ -69,6 +69,17 @@ public interface ITripReader
     Task<TripVm> GetTripAsync(Guid tripId, Guid accountId, Guid? userId, CancellationToken cancellationToken);
 
     /// <summary>
+    /// The account's trip carrying this <c>Code</c>, or <c>null</c>. Both this and
+    /// <see cref="FindByExternalReferenceAsync"/> are exact single-row reads against the per-account
+    /// unique index; the partner import used to probe the paged board with the value as a free-text
+    /// search term, which cost up to 25 pages of un-indexed ILIKE scans per imported row.
+    /// </summary>
+    Task<TripVm?> FindByCodeAsync(Guid accountId, string code, CancellationToken cancellationToken);
+
+    /// <summary>The account's trip carrying this <c>ExternalReference</c>, or <c>null</c>.</summary>
+    Task<TripVm?> FindByExternalReferenceAsync(Guid accountId, string externalReference, CancellationToken cancellationToken);
+
+    /// <summary>
     /// The owning trip of a stop, or <c>null</c> when the stop does not exist in the account or its
     /// trip is outside the caller's groups. Exists because the stop- and delivery-addressed
     /// commands (<c>UpdateTripStop</c>, <c>RemoveTripStop</c>, the delivery commands) carry no trip

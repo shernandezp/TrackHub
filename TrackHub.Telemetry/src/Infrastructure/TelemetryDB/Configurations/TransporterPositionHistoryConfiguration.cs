@@ -33,6 +33,7 @@ public class TransporterPositionHistoryConfiguration : IEntityTypeConfiguration<
 
         builder.HasIndex(e => new { e.AccountId, e.TransporterId, e.SourceTimestamp });
         builder.HasIndex(e => new { e.AccountId, e.OperatorId, e.SourceTimestamp });
+        builder.HasIndex(e => new { e.AccountId, e.DeviceId, e.SourceTimestamp });
         builder.HasIndex(e => e.IdempotencyKey).IsUnique();
     }
 }

@@ -142,6 +142,27 @@ jobs:
       - name: Test
         run: dotnet test "${{ steps.dir.outputs.dir }}" -c Release
 
+  # ---------------------------------------------------------------------------
+  # The cross-service GraphQL contract suite. Its `contracts` output was computed
+  # but consumed by no job, so a contract break reached develop green.
+  # ---------------------------------------------------------------------------
+  contracts:
+    needs: [changes, build]
+    if: needs.changes.outputs.contracts == 'true' || needs.changes.outputs.services != '[]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/Directory.Packages.props') }}
+          restore-keys: nuget-${{ runner.os }}-
+      - name: Contract tests
+        run: dotnet test TrackHub.IntegrationTests -c Release
+
   portal:
     needs: changes
     if: needs.changes.outputs.portal == 'true'
@@ -168,7 +189,7 @@ jobs:
   # ---------------------------------------------------------------------------
   ci-ok:
     if: always()
-    needs: [changes, build, test, portal]
+    needs: [changes, build, test, portal, contracts]
     runs-on: ubuntu-latest
     steps:
       - name: Fail if anything failed or was cancelled

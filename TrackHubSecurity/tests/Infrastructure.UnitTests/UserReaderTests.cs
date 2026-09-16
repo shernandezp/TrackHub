@@ -32,7 +32,7 @@ namespace Infrastructure.UnitTests;
 internal class UserReaderTests
 {
     private static ApplicationDbContext NewContext(string name)
-        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).Options);
+        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking).Options);
 
     // A global service identity: account-transparent, so the paging assertions are undisturbed
     // by the reader's by-id account guard.

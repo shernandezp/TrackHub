@@ -41,7 +41,8 @@ public sealed class GroupReader(IApplicationDbContext context, ICurrentPrincipal
                 d.Description,
                 d.Active,
                 d.AccountId))
-            .FirstAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken);
+        ReaderResults.EnsureFound(group, nameof(Entities.Group), id.ToString());
 
         RequireAccountAccess(group.AccountId);
         return group;
@@ -89,6 +90,13 @@ public sealed class GroupReader(IApplicationDbContext context, ICurrentPrincipal
             .ThenBy(g => g.GroupId)
             .Take(fetchSize)
             .Select(g => new GroupLookupVm(g.GroupId, g.Name))
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyCollection<long>> GetGroupIdsWithUsersAsync(Guid accountId, CancellationToken cancellationToken)
+        => await ByAccount(accountId)
+            .Where(g => g.Active && g.Users.Any())
+            .OrderBy(g => g.GroupId)
+            .Select(g => g.GroupId)
             .ToListAsync(cancellationToken);
 
     // Filtered directly on Groups rather than joined through Accounts: the join was equivalent (a

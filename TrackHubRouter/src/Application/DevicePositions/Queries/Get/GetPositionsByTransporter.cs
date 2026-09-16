@@ -20,6 +20,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using TrackHub.Router.Domain.Models;
 using TrackHub.Router.Domain.Extensions;
+using TrackHub.Router.Domain.Helpers;
 
 namespace TrackHub.Router.Application.DevicePositions.Queries.Get;
 
@@ -109,9 +110,8 @@ public class GetPositionByTransporterQueryHandler(
 
     private async Task PersistLatestPositionAsync(PositionVm position, CancellationToken cancellationToken)
     {
-        if (position.DeviceDateTime == default
-            || position.Latitude is < -90d or > 90d
-            || position.Longitude is < -180d or > 180d)
+        if (!PositionValidity.HasCoordinates(position.Latitude, position.Longitude)
+            || !PositionValidity.IsWithinClockWindow(position.DeviceDateTime))
         {
             return;
         }

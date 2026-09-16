@@ -30,8 +30,12 @@ public class IsValidServiceForResourceQueryHandler(IIdentityService service, IUs
     public async Task<bool> Handle(IsValidServiceForResourceQuery request, CancellationToken cancellationToken)
     {
         IdentityCallerGuard.EnsureCallerIsSubjectService(user, request.Client, "IsValidServiceForResource");
-        return request.AccountId.HasValue || request.Scopes is { Count: > 0 } || request.Audiences is { Count: > 0 }
-            ? await service.IsValidServiceAsync(request.Client, request.Resource, request.Action, request.AccountId, request.Scopes ?? [], request.Audiences ?? [], cancellationToken)
-            : await service.IsValidServiceAsync(request.Client, request.Resource, request.Action, cancellationToken);
+        // ALWAYS the restricted overload. Choosing it from what the REQUEST carried made the
+        // scope/audience restriction opt-in by the caller: a token requested without a scope was
+        // evaluated with no restriction at all, so grants deliberately narrowed to one scope or
+        // audience were honoured as unrestricted.
+        return await service.IsValidServiceAsync(
+            request.Client, request.Resource, request.Action, request.AccountId,
+            request.Scopes ?? [], request.Audiences ?? [], cancellationToken);
     }
 }

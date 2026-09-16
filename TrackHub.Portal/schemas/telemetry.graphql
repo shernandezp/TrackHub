@@ -213,6 +213,8 @@ input GetPositionHistoryQueryInput {
   transporterId: UUID
   deviceId: UUID
   take: Int! = 500
+  from: DateTime
+  to: DateTime
 }
 
 input GetPositionHistoryRangeQueryInput {

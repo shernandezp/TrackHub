@@ -52,7 +52,7 @@ public class HttpClientService : IHttpClientService
                 request.Headers.Add(item.Key, item.Value);
             }
         }
-        var response = await _httpClient.SendAsync(request, cancellationToken);
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
         return content.Deserialize<T>();
@@ -73,6 +73,8 @@ public class HttpClientService : IHttpClientService
         Guard.Against.Null(_httpClient, message: $"Client configuration for {_clientName} not loaded");
 
         HttpContent? content = null;
+        // Content the caller passed in belongs to the caller; only content created here is disposed.
+        var ownsContent = parameters is not null and not HttpContent;
         if (parameters is not null)
         {
             content = parameters is HttpContent httpContent
@@ -80,9 +82,19 @@ public class HttpClientService : IHttpClientService
                 : new StringContent(JsonSerializer.Serialize(parameters), Encoding.UTF8, "application/json");
         }
 
-        var response = await _httpClient.PostAsync(url, content, cancellationToken);
-        response.EnsureSuccessStatusCode();
-        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
-        return responseContent.Deserialize<T>();
+        try
+        {
+            using var response = await _httpClient.PostAsync(url, content, cancellationToken);
+            response.EnsureSuccessStatusCode();
+            var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+            return responseContent.Deserialize<T>();
+        }
+        finally
+        {
+            if (ownsContent)
+            {
+                content?.Dispose();
+            }
+        }
     }
 }

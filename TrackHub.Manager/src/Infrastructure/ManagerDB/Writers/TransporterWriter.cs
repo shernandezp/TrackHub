@@ -38,6 +38,7 @@ public sealed class TransporterWriter(IApplicationDbContext context, ICurrentPri
             transporterDto.AccountId);
 
         await Context.Transporters.AddAsync(transporter, cancellationToken);
+        AddAuditEvent(transporter.AccountId, "CreateTransporter", "Transporter", $"{transporter.TransporterId}", null, Describe(transporter));
         await Context.SaveChangesAsync(cancellationToken);
 
         return new TransporterVm(
@@ -59,9 +60,11 @@ public sealed class TransporterWriter(IApplicationDbContext context, ICurrentPri
 
         Context.Transporters.Attach(transporter);
 
+        var previous = Describe(transporter);
         transporter.Name = transporterDto.Name;
         transporter.TransporterTypeId = transporterDto.TransporterTypeId;
 
+        AddAuditEvent(transporter.AccountId, "UpdateTransporter", "Transporter", $"{transporter.TransporterId}", previous, Describe(transporter));
         await Context.SaveChangesAsync(cancellationToken);
     }
 
@@ -77,8 +80,11 @@ public sealed class TransporterWriter(IApplicationDbContext context, ICurrentPri
 
         Context.Transporters.Attach(transporter);
 
+        AddAuditEvent(transporter.AccountId, "DeleteTransporter", "Transporter", $"{transporter.TransporterId}", Describe(transporter), null);
         Context.Transporters.Remove(transporter);
         await Context.SaveChangesAsync(cancellationToken);
     }
 
+    private static string Describe(Transporter transporter)
+        => $$"""{"name":{{AuditJson.Quote(transporter.Name)}},"transporterTypeId":{{transporter.TransporterTypeId}}}""";
 }

@@ -14,6 +14,8 @@
 //
 
 using Common.Application.Exceptions;
+using Common.Application.Interfaces;
+using Moq;
 using Microsoft.EntityFrameworkCore;
 using TrackHub.Telemetry.Domain.Enums;
 using TrackHub.Telemetry.Domain.Records;
@@ -28,12 +30,30 @@ public class PositionWriterTests
     private static TransporterPositionDto PositionDto(Guid transporterId, double latitude, DateTimeOffset deviceDateTime)
         => new(transporterId, null, latitude, 0, null, deviceDateTime, 0, null, null, null, null, null, null, null);
 
+    // The Router writes these under the global service identity (no account claim), which is what
+    // CanAccessAllAccounts recognises.
+    private static ICurrentPrincipal ServicePrincipal()
+    {
+        var principal = new Mock<ICurrentPrincipal>();
+        principal.SetupGet(p => p.PrincipalType).Returns(PrincipalType.ServiceClient);
+        principal.SetupGet(p => p.AccountId).Returns((Guid?)null);
+        return principal.Object;
+    }
+
+    private static ICurrentPrincipal AccountPrincipal(Guid accountId)
+    {
+        var principal = new Mock<ICurrentPrincipal>();
+        principal.SetupGet(p => p.PrincipalType).Returns(PrincipalType.ServiceClient);
+        principal.SetupGet(p => p.AccountId).Returns(accountId);
+        return principal.Object;
+    }
+
     [Test]
     public async Task Bulk_InsertsNewLatestPosition()
     {
         var transporterId = Guid.NewGuid();
         var context = TestDb.NewContext();
-        var writer = new TransporterPositionWriter(context);
+        var writer = new TransporterPositionWriter(context, ServicePrincipal());
 
         await writer.BulkTransporterPositionAsync([PositionDto(transporterId, 10, DateTimeOffset.UtcNow)], CancellationToken.None);
 
@@ -50,7 +70,7 @@ public class PositionWriterTests
         var existingAt = DateTimeOffset.UtcNow;
         context.TransporterPositions.Add(new TrackHub.Telemetry.Infrastructure.TelemetryDB.Entities.TransporterPosition(transporterId, null, 1, 1, null, existingAt, 0, null, null, null, null, null, null, null));
         context.SaveChanges();
-        var writer = new TransporterPositionWriter(context);
+        var writer = new TransporterPositionWriter(context, ServicePrincipal());
 
         // Stale (older) fix is ignored.
         await writer.BulkTransporterPositionAsync([PositionDto(transporterId, 99, existingAt.AddHours(-1))], CancellationToken.None);
@@ -113,7 +133,7 @@ public class PositionWriterTests
         typeof(TransporterPositionHistory).GetProperty(nameof(TransporterPositionHistory.TransporterPositionHistoryId))!.SetValue(history, historyId);
         context.TransporterPositionHistory.Add(history);
         context.SaveChanges();
-        var writer = new ResolvedAddressWriter(context);
+        var writer = new ResolvedAddressWriter(context, ServicePrincipal());
 
         var updated = await writer.PersistResolvedAddressAsync(historyId, transporterId, "New Address", "City", "State", "Country", CancellationToken.None);
 
@@ -126,4 +146,36 @@ public class PositionWriterTests
         await context.DisposeAsync();
     }
 
+    [Test]
+    public async Task Bulk_AccountBoundPrincipal_CannotWriteAnotherTenantsTransporter()
+    {
+        var transporterId = Guid.NewGuid();
+        var ownerAccountId = Guid.NewGuid();
+        var context = TestDb.NewContext();
+        context.Transporters.Add(new Transporter { TransporterId = transporterId, Name = "t", AccountId = ownerAccountId });
+        context.SaveChanges();
+        var writer = new TransporterPositionWriter(context, AccountPrincipal(Guid.NewGuid()));
+
+        Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.BulkTransporterPositionAsync(
+            [PositionDto(transporterId, 10, DateTimeOffset.UtcNow)], CancellationToken.None));
+
+        Assert.That(await context.TransporterPositions.AnyAsync(), Is.False);
+        await context.DisposeAsync();
+    }
+
+    [Test]
+    public async Task Bulk_AccountBoundPrincipal_WritesItsOwnTransporter()
+    {
+        var transporterId = Guid.NewGuid();
+        var accountId = Guid.NewGuid();
+        var context = TestDb.NewContext();
+        context.Transporters.Add(new Transporter { TransporterId = transporterId, Name = "t", AccountId = accountId });
+        context.SaveChanges();
+        var writer = new TransporterPositionWriter(context, AccountPrincipal(accountId));
+
+        await writer.BulkTransporterPositionAsync([PositionDto(transporterId, 10, DateTimeOffset.UtcNow)], CancellationToken.None);
+
+        Assert.That((await context.TransporterPositions.SingleAsync()).Latitude, Is.EqualTo(10));
+        await context.DisposeAsync();
+    }
 }

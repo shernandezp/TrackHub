@@ -44,6 +44,10 @@ import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
 import { notifyGpsIntegrationRefresh } from "layouts/gpsintegration/gpsIntegrationEvents";
 
+/** A manual sync is accepted, then runs off the request; poll its run for at most ~20s. */
+const SYNC_RUN_POLL_ATTEMPTS = 10;
+const SYNC_RUN_POLL_INTERVAL_MS = 2000;
+
 /**
  * Dialog/form state for an operator. Merges an API {@link Operator} (when editing)
  * with the loose fresh-add shape (`{ protocolTypeId, syncIntervalMinutes }`); all
@@ -247,24 +251,48 @@ function useOperatorTableData(
     }
   };
 
-  // The mutation only returns acceptance; the recorded sync run is the source of
-  // truth for what actually happened, so read the freshest run back for the
-  // confirmation message. A read failure never hides the confirmation itself.
-  const describeCompletedSync = async (operatorId: string): Promise<string> => {
+  // The id of the newest recorded run, or null when there is none yet. Used as the baseline a
+  // triggered sync must move past — comparing the run's server timestamp against the browser clock
+  // would misreport on any machine whose clock is even slightly behind the server's.
+  // undefined means the baseline could not be read; the sync is still triggered, but its result is
+  // reported as "started" rather than risking the PREVIOUS run being described as this one.
+  const latestSyncRunId = async (operatorId: string): Promise<string | null | undefined> => {
+    try {
+      const account = await getAccountByUser();
+      if (!account?.accountId) return undefined;
+      const [run] = await getOperatorSyncRuns(account.accountId, operatorId, 1);
+      return run?.operatorSyncRunId ?? null;
+    } catch {
+      return undefined;
+    }
+  };
+
+  // The mutation only returns ACCEPTANCE — the sync runs off the request — so poll for the run it
+  // produces and describe that. The recorded run is the source of truth for what actually happened.
+  const describeCompletedSync = async (operatorId: string, baselineRunId: string | null | undefined): Promise<string> => {
+    if (baselineRunId === undefined) {
+      return t('gpsIntegration.actions.syncStarted');
+    }
+
     try {
       const account = await getAccountByUser();
       if (account?.accountId) {
-        const [run] = await getOperatorSyncRuns(account.accountId, operatorId, 1);
-        if (run) {
-          return (run.devicesSeen ?? 0) === 0
-            ? t('gpsIntegration.actions.syncCompletedNoDevices')
-            : t('gpsIntegration.actions.syncCompletedCounts', {
-                seen: run.devicesSeen ?? 0,
-                added: run.devicesAdded ?? 0,
-                updated: run.devicesUpdated ?? 0,
-                removed: run.devicesRemoved ?? 0,
-              });
+        for (let attempt = 0; attempt < SYNC_RUN_POLL_ATTEMPTS; attempt += 1) {
+          const [run] = await getOperatorSyncRuns(account.accountId, operatorId, 1);
+          if (run && run.operatorSyncRunId !== baselineRunId) {
+            return (run.devicesSeen ?? 0) === 0
+              ? t('gpsIntegration.actions.syncCompletedNoDevices')
+              : t('gpsIntegration.actions.syncCompletedCounts', {
+                  seen: run.devicesSeen ?? 0,
+                  added: run.devicesAdded ?? 0,
+                  updated: run.devicesUpdated ?? 0,
+                  removed: run.devicesRemoved ?? 0,
+                });
+          }
+          await new Promise(resolve => setTimeout(resolve, SYNC_RUN_POLL_INTERVAL_MS));
         }
+        // Still running: accepted is the honest answer, not "completed".
+        return t('gpsIntegration.actions.syncStarted');
       }
     } catch {
       // Fall back to the plain confirmation below.
@@ -276,13 +304,14 @@ function useOperatorTableData(
     setLoading(true);
     try {
       setSyncingMap(prev => ({ ...prev, [operator.operatorId]: true }));
+      const baselineRunId = await latestSyncRunId(operator.operatorId);
       const completed = await triggerOperatorDeviceSync.mutateAsync({
         operatorId: operator.operatorId,
         resetDeviceCatalog,
       });
       setTestTitle(t('gpsIntegration.actions.sync'));
       setTestMessage(completed
-        ? await describeCompletedSync(operator.operatorId)
+        ? await describeCompletedSync(operator.operatorId, baselineRunId)
         : t('gpsIntegration.actions.syncNotCompleted'));
       setTestOpen(true);
       notifyGpsIntegrationRefresh();

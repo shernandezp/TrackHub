@@ -11,10 +11,12 @@ public sealed class AccountSupportGrantReader(IApplicationDbContext context, ICu
     public async Task<AccountSupportGrantVm> GetSupportGrantStatusAsync(Guid accountSupportGrantId, CancellationToken cancellationToken)
     {
         var accountId = ResolveAccountScope(null);
-        return await Context.AccountSupportGrants
+        var found = await Context.AccountSupportGrants
             .Where(x => x.AccountSupportGrantId == accountSupportGrantId && (!accountId.HasValue || x.AccountId == accountId.Value))
             .Select(x => new AccountSupportGrantVm(x.AccountSupportGrantId, x.AccountId, x.SupportUserId, x.Reason, x.TicketReference, x.ApprovedBy, x.ApprovedAt, x.AccessLevel, x.StartsAt, x.EndsAt, x.RevokedAt, x.RevokedBy, x.LastModified))
-            .FirstAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken);
+        ReaderResults.EnsureFound(found, nameof(Entities.AccountSupportGrant), accountSupportGrantId.ToString());
+        return found;
     }
 
     public async Task<IReadOnlyCollection<AccountSupportGrantVm>> GetAccountSupportGrantsAsync(Guid? accountId, int skip, int take, CancellationToken cancellationToken)

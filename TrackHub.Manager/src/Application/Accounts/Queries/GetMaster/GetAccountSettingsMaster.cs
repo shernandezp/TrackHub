@@ -15,16 +15,17 @@
 
 using Common.Application.Extensions;
 using Common.Application.GraphQL.Inputs;
+using TrackHub.Manager.Domain.Constants;
 
 namespace TrackHub.Manager.Application.Accounts.Queries.GetMaster;
 
 [Authorize(Resource = Resources.AccountsMaster, Action = Actions.Read)]
 [AllowCrossAccount("Master surface: the Router/SyncWorker global service identity (no account claim) enumerates account settings across every tenant to drive the sync loop; the portal systemadmin console shares it. The AccountsMaster resource gates access.")]
-public readonly record struct GetAccountSettingsMasterQuery(FiltersInput Filter) : IRequest<IReadOnlyCollection<AccountSettingsVm>>;
+public readonly record struct GetAccountSettingsMasterQuery(FiltersInput Filter, int Skip = 0, int Take = MasterPaging.MaxPageSize) : IRequest<IReadOnlyCollection<AccountSettingsVm>>;
 
 public class GetAccountSettingsMasterQueryHandler(IAccountSettingsReader reader) : IRequestHandler<GetAccountSettingsMasterQuery, IReadOnlyCollection<AccountSettingsVm>>
 {
     public async Task<IReadOnlyCollection<AccountSettingsVm>> Handle(GetAccountSettingsMasterQuery request, CancellationToken cancellationToken)
-        => await reader.GetAccountSettingsAsync(request.Filter.GetFilters(), cancellationToken);
+        => await reader.GetAccountSettingsAsync(request.Filter.GetFilters(MasterQueryFilters.AccountSettings), request.Skip, request.Take, cancellationToken);
 
 }

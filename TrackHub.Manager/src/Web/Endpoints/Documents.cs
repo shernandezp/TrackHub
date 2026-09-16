@@ -20,9 +20,11 @@ public sealed class Documents : Common.Web.Infrastructure.EndpointGroupBase
 {
     public override void Map(WebApplication app)
     {
-        app.MapPost("~/documents/upload", Upload).DisableAntiforgery();
-        app.MapPost("~/documents/{documentId:guid}/versions", UploadVersion).DisableAntiforgery();
-        app.MapGet("~/documents/{documentId:guid}/download", Download);
+        // The service has no fallback authorization policy, so a route without RequireAuthorization
+        // is anonymous. PublicDownload stays so by design: it validates its own grant token.
+        app.MapPost("~/documents/upload", Upload).DisableAntiforgery().RequireAuthorization();
+        app.MapPost("~/documents/{documentId:guid}/versions", UploadVersion).DisableAntiforgery().RequireAuthorization();
+        app.MapGet("~/documents/{documentId:guid}/download", Download).RequireAuthorization();
         app.MapGet("~/documents/public/{publicLinkGrantId:guid}", PublicDownload);
     }
 
@@ -47,11 +49,14 @@ public sealed class Documents : Common.Web.Infrastructure.EndpointGroupBase
             return Results.BadRequest($"File exceeds the {DocumentLimits.DefaultMaxBytes / (1024 * 1024)} MB limit.");
         }
 
-        var accountId = user.AccountId ?? ParseGuid(form["accountId"]);
+        // From the principal only. Falling back to a form field let the caller name the tenant.
+        var accountId = user.AccountId;
         if (accountId is null || accountId == Guid.Empty)
         {
             return Results.BadRequest("Missing account id.");
         }
+
+        await sender.Send(new AuthorizeDocumentUploadCommand(accountId.Value), cancellationToken);
 
         var ownerEntityType = form["ownerEntityType"].ToString();
         var ownerEntityId = form["ownerEntityId"].ToString();

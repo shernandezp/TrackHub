@@ -14,6 +14,7 @@
 //
 
 using Microsoft.AspNetCore;
+using TrackHub.AuthorityServer.Web.Helpers;
 using OpenIddict.Server.AspNetCore;
 using OpenIddict.Abstractions;
 using Microsoft.AspNetCore.Authentication;
@@ -31,8 +32,8 @@ namespace TrackHub.AuthorityServer.Web.Endpoints;
 public sealed class TokenHandler(
     IClientReader clientReader,
     IUserReader userReader,
-    IDriverCredentialReader driverCredentialReader,
-    IServiceClientPermissionReader serviceClientPermissionReader)
+    IServiceClientPermissionReader serviceClientPermissionReader,
+    SubjectValidity subjectValidity)
 {
     // Optional client-credentials request parameter a service client with grants on more than one
     // account uses to pick which tenant the token is issued for.
@@ -229,36 +230,8 @@ public sealed class TokenHandler(
         }
     }
 
-    // Re-validates the principal behind a refresh token against the current security state.
-    private async Task<bool> IsSubjectStillValidAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
-    {
-        var principalType = principal.FindFirst("principal_type")?.Value ?? "User";
-
-        if (string.Equals(principalType, "Driver", StringComparison.OrdinalIgnoreCase))
-        {
-            return Guid.TryParse(principal.FindFirst("driver_id")?.Value, out var driverId)
-                && await driverCredentialReader.HasActiveCredentialAsync(driverId, cancellationToken);
-        }
-
-        // Client-credentials tokens carry no refresh token, so nothing to re-validate for them.
-        if (string.Equals(principalType, "ServiceClient", StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-
-        var subject = principal.FindFirst("user_id")?.Value
-            ?? principal.FindFirst(OpenIddictConstants.Claims.Subject)?.Value;
-
-        if (!Guid.TryParse(subject, out var userId))
-        {
-            return false;
-        }
-
-        var user = await userReader.GetUserAsync(userId, cancellationToken);
-        return user != default
-            && user.Active
-            && (user.LockedUntil is null || user.LockedUntil <= DateTimeOffset.UtcNow);
-    }
+    internal Task<bool> IsSubjectStillValidAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
+        => subjectValidity.IsStillValidAsync(principal, cancellationToken);
 
     private async Task<IResult> ExchangePasswordAsync(HttpContext context, OpenIddictRequest request)
     {

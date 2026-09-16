@@ -28,7 +28,7 @@ Coded by www.creative-tim.com
 
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import type { ReactNode } from 'react';
 
 // react-router components
@@ -83,6 +83,7 @@ import type { AccountContext, AccountStatus } from "api/manager/accounts";
 import { getCurrentPrincipal } from "api/manager/principals";
 import type { CurrentPrincipal } from "api/manager/principals";
 import { isDarkStyle, isMiniSidenav, writeUiPreferences } from "utils/uiPreferences";
+import { activateOnKeyboard } from 'utils/keyboard';
 import { useTranslation } from 'react-i18next';
 import ErrorBoundary from "components/ErrorBoundary";
 import SuspensionScreen from "components/SuspensionScreen";
@@ -107,7 +108,7 @@ export default function App() {
   const [onMouseEnter, setOnMouseEnter] = useState(false);
   const { isAuthenticated, login, isLoggingIn, authError } = useAuth();
   const { pathname } = useLocation();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const saveAccountSettings = (
     accountId: string,
@@ -115,8 +116,11 @@ export default function App() {
   ) => updateAccountSettings(accountId, settings);
 
   const [loading, setLoading] = useState(false);
-  const [userIsAdmin, setUserIsAdmin] = useState(true);
-  const [userIsManager, setUserIsManager] = useState(true);
+  // Closed until bootstrap answers. Open defaults briefly showed every signed-in user the admin
+  // consoles, which then fired their privileged queries and filled the screen with rejections.
+  const [userIsAdmin, setUserIsAdmin] = useState(false);
+  const [userIsManager, setUserIsManager] = useState(false);
+  const [bootstrapLoaded, setBootstrapLoaded] = useState(false);
   const [accountSettings, setAccountSettings] = useState<Partial<AccountSettings>>({});
   const [accountFeatures, setAccountFeatures] = useState<AccountContext['features']>([]);
   const [authorizedActions, setAuthorizedActions] = useState<AuthorizedAction[]>([]);
@@ -179,6 +183,7 @@ export default function App() {
       setCurrentPrincipal(principal);
       setUserIsAdmin(admin);
       setUserIsManager(manager);
+      setBootstrapLoaded(true);
 
       // The caller's effective permission set (roles UNION policies), used to gate
       // actions the way `featureEnabled` gates screens. Needs the principal's user
@@ -202,7 +207,18 @@ export default function App() {
         setAccountFeatures(context.features || []);
       }
     };
-    fetchPermissions();
+
+    // Only once the caller is authenticated: fetchPermissions returns immediately while signed out,
+    // and releasing the gate on that pass would decide every gated route against role flags that have
+    // not loaded — a deep link opened signed out was redirected away before sign-in even completed.
+    if (!isAuthenticated) {
+      return;
+    }
+
+    // Routing resumes whatever happens in there. Every read above already degrades to a null, but a
+    // bootstrap that threw for some other reason must not leave gated routes rendering nothing at
+    // all — with the role flags still closed, the worst case is a redirect to /dashboard.
+    fetchPermissions().finally(() => setBootstrapLoaded(true));
   }, [isAuthenticated]);
 
   // Open sidenav when mouse enter on mini sidenav
@@ -260,14 +276,19 @@ export default function App() {
 
   // Shared with FeaturesContext consumers; matches the backend flag semantics
   // (missing row ⇒ disabled, effective window honoured).
-  const featureEnabled = (featureKey?: string | null): boolean =>
-    isFeatureActive(accountFeatures, featureKey);
+  // Stable identities: these travel in context values, and a new function per render re-renders
+  // every consumer on each loading toggle — of which the map refresh alone fires two.
+  const featureEnabled = useCallback(
+    (featureKey?: string | null): boolean => isFeatureActive(accountFeatures, featureKey),
+    [accountFeatures]);
 
   // Permission gate for ACTIONS (the feature flags above gate SCREENS). Open until the
   // set has loaded — see the note on PermissionsContext.
   const permissionIndex = useMemo(() => buildPermissionIndex(authorizedActions), [authorizedActions]);
-  const can = (resource: string, action: string): boolean =>
-    !permissionsLoaded || permissionIndex.has(`${resource}.${action}`);
+  const can = useCallback(
+    (resource: string, action: string): boolean =>
+      !permissionsLoaded || permissionIndex.has(`${resource}.${action}`),
+    [permissionsLoaded, permissionIndex]);
 
   const filterRoutesByFeatures = (allRoutes: RouteDefinition[]): RouteDefinition[] =>
     allRoutes
@@ -275,6 +296,13 @@ export default function App() {
       .map(route => route.collapse ? { ...route, collapse: filterRoutesByFeatures(route.collapse) } : route);
 
   const enabledRoutes = filterRoutesByFeatures(routes);
+
+  // Reached BEFORE a session exists — the callback is what creates one — so these can never wait for
+  // bootstrap: gate them and the code is never exchanged, isAuthenticated never flips, and the gate
+  // never releases. Public routes are already exempt; they need no session at all.
+  const PRE_SESSION_ROUTES = ['/authentication/callback', '/error'];
+  const awaitsBootstrap = (route: RouteDefinition): boolean =>
+    !route.public && !PRE_SESSION_ROUTES.includes(route.route ?? '');
 
   const routeAllowed = (route: RouteDefinition): boolean => {
     // Public routes bypass every gate. Without this a non-User principal (Driver, public link)
@@ -304,11 +332,27 @@ export default function App() {
       }
 
       if (route.route) {
-        return <Route path={route.route} element={routeAllowed(route) ? route.component : <Navigate to="/dashboard" replace />} key={route.key} />;
+        // The ROLE-gated screens wait for bootstrap: their flags start closed, so deciding now would
+        // bounce a deep link the user is entitled to. Nothing else may wait — every other route is
+        // already allowed while the principal is null, and the sign-in callback is one of them: gate
+        // it and it never mounts, never exchanges the code, and sign-in can never complete.
+        const element = !awaitsBootstrap(route) || bootstrapLoaded
+          ? (routeAllowed(route) ? route.component : <Navigate to="/dashboard" replace />)
+          : null;
+
+        return <Route path={route.route} element={element} key={route.key} />;
       }
 
       return null;
     });
+
+  const loadingValue = useMemo(() => ({ loading, setLoading }), [loading]);
+  const featuresValue = useMemo(
+    () => ({ features: accountFeatures, isFeatureEnabled: featureEnabled }),
+    [accountFeatures, featureEnabled]);
+  const permissionsValue = useMemo(
+    () => ({ actions: authorizedActions, can, loaded: permissionsLoaded }),
+    [authorizedActions, can, permissionsLoaded]);
 
   const configsButton = (
     <ArgonBox
@@ -327,6 +371,12 @@ export default function App() {
       color="dark"
       sx={{ cursor: "pointer" }}
       onClick={handleConfiguratorOpen}
+      // Reachable from a keyboard: as a bare styled div this could not be focused or activated at
+      // all, and account settings open from here.
+      role="button"
+      tabIndex={0}
+      aria-label={t("settings.title")}
+      onKeyDown={activateOnKeyboard(handleConfiguratorOpen)}
       data-testid="configurator-toggle"
     >
       <Icon color="inherit">
@@ -336,7 +386,7 @@ export default function App() {
   );
 
   return (
-    <LoadingContext.Provider value={{ loading, setLoading }}>
+    <LoadingContext.Provider value={loadingValue}>
       <ThemeProvider theme={darkMode ? themeDark : theme}>
         <CssBaseline />
         {/* The page itself never scrolls laterally (full-bleed bands, sub-pixel grid rounding
@@ -346,8 +396,8 @@ export default function App() {
           {isAuthenticated && !accountOperational && !onPublicPage ? (
             <SuspensionScreen status={accountStatus} branding={branding} />
           ) : (
-          <FeaturesContext.Provider value={{ features: accountFeatures, isFeatureEnabled: featureEnabled }}>
-          <PermissionsContext.Provider value={{ actions: authorizedActions, can, loaded: permissionsLoaded }}>
+          <FeaturesContext.Provider value={featuresValue}>
+          <PermissionsContext.Provider value={permissionsValue}>
           <HelpProvider allowedScreens={allowedScreens} isFeatureEnabled={featureEnabled}>
           {layout === "dashboard" && !onChromelessPage && (
           <>
@@ -371,10 +421,13 @@ export default function App() {
         {/* Platform announcements reach every signed-in user on every screen; the
             status page renders its own copy, so it is skipped there. */}
         {isAuthenticated && !onChromelessPage && <AnnouncementBanner />}
-        <Routes>
-          {getRoutes(enabledRoutes)}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
+        {/* Screens load on demand, so the router needs a boundary to render while one arrives. */}
+        <Suspense fallback={null}>
+          <Routes>
+            {getRoutes(enabledRoutes)}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </Suspense>
           </HelpProvider>
           </PermissionsContext.Provider>
           </FeaturesContext.Provider>

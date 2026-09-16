@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2025 Sergio Hernandez. All rights reserved.
+﻿// Copyright (c) 2026 Sergio Hernandez. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License").
 //  You may not use this file except in compliance with the License.
@@ -13,19 +13,24 @@
 //  limitations under the License.
 //
 
+using System.Text.Json;
+using TrackHub.Security.Application.Outbox;
+using TrackHub.Security.Domain.Constants;
+
 namespace TrackHub.Security.Application.Users.Events;
 
 public sealed class UserUpdated
 {
-    // Define a record struct for the UserUpdated notification
     public readonly record struct Notification(Guid Id, UpdateUserShrankDto User) : INotification
     {
-        // Define an event handler for the UserUpdated notification
-        public class EventHandler(IManagerWriter managerWriter) : INotificationHandler<Notification>
+        public class EventHandler(IOutboxWriter outbox) : INotificationHandler<Notification>
         {
-            // Handle the UserUpdated notification by updating the user asynchronously
             public async Task Handle(Notification notification, CancellationToken cancellationToken)
-                => await managerWriter.UpdateUserAsync(notification.Id, notification.User, cancellationToken);
+                => await outbox.EnqueueAsync(
+                    OutboxMessageTypes.UserUpdated,
+                    JsonSerializer.Serialize(new UserMirrorUpdate(notification.Id, notification.User)),
+                    notification.Id.ToString(),
+                    cancellationToken);
         }
     }
 }

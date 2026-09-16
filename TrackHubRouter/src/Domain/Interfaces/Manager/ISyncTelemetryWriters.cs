@@ -25,6 +25,18 @@ public interface IDeviceSyncWriter
     Task<DeviceSyncCountsVm> SynchronizeAsync(Guid accountId, Guid operatorId, IEnumerable<SynchronizedDeviceDto> devices, string correlationId, string triggerType, bool autoAssignNewDevices, CancellationToken cancellationToken);
 }
 
+public interface IBackgroundJobRunRecorder
+{
+    Task RecordAsync(
+        string jobKey,
+        string idempotencyKey,
+        string status,
+        DateTimeOffset startedAt,
+        DateTimeOffset? completedAt,
+        string? errorMessage,
+        CancellationToken cancellationToken);
+}
+
 public interface IAlertEventWriter
 {
     Task RecordAsync(AlertEventDto dto, CancellationToken cancellationToken);

@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Web.Infrastructure;
 using Ardalis.GuardClauses;
 using Common.Application;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -27,8 +28,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddTrackHubSerilog();
 
-var allowedCORSOrigins = builder.Configuration.GetSection("AllowedCorsOrigins").Get<string>();
-Guard.Against.Null(allowedCORSOrigins, message: $"Allowed Origins configuration for CORS not loaded");
+var allowedCORSOrigins = builder.Configuration.GetAllowedCorsOrigins();
+Guard.Against.NullOrEmpty(allowedCORSOrigins, message: $"Allowed Origins configuration for CORS not loaded");
 
 // Add services to the container.
 builder.Services.AddApplicationServices();
@@ -88,12 +89,7 @@ var app = builder.Build();
 
 // Behind nginx every request otherwise appears to come from the proxy's container IP, which would
 // collapse the per-IP rate-limit partition above into a single shared bucket.
-var forwardedHeadersOptions = new ForwardedHeadersOptions
-{
-    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-};
-forwardedHeadersOptions.KnownIPNetworks.Clear();
-forwardedHeadersOptions.KnownProxies.Clear();
+var forwardedHeadersOptions = TrustedProxies.Create(builder.Configuration);
 app.UseForwardedHeaders(forwardedHeadersOptions);
 
 app.UseHeaderPropagation();
@@ -124,6 +120,6 @@ app.UseExceptionHandler(options => { });
 app.UseRateLimiter();
 
 app.MapEndpoints(Assembly.GetExecutingAssembly());
-app.MapGraphQL();
+app.MapGraphQL().RequireAuthorization();
 
 app.Run();

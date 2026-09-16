@@ -15,6 +15,7 @@
 
 using System.Reflection;
 using Common.Application;
+using TrackHub.Security.Application.Outbox;
 using TrackHub.Security.Application.Users.Commands.Create;
 
 namespace Microsoft.Extensions.DependencyInjection;
@@ -27,6 +28,7 @@ public static class DependencyInjection
         services.AddApplicationServices(assembly);
         services.AddDistributedMemoryCache();
         services.AddValidatorsFromAssemblyContaining<CreateUserCommandValidator>();
+        services.AddScoped<OutboxDispatcher>();
         return services;
     }
 }

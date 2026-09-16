@@ -56,6 +56,18 @@ internal class TokenHelper(ICredentialWriter credentialWriter, IProviderSessionS
         return await RefreshTokenAsync(httpClientService, baseUrl, credential, cancellationToken);
     }
 
+    // Drops both caches and authenticates again. Used when the provider rejects the stored token
+    // with 401 before its recorded expiry — a server-side revocation the expiry cannot predict.
+    public async Task<string> ForceRefreshTokenAsync(
+        IHttpClientService httpClientService,
+        string baseUrl,
+        CredentialTokenDto credential,
+        CancellationToken cancellationToken)
+    {
+        sessionStore.Invalidate(credential.CredentialId);
+        return await RefreshTokenAsync(httpClientService, baseUrl, credential, cancellationToken);
+    }
+
     // Non-sliding: a bearer token has an absolute expiry regardless of use. Tokens without an
     // expiry are not cached (no TTL basis) — the durable credential copy covers them.
     private void CacheToken(CredentialTokenDto credential, string tokenValue, DateTimeOffset? expiration)
@@ -120,6 +132,9 @@ internal class TokenHelper(ICredentialWriter credentialWriter, IProviderSessionS
         return Convert.ToHexStringLower(hashBytes);
     }
 
+    // A null expiry means the provider never said when the token dies. Treat that as expired: the
+    // lifted comparison would otherwise be false forever and pin a token the provider may already
+    // have dropped, leaving the operator failing 401 until someone rotates the credential by hand.
     private static bool IsTokenExpired(CredentialTokenDto token)
-        => DateTimeOffset.UtcNow >= token.TokenExpiration;
+        => token.TokenExpiration is not { } expiration || DateTimeOffset.UtcNow >= expiration;
 }

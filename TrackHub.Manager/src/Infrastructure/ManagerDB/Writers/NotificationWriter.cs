@@ -16,6 +16,7 @@ public sealed class NotificationWriter(IApplicationDbContext context, ICurrentPr
         await RequireSelectorPrincipalsInAccountAsync(accountId, notificationRule.RecipientSelector, cancellationToken);
         var entity = new NotificationRule(accountId, notificationRule.RuleKey, notificationRule.RuleType, notificationRule.Enabled, notificationRule.TriggerEvent, notificationRule.RecipientSelector, notificationRule.ChannelsJson, notificationRule.ThrottlingJson, notificationRule.ConfigurationJson);
         await Context.NotificationRules.AddAsync(entity, cancellationToken);
+        AddAuditEvent(accountId, "CreateNotificationRule", "NotificationRule", $"{entity.NotificationRuleId}", null, Describe(entity));
         await Context.SaveChangesAsync(cancellationToken);
         return ToVm(entity);
     }
@@ -23,7 +24,8 @@ public sealed class NotificationWriter(IApplicationDbContext context, ICurrentPr
     public async Task UpdateNotificationRuleAsync(Guid notificationRuleId, NotificationRuleDto notificationRule, CancellationToken cancellationToken)
     {
         RequirePrivileged();
-        var entity = await Context.NotificationRules.FirstAsync(x => x.NotificationRuleId == notificationRuleId, cancellationToken);
+        var entity = await Context.NotificationRules
+            .AsTracking().FirstAsync(x => x.NotificationRuleId == notificationRuleId, cancellationToken);
         RequireAccountWriteAccess(entity.AccountId);
         if (notificationRule.AccountId != entity.AccountId)
         {
@@ -31,7 +33,7 @@ public sealed class NotificationWriter(IApplicationDbContext context, ICurrentPr
         }
 
         await RequireSelectorPrincipalsInAccountAsync(entity.AccountId, notificationRule.RecipientSelector, cancellationToken);
-        Context.NotificationRules.Attach(entity);
+        var previous = Describe(entity);
         entity.RuleKey = notificationRule.RuleKey;
         entity.RuleType = notificationRule.RuleType;
         entity.Enabled = notificationRule.Enabled;
@@ -40,16 +42,18 @@ public sealed class NotificationWriter(IApplicationDbContext context, ICurrentPr
         entity.ChannelsJson = notificationRule.ChannelsJson;
         entity.ThrottlingJson = notificationRule.ThrottlingJson;
         entity.ConfigurationJson = notificationRule.ConfigurationJson;
+        AddAuditEvent(entity.AccountId, "UpdateNotificationRule", "NotificationRule", $"{entity.NotificationRuleId}", previous, Describe(entity));
         await Context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task DisableNotificationRuleAsync(Guid notificationRuleId, CancellationToken cancellationToken)
     {
         RequirePrivileged();
-        var entity = await Context.NotificationRules.FirstAsync(x => x.NotificationRuleId == notificationRuleId, cancellationToken);
+        var entity = await Context.NotificationRules
+            .AsTracking().FirstAsync(x => x.NotificationRuleId == notificationRuleId, cancellationToken);
         RequireAccountWriteAccess(entity.AccountId);
-        Context.NotificationRules.Attach(entity);
         entity.Enabled = false;
+        AddAuditEvent(entity.AccountId, "DisableNotificationRule", "NotificationRule", $"{entity.NotificationRuleId}", null, Describe(entity));
         await Context.SaveChangesAsync(cancellationToken);
     }
 
@@ -66,23 +70,26 @@ public sealed class NotificationWriter(IApplicationDbContext context, ICurrentPr
     public async Task RetryNotificationDeliveryAsync(Guid notificationDeliveryId, CancellationToken cancellationToken)
     {
         RequirePrivileged();
-        var entity = await Context.NotificationDeliveries.FirstAsync(x => x.NotificationDeliveryId == notificationDeliveryId, cancellationToken);
+        var entity = await Context.NotificationDeliveries
+            .AsTracking().FirstAsync(x => x.NotificationDeliveryId == notificationDeliveryId, cancellationToken);
         RequireAccountWriteAccess(entity.AccountId);
         if (entity.Status != DeliveryStatuses.Failed)
         {
             throw new ConflictException("Only Failed deliveries can be retried.");
         }
 
-        Context.NotificationDeliveries.Attach(entity);
         // Attempt counter preserved on manual retry.
         entity.Status = DeliveryStatuses.Pending;
         entity.Error = null;
+        AddAuditEvent(entity.AccountId, "RetryNotificationDelivery", "NotificationDelivery", $"{entity.NotificationDeliveryId}", null,
+            $$"""{"channel":{{AuditJson.Quote(entity.Channel)}},"attempts":{{entity.Attempts}}}""");
         await Context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task MarkNotificationReadAsync(Guid notificationDeliveryId, CancellationToken cancellationToken)
     {
-        var entity = await Context.NotificationDeliveries.FirstAsync(x => x.NotificationDeliveryId == notificationDeliveryId, cancellationToken);
+        var entity = await Context.NotificationDeliveries
+            .AsTracking().FirstAsync(x => x.NotificationDeliveryId == notificationDeliveryId, cancellationToken);
         if (!IsRecipient(entity))
         {
             throw new ForbiddenAccessException("Only the recipient may mark a notification read.");
@@ -90,7 +97,6 @@ public sealed class NotificationWriter(IApplicationDbContext context, ICurrentPr
 
         if (entity.ReadAt == null)
         {
-            Context.NotificationDeliveries.Attach(entity);
             entity.ReadAt = DateTimeOffset.UtcNow;
             await Context.SaveChangesAsync(cancellationToken);
         }
@@ -170,4 +176,6 @@ public sealed class NotificationWriter(IApplicationDbContext context, ICurrentPr
     }
 
     private static NotificationRuleVm ToVm(NotificationRule x) => new(x.NotificationRuleId, x.AccountId, x.RuleKey, x.RuleType, x.Enabled, x.TriggerEvent, x.RecipientSelector, x.ChannelsJson, x.ThrottlingJson, x.ConfigurationJson, x.LastModified);
+    private static string Describe(NotificationRule rule)
+        => $$"""{"ruleKey":{{AuditJson.Quote(rule.RuleKey)}},"ruleType":{{AuditJson.Quote(rule.RuleType)}},"enabled":{{rule.Enabled.ToString().ToLowerInvariant()}},"triggerEvent":{{AuditJson.Quote(rule.TriggerEvent)}},"recipientSelector":{{AuditJson.Quote(rule.RecipientSelector)}}}""";
 }

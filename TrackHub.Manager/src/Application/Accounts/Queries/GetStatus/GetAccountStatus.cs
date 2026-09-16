@@ -17,10 +17,11 @@ using Common.Application.Interfaces;
 
 namespace TrackHub.Manager.Application.Accounts.Queries.GetStatus;
 
-// Lightweight cross-service status read. Mirrors validateFeatureEnabled: no
-// [Authorize] gate (service clients read it during their own status enforcement), and
-// [AllowSuspendedAccount] so a suspended account's own status is still readable — otherwise the
-// cross-service status check would deadlock against itself. Returns 0 for an unknown account.
+// Lightweight cross-service status read. Mirrors validateFeatureEnabled: service identities read it
+// during their own status enforcement, and [AllowSuspendedAccount] keeps a suspended account's own
+// status readable — otherwise the cross-service status check would deadlock against itself.
+// Returns 0 for an unknown account.
+[Authorize(Resource = Resources.Accounts, Action = Actions.Read, PrincipalTypes = "ServiceClient")]
 [AllowSuspendedAccount]
 [AllowCrossAccount("Cross-service status probe. Router/SyncWorker and Reporting read it under their global service identity for the account they are about to act on — by definition not the caller's own. Returns a status code only, no tenant data.")]
 public readonly record struct GetAccountStatusQuery(Guid AccountId) : IRequest<short>;

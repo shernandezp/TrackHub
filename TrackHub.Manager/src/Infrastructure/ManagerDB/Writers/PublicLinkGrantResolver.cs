@@ -56,6 +56,7 @@ public sealed class PublicLinkGrantResolver(IApplicationDbContext context) : IPu
     {
         var tokenHash = PublicLinkTokenHasher.Hash(token);
         var grant = await context.PublicLinkGrants
+            .AsTracking()
             .FirstOrDefaultAsync(x =>
                 x.PublicLinkGrantId == publicLinkGrantId
                 && x.AccountId == accountId
@@ -78,7 +79,6 @@ public sealed class PublicLinkGrantResolver(IApplicationDbContext context) : IPu
 
         // ApplicationDbContext is configured NoTracking, so the grant comes back untracked and must be
         // attached for these writes to reach the same SaveChanges as the audit row below.
-        context.PublicLinkGrants.Attach(grant);
         grant.AccessCount++;
         grant.LastAccessedAt = DateTimeOffset.UtcNow;
         context.AuditEvents.Add(new AuditEvent(
@@ -90,7 +90,7 @@ public sealed class PublicLinkGrantResolver(IApplicationDbContext context) : IPu
             grant.PublicLinkGrantId.ToString(),
             "Succeeded",
             null,
-            $$"""{"resourceType":"{{grant.ResourceType}}","resourceId":"{{grant.ResourceId}}","scope":"{{scope}}","accessCount":{{grant.AccessCount}}}""",
+            $$"""{"resourceType":{{AuditJson.Quote(grant.ResourceType)}},"resourceId":{{AuditJson.Quote(grant.ResourceId)}},"scope":{{AuditJson.Quote(scope)}},"accessCount":{{grant.AccessCount}}}""",
             null,
             null,
             null,

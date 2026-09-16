@@ -54,7 +54,7 @@ public static class ProducerSchemaBuilder
         services.AddLogging();
         services.AddSingleton(sender);
 
-        var builder = services.AddTrackHubGraphQLServer<TQuery, TMutation>(includeExceptionDetails: true);
+        var builder = services.AddTrackHubGraphQLServer<TQuery, TMutation>(isDevelopment: true);
         configure?.Invoke(builder);
         return builder;
     }

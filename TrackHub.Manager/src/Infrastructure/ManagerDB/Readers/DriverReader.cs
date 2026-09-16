@@ -12,10 +12,12 @@ public sealed class DriverReader(IApplicationDbContext context, ICurrentPrincipa
     public async Task<DriverVm> GetDriverAsync(Guid driverId, CancellationToken cancellationToken)
     {
         var accountId = ResolveAccountScope(null);
-        return await Context.Drivers
+        var found = await Context.Drivers
             .Where(x => x.DriverId == driverId && (!accountId.HasValue || x.AccountId == accountId.Value))
             .Select(x => new DriverVm(x.DriverId, x.AccountId, x.Name, x.Phone, x.DocumentType, x.DocumentNumber, x.Active, x.EmployeeCode, x.LicenseNumber, x.LicenseExpiresAt, x.DefaultTransporterId, x.LastModified))
-            .FirstAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken);
+        ReaderResults.EnsureFound(found, nameof(Entities.Driver), driverId.ToString());
+        return found;
     }
 
     public async Task<IReadOnlyCollection<DriverVm>> GetDriversByAccountAsync(Guid accountId, int skip, int take, CancellationToken cancellationToken)
@@ -40,7 +42,8 @@ public sealed class DriverReader(IApplicationDbContext context, ICurrentPrincipa
         var driver = await Context.Drivers
             .Where(x => x.DriverId == driverId && (!accountId.HasValue || x.AccountId == accountId.Value))
             .Select(x => new { x.DriverId, x.AccountId, x.DefaultTransporterId, x.Active })
-            .FirstAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken);
+        ReaderResults.EnsureFound(driver, nameof(Entities.Driver), driverId.ToString());
 
         var now = DateTimeOffset.UtcNow;
         var assignments = await Context.DriverTransporterAssignments

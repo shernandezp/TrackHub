@@ -82,4 +82,8 @@ public static partial class TableMetadata
     public const string UserSettings = "user_settings";
     public const string UserRole = "user_role";
     public const string UserPolicy = "user_policy";
+
+    // Cross-service integration outbox (security schema): the durable record of a mirror call
+    // Security owes Manager.
+    public const string OutboxMessage = "outbox_messages";
 }

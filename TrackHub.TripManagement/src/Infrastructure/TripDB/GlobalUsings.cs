@@ -21,3 +21,4 @@ global using TrackHub.TripManagement.Domain.Models;
 global using TrackHub.TripManagement.Domain.Records;
 global using TrackHub.TripManagement.Infrastructure.TripDB.Entities;
 global using TrackHub.TripManagement.Infrastructure.TripDB.Interfaces;
+global using Common.Domain.Entities;

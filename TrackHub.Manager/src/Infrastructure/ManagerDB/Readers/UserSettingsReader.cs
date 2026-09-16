@@ -27,13 +27,17 @@ public sealed class UserSettingsReader(IApplicationDbContext context) : IUserSet
     /// <param name="cancellationToken"></param>
     /// <returns>Returns an UserSettingsVm object</returns>
     public async Task<UserSettingsVm> GetUserSettingsAsync(Guid id, CancellationToken cancellationToken)
-        => await context.UserSettings
+    {
+        var found = await context.UserSettings
             .Where(a => a.UserId.Equals(id))
             .Select(a => new UserSettingsVm(
                 a.Language,
                 a.Style,
                 a.Navbar,
                 a.UserId))
-            .FirstAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken);
+        ReaderResults.EnsureFound(found, nameof(Entities.UserSettings), id.ToString());
+        return found;
+    }
 
 }

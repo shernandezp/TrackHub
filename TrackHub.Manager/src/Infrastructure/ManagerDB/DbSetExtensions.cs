@@ -81,6 +81,7 @@ public static class DbSetExtensions
 
         // Fetch all existing entities in a single query
         var existingEntities = await dbSet
+            .AsTracking()
             .Where(predicate)
             .ToListAsync(cancellationToken);
 

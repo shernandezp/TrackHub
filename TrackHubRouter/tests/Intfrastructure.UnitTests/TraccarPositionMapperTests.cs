@@ -70,10 +70,10 @@ public class PositionMapperTests
             Assert.That(result.Altitude, Is.EqualTo(2640));
             Assert.That(result.DeviceDateTime, Is.EqualTo(DeviceTime));
             Assert.That(result.ServerDateTime, Is.EqualTo(ServerTime));
-            // RA-04 (open, needs live verification): the mapper treats Traccar's `speed` as km/h and
-            // only rounds it. Traccar's API documents knots. This pins the CURRENT behaviour - if the
-            // conversion is corrected, this expectation must change to 55.6 kn -> 103 km/h.
-            Assert.That(result.Speed, Is.EqualTo(56));
+            // Traccar reports speed-over-ground in KNOTS (straight from the NMEA RMC sentence);
+            // PositionVm is km/h platform-wide, so the mapper converts: 55.6 kn x 1.852 = 102.97 km/h,
+            // rounded to 103.
+            Assert.That(result.Speed, Is.EqualTo(103));
             Assert.That(result.Course, Is.EqualTo(275.0));
             Assert.That(result.EventId, Is.Null);
             Assert.That(result.Address, Is.EqualTo("Autopista Norte"));

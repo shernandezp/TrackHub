@@ -47,6 +47,7 @@ public static class DependencyInjection
         services.AddScoped<ITransporterTypeReader, TransporterTypeReader>();
         services.AddScoped<IDeviceSyncWriter, DeviceSyncWriter>();
         services.AddScoped<IAlertEventWriter, AlertEventWriter>();
+        services.AddScoped<IBackgroundJobRunRecorder, BackgroundJobRunRecorder>();
 
         return services;
     }

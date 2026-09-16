@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Common.Infrastructure.Time;
 using Common.Domain.Time;
 using Common.Infrastructure.Interceptors;
@@ -38,10 +39,15 @@ public static class DependencyInjection
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
-                var validateSigningKey = configuration.GetValue<bool>("AuthorityServer:ValidateIssuerSigningKey");
-                options.Authority = configuration.GetValue<string>("AuthorityServer:Authority");
-                options.TokenValidationParameters.ValidateAudience = configuration.GetValue<bool>("AuthorityServer:ValidateAudience");
-                options.TokenValidationParameters.ValidateIssuer = configuration.GetValue<bool>("AuthorityServer:ValidateIssuer");
+                // Absent keys default to VALIDATING. GetValue<bool> returns false for a missing
+                // key, so one dropped environment variable silently turned a service into one that
+                // accepts any token from any issuer with any signature, with no startup error.
+                var validateSigningKey = configuration.GetValue<bool?>("AuthorityServer:ValidateIssuerSigningKey") ?? true;
+                options.Authority = Guard.Against.NullOrWhiteSpace(
+                    configuration.GetValue<string>("AuthorityServer:Authority"),
+                    "AuthorityServer:Authority");
+                options.TokenValidationParameters.ValidateAudience = configuration.GetValue<bool?>("AuthorityServer:ValidateAudience") ?? true;
+                options.TokenValidationParameters.ValidateIssuer = configuration.GetValue<bool?>("AuthorityServer:ValidateIssuer") ?? true;
                 options.TokenValidationParameters.ValidateIssuerSigningKey = validateSigningKey;
                 options.TokenValidationParameters.ValidIssuer = configuration.GetValue<string>("AuthorityServer:Authority");
                 var validAudience = configuration.GetValue<string>("AuthorityServer:ValidAudience");
@@ -90,6 +96,7 @@ public static class DependencyInjection
             // The calendar of the account a request serves, read from Manager and cached (Manager
             // itself overrides this with a database-backed resolver).
             services.AddScoped<IAccountTimeZoneResolver, ManagerAccountTimeZoneResolver>();
+            services.TryAddSingleton<IClientCredentialsTokenProvider, ClientCredentialsTokenProvider>();
             services.AddSingleton<IGraphQLClientFactory, GraphQLClientFactory>();
             services.AddScoped<IIdentityService, IdentityService>();
         }

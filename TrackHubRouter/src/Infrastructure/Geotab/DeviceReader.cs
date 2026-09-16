@@ -18,6 +18,7 @@ using TrackHub.Router.Infrastructure.Geotab.Mappers;
 using TrackHub.Router.Domain.Interfaces;
 using TrackHub.Router.Domain.Interfaces.Operator;
 using TrackHub.Router.Domain.Models;
+using TrackHub.Router.Domain.Extensions;
 
 namespace TrackHub.Router.Infrastructure.Geotab;
 
@@ -46,7 +47,7 @@ public sealed class DeviceReader(IProviderSessionStore sessionStore)
         {
             return [];
         }
-        var devicesDictionary = devices.ToDictionary(device => device.Identifier, device => device);
+        var devicesDictionary = devices.ToDeviceLookup(device => device.Identifier);
         return result.MapToDeviceVm(devicesDictionary);
     }
 

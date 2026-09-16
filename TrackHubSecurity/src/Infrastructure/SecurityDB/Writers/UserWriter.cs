@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Application.Exceptions;
 using Common.Application.Interfaces;
 using Common.Domain.Extensions;
 using TrackHub.Security.Domain.Records;
@@ -36,7 +37,7 @@ public sealed class UserWriter(IApplicationDbContext context, ICurrentPrincipal 
     /// <returns>The created user view model</returns>
     public async Task<UserVm> CreateUserAsync(CreateUserDto userDto, Guid accountId, CancellationToken cancellationToken)
     {
-        RequireAccountAccess(accountId);
+        await RequireAccountAccessAsync(accountId, cancellationToken);
 
         // Hash the password
         var password = userDto.Password.HashPassword();
@@ -54,6 +55,9 @@ public sealed class UserWriter(IApplicationDbContext context, ICurrentPrincipal 
             0,
             accountId,
             userDto.IntegrationUser);
+
+        // Sign-in is refused while `verified` is null, and the platform has no self-registration.
+        user.Verified = DateTimeOffset.UtcNow;
 
         await Context.Users.AddAsync(user, cancellationToken);
 
@@ -88,7 +92,7 @@ public sealed class UserWriter(IApplicationDbContext context, ICurrentPrincipal 
     {
         var user = await Context.Users.FindAsync([userDto.UserId], cancellationToken)
             ?? throw new NotFoundException(nameof(User), $"{userDto.UserId}");
-        RequireAccountAccess(user.AccountId);
+        await RequireAccountAccessAsync(user.AccountId, cancellationToken);
 
         Context.Users.Attach(user);
 
@@ -118,7 +122,7 @@ public sealed class UserWriter(IApplicationDbContext context, ICurrentPrincipal 
     {
         var user = await Context.Users.FindAsync([userId], cancellationToken)
             ?? throw new NotFoundException(nameof(User), $"{userId}");
-        RequireAccountAccess(user.AccountId);
+        await RequireAccountAccessAsync(user.AccountId, cancellationToken);
 
         Context.Users.Attach(user);
 
@@ -138,11 +142,20 @@ public sealed class UserWriter(IApplicationDbContext context, ICurrentPrincipal 
     /// <param name="cancellationToken"></param>
     /// <returns>The task result</returns>
     /// <exception cref="NotFoundException">If the user does not exist</exception>
-    public async Task UpdatePasswordAsync(UserPasswordDto userPasswordDto, CancellationToken cancellationToken)
+    public async Task UpdatePasswordAsync(UserPasswordDto userPasswordDto, bool verifyCurrentPassword, CancellationToken cancellationToken)
     {
         var user = await Context.Users.FindAsync([userPasswordDto.UserId], cancellationToken)
             ?? throw new NotFoundException(nameof(User), $"{userPasswordDto.UserId}");
-        RequireAccountAccess(user.AccountId);
+        await RequireAccountAccessAsync(user.AccountId, cancellationToken);
+
+        // A self-service change proves knowledge of the existing password, so a live access token
+        // or an unattended session cannot take the account over permanently.
+        if (verifyCurrentPassword
+            && (string.IsNullOrEmpty(userPasswordDto.CurrentPassword)
+                || !user.Password.VerifyHashedPassword(userPasswordDto.CurrentPassword)))
+        {
+            throw new ForbiddenAccessException("The current password is incorrect.");
+        }
 
         Context.Users.Attach(user);
 
@@ -162,7 +175,7 @@ public sealed class UserWriter(IApplicationDbContext context, ICurrentPrincipal 
     {
         var user = await Context.Users.FindAsync([userId], cancellationToken)
             ?? throw new NotFoundException(nameof(User), $"{userId}");
-        RequireAccountAccess(user.AccountId);
+        await RequireAccountAccessAsync(user.AccountId, cancellationToken);
 
         Context.Users.Attach(user);
         user.LoginAttempts = 0;
@@ -182,7 +195,7 @@ public sealed class UserWriter(IApplicationDbContext context, ICurrentPrincipal 
     {
         var user = await Context.Users.FindAsync([userId], cancellationToken)
             ?? throw new NotFoundException(nameof(User), $"{userId}");
-        RequireAccountAccess(user.AccountId);
+        await RequireAccountAccessAsync(user.AccountId, cancellationToken);
 
         Context.Users.Attach(user);
         Context.Users.Remove(user);

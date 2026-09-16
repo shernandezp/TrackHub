@@ -49,10 +49,10 @@ public sealed class DocumentWriter(IApplicationDbContext context, ICurrentPrinci
 
     public async Task MarkDocumentScanResultAsync(Guid documentId, string scanStatus, CancellationToken cancellationToken)
     {
-        var entity = await Context.Documents.FirstOrDefaultAsync(x => x.DocumentId == documentId, cancellationToken)
+        var entity = await Context.Documents
+            .AsTracking().FirstOrDefaultAsync(x => x.DocumentId == documentId, cancellationToken)
             ?? throw new NotFoundException(nameof(Document), documentId.ToString());
         RequireAccountWriteAccess(entity.AccountId);
-        Context.Documents.Attach(entity);
         var oldValues = AuditValues(entity);
 
         entity.ScanStatus = scanStatus;
@@ -65,10 +65,10 @@ public sealed class DocumentWriter(IApplicationDbContext context, ICurrentPrinci
         // The verdict belongs to the BYTES, and the bytes are the current version's. Writing both
         // keeps the document-level column a safe denormalisation of the version it describes.
         var version = await Context.DocumentVersions
+            .AsTracking()
             .FirstOrDefaultAsync(v => v.DocumentId == entity.DocumentId && v.VersionNumber == entity.CurrentVersion, cancellationToken);
         if (version is not null)
         {
-            Context.DocumentVersions.Attach(version);
             version.ScanStatus = scanStatus;
         }
 
@@ -84,11 +84,11 @@ public sealed class DocumentWriter(IApplicationDbContext context, ICurrentPrinci
 
     public async Task<DocumentVm> ReplaceDocumentVersionAsync(Guid documentId, DocumentVersionDto newVersion, CancellationToken cancellationToken)
     {
-        var entity = await Context.Documents.FirstOrDefaultAsync(x => x.DocumentId == documentId, cancellationToken)
+        var entity = await Context.Documents
+            .AsTracking().FirstOrDefaultAsync(x => x.DocumentId == documentId, cancellationToken)
             ?? throw new NotFoundException(nameof(Document), documentId.ToString());
         RequireAccountWriteAccess(entity.AccountId);
         await EnsureOwnerWriteAccessAsync(entity.AccountId, entity.OwnerEntityType, entity.OwnerEntityId, cancellationToken);
-        Context.Documents.Attach(entity);
 
         var oldValues = AuditValues(entity);
         var nextVersion = entity.CurrentVersion + 1;
@@ -148,7 +148,8 @@ public sealed class DocumentWriter(IApplicationDbContext context, ICurrentPrinci
     {
         var accountId = RequireAccountWriteAccess(documentType.AccountId);
 
-        var existing = await Context.DocumentTypes.FirstOrDefaultAsync(t => t.AccountId == accountId && t.Category == documentType.Category, cancellationToken);
+        var existing = await Context.DocumentTypes
+            .AsTracking().FirstOrDefaultAsync(t => t.AccountId == accountId && t.Category == documentType.Category, cancellationToken);
         if (existing is null)
         {
             var entity = new DocumentType(accountId, documentType.Category, documentType.DisplayName, documentType.Required, documentType.Expiring, documentType.DefaultValidityDays, enabled: true, DateTimeOffset.UtcNow);
@@ -158,7 +159,6 @@ public sealed class DocumentWriter(IApplicationDbContext context, ICurrentPrinci
             return ToTypeVm(entity);
         }
 
-        Context.DocumentTypes.Attach(existing);
         var oldValues = DocumentTypeAuditValues(existing);
         existing.DisplayName = documentType.DisplayName;
         existing.Required = documentType.Required;
@@ -172,10 +172,10 @@ public sealed class DocumentWriter(IApplicationDbContext context, ICurrentPrinci
 
     public async Task DisableDocumentTypeAsync(Guid documentTypeId, CancellationToken cancellationToken)
     {
-        var entity = await Context.DocumentTypes.FirstOrDefaultAsync(t => t.DocumentTypeId == documentTypeId, cancellationToken)
+        var entity = await Context.DocumentTypes
+            .AsTracking().FirstOrDefaultAsync(t => t.DocumentTypeId == documentTypeId, cancellationToken)
             ?? throw new NotFoundException(nameof(DocumentType), documentTypeId.ToString());
         RequireAccountWriteAccess(entity.AccountId);
-        Context.DocumentTypes.Attach(entity);
         entity.Enabled = false;
         AddAuditEvent(entity.AccountId, "DisableDocumentType", "DocumentType", entity.DocumentTypeId.ToString(), null, DocumentTypeAuditValues(entity));
         await Context.SaveChangesAsync(cancellationToken);
@@ -183,10 +183,10 @@ public sealed class DocumentWriter(IApplicationDbContext context, ICurrentPrinci
 
     private async Task UpdateDocumentAsync(Guid documentId, string action, Action<Document> update, CancellationToken cancellationToken, string? reason = null)
     {
-        var entity = await Context.Documents.FirstOrDefaultAsync(x => x.DocumentId == documentId, cancellationToken)
+        var entity = await Context.Documents
+            .AsTracking().FirstOrDefaultAsync(x => x.DocumentId == documentId, cancellationToken)
             ?? throw new NotFoundException(nameof(Document), documentId.ToString());
         RequireAccountWriteAccess(entity.AccountId);
-        Context.Documents.Attach(entity);
         var oldValues = AuditValues(entity);
         update(entity);
         AddAuditEvent(entity.AccountId, action, "Document", entity.DocumentId.ToString(), oldValues, AuditValues(entity, reason));

@@ -8,6 +8,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Application\Application.csproj" />
+    <ProjectReference Include="$(RepoRoot)TrackHubCommon/src/Common.Infrastructure/Common.Infrastructure.csproj" />
     <ProjectReference Include="..\CommandTrack\CommandTrack.csproj" />
     <ProjectReference Include="..\Flespi\Flespi.csproj" />
     <ProjectReference Include="..\Geotab\Geotab.csproj" />

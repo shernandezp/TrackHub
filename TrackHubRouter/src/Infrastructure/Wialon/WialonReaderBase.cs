@@ -84,7 +84,7 @@ public class WialonReaderBase
     {
         var loginUrl = $"{_baseUrl}/wialon/ajax.html?svc=token/login";
         var loginParams = new { token = _credential.Token };
-        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        using var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             { "params", JsonSerializer.Serialize(loginParams) }
         });
@@ -134,7 +134,7 @@ public class WialonReaderBase
         where T : class, IWialonResponse
     {
         var url = $"{_baseUrl}/wialon/ajax.html?svc={svc}&sid={_sid}";
-        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        using var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             { "params", JsonSerializer.Serialize(parameters) }
         });

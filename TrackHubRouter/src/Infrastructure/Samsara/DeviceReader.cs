@@ -15,6 +15,8 @@
 
 using TrackHub.Router.Infrastructure.Samsara.Mappers;
 using TrackHub.Router.Domain.Interfaces;
+using TrackHub.Router.Domain.Extensions;
+using TrackHub.Router.Domain.Helpers;
 
 namespace TrackHub.Router.Infrastructure.Samsara;
 
@@ -46,17 +48,18 @@ public sealed class DeviceReader(
     /// </summary>
     public async Task<IEnumerable<DeviceVm>> GetDevicesAsync(IEnumerable<DeviceTransporterVm> devices, CancellationToken cancellationToken)
     {
-        var vehicleIds = string.Join(",", devices.Select(d => d.Serial));
-        var url = $"fleet/vehicles/stats?vehicleIds={vehicleIds}";
-        
-        var result = await HttpClientService.GetAsync<VehicleStatsResponse>(url, cancellationToken: cancellationToken);
-        if (result?.Data is null || !result.Data.Any())
+        var devicesDictionary = devices.ToDeviceLookup(device => device.Serial);
+        var results = new List<DeviceVm>();
+        foreach (var chunk in devicesDictionary.Keys.Chunk(ProviderBatching.MaxIdsPerRequest))
         {
-            return [];
+            var url = $"fleet/vehicles/stats?vehicleIds={string.Join(",", chunk)}";
+            var result = await HttpClientService.GetAsync<VehicleStatsResponse>(url, cancellationToken: cancellationToken);
+            if (result?.Data is not null)
+            {
+                results.AddRange(result.Data.MapToDeviceVm(devicesDictionary));
+            }
         }
-
-        var devicesDictionary = devices.ToDictionary(device => device.Serial, device => device);
-        return result.Data.MapToDeviceVm(devicesDictionary);
+        return results;
     }
 
     /// <summary>

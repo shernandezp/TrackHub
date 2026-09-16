@@ -14,6 +14,7 @@
 //
 
 using NetTopologySuite.Geometries;
+using NetTopologySuite.Geometries.Prepared;
 
 namespace TrackHub.Geofencing.Infrastructure.Readers;
 
@@ -24,7 +25,8 @@ public sealed class GeofenceReader(IApplicationDbContext context) : IGeofenceRea
     {
         var geofence = await context.Geofences
             .Where(a => a.GeofenceId.Equals(id))
-            .FirstAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken)
+            ?? throw new NotFoundException(nameof(Geofence), id.ToString());
 
         return CastGeofence(geofence);
     }
@@ -98,6 +100,53 @@ public sealed class GeofenceReader(IApplicationDbContext context) : IGeofenceRea
             .ToListAsync(cancellationToken);
 
         return geofenceIds;
+    }
+
+    public async Task<IReadOnlyDictionary<int, IReadOnlyCollection<Guid>>> GetGeofenceIdsContainingPointsAsync(
+        Guid accountId,
+        IReadOnlyList<(double Latitude, double Longitude)> points,
+        CancellationToken cancellationToken)
+    {
+        var result = new Dictionary<int, IReadOnlyCollection<Guid>>();
+        if (points.Count == 0)
+        {
+            return result;
+        }
+
+        // The account's active geofences are a small, bounded set, so they are fetched ONCE and the
+        // containment tests run against prepared geometries. Same NetTopologySuite predicate the
+        // per-point ST_Contains used, without a round trip per position.
+        var geofences = await context.Geofences
+            .Where(g => g.AccountId == accountId && g.Active)
+            .Select(g => new { g.GeofenceId, g.Geom })
+            .ToListAsync(cancellationToken);
+
+        if (geofences.Count == 0)
+        {
+            return result;
+        }
+
+        var prepared = geofences
+            .Select(g => (g.GeofenceId, Geometry: PreparedGeometryFactory.Prepare(g.Geom)))
+            .ToList();
+
+        var geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
+
+        for (var index = 0; index < points.Count; index++)
+        {
+            var point = geometryFactory.CreatePoint(new Coordinate(points[index].Longitude, points[index].Latitude));
+            var hits = prepared
+                .Where(g => g.Geometry.Contains(point))
+                .Select(g => g.GeofenceId)
+                .ToList();
+
+            if (hits.Count > 0)
+            {
+                result[index] = hits;
+            }
+        }
+
+        return result;
     }
 
     private static GeofenceVm CastGeofence(Entities.Geofence geofence)

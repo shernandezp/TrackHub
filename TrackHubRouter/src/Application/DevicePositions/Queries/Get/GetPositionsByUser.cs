@@ -21,6 +21,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using TrackHub.Router.Domain.Models;
 using TrackHub.Router.Domain.Extensions;
+using TrackHub.Router.Domain.Helpers;
 
 namespace TrackHub.Router.Application.DevicePositions.Queries.Get;
 
@@ -295,7 +296,7 @@ public class GetPositionsByUserQueryHandler(
         IReadOnlyCollection<PositionVm> positions,
         CancellationToken cancellationToken)
     {
-        var validPositions = positions.Where(IsValidPosition).ToArray();
+        var validPositions = positions.Where(PositionValidity.IsStorable).ToArray();
         if (validPositions.Length == 0)
         {
             return;
@@ -310,11 +311,5 @@ public class GetPositionsByUserQueryHandler(
             logger.LogWarning(ex, "Failed to persist on-demand positions; the map read is unaffected.");
         }
     }
-
-    private static bool IsValidPosition(PositionVm position)
-        => position.TransporterId != Guid.Empty
-           && position.DeviceDateTime != default
-           && position.Latitude is >= -90d and <= 90d
-           && position.Longitude is >= -180d and <= 180d;
 
 }

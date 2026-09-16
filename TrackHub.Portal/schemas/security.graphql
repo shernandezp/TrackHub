@@ -557,6 +557,7 @@ input UpdateUserDtoInput {
 input UserPasswordDtoInput {
   userId: UUID!
   password: String!
+  currentPassword: String
 }
 
 input UserPolicyDtoInput {

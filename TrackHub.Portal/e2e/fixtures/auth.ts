@@ -127,6 +127,16 @@ export function tokenExchange(page: Page, timeout = 60_000): Promise<unknown> {
   );
 }
 
+/** Resolves once the bootstrap read that opens the role-gated shell has answered. */
+export function principalLoaded(page: Page, timeout = 60_000): Promise<unknown> {
+  return page
+    .waitForResponse(
+      (response) => (response.request().postData() ?? '').includes('GetCurrentPrincipal'),
+      { timeout }
+    )
+    .catch(() => null);
+}
+
 /** Persists the browser state and the captured tokens for one role. */
 export function persistRole(role: RoleName, tokens: CapturedTokens | null): void {
   fs.mkdirSync(AUTH_DIR, { recursive: true });
@@ -137,10 +147,24 @@ export function persistRole(role: RoleName, tokens: CapturedTokens | null): void
 
 export const authFiles = {
   dir: AUTH_DIR,
-  /** Roles whose storage state exists — a spec skips rather than fails without one. */
+  /** Roles whose storage state exists. */
   hasRole: (role: RoleName): boolean => fs.existsSync(storageStatePath(role)),
   createdFile: path.join(AUTH_DIR, 'created.json'),
+  refusalsFile: path.join(AUTH_DIR, 'refusals.json'),
 };
+
+/** Why a role has no session: the platform refused it, naming the reason. */
+export type Refusals = Partial<Record<RoleName, string>>;
+
+export function readRefusals(): Refusals {
+  if (!fs.existsSync(authFiles.refusalsFile)) return {};
+  return JSON.parse(fs.readFileSync(authFiles.refusalsFile, 'utf8')) as Refusals;
+}
+
+export function writeRefusals(refusals: Refusals): void {
+  fs.mkdirSync(AUTH_DIR, { recursive: true });
+  fs.writeFileSync(authFiles.refusalsFile, JSON.stringify(refusals, null, 2));
+}
 
 /** Users the setup project created itself, recorded so teardown can delete them. */
 export interface CreatedPrincipal {

@@ -52,10 +52,10 @@ public sealed class ResourceActionRoleWriter(IApplicationDbContext context) : IR
     public async Task DeleteResourceActionRoleAsync(int resourceId, int actionId, int roleId, CancellationToken cancellationToken)
     {
         var resourceActionRole = await context.ResourceActionRole
+            .AsTracking()
             .FirstOrDefaultAsync(r => r.ActionId == actionId && r.ResourceId == resourceId && r.RoleId == roleId, cancellationToken)
             ?? throw new NotFoundException(nameof(ResourceActionRole), $"{resourceId}-{actionId}-{roleId}");
 
-        context.ResourceActionRole.Attach(resourceActionRole);
         context.ResourceActionRole.Remove(resourceActionRole);
         await context.SaveChangesAsync(cancellationToken);
     }

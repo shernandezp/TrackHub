@@ -13,6 +13,9 @@
 //  limitations under the License.
 //
 
+using Common.Application.Interfaces;
+using Common.Infrastructure;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Http.Resilience;
 using Polly;
 
@@ -72,6 +75,15 @@ public static class GraphQLClientServiceCollectionExtensions
         {
             builder.AddHeaderPropagation();
         }
+
+        // The host identity travels per request, not per client, and a client that does NOT propagate
+        // the caller's headers is exactly the one that has no caller to speak for: the {name}AsService
+        // twins and a worker host's clients (the SyncWorker registers with propagateHeaders: false).
+        // On a propagating client the handler is inert — the caller's token is already on the request.
+        services.TryAddSingleton<IClientCredentialsTokenProvider, ClientCredentialsTokenProvider>();
+        builder.AddHttpMessageHandler(sp => new ClientCredentialsTokenHandler(
+            sp.GetRequiredService<IClientCredentialsTokenProvider>(),
+            useServiceIdentity: !propagateHeaders));
 
         switch (resilience)
         {

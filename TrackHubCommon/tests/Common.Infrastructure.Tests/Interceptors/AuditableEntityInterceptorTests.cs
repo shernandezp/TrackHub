@@ -1,4 +1,5 @@
 using Common.Application.Interfaces;
+using Common.Domain.Entities;
 using Common.Infrastructure;
 using Common.Infrastructure.Interceptors;
 using FluentAssertions;

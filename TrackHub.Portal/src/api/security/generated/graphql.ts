@@ -73,6 +73,7 @@ export type UpdateUserDtoInput = {
 };
 
 export type UserPasswordDtoInput = {
+  currentPassword?: string | null | undefined;
   password: string;
   userId: string;
 };

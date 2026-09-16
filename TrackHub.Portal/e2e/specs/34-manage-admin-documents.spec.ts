@@ -147,9 +147,8 @@ test.describe('account management — documents & sharing', () => {
 
     await form.root.locator('input[type="file"]').setInputFiles(file);
     await expect(form.root.getByText(path.basename(file))).toBeVisible();
-    // Typed, not picked: this panel is given no document types, so the dialog
-    // renders a free-text Type field. See the pinned test below.
-    await form.field('category').fill(category);
+    // The panel loads the account's document types, so Type is a picker, not a text field.
+    await form.select('category', category);
     await form.field('title').fill(title);
     await form.saveAndClose();
 

@@ -36,6 +36,8 @@ public class RegisterManualDeviceCommandHandlerTests
         _groupWriter = new Mock<IGroupWriter>();
         _transporterGroupWriter = new Mock<ITransporterGroupWriter>();
         _assignmentWriter = new Mock<ITransporterDeviceAssignmentWriter>();
+        _groupReader.Setup(x => x.GetGroupIdsWithUsersAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
         _groupReader.Setup(x => x.GetGroupsByAccountAsync(
                 It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new GroupsPageVm([], 0));

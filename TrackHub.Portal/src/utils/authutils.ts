@@ -18,14 +18,12 @@ import SHA256 from 'crypto-js/sha256';
 import Base64 from 'crypto-js/enc-base64';
 
 const generateCodeVerifier = (): string => {
-    const charset =
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
-    let verifier = '';
-    for (let i = 0; i < 128; i++) {
-      const randomIndex = Math.floor(Math.random() * charset.length);
-      verifier += charset[randomIndex];
-    }
-    return verifier;
+    const bytes = new Uint8Array(32);
+    crypto.getRandomValues(bytes);
+    return btoa(String.fromCharCode(...bytes))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=/g, '');
   };
 
 const generateCodeChallenge = (plain: string): string => {

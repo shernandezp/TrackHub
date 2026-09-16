@@ -223,6 +223,31 @@ public sealed class TripReader(IApplicationDbContext context, IAccountFeatureRea
         return TripMapper.ToVm(trip, stops.Count, stops, overdueGraceMinutes);
     }
 
+    public Task<TripVm?> FindByCodeAsync(Guid accountId, string code, CancellationToken cancellationToken)
+        => FindOneAsync(accountId, t => t.Code == code, cancellationToken);
+
+    public Task<TripVm?> FindByExternalReferenceAsync(Guid accountId, string externalReference, CancellationToken cancellationToken)
+        => FindOneAsync(accountId, t => t.ExternalReference == externalReference, cancellationToken);
+
+    private async Task<TripVm?> FindOneAsync(
+        Guid accountId, System.Linq.Expressions.Expression<Func<Trip, bool>> predicate, CancellationToken cancellationToken)
+    {
+        var trip = await context.Trips
+            .Where(t => t.AccountId == accountId)
+            .Where(predicate)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (trip is null)
+        {
+            return null;
+        }
+
+        var (overdueGraceMinutes, stopsByTrip) = await PhaseContextAsync(accountId, [trip.TripId], cancellationToken);
+        var stops = stopsByTrip.TryGetValue(trip.TripId, out var found) ? found : [];
+
+        return TripMapper.ToVm(trip, stops.Count, stops, overdueGraceMinutes);
+    }
+
     public async Task<Guid?> FindVisibleTripIdByStopAsync(Guid tripStopId, Guid accountId, Guid? userId, CancellationToken cancellationToken)
     {
         var query = from stop in context.TripStops

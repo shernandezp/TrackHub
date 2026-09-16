@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Sergio Hernandez. All rights reserved.
+﻿// Copyright (c) 2026 Sergio Hernandez. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License").
 //  You may not use this file except in compliance with the License.
@@ -13,42 +13,29 @@
 //  limitations under the License.
 //
 
+using System.Text.Json;
 using TrackHub.Security.Application.Users.Events;
+using TrackHub.Security.Domain.Constants;
 
 namespace Application.UnitTests.Events;
 
 [TestFixture]
 public class UserDeletedEventTests
 {
-    private Mock<IManagerWriter> _managerWriterMock;
-
-    [SetUp]
-    public void SetUp()
-    {
-        _managerWriterMock = new Mock<IManagerWriter>();
-    }
-
     [Test]
-    public async Task Handle_ValidNotification_CallsDeleteUserAsync()
+    public async Task Handle_EnqueuesUserDeletedWithTheUserId()
     {
+        var outbox = new Mock<IOutboxWriter>();
         var userId = Guid.NewGuid();
-        var handler = new UserDeleted.Notification.EventHandler(_managerWriterMock.Object);
+        string? payload = null;
+        outbox.Setup(w => w.EnqueueAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .Callback<string, string, string?, CancellationToken>((_, json, _, _) => payload = json);
 
-        await handler.Handle(new UserDeleted.Notification(userId), CancellationToken.None);
+        await new UserDeleted.Notification.EventHandler(outbox.Object)
+            .Handle(new UserDeleted.Notification(userId), CancellationToken.None);
 
-        _managerWriterMock.Verify(w => w.DeleteUserAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Test]
-    public async Task Handle_DifferentUserId_PassesCorrectId()
-    {
-        var userId = Guid.NewGuid();
-        var wrongId = Guid.NewGuid();
-        var handler = new UserDeleted.Notification.EventHandler(_managerWriterMock.Object);
-
-        await handler.Handle(new UserDeleted.Notification(userId), CancellationToken.None);
-
-        _managerWriterMock.Verify(w => w.DeleteUserAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
-        _managerWriterMock.Verify(w => w.DeleteUserAsync(wrongId, It.IsAny<CancellationToken>()), Times.Never);
+        outbox.Verify(w => w.EnqueueAsync(
+            OutboxMessageTypes.UserDeleted, It.IsAny<string>(), userId.ToString(), It.IsAny<CancellationToken>()), Times.Once);
+        Assert.That(JsonSerializer.Deserialize<Guid>(payload!), Is.EqualTo(userId));
     }
 }

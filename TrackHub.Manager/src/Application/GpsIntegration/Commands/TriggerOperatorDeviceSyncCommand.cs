@@ -48,7 +48,9 @@ public class TriggerOperatorDeviceSyncCommandHandler(
             "Manual device sync accepted for operator {OperatorId} (account {AccountId}); dispatching to Router. Correlation {CorrelationId}, reset {Reset}.",
             request.OperatorId, op.AccountId, correlationId, request.ResetDeviceCatalog);
 
-        var completed = await dispatcher.DispatchManualSyncAsync(
+        // The Router ACCEPTS the sync and runs it off the request; the outcome is recorded in
+        // operator_sync_runs, not returned here.
+        var accepted = await dispatcher.DispatchManualSyncAsync(
             op.AccountId,
             request.OperatorId,
             correlationId,
@@ -57,9 +59,9 @@ public class TriggerOperatorDeviceSyncCommandHandler(
             cancellationToken);
 
         logger.LogInformation(
-            "Manual device sync for operator {OperatorId} finished: {Result}. Correlation {CorrelationId}.",
-            request.OperatorId, completed ? "completed" : "not completed", correlationId);
+            "Manual device sync for operator {OperatorId} was {Result} by the Router. Correlation {CorrelationId}.",
+            request.OperatorId, accepted ? "accepted" : "refused", correlationId);
 
-        return completed;
+        return accepted;
     }
 }

@@ -4,6 +4,7 @@ using Common.Application.Exceptions;
 using Common.Application.Interfaces;
 using Common.Mediator;
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace Common.Application.Tests.Behaviors;
@@ -28,19 +29,25 @@ public class RateLimitingBehaviorTests
     public async Task Handle_NoRateLimitAttribute_ProceedsToNext()
     {
         var user = new Mock<IUser>();
-        var behavior = new RateLimitingBehavior<NonRateLimitedRequest, string>(user.Object);
+        var behavior = new RateLimitingBehavior<NonRateLimitedRequest, string>(user.Object, NullLogger<RateLimitingBehavior<NonRateLimitedRequest, string>>.Instance);
         var result = await behavior.HandleAsync(new NonRateLimitedRequest(), () => Task.FromResult("OK"), CancellationToken.None);
         result.Should().Be("OK");
     }
 
     [Fact]
-    public async Task Handle_NullPartitionKey_ProceedsToNext()
+    public async Task Handle_UnresolvablePartitionKey_StillEnforcesTheLimit()
     {
         var user = new Mock<IUser>();
         user.Setup(u => u.Id).Returns((string?)null);
-        var behavior = new RateLimitingBehavior<RateLimitedRequest, string>(user.Object);
-        var result = await behavior.HandleAsync(new RateLimitedRequest(), () => Task.FromResult("OK"), CancellationToken.None);
-        result.Should().Be("OK");
+        user.Setup(u => u.Client).Returns((string?)null);
+        user.Setup(u => u.SubjectId).Returns((string?)null);
+        var behavior = new RateLimitingBehavior<RateLimitedRequest, string>(user.Object, NullLogger<RateLimitingBehavior<RateLimitedRequest, string>>.Instance);
+
+        await behavior.HandleAsync(new RateLimitedRequest(), () => Task.FromResult("OK"), CancellationToken.None);
+        await behavior.HandleAsync(new RateLimitedRequest(), () => Task.FromResult("OK"), CancellationToken.None);
+
+        var act = () => behavior.HandleAsync(new RateLimitedRequest(), () => Task.FromResult("OK"), CancellationToken.None);
+        await act.Should().ThrowAsync<TooManyRequestsException>();
     }
 
     [Fact]
@@ -48,7 +55,7 @@ public class RateLimitingBehaviorTests
     {
         var user = new Mock<IUser>();
         user.Setup(u => u.Id).Returns(Guid.NewGuid().ToString());
-        var behavior = new RateLimitingBehavior<RateLimitedRequest, string>(user.Object);
+        var behavior = new RateLimitingBehavior<RateLimitedRequest, string>(user.Object, NullLogger<RateLimitingBehavior<RateLimitedRequest, string>>.Instance);
 
         var result = await behavior.HandleAsync(new RateLimitedRequest(), () => Task.FromResult("OK"), CancellationToken.None);
         result.Should().Be("OK");
@@ -63,7 +70,7 @@ public class RateLimitingBehaviorTests
 
         // Use a unique request type to avoid cross-test interference - use client partition
         user.Setup(u => u.Client).Returns($"unique-client-{Guid.NewGuid()}");
-        var behavior = new RateLimitingBehavior<ClientRateLimitedRequest, string>(user.Object);
+        var behavior = new RateLimitingBehavior<ClientRateLimitedRequest, string>(user.Object, NullLogger<RateLimitingBehavior<ClientRateLimitedRequest, string>>.Instance);
 
         // First 2 should pass
         await behavior.HandleAsync(new ClientRateLimitedRequest(), () => Task.FromResult("OK"), CancellationToken.None);
@@ -80,7 +87,7 @@ public class RateLimitingBehaviorTests
     {
         var user = new Mock<IUser>();
         user.Setup(u => u.Id).Returns(Guid.NewGuid().ToString());
-        var behavior = new RateLimitingBehavior<EndpointRateLimitedRequest, string>(user.Object);
+        var behavior = new RateLimitingBehavior<EndpointRateLimitedRequest, string>(user.Object, NullLogger<RateLimitingBehavior<EndpointRateLimitedRequest, string>>.Instance);
 
         var result = await behavior.HandleAsync(new EndpointRateLimitedRequest(), () => Task.FromResult("OK"), CancellationToken.None);
         result.Should().Be("OK");
@@ -91,7 +98,7 @@ public class RateLimitingBehaviorTests
     {
         var user = new Mock<IUser>();
         user.Setup(u => u.Id).Returns(Guid.NewGuid().ToString());
-        var behavior = new RateLimitingBehavior<UnknownPartitionRequest, string>(user.Object);
+        var behavior = new RateLimitingBehavior<UnknownPartitionRequest, string>(user.Object, NullLogger<RateLimitingBehavior<UnknownPartitionRequest, string>>.Instance);
 
         var result = await behavior.HandleAsync(new UnknownPartitionRequest(), () => Task.FromResult("OK"), CancellationToken.None);
         result.Should().Be("OK");

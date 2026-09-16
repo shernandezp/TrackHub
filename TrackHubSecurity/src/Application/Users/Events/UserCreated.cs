@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2025 Sergio Hernandez. All rights reserved.
+﻿// Copyright (c) 2026 Sergio Hernandez. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License").
 //  You may not use this file except in compliance with the License.
@@ -13,19 +13,26 @@
 //  limitations under the License.
 //
 
+using System.Text.Json;
+using TrackHub.Security.Application.Outbox;
+using TrackHub.Security.Domain.Constants;
+
 namespace TrackHub.Security.Application.Users.Events;
 
 public sealed class UserCreated
 {
-    // Represents a notification for when a user is created
     public readonly record struct Notification(UserShrankDto User) : INotification
     {
-        // Handles the UserCreated notification
-        public class EventHandler(IManagerWriter managerWriter) : INotificationHandler<Notification>
+        // Recorded rather than called: the Security user row is already committed, so a Manager
+        // outage here would otherwise leave a user with no replica and no trace of the debt.
+        public class EventHandler(IOutboxWriter outbox) : INotificationHandler<Notification>
         {
-            // Handles the notification by calling the CreateUserAsync method on the manager writer (api)
             public async Task Handle(Notification notification, CancellationToken cancellationToken)
-                => await managerWriter.CreateUserAsync(notification.User, cancellationToken);
+                => await outbox.EnqueueAsync(
+                    OutboxMessageTypes.UserCreated,
+                    JsonSerializer.Serialize(notification.User),
+                    notification.User.UserId.ToString(),
+                    cancellationToken);
         }
     }
 }

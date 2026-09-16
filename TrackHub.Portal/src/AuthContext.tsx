@@ -108,10 +108,8 @@ export const AuthProvider = ({ children, navigate }: AuthProviderProps) => {
       const { pathname, search, hash } = window.location;
       rememberReturnPath(`${pathname}${search}${hash}`);
 
-      if (!codeVerifierRef.current) {
-        codeVerifierRef.current = generateCodeVerifier();
-        sessionStorage.setItem('code_verifier', codeVerifierRef.current);
-      }
+      codeVerifierRef.current = generateCodeVerifier();
+      sessionStorage.setItem('code_verifier', codeVerifierRef.current);
       const codeChallenge = generateCodeChallenge(codeVerifierRef.current);
       const responseType = 'code';
       const scope = 'web_scope offline_access';
@@ -130,7 +128,7 @@ export const AuthProvider = ({ children, navigate }: AuthProviderProps) => {
         code_challenge_method: 'S256',
       });
       const authorizationUrl = `${OAUTH_ENDPOINTS.authorization}?${queryParams.toString()}`;
-      navigate(`/authentication/authorize?authorizationUrl=${encodeURIComponent(authorizationUrl)}`);
+      window.location.assign(authorizationUrl);
     }
   };
 

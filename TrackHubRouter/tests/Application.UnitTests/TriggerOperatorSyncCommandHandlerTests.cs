@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sergio Hernandez. All rights reserved.
+﻿// Copyright (c) 2026 Sergio Hernandez. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License").
 //  You may not use this file except in compliance with the License.
@@ -13,12 +13,13 @@
 //  limitations under the License.
 //
 
+using Common.Application.Exceptions;
 using Common.Domain.Enums;
-using Common.Mediator;
 using Microsoft.Extensions.Logging;
 using Moq;
 using TrackHub.Router.Application.DevicePositions.Commands.Sync;
 using TrackHub.Router.Domain.Exceptions;
+using TrackHub.Router.Domain.Interfaces;
 using TrackHub.Router.Domain.Interfaces.Manager;
 using TrackHub.Router.Domain.Models;
 
@@ -26,26 +27,28 @@ namespace Application.UnitTests;
 
 // The manual dispatch makes exactly ONE Manager read (the operator, which carries the account
 // binding and credential). Manager already validated authorization/account status before
-// dispatching, so no account/feature callbacks exist here.
+// dispatching, so no account/feature callbacks exist here. The sync itself is QUEUED, not awaited:
+// the caller reads what happened from operator_sync_runs.
 [TestFixture]
 public class TriggerOperatorSyncCommandHandlerTests : TestsContext
 {
     private Mock<IOperatorReader> _operatorReaderMock = null!;
     private Mock<IOperatorSystemReader> _operatorSystemReaderMock = null!;
-    private Mock<ISender> _senderMock = null!;
+    private Mock<ISyncDispatchQueue> _queueMock = null!;
 
     [SetUp]
     public void SetUp()
     {
         _operatorReaderMock = new Mock<IOperatorReader>();
         _operatorSystemReaderMock = new Mock<IOperatorSystemReader>();
-        _senderMock = new Mock<ISender>();
+        _queueMock = new Mock<ISyncDispatchQueue>();
+        _queueMock.Setup(q => q.TryEnqueue(It.IsAny<SyncDispatchRequest>())).Returns(true);
     }
 
     private TriggerOperatorSyncCommandHandler CreateHandler() => new(
         _operatorReaderMock.Object,
         _operatorSystemReaderMock.Object,
-        _senderMock.Object,
+        _queueMock.Object,
         Mock.Of<ILogger<TriggerOperatorSyncCommandHandler>>());
 
     // The caller-scoped read authorizes; the system read supplies the same operator with its
@@ -67,7 +70,7 @@ public class TriggerOperatorSyncCommandHandlerTests : TestsContext
         // A2: operator that does not belong to the account -> typed error, never a silent false.
         Assert.ThrowsAsync<OperatorNotFoundException>(() => CreateHandler().Handle(
             new TriggerOperatorSyncCommand(accountId, op.OperatorId), CancellationToken.None));
-        _senderMock.Verify(s => s.Send(It.IsAny<SyncOperatorDevicesCommand>(), It.IsAny<CancellationToken>()), Times.Never);
+        _queueMock.Verify(q => q.TryEnqueue(It.IsAny<SyncDispatchRequest>()), Times.Never);
     }
 
     [Test]
@@ -81,17 +84,15 @@ public class TriggerOperatorSyncCommandHandlerTests : TestsContext
         // A2: disabled operator -> typed error, never a silent false.
         Assert.ThrowsAsync<OperatorDisabledException>(() => CreateHandler().Handle(
             new TriggerOperatorSyncCommand(accountId, op.OperatorId), CancellationToken.None));
-        _senderMock.Verify(s => s.Send(It.IsAny<SyncOperatorDevicesCommand>(), It.IsAny<CancellationToken>()), Times.Never);
+        _queueMock.Verify(q => q.TryEnqueue(It.IsAny<SyncDispatchRequest>()), Times.Never);
     }
 
     [Test]
-    public async Task Handle_HappyPath_MakesSingleManagerReadAndDispatches()
+    public async Task Handle_HappyPath_MakesSingleManagerReadAndQueues()
     {
         var accountId = Guid.NewGuid();
         var op = new OperatorVm(Guid.NewGuid(), (int)ProtocolType.CommandTrack, accountId, TestCredentialTokenVm);
         SetupOperator(op);
-        _senderMock.Setup(s => s.Send(It.IsAny<SyncOperatorDevicesCommand>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
 
         var result = await CreateHandler().Handle(
             new TriggerOperatorSyncCommand(accountId, op.OperatorId, "MANUAL", "corr-42"), CancellationToken.None);
@@ -99,52 +100,45 @@ public class TriggerOperatorSyncCommandHandlerTests : TestsContext
         Assert.That(result, Is.True);
         _operatorReaderMock.Verify(x => x.GetOperatorAsync(op.OperatorId, It.IsAny<CancellationToken>()), Times.Once);
         _operatorReaderMock.VerifyNoOtherCalls();
-        _senderMock.Verify(s => s.Send(
-            It.Is<SyncOperatorDevicesCommand>(c =>
-                c.Operator.OperatorId == op.OperatorId
-                && c.Operator.AccountId == accountId
-                && c.TriggerType == "MANUAL"
-                && c.CorrelationId == "corr-42"
-                && !c.ResetDeviceCatalog
-                && c.AutoAssignNewDevices),
-            It.IsAny<CancellationToken>()), Times.Once);
-        _senderMock.Verify(s => s.Send(It.IsAny<GetPositionsByOperatorCommand>(), It.IsAny<CancellationToken>()), Times.Never);
+        _queueMock.Verify(q => q.TryEnqueue(
+            It.Is<SyncDispatchRequest>(r =>
+                r.Operator.OperatorId == op.OperatorId
+                && r.Operator.AccountId == accountId
+                && r.TriggerType == "MANUAL"
+                && r.CorrelationId == "corr-42"
+                && !r.ResetDeviceCatalog
+                && r.AutoAssignNewDevices)), Times.Once);
     }
 
     [Test]
-    public async Task Handle_ResetDeviceCatalog_DispatchesDeviceSyncWithReset()
+    public async Task Handle_ResetDeviceCatalog_QueuesWithReset()
     {
         var accountId = Guid.NewGuid();
         var op = new OperatorVm(Guid.NewGuid(), (int)ProtocolType.CommandTrack, accountId, TestCredentialTokenVm);
         SetupOperator(op);
-        _senderMock.Setup(s => s.Send(It.IsAny<SyncOperatorDevicesCommand>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
 
         var result = await CreateHandler().Handle(
             new TriggerOperatorSyncCommand(accountId, op.OperatorId, "MANUAL", "corr-42", ResetDeviceCatalog: true),
             CancellationToken.None);
 
         Assert.That(result, Is.True);
-        _senderMock.Verify(s => s.Send(
-            It.Is<SyncOperatorDevicesCommand>(c =>
-                c.Operator.OperatorId == op.OperatorId
-                && c.ResetDeviceCatalog
-                && c.CorrelationId == "corr-42"),
-            It.IsAny<CancellationToken>()), Times.Once);
+        _queueMock.Verify(q => q.TryEnqueue(
+            It.Is<SyncDispatchRequest>(r =>
+                r.Operator.OperatorId == op.OperatorId
+                && r.ResetDeviceCatalog
+                && r.CorrelationId == "corr-42")), Times.Once);
     }
 
     [Test]
-    public async Task Handle_DownstreamSyncReturnsFalse_ReturnsFalse()
+    public void Handle_QueueFull_ThrowsTooManyRequests()
     {
         var accountId = Guid.NewGuid();
         var op = new OperatorVm(Guid.NewGuid(), (int)ProtocolType.CommandTrack, accountId, TestCredentialTokenVm);
         SetupOperator(op);
-        _senderMock.Setup(s => s.Send(It.IsAny<SyncOperatorDevicesCommand>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
+        _queueMock.Setup(q => q.TryEnqueue(It.IsAny<SyncDispatchRequest>())).Returns(false);
 
-        var result = await CreateHandler().Handle(
-            new TriggerOperatorSyncCommand(accountId, op.OperatorId, "MANUAL", "corr-42"), CancellationToken.None);
-
-        Assert.That(result, Is.False);
+        // A refused trigger must say so — never answer "accepted" for work that was dropped.
+        Assert.ThrowsAsync<TooManyRequestsException>(() => CreateHandler().Handle(
+            new TriggerOperatorSyncCommand(accountId, op.OperatorId), CancellationToken.None));
     }
 }

@@ -22,4 +22,7 @@ public interface IDriverCredentialReader
     Task<DriverCredentialAuthenticationVm?> GetDriverCredentialByLoginAsync(string normalizedLogin, CancellationToken cancellationToken);
 
     Task<bool> HasActiveCredentialAsync(Guid driverId, CancellationToken cancellationToken);
+
+    /// <summary>Is THIS credential still active? Revoking one of a driver's credentials must end the sessions issued from it.</summary>
+    Task<bool> IsCredentialActiveAsync(Guid driverCredentialId, CancellationToken cancellationToken);
 }

@@ -121,7 +121,10 @@ internal sealed class CoreRbacSeedContribution : IRbacSeedContribution
             [Roles.Manager] =
             [
                 (Common.Domain.Constants.Resources.Accounts, [Actions.Read, Actions.Edit]),
-                (Common.Domain.Constants.Resources.AccountFeatures, [Actions.Read, Actions.Write, Actions.Edit, Actions.Delete]),
+                // Read only: entitlement provisioning is the platform operator's, through the
+                // AccountFeaturesMaster surface. Write here let a tenant Manager enable any paid
+                // module for their own account and raise their own API quota through ConfigurationJson.
+                (Common.Domain.Constants.Resources.AccountFeatures, [Actions.Read]),
                 (Common.Domain.Constants.Resources.Alerts, [Actions.Read, Actions.Edit]),
                 (Common.Domain.Constants.Resources.Audit, [Actions.Read]),
                 (Common.Domain.Constants.Resources.BackgroundJobs, [Actions.Read]),
@@ -234,11 +237,12 @@ internal sealed class CoreRbacSeedContribution : IRbacSeedContribution
             (Common.Domain.Constants.Resources.Alerts, Actions.Write),
             (Common.Domain.Constants.Resources.GeocodingProviders, Actions.Read),
         ]),
-        // The security_client posts security audit events to Manager's central AuditEvent store.
-        // It needs exactly one grant — Audit/Write — and nothing else.
+        // The security_client posts security audit events to Manager's central AuditEvent store and
+        // probes feature flags for its own gating.
         (["security_client"],
         [
             (Common.Domain.Constants.Resources.Audit, Actions.Write),
+            (Common.Domain.Constants.Resources.AccountFeatures, Actions.Read),
         ]),
         // The geofence_client records geofence alert events (recordAlertEvent) and its dwell
         // evaluator's job runs (createBackgroundJobRun) in Manager — exactly two grants.
@@ -282,11 +286,12 @@ internal sealed class CoreRbacSeedContribution : IRbacSeedContribution
         [
             (Common.Domain.Constants.Resources.TripTracking, Actions.Custom),
         ]),
-        // The reporting_client reads the account's time zone from Manager; every other Reporting
-        // feed travels on the requesting user's token.
+        // The reporting_client reads the account's time zone and operational status from Manager;
+        // every other Reporting feed travels on the requesting user's token.
         (["reporting_client"],
         [
             (Common.Domain.Constants.Resources.AccountFeatures, Actions.Read),
+            (Common.Domain.Constants.Resources.Accounts, Actions.Read),
         ]),
     ];
 }

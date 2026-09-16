@@ -31,6 +31,8 @@ export interface FormChangeEvent {
     value?: string | number | boolean;
     type?: string;
     checked?: boolean;
+    /** Validation rule the control declares, independent of its live DOM type. */
+    dataset?: { validation?: string };
   };
 }
 
@@ -87,7 +89,9 @@ function useForm<T extends object>(initialValues: T | (() => T)): UseFormResult<
     }) as T);
     setTypes((previous) => ({
       ...previous,
-      [event.target.name]: event.target.type,
+      // A field declares its validation rule through data-validation; the live DOM type is only the
+      // fallback, because a revealed password field reports type "text" and would skip its rule.
+      [event.target.name]: event.target.dataset?.validation ?? event.target.type,
     }));
   };
 

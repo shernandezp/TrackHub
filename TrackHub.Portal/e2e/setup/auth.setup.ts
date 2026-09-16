@@ -16,8 +16,8 @@ import { test as setup, expect } from '@playwright/test';
 import type { Browser, Page } from '@playwright/test';
 import { AUTH_DIR, config, storageStatePath } from '../fixtures/env';
 import type { RoleName } from '../fixtures/env';
-import { captureTokens, persistRole, signIn, writeCreated } from '../fixtures/auth';
-import type { CreatedPrincipal, Credentials } from '../fixtures/auth';
+import { authFiles, captureTokens, persistRole, signIn, writeCreated, writeRefusals } from '../fixtures/auth';
+import type { CreatedPrincipal, Credentials, Refusals } from '../fixtures/auth';
 import { translate } from '../fixtures/i18n';
 import { uniqueEmail } from '../fixtures/data';
 
@@ -29,7 +29,7 @@ setup.describe.configure({ mode: 'serial' });
 /**
  * Signs a role in inside its own browser context and saves state + tokens.
  * Returns the AuthorityServer's rejection text instead of throwing, so a
- * principal that cannot sign in becomes a specific skip rather than a crash.
+ * principal that cannot sign in is recorded with its reason rather than crashing setup.
  */
 async function establish(
   browser: Browser,
@@ -144,6 +144,7 @@ setup('administrator signs in and the session is recorded', async ({ browser }) 
     // A stale state from a previous run would hide a provisioning failure.
     if (fs.existsSync(storageStatePath(role))) fs.rmSync(storageStatePath(role));
   }
+  if (fs.existsSync(authFiles.refusalsFile)) fs.rmSync(authFiles.refusalsFile);
   const refusal = await establish(browser, 'admin', config.credentials.admin);
   expect(refusal, `the administrator could not sign in: ${refusal}`).toBeNull();
   expect(fs.existsSync(storageStatePath('admin'))).toBe(true);
@@ -174,7 +175,7 @@ setup('manager and user roles exist and sign in', async ({ browser }) => {
     }
   };
 
-  const refusals: string[] = [];
+  const refusals: Refusals = {};
   for (const [role, label] of [
     ['manager', t('roles.manager')],
     ['user', t('roles.user')],
@@ -182,20 +183,15 @@ setup('manager and user roles exist and sign in', async ({ browser }) => {
     const credentials = await provision(role, label);
     if (!credentials) continue;
     const refusal = await establish(browser, role, credentials);
-    if (refusal) refusals.push(`${role}: ${refusal}`);
+    if (refusal) refusals[role] = refusal;
   }
 
   writeCreated(created);
+  writeRefusals(refusals);
 
-  if (refusals.length > 0) {
-    // Not a suite failure: it is a PORTAL defect, and the specs that need these
-    // roles say so themselves when they skip. `security.users.verified` is never
-    // written by any code path — the seeded administrator's row was set by hand —
-    // so a user created through Account Management can never sign in.
-    console.log(
-      `[setup] created principals cannot sign in (${refusals.join('; ')}). ` +
-        'Set E2E_MANAGER_EMAIL/PASSWORD and E2E_USER_EMAIL/PASSWORD to existing, ' +
-        'verified accounts to run the role-scoped tests.'
-    );
+  // Recorded, not thrown: failing here would take the whole suite's setup dependency with it and
+  // skip all 145 tests that do not need these roles. The specs that DO need them fail instead.
+  for (const [role, refusal] of Object.entries(refusals)) {
+    console.log(`[setup] the ${role} principal exists but cannot sign in: ${refusal}`);
   }
 });

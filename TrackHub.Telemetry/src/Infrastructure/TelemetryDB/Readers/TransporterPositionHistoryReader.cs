@@ -8,11 +8,24 @@ namespace TrackHub.Telemetry.Infrastructure.TelemetryDB.Readers;
 public sealed class TransporterPositionHistoryReader(IApplicationDbContext context, ICurrentPrincipal principal)
     : AccountScopedDataAccess(context, principal), ITransporterPositionHistoryReader
 {
-    public async Task<IReadOnlyCollection<TransporterPositionHistoryVm>> GetAsync(Filters filters, int take, CancellationToken cancellationToken)
+    public async Task<IReadOnlyCollection<TransporterPositionHistoryVm>> GetAsync(Filters filters, int take, DateTimeOffset? from, DateTimeOffset? to, CancellationToken cancellationToken)
     {
         var pageSize = Math.Clamp(take <= 0 ? 100 : take, 1, 1000);
         var q = Context.TransporterPositionHistory.AsQueryable();
         q = filters.Apply(q);
+
+        // Bounded in SQL. Applied after a newest-first Take, the window intersected only the most
+        // recent page, so an export of an older month came back near-empty on an active fleet.
+        if (from.HasValue)
+        {
+            q = q.Where(x => x.SourceTimestamp >= from.Value);
+        }
+
+        if (to.HasValue)
+        {
+            q = q.Where(x => x.SourceTimestamp <= to.Value);
+        }
+
         if (!CanAccessAllAccounts && Principal.AccountId.HasValue)
         {
             var acct = Principal.AccountId.Value;

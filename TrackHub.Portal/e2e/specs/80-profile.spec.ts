@@ -86,6 +86,9 @@ test.describe('profile', () => {
     const dialog = page.getByTestId('dialog-form');
     await expect(dialog).toBeVisible();
 
+    // The dialog proves the current password before it will change it, so a mismatch is only
+    // reached once that field is satisfied.
+    await dialog.locator('#currentPassword').fill(config.credentials.admin.password);
     await dialog.locator('#password').fill('E2eChanged9');
     await dialog.locator('#confirmPassword').fill('E2eDifferent9');
     await dialog.getByRole('button', { name: t('generic.save') }).click();
@@ -186,7 +189,10 @@ test.describe('profile', () => {
     await page.getByRole('option', { name: target, exact: true }).click();
     // Choosing the language re-renders the UI immediately, so the Save button is
     // already labelled in the NEW language by the time it is clicked.
+    const saved = userSettingsSaved(page);
     await settingsCard.getByRole('button', { name: /Save|Guardar/ }).click();
+    // The reload below cancels whatever is still in flight, and a cancelled save stores nothing.
+    await saved;
 
     // The switch is immediate: the sidenav re-renders in the new language.
     const dashboardInTarget = target === 'es' ? 'Tablero' : 'Dashboard';
@@ -202,7 +208,9 @@ test.describe('profile', () => {
     // language just switched to, so both spellings are accepted.
     await reloadedCard.locator('#language').click();
     await page.getByRole('option', { name: original, exact: true }).click();
+    const restored = userSettingsSaved(page);
     await reloadedCard.getByRole('button', { name: /Save|Guardar/ }).click();
+    await restored;
     await expect(reloadedCard.locator('#language')).toHaveText(original);
   });
 

@@ -35,7 +35,7 @@ public class ServiceClientPermissionReaderTests
     private static readonly string[] Audiences = ["trackhub_api"];
 
     private static ApplicationDbContext NewContext(string name)
-        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).Options);
+        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking).Options);
 
     private static async Task<ServiceClientPermissionReader> ReaderWith(string name, Guid? grantAccountId, bool allowCrossAccount)
     {

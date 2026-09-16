@@ -63,4 +63,45 @@ public static class ExceptionConverter
         => ErrorBuilder.New()
             .SetMessage(validationFailure.ErrorMessage)
             .Build();
+
+    public const string UpstreamErrorCode = "UPSTREAM_ERROR";
+
+    // A peer's message, path and locations describe the peer's schema and internal state; only a
+    // declared code is a contract. The peer already logged the original under the correlation id.
+    public static IError[] ConvertToUpstreamIError(this IEnumerable<GraphQLError> graphQLErrors)
+        => graphQLErrors.Select(error => error.ConvertToUpstreamIError()).ToArray();
+
+    public static IError ConvertToUpstreamIError(this GraphQLError graphQLError)
+    {
+        ArgumentNullException.ThrowIfNull(graphQLError);
+
+        var code = ReadCode(graphQLError);
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            return ErrorBuilder.New()
+                .SetMessage("An upstream service failed to process the request.")
+                .SetCode(UpstreamErrorCode)
+                .Build();
+        }
+
+        var builder = ErrorBuilder.New()
+            .SetMessage(graphQLError.Message)
+            .SetCode(code);
+
+        if (graphQLError.Extensions is { } extensions)
+        {
+            foreach (var extension in extensions.Where(e => !string.Equals(e.Key, "code", StringComparison.Ordinal)))
+            {
+                builder.SetExtension(extension.Key, extension.Value);
+            }
+        }
+
+        return builder.Build();
+    }
+
+    private static string? ReadCode(GraphQLError graphQLError)
+        => graphQLError.Extensions is { } extensions
+            && extensions.TryGetValue("code", out var value)
+                ? value?.ToString()
+                : null;
 }

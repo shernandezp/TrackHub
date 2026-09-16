@@ -41,6 +41,7 @@ public sealed class OperatorWriter(IApplicationDbContext context, ICurrentPrinci
         };
 
         await Context.Operators.AddAsync(@operator, cancellationToken);
+        AddAuditEvent(accountId, "CreateOperator", "Operator", $"{@operator.OperatorId}", null, Describe(@operator));
         await Context.SaveChangesAsync(cancellationToken);
 
         return new OperatorVm(
@@ -78,6 +79,7 @@ public sealed class OperatorWriter(IApplicationDbContext context, ICurrentPrinci
 
         Context.Operators.Attach(@operator);
 
+        var previous = Describe(@operator);
         @operator.Name = operatorDto.Name;
         @operator.Description = operatorDto.Description;
         @operator.PhoneNumber = operatorDto.PhoneNumber;
@@ -87,6 +89,7 @@ public sealed class OperatorWriter(IApplicationDbContext context, ICurrentPrinci
         @operator.ProtocolType = operatorDto.ProtocolTypeId;
         @operator.SyncIntervalMinutes = operatorDto.SyncIntervalMinutes;
 
+        AddAuditEvent(@operator.AccountId, "UpdateOperator", "Operator", $"{@operator.OperatorId}", previous, Describe(@operator));
         await Context.SaveChangesAsync(cancellationToken);
     }
 
@@ -99,6 +102,7 @@ public sealed class OperatorWriter(IApplicationDbContext context, ICurrentPrinci
 
         Context.Operators.Attach(@operator);
 
+        AddAuditEvent(@operator.AccountId, "DeleteOperator", "Operator", $"{@operator.OperatorId}", Describe(@operator), null);
         Context.Operators.Remove(@operator);
         await Context.SaveChangesAsync(cancellationToken);
     }
@@ -110,7 +114,10 @@ public sealed class OperatorWriter(IApplicationDbContext context, ICurrentPrinci
         RequireAccountWriteAccess(@operator.AccountId);
 
         Context.Operators.Attach(@operator);
+        var previous = $$"""{"enabled":{{@operator.Enabled.ToString().ToLowerInvariant()}}}""";
         @operator.Enabled = enabled;
+        AddAuditEvent(@operator.AccountId, "SetOperatorEnabled", "Operator", $"{@operator.OperatorId}", previous,
+            $$"""{"enabled":{{enabled.ToString().ToLowerInvariant()}}}""");
         await Context.SaveChangesAsync(cancellationToken);
     }
 
@@ -143,4 +150,6 @@ public sealed class OperatorWriter(IApplicationDbContext context, ICurrentPrinci
 
         await Context.SaveChangesAsync(cancellationToken);
     }
+    private static string Describe(Operator @operator)
+        => $$"""{"name":{{AuditJson.Quote(@operator.Name)}},"protocolType":{{@operator.ProtocolType}},"syncIntervalMinutes":{{@operator.SyncIntervalMinutes}},"enabled":{{@operator.Enabled.ToString().ToLowerInvariant()}}}""";
 }
