@@ -28,8 +28,8 @@ namespace TrackHub.Manager.Infrastructure.ManagerDB.Notifications;
 /// </summary>
 public static class NotificationMessageRenderer
 {
-    public const string TestTemplateKey = "TestNotification";
-    public const string DigestTemplateKey = "NotificationDigest";
+    public const string TestTemplateKey = NotificationTemplateKeys.Test;
+    public const string DigestTemplateKey = NotificationTemplateKeys.Digest;
 
     public static async Task<(string? Subject, string Body)> RenderAsync(
         IApplicationDbContext context,

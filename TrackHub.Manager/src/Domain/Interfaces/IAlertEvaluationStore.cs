@@ -24,9 +24,6 @@ public readonly record struct StaleTransporterVm(Guid TransporterId, string Name
 /// </summary>
 public interface IAlertEvaluationStore
 {
-    Task<IReadOnlyCollection<Guid>> GetFeatureEnabledActiveAccountsAsync(
-        string featureKey, DateTimeOffset now, CancellationToken cancellationToken);
-
     Task<IReadOnlyCollection<NotificationRuleVm>> GetEnabledRulesAsync(
         IReadOnlyCollection<Guid> accountIds, IReadOnlyCollection<string> triggerEvents, CancellationToken cancellationToken);
 

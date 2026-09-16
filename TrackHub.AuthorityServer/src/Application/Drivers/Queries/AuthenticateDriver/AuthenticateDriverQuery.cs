@@ -21,7 +21,11 @@ namespace TrackHub.AuthorityServer.Application.Drivers.Queries.AuthenticateDrive
 
 public readonly record struct AuthenticateDriverQuery(string Login, string Password) : IRequest<AuthenticatedDriverVm>;
 
-public readonly record struct AuthenticatedDriverVm(Guid DriverId, Guid AccountId);
+/// <summary>
+/// Carries the credential that authenticated, not just the driver: a driver may hold several
+/// credentials, and revoking one has to invalidate the sessions issued from THAT one.
+/// </summary>
+public readonly record struct AuthenticatedDriverVm(Guid DriverId, Guid AccountId, Guid DriverCredentialId);
 
 public sealed class AuthenticateDriverQueryHandler(IDriverCredentialReader reader, IDriverCredentialWriter writer) : IRequestHandler<AuthenticateDriverQuery, AuthenticatedDriverVm>
 {
@@ -62,6 +66,6 @@ public sealed class AuthenticateDriverQueryHandler(IDriverCredentialReader reade
         }
 
         await writer.RecordDriverCredentialLoginSuccessAsync(credential.DriverCredentialId, cancellationToken);
-        return new AuthenticatedDriverVm(credential.DriverId, credential.AccountId);
+        return new AuthenticatedDriverVm(credential.DriverId, credential.AccountId, credential.DriverCredentialId);
     }
 }

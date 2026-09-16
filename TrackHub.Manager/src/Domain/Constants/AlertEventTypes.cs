@@ -29,6 +29,7 @@ public static class AlertEventTypes
     public const string GpsOperatorPositionSyncFailed = nameof(GpsOperatorPositionSyncFailed);
     public const string DocumentExpiring = nameof(DocumentExpiring);
     public const string DocumentExpired = nameof(DocumentExpired);
+    public const string DocumentScanFailed = nameof(DocumentScanFailed);
     public const string NotificationDeliveryFailed = nameof(NotificationDeliveryFailed);
     public const string DriverQualificationExpiring = nameof(DriverQualificationExpiring);
     public const string DriverQualificationExpired = nameof(DriverQualificationExpired);
@@ -51,7 +52,7 @@ public static class AlertEventTypes
     [
         GeofenceEntered, GeofenceExited, GeofenceDwellExceeded, CommunicationLoss,
         GpsCredentialExpiring, GpsOperatorPositionSyncFailed, DocumentExpiring, DocumentExpired,
-        NotificationDeliveryFailed, DriverQualificationExpiring, DriverQualificationExpired,
+        DocumentScanFailed, NotificationDeliveryFailed, DriverQualificationExpiring, DriverQualificationExpired,
         TripAssigned, TripStarted, TripStopArrived, TripStopDeparted, TripDelayed,
         TripRouteDeviation, TripPodSubmitted, TripCompleted, TripCancelled, TripStartDue
     ];

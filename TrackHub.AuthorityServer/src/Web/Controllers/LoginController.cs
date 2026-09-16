@@ -86,6 +86,7 @@ public class LoginController(ISender sender, IStringLocalizer<LoginController> l
                     new(ClaimTypes.Sid, driver.DriverId.ToString()),
                     new("principal_type", "Driver"),
                     new("driver_id", driver.DriverId.ToString()),
+                    new("driver_credential_id", driver.DriverCredentialId.ToString()),
                     new("account_id", driver.AccountId.ToString()),
                     new("client_id", DriverMobileClientId)
                 };

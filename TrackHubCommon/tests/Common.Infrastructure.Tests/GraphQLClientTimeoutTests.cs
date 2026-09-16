@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Options;
@@ -23,6 +24,9 @@ public class GraphQLClientTimeoutTests
     private static ServiceProvider Build(int timeoutSeconds, GraphQLClientResilience resilience)
     {
         var services = new ServiceCollection();
+        // A real host always has configuration. The client registration now composes an auth
+        // pipeline, and its token provider reads configuration to acquire the host token.
+        services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build());
         services.AddLogging();
         services.AddGraphQLClient(ClientName, propagateHeaders: false, resilience, timeoutSeconds);
         return services.BuildServiceProvider();

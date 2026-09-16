@@ -30,16 +30,18 @@ public class AlertEvaluationJobTests
     private static readonly Guid AccountId = Guid.NewGuid();
     private static readonly DateTimeOffset Now = new(2026, 9, 14, 12, 0, 0, TimeSpan.Zero);
 
+    private Mock<IAccountFeatureGate> _features = null!;
     private Mock<IAlertEvaluationStore> _store = null!;
     private Mock<IAlertRuleEvaluator> _evaluator = null!;
 
     [SetUp]
     public void SetUp()
     {
+        _features = new Mock<IAccountFeatureGate>();
         _store = new Mock<IAlertEvaluationStore>();
         _evaluator = new Mock<IAlertRuleEvaluator>();
 
-        _store.Setup(s => s.GetFeatureEnabledActiveAccountsAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+        _features.Setup(f => f.EnabledActiveAccountsAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
         _store.Setup(s => s.GetEnabledRulesAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
@@ -54,13 +56,14 @@ public class AlertEvaluationJobTests
     }
 
     private AlertEvaluationJob CreateJob() => new(
+        _features.Object,
         _store.Object, _evaluator.Object, Mock.Of<ILogger<AlertEvaluationJob>>());
 
     private static NotificationRuleVm Rule(string triggerEvent, string? configurationJson)
         => new(Guid.NewGuid(), AccountId, "rule", "Alert", true, triggerEvent, "role:Administrator", "[]", null, configurationJson, Now);
 
     private void NotificationsEnabledFor(params Guid[] accountIds)
-        => _store.Setup(s => s.GetFeatureEnabledActiveAccountsAsync(FeatureKeys.Notifications, It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+        => _features.Setup(f => f.EnabledActiveAccountsAsync(FeatureKeys.Notifications, It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(accountIds);
 
     [Test]
@@ -174,7 +177,7 @@ public class AlertEvaluationJobTests
     {
         await CreateJob().RunOnceAsync(Now, CancellationToken.None);
 
-        _store.Verify(s => s.GetFeatureEnabledActiveAccountsAsync(
+        _features.Verify(f => f.EnabledActiveAccountsAsync(
             FeatureKeys.GpsIntegration, It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -196,7 +199,7 @@ public class AlertEvaluationJobTests
     {
         _store.Setup(s => s.JobRunSucceededAsync(It.IsAny<string>(), It.Is<string>(k => k.StartsWith("credential-scan:")), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
-        _store.Setup(s => s.GetFeatureEnabledActiveAccountsAsync(FeatureKeys.GpsIntegration, It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+        _features.Setup(f => f.EnabledActiveAccountsAsync(FeatureKeys.GpsIntegration, It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([AccountId]);
         var operatorId = Guid.NewGuid();
         _store.Setup(s => s.GetExpiringCredentialsAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))

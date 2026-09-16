@@ -22,3 +22,4 @@ global using TrackHub.Manager.Domain.Models;
 global using TrackHub.Manager.Domain.Records;
 global using FluentValidation;
 global using Common.Mediator;
+global using Common.Application.BackgroundJobs;

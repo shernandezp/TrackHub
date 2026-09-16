@@ -19,7 +19,8 @@ using Common.Web.Infrastructure;
 using Microsoft.AspNetCore.HttpOverrides;
 using System.Reflection;
 using TrackHub.Manager.Infrastructure;
-using TrackHub.Manager.Web.BackgroundServices;
+using Common.Web.BackgroundJobs;
+using TrackHub.Manager.Application.BackgroundJobs;
 using TrackHub.Manager.Web.Endpoints;
 using TrackHub.Manager.Web.GraphQL.Mutation;
 using TrackHub.Manager.Web.GraphQL.Query;
@@ -44,29 +45,18 @@ builder.Services.AddAppSecurityContext();
 builder.Services.AddAppRouterContext(builder.Configuration);
 builder.Services.AddWebServices();
 
-// Trial-expiration enforcement job.
-builder.Services.AddHostedService<TrialExpirationService>();
-
-// Document jobs: scan-result processing (quarantine → clean/infected) and the
-// 30/15/7-day expiration scan.
-builder.Services.AddHostedService<DocumentScanService>();
-builder.Services.AddHostedService<DocumentExpirationService>();
-builder.Services.AddHostedService<DocumentRetentionCleanupService>();
-
-// Workforce job: daily 30/15/7/0-day driver-qualification expiration scan (workforce-gated accounts).
-builder.Services.AddHostedService<WorkforceExpirationService>();
-
-// Alerts/notifications jobs: 30 s delivery dispatch, 5 min alert evaluation
-// (communication loss + escalation + daily credential-expiry emission), hourly digest fold, and
-// daily delivery retention.
-builder.Services.AddHostedService<NotificationDispatchService>();
-builder.Services.AddHostedService<AlertEvaluationService>();
-builder.Services.AddHostedService<NotificationDigestService>();
-builder.Services.AddHostedService<DeliveryRetentionService>();
-
-// Platform-table retention: daily purge of aged background job runs (latest row per JobKey preserved
-// for the status page) and resolved alert events.
-builder.Services.AddHostedService<PlatformRetentionService>();
+// Scheduled background jobs. Each job owns its cadence and its policy in the Application layer; the
+// shared host owns the loop, the failure backoff and the logging.
+builder.Services.AddScheduledJob<TrialExpirationJob>();
+builder.Services.AddScheduledJob<DocumentScanJob>();
+builder.Services.AddScheduledJob<DocumentExpirationJob>();
+builder.Services.AddScheduledJob<DocumentRetentionCleanupJob>();
+builder.Services.AddScheduledJob<WorkforceExpirationJob>();
+builder.Services.AddScheduledJob<NotificationDispatchJob>();
+builder.Services.AddScheduledJob<AlertEvaluationJob>();
+builder.Services.AddScheduledJob<NotificationDigestJob>();
+builder.Services.AddScheduledJob<DeliveryRetentionJob>();
+builder.Services.AddScheduledJob<PlatformRetentionJob>();
 
 // Add HealthChecks
 builder.Services.AddHealthChecks()

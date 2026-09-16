@@ -30,7 +30,7 @@ public static class DependencyInjection
         services.AddApplicationServices(assembly);
         services.AddDistributedMemoryCache();
         services.TryAddScoped<ISyncDispatcher, NoopSyncDispatcher>();
-        services.AddScoped<AlertEvaluationJob>();
+
         return services;
     }
 }

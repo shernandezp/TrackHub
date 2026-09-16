@@ -25,17 +25,21 @@ namespace TrackHub.Manager.Application.BackgroundJobs;
 /// credential-expiry alerts. Feature-disabled and suspended accounts are skipped.
 /// </summary>
 public sealed class AlertEvaluationJob(
+    IAccountFeatureGate features,
     IAlertEvaluationStore store,
     IAlertRuleEvaluator evaluator,
-    ILogger<AlertEvaluationJob> logger)
+    ILogger<AlertEvaluationJob> logger) : IScheduledJob
 {
+    public static TimeSpan Interval => TimeSpan.FromMinutes(5);
+    public static TimeSpan StartupDelay => TimeSpan.FromMinutes(2);
+
     public const string JobKey = BackgroundJobKeys.AlertEvaluation;
     public const int DefaultCommunicationLossThresholdMinutes = 60;
     public const int CredentialExpiryWithinDays = 7;
 
     public async Task RunOnceAsync(DateTimeOffset now, CancellationToken cancellationToken)
     {
-        var enabledAccounts = await store.GetFeatureEnabledActiveAccountsAsync(
+        var enabledAccounts = await features.EnabledActiveAccountsAsync(
             FeatureKeys.Notifications, now, cancellationToken);
 
         if (enabledAccounts.Count > 0)
@@ -171,7 +175,7 @@ public sealed class AlertEvaluationJob(
             return;
         }
 
-        var gpsAccounts = await store.GetFeatureEnabledActiveAccountsAsync(FeatureKeys.GpsIntegration, now, cancellationToken);
+        var gpsAccounts = await features.EnabledActiveAccountsAsync(FeatureKeys.GpsIntegration, now, cancellationToken);
         var cutoff = now.AddDays(CredentialExpiryWithinDays);
         var emitted = 0;
 

@@ -15,6 +15,10 @@
     <PackageReference Include="HotChocolate.Execution.Abstractions" />
   </ItemGroup>
   <ItemGroup>
+    <!-- The scheduled-job host keeps its backoff arithmetic internal; the tests assert it directly. -->
+    <InternalsVisibleTo Include="Common.Web.Tests" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\Common.Application\Common.Application.csproj" />
     <ProjectReference Include="..\Common.Infrastructure\Common.Infrastructure.csproj" />
   </ItemGroup>

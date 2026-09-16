@@ -5,10 +5,11 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
     <ProjectReference Include="$(RepoRoot)TrackHubCommon/src/Common.Application/Common.Application.csproj" />
     <ProjectReference Include="$(RepoRoot)TrackHubCommon/src/Common.Domain/Common.Domain.csproj" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Domain\Domain.csproj" />
   </ItemGroup>
-</Project>
+</Project>

@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Common.Infrastructure.Time;
 using Common.Domain.Time;
 using Common.Infrastructure.Interceptors;
@@ -90,6 +91,7 @@ public static class DependencyInjection
             // The calendar of the account a request serves, read from Manager and cached (Manager
             // itself overrides this with a database-backed resolver).
             services.AddScoped<IAccountTimeZoneResolver, ManagerAccountTimeZoneResolver>();
+            services.TryAddSingleton<IClientCredentialsTokenProvider, ClientCredentialsTokenProvider>();
             services.AddSingleton<IGraphQLClientFactory, GraphQLClientFactory>();
             services.AddScoped<IIdentityService, IdentityService>();
         }

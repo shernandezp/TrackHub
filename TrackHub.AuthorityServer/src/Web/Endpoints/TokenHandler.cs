@@ -230,12 +230,21 @@ public sealed class TokenHandler(
     }
 
     // Re-validates the principal behind a refresh token against the current security state.
-    private async Task<bool> IsSubjectStillValidAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
+    internal async Task<bool> IsSubjectStillValidAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
     {
         var principalType = principal.FindFirst("principal_type")?.Value ?? "User";
 
         if (string.Equals(principalType, "Driver", StringComparison.OrdinalIgnoreCase))
         {
+            // The credential the session was issued from is what must still be active: a driver may
+            // hold several, and revoking one has to end ITS sessions even while the others live on.
+            if (Guid.TryParse(principal.FindFirst("driver_credential_id")?.Value, out var credentialId))
+            {
+                return await driverCredentialReader.IsCredentialActiveAsync(credentialId, cancellationToken);
+            }
+
+            // Refresh tokens issued before the credential claim existed carry only the driver, so they
+            // fall back to the driver-level check. Remove this branch once every such token has aged out.
             return Guid.TryParse(principal.FindFirst("driver_id")?.Value, out var driverId)
                 && await driverCredentialReader.HasActiveCredentialAsync(driverId, cancellationToken);
         }

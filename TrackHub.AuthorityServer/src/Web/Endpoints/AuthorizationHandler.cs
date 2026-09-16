@@ -72,6 +72,7 @@ public sealed class AuthorizationHandler
         if (string.Equals(principalType, "Driver", StringComparison.OrdinalIgnoreCase))
         {
             AddRequiredClaim(cookiePrincipal, claims, "driver_id");
+            AddRequiredClaim(cookiePrincipal, claims, "driver_credential_id");
             AddRequiredClaim(cookiePrincipal, claims, "account_id");
             claims.Add(AccessTokenClaim("client_id", DriverMobileClientId));
         }

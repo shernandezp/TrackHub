@@ -41,4 +41,9 @@ public sealed class DriverCredentialReader(SecurityDbContext context) : IDriverC
         => await context.DriverCredentials
             .AsNoTracking()
             .AnyAsync(x => x.DriverId == driverId && x.Active, cancellationToken);
+
+    public async Task<bool> IsCredentialActiveAsync(Guid driverCredentialId, CancellationToken cancellationToken)
+        => await context.DriverCredentials
+            .AsNoTracking()
+            .AnyAsync(x => x.DriverCredentialId == driverCredentialId && x.Active, cancellationToken);
 }

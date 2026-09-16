@@ -26,18 +26,6 @@ namespace TrackHub.Manager.Infrastructure.ManagerDB.Jobs;
 /// </summary>
 public sealed class AlertEvaluationStore(IApplicationDbContext context) : IAlertEvaluationStore
 {
-    public async Task<IReadOnlyCollection<Guid>> GetFeatureEnabledActiveAccountsAsync(
-        string featureKey, DateTimeOffset now, CancellationToken cancellationToken)
-        => await context.AccountFeatures
-            .Where(f => f.FeatureKey == featureKey && f.Enabled
-                && (f.EffectiveFrom == null || f.EffectiveFrom <= now)
-                && (f.EffectiveTo == null || f.EffectiveTo >= now)
-                // Suspended accounts are skipped.
-                && context.Accounts.Any(a => a.AccountId == f.AccountId && a.Active))
-            .Select(f => f.AccountId)
-            .Distinct()
-            .ToListAsync(cancellationToken);
-
     public async Task<IReadOnlyCollection<NotificationRuleVm>> GetEnabledRulesAsync(
         IReadOnlyCollection<Guid> accountIds, IReadOnlyCollection<string> triggerEvents, CancellationToken cancellationToken)
         => await context.NotificationRules
