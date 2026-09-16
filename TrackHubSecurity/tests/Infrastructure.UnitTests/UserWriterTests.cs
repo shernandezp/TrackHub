@@ -66,6 +66,25 @@ internal class UserWriterTests : Context
     }
 
     [Test]
+    public async Task CreateUserAsync_StampsVerified_SoTheUserCanSignIn()
+    {
+        User? added = null;
+        _dbContextMock.Setup(m => m.Users.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+                      .Returns((User model, CancellationToken token) =>
+                      {
+                          added = model;
+                          return new ValueTask<EntityEntry<User>>();
+                      });
+        _dbContextMock.Setup(m => m.SaveChangesAsync(It.IsAny<CancellationToken>()))
+                      .ReturnsAsync(1);
+
+        await _userWriter.CreateUserAsync(new CreateUserDto { Password = "password" }, Guid.NewGuid(), CancellationToken.None);
+
+        Assert.That(added, Is.Not.Null);
+        Assert.That(added!.Verified, Is.Not.Null, "an unverified user is refused by the AuthorityServer at sign-in");
+    }
+
+    [Test]
     public async Task UpdateUserAsync_ValidUserDto_UpdatesUser()
     {
         // Arrange

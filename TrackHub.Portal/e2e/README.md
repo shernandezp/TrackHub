@@ -88,9 +88,10 @@ under test is pointed at.
 | `E2E_TRIP_IN_TRANSIT_ID` | The pause/resume exception verbs | The trip lifecycle is GPS-driven (spec 11a); a browser cannot make a truck leave a zone. |
 | `E2E_CREATE_ACCOUNT=1` | The feature-gate test | Toggling a feature is account-wide; the shared master account is not changed by default. |
 | `E2E_ALLOW_GEOCODING_SWITCH=1` | Activating a geocoding provider | The active provider is platform-wide, affecting every account. |
+| `E2E_GOOGLE_MAPS=1` | Switching the account map provider | The flip lands on Google, and a Maps key that is not authorized for the portal origin answers `RefererNotAllowedMapError` — a broken map on every screen until the setting is put back. |
 | `E2E_ALLOW_ROLE_MATRIX_WRITE=1` | Granting/revoking a ROLE permission | A role grant widens what every holder may do. The POLICY matrix — additive grants that cannot dent the mandatory baseline — is exercised unconditionally instead. |
 | `E2E_ALLOW_PASSWORD_CHANGE=1` | Changing the administrator's password | One-way door unless `E2E_ADMIN_PASSWORD` itself meets the platform policy (8+ chars, upper, lower, digit): the Security validator refuses to set a weaker one back, and the seeded `12345678` is weaker. |
-| `E2E_MANAGER_*` / `E2E_USER_*` | The role-gate tests | A user created through the UI can never sign in — nothing in the platform sets `security.users.verified`. See the findings. |
+| `E2E_MANAGER_*` / `E2E_USER_*` | The role-gate tests | Optional. Unset, the setup project creates both principals through the real Account Management screens and the teardown removes them. |
 | `E2E_SCANNER=1` | reserved | The document scanner's final state; the upload surface is currently unreachable (see findings). |
 
 ---
@@ -273,9 +274,6 @@ test that seeds data:
   token would invalidate the session every other test in the worker signs in
   with; the portal path under test (`handleRefreshToken` → auth error → restart
   login) is identical either way.
-- **Blocked by defects, not by the suite.** A user created through the UI is never
-  marked verified, so the role-scoped tests fail naming that refusal — a principal
-  the product cannot sign in is a defect, not a missing fixture.
 - **Not covered.** Branding logo upload and its reflection in the shell, the
   >500-geofence page drain, the report truncation notice (needs data), the
   document panel's version/signature surfaces, and per-feature sidenav proof for

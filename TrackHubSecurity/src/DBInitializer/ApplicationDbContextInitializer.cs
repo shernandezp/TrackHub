@@ -177,7 +177,10 @@ internal class ApplicationDbContextInitializer(ILogger<ApplicationDbContextIniti
                 null,
                 true,
                 0,
-                PlatformBootstrap.MasterAccountId);
+                PlatformBootstrap.MasterAccountId)
+            {
+                Verified = DateTimeOffset.UtcNow
+            };
 
             context.Users.Add(administrator);
             // Well-known id, matching the replica Manager seeds: a minted-per-seeder guid gave the

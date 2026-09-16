@@ -6,7 +6,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { test, expect, unique } from '../fixtures';
+import { test, expect, flag, unique } from '../fixtures';
 import { NAV_KEYS, NAV_ROUTES } from '../pages/shell';
 import type { NavKey } from '../pages/shell';
 import { PORTAL_ROOT } from '../fixtures/env';
@@ -204,6 +204,14 @@ test.describe('shell', () => {
     page,
     t,
   }) => {
+    // Switching the account to Google renders every map screen against the Google Maps
+    // API: without a key authorized for the portal's origin the map is broken until the
+    // setting is put back, so the flip is only driven where the environment can serve it.
+    test.skip(
+      !flag('E2E_GOOGLE_MAPS'),
+      'Set E2E_GOOGLE_MAPS=1 when the stack has a Maps key authorized for the portal origin.'
+    );
+
     // Saving confirms through the app's own toast, not a native dialog.
     const saveToast = page.getByRole('alert').filter({ hasText: t('settings.saveMessage') });
 

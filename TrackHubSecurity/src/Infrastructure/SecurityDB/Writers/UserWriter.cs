@@ -56,6 +56,9 @@ public sealed class UserWriter(IApplicationDbContext context, ICurrentPrincipal 
             accountId,
             userDto.IntegrationUser);
 
+        // Sign-in is refused while `verified` is null, and the platform has no self-registration.
+        user.Verified = DateTimeOffset.UtcNow;
+
         await Context.Users.AddAsync(user, cancellationToken);
 
         await Context.SaveChangesAsync(cancellationToken);
