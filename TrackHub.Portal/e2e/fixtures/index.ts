@@ -18,7 +18,7 @@ import { ApiClient } from './api';
 import { CleanupRegistry } from './data';
 import { config, storageStatePath } from './env';
 import type { RoleName } from './env';
-import { authFiles } from './auth';
+import { authFiles, readRefusals } from './auth';
 import { translatorFor } from './i18n';
 import type { Language, Translator } from './i18n';
 import { Shell } from '../pages/shell';
@@ -44,14 +44,20 @@ export interface E2EWorkerFixtures {
   api: ApiClient;
 }
 
-/** Opens a second context for another role, or skips the test when it has none. */
+/** Opens a second context for another role. A role that cannot sign in is a FAILURE. */
 async function contextForRole(
   browser: import('@playwright/test').Browser,
   role: RoleName
 ): Promise<BrowserContext> {
   if (!authFiles.hasRole(role)) {
-    // A specific skip beats a silent pass: the message names what is missing.
-    base.skip(true, `No stored session for the "${role}" role — set E2E_${role.toUpperCase()}_EMAIL/PASSWORD or let setup create one.`);
+    // The setup project creates this principal itself, so "no session" means the platform refused
+    // one it had just accepted as a user. Skipping that would hide a defect behind a green run.
+    const refusal = readRefusals()[role];
+    throw new Error(
+      refusal
+        ? `The "${role}" principal exists but cannot sign in: ${refusal}`
+        : `No stored session for the "${role}" role, and setup recorded no reason.`
+    );
   }
   return browser.newContext({
     baseURL: config.baseURL,

@@ -6,7 +6,7 @@
 import { expect } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import type { Translator } from '../fixtures/i18n';
-import { tokenExchange } from '../fixtures/auth';
+import { principalLoaded, tokenExchange } from '../fixtures/auth';
 
 /** Every route key the sidenav can render, in the order `routes.tsx` declares them. */
 export const NAV_KEYS = [
@@ -108,8 +108,10 @@ export class Shell {
     }
     this.established = false;
     const exchanged = tokenExchange(this.page).catch(() => null);
+    const principal = principalLoaded(this.page);
     await this.page.goto('/dashboard');
     await exchanged;
+    await principal;
     await this.ready();
     this.established = true;
   }
@@ -122,8 +124,10 @@ export class Shell {
   async reloadTo(key: NavKey): Promise<void> {
     this.established = false;
     const exchanged = tokenExchange(this.page).catch(() => null);
+    const principal = principalLoaded(this.page);
     await this.page.reload();
     await exchanged;
+    await principal;
     this.established = true;
     await this.open(key);
   }

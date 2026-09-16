@@ -101,9 +101,20 @@ export class CrudFlow {
     return { labelled, fallback: row.getByRole('button').last() };
   }
 
+  /** Retried: a row refetched mid-click swallows it, and pressing again only re-opens the dialog. */
   private async clickDelete(row: import('@playwright/test').Locator): Promise<void> {
     const { labelled, fallback } = this.deleteButton(row);
-    await ((await labelled.count()) > 0 ? labelled.first() : fallback).click();
+    const button = (await labelled.count()) > 0 ? labelled.first() : fallback;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      await button.click();
+      try {
+        await expect(this.confirm.root).toBeVisible({ timeout: 5_000 });
+        return;
+      } catch {
+        continue;
+      }
+    }
+    await expect(this.confirm.root).toBeVisible();
   }
 
   /** Deletes the row through its confirm dialog and waits for it to disappear. */

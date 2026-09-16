@@ -39,7 +39,7 @@ test.describe('shell', () => {
 
     // The seeded administrator holds Administrator + Manager and the account has
     // every feature on, so the full route table is reachable.
-    expect(await shell.visibleNavKeys()).toEqual([...NAV_KEYS]);
+    await expect.poll(() => shell.visibleNavKeys(), { timeout: 30_000 }).toEqual([...NAV_KEYS]);
 
     for (const key of NAV_KEYS) {
       if (key === 'platformStatus') continue; // chrome-less: covered by its own spec

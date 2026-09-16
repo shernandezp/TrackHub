@@ -203,8 +203,8 @@ e2e/
   `Section.findRowAnyPage` walks them.
 - The configurator drawer is always mounted, so a page-wide
   `getByRole('button', { name: 'Save' })` can match it. Scope to the card.
-- The Configurator's Save calls `window.alert` — register `page.on('dialog')`
-  before clicking.
+- Saves confirm through the app's own snackbar (`getByRole('alert')`), not a
+  native dialog.
 
 ---
 
@@ -274,8 +274,8 @@ test that seeds data:
   with; the portal path under test (`handleRefreshToken` → auth error → restart
   login) is identical either way.
 - **Blocked by defects, not by the suite.** A user created through the UI is never
-  marked verified, so the "Add is absent without write permission" proof and the
-  lock/unlock flow skip with that reason rather than assert a false pass.
+  marked verified, so the role-scoped tests fail naming that refusal — a principal
+  the product cannot sign in is a defect, not a missing fixture.
 - **Not covered.** Branding logo upload and its reflection in the shell, the
   >500-geofence page drain, the report truncation notice (needs data), the
   document panel's version/signature surfaces, and per-feature sidenav proof for
