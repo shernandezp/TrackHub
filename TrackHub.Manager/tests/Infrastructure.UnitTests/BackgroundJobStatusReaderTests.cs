@@ -12,7 +12,7 @@ namespace Infrastructure.UnitTests;
 public class BackgroundJobStatusReaderTests
 {
     private static ApplicationDbContext NewContext(string name)
-        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).Options);
+        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking).Options);
 
     private static BackgroundJobRun Run(string jobKey, DateTimeOffset startedAt, string status = "Succeeded", Guid? accountId = null, string? errorCode = null)
         => new(jobKey, accountId, null, $"{jobKey}:{startedAt:O}:{Guid.NewGuid()}", status, 1, startedAt)

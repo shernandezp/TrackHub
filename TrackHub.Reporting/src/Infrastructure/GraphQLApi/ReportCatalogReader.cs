@@ -68,7 +68,7 @@ public class ReportCatalogReader(IGraphQLClientFactory graphQLClient, IMemoryCac
 
         if (response.Errors is { Length: > 0 })
         {
-            throw new GraphQLException(response.Errors.ConvertToIError());
+            throw new GraphQLException(response.Errors.ConvertToUpstreamIError());
         }
 
         ReportMetadataVm? result = null;

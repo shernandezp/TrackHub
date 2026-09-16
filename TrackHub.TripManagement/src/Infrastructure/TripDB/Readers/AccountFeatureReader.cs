@@ -65,8 +65,19 @@ public sealed class AccountFeatureReader(IApplicationDbContext context) : IAccou
 
     public async Task<TripAccountConfigVm> GetAccountConfigAsync(Guid accountId, CancellationToken cancellationToken)
     {
+        var now = DateTimeOffset.UtcNow;
+
+        // Same predicate and ordering as IsFeatureEnabledAsync above: with more than one row and no
+        // ORDER BY, PostgreSQL returned an arbitrary one, so a superseded row could silently decide
+        // whether trips auto-start and auto-complete.
         var configurationJson = await context.AccountFeatures
-            .Where(x => x.AccountId == accountId && x.FeatureKey == FeatureKeys.TripManagement)
+            .Where(x => x.AccountId == accountId
+                && x.FeatureKey == FeatureKeys.TripManagement
+                && x.Enabled
+                && (!x.EffectiveFrom.HasValue || x.EffectiveFrom <= now)
+                && (!x.EffectiveTo.HasValue || x.EffectiveTo >= now))
+            .OrderByDescending(x => x.EffectiveFrom ?? DateTimeOffset.MinValue)
+            .ThenByDescending(x => x.AccountFeatureId)
             .Select(x => x.ConfigurationJson)
             .FirstOrDefaultAsync(cancellationToken);
 

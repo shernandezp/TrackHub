@@ -12,7 +12,7 @@ namespace Infrastructure.UnitTests;
 public class DocumentWriterTests
 {
     private static ApplicationDbContext NewContext(string name)
-        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).Options);
+        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking).Options);
 
     private static ICurrentPrincipal Principal(Guid accountId, PrincipalType type = PrincipalType.User)
     {

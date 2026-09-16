@@ -32,35 +32,46 @@ public sealed class OperatorHealthCheckReader(IApplicationDbContext context, ICu
             ?? throw new NotFoundException("Operator", $"{operatorId}");
         RequireAccountAccess(op.AccountId);
 
-        var checks = await Context.OperatorHealthChecks
-            .Where(c => c.OperatorId == operatorId && c.StartedAt >= since)
-            .Select(c => new { c.Status, c.LatencyMs, c.StartedAt, c.ErrorCode })
-            .ToListAsync(cancellationToken);
+        // Aggregated in SQL. The window is caller-controlled up to 90 days and there is a check per
+        // sync cycle, so materialising the rows pulled six figures of them into the host to produce
+        // eleven scalars.
+        var checks = Context.OperatorHealthChecks
+            .Where(c => c.OperatorId == operatorId && c.StartedAt >= since);
 
-        var total = checks.Count;
-        var healthy = checks.Count(c => c.Status == (int)OperatorHealthStatus.Healthy);
-        var degraded = checks.Count(c => c.Status == (int)OperatorHealthStatus.Degraded);
-        var offline = checks.Count(c => c.Status == (int)OperatorHealthStatus.Offline);
-        var failures = degraded + offline;
-        var uptime = total == 0 ? 0d : Math.Round(100d * healthy / total, 2);
-        var avgLatency = checks.Where(c => c.LatencyMs.HasValue).Select(c => (double)c.LatencyMs!.Value).DefaultIfEmpty().Average();
-        var hasLatency = checks.Any(c => c.LatencyMs.HasValue);
-        var last = checks.OrderByDescending(c => c.StartedAt).FirstOrDefault();
-        var lastFailure = checks.Where(c => c.Status != (int)OperatorHealthStatus.Healthy)
-            .OrderByDescending(c => c.StartedAt).FirstOrDefault();
+        var totals = await checks
+            .GroupBy(_ => 1)
+            .Select(g => new
+            {
+                Total = g.Count(),
+                Healthy = g.Count(c => c.Status == (int)OperatorHealthStatus.Healthy),
+                Degraded = g.Count(c => c.Status == (int)OperatorHealthStatus.Degraded),
+                Offline = g.Count(c => c.Status == (int)OperatorHealthStatus.Offline),
+                AverageLatency = g.Average(c => (double?)c.LatencyMs),
+                LastStartedAt = g.Max(c => (DateTimeOffset?)c.StartedAt)
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var lastFailure = await checks
+            .Where(c => c.Status != (int)OperatorHealthStatus.Healthy)
+            .OrderByDescending(c => c.StartedAt)
+            .Select(c => new { c.StartedAt, c.ErrorCode })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        var total = totals?.Total ?? 0;
+        var healthy = totals?.Healthy ?? 0;
 
         return new OperatorHealthSummaryVm(
             operatorId,
             since,
             total,
             healthy,
-            degraded,
-            offline,
-            failures,
-            uptime,
-            hasLatency ? avgLatency : null,
-            last is null ? null : last.StartedAt,
-            lastFailure is null ? null : lastFailure.StartedAt,
+            totals?.Degraded ?? 0,
+            totals?.Offline ?? 0,
+            (totals?.Degraded ?? 0) + (totals?.Offline ?? 0),
+            total == 0 ? 0d : Math.Round(100d * healthy / total, 2),
+            totals?.AverageLatency,
+            totals?.LastStartedAt,
+            lastFailure?.StartedAt,
             lastFailure?.ErrorCode);
     }
 

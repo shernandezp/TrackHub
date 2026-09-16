@@ -40,11 +40,14 @@ public class AdminReportReader(IGraphQLClientFactory graphQLClient)
                     }
                 }";
 
-    // Batched master read: every account's features in one call (the matrix report previously
-    // fanned out one accountFeaturesMaster call per account).
+    // The master feed is paged: it spans every tenant, so an unpaged read grows without bound.
+    private const int MasterFeaturePageSize = 500;
+
+    // Batched master read: every account's features (the matrix report previously fanned out one
+    // accountFeaturesMaster call per account).
     internal const string AllAccountFeaturesMasterQuery = @"
-                query {
-                    allAccountFeaturesMaster {
+                query($skip: Int!, $take: Int!) {
+                    allAccountFeaturesMaster(query: { skip: $skip, take: $take }) {
                         accountId
                         featureKey
                         enabled
@@ -96,8 +99,21 @@ public class AdminReportReader(IGraphQLClientFactory graphQLClient)
 
     public async Task<IReadOnlyCollection<AdminAccountFeatureVm>> GetAllAccountFeaturesAsync(CancellationToken cancellationToken)
     {
-        var request = new GraphQLRequest { Query = AllAccountFeaturesMasterQuery };
-        return await QueryAsync<List<AdminAccountFeatureVm>>(request, cancellationToken);
+        var features = new List<AdminAccountFeatureVm>();
+        for (var skip = 0; ; skip += MasterFeaturePageSize)
+        {
+            var request = new GraphQLRequest
+            {
+                Query = AllAccountFeaturesMasterQuery,
+                Variables = new { skip, take = MasterFeaturePageSize }
+            };
+            var page = await QueryAsync<List<AdminAccountFeatureVm>>(request, cancellationToken);
+            features.AddRange(page);
+            if (page.Count < MasterFeaturePageSize)
+            {
+                return features;
+            }
+        }
     }
 
     public Task<IReadOnlyCollection<AdminGroupVm>> GetGroupsByAccountAsync(CancellationToken cancellationToken)

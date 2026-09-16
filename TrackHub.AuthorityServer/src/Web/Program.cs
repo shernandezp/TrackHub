@@ -13,6 +13,10 @@
 //  limitations under the License.
 //
 
+using Common.Web.Infrastructure;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
+using TrackHub.AuthorityServer.Web.Helpers;
 using System.Globalization;
 using Ardalis.GuardClauses;
 using Microsoft.AspNetCore.Authentication;
@@ -78,6 +82,23 @@ builder.Services.AddHealthChecks()
             .AddDbContextCheck<SecurityDbContext>();
 
 //Register Handlers
+builder.Services.AddScoped<SubjectValidity>();
+
+// The per-user lockout counts failures against ONE account, so it does nothing against spraying a
+// single password across many addresses. This is the per-address half of that pair.
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy(CredentialRateLimit.Policy, httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = CredentialRateLimit.PerMinute(builder.Configuration),
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+            }));
+});
 builder.Services.AddScoped<AuthorizationHandler>();
 builder.Services.AddScoped<TokenHandler>();
 
@@ -101,12 +122,7 @@ if (!app.Environment.IsDevelopment())
 app.UseRequestLocalization(localizationOptions);
 
 // Trust reverse proxy headers (nginx terminates SSL)
-var forwardedHeadersOptions = new ForwardedHeadersOptions
-{
-    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-};
-forwardedHeadersOptions.KnownIPNetworks.Clear();
-forwardedHeadersOptions.KnownProxies.Clear();
+var forwardedHeadersOptions = TrustedProxies.Create(builder.Configuration);
 app.UseForwardedHeaders(forwardedHeadersOptions);
 
 app.UsePathBase("/Identity");
@@ -125,6 +141,9 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// After UseAuthentication so a partition can read the caller's claims.
+app.UseRateLimiter();
+
 app.UseExceptionHandler(options => { });
 
 app.MapGet("~/authorize", async (HttpContext context) =>
@@ -137,7 +156,7 @@ app.MapPost("~/token", async (HttpContext context) =>
 {
     var tokenHandler = context.RequestServices.GetRequiredService<TokenHandler>();
     return await tokenHandler.Exchange(context);
-});
+}).RequireRateLimiting(CredentialRateLimit.Policy);
 
 app.MapPost("~/logout", async (HttpContext context) =>
 {

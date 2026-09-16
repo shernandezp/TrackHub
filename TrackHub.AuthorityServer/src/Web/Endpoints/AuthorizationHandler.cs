@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using TrackHub.AuthorityServer.Web.Helpers;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using OpenIddict.Abstractions;
@@ -23,7 +24,7 @@ using Microsoft.AspNetCore;
 namespace TrackHub.AuthorityServer.Web.Endpoints;
 
 // This class handles the authorization process.
-public sealed class AuthorizationHandler
+public sealed class AuthorizationHandler(SubjectValidity subjectValidity)
 {
     private const string DriverMobileClientId = "driver_mobile_client";
 
@@ -45,6 +46,16 @@ public sealed class AuthorizationHandler
         }
 
         var cookiePrincipal = result.Principal ?? throw new InvalidOperationException("The authentication cookie principal cannot be retrieved.");
+
+        // Offboarding is not effective until the cookie expires unless the subject is re-checked
+        // here: the refresh grant does this, but this endpoint mints tokens from the cookie alone.
+        if (!await subjectValidity.IsStillValidAsync(cookiePrincipal, context.RequestAborted))
+        {
+            await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            await ChallengeWithCurrentRequestAsync(context);
+            return;
+        }
+
         var principalType = cookiePrincipal.FindFirst("principal_type")?.Value ?? "User";
 
         if (string.Equals(request.ClientId, DriverMobileClientId, StringComparison.OrdinalIgnoreCase)
@@ -62,7 +73,14 @@ public sealed class AuthorizationHandler
             return;
         }
 
-        var subject = cookiePrincipal.Claims.Single(x => x.Type == ClaimTypes.Sid).Value;
+        var subject = cookiePrincipal.FindFirst(ClaimTypes.Sid)?.Value;
+        if (string.IsNullOrWhiteSpace(subject))
+        {
+            await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            await ChallengeWithCurrentRequestAsync(context);
+            return;
+        }
+
         var claims = new List<Claim>
         {
             AccessTokenClaim(OpenIddictConstants.Claims.Subject, subject),

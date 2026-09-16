@@ -14,21 +14,31 @@
 //
 
 using System.Text.Json;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace TrackHub.Router.Infrastructure.ManagerApi;
 
-public class AccountReader(IGraphQLClientFactory graphQLClient)
-    : GraphQLService(graphQLClient.CreateClient(Clients.Manager)), IAccountReader
+public class AccountReader(IGraphQLClientFactory graphQLClient, IMemoryCache cache)
+    : GraphQLService(graphQLClient.CreateClient(Clients.Manager, asService: true)), IAccountReader
 {
     // Fallback cadence (seconds) when the gps.integration feature omits a storing interval.
     private const int DefaultStoringIntervalSeconds = 360;
 
+    // The three worker loops ask for this set every 10 and 60 seconds for data that changes rarely.
+    // The same TTL the request path uses for derived feature flags, so a toggle still takes effect
+    // within a minute everywhere.
+    private static readonly TimeSpan AccountsCacheTtl = TimeSpan.FromSeconds(60);
+    private const string AccountsCacheKey = "router:accounts-to-sync";
+
+    // Master feeds are read a page at a time; the Manager caps a page at MasterPageSize rows.
+    private const int MasterPageSize = 500;
+
     // Single source of truth for the queries this reader sends; the
     // ServiceContracts tests validate these exact strings against the Manager schema.
     internal const string AccountsToSyncQuery = @"
-                query($filter: FiltersInput!) {
+                query($filter: FiltersInput!, $skip: Int!, $take: Int!) {
                     accountSettingsMaster(
-                        query: { filter: $filter }
+                        query: { filter: $filter, skip: $skip, take: $take }
                       ) {
                             accountId
                        }
@@ -40,8 +50,8 @@ public class AccountReader(IGraphQLClientFactory graphQLClient)
                 }";
 
     internal const string AllAccountFeaturesQuery = @"
-                query {
-                    allAccountFeaturesMaster {
+                query($skip: Int!, $take: Int!) {
+                    allAccountFeaturesMaster(query: { skip: $skip, take: $take }) {
                         accountId
                         featureKey
                         enabled
@@ -53,32 +63,70 @@ public class AccountReader(IGraphQLClientFactory graphQLClient)
 
     public async Task<IEnumerable<AccountSettingsVm>> GetAccountsToSyncAsync(CancellationToken cancellationToken)
     {
-        var request = new GraphQLRequest
+        if (cache.TryGetValue(AccountsCacheKey, out IReadOnlyCollection<AccountSettingsVm>? cached) && cached is not null)
         {
-            Query = AccountsToSyncQuery,
-            Variables = new
-            {
-                filter = new
-                {
-                    filters = Array.Empty<object>()
-                }
-            }
-        };
-        var accounts = await QueryAsync<IEnumerable<AccountSettingsVm>>(request, cancellationToken);
+            return cached;
+        }
 
-        // Two round trips regardless of account count: the account list plus every account's
-        // features in one batched master read (previously one accountFeatures call per account).
-        var featureRequest = new GraphQLRequest { Query = AllAccountFeaturesQuery };
-        var allFeatures = await QueryAsync<IReadOnlyCollection<AccountFeatureMasterStateVm>>(featureRequest, cancellationToken);
-        var featuresByAccount = allFeatures
+        var accounts = await ReadAccountsAsync(cancellationToken);
+        var featuresByAccount = (await ReadAllFeaturesAsync(cancellationToken))
             .GroupBy(f => f.AccountId)
             .ToDictionary(g => g.Key, g => (IReadOnlyCollection<AccountFeatureStateVm>)g
                 .Select(f => new AccountFeatureStateVm(f.FeatureKey, f.Enabled, f.EffectiveFrom, f.EffectiveTo, f.ConfigurationJson))
                 .ToList());
 
-        return accounts
+        var resolved = accounts
             .Select(account => BuildAccountSettings(account, featuresByAccount.GetValueOrDefault(account.AccountId, [])))
             .ToList();
+
+        cache.Set(AccountsCacheKey, (IReadOnlyCollection<AccountSettingsVm>)resolved, AccountsCacheTtl);
+        return resolved;
+    }
+
+    private async Task<List<AccountSettingsVm>> ReadAccountsAsync(CancellationToken cancellationToken)
+    {
+        var accounts = new List<AccountSettingsVm>();
+        for (var skip = 0; ; skip += MasterPageSize)
+        {
+            var request = new GraphQLRequest
+            {
+                Query = AccountsToSyncQuery,
+                Variables = new
+                {
+                    filter = new
+                    {
+                        filters = Array.Empty<object>()
+                    },
+                    skip,
+                    take = MasterPageSize
+                }
+            };
+            var page = await QueryAsync<IReadOnlyCollection<AccountSettingsVm>>(request, cancellationToken);
+            accounts.AddRange(page);
+            if (page.Count < MasterPageSize)
+            {
+                return accounts;
+            }
+        }
+    }
+
+    private async Task<List<AccountFeatureMasterStateVm>> ReadAllFeaturesAsync(CancellationToken cancellationToken)
+    {
+        var features = new List<AccountFeatureMasterStateVm>();
+        for (var skip = 0; ; skip += MasterPageSize)
+        {
+            var request = new GraphQLRequest
+            {
+                Query = AllAccountFeaturesQuery,
+                Variables = new { skip, take = MasterPageSize }
+            };
+            var page = await QueryAsync<IReadOnlyCollection<AccountFeatureMasterStateVm>>(request, cancellationToken);
+            features.AddRange(page);
+            if (page.Count < MasterPageSize)
+            {
+                return features;
+            }
+        }
     }
 
     public async Task<bool> IsFeatureEnabledAsync(Guid accountId, string featureKey, CancellationToken cancellationToken)

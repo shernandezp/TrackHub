@@ -107,7 +107,7 @@ public sealed class UserReader(IApplicationDbContext context, ICurrentPrincipal 
                 u.Policies.Select(p => new PolicyVm(p.PolicyId, p.Name)).ToList()))
             .FirstAsync(cancellationToken);
 
-        RequireAccountAccess(user.AccountId);
+        await RequireAccountAccessAsync(user.AccountId, cancellationToken);
         return user;
     }
 
@@ -336,16 +336,18 @@ public sealed class UserReader(IApplicationDbContext context, ICurrentPrincipal 
     public async Task<bool> IsManagerAsync(Guid userId, Guid managerId, CancellationToken cancellationToken)
     {
         // Retrieve the account ID of the user
-        var user = await Context.Users.FindAsync(userId, cancellationToken)
+        var user = await Context.Users.FindAsync([userId], cancellationToken)
             ?? throw new NotFoundException(nameof(User), $"{userId}");
 
         // Check if the manager is part of the same account and if a role parent of the manager is top level
-        return await Context.Users
+        var isSameAccountManager = await Context.Users
             .Where(u => u.UserId == managerId && u.AccountId == user.AccountId)
             .SelectMany(u => u.Roles)
             .SelectMany(r => Context.Roles
                 .Where(pr => pr.RoleId == r.ParentRoleId && pr.ParentRoleId == null))
             .AnyAsync(cancellationToken);
+
+        return isSameAccountManager && !await SubjectOutranksCallerAsync(userId, cancellationToken);
     }
 
 }

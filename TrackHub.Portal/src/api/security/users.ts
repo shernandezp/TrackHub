@@ -157,10 +157,10 @@ export async function updateCurrentUser(user: UpdateCurrentUserDtoInput): Promis
   return data.updateCurrentUser;
 }
 
-export async function updatePassword(userId: string, password: string): Promise<boolean> {
+export async function updatePassword(userId: string, password: string, currentPassword?: string): Promise<boolean> {
   const data = await executeGraphQL('security', UpdatePasswordDocument, {
     id: userId,
-    user: { userId, password },
+    user: { userId, password, currentPassword },
   });
   return data.updatePassword;
 }

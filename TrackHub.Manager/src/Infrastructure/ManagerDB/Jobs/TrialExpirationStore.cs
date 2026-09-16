@@ -49,13 +49,13 @@ public sealed class TrialExpirationStore(IApplicationDbContext context) : ITrial
     {
         context.ChangeTracker.Clear();
 
-        var account = await context.Accounts.FirstOrDefaultAsync(a => a.AccountId == accountId, cancellationToken);
+        var account = await context.Accounts
+            .AsTracking().FirstOrDefaultAsync(a => a.AccountId == accountId, cancellationToken);
         if (account is null || (AccountStatus)account.Status != AccountStatus.Trial)
         {
             return false;
         }
 
-        context.Accounts.Attach(account);
         account.Status = (short)AccountStatus.Suspended;
         account.Active = false;
         account.StatusChangedAt = startedAt;

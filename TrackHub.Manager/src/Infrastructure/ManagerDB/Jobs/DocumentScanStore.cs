@@ -42,24 +42,24 @@ public sealed class DocumentScanStore(IApplicationDbContext context) : IDocument
     {
         context.ChangeTracker.Clear();
 
-        var entity = await context.Documents.FirstOrDefaultAsync(d => d.DocumentId == document.DocumentId, cancellationToken);
+        var entity = await context.Documents
+            .AsTracking().FirstOrDefaultAsync(d => d.DocumentId == document.DocumentId, cancellationToken);
         if (entity is null)
         {
             return;
         }
 
-        context.Documents.Attach(entity);
         entity.ScanStatus = outcome.ScanStatus;
         if (outcome.Activate)
         {
             entity.Status = DocumentStatuses.Active;
         }
 
-        var version = await context.DocumentVersions.FirstOrDefaultAsync(
+        var version = await context.DocumentVersions
+            .AsTracking().FirstOrDefaultAsync(
             v => v.DocumentId == document.DocumentId && v.VersionNumber == document.CurrentVersion, cancellationToken);
         if (version is not null)
         {
-            context.DocumentVersions.Attach(version);
             version.ScanStatus = outcome.ScanStatus;
         }
 

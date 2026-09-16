@@ -79,8 +79,8 @@ function Overview() {
       secondSurname: values.secondSurname,
       dob: values.dob,
     });
-  const updatePassword = (userId: string, userData: { password?: string }): Promise<boolean> =>
-    updatePasswordMutation.mutateAsync({ userId, password: userData.password! });
+  const updatePassword = (userId: string, userData: { password?: string; currentPassword?: string }): Promise<boolean> =>
+    updatePasswordMutation.mutateAsync({ userId, password: userData.password!, currentPassword: userData.currentPassword });
 
   // Keep the global spinner UX while the profile loads.
   useEffect(() => {

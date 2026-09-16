@@ -36,7 +36,7 @@ public class PublicLinkGrantResolverTests
     private const string Scope = "trip.track";
 
     private static ApplicationDbContext NewContext(string name)
-        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).Options);
+        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking).Options);
 
     private static PublicLinkGrant Grant(Guid accountId, string resourceId, string scopes = Scope, string token = Token)
         => new(accountId, ResourceType, resourceId, scopes, "customer tracking", PublicLinkTokenHasher.Hash(token), DateTimeOffset.UtcNow.AddDays(1), "creator");

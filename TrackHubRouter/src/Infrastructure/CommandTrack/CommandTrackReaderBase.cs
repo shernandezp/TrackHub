@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using System.Net;
 using Ardalis.GuardClauses;
 using Common.Domain.Enums;
 using TrackHub.Router.Infrastructure.CommandTrack.Helpers;
@@ -29,6 +30,7 @@ public abstract class CommandTrackReaderBase(ICredentialHttpClientFactory httpCl
     IProviderSessionStore sessionStore)
 {
     private HttpClient? _httpClient;
+    private CredentialTokenDto? _credential;
 
     public ProtocolType Protocol => ProtocolType.CommandTrack;
 
@@ -42,11 +44,42 @@ public abstract class CommandTrackReaderBase(ICredentialHttpClientFactory httpCl
         Guard.Against.Null(credential, message: $"No CredentialToken configurations provided for {credential.CredentialId}");
         Guard.Against.Null(credential.Key, message: $"No Credential key found for {credential.CredentialId}");
 
+        _credential = credential;
         var tokenHelper = new TokenHelper(credentialWriter, sessionStore);
         _httpClient = httpClientFactory.CreateClientAsync(credential, cancellationToken);
         var token = await tokenHelper.GetTokenAsync(_httpClient, credential, cancellationToken);
-        _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
+        SetBearer(token);
         Header = new Dictionary<string, string> { { "Client-ID", credential.Key } };
         HttpClientService.Init(_httpClient, $"{ProtocolType.CommandTrack}");
+    }
+
+    /// <summary>
+    /// Runs a provider read and, if the provider rejects the token with 401, authenticates again and
+    /// retries once. Without this a token revoked server-side before its recorded expiry fails every
+    /// sync for the operator until the credential is rotated by hand.
+    /// </summary>
+    private protected async Task<T?> WithReauthenticationAsync<T>(Func<Task<T?>> read, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await read();
+        }
+        catch (HttpRequestException exception) when (exception.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            if (_httpClient is null || _credential is not { } credential)
+            {
+                throw new InvalidOperationException("CommandTrack reader was not initialized.");
+            }
+
+            var tokenHelper = new TokenHelper(credentialWriter, sessionStore);
+            SetBearer(await tokenHelper.ForceRefreshTokenAsync(_httpClient, credential, cancellationToken));
+            return await read();
+        }
+    }
+
+    private void SetBearer(string token)
+    {
+        _httpClient!.DefaultRequestHeaders.Remove("Authorization");
+        _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
     }
 }

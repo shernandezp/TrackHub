@@ -76,11 +76,6 @@ public class IdentityService(IUserReader userReader,
     public async Task<bool> IsValidServiceAsync(string? client, CancellationToken token)
         => client != null && await clientReader.IsValidClientAsync(client, token);
 
-    public async Task<bool> IsValidServiceAsync(string? client, string resource, string action, CancellationToken token)
-        => client != null
-           && await clientReader.IsValidClientAsync(client, token)
-           && await serviceClientPermissionReader.HasPermissionAsync(client, resource, action, token);
-
     public async Task<bool> IsValidServiceAsync(string? client, string resource, string action, Guid? accountId, IReadOnlyCollection<string> scopes, IReadOnlyCollection<string> audiences, CancellationToken token)
         => client != null
            && await clientReader.IsValidClientAsync(client, token)

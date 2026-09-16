@@ -89,6 +89,7 @@ public sealed class TransporterGroupWriter(IApplicationDbContext context, ICurre
     public async Task DeleteTransporterGroupsAsync(Guid transporterId, CancellationToken cancellationToken)
     {
         var transporterGroups = await Context.TransportersGroup
+            .AsTracking()
             .Where(tg => tg.TransporterId == transporterId)
             .ToListAsync(cancellationToken);
 

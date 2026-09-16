@@ -40,7 +40,6 @@ public class CommonIdentityContractTests
         yield return new TestCaseData("IdentityService.IsInRole", Common.Infrastructure.IdentityService.IsInRoleQuery);
         yield return new TestCaseData("IdentityService.AuthorizeUser", Common.Infrastructure.IdentityService.AuthorizeUserQuery);
         yield return new TestCaseData("IdentityService.IsValidService", Common.Infrastructure.IdentityService.IsValidServiceQuery);
-        yield return new TestCaseData("IdentityService.IsValidServiceForResource", Common.Infrastructure.IdentityService.IsValidServiceForResourceQuery);
         yield return new TestCaseData("IdentityService.IsValidServiceForResourceFull", Common.Infrastructure.IdentityService.IsValidServiceForResourceFullQuery);
     }
 

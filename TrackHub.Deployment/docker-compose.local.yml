@@ -80,8 +80,8 @@ services:
     container_name: trackhub-nginx-local
     restart: unless-stopped
     ports:
-      - "8080:80"
-      - "8443:443"
+      - "127.0.0.1:8080:80"
+      - "127.0.0.1:8443:443"
     volumes:
       - ./nginx/nginx.local.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/local.d:/etc/nginx/local.d:ro
@@ -112,7 +112,7 @@ services:
   authority:
     <<: *local-service
     ports:
-      - "6001:8080"
+      - "127.0.0.1:6001:8080"
     volumes:
       - ./local/ca-bundle.crt:/app/ssl/ca-bundle.crt:ro
       - ./local/generated/appsettings.authority.json:/app/appsettings.json:ro
@@ -120,7 +120,7 @@ services:
   security:
     <<: *local-service
     ports:
-      - "6002:8080"
+      - "127.0.0.1:6002:8080"
     volumes:
       - ./local/ca-bundle.crt:/app/ssl/ca-bundle.crt:ro
       - ./local/generated/appsettings.security.json:/app/appsettings.json:ro
@@ -128,7 +128,7 @@ services:
   manager:
     <<: *local-service
     ports:
-      - "6003:8080"
+      - "127.0.0.1:6003:8080"
     volumes:
       - ./local/ca-bundle.crt:/app/ssl/ca-bundle.crt:ro
       - ./local/generated/appsettings.manager.json:/app/appsettings.json:ro
@@ -136,7 +136,7 @@ services:
   router:
     <<: *local-service
     ports:
-      - "6004:8080"
+      - "127.0.0.1:6004:8080"
     volumes:
       - ./local/ca-bundle.crt:/app/ssl/ca-bundle.crt:ro
       - ./local/generated/appsettings.router.json:/app/appsettings.json:ro
@@ -144,7 +144,7 @@ services:
   geofencing:
     <<: *local-service
     ports:
-      - "6005:8080"
+      - "127.0.0.1:6005:8080"
     volumes:
       - ./local/ca-bundle.crt:/app/ssl/ca-bundle.crt:ro
       - ./local/generated/appsettings.geofencing.json:/app/appsettings.json:ro
@@ -152,7 +152,7 @@ services:
   tripmanagement:
     <<: *local-service
     ports:
-      - "6006:8080"
+      - "127.0.0.1:6006:8080"
     volumes:
       - ./local/ca-bundle.crt:/app/ssl/ca-bundle.crt:ro
       - ./local/generated/appsettings.tripmanagement.json:/app/appsettings.json:ro
@@ -160,7 +160,7 @@ services:
   telemetry:
     <<: *local-service
     ports:
-      - "6007:8080"
+      - "127.0.0.1:6007:8080"
     volumes:
       - ./local/ca-bundle.crt:/app/ssl/ca-bundle.crt:ro
       - ./local/generated/appsettings.telemetry.json:/app/appsettings.json:ro
@@ -168,7 +168,7 @@ services:
   reporting:
     <<: *local-service
     ports:
-      - "6008:8080"
+      - "127.0.0.1:6008:8080"
     volumes:
       - ./local/ca-bundle.crt:/app/ssl/ca-bundle.crt:ro
       - ./local/generated/appsettings.reporting.json:/app/appsettings.json:ro

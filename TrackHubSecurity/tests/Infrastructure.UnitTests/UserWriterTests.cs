@@ -107,7 +107,7 @@ internal class UserWriterTests : Context
                       .ReturnsAsync(1); // Return a completed task
 
         // Act
-        await _userWriter.UpdatePasswordAsync(userPasswordDto, cancellationToken);
+        await _userWriter.UpdatePasswordAsync(userPasswordDto, verifyCurrentPassword: false, cancellationToken);
 
         // Assert
         // Add assertions to check if the password is updated properly

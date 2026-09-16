@@ -17,11 +17,12 @@ using Common.Domain.Time;
 using Common.Domain.Enums;
 using TrackHub.Manager.Infrastructure.Entities;
 using TrackHub.Manager.Infrastructure.Interfaces;
+using Common.Application.Interfaces;
 
 namespace TrackHub.Manager.Infrastructure.ManagerDB.Writers;
 
 // AccountWriter class is responsible for writing account-related data to the database
-public sealed class AccountWriter(IApplicationDbContext context) : IAccountWriter
+public sealed class AccountWriter(IApplicationDbContext context, ICurrentPrincipal principal) : IAccountWriter
 {
     // Creates a new account asynchronously
     // Parameters:
@@ -39,6 +40,7 @@ public sealed class AccountWriter(IApplicationDbContext context) : IAccountWrite
 
         account.TimeZoneId = AccountTimeZone.Normalize(accountDto.TimeZoneId);
         await context.Accounts.AddAsync(account, cancellationToken);
+        AddAuditEvent(account.AccountId, "CreateAccount", $"{account.AccountId}", null, Describe(account));
         await context.SaveChangesAsync(cancellationToken);
 
         return new AccountVm(
@@ -65,6 +67,7 @@ public sealed class AccountWriter(IApplicationDbContext context) : IAccountWrite
 
         context.Accounts.Attach(account);
 
+        var previous = Describe(account);
         account.Name = accountDto.Name;
         account.Description = accountDto.Description;
         account.Type = accountDto.TypeId;
@@ -77,6 +80,13 @@ public sealed class AccountWriter(IApplicationDbContext context) : IAccountWrite
         // into, the operational band {Trial, Active}.
         account.Active = ((AccountStatus)account.Status).IsOperational();
 
+        AddAuditEvent(account.AccountId, "UpdateAccount", $"{account.AccountId}", previous, Describe(account));
         await context.SaveChangesAsync(cancellationToken);
     }
+
+    private void AddAuditEvent(Guid accountId, string action, string resourceId, string? oldValuesJson, string? newValuesJson)
+        => context.AuditEvents.Add(AuditTrail.Create(principal, accountId, action, "Account", resourceId, oldValuesJson, newValuesJson));
+
+    private static string Describe(Account account)
+        => $$"""{"name":{{AuditJson.Quote(account.Name)}},"type":{{account.Type}},"status":{{account.Status}},"timeZoneId":{{AuditJson.Quote(account.TimeZoneId)}}}""";
 }

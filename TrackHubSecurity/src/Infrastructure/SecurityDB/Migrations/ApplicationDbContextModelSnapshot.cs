@@ -275,6 +275,15 @@ namespace TrackHub.Security.Infrastructure.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("attemptcount");
 
+                    b.Property<DateTimeOffset?>("ClaimedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("claimedat");
+
+                    b.Property<string>("ClaimedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("claimedby");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("createdat");

@@ -4,7 +4,7 @@ using TrackHub.Reporting.Domain.Interfaces;
 namespace TrackHub.Reporting.Infrastructure.GraphQLApi;
 
 public class AccountFeatureReader(IGraphQLClientFactory graphQLClient)
-    : GraphQLService(graphQLClient.CreateClient(Clients.Manager)), IAccountFeatureReader
+    : GraphQLService(graphQLClient.CreateClient(Clients.Manager, asService: true)), IAccountFeatureReader
 {
     internal const string ValidateFeatureEnabledQuery = @"
                 query($accountId: UUID!, $featureKey: String!) {

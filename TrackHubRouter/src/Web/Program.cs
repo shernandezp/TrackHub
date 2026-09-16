@@ -70,9 +70,12 @@ builder.Services.AddHostedService<SyncDispatchService>();
 
 var app = builder.Build();
 
-//Add Scalar API
-app.MapOpenApi();
-app.MapScalarApiReference();
+// The REST surface description and its interactive explorer are development aids only.
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+    app.MapScalarApiReference();
+}
 
 app.UseHeaderPropagation();
 
@@ -97,6 +100,6 @@ app.UseAuthorization();
 app.UseExceptionHandler(options => { });
 app.MapEndpoints(Assembly.GetExecutingAssembly());
 
-app.MapGraphQL();
+app.MapGraphQL().RequireAuthorization();
 
 app.Run();

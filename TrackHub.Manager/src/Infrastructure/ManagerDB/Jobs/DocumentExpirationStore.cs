@@ -42,7 +42,8 @@ public sealed class DocumentExpirationStore(IApplicationDbContext context) : IDo
     {
         context.ChangeTracker.Clear();
 
-        var entity = await context.AlertEvents.FirstOrDefaultAsync(
+        var entity = await context.AlertEvents
+            .AsTracking().FirstOrDefaultAsync(
             e => e.AccountId == alertEvent.AccountId
                 && e.DeduplicationKey == alertEvent.DeduplicationKey
                 && e.Status != "Resolved",
@@ -57,7 +58,6 @@ public sealed class DocumentExpirationStore(IApplicationDbContext context) : IDo
         }
         else
         {
-            context.AlertEvents.Attach(entity);
             entity.LastSeenAt = DateTimeOffset.UtcNow;
             entity.PayloadJson = alertEvent.PayloadJson;
         }
@@ -78,10 +78,10 @@ public sealed class DocumentExpirationStore(IApplicationDbContext context) : IDo
 
         if (markExpired)
         {
-            var document = await context.Documents.FirstOrDefaultAsync(d => d.DocumentId == documentId, cancellationToken);
+            var document = await context.Documents
+                .AsTracking().FirstOrDefaultAsync(d => d.DocumentId == documentId, cancellationToken);
             if (document is not null && document.Status == DocumentStatuses.Active)
             {
-                context.Documents.Attach(document);
                 document.Status = DocumentStatuses.Expired;
             }
         }

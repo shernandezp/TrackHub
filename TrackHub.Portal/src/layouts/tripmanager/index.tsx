@@ -130,6 +130,7 @@ import DeliveryOutcomeDialog from './components/DeliveryOutcomeDialog';
 import PodDialog from './components/PodDialog';
 import TollClassDialog from './components/TollClassDialog';
 import TripImportDialog from './components/TripImportDialog';
+import { useDebouncedValue } from 'utils/useDebouncedValue';
 
 const PAGE_SIZE = 10;
 const ALL = 'all';
@@ -209,7 +210,13 @@ function TripManager() {
   const [driverFilter, setDriverFilter] = useState<string>(ALL);
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
-  const [search, setSearch] = useState('');
+  // The box updates as the user types; the query waits for them to stop. Wired straight through, a
+  // twelve-character trip code issued twelve backend reads, each one a full page.
+  const [searchDraft, setSearchDraft] = useState('');
+  const search = useDebouncedValue(searchDraft);
+
+  // A narrower search can leave the current page past the end of the new result set.
+  useEffect(() => { setPage(0); }, [search]);
 
   const filteringExceptions = exception !== ALL;
 
@@ -990,10 +997,9 @@ function TripManager() {
     <DashboardLayout>
       <DashboardNavbar
         searchVisibility
-        searchQuery={search}
+        searchQuery={searchDraft}
         handleSearch={(event) => {
-          setPage(0);
-          setSearch(event.target.value);
+          setSearchDraft(event.target.value);
         }}
       />
       <ArgonBox py={2}>

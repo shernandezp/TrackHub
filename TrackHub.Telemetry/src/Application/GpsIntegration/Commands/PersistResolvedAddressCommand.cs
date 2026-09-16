@@ -45,9 +45,10 @@ public sealed class PersistResolvedAddressCommandValidator : AbstractValidator<P
 {
     public PersistResolvedAddressCommandValidator()
     {
-        RuleFor(v => v)
-            .Must(v => v.TransporterPositionHistoryId.HasValue || v.TransporterId.HasValue)
-            .WithMessage("Either TransporterPositionHistoryId or TransporterId is required.");
+        // TransporterId is what the caller's access is verified against, so it is always required;
+        // the history row id only ever narrows the write within that transporter.
+        RuleFor(v => v.TransporterId)
+            .NotEmpty();
 
         RuleFor(v => v.Address)
             .NotEmpty();

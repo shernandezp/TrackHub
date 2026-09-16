@@ -85,8 +85,8 @@ public class SynchronizeOperatorDevicesCommandHandlerTests
             null,
             "hash",
             "ACTIVE");
-        _deviceWriter.Setup(x => x.UpsertSynchronizedDeviceAsync(device, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new DeviceVm(
+        _deviceWriter.Setup(x => x.UpsertSynchronizedDevicesAsync(It.IsAny<Guid>(), It.IsAny<IReadOnlyCollection<DeviceDto>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new DeviceVm(
                 deviceId,
                 accountId,
                 operatorId,
@@ -104,7 +104,7 @@ public class SynchronizeOperatorDevicesCommandHandlerTests
                 DateTimeOffset.UtcNow,
                 DateTimeOffset.UtcNow,
                 null,
-                null));
+                null)]);
         _transporterWriter.Setup(x => x.CreateTransporterAsync(
                 It.Is<TransporterDto>(dto =>
                     dto.AccountId == accountId
@@ -179,8 +179,8 @@ public class SynchronizeOperatorDevicesCommandHandlerTests
             null,
             "hash",
             "ACTIVE");
-        _deviceWriter.Setup(x => x.UpsertSynchronizedDeviceAsync(device, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new DeviceVm(
+        _deviceWriter.Setup(x => x.UpsertSynchronizedDevicesAsync(It.IsAny<Guid>(), It.IsAny<IReadOnlyCollection<DeviceDto>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new DeviceVm(
                 deviceId,
                 accountId,
                 operatorId,
@@ -198,7 +198,7 @@ public class SynchronizeOperatorDevicesCommandHandlerTests
                 DateTimeOffset.UtcNow,
                 DateTimeOffset.UtcNow,
                 null,
-                null));
+                null)]);
         _transporterReader.Setup(x => x.FindAdoptableTransporterAsync(accountId, "Truck 101", It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingTransporterId);
         _assignmentWriter.Setup(x => x.AssignAsync(It.IsAny<TransporterDeviceAssignmentDto>(), It.IsAny<CancellationToken>()))
@@ -237,8 +237,8 @@ public class SynchronizeOperatorDevicesCommandHandlerTests
         var accountId = Guid.NewGuid();
         var operatorId = Guid.NewGuid();
         var device = new DeviceDto(accountId, operatorId, "SER-1", "Device 1", 101, null, (short)DeviceType.OBDScanner, null, null, "ACTIVE");
-        _deviceWriter.Setup(x => x.UpsertSynchronizedDeviceAsync(device, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new DeviceVm(
+        _deviceWriter.Setup(x => x.UpsertSynchronizedDevicesAsync(It.IsAny<Guid>(), It.IsAny<IReadOnlyCollection<DeviceDto>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new DeviceVm(
                 Guid.NewGuid(),
                 accountId,
                 operatorId,
@@ -256,7 +256,7 @@ public class SynchronizeOperatorDevicesCommandHandlerTests
                 DateTimeOffset.UtcNow,
                 DateTimeOffset.UtcNow,
                 null,
-                null));
+                null)]);
 
         await CreateHandler().Handle(
             new SynchronizeOperatorDevicesCommand(accountId, operatorId, [device], "corr-2", AutoAssignNewDevices: false),
@@ -283,12 +283,12 @@ public class SynchronizeOperatorDevicesCommandHandlerTests
             accountId, operatorId, "SER-9", "Device 9", 109, "Truck 109",
             (short)DeviceType.OBDScanner, null, "hash", "ACTIVE");
 
-        _deviceWriter.Setup(x => x.UpsertSynchronizedDeviceAsync(device, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new DeviceVm(
+        _deviceWriter.Setup(x => x.UpsertSynchronizedDevicesAsync(It.IsAny<Guid>(), It.IsAny<IReadOnlyCollection<DeviceDto>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new DeviceVm(
                 deviceId, accountId, operatorId, device.Serial, device.Name, device.Identifier,
                 device.ProviderDisplayName, DeviceType.OBDScanner, device.DeviceTypeId, device.Description,
                 device.ProviderMetadataHash, device.ProviderStatus, DetectedStatus.New,
-                DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, null, null));
+                DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, null, null)]);
 
         _transporterWriter.Setup(x => x.CreateTransporterAsync(It.IsAny<TransporterDto>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TransporterVm(transporterId, "Truck 109", TransporterType.FleetVehicle, (short)TransporterType.FleetVehicle));
@@ -394,12 +394,12 @@ public class SynchronizeOperatorDevicesCommandHandlerTests
             accountId, operatorId, "SER-9", "Device 9", 109, "Truck 109",
             (short)DeviceType.OBDScanner, null, "hash", "ACTIVE");
 
-        _deviceWriter.Setup(x => x.UpsertSynchronizedDeviceAsync(device, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new DeviceVm(
+        _deviceWriter.Setup(x => x.UpsertSynchronizedDevicesAsync(It.IsAny<Guid>(), It.IsAny<IReadOnlyCollection<DeviceDto>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new DeviceVm(
                 deviceId, accountId, operatorId, device.Serial, device.Name, device.Identifier,
                 device.ProviderDisplayName, DeviceType.OBDScanner, device.DeviceTypeId, device.Description,
                 device.ProviderMetadataHash, device.ProviderStatus, DetectedStatus.New,
-                DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, null, null));
+                DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, null, null)]);
         _transporterWriter.Setup(x => x.CreateTransporterAsync(It.IsAny<TransporterDto>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TransporterVm(transporterId, "Truck 109", TransporterType.FleetVehicle, (short)TransporterType.FleetVehicle));
         _assignmentWriter.Setup(x => x.AssignAsync(It.IsAny<TransporterDeviceAssignmentDto>(), It.IsAny<CancellationToken>()))

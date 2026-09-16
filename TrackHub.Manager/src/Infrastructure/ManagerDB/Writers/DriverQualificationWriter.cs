@@ -38,7 +38,6 @@ public sealed class DriverQualificationWriter(IApplicationDbContext context, ICu
         await RequireDriverInAccountAsync(qualification.DriverId, entity.AccountId, cancellationToken);
         await RequireDocumentInAccountAsync(qualification.DocumentId, entity.AccountId, cancellationToken);
 
-        Context.DriverQualifications.Attach(entity);
         var oldValues = AuditValues(entity);
         entity.DriverId = qualification.DriverId;
         entity.QualificationType = qualification.QualificationType;
@@ -68,7 +67,9 @@ public sealed class DriverQualificationWriter(IApplicationDbContext context, ICu
 
     private async Task<DriverQualification> GetForWriteAsync(Guid driverQualificationId, CancellationToken cancellationToken)
     {
-        var entity = await Context.DriverQualifications.FirstOrDefaultAsync(x => x.DriverQualificationId == driverQualificationId, cancellationToken)
+        var entity = await Context.DriverQualifications
+            .AsTracking()
+            .FirstOrDefaultAsync(x => x.DriverQualificationId == driverQualificationId, cancellationToken)
             ?? throw new NotFoundException(nameof(DriverQualification), driverQualificationId.ToString());
         RequireAccountWriteAccess(entity.AccountId);
         return entity;

@@ -15,6 +15,7 @@
 
 using TrackHub.Router.Infrastructure.GpsGate.Mappers;
 using TrackHub.Router.Domain.Interfaces;
+using TrackHub.Router.Domain.Extensions;
 
 namespace TrackHub.Router.Infrastructure.GpsGate;
 
@@ -52,7 +53,7 @@ public sealed class DeviceReader(
         {
             return [];
         }
-        var devicesDictionary = devices.ToDictionary(device => device.Identifier, device => device);
+        var devicesDictionary = devices.ToDeviceLookup(device => device.Identifier);
         return result
             .Where(d => devicesDictionary.ContainsKey(d.Id))
             .MapToDeviceVm(devicesDictionary);

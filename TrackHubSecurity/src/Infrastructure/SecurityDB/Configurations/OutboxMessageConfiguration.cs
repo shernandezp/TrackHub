@@ -35,6 +35,8 @@ public sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<Outbox
         builder.Property(x => x.LastError).HasColumnName("lasterror").HasMaxLength(2000);
         builder.Property(x => x.CreatedAt).HasColumnName("createdat");
         builder.Property(x => x.ProcessedAt).HasColumnName("processedat");
+        builder.Property(x => x.ClaimedBy).HasColumnName("claimedby").HasMaxLength(ColumnMetadata.DefaultNameLength);
+        builder.Property(x => x.ClaimedAt).HasColumnName("claimedat");
 
         // The dispatcher scans pending work in creation order.
         builder.HasIndex(x => new { x.Status, x.Sequence });

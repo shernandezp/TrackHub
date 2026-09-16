@@ -15,14 +15,36 @@ public class CachingExtensionsTests
         public int Id { get; set; }
     }
 
+    private class NestedRequest
+    {
+        public TestRequest? Inner { get; set; }
+    }
+
     [Fact]
-    public void GetCacheKey_GeneratesKeyWithProperties()
+    public void GetCacheKey_IsScopedToTheRequestTypeAndCarriesNoValues()
     {
         var request = new TestRequest { Name = "test", Id = 5 };
         var key = request.GetCacheKey<TestRequest, string>();
-        key.Should().Contain("TestRequest");
-        key.Should().Contain("Name:test");
-        key.Should().Contain("Id:5");
+        key.Should().StartWith(typeof(TestRequest).FullName);
+        key.Should().NotContain("test");
+    }
+
+    [Fact]
+    public void GetCacheKey_DistinguishesRequestsDifferingOnlyInsideANestedObject()
+    {
+        var r1 = new NestedRequest { Inner = new TestRequest { Name = "tenant-a", Id = 1 } };
+        var r2 = new NestedRequest { Inner = new TestRequest { Name = "tenant-b", Id = 2 } };
+
+        r1.GetCacheKey<NestedRequest, string>().Should().NotBe(r2.GetCacheKey<NestedRequest, string>());
+    }
+
+    [Fact]
+    public void GetCacheKey_DistinguishesValuesContainingTheOldSeparators()
+    {
+        var r1 = new TestRequest { Name = "a,Id:9", Id = 1 };
+        var r2 = new TestRequest { Name = "a", Id = 1 };
+
+        r1.GetCacheKey<TestRequest, string>().Should().NotBe(r2.GetCacheKey<TestRequest, string>());
     }
 
     [Fact]

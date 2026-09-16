@@ -27,7 +27,7 @@ public class DbSetExtensionsTests
         // Arrange
         var dbName = nameof(BulkAddOrUpdateAsync_AddsNewEntities_WhenNoneExist);
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(dbName)
+            .UseInMemoryDatabase(dbName).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
             .Options;
 
         await using var context = new ApplicationDbContext(options);
@@ -65,7 +65,7 @@ public class DbSetExtensionsTests
         // Arrange
         var dbName = nameof(BulkAddOrUpdateAsync_UpdatesExistingEntities_WhenTheyExist);
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(dbName)
+            .UseInMemoryDatabase(dbName).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
             .Options;
 
         var transporterId = Guid.NewGuid();
@@ -108,7 +108,7 @@ public class DbSetExtensionsTests
         // Arrange
         var dbName = nameof(BulkAddOrUpdateAsync_MixedAddAndUpdate_HandlesCorrectly);
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(dbName)
+            .UseInMemoryDatabase(dbName).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
             .Options;
 
         var existingTransporterId = Guid.NewGuid();
@@ -153,7 +153,7 @@ public class DbSetExtensionsTests
         // Arrange
         var dbName = nameof(BulkAddOrUpdateAsync_ExcludesSpecifiedProperties_FromUpdate);
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(dbName)
+            .UseInMemoryDatabase(dbName).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
             .Options;
 
         var transporterId = Guid.NewGuid();
@@ -194,7 +194,7 @@ public class DbSetExtensionsTests
         // Arrange
         var dbName = nameof(BulkAddOrUpdateAsync_HandlesDuplicateKeys_KeepsLastOccurrence);
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(dbName)
+            .UseInMemoryDatabase(dbName).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
             .Options;
 
         var transporterId = Guid.NewGuid();
@@ -233,7 +233,7 @@ public class DbSetExtensionsTests
         // Arrange
         var dbName = nameof(BulkAddOrUpdateAsync_HandlesDuplicateKeys_UpdatesWithLastOccurrence);
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(dbName)
+            .UseInMemoryDatabase(dbName).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
             .Options;
 
         var transporterId = Guid.NewGuid();
@@ -277,7 +277,7 @@ public class DbSetExtensionsTests
         // Arrange
         var dbName = nameof(BulkAddOrUpdateAsync_EmptyCollection_DoesNothing);
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(dbName)
+            .UseInMemoryDatabase(dbName).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
             .Options;
 
         await using var context = new ApplicationDbContext(options);
@@ -301,7 +301,7 @@ public class DbSetExtensionsTests
         // Arrange
         var dbName = nameof(BulkAddOrUpdateAsync_OnlyUpdatesChangedProperties);
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(dbName)
+            .UseInMemoryDatabase(dbName).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
             .Options;
 
         var transporterId = Guid.NewGuid();
@@ -339,7 +339,7 @@ public class DbSetExtensionsTests
         // Arrange
         var dbName = nameof(BulkAddOrUpdateAsync_HandlesAttributes_Correctly);
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(dbName)
+            .UseInMemoryDatabase(dbName).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
             .Options;
 
         var transporterId = Guid.NewGuid();
@@ -381,7 +381,7 @@ public class DbSetExtensionsTests
         // Arrange
         var dbName = nameof(BulkAddOrUpdateAsync_MultipleDifferentTransporters_WithDuplicates_HandlesCorrectly);
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(dbName)
+            .UseInMemoryDatabase(dbName).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
             .Options;
 
         var transporterId1 = Guid.NewGuid();

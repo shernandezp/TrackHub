@@ -11,7 +11,7 @@ namespace Infrastructure.UnitTests;
 public class NotificationWriterTests
 {
     private static ApplicationDbContext NewContext(string name)
-        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).Options);
+        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking).Options);
 
     private static ICurrentPrincipal Principal(Guid? accountId, PrincipalType principalType = PrincipalType.User, Guid? userId = null, Guid? driverId = null, string? role = null)
     {

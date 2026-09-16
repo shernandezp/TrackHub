@@ -41,7 +41,8 @@ public sealed class GroupReader(IApplicationDbContext context, ICurrentPrincipal
                 d.Description,
                 d.Active,
                 d.AccountId))
-            .FirstAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken);
+        ReaderResults.EnsureFound(group, nameof(Entities.Group), id.ToString());
 
         RequireAccountAccess(group.AccountId);
         return group;

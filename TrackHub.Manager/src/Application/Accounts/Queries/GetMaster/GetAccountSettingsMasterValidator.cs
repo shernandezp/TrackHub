@@ -13,6 +13,8 @@
 //  limitations under the License.
 //
 
+using TrackHub.Manager.Domain.Constants;
+
 namespace TrackHub.Manager.Application.Accounts.Queries.GetMaster;
 
 public class GetAccountSettingsMasterValidator : AbstractValidator<GetAccountSettingsMasterQuery>
@@ -21,5 +23,12 @@ public class GetAccountSettingsMasterValidator : AbstractValidator<GetAccountSet
     {
         RuleFor(x => x.Filter)
             .NotEmpty();
+
+        RuleFor(x => x.Skip)
+            .GreaterThanOrEqualTo(0);
+
+        RuleFor(x => x.Take)
+            .GreaterThan(0)
+            .LessThanOrEqualTo(MasterPaging.MaxPageSize);
     }
 }

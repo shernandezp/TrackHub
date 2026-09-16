@@ -9,7 +9,7 @@ namespace Infrastructure.UnitTests;
 public class NotificationLocaleResolverTests
 {
     private static ApplicationDbContext NewContext(string name)
-        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).Options);
+        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking).Options);
 
     [Test]
     public async Task ResolveAsync_UserRecipientWithLanguageSetting_UsesTheirLanguage()

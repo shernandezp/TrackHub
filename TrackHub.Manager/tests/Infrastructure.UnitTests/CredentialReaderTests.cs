@@ -13,7 +13,7 @@ public class CredentialReaderTests
     private const string EncryptionKey = "test-encryption-key";
 
     private static ApplicationDbContext NewContext(string name)
-        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).Options);
+        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking).Options);
 
     private static ICurrentPrincipal Principal(Guid? accountId, PrincipalType principalType = PrincipalType.User)
     {

@@ -44,7 +44,7 @@ public abstract class GraphQLService(IGraphQLClient graphQLClient)
 
         if (response.Errors != null && response.Errors.Length > 0)
         {
-            throw new GraphQLException(response.Errors.ConvertToIError());
+            throw new GraphQLException(response.Errors.ConvertToUpstreamIError());
         }
 
         var dataString = response.Data.ToString();
@@ -70,7 +70,7 @@ public abstract class GraphQLService(IGraphQLClient graphQLClient)
 
         if (response.Errors != null && response.Errors.Length > 0)
         {
-            throw new GraphQLException(response.Errors.ConvertToIError());
+            throw new GraphQLException(response.Errors.ConvertToUpstreamIError());
         }
 
         var dataString = response.Data.ToString();

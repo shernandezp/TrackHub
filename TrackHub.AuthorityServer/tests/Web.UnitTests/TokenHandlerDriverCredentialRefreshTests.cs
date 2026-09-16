@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using TrackHub.AuthorityServer.Web.Helpers;
 using System.Security.Claims;
 using Moq;
 using TrackHub.AuthorityServer.Domain.Interfaces;
@@ -42,8 +43,8 @@ public class TokenHandlerDriverCredentialRefreshTests
         _handler = new TokenHandler(
             Mock.Of<IClientReader>(),
             Mock.Of<IUserReader>(),
-            _credentials.Object,
-            Mock.Of<IServiceClientPermissionReader>());
+            Mock.Of<IServiceClientPermissionReader>(),
+            new SubjectValidity(Mock.Of<IUserReader>(), _credentials.Object));
     }
 
     private static ClaimsPrincipal DriverPrincipal(Guid? credentialId)

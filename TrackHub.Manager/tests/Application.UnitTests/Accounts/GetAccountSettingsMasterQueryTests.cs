@@ -26,7 +26,7 @@ public class GetAccountSettingsMasterQueryTests
     {
         var filtersInput = new FiltersInput();
         var list = new List<AccountSettingsVm>();
-        _readerMock.Setup(r => r.GetAccountSettingsAsync(It.IsAny<Filters>(), CancellationToken.None)).ReturnsAsync(list);
+        _readerMock.Setup(r => r.GetAccountSettingsAsync(It.IsAny<Filters>(), It.IsAny<int>(), It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(list);
 
         var result = await _handler.Handle(new GetAccountSettingsMasterQuery(filtersInput), CancellationToken.None);
 

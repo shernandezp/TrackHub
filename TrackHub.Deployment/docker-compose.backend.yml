@@ -12,6 +12,7 @@ services:
       - "443:443"
     volumes:
       - ./nginx/nginx.backend.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/security-headers.conf:/etc/nginx/security-headers.conf:ro
       - ./certificates:/etc/nginx/ssl:ro
       - ./certbot/webroot:/var/www/certbot:ro
     depends_on:

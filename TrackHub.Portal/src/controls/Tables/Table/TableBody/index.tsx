@@ -16,13 +16,13 @@
 
 import { isValidElement } from "react";
 import type { ReactNode } from "react";
-import { v4 as uuidv4 } from "uuid";
 import { TableRow, TableBody as MuiTableBody } from "@mui/material";
 import ArgonBox from "components/ArgonBox";
 import ArgonAvatar from "components/ArgonAvatar";
 import ArgonTypography from "components/ArgonTypography";
 import borders from "assets/theme/base/borders";
 import type { TableColumn, TableRowData } from "controls/Tables/Table";
+import { activateOnKeyboard } from "utils/keyboard";
 
 const extractValue = (obj: unknown): string => {
   const el = obj as
@@ -63,8 +63,10 @@ const TableBody = ({
     <MuiTableBody>
       {sortedRows
         .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-        .map((row) => {
-          const rowKey = row.id || uuidv4();
+        .map((row, rowIndex) => {
+          // Stable keys: a fresh uuid per render made React unmount and rebuild every cell on every
+          // refresh, destroying focus, selection and hover in the process.
+          const rowKey = row.id ?? `row-${page * rowsPerPage + rowIndex}`;
           const selectedValue = extractValue(row[selectedField]);
 
           const tableRow: ReactNode[] = columns
@@ -78,7 +80,7 @@ const TableBody = ({
                 const avatarProps = { src: avatar[0], name: avatar[1] };
                 template = (
                   <ArgonBox
-                    key={uuidv4()}
+                    key={name}
                     component="td"
                     p={compact ? 0.5 : 1}
                     sx={({ palette: { light } }) => ({
@@ -108,7 +110,7 @@ const TableBody = ({
                 template = (
                   <ArgonBox
                     {...tdExtra}
-                    key={uuidv4()}
+                    key={name}
                     component="td"
                     p={compact ? 0.5 : 1}
                     textAlign={align}
@@ -124,7 +126,7 @@ const TableBody = ({
                 template = (
                   <ArgonBox
                     {...tdExtra}
-                    key={uuidv4()}
+                    key={name}
                     component="td"
                     p={compact ? 0.5 : 1}
                     textAlign={align}
@@ -152,7 +154,10 @@ const TableBody = ({
             <TableRow
               key={rowKey}
               data-testid={`row-${rowKey}`}
+              // Selecting a row is an action, so it answers the keyboard as well as the mouse.
+              tabIndex={0}
               onClick={() => handleRowSelection(rowKey)}
+              onKeyDown={activateOnKeyboard(() => handleRowSelection(rowKey))}
               selected={selected === selectedValue}
               ref={(el) => {
                 if (rowRefs && rowRefs.current) {

@@ -13,10 +13,13 @@
 //  limitations under the License.
 //
 
+using Microsoft.AspNetCore.RateLimiting;
+using TrackHub.AuthorityServer.Web.Helpers;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.AspNetCore.Authorization;
 using TrackHub.AuthorityServer.Application.Users.Queries.GetUserRole;
 using TrackHub.AuthorityServer.Application.Users.Queries.GetUsers;
@@ -62,8 +65,11 @@ public class LoginController(ISender sender, IStringLocalizer<LoginController> l
     [HttpPost]
     [AllowAnonymous]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting(CredentialRateLimit.Policy)]
     public async Task<IActionResult> Index(LoginViewModel model)
     {
+        model.ReturnUrl = LocalReturnUrl(model.ReturnUrl);
+
         ViewData["ReturnUrl"] = model.ReturnUrl;
         // Re-resolved on every POST: a failed sign-in re-renders this view, and that is
         // precisely when the user needs the status link (it is not round-tripped by the form).
@@ -143,7 +149,46 @@ public class LoginController(ISender sender, IStringLocalizer<LoginController> l
         return View(model);
     }
 
+    // A substring match selected the driver branch for any url merely containing that text,
+    // including inside a state or redirect_uri parameter.
     private static bool IsDriverMobileLogin(string? returnUrl)
-        => !string.IsNullOrWhiteSpace(returnUrl)
-        && Uri.UnescapeDataString(returnUrl).Contains($"client_id={DriverMobileClientId}", StringComparison.OrdinalIgnoreCase);
+    {
+        if (string.IsNullOrWhiteSpace(returnUrl))
+        {
+            return false;
+        }
+
+        var queryStart = returnUrl.IndexOf('?', StringComparison.Ordinal);
+        if (queryStart < 0)
+        {
+            return false;
+        }
+
+        var query = QueryHelpers.ParseQuery(returnUrl[queryStart..]);
+        return query.TryGetValue("client_id", out var clientId)
+            && string.Equals(clientId.ToString(), DriverMobileClientId, StringComparison.Ordinal);
+    }
+
+    // Same rule as IUrlHelper.IsLocalUrl, without depending on MVC's url helper being wired up.
+    // An absolute or protocol-relative destination is replaced rather than rejected, so a stale
+    // bookmark still completes the sign-in.
+    private static string LocalReturnUrl(string? returnUrl)
+    {
+        if (string.IsNullOrEmpty(returnUrl))
+        {
+            return "/";
+        }
+
+        if (returnUrl[0] == '/')
+        {
+            return returnUrl.Length == 1 || (returnUrl[1] != '/' && returnUrl[1] != '\\') ? returnUrl : "/";
+        }
+
+        if (returnUrl.Length > 1 && returnUrl[0] == '~' && returnUrl[1] == '/')
+        {
+            return returnUrl;
+        }
+
+        return "/";
+    }
 }

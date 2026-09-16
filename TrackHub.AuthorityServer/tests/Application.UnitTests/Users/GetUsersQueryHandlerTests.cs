@@ -15,6 +15,7 @@
 
 using System.Security.Authentication;
 using Common.Domain.Extensions;
+using Microsoft.Extensions.Logging.Abstractions;
 using TrackHub.AuthorityServer.Application.Users.Queries.GetUsers;
 using TrackHub.AuthorityServer.Domain.Interfaces;
 using TrackHub.AuthorityServer.Domain.Models;
@@ -53,7 +54,7 @@ public class GetUsersQueryHandlerTests
             LockedUntil: lockedUntil,
             AccountId: Guid.NewGuid());
 
-    private GetUsersQueryHandler Handler() => new(_reader.Object, _writer.Object);
+    private GetUsersQueryHandler Handler() => new(_reader.Object, _writer.Object, NullLogger<GetUsersQueryHandler>.Instance);
 
     private void SetupReader(UserVm user)
         => _reader.Setup(r => r.GetUserAsync(It.IsAny<UserLoginDto>(), It.IsAny<CancellationToken>())).ReturnsAsync(user);

@@ -98,12 +98,7 @@ var app = builder.Build();
 // Behind nginx every request otherwise appears to come from the proxy's container IP, which would
 // collapse the per-IP rate-limit partition above into a single shared bucket. Mirrors the
 // AuthorityServer configuration.
-var forwardedHeadersOptions = new ForwardedHeadersOptions
-{
-    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-};
-forwardedHeadersOptions.KnownIPNetworks.Clear();
-forwardedHeadersOptions.KnownProxies.Clear();
+var forwardedHeadersOptions = TrustedProxies.Create(builder.Configuration);
 app.UseForwardedHeaders(forwardedHeadersOptions);
 
 app.UseHeaderPropagation();
@@ -132,6 +127,6 @@ app.UseRateLimiter();
 app.UseOutputCache();
 
 app.MapEndpoints(Assembly.GetExecutingAssembly());
-app.MapGraphQL();
+app.MapGraphQL().RequireAuthorization();
 
 app.Run();

@@ -12,7 +12,7 @@ namespace Infrastructure.UnitTests;
 public class DocumentAccessPolicyTests
 {
     private static ApplicationDbContext NewContext(string name)
-        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).Options);
+        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking).Options);
 
     private static Mock<ICurrentPrincipal> PrincipalMock(Guid accountId, PrincipalType type = PrincipalType.User, string? role = null, Guid? userId = null, Guid? driverId = null)
     {

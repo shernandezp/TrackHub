@@ -33,6 +33,7 @@ public class OutboxDispatcherTests
     {
         _reader = new Mock<IOutboxReader>();
         _writer = new Mock<IOutboxWriter>();
+        _writer.Setup(w => w.TryClaimAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         _managerWriter = new Mock<IManagerWriter>();
         _auditWriter = new Mock<IManagerAuditWriter>();
     }

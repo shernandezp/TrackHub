@@ -103,7 +103,8 @@ public sealed class AlertEvaluationStore(IApplicationDbContext context) : IAlert
     // coalesces into the existing open event. Returns the Vm to evaluate (null when only touched).
     public async Task<AlertEventVm?> RecordDedupedAlertAsync(AlertEventDto alertEvent, CancellationToken cancellationToken)
     {
-        var existing = await context.AlertEvents.FirstOrDefaultAsync(
+        var existing = await context.AlertEvents
+            .AsTracking().FirstOrDefaultAsync(
             e => e.AccountId == alertEvent.AccountId
                 && e.DeduplicationKey == alertEvent.DeduplicationKey
                 && e.Status != "Resolved",
@@ -111,7 +112,6 @@ public sealed class AlertEvaluationStore(IApplicationDbContext context) : IAlert
 
         if (existing is not null)
         {
-            context.AlertEvents.Attach(existing);
             existing.LastSeenAt = DateTimeOffset.UtcNow;
             existing.PayloadJson = alertEvent.PayloadJson;
             await context.SaveChangesAsync(cancellationToken);

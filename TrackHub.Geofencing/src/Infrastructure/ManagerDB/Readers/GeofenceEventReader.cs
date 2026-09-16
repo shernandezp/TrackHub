@@ -20,6 +20,25 @@ namespace TrackHub.Geofencing.Infrastructure.Readers;
 
 public sealed class GeofenceEventReader(IApplicationDbContext context) : IGeofenceEventReader
 {
+    public async Task<IReadOnlyCollection<GeofenceEventVm>> GetOpenEventsForTransportersAsync(
+        IReadOnlyCollection<Guid> transporterIds,
+        Guid accountId,
+        CancellationToken cancellationToken)
+    {
+        var query = from evt in context.GeofenceEvents
+                    where transporterIds.Contains(evt.TransporterId) && evt.AccountId == accountId && evt.DepartureTimestamp == null
+                    select new GeofenceEventVm(
+                        evt.GeofenceEventId,
+                        evt.TransporterId,
+                        evt.GeofenceId,
+                        evt.EventDateTime,
+                        evt.DepartureTimestamp,
+                        evt.Latitude,
+                        evt.Longitude);
+
+        return await query.ToListAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyCollection<GeofenceEventVm>> GetOpenEventsForTransporterAsync(
         Guid transporterId,
         Guid accountId,

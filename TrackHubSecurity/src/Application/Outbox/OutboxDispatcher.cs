@@ -43,8 +43,15 @@ public sealed class OutboxDispatcher(
     /// <summary>Completed messages are kept this long for diagnosis, then dropped.</summary>
     public static readonly TimeSpan CompletedRetention = TimeSpan.FromDays(14);
 
+    /// <summary>A claim older than this is assumed to belong to an instance that died mid-dispatch.</summary>
+    public static readonly TimeSpan ClaimTimeout = TimeSpan.FromMinutes(5);
+
+    private static readonly string Owner = $"{Environment.MachineName}:{Environment.ProcessId}";
+
     public async Task<OutboxDispatchResult> DispatchDueAsync(CancellationToken cancellationToken)
     {
+        await writer.ReclaimStaleAsync(DateTimeOffset.UtcNow - ClaimTimeout, cancellationToken);
+
         var due = await reader.GetDispatchableAsync(BatchSize, cancellationToken);
         var completed = 0;
         var gaveUp = 0;
@@ -52,6 +59,12 @@ public sealed class OutboxDispatcher(
         foreach (var message in due)
         {
             cancellationToken.ThrowIfCancellationRequested();
+
+            // Another instance, or an overlapping cycle of this one, may already have taken it.
+            if (!await writer.TryClaimAsync(message.OutboxMessageId, Owner, cancellationToken))
+            {
+                continue;
+            }
 
             try
             {

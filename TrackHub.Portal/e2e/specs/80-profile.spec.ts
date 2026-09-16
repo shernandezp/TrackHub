@@ -86,6 +86,9 @@ test.describe('profile', () => {
     const dialog = page.getByTestId('dialog-form');
     await expect(dialog).toBeVisible();
 
+    // The dialog proves the current password before it will change it, so a mismatch is only
+    // reached once that field is satisfied.
+    await dialog.locator('#currentPassword').fill(config.credentials.admin.password);
     await dialog.locator('#password').fill('E2eChanged9');
     await dialog.locator('#confirmPassword').fill('E2eDifferent9');
     await dialog.getByRole('button', { name: t('generic.save') }).click();

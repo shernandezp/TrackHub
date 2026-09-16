@@ -37,7 +37,7 @@ public sealed class AccountReader(IApplicationDbContext context, ICurrentPrincip
         // GetAccountsAsync below, gated by its own master-class surfaces.
         RequireAccountAccess(id);
 
-        return await Context.Accounts
+        var found = await Context.Accounts
             .Where(a => a.AccountId.Equals(id))
             .Select(a => new AccountVm(
                 a.AccountId,
@@ -50,7 +50,9 @@ public sealed class AccountReader(IApplicationDbContext context, ICurrentPrincip
                 a.Active,
                 a.TimeZoneId,
                 a.LastModified))
-            .FirstAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken);
+        ReaderResults.EnsureFound(found, nameof(Entities.Account), id.ToString());
+        return found;
     }
 
     /// <summary>

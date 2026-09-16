@@ -29,13 +29,15 @@ public sealed class NotificationTemplateWriter(IApplicationDbContext context, IC
 
         var entity = new NotificationTemplate(accountId, template.TemplateKey, template.Channel, template.Locale, template.Subject, template.Body, template.Active);
         await Context.NotificationTemplates.AddAsync(entity, cancellationToken);
+        AddAuditEvent(accountId, "CreateNotificationTemplate", "NotificationTemplate", $"{entity.NotificationTemplateId}", null, Describe(entity));
         await Context.SaveChangesAsync(cancellationToken);
         return ToVm(entity);
     }
 
     public async Task UpdateNotificationTemplateAsync(Guid notificationTemplateId, NotificationTemplateDto template, CancellationToken cancellationToken)
     {
-        var entity = await Context.NotificationTemplates.FirstAsync(x => x.NotificationTemplateId == notificationTemplateId, cancellationToken);
+        var entity = await Context.NotificationTemplates
+            .AsTracking().FirstAsync(x => x.NotificationTemplateId == notificationTemplateId, cancellationToken);
         RequireAccountOverride(entity);
         if (template.AccountId != entity.AccountId)
         {
@@ -53,20 +55,23 @@ public sealed class NotificationTemplateWriter(IApplicationDbContext context, IC
             throw new ConflictException("A template with the same key, channel, and locale already exists.");
         }
 
-        Context.NotificationTemplates.Attach(entity);
+        var previous = Describe(entity);
         entity.TemplateKey = template.TemplateKey;
         entity.Channel = template.Channel;
         entity.Locale = template.Locale;
         entity.Subject = template.Subject;
         entity.Body = template.Body;
         entity.Active = template.Active;
+        AddAuditEvent(entity.AccountId ?? Guid.Empty, "UpdateNotificationTemplate", "NotificationTemplate", $"{entity.NotificationTemplateId}", previous, Describe(entity));
         await Context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task DeleteNotificationTemplateAsync(Guid notificationTemplateId, CancellationToken cancellationToken)
     {
-        var entity = await Context.NotificationTemplates.FirstAsync(x => x.NotificationTemplateId == notificationTemplateId, cancellationToken);
+        var entity = await Context.NotificationTemplates
+            .AsTracking().FirstAsync(x => x.NotificationTemplateId == notificationTemplateId, cancellationToken);
         RequireAccountOverride(entity);
+        AddAuditEvent(entity.AccountId ?? Guid.Empty, "DeleteNotificationTemplate", "NotificationTemplate", $"{entity.NotificationTemplateId}", Describe(entity), null);
         Context.NotificationTemplates.Remove(entity);
         await Context.SaveChangesAsync(cancellationToken);
     }
@@ -93,4 +98,6 @@ public sealed class NotificationTemplateWriter(IApplicationDbContext context, IC
     }
 
     private static NotificationTemplateVm ToVm(NotificationTemplate x) => new(x.NotificationTemplateId, x.AccountId, x.TemplateKey, x.Channel, x.Locale, x.Subject, x.Body, x.Active, x.LastModified);
+    private static string Describe(NotificationTemplate template)
+        => $$"""{"templateKey":{{AuditJson.Quote(template.TemplateKey)}},"channel":{{AuditJson.Quote(template.Channel)}},"locale":{{AuditJson.Quote(template.Locale)}},"active":{{template.Active.ToString().ToLowerInvariant()}}}""";
 }

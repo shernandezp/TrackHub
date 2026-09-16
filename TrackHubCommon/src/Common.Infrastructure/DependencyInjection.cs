@@ -39,10 +39,15 @@ public static class DependencyInjection
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
-                var validateSigningKey = configuration.GetValue<bool>("AuthorityServer:ValidateIssuerSigningKey");
-                options.Authority = configuration.GetValue<string>("AuthorityServer:Authority");
-                options.TokenValidationParameters.ValidateAudience = configuration.GetValue<bool>("AuthorityServer:ValidateAudience");
-                options.TokenValidationParameters.ValidateIssuer = configuration.GetValue<bool>("AuthorityServer:ValidateIssuer");
+                // Absent keys default to VALIDATING. GetValue<bool> returns false for a missing
+                // key, so one dropped environment variable silently turned a service into one that
+                // accepts any token from any issuer with any signature, with no startup error.
+                var validateSigningKey = configuration.GetValue<bool?>("AuthorityServer:ValidateIssuerSigningKey") ?? true;
+                options.Authority = Guard.Against.NullOrWhiteSpace(
+                    configuration.GetValue<string>("AuthorityServer:Authority"),
+                    "AuthorityServer:Authority");
+                options.TokenValidationParameters.ValidateAudience = configuration.GetValue<bool?>("AuthorityServer:ValidateAudience") ?? true;
+                options.TokenValidationParameters.ValidateIssuer = configuration.GetValue<bool?>("AuthorityServer:ValidateIssuer") ?? true;
                 options.TokenValidationParameters.ValidateIssuerSigningKey = validateSigningKey;
                 options.TokenValidationParameters.ValidIssuer = configuration.GetValue<string>("AuthorityServer:Authority");
                 var validAudience = configuration.GetValue<string>("AuthorityServer:ValidAudience");

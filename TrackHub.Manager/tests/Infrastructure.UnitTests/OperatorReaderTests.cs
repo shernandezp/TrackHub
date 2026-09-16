@@ -13,7 +13,7 @@ namespace Infrastructure.UnitTests;
 public class OperatorReaderTests
 {
     private static ApplicationDbContext NewContext(string name)
-        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).Options);
+        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking).Options);
 
     // accountId is what RequireAccountAccess authorizes the by-id read against. Tests that are about
     // credential redaction (not tenant isolation) must place the principal in the operator's own

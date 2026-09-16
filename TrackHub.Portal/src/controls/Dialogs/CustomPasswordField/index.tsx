@@ -32,6 +32,8 @@ import { textFieldSx } from 'controls/Dialogs/fieldStyles';
 export type CustomPasswordFieldProps = Omit<TextFieldProps, 'label' | 'type'> & {
   errorMsg?: string;
   label?: ReactNode;
+  /** Rule the form validates this field against; 'text' means required-only. */
+  validationRule?: 'password' | 'text';
 };
 
 const marginMap: Record<'none' | 'dense' | 'normal', number> = { none: 0, dense: 1, normal: 2 };
@@ -44,6 +46,7 @@ const CustomPasswordField = ({
   required = false,
   fullWidth = true,
   margin = 'dense',
+  validationRule = 'password',
   ...props
 }: CustomPasswordFieldProps) => {
   const [showPassword, setShowPassword] = useState(false);
@@ -66,6 +69,9 @@ const CustomPasswordField = ({
         required={required}
         sx={textFieldSx}
         slotProps={{
+          // The rule the form validates this field against. Revealing the value flips the DOM type to
+          // "text", and inferring the rule from that type is what used to skip the complexity check.
+          htmlInput: { 'data-validation': validationRule },
           input: {
             endAdornment: (
               <InputAdornment position="end">

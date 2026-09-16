@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using TrackHub.Router.Domain.Helpers;
 using TrackHub.Router.Infrastructure.GpsGate.Mappers;
 using TrackHub.Router.Domain.Enumerators;
 using TrackHub.Router.Domain.Exceptions;
@@ -38,14 +39,18 @@ public sealed class PositionReader(
 
     public async Task<IEnumerable<PositionVm>> GetDevicePositionAsync(IEnumerable<DeviceTransporterVm> devices, CancellationToken cancellationToken)
     {
-        // GpsGate doesn't provide bulk last position API; fetch device endpoint per device sequentially
-        var results = new List<PositionVm>();
-        foreach (var device in devices)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            var position = await GetDevicePositionAsync(device, cancellationToken);
-            results.Add(position);
-        }
+        // GpsGate provides no bulk last-position API, so the batch is a bounded fan-out rather than
+        // a sequential walk: one call per vehicle in series did not fit the 10-second cycle.
+        var results = new System.Collections.Concurrent.ConcurrentBag<PositionVm>();
+        await Parallel.ForEachAsync(
+            devices,
+            new ParallelOptions
+            {
+                MaxDegreeOfParallelism = ProviderConcurrency.MaxConcurrentDeviceReads,
+                CancellationToken = cancellationToken
+            },
+            async (device, token) => results.Add(await GetDevicePositionAsync(device, token)));
+
         return results.Distinct();
     }
 

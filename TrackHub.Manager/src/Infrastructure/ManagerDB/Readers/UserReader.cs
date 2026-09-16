@@ -43,7 +43,8 @@ public sealed class UserReader(IApplicationDbContext context, ICurrentPrincipal 
                 u.Username,
                 u.Active,
                 u.AccountId))
-            .FirstAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken);
+        ReaderResults.EnsureFound(user, nameof(Entities.User), id.ToString());
 
         RequireAccountAccess(user.AccountId);
         return user;

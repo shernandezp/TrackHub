@@ -28,13 +28,15 @@ public sealed class AlertSubscriptionWriter(IApplicationDbContext context, ICurr
 
         var entity = new AlertSubscription(accountId, subscription.PrincipalType, subscription.PrincipalId, subscription.EventTypeFilter, subscription.Channel, contact, subscription.Enabled);
         await Context.AlertSubscriptions.AddAsync(entity, cancellationToken);
+        AddAuditEvent(entity.AccountId, "CreateAlertSubscription", "AlertSubscription", $"{entity.AlertSubscriptionId}", null, Describe(entity));
         await Context.SaveChangesAsync(cancellationToken);
         return ToVm(entity);
     }
 
     public async Task UpdateAlertSubscriptionAsync(Guid alertSubscriptionId, AlertSubscriptionDto subscription, CancellationToken cancellationToken)
     {
-        var entity = await Context.AlertSubscriptions.FirstAsync(x => x.AlertSubscriptionId == alertSubscriptionId, cancellationToken);
+        var entity = await Context.AlertSubscriptions
+            .AsTracking().FirstAsync(x => x.AlertSubscriptionId == alertSubscriptionId, cancellationToken);
         RequireAccountWriteAccess(entity.AccountId);
         RequireSelfOrPrivileged(entity.PrincipalType, entity.PrincipalId);
         if (subscription.AccountId != entity.AccountId)
@@ -58,21 +60,24 @@ public sealed class AlertSubscriptionWriter(IApplicationDbContext context, ICurr
             throw new ConflictException("An identical subscription already exists.");
         }
 
-        Context.AlertSubscriptions.Attach(entity);
+        var previous = Describe(entity);
         entity.PrincipalType = subscription.PrincipalType;
         entity.PrincipalId = subscription.PrincipalId;
         entity.EventTypeFilter = subscription.EventTypeFilter;
         entity.Channel = subscription.Channel;
         entity.Contact = contact;
         entity.Enabled = subscription.Enabled;
+        AddAuditEvent(entity.AccountId, "UpdateAlertSubscription", "AlertSubscription", $"{entity.AlertSubscriptionId}", previous, Describe(entity));
         await Context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task DeleteAlertSubscriptionAsync(Guid alertSubscriptionId, CancellationToken cancellationToken)
     {
-        var entity = await Context.AlertSubscriptions.FirstAsync(x => x.AlertSubscriptionId == alertSubscriptionId, cancellationToken);
+        var entity = await Context.AlertSubscriptions
+            .AsTracking().FirstAsync(x => x.AlertSubscriptionId == alertSubscriptionId, cancellationToken);
         RequireAccountWriteAccess(entity.AccountId);
         RequireSelfOrPrivileged(entity.PrincipalType, entity.PrincipalId);
+        AddAuditEvent(entity.AccountId, "DeleteAlertSubscription", "AlertSubscription", $"{entity.AlertSubscriptionId}", Describe(entity), null);
         Context.AlertSubscriptions.Remove(entity);
         await Context.SaveChangesAsync(cancellationToken);
     }
@@ -128,4 +133,6 @@ public sealed class AlertSubscriptionWriter(IApplicationDbContext context, ICurr
     }
 
     private static AlertSubscriptionVm ToVm(AlertSubscription x) => new(x.AlertSubscriptionId, x.AccountId, x.PrincipalType, x.PrincipalId, x.EventTypeFilter, x.Channel, x.Contact, x.Enabled, x.LastModified);
+    private static string Describe(AlertSubscription subscription)
+        => $$"""{"principalType":{{AuditJson.Quote(subscription.PrincipalType)}},"principalId":"{{subscription.PrincipalId}}","eventTypeFilter":{{AuditJson.Quote(subscription.EventTypeFilter)}},"channel":{{AuditJson.Quote(subscription.Channel)}},"enabled":{{subscription.Enabled.ToString().ToLowerInvariant()}}}""";
 }

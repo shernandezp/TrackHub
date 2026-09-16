@@ -19,7 +19,6 @@ namespace TrackHub.Security.Domain.Interfaces;
 
 public interface IServiceClientPermissionReader
 {
-    Task<bool> HasPermissionAsync(string clientId, string resource, string action, CancellationToken cancellationToken);
     Task<bool> HasPermissionAsync(string clientId, string resource, string action, Guid? accountId, IReadOnlyCollection<string> scopes, IReadOnlyCollection<string> audiences, CancellationToken cancellationToken);
     Task<IReadOnlyCollection<ServiceClientPermissionVm>> GetServiceClientPermissionsAsync(string? clientId, Guid? accountId, int skip, int take, CancellationToken cancellationToken);
 }

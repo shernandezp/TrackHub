@@ -49,22 +49,22 @@ Coded by www.creative-tim.com
   10. The `component` key is used to store the component of its route.
 */
 
+import { lazy } from "react";
 import type { ReactNode } from "react";
 
 // Argon Dashboard 2 MUI layouts
-import Dashboard from "layouts/dashboard";
-import ManageAdmin from "layouts/manageadmin";
-import SystemAdmin from "layouts/systemadmin";
-import Reports from "layouts/reports";
-import GpsIntegration from "layouts/gpsintegration";
-import GeofenceManager from "layouts/geofencemanager";
-import TripManager from "layouts/tripmanager";
-import TripTracking from "layouts/triptracking";
-import Profile from "layouts/profile";
-import PlatformStatus from "layouts/platformstatus";
-import Callback from "layouts/authentication/callback";
-import AuthorizeRedirect from "layouts/authentication/authorizeredirect";
-import ErrorPage from "layouts/authentication/error";
+const Dashboard = lazy(() => import("layouts/dashboard"));
+const ManageAdmin = lazy(() => import("layouts/manageadmin"));
+const SystemAdmin = lazy(() => import("layouts/systemadmin"));
+const Reports = lazy(() => import("layouts/reports"));
+const GpsIntegration = lazy(() => import("layouts/gpsintegration"));
+const GeofenceManager = lazy(() => import("layouts/geofencemanager"));
+const TripManager = lazy(() => import("layouts/tripmanager"));
+const TripTracking = lazy(() => import("layouts/triptracking"));
+const Profile = lazy(() => import("layouts/profile"));
+const PlatformStatus = lazy(() => import("layouts/platformstatus"));
+const Callback = lazy(() => import("layouts/authentication/callback"));
+const ErrorPage = lazy(() => import("layouts/authentication/error"));
 import PrincipalTypes from "constants/principalTypes";
 import type { PrincipalType } from "constants/principalTypes";
 import { editionRoutes } from "edition/routes";
@@ -239,13 +239,6 @@ const routes: RouteDefinition[] = [
     key: "callback",
     route: "/authentication/callback",
     component: <Callback />,
-  },
-  {
-    type: "hidden",
-    name: "Authorize Redirect",
-    key: "authorize-redirect",
-    route: "/authentication/authorize",
-    component: <AuthorizeRedirect />,
   },
   // Edition extension point (src/edition/routes.ts): additional routes registered by
   // distributions built on this codebase; empty in this repository.

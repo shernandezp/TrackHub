@@ -127,12 +127,8 @@ test.describe('shell', () => {
     page,
     t,
   }) => {
-    // The Save handler calls window.alert; a dialog left unhandled blocks the page.
-    const alerts: string[] = [];
-    page.on('dialog', (dialog) => {
-      alerts.push(dialog.message());
-      void dialog.accept();
-    });
+    // Saving confirms through the app's own toast, not a native dialog.
+    const saveToast = page.getByRole('alert').filter({ hasText: t('settings.saveMessage') });
 
     await shell.enter();
     await shell.configuratorButton.click();
@@ -145,7 +141,7 @@ test.describe('shell', () => {
     await interval.fill(changed);
     const saved = settingsSaved(page);
     await page.getByRole('button', { name: t('generic.save') }).last().click();
-    await expect.poll(() => alerts).toContain(t('settings.saveMessage'));
+    await expect(saveToast).toBeVisible();
     await saved;
 
     await shell.reloadTo('dashboard');
@@ -156,7 +152,7 @@ test.describe('shell', () => {
     await interval.fill(original);
     const restored = settingsSaved(page);
     await page.getByRole('button', { name: t('generic.save') }).last().click();
-    await expect.poll(() => alerts.length).toBeGreaterThan(1);
+    await expect(saveToast).toBeVisible();
     await restored;
   });
 
@@ -165,11 +161,8 @@ test.describe('shell', () => {
     page,
     t,
   }) => {
-    const alerts: string[] = [];
-    page.on('dialog', (dialog) => {
-      alerts.push(dialog.message());
-      void dialog.accept();
-    });
+    // A refused save must not confirm: the success toast never appears.
+    const saveToast = page.getByRole('alert').filter({ hasText: t('settings.saveMessage') });
 
     await shell.enter();
     await shell.configuratorButton.click();
@@ -183,7 +176,7 @@ test.describe('shell', () => {
     await expect(
       page.getByText(t('settings.validation.refreshMapInterval', { min: 60 }))
     ).toBeVisible();
-    expect(alerts).toEqual([]);
+    await expect(saveToast).toBeHidden();
 
     await interval.fill(original);
   });
@@ -211,12 +204,8 @@ test.describe('shell', () => {
     page,
     t,
   }) => {
-    // The Save handler calls window.alert; a dialog left unhandled blocks the page.
-    const alerts: string[] = [];
-    page.on('dialog', (dialog) => {
-      alerts.push(dialog.message());
-      void dialog.accept();
-    });
+    // Saving confirms through the app's own toast, not a native dialog.
+    const saveToast = page.getByRole('alert').filter({ hasText: t('settings.saveMessage') });
 
     await shell.enter();
     await shell.configuratorButton.click();
@@ -230,7 +219,7 @@ test.describe('shell', () => {
     await page.getByRole('option', { name: target, exact: true }).click();
     const saved = settingsSaved(page);
     await page.getByRole('button', { name: t('generic.save') }).last().click();
-    await expect.poll(() => alerts).toContain(t('settings.saveMessage'));
+    await expect(saveToast).toBeVisible();
     await saved;
 
     await shell.reloadTo('dashboard');
@@ -245,7 +234,7 @@ test.describe('shell', () => {
     await page.getByRole('option', { name: original, exact: true }).click();
     const restored = settingsSaved(page);
     await page.getByRole('button', { name: t('generic.save') }).last().click();
-    await expect.poll(() => alerts.length).toBeGreaterThan(1);
+    await expect(saveToast).toBeVisible();
     await restored;
     await shell.reloadTo('dashboard');
     await shell.configuratorButton.click();

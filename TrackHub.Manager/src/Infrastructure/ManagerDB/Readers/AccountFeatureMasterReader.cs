@@ -17,9 +17,10 @@ public sealed class AccountFeatureMasterReader(IApplicationDbContext context) : 
 
     // One batched read of every account's features, so schedulers and reports don't fan out
     // one query per account (features are a small, bounded catalog per account).
-    public async Task<IReadOnlyCollection<AccountFeatureVm>> GetAllAccountFeaturesAsync(CancellationToken cancellationToken)
+    public async Task<IReadOnlyCollection<AccountFeatureVm>> GetAllAccountFeaturesAsync(int skip, int take, CancellationToken cancellationToken)
         => await context.AccountFeatures
-            .OrderBy(x => x.AccountId).ThenBy(x => x.FeatureKey)
+            .OrderBy(x => x.AccountId).ThenBy(x => x.FeatureKey).ThenBy(x => x.AccountFeatureId)
+            .Skip(skip).Take(take)
             .Select(x => new AccountFeatureVm(x.AccountFeatureId, x.AccountId, x.FeatureKey, x.Enabled, x.Tier, x.Source, x.EffectiveFrom, x.EffectiveTo, x.ConfigurationJson, x.LastModified))
             .ToListAsync(cancellationToken);
 }

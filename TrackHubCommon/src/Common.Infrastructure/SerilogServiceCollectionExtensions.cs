@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Infrastructure.Logging;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Events;
@@ -43,6 +44,9 @@ public static class SerilogServiceCollectionExtensions
             // wins) rather than repeating the override in each service's appsettings. Genuine
             // resilience Warnings/Errors (retries exhausted, circuit opened) still flow through.
             .MinimumLevel.Override("Polly", LogEventLevel.Warning)
+            // Redacts credential-bearing members from anything destructured into a log event,
+            // so no sink can persist a plaintext password or client secret.
+            .Destructure.With<SensitiveDataDestructuringPolicy>()
             .Enrich.FromLogContext()
             .Enrich.WithMachineName()
             .Enrich.WithEnvironmentName()

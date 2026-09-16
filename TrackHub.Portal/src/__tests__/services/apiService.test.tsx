@@ -57,16 +57,28 @@ describe('AuthContext', () => {
     expect(result.current.accessToken).toBeNull();
   });
 
-  test('login navigates to authorization URL', () => {
-    const { result } = renderHook(() => useAuth(), { wrapper });
-
-    act(() => {
-      result.current.login();
+  test('login assigns the authorization endpoint directly', () => {
+    const assign = vi.fn();
+    const originalLocation = window.location;
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { ...originalLocation, assign },
     });
 
-    expect(mockNavigate).toHaveBeenCalledWith(
-      expect.stringContaining('/authentication/authorize?authorizationUrl=')
-    );
+    try {
+      const { result } = renderHook(() => useAuth(), { wrapper });
+
+      act(() => {
+        result.current.login();
+      });
+
+      expect(assign).toHaveBeenCalledTimes(1);
+      const target: string = assign.mock.calls[0][0];
+      expect(target.startsWith(process.env.REACT_APP_AUTHORIZATION_ENDPOINT as string)).toBe(true);
+      expect(mockNavigate).not.toHaveBeenCalled();
+    } finally {
+      Object.defineProperty(window, 'location', { configurable: true, value: originalLocation });
+    }
   });
 
   test('login stores code_verifier in sessionStorage', () => {
@@ -81,14 +93,25 @@ describe('AuthContext', () => {
   });
 
   test('login rate limits after MAX_LOGIN_ATTEMPTS', () => {
-    const { result } = renderHook(() => useAuth(), { wrapper });
-
-    // Trigger 3 logins quickly — need to reset isLoggingIn between calls
-    act(() => {
-      result.current.login();
+    const assign = vi.fn();
+    const originalLocation = window.location;
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { ...originalLocation, assign },
     });
-    // After first login, isLoggingIn is true, so subsequent calls are blocked
-    expect(mockNavigate).toHaveBeenCalledTimes(1);
+
+    try {
+      const { result } = renderHook(() => useAuth(), { wrapper });
+
+      // Trigger 3 logins quickly — need to reset isLoggingIn between calls
+      act(() => {
+        result.current.login();
+      });
+      // After first login, isLoggingIn is true, so subsequent calls are blocked
+      expect(assign).toHaveBeenCalledTimes(1);
+    } finally {
+      Object.defineProperty(window, 'location', { configurable: true, value: originalLocation });
+    }
   });
 
   test('setIsAuthenticated updates state', () => {

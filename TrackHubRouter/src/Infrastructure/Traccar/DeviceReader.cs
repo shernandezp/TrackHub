@@ -16,6 +16,7 @@
 using TrackHub.Router.Infrastructure.Traccar.Mappers;
 using TrackHub.Router.Domain.Extensions;
 using TrackHub.Router.Domain.Interfaces;
+using TrackHub.Router.Domain.Helpers;
 
 namespace TrackHub.Router.Infrastructure.Traccar;
 
@@ -52,14 +53,18 @@ public sealed class DeviceReader(
     /// <returns>Returns the devices as a collection of DeviceVm.</returns>
     public async Task<IEnumerable<DeviceVm>> GetDevicesAsync(IEnumerable<DeviceTransporterVm> devices, CancellationToken cancellationToken)
     {
-        var url = $"api/devices?{devices.GetIdsQueryString()}";
-        var result = await HttpClientService.GetAsync<IEnumerable<Device>>(url, cancellationToken: cancellationToken);
-        if (result is null)
+        var devicesDictionary = devices.ToDeviceLookup(device => device.Identifier);
+        var results = new List<DeviceVm>();
+        foreach (var chunk in devicesDictionary.Values.Chunk(ProviderBatching.MaxIdsPerRequest))
         {
-            return [];
+            var url = $"api/devices?{chunk.GetIdsQueryString()}";
+            var result = await HttpClientService.GetAsync<IEnumerable<Device>>(url, cancellationToken: cancellationToken);
+            if (result is not null)
+            {
+                results.AddRange(result.MapToDeviceVm(devicesDictionary));
+            }
         }
-        var devicesDictionary = devices.ToDictionary(device => device.Identifier, device => device);
-        return result.MapToDeviceVm(devicesDictionary);
+        return results;
     }
 
     /// <summary>

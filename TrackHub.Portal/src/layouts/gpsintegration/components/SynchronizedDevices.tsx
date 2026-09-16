@@ -44,6 +44,8 @@ import type { ManualDeviceFormValues } from 'layouts/gpsintegration/components/d
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from 'utils/dateUtils';
 import { GPS_INTEGRATION_REFRESH_EVENT } from 'layouts/gpsintegration/gpsIntegrationEvents';
+import { useRequestTicket } from 'utils/requestTicket';
+import ConfirmDialog from 'controls/Dialogs/ConfirmDialog';
 
 const PAGE_SIZE = 10;
 
@@ -89,6 +91,7 @@ function ManageSynchronizedDevices() {
   const operators = operatorsQuery.data ?? [];
   const capabilitiesQuery = useProviderCapabilities({ enabled: expanded });
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<SynchronizedDevice | null>(null);
   const [deviceValues, handleDeviceChange, setDeviceValues, setDeviceErrors, validateDevice, deviceErrors] =
     useForm<ManualDeviceFormValues>({});
 
@@ -102,6 +105,8 @@ function ManageSynchronizedDevices() {
   const manualOperators = operators.filter((o) => catalogLessProtocolIds.has(o.protocolTypeId));
   const canAddManual = manualOperators.length > 0;
 
+  const takeTicket = useRequestTicket();
+
   const statusLabel = (status: string): string => {
     const key = (status || '').toLowerCase();
     return t(`gpsIntegration.status.${key}` as 'gpsIntegration.status.new', { defaultValue: status || '-' });
@@ -109,6 +114,9 @@ function ManageSynchronizedDevices() {
 
   const refresh = async (acct: string | null = accountId) => {
     if (!acct) return;
+    // Filters and pages are server arguments, so a change starts a new read while the previous one
+    // is still out: only the newest read may repaint the table and its pager count.
+    const isCurrent = takeTicket();
     setLoading(true);
     try {
       const result = await getSynchronizedDevices(acct, {
@@ -118,13 +126,17 @@ function ManageSynchronizedDevices() {
         unassignedOnly,
         recentOnly,
       });
+      if (!isCurrent()) return;
       setDevices(result.items);
       setTotalCount(result.totalCount);
     } catch (e) {
+      if (!isCurrent()) return;
       // Preserve the legacy toast-on-error behavior; keep the inline notice too.
       notifyApiError(e);
       setError(t('gpsIntegration.errors.devicesLoad'));
-    } finally { setLoading(false); }
+    } finally {
+      if (isCurrent()) setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -171,8 +183,16 @@ function ManageSynchronizedDevices() {
     } finally { setLoading(false); }
   };
 
-  const handleDelete = async (device: SynchronizedDevice) => {
-    if (!window.confirm(t('gpsIntegration.actions.deleteDeviceConfirm'))) return;
+  // The in-app dialog rather than window.confirm: a browser that suppresses the native prompt
+  // answers it for the user, and a destructive delete must not depend on which way.
+  const handleDelete = (device: SynchronizedDevice) => {
+    setPendingDelete(device);
+  };
+
+  const confirmDelete = async () => {
+    const device = pendingDelete;
+    setPendingDelete(null);
+    if (!device) return;
     setLoading(true);
     try {
       await deleteDevice(device.deviceId);
@@ -370,6 +390,13 @@ function ManageSynchronizedDevices() {
             </>
       }
     </TableAccordion>
+    <ConfirmDialog
+      open={pendingDelete !== null}
+      setOpen={(open) => { if (!open) setPendingDelete(null); }}
+      title={t('gpsIntegration.actions.deleteDevice')}
+      message={t('gpsIntegration.actions.deleteDeviceConfirm')}
+      onConfirm={confirmDelete}
+    />
     <DeviceFormDialog
       open={dialogOpen}
       setOpen={setDialogOpen}

@@ -11,10 +11,12 @@ public sealed class PublicLinkGrantReader(IApplicationDbContext context, ICurren
     public async Task<PublicLinkGrantVm> GetPublicLinkGrantAsync(Guid publicLinkGrantId, CancellationToken cancellationToken)
     {
         var accountId = ResolveAccountScope(null);
-        return await Context.PublicLinkGrants
+        var found = await Context.PublicLinkGrants
             .Where(x => x.PublicLinkGrantId == publicLinkGrantId && (!accountId.HasValue || x.AccountId == accountId.Value))
             .Select(x => new PublicLinkGrantVm(x.PublicLinkGrantId, x.AccountId, x.ResourceType, x.ResourceId, x.Scopes, x.Purpose, x.ExpiresAt, x.RevokedAt, x.RevokedBy, x.CreatedByPrincipalId, x.AccessCount, x.LastAccessedAt, x.LastModified, null))
-            .FirstAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken);
+        ReaderResults.EnsureFound(found, nameof(Entities.PublicLinkGrant), publicLinkGrantId.ToString());
+        return found;
     }
 
     public async Task<IReadOnlyCollection<PublicLinkGrantVm>> GetPublicLinkGrantsByAccountAsync(Guid accountId, int skip, int take, CancellationToken cancellationToken)

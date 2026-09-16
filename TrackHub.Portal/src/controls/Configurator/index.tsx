@@ -45,6 +45,7 @@ import CustomTextField from "controls/Dialogs/CustomTextField";
 
 // Custom styles for the Configurator
 import ConfiguratorRoot from "controls/Configurator/ConfiguratorRoot";
+import { useNotification } from 'context/NotificationContext';
 import { useTranslation } from "react-i18next";
 import CustomSelect from "controls/Dialogs/CustomSelect";
 import { LoadingContext } from "LoadingContext";
@@ -98,6 +99,7 @@ function Configurator({ settings, updateSettings }: ConfiguratorProps) {
   const [controller, dispatch] = useArgonController();
   const { openConfigurator, darkMode } = controller;
   const { t } = useTranslation();
+  const notification = useNotification();
   const mapOptions = maps.map((type) => ({ value: type, label: type }));
 
   const [accountSettings, setAccountSettings] = useState<ConfiguratorState>(() =>
@@ -175,7 +177,7 @@ function Configurator({ settings, updateSettings }: ConfiguratorProps) {
         refreshMap: accountSettings.refreshMap,
         refreshMapInterval,
       });
-      alert(t("settings.saveMessage"));
+      notification?.showSuccess(t("settings.saveMessage"));
     } catch (error) {
       notifyApiError(error);
     } finally {

@@ -20,6 +20,16 @@ public interface IOutboxWriter
     /// <param name="orderingKey">The entity the message is about; messages sharing a key are dispatched in write order.</param>
     Task EnqueueAsync(string messageType, string payloadJson, string? orderingKey, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Atomically moves ONE pending message to Dispatching. False when another instance got there
+    /// first — the table has no lease otherwise, so two Security replicas drained the same batch and
+    /// sent Manager duplicate creates, audit rows and deletes.
+    /// </summary>
+    Task<bool> TryClaimAsync(Guid outboxMessageId, string owner, CancellationToken cancellationToken);
+
+    /// <summary>Returns claims older than <paramref name="staleBefore"/> to Pending.</summary>
+    Task<int> ReclaimStaleAsync(DateTimeOffset staleBefore, CancellationToken cancellationToken);
+
     Task MarkCompletedAsync(Guid outboxMessageId, CancellationToken cancellationToken);
 
     /// <summary>Records the failure and schedules the retry, or gives up at <c>MaxAttempts</c>.</summary>

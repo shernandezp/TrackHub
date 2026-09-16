@@ -166,7 +166,7 @@ internal class ApplicationDbContextInitializer(ILogger<ApplicationDbContextIniti
         if (!context.Users.Any())
         {
             var password = "12345678".HashPassword();
-            context.Users.Add(new User(
+            var administrator = new User(
                 "Administrator",
                 password,
                 "email@mail.com",
@@ -177,7 +177,12 @@ internal class ApplicationDbContextInitializer(ILogger<ApplicationDbContextIniti
                 null,
                 true,
                 0,
-                Guid.NewGuid()));
+                PlatformBootstrap.MasterAccountId);
+
+            context.Users.Add(administrator);
+            // Well-known id, matching the replica Manager seeds: a minted-per-seeder guid gave the
+            // administrator a token whose subject and account existed in neither Manager table.
+            context.Entry(administrator).Property(x => x.UserId).CurrentValue = PlatformBootstrap.AdministratorUserId;
 
             await context.SaveChangesAsync();
 

@@ -45,9 +45,14 @@ public class SynchronizeOperatorDevicesCommandHandler(
         var newlyAdded = new List<DeviceDto>();
         var newlyAddedDevices = new List<(DeviceDto Incoming, DeviceVm Device)>();
         int added = 0, updated = 0, ignored = 0;
-        foreach (var incoming in request.Devices)
+
+        // One unit of work for the whole catalog: per device this issued four round trips and its
+        // own save, and a failure half way left the catalog partially written with no rollback.
+        var upsertedDevices = await deviceWriter.UpsertSynchronizedDevicesAsync(
+            request.OperatorId, request.Devices, cancellationToken);
+
+        foreach (var (incoming, upserted) in request.Devices.Zip(upsertedDevices))
         {
-            var upserted = await deviceWriter.UpsertSynchronizedDeviceAsync(incoming, cancellationToken);
             incomingIdentifiers.Add(incoming.Identifier);
 
             if (!existingByIdentifier.ContainsKey(incoming.Identifier))

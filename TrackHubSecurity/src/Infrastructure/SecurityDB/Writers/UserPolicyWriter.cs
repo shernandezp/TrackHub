@@ -31,6 +31,7 @@ public sealed class UserPolicyWriter(IApplicationDbContext context, ICurrentPrin
     public async Task<UserPolicyVm> CreateUserPolicyAsync(UserPolicyDto userPolicyDto, CancellationToken cancellationToken)
     {
         await RequireTargetUserAccessAsync(userPolicyDto.UserId, cancellationToken);
+        await RequireGrantablePolicyAsync(userPolicyDto.PolicyId, cancellationToken);
 
         // Create a new UserPolicy object with the provided user ID and policy ID.
         var userPolicy = new UserPolicy
@@ -72,6 +73,6 @@ public sealed class UserPolicyWriter(IApplicationDbContext context, ICurrentPrin
     {
         var target = await Context.Users.FindAsync([userId], cancellationToken)
             ?? throw new NotFoundException(nameof(User), $"{userId}");
-        RequireAccountAccess(target.AccountId);
+        await RequireAccountAccessAsync(target.AccountId, cancellationToken);
     }
 }

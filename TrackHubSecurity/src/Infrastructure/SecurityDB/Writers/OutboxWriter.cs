@@ -31,6 +31,31 @@ public sealed class OutboxWriter(IApplicationDbContext context) : IOutboxWriter
         await context.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<bool> TryClaimAsync(Guid outboxMessageId, string owner, CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+
+        // ONE conditional UPDATE, so exactly one instance can win the transition.
+        var claimed = await context.OutboxMessages
+            .Where(x => x.OutboxMessageId == outboxMessageId && x.Status == OutboxMessageStatuses.Pending)
+            .ExecuteUpdateAsync(set => set
+                .SetProperty(x => x.Status, OutboxMessageStatuses.Dispatching)
+                .SetProperty(x => x.ClaimedBy, owner)
+                .SetProperty(x => x.ClaimedAt, now),
+                cancellationToken);
+
+        return claimed == 1;
+    }
+
+    public async Task<int> ReclaimStaleAsync(DateTimeOffset staleBefore, CancellationToken cancellationToken)
+        => await context.OutboxMessages
+            .Where(x => x.Status == OutboxMessageStatuses.Dispatching && x.ClaimedAt < staleBefore)
+            .ExecuteUpdateAsync(set => set
+                .SetProperty(x => x.Status, OutboxMessageStatuses.Pending)
+                .SetProperty(x => x.ClaimedBy, (string?)null)
+                .SetProperty(x => x.ClaimedAt, (DateTimeOffset?)null),
+                cancellationToken);
+
     public async Task MarkCompletedAsync(Guid outboxMessageId, CancellationToken cancellationToken)
     {
         var message = await FindAsync(outboxMessageId, cancellationToken);
@@ -40,6 +65,8 @@ public sealed class OutboxWriter(IApplicationDbContext context) : IOutboxWriter
         }
 
         message.Status = OutboxMessageStatuses.Completed;
+        message.ClaimedBy = null;
+        message.ClaimedAt = null;
         message.ProcessedAt = DateTimeOffset.UtcNow;
         message.LastError = null;
         await context.SaveChangesAsync(cancellationToken);
@@ -56,6 +83,9 @@ public sealed class OutboxWriter(IApplicationDbContext context) : IOutboxWriter
         message.AttemptCount++;
         message.LastError = error.Length > 2000 ? error[..2000] : error;
 
+        message.ClaimedBy = null;
+        message.ClaimedAt = null;
+
         if (message.AttemptCount >= OutboxPolicy.MaxAttempts)
         {
             message.Status = OutboxMessageStatuses.Failed;
@@ -63,6 +93,9 @@ public sealed class OutboxWriter(IApplicationDbContext context) : IOutboxWriter
         }
         else
         {
+            // Back to Pending: the dispatcher claimed it, so leaving it Dispatching would keep it
+            // out of every later batch until the claim went stale.
+            message.Status = OutboxMessageStatuses.Pending;
             message.NextAttemptAt = DateTimeOffset.UtcNow.Add(OutboxPolicy.BackoffFor(message.AttemptCount));
         }
 

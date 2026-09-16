@@ -18,45 +18,16 @@ namespace TrackHub.TripManagement.Application.Common;
 /// <summary>
 /// Uniqueness probes for <c>Code</c> and <c>ExternalReference</c>, both unique per account.
 /// <para>
-/// NOTE (Domain contract gap): <see cref="ITripReader"/> exposes no by-code / by-external-reference
-/// lookup, so these probe the paged board with the value as the free-text <c>search</c> term and
-/// then compare exactly. A dedicated reader method would be cheaper and exact; this is the closest
-/// the frozen contract allows and it never returns a false positive because the comparison is on
-/// the projected value, not on the search.
+/// Each is one indexed single-row read. They used to walk up to 25 pages of the board with the
+/// value as a free-text <c>search</c> term, which made a 200-trip partner batch issue tens of
+/// thousands of un-indexed <c>ILIKE '%…%'</c> scans against the shared database.
 /// </para>
 /// </summary>
 public static class TripLookup
 {
-    private const int ProbePageSize = 200;
-
-    // The search is a substring match, so a short value can sit behind hundreds of longer ones
-    // ("TRIP-1" behind TRIP-10 ... TRIP-199). One page was not enough to be sure the exact match
-    // is absent; the probe walks the matches until a short page ends them.
-    private const int MaxProbePages = 25;
-
     public static Task<TripVm?> FindByCodeAsync(ITripReader reader, Guid accountId, string code, CancellationToken cancellationToken)
-        => ProbeAsync(reader, accountId, code, trip => trip.Code, cancellationToken);
+        => reader.FindByCodeAsync(accountId, code, cancellationToken);
 
     public static Task<TripVm?> FindByExternalReferenceAsync(ITripReader reader, Guid accountId, string externalReference, CancellationToken cancellationToken)
-        => ProbeAsync(reader, accountId, externalReference, trip => trip.ExternalReference, cancellationToken);
-
-    private static async Task<TripVm?> ProbeAsync(
-        ITripReader reader, Guid accountId, string value, Func<TripVm, string?> projected, CancellationToken cancellationToken)
-    {
-        for (var page = 0; page < MaxProbePages; page++)
-        {
-            var result = await reader.GetTripsPageAsync(
-                accountId, null, null, null, null, null, null, null, value, page * ProbePageSize, ProbePageSize, cancellationToken);
-            foreach (var trip in result.Items)
-            {
-                if (string.Equals(projected(trip), value, StringComparison.OrdinalIgnoreCase))
-                    return trip;
-            }
-
-            if (result.Items.Count < ProbePageSize)
-                break;
-        }
-
-        return null;
-    }
+        => reader.FindByExternalReferenceAsync(accountId, externalReference, cancellationToken);
 }

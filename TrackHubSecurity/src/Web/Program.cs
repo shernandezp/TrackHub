@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Web.Infrastructure;
 using Ardalis.GuardClauses;
 using Microsoft.AspNetCore.HttpOverrides;
 using TrackHub.Security.Infrastructure;
@@ -27,9 +28,22 @@ builder.AddTrackHubSerilog();
 var allowedCORSOrigins = builder.Configuration.GetAllowedCorsOrigins();
 Guard.Against.NullOrEmpty(allowedCORSOrigins, message: $"Allowed Origins configuration for CORS not loaded");
 
-builder.Services.Configure<ForwardedHeadersOptions>(options 
-    => options.ForwardedHeaders =
-        ForwardedHeaders.All);
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    // The anonymous activation endpoint rate-limits per client IP, so the forwarded address has to
+    // be honoured — but only from the deployment's own proxy network. ASP.NET's own default (trust
+    // loopback only) would leave every request carrying nginx's container IP and collapse those
+    // partitions into one bucket.
+    var trusted = TrustedProxies.Create(builder.Configuration);
+    options.ForwardedHeaders = ForwardedHeaders.All;
+    options.ForwardLimit = trusted.ForwardLimit;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+    foreach (var network in trusted.KnownIPNetworks)
+    {
+        options.KnownIPNetworks.Add(network);
+    }
+});
 
 // Add services to the container.
 builder.Services.AddApplicationServices();
@@ -87,6 +101,6 @@ app.UseAuthorization();
 
 app.UseExceptionHandler(options => { });
 
-app.MapGraphQL();
+app.MapGraphQL().RequireAuthorization();
 
 app.Run();

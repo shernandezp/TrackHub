@@ -17,18 +17,26 @@ using System.Security.Authentication;
 using TrackHub.AuthorityServer.Domain.Interfaces;
 using TrackHub.AuthorityServer.Domain.Models;
 using Common.Domain.Extensions;
+using Microsoft.Extensions.Logging;
 
 namespace TrackHub.AuthorityServer.Application.Users.Queries.GetUsers;
-
 public readonly record struct GetUsersQuery(string EmailAddress, string Password) : IRequest<UserVm>;
 
 // Handles the GetUsersQuery and returns a UserVm.
 // Login lockout mirrors the driver credential model (see AuthenticateDriverQuery): a rolling
 // failed-attempt counter that trips a timed lock and resets on a successful login.
-public class GetUsersQueryHandler(IUserReader reader, IUserWriter writer) : IRequestHandler<GetUsersQuery, UserVm>
+public class GetUsersQueryHandler(IUserReader reader, IUserWriter writer, ILogger<GetUsersQueryHandler> logger) : IRequestHandler<GetUsersQuery, UserVm>
 {
     private const int MaximumFailedAttempts = 5;
     private static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(15);
+
+    // One key for every credential failure: a distinct message per account state made the form an
+    // e-mail-enumeration oracle, and the password grant echoes it verbatim to an anonymous caller.
+    private const string CredentialsRejected = "Email or password is incorrect";
+
+    // Verified against on the unknown-email path so the BCrypt cost is paid either way; otherwise
+    // the missing hash is a timing oracle that survives unifying the messages.
+    private static readonly string DummyHash = "unused-placeholder".HashPassword();
 
     // Handles the GetUsersQuery and returns a UserVm
     public async Task<UserVm> Handle(GetUsersQuery request, CancellationToken cancellationToken)
@@ -36,8 +44,23 @@ public class GetUsersQueryHandler(IUserReader reader, IUserWriter writer) : IReq
         var user = await reader.GetUserAsync(new Domain.Records.UserLoginDto(request.EmailAddress, request.Password), cancellationToken);
 
         if (user == default)
-            throw new AuthenticationException("Email is incorrect");
+        {
+            DummyHash.VerifyHashedPassword(request.Password);
+            logger.LogInformation("Login rejected: no user matches the supplied address.");
+            throw new AuthenticationException(CredentialsRejected);
+        }
 
+        var now = DateTimeOffset.UtcNow;
+
+        if (!user.Password.VerifyHashedPassword(request.Password))
+        {
+            await RecordFailureAsync(user, now, cancellationToken);
+            logger.LogInformation("Login rejected: wrong password for {UserId}.", user.UserId);
+            throw new AuthenticationException(CredentialsRejected);
+        }
+
+        // Account state is disclosed only to a caller that proved it knows the password, so a
+        // legitimate user still learns why sign-in failed while an attacker learns nothing.
         if (user.Verified == null)
             throw new AuthenticationException("User account hasn't been verified");
 
@@ -47,22 +70,22 @@ public class GetUsersQueryHandler(IUserReader reader, IUserWriter writer) : IReq
         if (user.AccountId == Guid.Empty)
             throw new AuthenticationException("User account is missing tenant assignment");
 
-        // Deny while the account is locked, without revealing whether the password was correct.
-        if (user.LockedUntil.HasValue && user.LockedUntil.Value > DateTimeOffset.UtcNow)
+        if (user.LockedUntil.HasValue && user.LockedUntil.Value > now)
             throw new AuthenticationException("User account is temporarily locked. Please try again later.");
 
-        if (user.Password.VerifyHashedPassword(request.Password))
-        {
-            await writer.RecordLoginSuccessAsync(user.UserId, cancellationToken);
-            user.Password = string.Empty;
-            return user;
-        }
+        await writer.RecordLoginSuccessAsync(user.UserId, cancellationToken);
+        user.Password = string.Empty;
+        return user;
+    }
 
-        var loginAttempts = user.LoginAttempts + 1;
-        DateTimeOffset? lockedUntil = loginAttempts >= MaximumFailedAttempts
-            ? DateTimeOffset.UtcNow.Add(LockoutDuration)
-            : null;
+    // An expired lock resets the counter: it used to survive, so after the first lockout a single
+    // wrong password re-locked the account for another window, indefinitely.
+    private async Task RecordFailureAsync(UserVm user, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        var lockExpired = user.LockedUntil.HasValue && user.LockedUntil.Value <= now;
+        var loginAttempts = (lockExpired ? 0 : user.LoginAttempts) + 1;
+
+        DateTimeOffset? lockedUntil = loginAttempts >= MaximumFailedAttempts ? now.Add(LockoutDuration) : null;
         await writer.RecordLoginFailureAsync(user.UserId, loginAttempts, lockedUntil, cancellationToken);
-        throw new AuthenticationException("Password is incorrect");
     }
 }

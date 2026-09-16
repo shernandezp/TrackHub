@@ -32,6 +32,9 @@ public static class OutboxMessageStatuses
     public const string Pending = nameof(Pending);
     public const string Completed = nameof(Completed);
     public const string Failed = nameof(Failed);
+
+    /// <summary>Claimed by one dispatcher instance and in flight. Reclaimed if the claim goes stale.</summary>
+    public const string Dispatching = nameof(Dispatching);
 }
 
 public static class OutboxPolicy

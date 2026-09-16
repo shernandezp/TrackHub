@@ -18,7 +18,9 @@ using Common.Mediator;
 using TrackHub.Router.Application.DevicePositions.Commands.Health;
 using TrackHub.Router.Application.DevicePositions.Commands.Sync;
 using TrackHub.Router.Domain.Interfaces;
+using TrackHub.Router.Application.Sync;
 using TrackHub.Router.Domain.Interfaces.Manager;
+using TrackHub.Router.Domain.Models;
 
 namespace TrackHub.Router.SyncWorker;
 
@@ -98,146 +100,125 @@ public class Worker(ILogger<Worker> logger, IServiceProvider serviceProvider) : 
         await sender.Send(new SyncPositionCommand(), stoppingToken);
     }
 
-    private async Task RunDeviceSyncAsync(CancellationToken stoppingToken)
+    private Task RunDeviceSyncAsync(CancellationToken stoppingToken)
+        => RunOperatorLoopAsync(
+            "device-sync",
+            (op, now) => now - (op.LastDeviceSyncAt ?? DateTimeOffset.MinValue) >= TimeSpan.FromMinutes(Math.Max(1, op.SyncIntervalMinutes)),
+            (sender, op, token) => sender.Send(new SyncOperatorDevicesCommand(op, "AUTOMATIC"), token),
+            stoppingToken);
+
+    // Operator health monitoring is core behavior for every account with provider integration
+    // running in the background; it is not a separately billed feature.
+    private Task RunHealthCheckAsync(CancellationToken stoppingToken)
+        => RunOperatorLoopAsync(
+            "operator-health",
+            (op, now) => now - (op.LastHealthCheckAt ?? DateTimeOffset.MinValue) >= HealthCheckInterval,
+            (sender, op, token) => sender.Send(new RecordOperatorHealthCommand(op), token),
+            stoppingToken);
+
+    /// <summary>
+    /// Walks every GPS-enabled account and dispatches the due operators. Accounts run concurrently
+    /// and every operator draws from one shared gate: sequentially, a single unreachable provider
+    /// held the whole platform's cadence for its 30 s timeout, one operator at a time, so healthy
+    /// accounts missed their cycle entirely.
+    /// </summary>
+    private async Task RunOperatorLoopAsync(
+        string loopName,
+        Func<OperatorVm, DateTimeOffset, bool> isDue,
+        Func<ISender, OperatorVm, CancellationToken, Task<bool>> dispatch,
+        CancellationToken stoppingToken)
     {
         using var scope = _serviceProvider.CreateScope();
-        var sender = scope.ServiceProvider.GetRequiredService<ISender>();
         var accountReader = scope.ServiceProvider.GetRequiredService<IAccountReader>();
         var operatorReader = scope.ServiceProvider.GetRequiredService<IOperatorReader>();
         var backoff = scope.ServiceProvider.GetRequiredService<IOperatorSyncBackoff>();
+        var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
         var accounts = await accountReader.GetAccountsToSyncAsync(stoppingToken);
         var now = DateTimeOffset.UtcNow;
 
-        foreach (var account in accounts.Where(a => a.GpsIntegrationEnabled))
-        {
-            IEnumerable<Domain.Models.OperatorVm> operators;
-            try
-            {
-                operators = await operatorReader.GetOperatorsByAccountsAsync(account.AccountId, stoppingToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to load operators for account {AccountId}.", account.AccountId);
-                continue;
-            }
-
-            foreach (var op in operators.Where(o => o.Enabled))
-            {
-                var intervalMinutes = Math.Max(1, op.SyncIntervalMinutes);
-                // Gate on persisted LastDeviceSyncAt so multiple Router instances
-                // do not duplicate scheduled syncs.
-                var last = op.LastDeviceSyncAt ?? DateTimeOffset.MinValue;
-
-                if (now - last < TimeSpan.FromMinutes(intervalMinutes))
-                {
-                    continue;
-                }
-
-                // The master projection already carries the credential under the worker's
-                // service identity — no per-operator re-fetch.
-                if (op.Credential is null)
-                {
-                    continue;
-                }
-
-                // Skip operators still inside their failure backoff window so a persistently
-                // failing operator is not re-attempted at full cadence (router-audit A-15).
-                if (backoff.IsInBackoff(op.OperatorId, now))
-                {
-                    continue;
-                }
-
-                try
-                {
-                    var succeeded = await sender.Send(new SyncOperatorDevicesCommand(op, "AUTOMATIC"), stoppingToken);
-                    if (succeeded)
-                    {
-                        backoff.RecordSuccess(op.OperatorId);
-                    }
-                    else
-                    {
-                        backoff.RecordFailure(op.OperatorId, DateTimeOffset.UtcNow);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    backoff.RecordFailure(op.OperatorId, DateTimeOffset.UtcNow);
-                    _logger.LogError(ex, "Scheduled device sync failed for operator {OperatorId}.", op.OperatorId);
-                }
-            }
-        }
+        using var gate = new SemaphoreSlim(OperatorSyncConcurrency.Resolve(configuration));
+        await Task.WhenAll(accounts
+            .Where(account => account.GpsIntegrationEnabled)
+            .Select(account => ProcessAccountOperatorsAsync(
+                loopName, account.AccountId, operatorReader, backoff, gate, now, isDue, dispatch, stoppingToken)));
     }
 
-    private async Task RunHealthCheckAsync(CancellationToken stoppingToken)
+    private async Task ProcessAccountOperatorsAsync(
+        string loopName,
+        Guid accountId,
+        IOperatorReader operatorReader,
+        IOperatorSyncBackoff backoff,
+        SemaphoreSlim gate,
+        DateTimeOffset now,
+        Func<OperatorVm, DateTimeOffset, bool> isDue,
+        Func<ISender, OperatorVm, CancellationToken, Task<bool>> dispatch,
+        CancellationToken stoppingToken)
     {
-        using var scope = _serviceProvider.CreateScope();
-        var sender = scope.ServiceProvider.GetRequiredService<ISender>();
-        var accountReader = scope.ServiceProvider.GetRequiredService<IAccountReader>();
-        var operatorReader = scope.ServiceProvider.GetRequiredService<IOperatorReader>();
-        var backoff = scope.ServiceProvider.GetRequiredService<IOperatorSyncBackoff>();
-
-        var accounts = await accountReader.GetAccountsToSyncAsync(stoppingToken);
-        var now = DateTimeOffset.UtcNow;
-
-        // Operator health monitoring is core behavior for every account with provider
-        // integration running in the background; it is not a separately billed feature.
-        foreach (var account in accounts.Where(a => a.GpsIntegrationEnabled))
+        IEnumerable<OperatorVm> operators;
+        try
         {
-            IEnumerable<Domain.Models.OperatorVm> operators;
-            try
+            operators = await operatorReader.GetOperatorsByAccountsAsync(accountId, stoppingToken);
+        }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Loop {Loop} failed to load operators for account {AccountId}.", loopName, accountId);
+            return;
+        }
+
+        var due = operators
+            // The master projection already carries the credential under the worker's service
+            // identity, and gating on the persisted timestamp keeps horizontally-scaled Router
+            // instances from duplicating work. Operators inside their failure backoff window are
+            // skipped so a persistently failing provider is not re-attempted at full cadence.
+            .Where(op => op.Enabled && op.Credential is not null && isDue(op, now) && !backoff.IsInBackoff(op.OperatorId, now))
+            .Select(op => DispatchOperatorAsync(loopName, accountId, op, backoff, gate, dispatch, stoppingToken));
+        await Task.WhenAll(due);
+    }
+
+    private async Task DispatchOperatorAsync(
+        string loopName,
+        Guid accountId,
+        OperatorVm @operator,
+        IOperatorSyncBackoff backoff,
+        SemaphoreSlim gate,
+        Func<ISender, OperatorVm, CancellationToken, Task<bool>> dispatch,
+        CancellationToken stoppingToken)
+    {
+        await gate.WaitAsync(stoppingToken);
+        try
+        {
+            // A scope per dispatch: the fan-out is concurrent, and a handler's scoped dependencies
+            // must not be shared across parallel sends.
+            using var scope = _serviceProvider.CreateScope();
+            var sender = scope.ServiceProvider.GetRequiredService<ISender>();
+
+            if (await dispatch(sender, @operator, stoppingToken))
             {
-                operators = await operatorReader.GetOperatorsByAccountsAsync(account.AccountId, stoppingToken);
+                backoff.RecordSuccess(@operator.OperatorId);
             }
-            catch (Exception ex)
+            else
             {
-                _logger.LogError(ex, "Failed to load operators for health check on account {AccountId}.", account.AccountId);
-                continue;
+                backoff.RecordFailure(@operator.OperatorId, DateTimeOffset.UtcNow);
             }
-
-            foreach (var op in operators.Where(o => o.Enabled))
-            {
-                // Gate on persisted LastHealthCheckAt so horizontally-scaled
-                // Router instances do not duplicate health checks.
-                var last = op.LastHealthCheckAt ?? DateTimeOffset.MinValue;
-                if (now - last < HealthCheckInterval)
-                {
-                    continue;
-                }
-
-                // Credential comes with the master projection (service identity) — no re-fetch.
-                if (op.Credential is null)
-                {
-                    continue;
-                }
-
-                // Persistently unreachable operators back off (router-audit A-15): the offline
-                // alert is already deduped, so full-cadence probing only produced log spam; a
-                // recovered operator's first successful probe (within the backoff window) clears it.
-                if (backoff.IsInBackoff(op.OperatorId, now))
-                {
-                    continue;
-                }
-
-                try
-                {
-                    var healthy = await sender.Send(new RecordOperatorHealthCommand(op), stoppingToken);
-                    if (healthy)
-                    {
-                        backoff.RecordSuccess(op.OperatorId);
-                    }
-                    else
-                    {
-                        backoff.RecordFailure(op.OperatorId, DateTimeOffset.UtcNow);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    backoff.RecordFailure(op.OperatorId, DateTimeOffset.UtcNow);
-                    _logger.LogError(ex, "Operator {OperatorId} health check failed.", op.OperatorId);
-                }
-            }
+        }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            backoff.RecordFailure(@operator.OperatorId, DateTimeOffset.UtcNow);
+            _logger.LogError(ex, "Loop {Loop} failed for operator {OperatorId} (account {AccountId}).",
+                loopName, @operator.OperatorId, accountId);
+        }
+        finally
+        {
+            gate.Release();
         }
     }
 }
-

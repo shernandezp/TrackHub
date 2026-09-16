@@ -16,6 +16,7 @@
 using TrackHub.Router.Infrastructure.Navixy.Mappers;
 using TrackHub.Router.Domain.Interfaces;
 using TrackHub.Router.Domain.Interfaces.Operator;
+using TrackHub.Router.Domain.Extensions;
 
 namespace TrackHub.Router.Infrastructure.Navixy;
 
@@ -55,7 +56,7 @@ public sealed class DeviceReader(
             return [];
         }
 
-        var devicesDictionary = devices.ToDictionary(device => device.Identifier, device => device);
+        var devicesDictionary = devices.ToDeviceLookup(device => device.Identifier);
         return result.List
             .Where(t => devicesDictionary.ContainsKey((int)t.Tracker_id))
             .MapToDeviceVm(devicesDictionary);

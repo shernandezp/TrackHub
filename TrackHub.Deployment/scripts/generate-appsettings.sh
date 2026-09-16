@@ -11,6 +11,9 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
+# Everything this script writes contains service secrets and database credentials.
+umask 077
+
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -261,6 +264,9 @@ generate_manager() {
 $(serilog_section),
   "AuthorityServer": {
     "Authority": "${AUTHORITY_URL}",
+    "ClientId": "${MANAGER_CLIENT_ID:-manager_client}",
+    "ClientSecret": "${MANAGER_CLIENT_SECRET}",
+    "Scope": "service_scope",
     "ValidateAudience": true,
     "ValidAudience": "${VALID_AUDIENCE}",
     "ValidateIssuer": true,
@@ -611,9 +617,13 @@ process_service() {
     esac
     
     if [ -n "$OUTPUT_DIR" ]; then
+        # These files carry every client secret, the certificate password and the database
+        # credentials, and the deployment host is shared: they are owner-only from creation.
         mkdir -p "$OUTPUT_DIR"
+        chmod 700 "$OUTPUT_DIR"
         echo "$content" > "$OUTPUT_DIR/appsettings.$service.json"
         print_success "Generated: $OUTPUT_DIR/appsettings.$service.json"
+        chmod 600 "$OUTPUT_DIR/appsettings.$service.json"
     else
         echo "# =============================================="
         echo "# $service - appsettings.json"

@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Amazon;
@@ -22,6 +23,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Npgsql;
+using Common.Infrastructure.Http;
 using TrackHub.Manager.Domain.Interfaces;
 using TrackHub.Manager.Infrastructure;
 using TrackHub.Manager.Infrastructure.Interfaces;
@@ -126,7 +128,14 @@ public static class DependencyInjection
         // Notification channel providers. Push is contract-only for now.
         services.Configure<SmtpOptions>(configuration.GetSection(SmtpOptions.SectionName));
         services.Configure<WhatsAppOptions>(configuration.GetSection(WhatsAppOptions.SectionName));
-        services.AddHttpClient(WebhookNotificationProvider.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(10));
+        // A 3xx from a tenant-controlled endpoint must not be followed to an internal target, and
+        // the connect callback refuses a non-routable address even if DNS changes after validation.
+        services.AddHttpClient(WebhookNotificationProvider.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(10))
+            .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+            {
+                AllowAutoRedirect = false,
+                ConnectCallback = NonRoutableAddressGuard.ConnectCallback()
+            });
         services.AddHttpClient(WhatsAppNotificationProvider.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(30));
         services.AddScoped<INotificationChannelProvider, InAppNotificationProvider>();
         services.AddScoped<INotificationChannelProvider, EmailNotificationProvider>();

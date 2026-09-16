@@ -95,6 +95,16 @@ export async function extractRestErrorEntries(data: unknown): Promise<GraphQLErr
   return [];
 }
 
+
+/** Shown for any failure the UI has no specific explanation for. */
+export const UNEXPECTED_ERROR_I18N_KEY = 'errors.unexpected';
+
+/** Keeps the server's own words reachable while developing, without showing them to the user. */
+function logUnmappedError(detail: string): void {
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug('[api] unmapped server error:', detail);
+  }
+}
 /**
  * Normalized API failure. The api layer THROWS these; deciding what a failure
  * means (fallback value, toast, retry) belongs to the caller — usually the
@@ -183,8 +193,13 @@ export class ApiError extends Error {
         graphQLErrors: errors,
       });
     }
-    return new ApiError(errors.map((e) => e.message ?? 'Unknown GraphQL error').join('\n'), {
+
+    // No code the UI knows: the server text is unmapped and may name a table, a constraint or an
+    // upstream service, so the user gets the generic line and the detail goes to the console.
+    logUnmappedError(errors.map((e) => e.message ?? 'Unknown GraphQL error').join('\n'));
+    return new ApiError('The request could not be completed.', {
       code: errors.length > 0 ? codeOf(errors[0]) : undefined,
+      i18nKey: UNEXPECTED_ERROR_I18N_KEY,
       graphQLErrors: errors,
     });
   }

@@ -17,9 +17,18 @@ public sealed class PositionRetentionPolicyReader(IApplicationDbContext context,
     public async Task<PositionRetentionPolicyVm> GetAsync(Guid accountId, CancellationToken cancellationToken)
     {
         var scoped = RequireAccountAccess(accountId);
+        var now = DateTimeOffset.UtcNow;
+
+        // The effective window is part of the entitlement: without it a lapsed feature still reads
+        // as enabled. Ordering also needs the null guard — PostgreSQL sorts NULLS FIRST on DESC, so
+        // a row with no EffectiveFrom used to win over the current one.
         var feature = await Context.AccountFeatures
-            .Where(f => f.AccountId == scoped && f.FeatureKey == FeatureKeys.GpsPositionHistory)
-            .OrderByDescending(f => f.EffectiveFrom)
+            .Where(f => f.AccountId == scoped
+                && f.FeatureKey == FeatureKeys.GpsPositionHistory
+                && (f.EffectiveFrom == null || f.EffectiveFrom <= now)
+                && (f.EffectiveTo == null || f.EffectiveTo >= now))
+            .OrderByDescending(f => f.EffectiveFrom ?? DateTimeOffset.MinValue)
+            .ThenByDescending(f => f.AccountFeatureId)
             .FirstOrDefaultAsync(cancellationToken);
 
         if (feature is null || !feature.Enabled)

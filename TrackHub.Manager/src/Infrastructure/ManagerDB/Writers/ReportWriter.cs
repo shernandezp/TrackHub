@@ -15,10 +15,11 @@
 
 using TrackHub.Manager.Infrastructure.Entities;
 using TrackHub.Manager.Infrastructure.Interfaces;
+using Common.Application.Interfaces;
 
 namespace TrackHub.Manager.Infrastructure.ManagerDB.Writers;
 
-public sealed class ReportWriter(IApplicationDbContext context) : IReportWriter
+public sealed class ReportWriter(IApplicationDbContext context, ICurrentPrincipal principal) : IReportWriter
 {
     /// <summary>
     /// Updates an existing report in the database with the provided data.
@@ -34,6 +35,7 @@ public sealed class ReportWriter(IApplicationDbContext context) : IReportWriter
 
         context.Reports.Attach(report);
 
+        var previous = Describe(report);
         report.Description = reportDto.Description;
         report.Type = reportDto.TypeId;
         report.Active = reportDto.Active;
@@ -43,6 +45,11 @@ public sealed class ReportWriter(IApplicationDbContext context) : IReportWriter
         report.SupportsPdf = reportDto.SupportsPdf;
         report.SortOrder = reportDto.SortOrder;
 
+        // The report catalog is platform-wide, so the audit row carries the platform account.
+        context.AuditEvents.Add(AuditTrail.Create(principal, Guid.Empty, "UpdateReport", "Report", $"{report.ReportId}", previous, Describe(report)));
         await context.SaveChangesAsync(cancellationToken);
     }
+
+    private static string Describe(Report report)
+        => $$"""{"description":{{AuditJson.Quote(report.Description)}},"type":{{report.Type}},"active":{{report.Active.ToString().ToLowerInvariant()}},"category":{{AuditJson.Quote(report.Category)}},"requiredFeatureKey":{{AuditJson.Quote(report.RequiredFeatureKey)}},"managerOnly":{{report.ManagerOnly.ToString().ToLowerInvariant()}},"supportsPdf":{{report.SupportsPdf.ToString().ToLowerInvariant()}},"sortOrder":{{report.SortOrder}}}""";
 }

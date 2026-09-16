@@ -68,7 +68,7 @@ function ProfileInfoCard({ user, updateCurrentUser, updatePassword }: ProfileInf
 
   const handleSubmitPassword = async () => {
     setLoading(true);
-    if (validatePassword(['password', 'confirmPassword']) && validateMatch('password', 'confirmPassword')) {
+    if (validatePassword(['currentPassword', 'password', 'confirmPassword']) && validateMatch('password', 'confirmPassword')) {
       passwordValues.userId = user.userId;
       await updatePassword(user.userId, passwordValues);
       setOpenPassword(false);

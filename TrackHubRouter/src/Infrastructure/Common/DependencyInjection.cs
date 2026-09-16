@@ -14,6 +14,7 @@
 //
 
 using Common.Domain.Enums;
+using Common.Infrastructure.Http;
 using Microsoft.Extensions.Configuration;
 using TrackHub.Router.Infrastructure.Common;
 using TrackHub.Router.Infrastructure.Common.Geocoding;
@@ -54,8 +55,14 @@ public static class DependencyInjection
 
         // Provider credential clients: auto-redirect disabled so an operator-configured base URL
         // cannot be used to 302-redirect the Router to an internal endpoint (router-audit A-20).
+        // ConnectCallback additionally refuses a non-routable destination at dial time, so a
+        // credential host whose DNS record changes after validation cannot reach the intranet.
         services.AddHttpClient(CredentialHttpClientFactory.ProviderHttpClientName)
-            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false });
+            .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+            {
+                AllowAutoRedirect = false,
+                ConnectCallback = NonRoutableAddressGuard.ConnectCallback()
+            });
 
         services.AddScoped<IReverseGeocoder, NominatimReverseGeocoder>();
         services.AddScoped<IReverseGeocoder, OpenRouteServiceReverseGeocoder>();

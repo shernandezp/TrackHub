@@ -10,7 +10,7 @@ namespace Infrastructure.UnitTests;
 public class DriverWorkforceReaderTests
 {
     private static ApplicationDbContext NewContext(string name)
-        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).Options);
+        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking).Options);
 
     private static ICurrentPrincipal Principal(Guid accountId, PrincipalType type = PrincipalType.User, Guid? driverId = null)
     {

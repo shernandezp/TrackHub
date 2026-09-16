@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using System.Net;
 using System.Net.Http.Headers;
 using Common.Domain.Enums;
 using TrackHub.Router.Infrastructure.Protrack.Helpers;
@@ -29,6 +30,7 @@ public class ProtrackReaderBase
 {
     private readonly ICredentialHttpClientFactory _httpClientFactory;
     private readonly TokenHelper _tokenHelper;
+    private CredentialTokenDto? _credential;
 
     protected IHttpClientService HttpClientService { get; }
 
@@ -62,6 +64,7 @@ public class ProtrackReaderBase
     /// </summary>
     public virtual async Task Init(CredentialTokenDto credential, CancellationToken cancellationToken = default)
     {
+        _credential = credential;
         var httpClient = _httpClientFactory.CreateClientAsync(credential, cancellationToken);
         httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         BaseUrl = credential.Uri.TrimEnd('/');
@@ -70,5 +73,29 @@ public class ProtrackReaderBase
 
         AccessToken = await _tokenHelper.GetTokenAsync(
             HttpClientService, BaseUrl, credential, cancellationToken);
+    }
+
+    /// <summary>
+    /// Runs a provider read and, if the provider rejects the token with 401, authenticates again and
+    /// retries once. The read is a factory because Protrack carries the token in the query string,
+    /// so the retry has to rebuild the URL around the new one.
+    /// </summary>
+    private protected async Task<T?> WithReauthenticationAsync<T>(Func<Task<T?>> read, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await read();
+        }
+        catch (HttpRequestException exception) when (exception.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            if (_credential is not { } credential)
+            {
+                throw new InvalidOperationException("Protrack reader was not initialized.");
+            }
+
+            AccessToken = await _tokenHelper.ForceRefreshTokenAsync(
+                HttpClientService, BaseUrl, credential, cancellationToken);
+            return await read();
+        }
     }
 }

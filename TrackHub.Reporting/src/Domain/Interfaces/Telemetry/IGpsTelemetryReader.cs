@@ -23,5 +23,5 @@ public interface IGpsTelemetryReader
     Task<ManagerOperatorHealthSummaryVm> GetOperatorHealthSummaryAsync(Guid operatorId, int lookbackHours, CancellationToken cancellationToken);
     Task<IReadOnlyCollection<ManagerOperatorSyncRunVm>> GetOperatorSyncRunsAsync(Guid accountId, Guid? operatorId, int take, CancellationToken cancellationToken);
     Task<IReadOnlyCollection<ManagerTransporterPositionVm>> GetLatestPositionsAsync(Guid operatorId, CancellationToken cancellationToken);
-    Task<IReadOnlyCollection<ManagerTransporterPositionHistoryVm>> GetPositionHistoryAsync(Guid accountId, Guid? transporterId, Guid? deviceId, int take, CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<ManagerTransporterPositionHistoryVm>> GetPositionHistoryAsync(Guid accountId, Guid? transporterId, Guid? deviceId, int take, DateTimeOffset? from, DateTimeOffset? to, CancellationToken cancellationToken);
 }

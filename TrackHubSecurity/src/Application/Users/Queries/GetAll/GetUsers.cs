@@ -15,6 +15,7 @@
 
 using Common.Application.Extensions;
 using Common.Application.GraphQL.Inputs;
+using TrackHub.Security.Domain.Constants;
 
 namespace TrackHub.Security.Application.Users.Queries.GetAll;
 
@@ -25,6 +26,6 @@ public readonly record struct GetUsersQuery(FiltersInput Filter, int Skip = 0, i
 public class GetUsersMasterQueryHandler(IUserReader reader) : IRequestHandler<GetUsersQuery, IReadOnlyCollection<UserVm>>
 {
     public async Task<IReadOnlyCollection<UserVm>> Handle(GetUsersQuery request, CancellationToken cancellationToken)
-        => await reader.GetUsersAsync(request.Filter.GetFilters(), request.Skip, request.Take, cancellationToken);
+        => await reader.GetUsersAsync(request.Filter.GetFilters(UserQueryFilters.Allowed), request.Skip, request.Take, cancellationToken);
 
 }

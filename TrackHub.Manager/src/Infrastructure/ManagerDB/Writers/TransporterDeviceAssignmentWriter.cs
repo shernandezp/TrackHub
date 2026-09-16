@@ -16,10 +16,10 @@ public sealed class TransporterDeviceAssignmentWriter(IApplicationDbContext cont
     {
         var scopedAccount = RequireAccountWriteAccess(dto.AccountId);
 
-        var device = await Context.Devices.Include(d => d.Operator)
+        var device = await Context.Devices
+            .AsTracking().Include(d => d.Operator)
             .FirstOrDefaultAsync(d => d.DeviceId == dto.DeviceId, cancellationToken)
             ?? throw new NotFoundException(nameof(Device), $"{dto.DeviceId}");
-        Context.Devices.Attach(device);
         if (device.AccountId != scopedAccount || device.Operator.AccountId != scopedAccount)
         {
             throw new ForbiddenAccessException();
@@ -92,6 +92,7 @@ public sealed class TransporterDeviceAssignmentWriter(IApplicationDbContext cont
     public async Task EndAssignmentAsync(Guid assignmentId, string? reason, CancellationToken cancellationToken)
     {
         var entity = await Context.TransporterDeviceAssignments
+            .AsTracking()
             .FirstOrDefaultAsync(a => a.TransporterDeviceAssignmentId == assignmentId, cancellationToken)
             ?? throw new NotFoundException(nameof(TransporterDeviceAssignment), $"{assignmentId}");
         RequireAccountWriteAccess(entity.AccountId);
@@ -100,7 +101,6 @@ public sealed class TransporterDeviceAssignmentWriter(IApplicationDbContext cont
             return;
         }
         // The context is NoTracking by default; attach so the status flip actually persists.
-        Context.TransporterDeviceAssignments.Attach(entity);
         var now = DateTimeOffset.UtcNow;
         entity.Status = (int)AssignmentStatus.Ended;
         entity.EffectiveTo = now;

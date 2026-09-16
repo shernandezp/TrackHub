@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2026 Sergio Hernandez. All rights reserved.
+// Copyright (c) 2026 Sergio Hernandez. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License").
 //  You may not use this file except in compliance with the License.
@@ -13,13 +13,16 @@
 //  limitations under the License.
 //
 
+using Common.Application.Interfaces;
 using Common.Mediator;
 using Microsoft.Extensions.Logging;
 
 namespace Common.Application.Behaviors;
 
 // This class is a pipeline behavior that handles unhandled exceptions in the application.
-public class UnhandledExceptionBehavior<TRequest, TResponse>(ILogger<TRequest> logger) : IPipelineBehavior<TRequest, TResponse> where TRequest : notnull
+public class UnhandledExceptionBehavior<TRequest, TResponse>(
+    ILogger<TRequest> logger,
+    ICurrentPrincipal? principal = null) : IPipelineBehavior<TRequest, TResponse> where TRequest : notnull
 {
     // This method handles the request by invoking the next behavior in the pipeline and catching any unhandled exceptions.
     public async Task<TResponse> HandleAsync(TRequest request, Func<Task<TResponse>> next, CancellationToken cancellationToken)
@@ -30,8 +33,11 @@ public class UnhandledExceptionBehavior<TRequest, TResponse>(ILogger<TRequest> l
         }
         catch (Exception ex)
         {
-            var requestName = typeof(TRequest).Name;
-            logger.LogError(ex, "Request: Unhandled Exception for Request {Name} {@Request}", requestName, request);
+            // The request payload is deliberately NOT logged: authentication and user-management
+            // requests carry plaintext passwords, and every property would land in the logs table.
+            // The correlation id is the join key back to the caller's request.
+            logger.LogError(ex, "Request: Unhandled Exception for Request {Name} (correlation {CorrelationId})",
+                typeof(TRequest).Name, principal?.CorrelationId ?? "none");
             throw;
         }
     }

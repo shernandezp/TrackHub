@@ -12,7 +12,7 @@ namespace Infrastructure.UnitTests;
 public class AlertRuleEvaluatorTests
 {
     private static ApplicationDbContext NewContext(string name)
-        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).Options);
+        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking).Options);
 
     private static AlertRuleEvaluator NewEvaluator(ApplicationDbContext context)
         => new(context as IApplicationDbContext, NullLogger<AlertRuleEvaluator>.Instance);

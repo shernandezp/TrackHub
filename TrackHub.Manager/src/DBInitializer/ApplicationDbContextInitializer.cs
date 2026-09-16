@@ -110,7 +110,11 @@ internal class ApplicationDbContextInitializer(ILogger<ApplicationDbContextIniti
         if (!context.Accounts.Any())
         {
             var accountType = (short)AccountType.Personal;
-            context.Accounts.Add(new Account("Master Account", "Master Account Description", accountType, true));
+            var masterAccount = new Account("Master Account", "Master Account Description", accountType, true);
+            context.Accounts.Add(masterAccount);
+            // Well-known id: Security seeds the bootstrap administrator against the same account,
+            // and a minted-per-seeder guid left the two databases describing different tenants.
+            context.Entry(masterAccount).Property(x => x.AccountId).CurrentValue = PlatformBootstrap.MasterAccountId;
             await context.SaveChangesAsync();
         }
         if (!context.AccountSettings.Any())
@@ -122,7 +126,7 @@ internal class ApplicationDbContextInitializer(ILogger<ApplicationDbContextIniti
         if (!context.Users.Any())
         {
             var account = await context.Accounts.FirstAsync();
-            context.Users.Add(new User(Guid.NewGuid(), "Administrator", true, account.AccountId));
+            context.Users.Add(new User(PlatformBootstrap.AdministratorUserId, "Administrator", true, account.AccountId));
             await context.SaveChangesAsync();
         }
         if (!context.UserSettings.Any())
@@ -137,7 +141,8 @@ internal class ApplicationDbContextInitializer(ILogger<ApplicationDbContextIniti
         // text never lives in the database. Defaults come from the NotificationDefaultMessages
         // resources at render time; the templates table holds account-authored overrides only.
         // Remove rows an earlier initializer version may have seeded.
-        var seededDefaults = await context.NotificationTemplates.Where(t => t.AccountId == null).ToListAsync();
+        var seededDefaults = await context.NotificationTemplates
+            .AsTracking().Where(t => t.AccountId == null).ToListAsync();
         if (seededDefaults.Count > 0)
         {
             context.NotificationTemplates.RemoveRange(seededDefaults);

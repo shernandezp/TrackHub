@@ -76,6 +76,6 @@ app.UseAuthorization();
 
 app.UseExceptionHandler(options => { });
 
-app.MapGraphQL();
+app.MapGraphQL().RequireAuthorization();
 
 app.Run();

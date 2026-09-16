@@ -54,10 +54,10 @@ public sealed class ImportTripsCommandHandler(
             {
                 results.Add(await ImportOneAsync(request.AccountId, item, cancellationToken));
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 logger.LogError(ex, "Trip import failed for external reference {ExternalReference}", item.ExternalReference);
-                results.Add(new TripImportResultVm(item.ExternalReference, false, null, "TRIP_IMPORT_FAILED", ex.Message));
+                results.Add(PartnerErrorResult.Describe(ex, item.ExternalReference, null, "TRIP_IMPORT_FAILED"));
             }
         }
 

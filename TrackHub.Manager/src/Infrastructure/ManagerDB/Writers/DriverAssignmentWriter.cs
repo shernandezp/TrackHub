@@ -54,6 +54,7 @@ public sealed class DriverAssignmentWriter(IApplicationDbContext context, ICurre
     public async Task EndDriverAssignmentAsync(Guid driverTransporterAssignmentId, DateTimeOffset? endsAt, CancellationToken cancellationToken)
     {
         var entity = await Context.DriverTransporterAssignments
+            .AsTracking()
             .FirstOrDefaultAsync(x => x.DriverTransporterAssignmentId == driverTransporterAssignmentId, cancellationToken)
             ?? throw new NotFoundException(nameof(DriverTransporterAssignment), driverTransporterAssignmentId.ToString());
 
@@ -71,7 +72,6 @@ public sealed class DriverAssignmentWriter(IApplicationDbContext context, ICurre
             throw Invalid(nameof(endsAt), "The assignment end must not precede its start.");
         }
 
-        Context.DriverTransporterAssignments.Attach(entity);
         var oldValues = AuditValues(entity);
         entity.EndsAt = effectiveEnd;
         // A FUTURE end date schedules the close; it must not retire the assignment today. §6 defines an

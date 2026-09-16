@@ -11,7 +11,8 @@ public sealed class AlertEventWriter(IApplicationDbContext context, ICurrentPrin
     {
         var accountId = RequireAccountWriteAccess(alertEvent.AccountId);
         await RequireResourceInAccountAsync(accountId, alertEvent.ResourceType, alertEvent.ResourceId, cancellationToken);
-        var entity = await Context.AlertEvents.FirstOrDefaultAsync(x => x.AccountId == accountId && x.DeduplicationKey == alertEvent.DeduplicationKey && x.Status != "Resolved", cancellationToken);
+        var entity = await Context.AlertEvents
+            .AsTracking().FirstOrDefaultAsync(x => x.AccountId == accountId && x.DeduplicationKey == alertEvent.DeduplicationKey && x.Status != "Resolved", cancellationToken);
         if (entity == null)
         {
             entity = new AlertEvent(accountId, alertEvent.EventType, alertEvent.Severity, alertEvent.SourceModule, alertEvent.ResourceType, alertEvent.ResourceId, alertEvent.Status, alertEvent.PayloadJson, alertEvent.DeduplicationKey);
@@ -19,23 +20,49 @@ public sealed class AlertEventWriter(IApplicationDbContext context, ICurrentPrin
         }
         else
         {
-            Context.AlertEvents.Attach(entity);
             entity.LastSeenAt = DateTimeOffset.UtcNow;
             entity.PayloadJson = alertEvent.PayloadJson;
         }
 
-        await Context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await Context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception) when (IsOpenAlertDuplicate(exception))
+        {
+            // Another emission won the insert. The filtered unique index is the real guard; fold
+            // into the row it created rather than failing an alert nobody asked to be unique-checked.
+            foreach (var entry in Context.ChangeTracker.Entries().ToList())
+            {
+                entry.State = EntityState.Detached;
+            }
+
+            var winner = await Context.AlertEvents
+                .AsTracking()
+                .FirstAsync(x => x.AccountId == accountId && x.DeduplicationKey == alertEvent.DeduplicationKey && x.Status != "Resolved", cancellationToken);
+
+            winner.LastSeenAt = DateTimeOffset.UtcNow;
+            winner.PayloadJson = alertEvent.PayloadJson;
+            await Context.SaveChangesAsync(cancellationToken);
+            return ToVm(winner);
+        }
+
         return ToVm(entity);
     }
+
+    private static bool IsOpenAlertDuplicate(DbUpdateException exception)
+        => exception.InnerException is Npgsql.PostgresException postgres
+            && string.Equals(postgres.SqlState, "23505", StringComparison.Ordinal)
+            && postgres.ConstraintName?.Contains("alert_events_open_dedup", StringComparison.OrdinalIgnoreCase) == true;
 
     public async Task AcknowledgeAlertEventAsync(Guid alertEventId, CancellationToken cancellationToken) => await UpdateStatusAsync(alertEventId, "Acknowledged", cancellationToken);
     public async Task ResolveAlertEventAsync(Guid alertEventId, CancellationToken cancellationToken) => await UpdateStatusAsync(alertEventId, "Resolved", cancellationToken);
 
     private async Task UpdateStatusAsync(Guid alertEventId, string status, CancellationToken cancellationToken)
     {
-        var entity = await Context.AlertEvents.FirstAsync(x => x.AlertEventId == alertEventId, cancellationToken);
+        var entity = await Context.AlertEvents
+            .AsTracking().FirstAsync(x => x.AlertEventId == alertEventId, cancellationToken);
         RequireAccountWriteAccess(entity.AccountId);
-        Context.AlertEvents.Attach(entity);
         entity.Status = status;
         await Context.SaveChangesAsync(cancellationToken);
     }

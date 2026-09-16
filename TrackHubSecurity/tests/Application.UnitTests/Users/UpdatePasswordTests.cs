@@ -57,7 +57,7 @@ public class UpdatePasswordTests
 
         await CreateHandler().Handle(command, CancellationToken.None);
 
-        _writerMock.Verify(x => x.UpdatePasswordAsync(It.IsAny<UserPasswordDto>(), It.IsAny<CancellationToken>()), Times.Once);
+        _writerMock.Verify(x => x.UpdatePasswordAsync(It.IsAny<UserPasswordDto>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Once);
         _publisherMock.Verify(x => x.Publish(It.IsAny<UserUpdated.Notification>(), It.IsAny<CancellationToken>()), Times.Never);
         _readerMock.Verify(x => x.IsManagerAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -76,7 +76,7 @@ public class UpdatePasswordTests
 
         await CreateHandler().Handle(command, CancellationToken.None);
 
-        _writerMock.Verify(x => x.UpdatePasswordAsync(It.IsAny<UserPasswordDto>(), It.IsAny<CancellationToken>()), Times.Once);
+        _writerMock.Verify(x => x.UpdatePasswordAsync(It.IsAny<UserPasswordDto>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Once);
         _publisherMock.Verify(x => x.Publish(
             It.Is<UserUpdated.Notification>(n => n.Id == subjectId && n.User.UserId == subjectId && n.User.Active),
             It.IsAny<CancellationToken>()), Times.Once);
@@ -93,6 +93,6 @@ public class UpdatePasswordTests
         var command = new UpdatePasswordCommand(new UserPasswordDto(subjectId, "New-Passw0rd!"));
 
         Assert.ThrowsAsync<UnauthorizedAccessException>(() => CreateHandler().Handle(command, CancellationToken.None));
-        _writerMock.Verify(x => x.UpdatePasswordAsync(It.IsAny<UserPasswordDto>(), It.IsAny<CancellationToken>()), Times.Never);
+        _writerMock.Verify(x => x.UpdatePasswordAsync(It.IsAny<UserPasswordDto>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

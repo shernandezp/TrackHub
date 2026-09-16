@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Common.Domain.Extensions;
 using FluentAssertions;
 
@@ -109,5 +111,57 @@ public class CryptographyExtensionsTests
         var encrypted = original.EncryptData(passphrase, salt);
         var decrypted = encrypted.DecryptData(passphrase, salt);
         decrypted.Should().Be(original);
+    }
+
+    [Fact]
+    public void DecryptData_ReadsValuesStoredInTheLegacyCbcFormat()
+    {
+        var original = "provider-api-key";
+        var passphrase = "super-secret-passphrase";
+        var salt = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
+
+        var decrypted = EncryptLegacyCbc(original, passphrase, salt).DecryptData(passphrase, salt);
+
+        decrypted.Should().Be(original);
+    }
+
+    [Fact]
+    public void DecryptData_RejectsTamperedCiphertext()
+    {
+        var passphrase = "super-secret-passphrase";
+        var salt = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
+
+        var encrypted = "Sensitive info".EncryptData(passphrase, salt);
+        var payload = Convert.FromBase64String(encrypted["v2:".Length..]);
+        payload[^1] ^= 0xFF;
+        var tampered = "v2:" + Convert.ToBase64String(payload);
+
+        var act = () => tampered.DecryptData(passphrase, salt);
+        act.Should().Throw<CryptographicException>();
+    }
+
+    [Theory]
+    [InlineData("v2:")]
+    [InlineData("v2:AAAA")]
+    [InlineData("AAAA")]
+    public void DecryptData_RejectsTruncatedPayload(string value)
+    {
+        var salt = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
+
+        var act = () => value.DecryptData("passphrase", salt);
+        act.Should().Throw<CryptographicException>();
+    }
+
+    private static string EncryptLegacyCbc(string value, string passphrase, byte[] salt)
+    {
+        using var aes = Aes.Create();
+        aes.Key = CryptographyExtensions.DeriveKey(passphrase, salt);
+        aes.GenerateIV();
+        aes.Padding = PaddingMode.PKCS7;
+
+        using var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
+        var cipher = encryptor.TransformFinalBlock(Encoding.UTF8.GetBytes(value), 0, Encoding.UTF8.GetByteCount(value));
+
+        return Convert.ToBase64String([.. aes.IV, .. cipher]);
     }
 }

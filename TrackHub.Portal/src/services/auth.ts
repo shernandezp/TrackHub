@@ -67,6 +67,8 @@ export const exchangeAuthorizationCode = async (
       );
     }
     throw error;
+  } finally {
+    sessionStorage.removeItem('code_verifier');
   }
 };
 

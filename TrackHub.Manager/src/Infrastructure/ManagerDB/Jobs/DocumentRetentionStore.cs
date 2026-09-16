@@ -48,13 +48,13 @@ public sealed class DocumentRetentionStore(IApplicationDbContext context) : IDoc
         PurgeableVersionVm version, string idempotencyKey, DateTimeOffset startedAt, CancellationToken cancellationToken)
     {
         var entity = await context.DocumentVersions
+            .AsTracking()
             .FirstOrDefaultAsync(v => v.DocumentVersionId == version.DocumentVersionId, cancellationToken);
         if (entity is null)
         {
             return;
         }
 
-        context.DocumentVersions.Attach(entity);
         entity.BytesPurgedAt = DateTimeOffset.UtcNow;
 
         context.AuditEvents.Add(new AuditEvent(

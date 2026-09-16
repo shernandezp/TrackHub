@@ -16,6 +16,7 @@
 using TrackHub.Router.Infrastructure.Wialon.Mappers;
 using TrackHub.Router.Domain.Interfaces;
 using TrackHub.Router.Domain.Interfaces.Operator;
+using TrackHub.Router.Domain.Extensions;
 
 namespace TrackHub.Router.Infrastructure.Wialon;
 
@@ -80,7 +81,7 @@ public sealed class PositionReader(
             return [];
         }
 
-        var devicesDictionary = devices.ToDictionary(device => device.Identifier, device => device);
+        var devicesDictionary = devices.ToDeviceLookup(device => device.Identifier);
         return result.Items.MapToPositionVm(devicesDictionary).Distinct();
     }
 

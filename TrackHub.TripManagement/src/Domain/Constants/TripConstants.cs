@@ -344,6 +344,8 @@ public static class TripErrorCodes
     public const string DuplicateTripCode = "TRIP_DUPLICATE_CODE";
     public const string DuplicateExternalReference = "TRIP_DUPLICATE_EXTERNAL_REFERENCE";
     public const string TripHasHistory = "TRIP_HAS_HISTORY";
+    public const string TripNotFound = "TRIP_NOT_FOUND";
+    public const string Forbidden = "TRIP_FORBIDDEN";
 
     /// <summary>
     /// The transporter is already running another trip. One physical unit runs one trip at a time,

@@ -25,6 +25,9 @@ public interface IGeofenceEventReader
     /// </summary>
     Task<IReadOnlyCollection<GeofenceEventVm>> GetOpenEventsForTransporterAsync(Guid transporterId, Guid accountId, CancellationToken cancellationToken);
 
+    /// <summary>Open events for a whole batch of transporters in one read.</summary>
+    Task<IReadOnlyCollection<GeofenceEventVm>> GetOpenEventsForTransportersAsync(IReadOnlyCollection<Guid> transporterIds, Guid accountId, CancellationToken cancellationToken);
+
     /// <summary>
     /// Gets a server-side page of geofence events filtered by account, user visibility, date range,
     /// optional transporter/geofence, and open-visit-only flag. <paramref name="scopeUserId"/> is

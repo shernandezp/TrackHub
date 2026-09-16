@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
@@ -33,10 +34,18 @@ public static class CachingExtensions
     /// <returns>The cache key.</returns>
     public static string GetCacheKey<TRequest, TResponse>(this TRequest request)
     {
-        var r = new { request };
-        var props = r.request?.GetType().GetProperties().Select(pi => $"{pi.Name}:{pi.GetValue(r.request, null)}");
-        return $"{typeof(TRequest).FullName}{{{string.Join(",", props ?? [])}}}";
+        // Hashing a canonical serialization, because concatenating member ToString() values
+        // renders every nested DTO or collection as its type name and lets two different
+        // argument tuples collide onto one entry.
+        var payload = JsonSerializer.SerializeToUtf8Bytes(request, CacheKeyOptions);
+        return $"{typeof(TRequest).FullName}:{Convert.ToHexString(SHA256.HashData(payload))}";
     }
+
+    private static readonly JsonSerializerOptions CacheKeyOptions = new()
+    {
+        IncludeFields = true,
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.Never
+    };
 
     /// <summary>
     /// Sets a value in the distributed cache asynchronously.

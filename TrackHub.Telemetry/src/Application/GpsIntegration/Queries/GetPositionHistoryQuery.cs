@@ -8,7 +8,9 @@ public readonly record struct GetPositionHistoryQuery(
     Guid AccountId,
     Guid? TransporterId = null,
     Guid? DeviceId = null,
-    int Take = 500) : IRequest<IReadOnlyCollection<TransporterPositionHistoryVm>>;
+    int Take = 500,
+    DateTimeOffset? From = null,
+    DateTimeOffset? To = null) : IRequest<IReadOnlyCollection<TransporterPositionHistoryVm>>;
 
 public class GetPositionHistoryQueryHandler(ITransporterPositionHistoryReader reader)
     : IRequestHandler<GetPositionHistoryQuery, IReadOnlyCollection<TransporterPositionHistoryVm>>
@@ -21,6 +23,6 @@ public class GetPositionHistoryQueryHandler(ITransporterPositionHistoryReader re
         };
         if (request.TransporterId.HasValue) dict[nameof(TransporterPositionHistoryVm.TransporterId)] = request.TransporterId.Value;
         if (request.DeviceId.HasValue) dict[nameof(TransporterPositionHistoryVm.DeviceId)] = request.DeviceId.Value;
-        return reader.GetAsync(new Filters(dict), request.Take, cancellationToken);
+        return reader.GetAsync(new Filters(dict), request.Take, request.From, request.To, cancellationToken);
     }
 }

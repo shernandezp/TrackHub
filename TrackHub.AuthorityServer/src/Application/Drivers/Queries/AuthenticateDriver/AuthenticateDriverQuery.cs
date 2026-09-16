@@ -52,15 +52,20 @@ public sealed class AuthenticateDriverQueryHandler(IDriverCredentialReader reade
             throw new AuthenticationException("Driver credential activation is required");
         }
 
-        if (credential.LockedUntil.HasValue && credential.LockedUntil.Value > DateTimeOffset.UtcNow)
+        var now = DateTimeOffset.UtcNow;
+        var lockExpired = credential.LockedUntil.HasValue && credential.LockedUntil.Value <= now;
+
+        if (credential.LockedUntil.HasValue && credential.LockedUntil.Value > now)
         {
             throw new AuthenticationException("Driver credential is locked");
         }
 
         if (!credential.PasswordHash.VerifyHashedPassword(request.Password))
         {
-            var failedAttempts = credential.FailedAttempts + 1;
-            DateTimeOffset? lockedUntil = failedAttempts >= MaximumFailedAttempts ? DateTimeOffset.UtcNow.Add(LockoutDuration) : null;
+            // An expired lock resets the counter: it used to survive, so after the first lockout a
+            // single wrong password re-locked the credential for another window, indefinitely.
+            var failedAttempts = (lockExpired ? 0 : credential.FailedAttempts) + 1;
+            DateTimeOffset? lockedUntil = failedAttempts >= MaximumFailedAttempts ? now.Add(LockoutDuration) : null;
             await writer.RecordDriverCredentialLoginFailureAsync(credential.DriverCredentialId, failedAttempts, lockedUntil, cancellationToken);
             throw new AuthenticationException("Driver credential is incorrect");
         }

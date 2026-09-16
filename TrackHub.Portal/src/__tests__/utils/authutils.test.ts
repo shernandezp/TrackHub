@@ -17,9 +17,10 @@
 import { generateCodeVerifier, generateCodeChallenge } from 'utils/authutils';
 
 describe('generateCodeVerifier', () => {
-  test('returns a string of length 128', () => {
+  test('length is within the range RFC 7636 permits', () => {
     const verifier = generateCodeVerifier();
-    expect(verifier.length).toBe(128);
+    expect(verifier.length).toBeGreaterThanOrEqual(43);
+    expect(verifier.length).toBeLessThanOrEqual(128);
   });
 
   test('contains only valid characters', () => {

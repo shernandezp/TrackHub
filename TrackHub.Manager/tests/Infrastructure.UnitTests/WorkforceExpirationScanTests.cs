@@ -23,7 +23,7 @@ public class WorkforceExpirationScanTests
     private const string JobKey = CommonConstants.BackgroundJobKeys.WorkforceExpirationScan;
 
     private static ApplicationDbContext NewContext(string name)
-        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).Options);
+        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking).Options);
 
     private static void EnableWorkforce(ApplicationDbContext context, Guid accountId)
     {

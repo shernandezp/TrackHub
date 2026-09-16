@@ -22,6 +22,12 @@ public class AlertEventConfiguration : IEntityTypeConfiguration<AlertEvent>
         builder.Property(x => x.PayloadJson).HasColumnName("payloadjson").HasColumnType(ColumnMetadata.TextField);
         builder.Property(x => x.DeduplicationKey).HasColumnName("deduplicationkey").HasMaxLength(ColumnMetadata.DefaultTokenLength).IsRequired();
         builder.HasIndex(x => new { x.AccountId, x.Status, x.LastSeenAt });
-        builder.HasIndex(x => x.DeduplicationKey);
+        // UNIQUE over OPEN alerts: de-duplication was a read-then-insert over a non-unique index,
+        // so two concurrent operator syncs both saw "no row" and both inserted — exactly under the
+        // provider outage that produces the most alerts.
+        builder.HasIndex(x => new { x.AccountId, x.DeduplicationKey })
+            .IsUnique()
+            .HasFilter("status <> 'Resolved'")
+            .HasDatabaseName("ix_alert_events_open_dedup");
     }
 }

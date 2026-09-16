@@ -60,6 +60,8 @@ public sealed class UserWriter(IApplicationDbContext context, ICurrentPrincipal 
             userDto.AccountId);
 
         await context.Users.AddAsync(user, cancellationToken);
+        AddAuditEvent(user.AccountId, "CreateUserReplica", $"{user.UserId}", null,
+            $$"""{"username":{{AuditJson.Quote(user.Username)}},"active":{{user.Active.ToString().ToLowerInvariant()}}}""");
         await context.SaveChangesAsync(cancellationToken);
 
         return new UserVm(
@@ -84,9 +86,12 @@ public sealed class UserWriter(IApplicationDbContext context, ICurrentPrincipal 
 
         context.Users.Attach(user);
 
+        var previous = $$"""{"username":{{AuditJson.Quote(user.Username)}},"active":{{user.Active.ToString().ToLowerInvariant()}}}""";
         user.Username = userDto.Username;
         user.Active = userDto.Active;
 
+        AddAuditEvent(user.AccountId, "UpdateUserReplica", $"{user.UserId}", previous,
+            $$"""{"username":{{AuditJson.Quote(user.Username)}},"active":{{user.Active.ToString().ToLowerInvariant()}}}""");
         await context.SaveChangesAsync(cancellationToken);
     }
 
@@ -105,7 +110,12 @@ public sealed class UserWriter(IApplicationDbContext context, ICurrentPrincipal 
 
         context.Users.Attach(user);
 
+        AddAuditEvent(user.AccountId, "DeleteUserReplica", $"{user.UserId}",
+            $$"""{"username":{{AuditJson.Quote(user.Username)}},"active":{{user.Active.ToString().ToLowerInvariant()}}}""", null);
         context.Users.Remove(user);
         await context.SaveChangesAsync(cancellationToken);
     }
+
+    private void AddAuditEvent(Guid accountId, string action, string userId, string? oldValuesJson, string? newValuesJson)
+        => context.AuditEvents.Add(AuditTrail.Create(principal, accountId, action, "User", userId, oldValuesJson, newValuesJson));
 }

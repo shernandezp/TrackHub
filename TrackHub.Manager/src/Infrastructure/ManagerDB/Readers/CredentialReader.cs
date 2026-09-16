@@ -45,7 +45,8 @@ public sealed class CredentialReader(IApplicationDbContext context, ICurrentPrin
                 c.Salt,
                 c.Operator.AccountId
             })
-            .FirstAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken);
+        ReaderResults.EnsureFound(credential, nameof(Entities.Credential), id.ToString());
         RequireAccountAccess(credential.AccountId);
         var salt = Convert.FromBase64String(credential.Salt);
         return new CredentialVm(
@@ -73,7 +74,8 @@ public sealed class CredentialReader(IApplicationDbContext context, ICurrentPrin
                 c.Salt,
                 c.Operator.AccountId
             })
-            .FirstAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken);
+        ReaderResults.EnsureFound(credential, nameof(Entities.Credential), operatorId.ToString());
         RequireAccountAccess(credential.AccountId);
         var salt = Convert.FromBase64String(credential.Salt);
         return new CredentialVm(
@@ -107,7 +109,8 @@ public sealed class CredentialReader(IApplicationDbContext context, ICurrentPrin
                 c.Salt,
                 c.Operator.AccountId
             })
-            .FirstAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken);
+        ReaderResults.EnsureFound(token, nameof(Entities.Credential), id.ToString());
         RequireAccountAccess(token.AccountId);
         var salt = Convert.FromBase64String(token.Salt);
         return new TokenVm(

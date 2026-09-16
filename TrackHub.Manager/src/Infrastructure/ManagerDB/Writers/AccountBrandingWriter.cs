@@ -29,6 +29,7 @@ public sealed class AccountBrandingWriter(IApplicationDbContext context, ICurren
         var newValuesJson = BrandingJson(branding.DisplayName, branding.LogoDocumentId, branding.PrimaryColor, branding.ReportHeader);
 
         var existing = await Context.AccountBrandings
+            .AsTracking()
             .FirstOrDefaultAsync(b => b.AccountId == accountId, cancellationToken);
 
         string? oldValuesJson;
@@ -40,7 +41,6 @@ public sealed class AccountBrandingWriter(IApplicationDbContext context, ICurren
         }
         else
         {
-            Context.AccountBrandings.Attach(existing);
             oldValuesJson = BrandingJson(existing.DisplayName, existing.LogoDocumentId, existing.PrimaryColor, existing.ReportHeader);
             existing.DisplayName = branding.DisplayName;
             existing.LogoDocumentId = branding.LogoDocumentId;

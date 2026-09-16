@@ -18,6 +18,8 @@ using TrackHub.Router.Infrastructure.Protrack.Mappers;
 using TrackHub.Router.Domain.Interfaces;
 using TrackHub.Router.Domain.Interfaces.Manager;
 using TrackHub.Router.Domain.Interfaces.Operator;
+using TrackHub.Router.Domain.Extensions;
+using TrackHub.Router.Domain.Helpers;
 
 namespace TrackHub.Router.Infrastructure.Protrack;
 
@@ -42,8 +44,11 @@ public sealed class PositionReader(
     /// </summary>
     public async Task<PositionVm> GetDevicePositionAsync(DeviceTransporterVm deviceDto, CancellationToken cancellationToken)
     {
-        var url = $"{BaseUrl}/api/track?access_token={AccessToken}&imeis={deviceDto.Serial}";
-        var result = await HttpClientService.GetAsync<TrackResponse>(url, cancellationToken: cancellationToken);
+        var result = await WithReauthenticationAsync(
+            () => HttpClientService.GetAsync<TrackResponse>(
+                $"{BaseUrl}/api/track?access_token={AccessToken}&imeis={deviceDto.Serial}",
+                cancellationToken: cancellationToken),
+            cancellationToken);
 
         var track = result?.Record?.FirstOrDefault(t => t.Imei == deviceDto.Serial);
         return track is null
@@ -57,24 +62,22 @@ public sealed class PositionReader(
     /// </summary>
     public async Task<IEnumerable<PositionVm>> GetDevicePositionAsync(IEnumerable<DeviceTransporterVm> devices, CancellationToken cancellationToken)
     {
-        var devicesList = devices.ToList();
-        if (devicesList.Count == 0)
+        var devicesDictionary = devices.ToDeviceLookup(device => device.Serial);
+        var results = new List<PositionVm>();
+        foreach (var chunk in devicesDictionary.Keys.Chunk(ProviderBatching.MaxIdsPerRequest))
         {
-            return [];
+            var result = await WithReauthenticationAsync(
+                () => HttpClientService.GetAsync<TrackResponse>(
+                    $"{BaseUrl}/api/track?access_token={AccessToken}&imeis={string.Join(",", chunk)}",
+                    cancellationToken: cancellationToken),
+                cancellationToken);
+
+            if (result?.Record is not null)
+            {
+                results.AddRange(result.Record.MapToPositionVm(devicesDictionary));
+            }
         }
-
-        var imeis = string.Join(",", devicesList.Select(d => d.Serial));
-        var url = $"{BaseUrl}/api/track?access_token={AccessToken}&imeis={imeis}";
-        var result = await HttpClientService.GetAsync<TrackResponse>(url, cancellationToken: cancellationToken);
-
-        if (result?.Record is null || !result.Record.Any())
-        {
-            return [];
-        }
-
-        // Serials are not unique in the catalog; the first row wins rather than the whole read failing.
-        var devicesDictionary = devicesList.GroupBy(device => device.Serial).ToDictionary(group => group.Key, group => group.First());
-        return result.Record.MapToPositionVm(devicesDictionary).Distinct();
+        return results.Distinct();
     }
 
     /// <summary>
@@ -90,8 +93,12 @@ public sealed class PositionReader(
 
         while (true)
         {
-            var url = $"{BaseUrl}/api/playback?access_token={AccessToken}&imei={deviceDto.Serial}&begintime={beginTime}&endtime={endTime}";
-            var result = await HttpClientService.GetAsync<PlaybackResponse>(url, cancellationToken: cancellationToken);
+            var page = beginTime;
+            var result = await WithReauthenticationAsync(
+                () => HttpClientService.GetAsync<PlaybackResponse>(
+                    $"{BaseUrl}/api/playback?access_token={AccessToken}&imei={deviceDto.Serial}&begintime={page}&endtime={endTime}",
+                    cancellationToken: cancellationToken),
+                cancellationToken);
 
             if (result?.Record is null || string.IsNullOrEmpty(result.Record))
             {

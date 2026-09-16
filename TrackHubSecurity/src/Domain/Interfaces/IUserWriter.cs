@@ -18,7 +18,7 @@ public interface IUserWriter
 {
     Task<UserVm> CreateUserAsync(CreateUserDto userDto, Guid accountId, CancellationToken cancellationToken);
     Task DeleteUserAsync(Guid userId, CancellationToken cancellationToken);
-    Task UpdatePasswordAsync(UserPasswordDto userPasswordDto, CancellationToken cancellationToken);
+    Task UpdatePasswordAsync(UserPasswordDto userPasswordDto, bool verifyCurrentPassword, CancellationToken cancellationToken);
     Task UnlockUserAsync(Guid userId, CancellationToken cancellationToken);
     Task UpdateUserAsync(UpdateUserDto userDto, CancellationToken cancellationToken);
     Task UpdateUserAsync(UpdateCurrentUserDto userDto, Guid userId, CancellationToken cancellationToken);

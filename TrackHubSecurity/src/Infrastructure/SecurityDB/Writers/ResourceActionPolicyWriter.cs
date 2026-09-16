@@ -51,10 +51,10 @@ public sealed class ResourceActionPolicyWriter(IApplicationDbContext context) : 
     public async Task DeleteResourceActionPolicyAsync(int resourceId, int actionId, int policyId, CancellationToken cancellationToken)
     {
         var resourceActionPolicy = await context.ResourceActionPolicy
+            .AsTracking()
             .FirstOrDefaultAsync(r => r.ResourceId == resourceId && r.ActionId == actionId && r.PolicyId == policyId, cancellationToken)
             ?? throw new NotFoundException(nameof(ResourceActionPolicy), $"{resourceId}-{actionId}-{policyId}");
 
-        context.ResourceActionPolicy.Attach(resourceActionPolicy);
         context.ResourceActionPolicy.Remove(resourceActionPolicy);
         await context.SaveChangesAsync(cancellationToken);
     }

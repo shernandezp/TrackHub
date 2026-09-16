@@ -14,6 +14,8 @@
 *  limitations under the License.
 */
 
+import { escapeHtml } from 'utils/htmlUtils';
+
 type SvgIconFormat = 'svg' | 'dataURL';
 
 interface SvgIconOptions {
@@ -30,7 +32,10 @@ const createSvgIcon = (
 ): string => {
     const scaledWidth = options.width || 40;
     const scaledHeight = options.height || 40;
-    const circleColor = options.color || "#1E90FF";
+    // The markup below is parsed as HTML by L.divIcon, so the two values that can come from account
+    // data are escaped here rather than at the (currently constant) call sites.
+    const circleColor = escapeHtml(options.color || "#1E90FF");
+    const label = escapeHtml(text);
 
     // Calculate darker gradient color
     const gradientColor = darkenColor(circleColor, 0.7); // Darken by 30%
@@ -47,7 +52,7 @@ const createSvgIcon = (
                 </linearGradient>
             </defs>
             <polygon points="50,10 63.75,35 36.25,35" fill="url(#rayGradient)" stroke="${circleColor}" stroke-width="1.5" stroke-linejoin="round" transform="rotate(${rotation}, 50, 50)"/>
-            <text x="50" y="60" text-anchor="middle" font-family="Arial, sans-serif" font-size="26" font-weight="bold" fill="#000000">${text}</text>
+            <text x="50" y="60" text-anchor="middle" font-family="Arial, sans-serif" font-size="26" font-weight="bold" fill="#000000">${label}</text>
         </svg>`;
 
     if (format === 'dataURL') {

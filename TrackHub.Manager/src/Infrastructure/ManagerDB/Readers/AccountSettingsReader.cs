@@ -38,7 +38,8 @@ public sealed class AccountSettingsReader(IApplicationDbContext context, ICurren
 
         var accountSettings = await Context.AccountSettings
             .Where(a => a.AccountId.Equals(id))
-            .FirstAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken);
+        ReaderResults.EnsureFound(accountSettings, nameof(Entities.AccountSettings), id.ToString());
 
         return ToVm(accountSettings);
     }
@@ -49,12 +50,16 @@ public sealed class AccountSettingsReader(IApplicationDbContext context, ICurren
     /// <param name="filters">Filters</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Returns a collection of AccountSettingsVm objects</returns>
-    public async Task<IReadOnlyCollection<AccountSettingsVm>> GetAccountSettingsAsync(Filters filters, CancellationToken cancellationToken)
+    public async Task<IReadOnlyCollection<AccountSettingsVm>> GetAccountSettingsAsync(Filters filters, int skip, int take, CancellationToken cancellationToken)
     {
         var query = Context.AccountSettings.AsQueryable();
         query = filters.Apply(query);
 
-        var settings = await query.ToListAsync(cancellationToken);
+        var settings = await query
+            // total-order: accountid is the primary key of account_settings, so it is already unique.
+            .OrderBy(a => a.AccountId)
+            .Skip(skip).Take(take)
+            .ToListAsync(cancellationToken);
         var result = new List<AccountSettingsVm>();
 
         foreach (var accountSettings in settings)

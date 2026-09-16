@@ -41,6 +41,7 @@ public sealed class PointOfInterestWriter(IApplicationDbContext context, ICurren
             accountId);
 
         await Context.PointsOfInterest.AddAsync(pointOfInterest, cancellationToken);
+        AddAuditEvent(accountId, "Create", nameof(PointOfInterest), pointOfInterest.PointOfInterestId.ToString(), null, Describe(pointOfInterest));
         await Context.SaveChangesAsync(cancellationToken);
 
         return new PointOfInterestVm(
@@ -67,6 +68,7 @@ public sealed class PointOfInterestWriter(IApplicationDbContext context, ICurren
 
         Context.PointsOfInterest.Attach(pointOfInterest);
 
+        var previous = Describe(pointOfInterest);
         pointOfInterest.Name = pointOfInterestDto.Name;
         pointOfInterest.Description = pointOfInterestDto.Description;
         pointOfInterest.Type = pointOfInterestDto.Type;
@@ -77,6 +79,7 @@ public sealed class PointOfInterestWriter(IApplicationDbContext context, ICurren
         pointOfInterest.GroupId = pointOfInterestDto.GroupId;
         pointOfInterest.Active = pointOfInterestDto.Active;
 
+        AddAuditEvent(accountId, "Update", nameof(PointOfInterest), pointOfInterestId.ToString(), previous, Describe(pointOfInterest));
         await Context.SaveChangesAsync(cancellationToken);
     }
 
@@ -95,7 +98,7 @@ public sealed class PointOfInterestWriter(IApplicationDbContext context, ICurren
             "Delete",
             nameof(PointOfInterest),
             pointOfInterestId.ToString(),
-            JsonSerializer.Serialize(new { pointOfInterest.Name, pointOfInterest.Type, pointOfInterest.Latitude, pointOfInterest.Longitude, pointOfInterest.GroupId, pointOfInterest.Active }),
+            Describe(pointOfInterest),
             null);
 
         await Context.SaveChangesAsync(cancellationToken);
@@ -116,4 +119,6 @@ public sealed class PointOfInterestWriter(IApplicationDbContext context, ICurren
             throw new NotFoundException(nameof(Group), $"{groupId.Value}");
         }
     }
+    private static string Describe(PointOfInterest pointOfInterest)
+        => JsonSerializer.Serialize(new { pointOfInterest.Name, pointOfInterest.Type, pointOfInterest.Latitude, pointOfInterest.Longitude, pointOfInterest.GroupId, pointOfInterest.Active });
 }

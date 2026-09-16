@@ -18,6 +18,7 @@ using TrackHub.Router.Domain.Interfaces.Geocoding;
 using TrackHub.Router.Domain.Interfaces.Geofence;
 using TrackHub.Router.Domain.Interfaces.Trip;
 using TrackHub.Router.Domain.Models;
+using TrackHub.Router.Domain.Helpers;
 
 namespace TrackHub.Router.Application.DevicePositions.Events;
 
@@ -56,7 +57,7 @@ public sealed class PositionsRetrieved
                 var result = providerFailed ? "FAILED" : "SUCCEEDED";
 
                 var validPositionCandidates = positions
-                    .Where(IsValidPosition)
+                    .Where(PositionValidity.IsStorable)
                     .ToArray();
                 var invalidPositionCount = positionsRead - validPositionCandidates.Length;
 
@@ -266,12 +267,6 @@ public sealed class PositionsRetrieved
 
                 return (positions, anyResolved);
             }
-
-            private static bool IsValidPosition(PositionVm position)
-                => position.TransporterId != Guid.Empty
-                   && position.DeviceDateTime != default
-                   && position.Latitude is >= -90d and <= 90d
-                   && position.Longitude is >= -180d and <= 180d;
         }
     }
 }

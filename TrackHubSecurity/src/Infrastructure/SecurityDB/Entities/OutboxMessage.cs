@@ -36,4 +36,6 @@ public sealed class OutboxMessage(string messageType, string payloadJson, string
     public string? LastError { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset? ProcessedAt { get; set; }
+    public string? ClaimedBy { get; set; }
+    public DateTimeOffset? ClaimedAt { get; set; }
 }

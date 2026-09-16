@@ -1,3 +1,5 @@
+using Moq;
+using Common.Application.Interfaces;
 using Common.Domain.Enums;
 using TrackHub.Manager.Domain.Records;
 using TrackHub.Manager.Infrastructure;
@@ -13,7 +15,7 @@ namespace Infrastructure.UnitTests;
 public class PlatformAnnouncementReaderTests
 {
     private static ApplicationDbContext NewContext(string name)
-        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).Options);
+        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking).Options);
 
     private static PlatformAnnouncement Announcement(
         string messageEn, bool active = true,
@@ -90,7 +92,7 @@ public class PlatformAnnouncementReaderTests
     {
         var now = DateTimeOffset.UtcNow;
         await using var context = NewContext(nameof(Writer_RoundTripsSeverityScheduleAndDelete));
-        var writer = new PlatformAnnouncementWriter(context);
+        var writer = new PlatformAnnouncementWriter(context, PlatformPrincipal());
 
         var created = await writer.CreatePlatformAnnouncementAsync(
             new PlatformAnnouncementDto("Maintenance window", "Ventana de mantenimiento", AnnouncementSeverity.Critical, now, now.AddHours(2), true),
@@ -124,7 +126,7 @@ public class PlatformAnnouncementReaderTests
     {
         var now = DateTimeOffset.UtcNow;
         await using var context = NewContext(nameof(DeactivatedAnnouncement_DisappearsFromTheAnonymousSurface));
-        var writer = new PlatformAnnouncementWriter(context);
+        var writer = new PlatformAnnouncementWriter(context, PlatformPrincipal());
         var reader = new PlatformAnnouncementReader(context);
 
         var created = await writer.CreatePlatformAnnouncementAsync(
@@ -135,5 +137,12 @@ public class PlatformAnnouncementReaderTests
             new PlatformAnnouncementDto("Investigating", null, AnnouncementSeverity.Warning, null, null, false), CancellationToken.None);
 
         Assert.That(await reader.GetVisiblePlatformAnnouncementsAsync(now, CancellationToken.None), Is.Empty);
+    }
+    private static ICurrentPrincipal PlatformPrincipal()
+    {
+        var principal = new Mock<ICurrentPrincipal>();
+        principal.SetupGet(p => p.PrincipalType).Returns(PrincipalType.User);
+        principal.SetupGet(p => p.UserId).Returns(Guid.NewGuid());
+        return principal.Object;
     }
 }

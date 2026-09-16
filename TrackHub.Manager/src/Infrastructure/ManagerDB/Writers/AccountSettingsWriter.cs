@@ -13,13 +13,14 @@
 //  limitations under the License.
 //
 
+using Common.Application.Interfaces;
 using TrackHub.Manager.Infrastructure.Entities;
 using TrackHub.Manager.Infrastructure.Interfaces;
 
 namespace TrackHub.Manager.Infrastructure.ManagerDB.Writers;
 
 // AccountSettingsWriter class is responsible for writing account settings-related data to the database
-public sealed class AccountSettingsWriter(IApplicationDbContext context) : IAccountSettingsWriter
+public sealed class AccountSettingsWriter(IApplicationDbContext context, ICurrentPrincipal principal) : IAccountSettingsWriter
 {
     /// <summary>
     /// Creates a new account setting asynchronously
@@ -32,6 +33,7 @@ public sealed class AccountSettingsWriter(IApplicationDbContext context) : IAcco
         var accountSettings = new AccountSettings(accountId);
 
         await context.AccountSettings.AddAsync(accountSettings, cancellationToken);
+        AddAuditEvent(accountId, "CreateAccountSettings", null, Describe(accountSettings));
         await context.SaveChangesAsync(cancellationToken);
 
         return new AccountSettingsVm(
@@ -52,10 +54,12 @@ public sealed class AccountSettingsWriter(IApplicationDbContext context) : IAcco
     /// <exception cref="NotFoundException"></exception>
     public async Task UpdateAccountSettingsAsync(AccountSettingsDto accountSettingsDto, CancellationToken cancellationToken)
     {
-        var accountSettings = await context.AccountSettings.FindAsync([accountSettingsDto.AccountId, cancellationToken], cancellationToken: cancellationToken)
+        var accountSettings = await context.AccountSettings.FindAsync([accountSettingsDto.AccountId], cancellationToken)
             ?? throw new NotFoundException(nameof(AccountSettings), $"{accountSettingsDto.AccountId}");
 
         context.AccountSettings.Attach(accountSettings);
+
+        var previous = Describe(accountSettings);
 
         accountSettings.Maps = accountSettingsDto.Maps;
         accountSettings.MapsKey = accountSettingsDto.MapsKey;
@@ -63,6 +67,14 @@ public sealed class AccountSettingsWriter(IApplicationDbContext context) : IAcco
         accountSettings.RefreshMap = accountSettingsDto.RefreshMap;
         accountSettings.RefreshMapInterval = accountSettingsDto.RefreshMapInterval;
 
+        AddAuditEvent(accountSettings.AccountId, "UpdateAccountSettings", previous, Describe(accountSettings));
         await context.SaveChangesAsync(cancellationToken);
     }
+
+    private void AddAuditEvent(Guid accountId, string action, string? oldValuesJson, string? newValuesJson)
+        => context.AuditEvents.Add(AuditTrail.Create(principal, accountId, action, "AccountSettings", $"{accountId}", oldValuesJson, newValuesJson));
+
+    // The maps API key is a secret the tenant supplies; only whether one is set is recorded.
+    private static string Describe(AccountSettings settings)
+        => $$"""{"maps":{{AuditJson.Quote(settings.Maps)}},"mapsKeyConfigured":{{(!string.IsNullOrEmpty(settings.MapsKey)).ToString().ToLowerInvariant()}},"onlineInterval":{{settings.OnlineInterval}},"refreshMap":{{settings.RefreshMap.ToString().ToLowerInvariant()}},"refreshMapInterval":{{settings.RefreshMapInterval}}}""";
 }

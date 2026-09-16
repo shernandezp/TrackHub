@@ -29,7 +29,7 @@ namespace Infrastructure.UnitTests;
 public class AccountSupportGrantWriterTests
 {
     private static ApplicationDbContext NewContext(string name)
-        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).Options);
+        => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking).Options);
 
     private static ICurrentPrincipal AdminPrincipal(Guid accountId, Guid userId)
     {

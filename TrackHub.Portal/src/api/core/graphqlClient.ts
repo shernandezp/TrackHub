@@ -18,7 +18,7 @@ import axios, { AxiosError } from 'axios';
 import { print } from 'graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { GRAPHQL_ENDPOINTS, type GraphQLBackend } from './endpoints';
-import { ApiError, type GraphQLErrorEntry } from './errors';
+import { UNEXPECTED_ERROR_I18N_KEY, ApiError, type GraphQLErrorEntry } from './errors';
 import { tokenStore } from './tokenStore';
 
 export const REQUEST_TIMEOUT_MS = 30000;
@@ -51,8 +51,29 @@ export async function executeGraphQL<TData, TVariables>(
   ...[variables]: TVariables extends Record<string, never> ? [] : [TVariables]
 ): Promise<TData> {
   const query = typeof document === 'string' ? document : print(document);
-  const token = await tokenStore.acquireValidAccessToken();
 
+  try {
+    return await postGraphQL<TData>(backend, query, variables, await tokenStore.acquireValidAccessToken());
+  } catch (error) {
+    // The server rejected a token this client still considered valid (revoked grant, authority
+    // restart, clock skew). Refresh once and replay; a second 401 is a real authentication failure.
+    if (!isUnauthorized(error)) {
+      throw error;
+    }
+    return await postGraphQL<TData>(backend, query, variables, await tokenStore.forceRefreshAccessToken());
+  }
+}
+
+function isUnauthorized(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 401;
+}
+
+async function postGraphQL<TData>(
+  backend: GraphQLBackend,
+  query: string,
+  variables: unknown,
+  token: string
+): Promise<TData> {
   let payload: GraphQLResponsePayload;
   try {
     const response = await axios.post<GraphQLResponsePayload>(
@@ -68,11 +89,13 @@ export async function executeGraphQL<TData, TVariables>(
     // HotChocolate returns GraphQL error payloads with non-2xx statuses too.
     const axiosError = error as AxiosError<GraphQLResponsePayload>;
     const errors = axiosError.response?.data?.errors;
-    if (errors && errors.length > 0) {
+    if (errors && errors.length > 0 && axiosError.response?.status !== 401) {
       throw ApiError.fromGraphQLErrors(errors);
     }
+    // The transport message names the backend and the axios failure; the user gets the generic line.
     throw new ApiError(`Request to ${backend} failed: ${axiosError.message}`, {
       status: axiosError.response?.status,
+      i18nKey: UNEXPECTED_ERROR_I18N_KEY,
       cause: error,
     });
   }

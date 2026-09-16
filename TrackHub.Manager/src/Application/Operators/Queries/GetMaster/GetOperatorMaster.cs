@@ -15,6 +15,7 @@
 
 using Common.Application.Extensions;
 using Common.Application.GraphQL.Inputs;
+using TrackHub.Manager.Domain.Constants;
 
 namespace TrackHub.Manager.Application.Operators.Queries.GetMaster;
 
@@ -25,6 +26,6 @@ public readonly record struct GetOperatorMasterQuery(FiltersInput Filter) : IReq
 public class GetOperatorsMasterQueryHandler(IOperatorReader reader) : IRequestHandler<GetOperatorMasterQuery, IReadOnlyCollection<OperatorVm>>
 {
     public async Task<IReadOnlyCollection<OperatorVm>> Handle(GetOperatorMasterQuery request, CancellationToken cancellationToken)
-        => await reader.GetOperatorsAsync(request.Filter.GetFilters(), cancellationToken);
+        => await reader.GetOperatorsAsync(request.Filter.GetFilters(MasterQueryFilters.Operators), cancellationToken);
 
 }

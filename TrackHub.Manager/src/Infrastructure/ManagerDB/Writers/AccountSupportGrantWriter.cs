@@ -18,7 +18,8 @@ public sealed class AccountSupportGrantWriter(IApplicationDbContext context, ICu
 
     public async Task ApproveAccountSupportGrantAsync(Guid accountSupportGrantId, string approvedBy, CancellationToken cancellationToken)
     {
-        var entity = await Context.AccountSupportGrants.FirstAsync(x => x.AccountSupportGrantId == accountSupportGrantId, cancellationToken);
+        var entity = await Context.AccountSupportGrants
+            .AsTracking().FirstAsync(x => x.AccountSupportGrantId == accountSupportGrantId, cancellationToken);
         RequireAccountWriteAccess(entity.AccountId);
 
         // Separation of duties: a grant may not be approved by the principal that created it.
@@ -28,7 +29,6 @@ public sealed class AccountSupportGrantWriter(IApplicationDbContext context, ICu
             throw new ForbiddenAccessException("A support grant must be approved by a principal other than its creator.");
         }
 
-        Context.AccountSupportGrants.Attach(entity);
         var oldValues = AuditValues(entity);
         entity.ApprovedBy = approvedBy;
         entity.ApprovedAt = DateTimeOffset.UtcNow;
@@ -38,9 +38,9 @@ public sealed class AccountSupportGrantWriter(IApplicationDbContext context, ICu
 
     public async Task RevokeAccountSupportGrantAsync(Guid accountSupportGrantId, string revokedBy, CancellationToken cancellationToken)
     {
-        var entity = await Context.AccountSupportGrants.FirstAsync(x => x.AccountSupportGrantId == accountSupportGrantId, cancellationToken);
+        var entity = await Context.AccountSupportGrants
+            .AsTracking().FirstAsync(x => x.AccountSupportGrantId == accountSupportGrantId, cancellationToken);
         RequireAccountWriteAccess(entity.AccountId);
-        Context.AccountSupportGrants.Attach(entity);
         var oldValues = AuditValues(entity);
         entity.RevokedBy = revokedBy;
         entity.RevokedAt = DateTimeOffset.UtcNow;

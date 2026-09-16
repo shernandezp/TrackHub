@@ -14,8 +14,7 @@
 //
 
 using System.Linq.Expressions;
-using System.Net;
-using System.Net.Sockets;
+using Common.Domain.Http;
 using Microsoft.Extensions.Configuration;
 
 namespace TrackHub.Manager.Application.Credentials.Command;
@@ -29,13 +28,6 @@ public static class CredentialUriRules
     // Absent (the deployed default) the non-routable ranges are rejected.
     public const string AllowPrivateHostsKey = "AppSettings:AllowPrivateCredentialHosts";
 
-    private static readonly string[] MetadataHosts =
-    [
-        "metadata.google.internal",
-        "metadata.goog",
-        "instance-data"
-    ];
-
     public static void Apply<T>(AbstractValidator<T> validator, Expression<Func<T, string>> selector, IConfiguration configuration)
     {
         var allowPrivateHosts = bool.TryParse(configuration[AllowPrivateHostsKey], out var configured) && configured;
@@ -44,7 +36,7 @@ public static class CredentialUriRules
             .NotEmpty()
             .Must(BeAnAbsoluteHttpUri)
             .WithMessage("Credential Uri must be an absolute http or https URL.")
-            .Must(uri => allowPrivateHosts || !TargetsNonRoutableHost(uri))
+            .Must(uri => allowPrivateHosts || !NonRoutableAddress.TargetsNonRoutableHost(uri))
             .WithMessage("Credential Uri must not target a loopback, link-local, private or metadata-service host.");
     }
 
@@ -52,55 +44,4 @@ public static class CredentialUriRules
         => string.IsNullOrWhiteSpace(uri)
             || (Uri.TryCreate(uri, UriKind.Absolute, out var parsed)
                 && (parsed.Scheme == Uri.UriSchemeHttp || parsed.Scheme == Uri.UriSchemeHttps));
-
-    private static bool TargetsNonRoutableHost(string uri)
-    {
-        if (!Uri.TryCreate(uri, UriKind.Absolute, out var parsed))
-        {
-            return false;
-        }
-
-        var host = parsed.DnsSafeHost;
-        if (IPAddress.TryParse(host, out var address))
-        {
-            return IsNonRoutable(address);
-        }
-
-        return host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
-            || host.EndsWith(".localhost", StringComparison.OrdinalIgnoreCase)
-            || MetadataHosts.Contains(host, StringComparer.OrdinalIgnoreCase);
-    }
-
-    private static bool IsNonRoutable(IPAddress address)
-    {
-        if (address.IsIPv4MappedToIPv6)
-        {
-            address = address.MapToIPv4();
-        }
-
-        if (IPAddress.IsLoopback(address) || address.Equals(IPAddress.Any) || address.Equals(IPAddress.IPv6Any))
-        {
-            return true;
-        }
-
-        if (address.AddressFamily == AddressFamily.InterNetworkV6)
-        {
-            // fe80::/10 link-local and fc00::/7 unique-local.
-            return address.IsIPv6LinkLocal || address.IsIPv6SiteLocal || (address.GetAddressBytes()[0] & 0xFE) == 0xFC;
-        }
-
-        var octets = address.GetAddressBytes();
-        return octets[0] switch
-        {
-            10 => true,
-            127 => true,
-            // 100.64.0.0/10 carrier-grade NAT.
-            100 => octets[1] >= 64 && octets[1] <= 127,
-            // 169.254.0.0/16 link-local, which covers the 169.254.169.254 metadata service.
-            169 => octets[1] == 254,
-            172 => octets[1] >= 16 && octets[1] <= 31,
-            192 => octets[1] == 168,
-            _ => false
-        };
-    }
 }

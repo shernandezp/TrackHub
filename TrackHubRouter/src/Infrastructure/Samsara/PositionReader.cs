@@ -16,6 +16,8 @@
 using Common.Domain.Extensions;
 using TrackHub.Router.Infrastructure.Samsara.Mappers;
 using TrackHub.Router.Domain.Interfaces;
+using TrackHub.Router.Domain.Extensions;
+using TrackHub.Router.Domain.Helpers;
 
 namespace TrackHub.Router.Infrastructure.Samsara;
 
@@ -46,17 +48,18 @@ public sealed class PositionReader(
     /// </summary>
     public async Task<IEnumerable<PositionVm>> GetDevicePositionAsync(IEnumerable<DeviceTransporterVm> devices, CancellationToken cancellationToken)
     {
-        var vehicleIds = string.Join(",", devices.Select(d => d.Serial));
-        var url = $"fleet/vehicles/stats?vehicleIds={vehicleIds}&types=gps";
-        
-        var result = await HttpClientService.GetAsync<VehicleStatsResponse>(url, cancellationToken: cancellationToken);
-        if (result?.Data is null || !result.Data.Any())
+        var devicesDictionary = devices.ToDeviceLookup(device => device.Serial);
+        var results = new List<PositionVm>();
+        foreach (var chunk in devicesDictionary.Keys.Chunk(ProviderBatching.MaxIdsPerRequest))
         {
-            return [];
+            var url = $"fleet/vehicles/stats?vehicleIds={string.Join(",", chunk)}&types=gps";
+            var result = await HttpClientService.GetAsync<VehicleStatsResponse>(url, cancellationToken: cancellationToken);
+            if (result?.Data is not null)
+            {
+                results.AddRange(result.Data.MapToPositionVm(devicesDictionary));
+            }
         }
-
-        var devicesDictionary = devices.ToDictionary(device => device.Serial, device => device);
-        return result.Data.MapToPositionVm(devicesDictionary).Distinct();
+        return results.Distinct();
     }
 
     /// <summary>

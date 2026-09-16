@@ -249,7 +249,8 @@ public sealed class OperatorReader(
         var accountId = await Context.Users
             .Where(u => u.UserId == userId)
             .Select(u => u.AccountId)
-            .FirstAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken);
+        ReaderResults.EnsureFound(accountId, nameof(Entities.User), userId.ToString());
 
         var items = await Context.Operators
             .Include(o => o.Credential)

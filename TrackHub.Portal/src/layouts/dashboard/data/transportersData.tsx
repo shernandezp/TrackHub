@@ -23,9 +23,10 @@ import Icon from "@mui/material/Icon";
 import ArgonButton from "components/ArgonButton";
 import { formatDateTime } from "utils/dateUtils";
 import type { Position } from "api/router/router";
+import type { TableColumn } from "controls/Tables/Table";
 
 /** A column descriptor consumed by the vendored `Table` control. */
-export interface TransporterColumn { name: string; title?: string; align?: "left" | "right" | "center"; width?: string; }
+export type TransporterColumn = TableColumn;
 /** A rendered table row for the live transporters list. */
 export interface TransporterRow {
   status: ReactNode;
@@ -49,10 +50,11 @@ function useTransportersTableData(transporters: Position[]): UseTransportersTabl
 
   const buildTableData = (transporters: Position[]): TransporterTableData => ({
     columns: [
-      { name: "status", title:t('transporterMap.status'), align: "center", width: "10%" },
+      { name: "status", title:t('transporterMap.status'), align: "center", width: "10%", sortValue: (row) => Number(row.speedValue) > 0 ? 1 : 0 },
       { name: "name", title:t('transporterMap.name'), align: "left", width: "35%" },
-      { name: "datetime", title:t('transporterMap.dateTime'), align: "left", width: "35%" },
-      { name: "speed", title:t('transporterMap.speed'), align: "left", width: "20%" },
+      // The cells render formatted text, so the columns sort on the raw values carried alongside.
+      { name: "datetime", title:t('transporterMap.dateTime'), align: "left", width: "35%", sortValue: (row) => row.datetimeValue as string },
+      { name: "speed", title:t('transporterMap.speed'), align: "left", width: "20%", sortValue: (row) => Number(row.speedValue) },
       { name: "id" }
     ],
     rows: transporters.map(transporter => ({
@@ -68,6 +70,8 @@ function useTransportersTableData(transporters: Position[]): UseTransportersTabl
         </ArgonTypography>
       ),
       speed: <Description description={transporter.speed} />,
+      speedValue: transporter.speed,
+      datetimeValue: transporter.deviceDateTime,
       id: transporter.transporterId
     })),
   });

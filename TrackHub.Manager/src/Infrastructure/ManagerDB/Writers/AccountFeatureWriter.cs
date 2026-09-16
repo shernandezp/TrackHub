@@ -25,6 +25,7 @@ public sealed class AccountFeatureWriter(IApplicationDbContext context, ICurrent
         foreach (var accountId in accountIds)
         {
             var existing = await Context.AccountFeatures
+                .AsTracking()
                 .FirstOrDefaultAsync(x => x.AccountId == accountId && x.FeatureKey == FeatureKeys.PublicLinks, cancellationToken);
 
             if (existing != null)
@@ -34,7 +35,6 @@ public sealed class AccountFeatureWriter(IApplicationDbContext context, ICurrent
                     continue;
                 }
 
-                Context.AccountFeatures.Attach(existing);
                 var oldValues = AuditValues(existing);
                 existing.Enabled = true;
                 AddAuditEvent(accountId, "SeedPublicLinksFeature", "AccountFeature", existing.AccountFeatureId.ToString(), oldValues, AuditValues(existing));
@@ -60,7 +60,8 @@ public sealed class AccountFeatureWriter(IApplicationDbContext context, ICurrent
     public async Task<AccountFeatureVm> SetAccountFeatureAsync(AccountFeatureDto feature, CancellationToken cancellationToken)
     {
         var accountId = RequireAccountWriteAccess(feature.AccountId);
-        var entity = await Context.AccountFeatures.FirstOrDefaultAsync(x => x.AccountId == accountId && x.FeatureKey == feature.FeatureKey, cancellationToken);
+        var entity = await Context.AccountFeatures
+            .AsTracking().FirstOrDefaultAsync(x => x.AccountId == accountId && x.FeatureKey == feature.FeatureKey, cancellationToken);
         string? oldValues = null;
         if (entity == null)
         {
@@ -70,7 +71,6 @@ public sealed class AccountFeatureWriter(IApplicationDbContext context, ICurrent
         else
         {
             oldValues = AuditValues(entity);
-            Context.AccountFeatures.Attach(entity);
             entity.Enabled = feature.Enabled;
             entity.Tier = feature.Tier;
             entity.Source = feature.Source;
@@ -86,9 +86,9 @@ public sealed class AccountFeatureWriter(IApplicationDbContext context, ICurrent
 
     public async Task DisableAccountFeatureAsync(Guid accountFeatureId, CancellationToken cancellationToken)
     {
-        var entity = await Context.AccountFeatures.FirstAsync(x => x.AccountFeatureId == accountFeatureId, cancellationToken);
+        var entity = await Context.AccountFeatures
+            .AsTracking().FirstAsync(x => x.AccountFeatureId == accountFeatureId, cancellationToken);
         RequireAccountWriteAccess(entity.AccountId);
-        Context.AccountFeatures.Attach(entity);
         var oldValues = AuditValues(entity);
         entity.Enabled = false;
         AddAuditEvent(entity.AccountId, "DisableAccountFeature", "AccountFeature", entity.AccountFeatureId.ToString(), oldValues, AuditValues(entity));
@@ -97,9 +97,9 @@ public sealed class AccountFeatureWriter(IApplicationDbContext context, ICurrent
 
     public async Task UpdateAccountFeatureConfigurationAsync(Guid accountFeatureId, string? configurationJson, CancellationToken cancellationToken)
     {
-        var entity = await Context.AccountFeatures.FirstAsync(x => x.AccountFeatureId == accountFeatureId, cancellationToken);
+        var entity = await Context.AccountFeatures
+            .AsTracking().FirstAsync(x => x.AccountFeatureId == accountFeatureId, cancellationToken);
         RequireAccountWriteAccess(entity.AccountId);
-        Context.AccountFeatures.Attach(entity);
         var oldValues = AuditValues(entity);
         entity.ConfigurationJson = configurationJson;
         AddAuditEvent(entity.AccountId, "UpdateAccountFeatureConfiguration", "AccountFeature", entity.AccountFeatureId.ToString(), oldValues, AuditValues(entity));
@@ -109,7 +109,10 @@ public sealed class AccountFeatureWriter(IApplicationDbContext context, ICurrent
     private static AccountFeatureVm ToVm(AccountFeature x) 
         => new(x.AccountFeatureId, x.AccountId, x.FeatureKey, x.Enabled, x.Tier, x.Source, x.EffectiveFrom, x.EffectiveTo, x.ConfigurationJson, x.LastModified);
 
-    private static string AuditValues(AccountFeature feature) 
-        => $$"""{"featureKey":"{{feature.FeatureKey}}","enabled":{{feature.Enabled.ToString().ToLowerInvariant()}},"tier":"{{feature.Tier}}","source":"{{feature.Source}}","effectiveFrom":{{Quote(feature.EffectiveFrom)}},"effectiveTo":{{Quote(feature.EffectiveTo)}},"configurationJson":{{Quote(feature.ConfigurationJson)}}}""";
+    // Every free-text value goes through Quote: featureKey, tier and source are caller-supplied on
+    // create, and interpolating them raw let a tenant forge fields in audit_events.newvaluesjson or
+    // make the row unparseable for every downstream consumer.
+    private static string AuditValues(AccountFeature feature)
+        => $$"""{"featureKey":{{Quote(feature.FeatureKey)}},"enabled":{{feature.Enabled.ToString().ToLowerInvariant()}},"tier":{{Quote(feature.Tier)}},"source":{{Quote(feature.Source)}},"effectiveFrom":{{Quote(feature.EffectiveFrom)}},"effectiveTo":{{Quote(feature.EffectiveTo)}},"configurationJson":{{Quote(feature.ConfigurationJson)}}}""";
 
 }

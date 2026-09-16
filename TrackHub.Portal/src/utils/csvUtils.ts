@@ -20,7 +20,10 @@
  */
 function escapeCsvCell(value: unknown): string {
   if (value === undefined || value === null) return '';
-  const text = String(value);
+  // Spreadsheets treat a leading =, +, -, @, tab or CR as the start of a formula, so an
+  // account-editable name like =HYPERLINK(...) would execute when a colleague opens the export.
+  const raw = String(value);
+  const text = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
   return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 

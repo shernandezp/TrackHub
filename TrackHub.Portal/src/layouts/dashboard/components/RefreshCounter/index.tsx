@@ -14,7 +14,7 @@
 *  limitations under the License.
 */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import type { AccountSettings } from 'api/manager/settings';
 
@@ -27,18 +27,33 @@ interface RefreshCounterProps {
 function RefreshCounter({ settings, fetchPositions, calculateReference }: RefreshCounterProps): ReactNode {
     const [counter, setCounter] = useState(settings.refreshMapInterval || 60);
 
-    useEffect(() => {
-      if (counter === 0) {
-        fetchPositions();
-        calculateReference();
-        setCounter(settings.refreshMap ? settings.refreshMapInterval : 60);
-      } else if (settings.refreshMap) {
-        const timer = setInterval(() => setCounter(counter - 1), 1000);
-        return () => clearInterval(timer);
-      }
-    }, [counter, settings.refreshMap]);
+    // The callbacks are new identities on every parent render, so the tick reads them from refs
+    // instead of closing over the ones from the render that last changed the counter — which is how
+    // a refreshed settings document used to leave the countdown running on the old interval.
+    const fetchPositionsRef = useRef(fetchPositions);
+    const calculateReferenceRef = useRef(calculateReference);
+    fetchPositionsRef.current = fetchPositions;
+    calculateReferenceRef.current = calculateReference;
 
-    return settings.refreshMap && <div className="mapcontrol">{counter} s.</div>;
+    const { refreshMap, refreshMapInterval } = settings;
+
+    useEffect(() => {
+      if (!refreshMap) {
+        return;
+      }
+
+      if (counter === 0) {
+        fetchPositionsRef.current();
+        calculateReferenceRef.current();
+        setCounter(refreshMapInterval || 60);
+        return;
+      }
+
+      const timer = setTimeout(() => setCounter((current) => current - 1), 1000);
+      return () => clearTimeout(timer);
+    }, [counter, refreshMap, refreshMapInterval]);
+
+    return refreshMap && <div className="mapcontrol">{counter} s.</div>;
   }
 
   export default RefreshCounter;
