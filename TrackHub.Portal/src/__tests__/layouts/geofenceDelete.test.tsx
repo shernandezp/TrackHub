@@ -17,6 +17,7 @@
 import type { ReactNode } from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { TestWrapper } from '../components/testHelpers';
+import GeofenceManager from 'layouts/geofencemanager';
 
 const GEOFENCE_ID = '11111111-1111-1111-1111-111111111111';
 
@@ -75,7 +76,6 @@ describe('geofence delete', () => {
   });
 
   test('confirming deletes the geofence even when the map registered no handles', async () => {
-    const GeofenceManager = (await import('layouts/geofencemanager')).default;
     render(
       <TestWrapper>
         <GeofenceManager />
