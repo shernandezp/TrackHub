@@ -20,3 +20,10 @@ public readonly record struct TransporterPositionHistoryVm(
     string? Country,
     string? Attributes,
     string IdempotencyKey);
+
+/// <summary>
+/// The history feed is append-only and unbounded, so it is paged by CURSOR and reports only whether
+/// more rows exist. An exact count over it is a scan of the account's whole history.
+/// </summary>
+public readonly record struct TransporterPositionHistoryPageVm(
+    IReadOnlyCollection<TransporterPositionHistoryVm> Items, bool HasMore, string? NextCursor);

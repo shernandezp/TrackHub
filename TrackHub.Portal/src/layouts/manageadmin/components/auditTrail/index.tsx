@@ -51,8 +51,8 @@ function ManageAuditTrail() {
       try {
         const account = await getAccountByUser();
         if (!account?.accountId) return;
-        const items = await getAuditTrail(account.accountId);
-        setAuditTrail(items || []);
+        const page = await getAuditTrail(account.accountId);
+        setAuditTrail(page?.items ?? []);
       } catch (error) {
         notifyApiError(error);
       } finally {

@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Infrastructure;
 using Common.Application.Extensions;
 using Microsoft.Extensions.Configuration;
 using TrackHub.AuthorityServer.Domain.Interfaces;
@@ -27,9 +28,8 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplicationDbContext(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("Security");
+        var connectionString = configuration.GetRequiredConnectionString("Security");
 
-        Guard.Against.Null(connectionString, message: "Connection string 'Security' not found.");
 
         services.AddDbContext<SecurityDbContext>((sp, options) => 
             options.UseNpgsql(connectionString, o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
@@ -51,9 +51,8 @@ public static class DependencyInjection
 
     public static IServiceCollection AddOpenIdDictDbContext(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("Security");
+        var connectionString = configuration.GetRequiredConnectionString("Security");
 
-        Guard.Against.Null(connectionString, message: "Connection string 'Security' not found.");
 
         services.AddDbContext<AuthorityDbContext>(
             options => options.UseNpgsql(connectionString));

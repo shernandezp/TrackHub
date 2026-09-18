@@ -74,6 +74,45 @@ wait_for_db() {
 wait_for_db "$DB_CONNECTION_SECURITY" "Security"
 
 # -----------------------------------------------------------------------------
+# Step 0: the logging database (idempotent)
+# -----------------------------------------------------------------------------
+# The Serilog sink creates its TABLE but never its database. Logs live in their own database so a
+# burst of warnings during an incident competes for nothing the fleet queries need.
+ensure_database() {
+    local connection_string=$1
+    local host port user pass db
+
+    host=$(echo "$connection_string" | grep -oP 'server=\K[^;]+')
+    port=$(echo "$connection_string" | grep -oP 'port=\K[^;]+'); port=${port:-5432}
+    user=$(echo "$connection_string" | grep -oP 'user id=\K[^;]+')
+    pass=$(echo "$connection_string" | grep -oP 'password=\K[^;]+')
+    db=$(echo "$connection_string" | grep -oP 'database=\K[^;]+')
+
+    if [ -z "$db" ]; then
+        print_warning "No database named in the connection string; skipping."
+        return 0
+    fi
+
+    if PGPASSWORD="$pass" psql -h "$host" -p "$port" -U "$user" -d postgres -tAc \
+        "SELECT 1 FROM pg_database WHERE datname = '$db'" | grep -q 1; then
+        print_info "Database $db already exists."
+        return 0
+    fi
+
+    PGPASSWORD="$pass" psql -h "$host" -p "$port" -U "$user" -d postgres -c "CREATE DATABASE \"$db\"" \
+        && print_success "Created database $db." \
+        || { print_error "Could not create database $db"; return 1; }
+}
+
+if [ -n "${DB_CONNECTION_LOGGING:-}" ]; then
+    echo ""
+    echo "=========================================="
+    echo "Step 0: Ensuring the logging database"
+    echo "=========================================="
+    ensure_database "$DB_CONNECTION_LOGGING"
+fi
+
+# -----------------------------------------------------------------------------
 # Step 1: ClientSeeder (idempotent - runs every deploy)
 # -----------------------------------------------------------------------------
 echo ""

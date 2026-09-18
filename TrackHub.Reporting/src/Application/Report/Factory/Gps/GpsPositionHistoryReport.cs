@@ -30,7 +30,7 @@ public sealed class GpsPositionHistoryReport(
         var to = filters.GetDate(FilterNames.To);
         var history = await telemetry.GetPositionHistoryAsync(accountId, transporterId, deviceId, take, from, to, cancellationToken);
 
-        var rows = history
+        var rows = history.Items
             .OrderByDescending(p => p.SourceTimestamp)
             .Select(p => new GpsPositionHistoryRowVm(
                 p.TransporterId,

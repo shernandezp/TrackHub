@@ -17,6 +17,11 @@ type Query {
   activeTrips: [TripVm!]! @cost(weight: "10")
   tripTimeline(query: GetTripTimelineQueryInput!): TripTimelinePageVm!
     @cost(weight: "10")
+    @deprecated(
+      reason: "Use tripTimelineFeed, which seeks by cursor and reports hasMore. Removed after 2026-12-17."
+    )
+  tripTimelineFeed(query: GetTripTimelineFeedQueryInput!): TripTimelineFeedPageVm!
+    @cost(weight: "10")
   tripRouteReplay(query: GetTripRouteReplayQueryInput!): RouteReplayVm!
     @cost(weight: "10")
   tripReportData(query: GetTripReportDataQueryInput!): TripReportPageVm!
@@ -479,6 +484,12 @@ type TripStopVm {
   deliveries: [DeliveryVm!]!
 }
 
+type TripTimelineFeedPageVm {
+  items: [TripEventVm!]!
+  hasMore: Boolean!
+  nextCursor: String
+}
+
 type TripTimelinePageVm {
   items: [TripEventVm!]!
   totalCount: Int!
@@ -674,6 +685,12 @@ input GetTripStopReportDataQueryInput {
   transporterId: UUID
   driverId: UUID
   skip: Int
+  take: Int
+}
+
+input GetTripTimelineFeedQueryInput {
+  tripId: UUID!
+  cursor: String
   take: Int
 }
 

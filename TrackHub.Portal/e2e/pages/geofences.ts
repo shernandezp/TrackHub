@@ -40,3 +40,19 @@ export async function openProperties(
   await expect(saveShape).toBeVisible({ timeout: 30_000 });
   await saveShape.click();
 }
+
+/**
+ * Brings a geofence into view by name.
+ *
+ * The list is client-paged, so an account with more than one page of zones will not
+ * show a freshly created one until it is searched for — and the search must not be
+ * typed before the first fetch has painted, or the initial load re-runs over it.
+ */
+export async function findGeofence(page: Page, searchPlaceholder: string, name: string): Promise<Locator> {
+  await expect(page.locator('[data-testid^="row-"]').first()).toBeVisible({ timeout: 60_000 });
+  await page.getByPlaceholder(searchPlaceholder).fill(name);
+
+  const row = listRow(page, name);
+  await expect(row).toBeVisible({ timeout: 60_000 });
+  return row;
+}

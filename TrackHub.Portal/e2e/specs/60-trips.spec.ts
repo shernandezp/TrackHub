@@ -495,15 +495,27 @@ test.describe('trips', () => {
     await page.getByRole('option', { name: t('trips.exceptions.all') }).click();
   });
 
-  test('the exception verbs of a running trip', async ({ shell, page, t }) => {
+  test('the exception verbs of a running trip', async ({ shell, page, t, api }) => {
     const tripId = optional('E2E_TRIP_IN_TRANSIT_ID');
     test.skip(
       !tripId,
       'Set E2E_TRIP_IN_TRANSIT_ID to a trip that is actually in transit — the lifecycle is GPS-driven and cannot be simulated from a browser.'
     );
 
+    // The board is SERVER-paged and opens unnarrowed, so one named trip is reachable
+    // only through the code search — the id the variable carries is not what it matches on.
+    const { tripDetail } = await api.gql<{ tripDetail: { trip: { code: string } } }>(
+      'tripManagement',
+      'query($tripId: UUID!) { tripDetail(query: { tripId: $tripId }) { trip { code } } }',
+      { tripId }
+    );
+
     await shell.open('tripManager');
-    await page.locator(`[data-testid="row-${tripId}"]`).click();
+    await page.getByPlaceholder(t('navbar.searchText')).fill(tripDetail.trip.code);
+
+    const row = page.locator(`[data-testid="row-${tripId}"]`);
+    await expect(row).toBeVisible({ timeout: 45_000 });
+    await row.click();
     await page.getByRole('button', { name: t('trips.override.action') }).click();
 
     await expect(page.getByRole('button', { name: t('trips.actions.pause') })).toBeVisible();

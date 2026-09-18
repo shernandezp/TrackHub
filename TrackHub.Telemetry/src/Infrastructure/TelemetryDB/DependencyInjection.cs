@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Infrastructure;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -28,9 +29,8 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplicationDbContext(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        var connectionString = configuration.GetRequiredConnectionString("DefaultConnection");
 
-        Guard.Against.Null(connectionString, message: "Connection string 'DefaultConnection' not found.");
 
         // Dynamic JSON is required for the transporter_position `attributes` json column (AttributesVm).
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);

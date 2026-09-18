@@ -14,6 +14,7 @@
 //
 
 using Common.Application.Interfaces;
+using Common.Domain.Enums;
 using Common.Domain.Helpers;
 using TrackHub.Manager.Infrastructure.Entities;
 using TrackHub.Manager.Infrastructure.Interfaces;
@@ -52,7 +53,10 @@ public sealed class AccountSettingsReader(IApplicationDbContext context, ICurren
     /// <returns>Returns a collection of AccountSettingsVm objects</returns>
     public async Task<IReadOnlyCollection<AccountSettingsVm>> GetAccountSettingsAsync(Filters filters, int skip, int take, CancellationToken cancellationToken)
     {
-        var query = Context.AccountSettings.AsQueryable();
+        // Every per-account call made for a non-operational tenant is refused downstream.
+        var query = Context.AccountSettings
+            .Where(a => Context.Accounts.Any(x => x.AccountId == a.AccountId
+                && (x.Status == (short)AccountStatus.Trial || x.Status == (short)AccountStatus.Active)));
         query = filters.Apply(query);
 
         var settings = await query

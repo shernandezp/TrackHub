@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Application.Extensions;
 using TrackHub.Security.Domain.Constants;
 using TrackHub.Security.Domain.Interfaces;
 using TrackHub.Security.Infrastructure.Interfaces;
@@ -105,7 +106,7 @@ public sealed class OutboxWriter(IApplicationDbContext context) : IOutboxWriter
     public async Task<int> PurgeCompletedAsync(DateTimeOffset before, CancellationToken cancellationToken)
         => await context.OutboxMessages
             .Where(x => x.Status == OutboxMessageStatuses.Completed && x.ProcessedAt != null && x.ProcessedAt < before)
-            .ExecuteDeleteAsync(cancellationToken);
+            .ExecuteDeleteInChunksAsync(x => x.OutboxMessageId, cancellationToken);
 
     // AsTracking: the Security context is globally NoTracking, so a plain read would mutate a
     // detached instance and save nothing.

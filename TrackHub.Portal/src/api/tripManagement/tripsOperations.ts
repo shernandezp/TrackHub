@@ -345,8 +345,8 @@ export const GetTripDetailDocument = graphql(`
 `);
 
 export const GetTripTimelineDocument = graphql(`
-  query GetTripTimeline($tripId: UUID!, $skip: Int, $take: Int) {
-    tripTimeline(query: { tripId: $tripId, skip: $skip, take: $take }) {
+  query GetTripTimeline($tripId: UUID!, $cursor: String, $take: Int) {
+    tripTimelineFeed(query: { tripId: $tripId, cursor: $cursor, take: $take }) {
       items {
         tripEventId
         tripId
@@ -356,7 +356,8 @@ export const GetTripTimelineDocument = graphql(`
         source
         payloadJson
       }
-      totalCount
+      hasMore
+      nextCursor
     }
   }
 `);

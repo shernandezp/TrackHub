@@ -42,11 +42,27 @@ public class Filters(Dictionary<string, object> filters)
         var parameter = Expression.Parameter(typeof(T), "e");
         var member = Expression.Property(parameter, property);
         // Typed explicitly: an AnyType value arriving as the wrong CLR type (a string for a Guid
-        // column) makes Expression.Equal throw at query time, which surfaces as a 500.
-        var constant = Expression.Constant(Coerce(value, property.PropertyType), property.PropertyType);
-        var lambda = Expression.Lambda<Func<T, bool>>(Expression.Equal(member, constant), parameter);
+        // column) makes Expression.Equal throw at query time, which surfaces as a 500. Read off a
+        // box, not emitted as a constant: EF Core parameterises captured variables, and a constant
+        // would bake the value into the SQL text that the plan cache keys on.
+        var lambda = Expression.Lambda<Func<T, bool>>(
+            Expression.Equal(member, Boxed(Coerce(value, property.PropertyType), property.PropertyType)),
+            parameter);
 
         return query.Where(lambda);
+    }
+
+    private static Expression Boxed(object? value, Type type)
+    {
+        var boxType = typeof(FilterValue<>).MakeGenericType(type);
+        return Expression.Property(
+            Expression.Constant(Activator.CreateInstance(boxType, value), boxType),
+            nameof(FilterValue<object>.Value));
+    }
+
+    private sealed class FilterValue<TValue>(TValue value)
+    {
+        public TValue Value { get; } = value;
     }
 
     private static object? Coerce(object? value, Type targetType)

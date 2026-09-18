@@ -37,7 +37,15 @@ public partial class Query
     public async Task<IReadOnlyCollection<TripVm>> GetActiveTrips([Service] ISender sender, CancellationToken cancellationToken)
         => await sender.Send(new GetActiveTripsQuery(), cancellationToken);
 
+    /// <summary>
+    /// Superseded by <c>tripTimelineFeed</c>. This one pages by OFFSET and counts the whole timeline
+    /// on every request.
+    /// </summary>
+    [GraphQLDeprecated("Use tripTimelineFeed, which seeks by cursor and reports hasMore. Removed after 2026-12-17.")]
     public async Task<TripTimelinePageVm> GetTripTimeline([Service] ISender sender, [AsParameters] GetTripTimelineQuery query, CancellationToken cancellationToken)
+        => await sender.Send(query, cancellationToken);
+
+    public async Task<TripTimelineFeedPageVm> GetTripTimelineFeed([Service] ISender sender, [AsParameters] GetTripTimelineFeedQuery query, CancellationToken cancellationToken)
         => await sender.Send(query, cancellationToken);
 
     public async Task<RouteReplayVm> GetTripRouteReplay([Service] ISender sender, [AsParameters] GetTripRouteReplayQuery query, CancellationToken cancellationToken)

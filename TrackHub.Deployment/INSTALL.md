@@ -241,12 +241,18 @@ loaded at zero.
 
 ### Database Server Requirements
 
-The deployment assumes an existing PostgreSQL server. Two databases are required:
+The deployment assumes an existing PostgreSQL server. Three databases are required:
 
 | Database | Purpose |
 |----------|---------|
 | `TrackHubSecurity` | Identity, users, roles, policies |
 | `TrackHub` | Assets, transporters, devices, geofences, trips, positions |
+| `TrackHubLogs` | The Serilog sink table, written by every service |
+
+`TrackHubLogs` is created by `init-databases.sh` on every deploy, and the sink creates its own
+table. Ageing it out is `ops.purge_logs()`, run against that database (see Retention below). It is
+separate so that a burst of warnings during an incident competes for nothing the fleet queries
+need; pointing `DB_CONNECTION_LOGGING` back at `TrackHub` still works.
 
 The PostgreSQL server must be accessible from the application server(s) over the network.
 
@@ -375,6 +381,10 @@ cd /opt/trackhub
 
 export SECURITY_CONN="server=db.example.com;port=5432;database=TrackHubSecurity;user id=trackhub;password=YourStrongPassword"
 export MANAGER_CONN="server=db.example.com;port=5432;database=TrackHub;user id=trackhub;password=YourStrongPassword"
+
+# Services run with a 30 s command timeout (the shared connection-string normalization in
+# Common.Infrastructure). Index builds and table rewrites take longer, so migrations run without one.
+export Database__CommandTimeoutSeconds=0
 
 ConnectionStrings__Security="$SECURITY_CONN" dotnet ef database update \
   --project TrackHubSecurity/src/Infrastructure/SecurityDB --startup-project TrackHubSecurity/src/Web
@@ -1083,7 +1093,8 @@ nano .env
 ### PostgreSQL Requirements
 
 - PostgreSQL 14+
-- Two databases: `TrackHubSecurity` and `TrackHub`
+- Three databases: `TrackHubSecurity`, `TrackHub` and `TrackHubLogs`
+  (`init-databases.sh` creates the logs one on every deploy)
 - The **`postgis`** extension in the `TrackHub` database (required by Geofencing and by
   TripManagement — their migrations declare `HasPostgresExtension("postgis")`). One
   `CREATE EXTENSION` covers both; they share the database.
@@ -1150,6 +1161,10 @@ dotnet tool install --global dotnet-ef
 cd /opt/trackhub
 
 export SECURITY_CONN="server=db.example.com;port=5432;database=TrackHubSecurity;user id=trackhub;password=YourStrongPassword"
+
+# Services run with a 30 s command timeout (the shared connection-string normalization in
+# Common.Infrastructure). Index builds and table rewrites take longer, so migrations run without one.
+export Database__CommandTimeoutSeconds=0
 export MANAGER_CONN="server=db.example.com;port=5432;database=TrackHub;user id=trackhub;password=YourStrongPassword"
 
 ConnectionStrings__Security="$SECURITY_CONN" dotnet ef database update \
@@ -1172,6 +1187,89 @@ ConnectionStrings__DefaultConnection="$MANAGER_CONN" dotnet ef database update \
 > `db-init` has run again, **every trip call returns `FORBIDDEN`**, including for
 > administrators, and the service itself looks healthy. See
 > [Upgrading From a Previous Version](#upgrading-from-a-previous-version).
+
+### Server Tuning
+
+`scripts/sql/tune-postgresql.sql` applies the settings TrackHub's workload depends on — the SSD
+cost model, WAL sizing, autovacuum aggressiveness, slow-query logging and the `accountid` statistics
+target. Run it once per server, as a superuser, after the databases exist:
+
+```bash
+psql -h "$DB_HOST" -U postgres -d postgres -f scripts/sql/tune-postgresql.sql
+```
+
+Memory settings and `max_connections` are sized against the host and are listed, commented, at the
+end of that file — they are the one part it does not set for you. `max_connections` must be at
+least the sum of every service process's `Maximum Pool Size` (20 by default, see
+`Database:MaxPoolSize`) plus headroom; Npgsql pools **per process**, not per service.
+
+
+### Why every service runs in UTC
+
+The Dockerfiles set `TZ=UTC`, and that is load-bearing rather than tidiness.
+
+Serilog's PostgreSQL sink writes `raise_date` with its default `TimestampColumnWriter`, which emits
+`logEvent.Timestamp.DateTime` — **the writing process's LOCAL wall clock** — into a `timestamp
+without time zone` column. The column carries no zone, so nothing downstream can recover one.
+
+Two consequences follow, and both are silent:
+
+- Logs from services in different zones cannot be compared or ordered against each other.
+- Log retention compares that column against a UTC cutoff, so under any non-UTC zone it deletes
+  rows early by exactly the offset. Measured on a `UTC-04:00` workstation, a row seconds old was
+  removed by an "older than one hour" cutoff.
+
+Switching the sink to `timestamptz` does **not** fix it and makes things worse: Npgsql accepts only
+offset `0` for that type, and the sink hands it `DateTimeOffset.Now` with the local offset, so every
+batch is rejected — and Serilog swallows sink exceptions, so logging simply stops with nothing in
+the logs to say so.
+
+With `TZ=UTC` the local wall clock IS the UTC wall clock, the column is unambiguous and retention is
+exact. If you ever set a different `TZ` on a service, expect both effects above.
+
+> On a developer workstation the host zone applies and log retention will over-delete. That affects
+> local `public.logs` only; it is not worth working around.
+### Partitioning the Position History
+
+`telemetry.transporter_position_history` is the only table whose growth justifies partitioning: at
+3 000 devices on a one-minute provider it reaches ~66 GB in 30 days. Partitioned, retention is a
+`DROP TABLE` instead of a `DELETE` — measured 1.24 s and 176 kB of WAL against 10.7 s and 782 MB
+for the same 2 550 000 rows, and the space comes back.
+
+**This is optional.** Everything works unpartitioned; Telemetry detects the layout at runtime and
+the retention job simply skips partition maintenance when the table is not partitioned.
+
+Order matters:
+
+1. Apply migrations — `PartitionReadyPositionHistoryKeys` puts `sourcetimestamp` into both keys,
+   which is what PostgreSQL requires before the table can be partitioned at all.
+2. Run the cutover with a **future** instant, normally the start of next month:
+
+```bash
+psql -h "$DB_HOST" -U postgres -d TrackHub \
+  -v cutover="'2026-11-01 00:00:00+00'" \
+  -f scripts/sql/partition-position-history.sql
+```
+
+No data is copied: the existing table is validated against the cutover bound and then attached as
+the first partition, so the only exclusive lock is the one that swaps the names. Telemetry's
+retention job creates each following month three months ahead and drops the months every account
+has aged past.
+
+Afterwards `transporter_position_history_legacy` still holds the pre-cutover rows and drains as
+retention deletes them. Once `SELECT count(*)` on it reaches zero, detach and drop it:
+
+```sql
+ALTER TABLE telemetry.transporter_position_history
+    DETACH PARTITION telemetry.transporter_position_history_legacy;
+DROP TABLE telemetry.transporter_position_history_legacy;
+```
+
+> **Idempotency becomes per-partition.** A unique index on a partitioned table must contain the
+> partition key, so the same `idempotencykey` in two different months is no longer rejected by the
+> database. The ingest probe is bounded to match
+> (`TransporterPositionHistoryWriter.DeduplicationWindow`, two days): a provider replaying a batch
+> older than that would store it twice.
 
 ### Running Seeders Manually
 
@@ -1840,6 +1938,46 @@ Notes that matter when the rolled-back service is the frontend:
   `.env` by `sync-config.sh`; an older image starting against newer config is still reading
   the newer config.
 - **Seed data is not rolled back.** `db-init` seeds idempotently and only ever adds.
+
+### Retention
+
+Purging lives in the database. Nothing inside the services deletes aged rows, so these must be
+scheduled — pgAgent, cron, Windows Task Scheduler or your own runner — or the tables grow forever.
+
+```bash
+psql -d TrackHub     -c "SELECT * FROM ops.purge_all();"
+psql -d TrackHubLogs -c "SELECT ops.purge_logs();"
+```
+
+Install or update them with `scripts/sql/purge-functions.sql` and
+`scripts/sql/purge-functions-logs.sql`; both are idempotent.
+
+`ops.purge_all()` returns a row per task with the number of rows affected, and covers position
+history, monthly partition maintenance, background job runs, resolved alert events, audit events,
+notification deliveries, API usage hours and trip events. Daily is enough.
+
+Each task is also callable on its own, with the retention window as an argument:
+
+```sql
+SELECT ops.purge_audit_events(now(), 365);
+SELECT ops.maintain_position_partitions();
+```
+
+Defaults are 30 days for position history and logs, 90 for job runs and deliveries, 180 for
+resolved alert events, 400 for API usage hours, and 730 for audit events and trip events.
+Position history is per account: the `gps.positionHistory` entitlement's
+`configurationJson.retentionDays` overrides the default for that tenant.
+
+What each task deliberately keeps: failed job runs and the newest run per job key, alert events a
+notification delivery still references, and events of trips that have not reached a terminal status.
+
+`ops.maintain_position_partitions()` creates the months covering the retention window plus three
+ahead and drops whole months once the longest retention on the platform has passed them. Run it
+at least monthly even if you purge nothing, or new rows land in the DEFAULT partition.
+
+Document *storage* is the exception: reclaiming the bytes behind superseded or voided document
+versions needs the object store, not SQL, so `DocumentRetentionCleanupJob` still runs inside
+Manager on `DocumentStorage:RetentionDays`.
 
 ### SSL Certificate Renewal
 

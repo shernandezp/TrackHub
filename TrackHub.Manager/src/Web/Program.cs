@@ -55,8 +55,6 @@ builder.Services.AddScheduledJob<WorkforceExpirationJob>();
 builder.Services.AddScheduledJob<NotificationDispatchJob>();
 builder.Services.AddScheduledJob<AlertEvaluationJob>();
 builder.Services.AddScheduledJob<NotificationDigestJob>();
-builder.Services.AddScheduledJob<DeliveryRetentionJob>();
-builder.Services.AddScheduledJob<PlatformRetentionJob>();
 
 // Add HealthChecks
 builder.Services.AddHealthChecks()

@@ -12,7 +12,13 @@
 
 import { test, expect, uniqueName } from '../fixtures';
 import { FormDialog, ConfirmDialog } from '../pages/dialogs';
-import { focusedGeofence, listRow, mapContainer, openProperties } from '../pages/geofences';
+import {
+  findGeofence,
+  focusedGeofence,
+  listRow,
+  mapContainer,
+  openProperties,
+} from '../pages/geofences';
 
 test.describe('geofences', () => {
   test('the screen renders the map, its drawing tools, the filters and the list', async ({
@@ -128,7 +134,7 @@ test.describe('geofences', () => {
     cleanup.add(`geofence ${renamed}`, () => api.deleteGeofence(geofenceId));
 
     await shell.open('geofenceManager');
-    await expect(listRow(page, name)).toBeVisible({ timeout: 60_000 });
+    await findGeofence(page, t('navbar.searchText'), name);
     await openProperties(page, name, t('geofence.saveShape'));
 
     const form = new FormDialog(page, t);
@@ -192,16 +198,11 @@ test.describe('geofences', () => {
     cleanup.add(`geofence ${name}`, () => api.deleteGeofence(geofenceId));
 
     await shell.open('geofenceManager');
-    // Wait for the list to load before typing: a search applied before the
-    // screen has its rows would be re-run by the initial fetch.
-    await expect(listRow(page, name)).toBeVisible({ timeout: 60_000 });
-
     // The name search lives in the navbar, mirroring the dashboard.
-    await page.getByPlaceholder(t('navbar.searchText')).fill(name);
+    await findGeofence(page, t('navbar.searchText'), name);
     await expect
       .poll(() => page.locator('[data-testid^="row-"]').count(), { timeout: 30_000 })
       .toBe(1);
-    await expect(listRow(page, name)).toBeVisible();
 
     // Filtering to inactive removes it: the seeded zone is active.
     const status = page.getByRole('combobox', { name: t('geofence.filterActive') });
@@ -226,7 +227,7 @@ test.describe('geofences', () => {
     cleanup.add(`geofence ${name}`, () => api.deleteGeofence(geofenceId));
 
     await shell.open('geofenceManager');
-    await expect(listRow(page, name)).toBeVisible({ timeout: 60_000 });
+    await findGeofence(page, t('navbar.searchText'), name);
 
     // The seeded zone is a ClientLocation, so every other type excludes it.
     const type = page.getByRole('combobox', { name: t('geofence.filterType') });

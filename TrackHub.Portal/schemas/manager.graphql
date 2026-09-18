@@ -34,6 +34,11 @@ type Query {
     @cost(weight: "10")
   auditTrail(query: GetAuditTrailQueryInput!): [AuditEventVm!]!
     @cost(weight: "10")
+    @deprecated(
+      reason: "Use auditTrailFeed, which seeks by cursor instead of counting past rows. Removed after 2026-12-17."
+    )
+  auditTrailFeed(query: GetAuditTrailFeedQueryInput!): AuditEventPageVm!
+    @cost(weight: "10")
   backgroundJobRuns(query: GetBackgroundJobRunsQueryInput!): [BackgroundJobRunVm!]!
     @cost(weight: "10")
   credential(query: GetCredentialQueryInput!): CredentialVm! @cost(weight: "10")
@@ -450,6 +455,12 @@ type AlertSubscriptionVm {
   contact: String
   enabled: Boolean!
   lastModified: DateTime!
+}
+
+type AuditEventPageVm {
+  items: [AuditEventVm!]!
+  hasMore: Boolean!
+  nextCursor: String
 }
 
 type AuditEventVm {
@@ -1573,6 +1584,14 @@ input GetAllAccountFeaturesMasterQueryInput {
 input GetAssignedDeviceTransportersByOperatorQueryInput {
   accountId: UUID!
   operatorId: UUID!
+}
+
+input GetAuditTrailFeedQueryInput {
+  accountId: UUID!
+  from: DateTime
+  to: DateTime
+  cursor: String
+  take: Int! = 50
 }
 
 input GetAuditTrailQueryInput {

@@ -16,7 +16,7 @@
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using TrackHub.Telemetry.Web.BackgroundServices;
+using TrackHub.Telemetry.Web.GraphQL.Query;
 
 namespace Web.UnitTests;
 
@@ -30,13 +30,13 @@ public sealed class ContainerValidationTests
 {
     // Anchored on a public Web type rather than Program: Program is generated from top-level
     // statements and making it addressable would mean editing production code to satisfy a test.
-    private sealed class TelemetryFactory : WebApplicationFactory<PositionRetentionPurgeService>
+    private sealed class TelemetryFactory : WebApplicationFactory<Query>
     {
         protected override IHost CreateHost(IHostBuilder builder)
         {
             // ValidateOnBuild walks every registered descriptor and fails if any constructor
             // dependency is unregistered. ValidateScopes catches a singleton capturing a scoped
-            // service — here that would mean the retention purge job sharing one DbContext.
+            // service.
             builder.UseDefaultServiceProvider(options =>
             {
                 options.ValidateOnBuild = true;

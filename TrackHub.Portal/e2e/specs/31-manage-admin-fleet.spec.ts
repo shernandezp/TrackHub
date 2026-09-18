@@ -416,12 +416,9 @@ test.describe('account management — fleet & tracking', () => {
     // table exists to surface.
     const expirations = new CrudFlow(page, 'qualification-expirations', t).section;
     await expirations.expand();
-    await expect(
-      expirations.root
-        .getByText(driver)
-        .or(expirations.root.getByText(t('workforce.expirations.empty')))
-        .first()
-    ).toBeVisible({ timeout: 45_000 });
+    // It expires inside the window, so it MUST be listed. The table is account-wide, so in
+    // an account with other expiring drivers the row is not on the first page.
+    await expect(await expirations.findRowAnyPage(driver)).toBeVisible({ timeout: 45_000 });
 
     await (await section.findRow(number)).getByRole('button', { name: t('generic.delete') }).click();
     await new ConfirmDialog(page, t).confirm();

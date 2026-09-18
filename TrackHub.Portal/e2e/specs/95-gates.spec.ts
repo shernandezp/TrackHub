@@ -77,7 +77,13 @@ test.describe('gates and negative paths', () => {
       'Set E2E_CREATE_ACCOUNT=1 to exercise the feature gates: toggling a feature affects every user of the account, so it is not done to the shared master account by default.'
     );
 
-    const accountId = await api.accountId();
+    // The account under test BY NAME: the filter lists every account on the platform, and
+    // the first of them is not necessarily the one whose sidenav this test then inspects.
+    const { accountByUser: account } = await api.gql<{ accountByUser: { accountId: string; name: string } }>(
+      'manager',
+      'query { accountByUser { accountId name } }'
+    );
+    const accountId = account.accountId;
     const featureKey = 'geofencing';
 
     // Whatever this test does, the entitlement goes back on: every other spec
@@ -94,7 +100,7 @@ test.describe('gates and negative paths', () => {
     const features = new Section(page, 'system-account-features', t);
     await features.expand();
     await features.root.locator('#accountFilter').click();
-    await page.getByRole('option').filter({ hasNotText: t('accountFeatures.selectAccount') }).first().click();
+    await page.getByRole('option', { name: account.name, exact: true }).click();
 
     const row = await features.findRow(t('resources.geofencing'));
     await expect(row).toContainText(t('generic.yes'));
@@ -122,7 +128,7 @@ test.describe('gates and negative paths', () => {
     await shell.open('systemAdmin');
     await features.expand();
     await features.root.locator('#accountFilter').click();
-    await page.getByRole('option').filter({ hasNotText: t('accountFeatures.selectAccount') }).first().click();
+    await page.getByRole('option', { name: account.name, exact: true }).click();
     const off = await features.findRow(t('resources.geofencing'));
     await off.getByRole('button', { name: t('generic.edit') }).click();
     await form.waitOpen();

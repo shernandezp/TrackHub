@@ -51,6 +51,10 @@ RUN mkdir -p /app/certificates
 COPY --from=build /app/publish .
 
 # Set environment variables
+# UTC is not decoration: the Serilog PostgreSQL sink writes this process local wall clock into a
+# zone-less column, so log timestamps are only comparable across services, and only prunable by
+# retention, while every service agrees on the zone.
+ENV TZ=UTC
 ENV ASPNETCORE_ENVIRONMENT=Production
 ENV ASPNETCORE_URLS=http://+:8080
 

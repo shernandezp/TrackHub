@@ -16,6 +16,11 @@ type Query {
     @cost(weight: "10")
   positionHistory(query: GetPositionHistoryQueryInput!): [TransporterPositionHistoryVm!]!
     @cost(weight: "10")
+    @deprecated(
+      reason: "Use positionHistoryFeed, which reports hasMore and hands back a cursor. Removed after 2026-12-17."
+    )
+  positionHistoryFeed(query: GetPositionHistoryQueryInput!): TransporterPositionHistoryPageVm!
+    @cost(weight: "10")
   positionHistoryRange(query: GetPositionHistoryRangeQueryInput!): [TransporterPositionHistoryVm!]!
     @cost(weight: "10")
   transporterPositionByOperator(
@@ -120,6 +125,12 @@ type PlatformSyncActivityVm {
   hasEnabledGpsIntegration: Boolean!
 }
 
+type TransporterPositionHistoryPageVm {
+  items: [TransporterPositionHistoryVm!]!
+  hasMore: Boolean!
+  nextCursor: String
+}
+
 type TransporterPositionHistoryVm {
   transporterPositionHistoryId: UUID!
   accountId: UUID!
@@ -215,6 +226,7 @@ input GetPositionHistoryQueryInput {
   take: Int! = 500
   from: DateTime
   to: DateTime
+  cursor: String
 }
 
 input GetPositionHistoryRangeQueryInput {

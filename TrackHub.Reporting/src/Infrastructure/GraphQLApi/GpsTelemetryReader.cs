@@ -75,16 +75,20 @@ public class GpsTelemetryReader(IGraphQLClientFactory graphQLClient)
 
     internal const string PositionHistoryQuery = @"
                 query($accountId: UUID!, $transporterId: UUID, $deviceId: UUID, $take: Int!, $from: DateTime, $to: DateTime) {
-                    positionHistory(query: { accountId: $accountId, transporterId: $transporterId, deviceId: $deviceId, take: $take, from: $from, to: $to }) {
-                        transporterPositionHistoryId
-                        accountId
-                        operatorId
-                        deviceId
-                        transporterId
-                        sourceTimestamp
-                        receivedAt
-                        latitude
-                        longitude
+                    positionHistoryFeed(query: { accountId: $accountId, transporterId: $transporterId, deviceId: $deviceId, take: $take, from: $from, to: $to }) {
+                        hasMore
+                        nextCursor
+                        items {
+                            transporterPositionHistoryId
+                            accountId
+                            operatorId
+                            deviceId
+                            transporterId
+                            sourceTimestamp
+                            receivedAt
+                            latitude
+                            longitude
+                        }
                     }
                 }";
 
@@ -123,7 +127,7 @@ public class GpsTelemetryReader(IGraphQLClientFactory graphQLClient)
         return await QueryAsync<List<ManagerTransporterPositionVm>>(request, cancellationToken);
     }
 
-    public async Task<IReadOnlyCollection<ManagerTransporterPositionHistoryVm>> GetPositionHistoryAsync(Guid accountId, Guid? transporterId, Guid? deviceId, int take, DateTimeOffset? from, DateTimeOffset? to, CancellationToken cancellationToken)
+    public async Task<ManagerTransporterPositionHistoryPageVm> GetPositionHistoryAsync(Guid accountId, Guid? transporterId, Guid? deviceId, int take, DateTimeOffset? from, DateTimeOffset? to, CancellationToken cancellationToken)
     {
         var request = new GraphQLRequest
         {
@@ -138,6 +142,6 @@ public class GpsTelemetryReader(IGraphQLClientFactory graphQLClient)
                 to
             }
         };
-        return await QueryAsync<List<ManagerTransporterPositionHistoryVm>>(request, cancellationToken);
+        return await QueryAsync<ManagerTransporterPositionHistoryPageVm>(request, cancellationToken);
     }
 }

@@ -16,7 +16,6 @@
 using Ardalis.GuardClauses;
 using Common.Application;
 using TrackHub.Telemetry.Infrastructure.TelemetryDB;
-using TrackHub.Telemetry.Web.BackgroundServices;
 using TrackHub.Telemetry.Web.GraphQL.Mutation;
 using TrackHub.Telemetry.Web.GraphQL.Query;
 
@@ -35,7 +34,6 @@ builder.Services.AddWebServices();
 
 // Retention purge runs inside the Telemetry host: daily, per account with
 // gps.positionHistory, honoring retentionDays. Replaces the Manager-hosted trigger.
-builder.Services.AddHostedService<PositionRetentionPurgeService>();
 
 // Add HealthChecks
 builder.Services.AddHealthChecks()
