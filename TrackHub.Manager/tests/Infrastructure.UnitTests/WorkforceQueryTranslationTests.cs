@@ -146,4 +146,27 @@ public class WorkforceQueryTranslationTests
         await AssertTranslatesAsync(() => reader.ValidateDriverAssignmentAsync(driverId, "Transporter", Guid.NewGuid().ToString(), CancellationToken.None));
         await AssertTranslatesAsync(() => reader.GetMyDriverProfileAsync(driverId, CancellationToken.None));
     }
+
+    [Test]
+    public async Task GetAuditTrail_TranslatesToSql()
+    {
+        using var context = NewNpgsqlContext();
+        var accountId = Guid.NewGuid();
+        var reader = new AuditEventReader(context, Principal(accountId));
+
+        await AssertTranslatesAsync(() => reader.GetAuditTrailAsync(accountId, null, null, null, 50, CancellationToken.None));
+    }
+
+    /// <summary>The cursor leg is the one that could fall back to client evaluation.</summary>
+    [Test]
+    public async Task GetAuditTrail_FromACursor_TranslatesToSql()
+    {
+        using var context = NewNpgsqlContext();
+        var accountId = Guid.NewGuid();
+        var reader = new AuditEventReader(context, Principal(accountId));
+        var cursor = Common.Application.Paging.FeedCursor.Encode(DateTimeOffset.UtcNow, Guid.NewGuid());
+
+        await AssertTranslatesAsync(() => reader.GetAuditTrailAsync(
+            accountId, DateTimeOffset.UtcNow.AddDays(-30), DateTimeOffset.UtcNow, cursor, 50, CancellationToken.None));
+    }
 }

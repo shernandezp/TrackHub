@@ -13,6 +13,8 @@
 //  limitations under the License.
 //
 
+using Common.Application.Paging;
+
 namespace TrackHub.TripManagement.Infrastructure.TripDB.Readers;
 
 /// <summary>
@@ -186,7 +188,41 @@ public sealed class TripReader(IApplicationDbContext context, IAccountFeatureRea
         return await WithStopCountsAsync(trips, cancellationToken);
     }
 
-    public async Task<TripTimelinePageVm> GetTimelineAsync(Guid tripId, Guid accountId, Guid? userId, int skip, int take, CancellationToken cancellationToken)
+    public async Task<TripTimelineFeedPageVm> GetTimelineAsync(Guid tripId, Guid accountId, Guid? userId, string? cursor, int take, CancellationToken cancellationToken)
+    {
+        var visible = await Visible(accountId, userId).AnyAsync(t => t.TripId == tripId, cancellationToken);
+        if (!visible)
+        {
+            throw new NotFoundException($"{tripId}", nameof(Trip));
+        }
+
+        var query = context.TripEvents.Where(e => e.TripId == tripId && e.AccountId == accountId);
+
+        // Strict tuple comparison against the sort key, which ends on the unique id: the seek lands
+        // exactly after the last row of the previous page even when several share an instant.
+        if (FeedCursor.TryDecode(cursor, out var at, out var id))
+        {
+            query = query.Where(e => e.OccurredAt < at || (e.OccurredAt == at && e.TripEventId.CompareTo(id) < 0));
+        }
+
+        // Ordering on entity columns, before any projection - see TripMapper for why. One row past
+        // the page is all a reader needs to know whether to offer "more".
+        var events = await query
+            .OrderByDescending(e => e.OccurredAt)
+            .ThenByDescending(e => e.TripEventId)
+            .Take(take + 1)
+            .ToListAsync(cancellationToken);
+
+        var hasMore = events.Count > take;
+        var page = hasMore ? events.GetRange(0, take) : events;
+
+        return new TripTimelineFeedPageVm(
+            [.. page.Select(TripMapper.ToVm)],
+            hasMore,
+            page.Count > 0 ? FeedCursor.Encode(page[^1].OccurredAt, page[^1].TripEventId) : null);
+    }
+
+    public async Task<TripTimelinePageVm> GetTimelineByOffsetAsync(Guid tripId, Guid accountId, Guid? userId, int skip, int take, CancellationToken cancellationToken)
     {
         var visible = await Visible(accountId, userId).AnyAsync(t => t.TripId == tripId, cancellationToken);
         if (!visible)
@@ -197,7 +233,6 @@ public sealed class TripReader(IApplicationDbContext context, IAccountFeatureRea
         var query = context.TripEvents.Where(e => e.TripId == tripId && e.AccountId == accountId);
         var totalCount = await query.CountAsync(cancellationToken);
 
-        // Ordering on entity columns, before any projection - see TripMapper for why.
         var events = await query
             .OrderByDescending(e => e.OccurredAt)
             .ThenByDescending(e => e.TripEventId)

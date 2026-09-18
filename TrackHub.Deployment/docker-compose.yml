@@ -218,12 +218,9 @@ services:
       - DocumentStorage__AzureBlob__SasExpiryMinutes=${DOCUMENT_AZURE_SAS_EXPIRY_MINUTES:-}
       # Notifications (spec 05). Portal link in channel messages + delivery retention.
       - AppSettings__PortalBaseUrl=${PORTAL_BASE_URL:-https://${DOMAIN}}
-      - AppSettings__NotificationDeliveryRetentionDays=${NOTIFICATION_DELIVERY_RETENTION_DAYS:-90}
       # A delivery stuck in Sending (crashed dispatch cycle) is returned to Pending after this.
       - AppSettings__NotificationSendingReclaimMinutes=${NOTIFICATION_SENDING_RECLAIM_MINUTES:-10}
       # Platform retention sweep: job-run history and alert events older than these are purged.
-      - AppSettings__BackgroundJobRunRetentionDays=${BACKGROUND_JOB_RUN_RETENTION_DAYS:-90}
-      - AppSettings__AlertEventRetentionDays=${ALERT_EVENT_RETENTION_DAYS:-180}
       # Email channel (SMTP). Empty host disables sends. External blocker: a production relay.
       - AppSettings__Smtp__Host=${SMTP_HOST:-}
       - AppSettings__Smtp__Port=${SMTP_PORT:-25}

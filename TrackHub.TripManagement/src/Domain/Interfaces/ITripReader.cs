@@ -44,7 +44,13 @@ public interface ITripReader
 
     Task<IReadOnlyCollection<TripVm>> GetActiveTripsAsync(Guid accountId, Guid? userId, CancellationToken cancellationToken);
 
-    Task<TripTimelinePageVm> GetTimelineAsync(Guid tripId, Guid accountId, Guid? userId, int skip, int take, CancellationToken cancellationToken);
+    Task<TripTimelineFeedPageVm> GetTimelineAsync(Guid tripId, Guid accountId, Guid? userId, string? cursor, int take, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The offset read behind the deprecated <c>tripTimeline</c> field. O(offset) plus an exact
+    /// count. Goes when the field does.
+    /// </summary>
+    Task<TripTimelinePageVm> GetTimelineByOffsetAsync(Guid tripId, Guid accountId, Guid? userId, int skip, int take, CancellationToken cancellationToken);
 
     /// <summary>
     /// Single-trip lookup for the write paths (lifecycle, stops, deliveries, POD) and for route

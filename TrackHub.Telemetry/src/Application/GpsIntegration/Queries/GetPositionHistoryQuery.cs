@@ -10,12 +10,13 @@ public readonly record struct GetPositionHistoryQuery(
     Guid? DeviceId = null,
     int Take = 500,
     DateTimeOffset? From = null,
-    DateTimeOffset? To = null) : IRequest<IReadOnlyCollection<TransporterPositionHistoryVm>>;
+    DateTimeOffset? To = null,
+    string? Cursor = null) : IRequest<TransporterPositionHistoryPageVm>;
 
 public class GetPositionHistoryQueryHandler(ITransporterPositionHistoryReader reader)
-    : IRequestHandler<GetPositionHistoryQuery, IReadOnlyCollection<TransporterPositionHistoryVm>>
+    : IRequestHandler<GetPositionHistoryQuery, TransporterPositionHistoryPageVm>
 {
-    public Task<IReadOnlyCollection<TransporterPositionHistoryVm>> Handle(GetPositionHistoryQuery request, CancellationToken cancellationToken)
+    public Task<TransporterPositionHistoryPageVm> Handle(GetPositionHistoryQuery request, CancellationToken cancellationToken)
     {
         var dict = new Dictionary<string, object>
         {
@@ -23,6 +24,6 @@ public class GetPositionHistoryQueryHandler(ITransporterPositionHistoryReader re
         };
         if (request.TransporterId.HasValue) dict[nameof(TransporterPositionHistoryVm.TransporterId)] = request.TransporterId.Value;
         if (request.DeviceId.HasValue) dict[nameof(TransporterPositionHistoryVm.DeviceId)] = request.DeviceId.Value;
-        return reader.GetAsync(new Filters(dict), request.Take, request.From, request.To, cancellationToken);
+        return reader.GetAsync(new Filters(dict), request.Take, request.From, request.To, request.Cursor, cancellationToken);
     }
 }

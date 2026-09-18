@@ -83,16 +83,21 @@ test.describe('account management — alerts & notifications', () => {
     await subscriptions.form.waitOpen();
     await subscriptions.form.select('principalType', t('alertSubscriptions.user'));
     await subscriptions.form.field('principalId').fill(userId);
+    // A NAMED event type, not the default "all events". An account seeded with
+    // all-events subscriptions for this user already holds that exact row, and an
+    // identical subscription is rejected as a CONFLICT — so the named type is also
+    // what distinguishes this row from the ones that were already there.
+    const event = t('alertEventTypes.geofenceEntered');
+    await subscriptions.form.select('eventTypeFilter', event);
     await subscriptions.form.select('channel', t('notificationChannels.inApp'));
     await subscriptions.form.saveAndClose();
 
-    const shortId = userId.substring(0, 8);
-    const row = await subscriptions.section.findRow(shortId);
+    const row = await subscriptions.section.findRow(event);
     await expect(row).toBeVisible();
-    cleanup.add(`alert subscription ${shortId}`, async () => {
+    cleanup.add(`alert subscription ${event}`, async () => {
       await shell.open('manageAdmin');
       await subscriptions.open();
-      const stale = subscriptions.section.row(shortId);
+      const stale = subscriptions.section.row(event);
       if ((await stale.count()) > 0) {
         await stale.getByRole('button', { name: t('generic.delete') }).click();
         await subscriptions.confirm.confirm();
@@ -100,9 +105,9 @@ test.describe('account management — alerts & notifications', () => {
     });
 
     await subscriptions.reload(shell, 'manageAdmin');
-    await expect(await subscriptions.section.findRow(shortId)).toBeVisible();
+    await expect(await subscriptions.section.findRow(event)).toBeVisible();
 
-    await subscriptions.remove(shortId);
+    await subscriptions.remove(event);
   });
 
   test('the subscription dialog rejects a recipient id that is not a GUID', async ({
@@ -149,12 +154,21 @@ test.describe('account management — alerts & notifications', () => {
     await templates.form.field('body').fill(body);
     await templates.form.saveAndClose();
 
-    const row = await templates.section.findRow(t('notificationTemplates.keys.testNotification'));
+    // Address the override by its OWN key. "Custom" is the badge every account override
+    // carries, so in an account that already has some it selects somebody else's row —
+    // and this flow deletes what it selects.
+    const key = t('notificationTemplates.keys.testNotification');
+    const mine = () =>
+      templates.section.rows
+        .filter({ hasText: key })
+        .filter({ hasText: t('notificationTemplates.custom') });
+
+    const row = await templates.section.findRow(key);
     await expect(row).toBeVisible();
     cleanup.add('notification template override', async () => {
       await shell.open('manageAdmin');
       await templates.open();
-      const stale = templates.section.row(t('notificationTemplates.custom'));
+      const stale = mine().first();
       if ((await stale.count()) > 0) {
         await stale.getByRole('button', { name: t('generic.delete') }).click();
         await templates.confirm.confirm();
@@ -162,12 +176,10 @@ test.describe('account management — alerts & notifications', () => {
     });
 
     await templates.reload(shell, 'manageAdmin');
-    const custom = await templates.section.findRow(t('notificationTemplates.custom'));
-    await custom.getByRole('button', { name: t('generic.delete') }).click();
+    await mine().first().getByRole('button', { name: t('generic.delete') }).click();
     await templates.confirm.confirm();
-    await expect(templates.section.row(t('notificationTemplates.custom'))).toHaveCount(0, {
-      timeout: 45_000,
-    });
+    // The key keeps its row — platform defaults are always listed — but stops being Custom.
+    await expect(mine()).toHaveCount(0, { timeout: 45_000 });
   });
 
   test('the alert events section lists events and offers acknowledge/resolve', async ({

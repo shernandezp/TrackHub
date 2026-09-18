@@ -111,8 +111,8 @@ export type TripShare = TripShareFieldsFragment;
 export type TripsPage = GetTripsQuery['trips'];
 export type TripDetail = GetTripDetailQuery['tripDetail'];
 export type TripAssignment = AssignTripMutation['assignTrip'];
-export type TripEvent = GetTripTimelineQuery['tripTimeline']['items'][number];
-export type TripTimelinePage = GetTripTimelineQuery['tripTimeline'];
+export type TripEvent = GetTripTimelineQuery['tripTimelineFeed']['items'][number];
+export type TripTimelinePage = GetTripTimelineQuery['tripTimelineFeed'];
 export type RouteReplay = GetTripRouteReplayQuery['tripRouteReplay'];
 export type ProofOfDelivery = ProofOfDeliveryFieldsFragment;
 export type TollStation = TollStationFieldsFragment;
@@ -182,15 +182,15 @@ export async function getTripDetail(tripId: string): Promise<TripDetail> {
 
 export async function getTripTimeline(
   tripId: string,
-  skip = 0,
+  cursor: string | null = null,
   take = 100
 ): Promise<TripTimelinePage> {
   const data = await executeGraphQL('tripManagement', GetTripTimelineDocument, {
     tripId,
-    skip,
+    cursor,
     take,
   });
-  return data.tripTimeline;
+  return data.tripTimelineFeed;
 }
 
 /**

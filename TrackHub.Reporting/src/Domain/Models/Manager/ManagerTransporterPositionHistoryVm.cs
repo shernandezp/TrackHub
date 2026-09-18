@@ -10,3 +10,7 @@ public readonly record struct ManagerTransporterPositionHistoryVm(
     DateTimeOffset ReceivedAt,
     double Latitude,
     double Longitude);
+
+/// <summary>Telemetry pages this feed by cursor; the report reads one page and says whether it truncated.</summary>
+public readonly record struct ManagerTransporterPositionHistoryPageVm(
+    IReadOnlyCollection<ManagerTransporterPositionHistoryVm> Items, bool HasMore, string? NextCursor);

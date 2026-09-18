@@ -159,7 +159,19 @@ public class TripQueryTranslationTests
         var reader = new TripReader(context, new AccountFeatureReader(context));
 
         await AssertTranslatesAsync(() => reader.GetTimelineAsync(
-            TripId, AccountId, UserId, 0, 50, CancellationToken.None));
+            TripId, AccountId, UserId, null, 50, CancellationToken.None));
+    }
+
+    /// <summary>The cursor leg is the one that could fall back to client evaluation.</summary>
+    [Test]
+    public async Task GetTimeline_FromACursor_TranslatesToSql()
+    {
+        using var context = NewNpgsqlContext();
+        var reader = new TripReader(context, new AccountFeatureReader(context));
+        var cursor = Common.Application.Paging.FeedCursor.Encode(DateTimeOffset.UtcNow, Guid.NewGuid());
+
+        await AssertTranslatesAsync(() => reader.GetTimelineAsync(
+            TripId, AccountId, UserId, cursor, 50, CancellationToken.None));
     }
 
     // The four Reporting export feeds (spec 11 §13). These are drained at 500/page by another

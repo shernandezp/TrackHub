@@ -19,6 +19,10 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+    <!-- SQLite in-memory: the InMemory provider cannot execute ExecuteDelete, and the chunked
+         retention loop is exactly the bulk-delete orchestration that needs executing to be proved. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
     <PackageReference Include="xunit.v3" />
   </ItemGroup>
 

@@ -51,6 +51,15 @@ export interface Page<T> {
   totalCount: number;
 }
 
+/**
+ * One page of an APPEND-ONLY feed. Those are paged by cursor and report only whether more rows
+ * exist: an exact count over a fact table nobody ever shrinks costs O(rows) on every request.
+ */
+export interface CursorPage<T> {
+  items: T[];
+  hasMore: boolean;
+}
+
 export interface FetchAllOptions {
   /** Rows requested per round trip (clamped to the server ceiling). */
   pageSize?: number;

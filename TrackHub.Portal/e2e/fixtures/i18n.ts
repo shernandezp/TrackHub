@@ -1,7 +1,8 @@
 /**
  * Locale-aware selector helper.
  *
- * Every visible string in the portal comes from `src/locales/{en,es}.json`, so a
+ * Every visible string in the portal comes from `src/locales/{en,es}.json` deep-merged
+ * with `src/edition/locales/{en,es}.json`, so a
  * test that selects by accessible NAME has to resolve the same key the component
  * rendered. Resolving through the real bundles is what lets one test body run in
  * both languages (`chromium` vs `chromium-es`) instead of duplicating selectors.
@@ -9,10 +10,31 @@
 
 import en from '../../src/locales/en.json';
 import es from '../../src/locales/es.json';
+import editionEn from '../../src/edition/locales/en.json';
+import editionEs from '../../src/edition/locales/es.json';
 
 export type Language = 'en' | 'es';
 
-const BUNDLES: Record<Language, unknown> = { en, es };
+/**
+ * The same deep merge `src/index.tsx` performs. Without it every key an edition
+ * bundle adds or overrides resolves to the core value — or throws as unknown — and
+ * the selector then looks for a string the screen never rendered.
+ */
+function mergeTranslations(core: unknown, edition: unknown): unknown {
+  if (core === null || edition === null || typeof core !== 'object' || typeof edition !== 'object') {
+    return edition ?? core;
+  }
+  const merged: Record<string, unknown> = { ...(core as Record<string, unknown>) };
+  for (const [key, value] of Object.entries(edition)) {
+    merged[key] = key in merged ? mergeTranslations(merged[key], value) : value;
+  }
+  return merged;
+}
+
+export const BUNDLES: Record<Language, unknown> = {
+  en: mergeTranslations(en, editionEn),
+  es: mergeTranslations(es, editionEs),
+};
 
 /** The language the current Playwright project drives the UI in. */
 export const activeLanguage = (): Language =>

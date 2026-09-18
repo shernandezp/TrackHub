@@ -36,11 +36,14 @@ export const AuditEventItemFragment = graphql(`
     occurredAt
   }
 `);
-
 export const GetAuditTrailDocument = graphql(`
-  query GetAuditTrail($accountId: UUID!, $skip: Int!, $take: Int!) {
-    auditTrail(query: { accountId: $accountId, skip: $skip, take: $take }) {
-      ...AuditEventItem
+  query GetAuditTrail($accountId: UUID!, $cursor: String, $take: Int!) {
+    auditTrailFeed(query: { accountId: $accountId, cursor: $cursor, take: $take }) {
+      items {
+        ...AuditEventItem
+      }
+      hasMore
+      nextCursor
     }
   }
 `);

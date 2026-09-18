@@ -29,9 +29,8 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplicationDbContext(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("Security");
+        var connectionString = Common.Infrastructure.DatabaseConnectionStrings.GetRequiredConnectionString(configuration, "Security");
 
-        Guard.Against.Null(connectionString, message: "Connection string 'Security' not found.");
 
         services.AddDbContext<ApplicationDbContext>((sp, options) =>
         {

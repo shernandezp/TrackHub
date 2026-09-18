@@ -7,11 +7,24 @@ namespace TrackHub.Telemetry.Infrastructure.TelemetryDB.Writers;
 public sealed class TransporterPositionHistoryWriter(IApplicationDbContext context, ICurrentPrincipal principal)
     : AccountScopedDataAccess(context, principal), ITransporterPositionHistoryWriter
 {
+    /// <summary>
+    /// How far back the duplicate probe looks. An open-ended probe fans out across every partition
+    /// of the history table, including sequential scans of partitions holding no matching key, so
+    /// its cost grows with the retained history rather than with the batch.
+    /// <para>
+    /// <b>The accepted consequence:</b> a redelivery older than this window can duplicate.
+    /// <c>SourceTimestamp</c> comes from the provider and sync windows are minutes, so two days is
+    /// generous; a provider replaying a week-old batch would insert it twice.
+    /// </para>
+    /// </summary>
+    public static readonly TimeSpan DeduplicationWindow = TimeSpan.FromDays(2);
+
     public async Task<bool> AppendAsync(TransporterPositionHistoryDto dto, CancellationToken cancellationToken)
     {
         var scoped = RequireAccountAccess(dto.AccountId);
+        var since = dto.SourceTimestamp - DeduplicationWindow;
         var exists = await Context.TransporterPositionHistory
-            .AnyAsync(x => x.AccountId == scoped && x.IdempotencyKey == dto.IdempotencyKey, cancellationToken);
+            .AnyAsync(x => x.AccountId == scoped && x.SourceTimestamp >= since && x.IdempotencyKey == dto.IdempotencyKey, cancellationToken);
         if (exists)
         {
             return false;
@@ -40,8 +53,9 @@ public sealed class TransporterPositionHistoryWriter(IApplicationDbContext conte
         var rows = dtos.Where(d => d.AccountId == accountId).ToList();
 
         var keys = rows.Select(d => d.IdempotencyKey).ToArray();
+        var since = rows.Min(d => d.SourceTimestamp) - DeduplicationWindow;
         var existingKeys = await Context.TransporterPositionHistory
-            .Where(x => x.AccountId == accountId && keys.Contains(x.IdempotencyKey))
+            .Where(x => x.AccountId == accountId && x.SourceTimestamp >= since && keys.Contains(x.IdempotencyKey))
             .Select(x => x.IdempotencyKey)
             .ToListAsync(cancellationToken);
         var existing = existingKeys.ToHashSet();

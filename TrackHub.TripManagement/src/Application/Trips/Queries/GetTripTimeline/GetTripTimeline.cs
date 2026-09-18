@@ -25,6 +25,41 @@ namespace TrackHub.TripManagement.Application.Trips.Queries.GetTripTimeline;
 // Enforcement: the handler derives the caller's own account and passes it to the reader/writer,
 // which filters every row on it (TripVisibility is the single visibility resolver - spec 11).
 [AccountScopeEnforcedInHandler]
+public readonly record struct GetTripTimelineFeedQuery(Guid TripId, string? Cursor, int? Take) : IRequest<TripTimelineFeedPageVm>;
+
+public sealed class GetTripTimelineFeedQueryHandler(
+    ITripReader reader,
+    IUserReader userReader,
+    IUser user) : IRequestHandler<GetTripTimelineFeedQuery, TripTimelineFeedPageVm>
+{
+    private const int DefaultPageSize = 50;
+    private const int MaxPageSize = 200;
+
+    private Guid UserId { get; } = TripVisibility.RequireUserId(user);
+
+    public async Task<TripTimelineFeedPageVm> Handle(GetTripTimelineFeedQuery request, CancellationToken cancellationToken)
+    {
+        var caller = await userReader.GetUserAsync(UserId, cancellationToken);
+        var take = Math.Clamp(request.Take ?? DefaultPageSize, 1, MaxPageSize);
+
+        return await reader.GetTimelineAsync(
+            request.TripId, caller.AccountId, TripVisibility.ResolveScopeUserId(user, UserId), request.Cursor, take, cancellationToken);
+    }
+}
+
+public sealed class GetTripTimelineFeedValidator : AbstractValidator<GetTripTimelineFeedQuery>
+{
+    public GetTripTimelineFeedValidator()
+    {
+        RuleFor(v => v.TripId).NotEmpty();
+        RuleFor(v => v.Take).InclusiveBetween(1, 200).When(v => v.Take.HasValue);
+    }
+}
+
+/// <summary>Behind the deprecated <c>tripTimeline</c> field. Goes when the field does.</summary>
+[Authorize(Resource = Resources.Trips, Action = Actions.Read)]
+[RequireFeature(FeatureKeys.TripManagement)]
+[AccountScopeEnforcedInHandler]
 public readonly record struct GetTripTimelineQuery(Guid TripId, int? Skip, int? Take) : IRequest<TripTimelinePageVm>;
 
 public sealed class GetTripTimelineQueryHandler(
@@ -32,19 +67,19 @@ public sealed class GetTripTimelineQueryHandler(
     IUserReader userReader,
     IUser user) : IRequestHandler<GetTripTimelineQuery, TripTimelinePageVm>
 {
-    private const int DefaultPageSize = 50;
-    private const int MaxPageSize = 200;
-
     private Guid UserId { get; } = TripVisibility.RequireUserId(user);
 
     public async Task<TripTimelinePageVm> Handle(GetTripTimelineQuery request, CancellationToken cancellationToken)
     {
         var caller = await userReader.GetUserAsync(UserId, cancellationToken);
-        var skip = Math.Max(request.Skip ?? 0, 0);
-        var take = Math.Clamp(request.Take ?? DefaultPageSize, 1, MaxPageSize);
 
-        return await reader.GetTimelineAsync(
-            request.TripId, caller.AccountId, TripVisibility.ResolveScopeUserId(user, UserId), skip, take, cancellationToken);
+        return await reader.GetTimelineByOffsetAsync(
+            request.TripId,
+            caller.AccountId,
+            TripVisibility.ResolveScopeUserId(user, UserId),
+            Math.Max(request.Skip ?? 0, 0),
+            Math.Clamp(request.Take ?? 50, 1, 200),
+            cancellationToken);
     }
 }
 

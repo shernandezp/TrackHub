@@ -123,17 +123,17 @@ public sealed class PositionsRetrieved
                         }
 
                         // Phase 2 — best-effort enrichment off the freshness path: fill blank
-                        // addresses, re-upsert the projection ONLY if enrichment resolved something
-                        // (avoids a pointless second write), and append the enriched history.
+                        // addresses, re-upsert ONLY the fixes enrichment actually resolved, and
+                        // append the enriched history.
                         if (writeSucceeded)
                         {
-                            var (enrichedCandidates, anyResolved) = await EnrichAddressesAsync(validPositionCandidates, cancellationToken);
+                            var (enrichedCandidates, resolved) = await EnrichAddressesAsync(validPositionCandidates, cancellationToken);
 
-                            if (anyResolved)
+                            if (resolved.Length > 0)
                             {
                                 try
                                 {
-                                    await positionWriter.AddOrUpdatePositionAsync(LatestPerTransporter(enrichedCandidates), cancellationToken);
+                                    await positionWriter.AddOrUpdatePositionAsync(LatestPerTransporter(resolved), cancellationToken);
                                 }
                                 catch (Exception ex)
                                 {
@@ -225,17 +225,17 @@ public sealed class PositionsRetrieved
                         .First())
                     .ToArray();
 
-            // Returns the enriched positions plus whether any blank address was actually resolved
-            // (so the caller only re-writes the projection when enrichment changed something).
-            private async Task<(PositionVm[] Positions, bool AnyResolved)> EnrichAddressesAsync(PositionVm[] positions, CancellationToken cancellationToken)
+            // Returns the enriched positions plus the subset whose blank address was actually
+            // resolved, so the caller re-writes only the rows that changed.
+            private async Task<(PositionVm[] Positions, PositionVm[] Resolved)> EnrichAddressesAsync(PositionVm[] positions, CancellationToken cancellationToken)
             {
-                var anyResolved = false;
+                var resolvedPositions = new List<PositionVm>();
                 try
                 {
                     var budget = await geocodingService.GetEnrichmentBudgetAsync(cancellationToken);
                     if (budget <= 0)
                     {
-                        return (positions, false);
+                        return (positions, []);
                     }
 
                     for (var i = 0; i < positions.Length && budget > 0; i++)
@@ -256,7 +256,7 @@ public sealed class PositionsRetrieved
                                 State = address.Value.State,
                                 Country = address.Value.Country
                             };
-                            anyResolved = true;
+                            resolvedPositions.Add(positions[i]);
                         }
                     }
                 }
@@ -265,7 +265,7 @@ public sealed class PositionsRetrieved
                     logger.LogWarning(ex, "Address enrichment failed; storing positions without addresses.");
                 }
 
-                return (positions, anyResolved);
+                return (positions, [.. resolvedPositions]);
             }
         }
     }

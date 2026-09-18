@@ -7,13 +7,19 @@
  * name from that key — so a backend added to one and not the other is a bug this
  * list surfaces. `syncWorker` is excluded: it is not probed, it is derived from
  * sync activity and only shown to the manager/administrator tier.
+ *
+ * The bundle is the MERGED one: an edition that adds services carries their names
+ * in its own overlay, and reading the core bundle alone undercounts the tiles.
  */
 
-import en from '../../src/locales/en.json';
+import { BUNDLES } from './i18n';
 
-export const PROBED_SERVICE_NAMES: readonly string[] = Object.keys(
-  en.platformStatus.services
-).filter((service) => service !== 'syncWorker');
+const services = (BUNDLES.en as { platformStatus: { services: Record<string, string> } })
+  .platformStatus.services;
+
+export const PROBED_SERVICE_NAMES: readonly string[] = Object.keys(services).filter(
+  (service) => service !== 'syncWorker'
+);
 
 /** How many tiles the page renders for a signed-out visitor. */
 export const PROBED_SERVICE_COUNT = PROBED_SERVICE_NAMES.length;

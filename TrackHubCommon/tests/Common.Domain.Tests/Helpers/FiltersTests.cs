@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Common.Domain.Helpers;
 using FluentAssertions;
 
@@ -95,5 +96,49 @@ public class FiltersTests
         var data = new List<TestEntity> { new() { Name = "Alice", Age = 30, Active = true } }.AsQueryable();
         var result = filters.Apply(data).ToList();
         result.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void Apply_ComparesAgainstAClosureMember_NotAConstant()
+    {
+        var filters = new Filters(new Dictionary<string, object> { { "Age", 30 } });
+
+        var where = (MethodCallExpression)filters.Apply(new List<TestEntity>().AsQueryable()).Expression;
+        var lambda = (LambdaExpression)((UnaryExpression)where.Arguments[1]).Operand;
+        var comparison = (BinaryExpression)lambda.Body;
+
+        comparison.Right.Should().BeAssignableTo<MemberExpression>(
+            "EF Core parameterises captured members and bakes constants into the SQL text");
+        ((MemberExpression)comparison.Right).Expression.Should().BeAssignableTo<ConstantExpression>();
+    }
+
+    [Fact]
+    public void Apply_NullableProperty_MatchesNull()
+    {
+        var data = new List<NullableEntity>
+        {
+            new() { OwnerId = Guid.NewGuid() },
+            new() { OwnerId = null },
+        }.AsQueryable();
+
+        var filters = new Filters(new Dictionary<string, object> { { "OwnerId", null! } });
+
+        filters.Apply(data).ToList().Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void Apply_CoercesAStringOntoAGuidProperty()
+    {
+        var id = Guid.NewGuid();
+        var data = new List<NullableEntity> { new() { OwnerId = id }, new() { OwnerId = Guid.NewGuid() } }.AsQueryable();
+
+        var filters = new Filters(new Dictionary<string, object> { { "OwnerId", id.ToString() } });
+
+        filters.Apply(data).ToList().Should().ContainSingle().Which.OwnerId.Should().Be(id);
+    }
+
+    private class NullableEntity
+    {
+        public Guid? OwnerId { get; set; }
     }
 }

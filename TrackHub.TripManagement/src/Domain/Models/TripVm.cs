@@ -170,6 +170,13 @@ public readonly record struct TripEventVm(
     string Source,
     string? PayloadJson);
 
+/// <summary>
+/// Append-only and unbounded per trip, so it is paged by CURSOR and reports only whether more rows
+/// exist: an exact count and an offset both cost O(rows).
+/// </summary>
+public readonly record struct TripTimelineFeedPageVm(IReadOnlyCollection<TripEventVm> Items, bool HasMore, string? NextCursor);
+
+/// <summary>The shape behind the deprecated <c>tripTimeline</c> field. Goes when the field does.</summary>
 public readonly record struct TripTimelinePageVm(IReadOnlyCollection<TripEventVm> Items, int TotalCount);
 
 public readonly record struct ProofOfDeliveryVm(

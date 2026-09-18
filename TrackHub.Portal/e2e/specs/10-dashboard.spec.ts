@@ -9,7 +9,12 @@
  */
 
 import { test, expect, flag } from '../fixtures';
-import { focusedUnit } from '../pages/dashboard';
+import {
+  accountSettingsLoaded,
+  focusedUnit,
+  positionsLoaded,
+  settledText,
+} from '../pages/dashboard';
 
 test.describe('dashboard', () => {
   test('the units tab shows the fleet summary, filter bar, map and side list', async ({
@@ -55,13 +60,16 @@ test.describe('dashboard', () => {
     page,
     t,
   }) => {
+    const loaded = positionsLoaded(page);
     await shell.open('dashboard');
+    await loaded;
+
     const total = page
       .getByText(t('dashboard.totalTitle'), { exact: true })
       .locator('xpath=..')
       .getByRole('heading');
     await expect(total).toBeVisible({ timeout: 60_000 });
-    const before = await total.innerText();
+    const before = await settledText(total);
 
     const status = page.getByRole('combobox', { name: t('dashboard.filterStatus') });
     await status.click();
@@ -141,10 +149,14 @@ test.describe('dashboard', () => {
   });
 
   test('the refresh counter counts down on the live map', async ({ shell, page }) => {
+    const settings = accountSettingsLoaded(page);
     await shell.open('dashboard');
+    await settings;
 
-    // Rendered only when the account enables automatic refresh.
+    // Rendered only when the account enables automatic refresh — a decision that is only
+    // knowable once the settings answer, so the skip must not be judged before then.
     const counter = page.locator('.mapcontrol');
+    await counter.first().waitFor({ state: 'attached', timeout: 10_000 }).catch(() => null);
     test.skip(
       (await counter.count()) === 0,
       'The account has automatic map refresh switched off, so no counter is rendered.'
@@ -194,6 +206,15 @@ test.describe('dashboard', () => {
 
     await shell.open('dashboard');
     await page.getByRole('tab', { name: t('dashboard.positionsTitle') }).click();
+
+    // Replay TrackHub's OWN stored history. The source defaults to the GPS provider,
+    // which only answers where live provider credentials are configured; the recorded
+    // points E2E_HAS_POSITIONS promises are the ones in TrackHub.
+    const stored = page.getByRole('button', { name: t('replay.sourceTrackHub') });
+    if ((await stored.count()) > 0) {
+      await stored.click();
+      await expect(stored).toHaveAttribute('aria-pressed', 'true');
+    }
 
     const from = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16);
     const to = new Date().toISOString().slice(0, 16);

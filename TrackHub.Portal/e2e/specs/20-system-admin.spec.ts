@@ -123,8 +123,10 @@ test.describe('system admin', () => {
     await accounts.section.search(name);
     const row = await accounts.section.findRow(name);
     await expect(row).toBeVisible();
-    // A brand new account starts on Trial, not Active.
-    await expect(row).toContainText(t('account.statusTrial'));
+    // A new account is operational from the start: createAccount maps `active` onto the
+    // lifecycle status (true -> Active). Trial is reached through a subscription, never
+    // through creation (spec 03 — migration backfills true -> Active, false -> Suspended).
+    await expect(row).toContainText(t('account.statusActive'));
 
     // Editing it sticks.
     await row.getByRole('button', { name: t('generic.edit') }).click();
@@ -137,8 +139,8 @@ test.describe('system admin', () => {
     await accounts.section.search(name);
     await expect(await accounts.section.findRow(name)).toContainText('renamed by the e2e suite');
 
-    // Suspending records a reason and moves the account out of Trial. There is
-    // no delete: an account is archived, never removed, so the row stays.
+    // Suspending records a reason and moves the account out of the operational band.
+    // There is no delete: an account is archived, never removed, so the row stays.
     const found = await accounts.section.findRow(name);
     await found.getByRole('button', { name: t('account.changeStatus') }).click();
     await form.waitOpen();

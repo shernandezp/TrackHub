@@ -41,8 +41,8 @@ export const tripKeys = {
   all: ['trips'] as const,
   list: (filters: TripListFilters = {}) => [...tripKeys.all, 'list', filters] as const,
   detail: (tripId: string) => [...tripKeys.all, 'detail', tripId] as const,
-  timeline: (tripId: string, skip: number, take: number) =>
-    [...tripKeys.all, 'timeline', tripId, skip, take] as const,
+  timeline: (tripId: string, cursor: string | null, take: number) =>
+    [...tripKeys.all, 'timeline', tripId, cursor, take] as const,
   replay: (tripId: string, maxPoints: number | null) =>
     [...tripKeys.all, 'replay', tripId, maxPoints ?? ''] as const,
   tolls: ['tolls'] as const,
@@ -98,10 +98,10 @@ export function useTripDetail(tripId: string | null | undefined) {
   });
 }
 
-export function useTripTimeline(tripId: string | null | undefined, skip = 0, take = 100) {
+export function useTripTimeline(tripId: string | null | undefined, cursor: string | null = null, take = 100) {
   return useQuery({
-    queryKey: tripKeys.timeline(tripId ?? '', skip, take),
-    queryFn: () => api.getTripTimeline(tripId as string, skip, take),
+    queryKey: tripKeys.timeline(tripId ?? '', cursor, take),
+    queryFn: () => api.getTripTimeline(tripId as string, cursor, take),
     enabled: !!tripId,
   });
 }

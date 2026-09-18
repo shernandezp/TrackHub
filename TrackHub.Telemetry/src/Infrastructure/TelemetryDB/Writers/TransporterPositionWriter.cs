@@ -64,7 +64,7 @@ public sealed class TransporterPositionWriter(IApplicationDbContext context, ICu
         {
             if (existingByTransporter.TryGetValue(positionDto.TransporterId, out var existing))
             {
-                if (existing.DeviceDateTime >= positionDto.DeviceDateTime)
+                if (existing.DeviceDateTime > positionDto.DeviceDateTime)
                 {
                     continue;
                 }

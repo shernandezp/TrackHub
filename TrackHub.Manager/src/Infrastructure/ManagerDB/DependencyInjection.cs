@@ -23,6 +23,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Npgsql;
+using Common.Infrastructure;
 using Common.Infrastructure.Http;
 using TrackHub.Manager.Domain.Interfaces;
 using TrackHub.Manager.Infrastructure;
@@ -39,9 +40,8 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplicationDbContext(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        var connectionString = configuration.GetRequiredConnectionString("DefaultConnection");
 
-        Guard.Against.Null(connectionString, message: "Connection string 'DefaultConnection' not found.");
 
         // Configure NpgsqlDataSourceBuilder and enable dynamic JSON serialization
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
@@ -115,8 +115,6 @@ public static class DependencyInjection
         services.AddScoped<IAccountFeatureGate, TrackHub.Manager.Infrastructure.ManagerDB.Jobs.AccountFeatureGate>();
         services.AddScoped<INotificationRenderer, TrackHub.Manager.Infrastructure.ManagerDB.Jobs.NotificationRenderer>();
         services.AddScoped<IAlertEvaluationStore, TrackHub.Manager.Infrastructure.ManagerDB.Jobs.AlertEvaluationStore>();
-        services.AddScoped<IDeliveryRetentionStore, TrackHub.Manager.Infrastructure.ManagerDB.Jobs.DeliveryRetentionStore>();
-        services.AddScoped<IPlatformRetentionStore, TrackHub.Manager.Infrastructure.ManagerDB.Jobs.PlatformRetentionStore>();
         services.AddScoped<IDocumentRetentionStore, TrackHub.Manager.Infrastructure.ManagerDB.Jobs.DocumentRetentionStore>();
         services.AddScoped<IDocumentScanStore, TrackHub.Manager.Infrastructure.ManagerDB.Jobs.DocumentScanStore>();
         services.AddScoped<IDocumentExpirationStore, TrackHub.Manager.Infrastructure.ManagerDB.Jobs.DocumentExpirationStore>();

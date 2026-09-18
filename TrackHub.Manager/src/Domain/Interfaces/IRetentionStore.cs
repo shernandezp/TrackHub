@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Sergio Hernandez. All rights reserved.
+﻿// Copyright (c) 2026 Sergio Hernandez. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License").
 //  You may not use this file except in compliance with the License.
@@ -14,24 +14,6 @@
 //
 
 namespace TrackHub.Manager.Domain.Interfaces;
-
-public interface IDeliveryRetentionStore
-{
-    Task<int> DeleteCompletedDeliveriesAsync(DateTimeOffset cutoff, CancellationToken cancellationToken);
-
-    Task RecordJobRunAsync(string resourceKey, string idempotencyKey, DateTimeOffset startedAt, CancellationToken cancellationToken);
-}
-
-public interface IPlatformRetentionStore
-{
-    /// <summary>Succeeded rows past the cutoff, except the durable idempotency markers and the newest row per job key.</summary>
-    Task<int> DeleteAgedJobRunsAsync(DateTimeOffset cutoff, IReadOnlyCollection<string> durableMarkerJobKeys, CancellationToken cancellationToken);
-
-    /// <summary>Resolved events last seen before the cutoff that no delivery row still points at.</summary>
-    Task<int> DeleteAgedResolvedAlertEventsAsync(DateTimeOffset cutoff, CancellationToken cancellationToken);
-
-    Task RecordJobRunAsync(string resourceKey, string idempotencyKey, DateTimeOffset startedAt, CancellationToken cancellationToken);
-}
 
 public readonly record struct PurgeableVersionVm(
     Guid DocumentVersionId, Guid DocumentId, Guid AccountId, int VersionNumber, string StorageKey);

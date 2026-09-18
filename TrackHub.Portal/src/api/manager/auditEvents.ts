@@ -20,16 +20,21 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
-import type { AuditEventItemFragment as AuditEventItemType } from './generated/graphql';
+import type { AuditEventItemFragment as AuditEventItemType, GetAuditTrailQuery } from './generated/graphql';
 import { GetAuditTrailDocument } from './auditEventsOperations';
 
 export type AuditEvent = AuditEventItemType;
+export type AuditEventPage = GetAuditTrailQuery['auditTrailFeed'];
 
+/**
+ * Cursor-paged: the trail is append-only and unbounded, so the backend reports whether more rows
+ * exist rather than a total, and the next page is a seek rather than an offset.
+ */
 export async function getAuditTrail(
   accountId: string,
-  skip = 0,
+  cursor: string | null = null,
   take = 50
-): Promise<AuditEvent[]> {
-  const data = await executeGraphQL('manager', GetAuditTrailDocument, { accountId, skip, take });
-  return data.auditTrail;
+): Promise<AuditEventPage> {
+  const data = await executeGraphQL('manager', GetAuditTrailDocument, { accountId, cursor, take });
+  return data.auditTrailFeed;
 }
