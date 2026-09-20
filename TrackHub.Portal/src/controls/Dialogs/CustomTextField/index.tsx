@@ -33,6 +33,7 @@ const marginMap: Record<'none' | 'dense' | 'normal', number> = { none: 0, dense:
 
 const CustomTextField = ({
   errorMsg,
+  helperText,
   label,
   id,
   name,
@@ -54,7 +55,8 @@ const CustomTextField = ({
         name={name}
         fullWidth={fullWidth}
         error={!!errorMsg}
-        helperText={errorMsg}
+        // The error text must win over a hint passed in helperText.
+        helperText={errorMsg ?? helperText}
         required={required}
         sx={errorMsg ? [textFieldSx, errorFieldSx] : textFieldSx}
         {...props}
