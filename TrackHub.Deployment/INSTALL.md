@@ -111,7 +111,7 @@ outside PostgreSQL: back it up separately.
 | Requirement | Minimum | Recommended |
 |-------------|---------|-------------|
 | CPU | 2 cores | 4+ cores |
-| RAM | 4 GB + 4 GB swap (image builds) | 8+ GB |
+| RAM | 4 GB + 4 GB swap | 8 GB + 4 GB swap |
 | Storage | 20 GB | 50+ GB SSD |
 | OS | Ubuntu 22.04 LTS | Ubuntu 24.04.4 LTS |
 
@@ -473,6 +473,11 @@ sudo ufw allow 22/tcp   # SSH
 sudo ufw allow 80/tcp   # HTTP
 sudo ufw allow 443/tcp  # HTTPS
 sudo ufw enable
+
+# Swap: image builds spike above the RAM of a small host, and without swap the kernel
+# kills the build or freezes the host instead
+sudo fallocate -l 4G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile
+echo "/swapfile none swap sw 0 0" | sudo tee -a /etc/fstab
 ```
 
 ### Step 2: Install Docker
@@ -1645,10 +1650,12 @@ cd /opt/trackhub/TrackHub.Deployment
 every container (so the Authority picks up the new `OPENIDDICT_SCOPES`). The one-time
 User/Account ID sync is skipped because its flag already exists.
 
-Images build **one at a time** (`COMPOSE_PARALLEL_LIMIT=1`, set by the script): the parallel
-build is OOM-killed on a 4 GB host. Expect well over an hour for a full rebuild; already-built
-images are cached, so a re-run after a failure resumes where it stopped. Set
-`DEPLOY_BUILD_PARALLEL=4` on a large host to speed it up.
+Images build **one at a time**, and every Dockerfile shares one BuildKit NuGet cache, so each
+package is downloaded once per host rather than once per image. Before building, the script
+checks free disk (10 GB under the Docker root), available memory (1.5 GB) and that nuget.org
+answers, and refuses to start otherwise. Already-built images are cached, so a re-run after a
+failure resumes where it stopped. After a successful deploy it prunes superseded images and
+trims the build cache to 15 GB.
 
 ### 7. Verify
 
@@ -2039,8 +2046,9 @@ docker compose restart nginx
 
 #### Build dies with "failed to execute bake: signal: killed"
 
-The kernel OOM-killed the parallel image build. `deploy.sh` and `update-service.sh` now build one
-image at a time (`COMPOSE_PARALLEL_LIMIT=1`); if it still dies, add swap before deploying:
+The kernel OOM-killed the image build. `deploy.sh` builds one image at a time and refuses to
+start with less than 1.5 GB available, but a build spike still needs somewhere to go: add swap
+before deploying (the same lack of swap is what makes a host stop answering SSH mid-build):
 
 ```bash
 fallocate -l 4G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile

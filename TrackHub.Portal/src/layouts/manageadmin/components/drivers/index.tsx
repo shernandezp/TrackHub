@@ -14,40 +14,41 @@
 *  limitations under the License.
 */
 
-import { useContext, useEffect, useState } from 'react';
-import type { ReactNode } from 'react';
+/**
+ * Drivers: one row per driver, a search box for accounts with hundreds of them, and three
+ * icon actions. Credentials and devices live in the detail dialog rather than in another
+ * accordion.
+ */
+
+import { useContext, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from '@mui/material/Icon';
-import Table from "controls/Tables/Table";
-import TableAccordion from "controls/Accordions/TableAccordion";
-import ArgonButton from "components/ArgonButton";
-import ArgonTypography from "components/ArgonTypography";
-import useForm from "controls/Dialogs/useForm";
-import DriverDialog from "layouts/manageadmin/components/drivers/DriverDialog";
-import type { DriverFormValues } from "layouts/manageadmin/components/drivers/DriverDialog";
-import ManageDriverCredentials from "layouts/manageadmin/components/drivers/DriverCredentials";
-import ManageDriverQualifications from "layouts/manageadmin/components/drivers/DriverQualifications";
-import ManageDriverAssignments from "layouts/manageadmin/components/drivers/DriverAssignments";
-import QualificationExpirations from "layouts/manageadmin/components/drivers/QualificationExpirations";
-import { useFeatures } from "context/features";
-import { useAccountByUser } from "queries/accounts";
+import Tooltip from '@mui/material/Tooltip';
+import Table from 'controls/Tables/Table';
+import TableAccordion from 'controls/Accordions/TableAccordion';
+import CustomTextField from 'controls/Dialogs/CustomTextField';
+import ArgonBadge from 'components/ArgonBadge';
+import ArgonBox from 'components/ArgonBox';
+import ArgonButton from 'components/ArgonButton';
+import ArgonTypography from 'components/ArgonTypography';
+import useForm from 'controls/Dialogs/useForm';
+import DriverDialog from 'layouts/manageadmin/components/drivers/DriverDialog';
+import type { DriverFormValues } from 'layouts/manageadmin/components/drivers/DriverDialog';
+import DriverDetailDialog from 'layouts/manageadmin/components/drivers/DriverDetailDialog';
+import ManageDriverQualifications from 'layouts/manageadmin/components/drivers/DriverQualifications';
+import ManageDriverAssignments from 'layouts/manageadmin/components/drivers/DriverAssignments';
+import QualificationExpirations from 'layouts/manageadmin/components/drivers/QualificationExpirations';
+import { TextCell, statusColor } from 'layouts/manageadmin/components/drivers/workforceShared';
+import type { BadgeColor } from 'layouts/manageadmin/components/drivers/workforceShared';
+import { credentialState } from 'layouts/manageadmin/components/drivers/credentialLifecycle';
+import { useFeatures } from 'context/features';
+import { useAccountByUser } from 'queries/accounts';
 import { useDriversByAccount, useCreateDriver, useUpdateDriver, useDeactivateDriver } from 'queries/drivers';
+import { useDriverCredentials } from 'queries/driverIdentity';
 import type { Driver, DriverDtoInput } from 'api/manager/drivers';
+import type { DriverCredential } from 'api/security/driverIdentity';
 import { LoadingContext } from 'LoadingContext';
 
-function TextCell({ children }: { children?: ReactNode }) {
-  return (
-    <ArgonTypography variant="caption" color="secondary" fontWeight="medium">
-      {children || '-'}
-    </ArgonTypography>
-  );
-}
-
-/**
- * The extended workforce capabilities (qualifications, assignment history,
- * expirations) are billable; the driver registry and credential/device
- * administration are core platform and stay visible regardless (spec 09 §3, §8).
- */
 const WORKFORCE_FEATURE_KEY = 'workforce';
 
 function ManageDrivers() {
@@ -57,40 +58,66 @@ function ManageDrivers() {
   const workforceEnabled = isFeatureEnabled(WORKFORCE_FEATURE_KEY);
   const [expanded, setExpanded] = useState(false);
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [detail, setDetail] = useState<Driver | null>(null);
   const [values, handleChange, setValues, setErrors, validate, errors] = useForm<DriverFormValues>({ active: true });
 
-  // Account id comes from the query layer; the driver list is then keyed on it.
   const accountQuery = useAccountByUser({ enabled: expanded });
   const account = accountQuery.data ?? null;
-  const driversQuery = useDriversByAccount(account?.accountId, { enabled: expanded && !!account?.accountId });
+  const accountId = account?.accountId;
+  const driversQuery = useDriversByAccount(accountId, { enabled: expanded && !!accountId });
   const drivers = driversQuery.data ?? [];
+  // One account-wide read feeds the credential column; the per-driver detail refetches its own.
+  const credentialsQuery = useDriverCredentials(accountId, null, { enabled: expanded && !!accountId });
   const createDriver = useCreateDriver();
   const updateDriver = useUpdateDriver();
   const deactivateDriver = useDeactivateDriver();
 
-  // Keep the global spinner UX while the account/driver list loads/refreshes.
   useEffect(() => {
     setLoading(accountQuery.isFetching || driversQuery.isFetching);
   }, [accountQuery.isFetching, driversQuery.isFetching, setLoading]);
 
+  // The credential that speaks for a driver: an active one wins, else the newest of the rest.
+  const credentialByDriver = useMemo(() => {
+    const map = new Map<string, DriverCredential>();
+    for (const credential of credentialsQuery.data ?? []) {
+      const current = map.get(credential.driverId);
+      if (!current || (!current.active && credential.active)) map.set(credential.driverId, credential);
+    }
+    return map;
+  }, [credentialsQuery.data]);
+
+  const accessBadge = (driver: Driver): { label: string; color: BadgeColor } => {
+    const credential = credentialByDriver.get(driver.driverId);
+    if (!credential) return { label: t('driver.accessNone'), color: 'secondary' };
+    switch (credentialState(credential)) {
+      case 'pending':
+        return { label: t('workforce.credentials.statusPending'), color: 'info' };
+      case 'revoked':
+        return { label: t('workforce.credentials.statusRevoked'), color: statusColor('REVOKED') };
+      case 'locked':
+        return { label: t('workforce.credentials.statusLocked'), color: 'warning' };
+      default:
+        return { label: t('workforce.credentials.statusActive'), color: statusColor('ACTIVE') };
+    }
+  };
+
   const handleAddClick = () => {
-    setValues({ accountId: account?.accountId, active: true });
+    setValues({ accountId, active: true });
     setErrors({});
   };
 
   const handleEdit = (driver: Driver) => {
-    setValues({ ...driver, accountId: account?.accountId || driver.accountId });
+    setValues({ ...driver, accountId: accountId || driver.accountId });
     setErrors({});
     setOpen(true);
   };
 
   const handleSubmit = async () => {
-    if (!validate(['name']) || !account?.accountId) return;
+    if (!validate(['name']) || !accountId) return;
     setLoading(true);
     try {
-      // validate(['name']) + the account?.accountId guard above ensure the
-      // required DriverDtoInput fields are present — assert at the boundary.
-      const driver = { ...values, accountId: account.accountId, active: values.active !== false };
+      const driver = { ...values, accountId, active: values.active !== false };
       if (driver.driverId) {
         await updateDriver.mutateAsync({ driverId: driver.driverId, driver: driver as DriverDtoInput });
       } else {
@@ -116,6 +143,14 @@ function ManageDrivers() {
     }
   };
 
+  const iconAction = (key: string, icon: string, color: 'dark' | 'info' | 'error', label: string, onClick: () => void) => (
+    <Tooltip key={key} title={label}>
+      <ArgonButton variant="text" color={color} size="small" iconOnly onClick={onClick}>
+        <Icon>{icon}</Icon>
+      </ArgonButton>
+    </Tooltip>
+  );
+
   return (
     <>
       <TableAccordion sectionKey="drivers"
@@ -125,40 +160,54 @@ function ManageDrivers() {
         setOpen={setOpen}
         handleAddClick={handleAddClick}
         setExpanded={setExpanded}>
+        <ArgonBox mb={1} maxWidth={420}>
+          <CustomTextField
+            margin="none"
+            name="driverSearch"
+            id="driverSearch"
+            type="search"
+            placeholder={t('driver.search')}
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+        </ArgonBox>
         <Table
+          searchQuery={search}
           columns={[
             { name: 'name', title: t('driver.name'), align: 'left' },
-            { name: 'phone', title: t('driver.phone'), align: 'center' },
             { name: 'document', title: t('driver.document'), align: 'center' },
+            { name: 'phone', title: t('driver.phone'), align: 'center' },
+            { name: 'access', title: t('driver.access'), align: 'center' },
             { name: 'active', title: t('generic.active'), align: 'center' },
-            { name: 'action', title: t('generic.action'), align: 'center' },
+            { name: 'action', title: t('generic.action'), align: 'center', width: '140px' },
             { name: 'id' }
           ]}
-          rows={drivers.map(driver => ({
-            name: <TextCell>{driver.name}</TextCell>,
-            phone: <TextCell>{driver.phone}</TextCell>,
-            document: <TextCell>{driver.documentNumber}</TextCell>,
-            active: <TextCell>{driver.active ? t('generic.yes') : t('generic.no')}</TextCell>,
-            action: (
-              <>
-                <ArgonButton variant="text" color="dark" onClick={() => handleEdit(driver)}>
-                  <Icon>edit</Icon>&nbsp;{t('generic.edit')}
-                </ArgonButton>
-                {driver.active && (
-                  <ArgonButton variant="text" color="error" onClick={() => handleDeactivate(driver)}>
-                    <Icon>block</Icon>&nbsp;{t('driver.deactivate')}
-                  </ArgonButton>
-                )}
-              </>
-            ),
-            id: driver.driverId
-          }))}
+          rows={drivers.map(driver => {
+            const access = accessBadge(driver);
+            return {
+              name: <TextCell>{driver.name}</TextCell>,
+              document: <TextCell>{driver.documentNumber}</TextCell>,
+              phone: <TextCell>{driver.phone}</TextCell>,
+              access: <ArgonBadge badgeContent={access.label} color={access.color} size="xs" container />,
+              active: <TextCell>{driver.active ? t('generic.yes') : t('generic.no')}</TextCell>,
+              action: (
+                <ArgonBox display="flex" justifyContent="center" gap={0.5}>
+                  {iconAction('manage', 'badge', 'info', t('driver.manage'), () => setDetail(driver))}
+                  {iconAction('edit', 'edit', 'dark', t('generic.edit'), () => handleEdit(driver))}
+                  {driver.active && iconAction('deactivate', 'block', 'error', t('driver.deactivate'), () => handleDeactivate(driver))}
+                </ArgonBox>
+              ),
+              id: driver.driverId
+            };
+          })}
           selectedField="name"
         />
+        {drivers.length === 0 && (
+          <ArgonTypography variant="caption" color="secondary">
+            {t('driver.empty')}
+          </ArgonTypography>
+        )}
       </TableAccordion>
-
-      {/* Core: driver identity administration is never feature-gated. */}
-      <ManageDriverCredentials />
 
       {/* Billable workforce surfaces — hidden without the feature (cosmetic
           only; the backend gate is authoritative). */}
@@ -178,6 +227,7 @@ function ManageDrivers() {
         handleChange={handleChange}
         errors={errors}
       />
+      {accountId && <DriverDetailDialog accountId={accountId} driver={detail} onClose={() => setDetail(null)} />}
     </>
   );
 }

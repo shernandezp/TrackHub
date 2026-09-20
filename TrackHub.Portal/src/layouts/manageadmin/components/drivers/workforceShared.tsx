@@ -19,13 +19,13 @@
  * qualifications, assignments, expirations).
  */
 
-import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { useTranslation } from 'react-i18next';
+import Autocomplete from '@mui/material/Autocomplete';
+import TextField from '@mui/material/TextField';
 import ArgonBox from 'components/ArgonBox';
 import ArgonTypography from 'components/ArgonTypography';
-import CustomSelect from 'controls/Dialogs/CustomSelect';
-import CustomTextField from 'controls/Dialogs/CustomTextField';
+import FieldLabel from 'controls/Dialogs/FieldLabel';
+import { textFieldSx } from 'controls/Dialogs/fieldStyles';
 import type { Driver } from 'api/manager/drivers';
 import { daysUntilDateOnly } from 'utils/dateUtils';
 
@@ -97,55 +97,22 @@ interface DriverPickerProps {
   id: string;
 }
 
-/**
- * Shared "which driver am I administering" picker used by the per-driver
- * sections. `drivers` is the account's COMPLETE list (the api layer pages to
- * exhaustion), so a typeahead sits above the select to keep a few hundred
- * options navigable. The selected driver is always kept in the option list, so
- * narrowing the filter can never blank out a live selection.
- */
+/** Shared "which driver" picker: type any part of the name, pick from the matches. */
 export function DriverPicker({ drivers, value, onChange, label, placeholder, id }: DriverPickerProps) {
-  const { t } = useTranslation();
-  const [search, setSearch] = useState('');
-
-  const options = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    const matches = term
-      ? drivers.filter((driver) => (driver.name || '').toLowerCase().includes(term))
-      : drivers;
-    const selected = value ? drivers.find((driver) => driver.driverId === value) : undefined;
-    return selected && !matches.some((driver) => driver.driverId === value)
-      ? [selected, ...matches]
-      : matches;
-  }, [drivers, search, value]);
-
+  const selected = drivers.find((driver) => driver.driverId === value) ?? null;
   return (
     <ArgonBox>
-      <CustomTextField
-        margin="none"
-        name={`${id}Search`}
-        id={`${id}Search`}
-        label={t('workforce.searchDriver')}
-        type="text"
-        fullWidth
-        value={search}
-        onChange={(event) => setSearch(event.target.value)}
-      />
-      <CustomSelect
-        list={options.map((driver) => ({ value: driver.driverId, label: driver.name }))}
-        name={id}
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <Autocomplete
         id={id}
-        label={label}
-        value={value}
-        handleChange={(event) => onChange(String(event.target.value ?? ''))}
-        numericValue={false}
-        placeholder={placeholder}
+        options={drivers}
+        value={selected}
+        onChange={(_, driver) => onChange(driver?.driverId ?? '')}
+        getOptionLabel={(driver) => driver.name ?? ''}
+        isOptionEqualToValue={(option, current) => option.driverId === current.driverId}
+        autoHighlight
+        renderInput={(params) => <TextField {...params} placeholder={placeholder} sx={textFieldSx} />}
       />
-      {drivers.length > 0 && options.length === 0 && (
-        <ArgonTypography variant="caption" color="secondary">
-          {t('workforce.noDriverMatches')}
-        </ArgonTypography>
-      )}
     </ArgonBox>
   );
 }

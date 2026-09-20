@@ -29,13 +29,13 @@ COPY TrackHub.Reporting/tests/Application.UnitTests/Application.UnitTests.csproj
 COPY TrackHub.Reporting/tests/Infrastructure.UnitTests/Infrastructure.UnitTests.csproj TrackHub.Reporting/tests/Infrastructure.UnitTests/
 COPY TrackHub.Reporting/tests/Web.UnitTests/Web.UnitTests.csproj TrackHub.Reporting/tests/Web.UnitTests/
 
-RUN dotnet restore TrackHub.Reporting/src/Web/Web.csproj
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore TrackHub.Reporting/src/Web/Web.csproj
 
 # Then the sources.
 COPY TrackHubCommon/ TrackHubCommon/
 COPY TrackHub.Reporting/ TrackHub.Reporting/
 
-RUN dotnet publish TrackHub.Reporting/src/Web/Web.csproj -c Release -o /app/publish --no-restore
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish TrackHub.Reporting/src/Web/Web.csproj -c Release -o /app/publish --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app

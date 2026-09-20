@@ -32,13 +32,13 @@ COPY TrackHub.TripManagement/tests/Application.UnitTests/Application.UnitTests.c
 COPY TrackHub.TripManagement/tests/Infrastructure.UnitTests/Infrastructure.UnitTests.csproj TrackHub.TripManagement/tests/Infrastructure.UnitTests/
 COPY TrackHub.TripManagement/tests/Web.UnitTests/Web.UnitTests.csproj TrackHub.TripManagement/tests/Web.UnitTests/
 
-RUN dotnet restore TrackHub.TripManagement/src/Web/Web.csproj
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore TrackHub.TripManagement/src/Web/Web.csproj
 
 # Then the sources.
 COPY TrackHubCommon/ TrackHubCommon/
 COPY TrackHub.TripManagement/ TrackHub.TripManagement/
 
-RUN dotnet publish TrackHub.TripManagement/src/Web/Web.csproj -c Release -o /app/publish --no-restore
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish TrackHub.TripManagement/src/Web/Web.csproj -c Release -o /app/publish --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app

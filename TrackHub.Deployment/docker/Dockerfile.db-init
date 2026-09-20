@@ -13,9 +13,9 @@ COPY TrackHub.AuthorityServer/ TrackHub.AuthorityServer/
 COPY TrackHubSecurity/ TrackHubSecurity/
 COPY TrackHub.Manager/ TrackHub.Manager/
 
-RUN dotnet publish TrackHub.AuthorityServer/src/ClientSeeder/ClientSeeder.csproj -c Release -o /app/client-seeder
-RUN dotnet publish TrackHubSecurity/src/DBInitializer/DBInitializer.csproj      -c Release -o /app/security-init
-RUN dotnet publish TrackHub.Manager/src/DBInitializer/DBInitializer.csproj      -c Release -o /app/manager-init
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish TrackHub.AuthorityServer/src/ClientSeeder/ClientSeeder.csproj -c Release -o /app/client-seeder
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish TrackHubSecurity/src/DBInitializer/DBInitializer.csproj      -c Release -o /app/security-init
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish TrackHub.Manager/src/DBInitializer/DBInitializer.csproj      -c Release -o /app/manager-init
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
