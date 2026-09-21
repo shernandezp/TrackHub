@@ -45,6 +45,9 @@ const formControlLabel = {
       display: "block",
       minHeight: pxToRem(24),
       marginBottom: pxToRem(2),
+      // MUI's default -11px left margin pulls the box under whatever sits to its left in a flex row
+      // and misaligns it with the fields above it in a dialog.
+      marginLeft: 0,
     },
 
     label: {

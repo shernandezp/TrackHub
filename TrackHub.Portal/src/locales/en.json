@@ -552,14 +552,17 @@
     "documentType": "Document Type",
     "documentNumber": "Document Number",
     "defaultTransporter": "Default Transporter",
-    "revokeDeviceRegistration": "Revoke Device Registration"
+    "revokeDeviceRegistration": "Revoke Device Registration",
+    "search": "Search by name, document or phone",
+    "empty": "No drivers yet. Use + to add the first one.",
+    "manage": "Credentials and devices",
+    "access": "Credential",
+    "accessNone": "No credential"
   },
   "workforce": {
     "selectDriver": "Driver",
     "selectDriverPlaceholder": "Select a driver",
     "selectDriverHint": "Select a driver to manage their credentials, devices, qualifications and assignments.",
-    "searchDriver": "Filter drivers",
-    "noDriverMatches": "No driver matches the filter.",
     "credentials": {
       "title": "Driver Credentials & Devices",
       "login": "Login",

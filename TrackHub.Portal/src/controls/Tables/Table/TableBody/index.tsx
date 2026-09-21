@@ -25,6 +25,8 @@ import type { TableColumn, TableRowData } from "controls/Tables/Table";
 import { activateOnKeyboard } from "utils/keyboard";
 
 const extractValue = (obj: unknown): string => {
+  // A plain string or number cell (the row id) is its own value.
+  if (typeof obj === "string" || typeof obj === "number") return String(obj);
   const el = obj as
     | { props?: { children?: unknown; name?: unknown; description?: unknown } }
     | null

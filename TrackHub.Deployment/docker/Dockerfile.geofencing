@@ -29,13 +29,13 @@ COPY TrackHub.Geofencing/src/Web/Web.csproj TrackHub.Geofencing/src/Web/
 COPY TrackHub.Geofencing/tests/Application.UnitTests/Application.UnitTests.csproj TrackHub.Geofencing/tests/Application.UnitTests/
 COPY TrackHub.Geofencing/tests/Web.UnitTests/Web.UnitTests.csproj TrackHub.Geofencing/tests/Web.UnitTests/
 
-RUN dotnet restore TrackHub.Geofencing/src/Web/Web.csproj
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore TrackHub.Geofencing/src/Web/Web.csproj
 
 # Then the sources.
 COPY TrackHubCommon/ TrackHubCommon/
 COPY TrackHub.Geofencing/ TrackHub.Geofencing/
 
-RUN dotnet publish TrackHub.Geofencing/src/Web/Web.csproj -c Release -o /app/publish --no-restore
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish TrackHub.Geofencing/src/Web/Web.csproj -c Release -o /app/publish --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app

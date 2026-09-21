@@ -552,14 +552,17 @@
     "documentType": "Tipo de Documento",
     "documentNumber": "Número de Documento",
     "defaultTransporter": "Transportador Predeterminado",
-    "revokeDeviceRegistration": "Revocar Registro de Dispositivo"
+    "revokeDeviceRegistration": "Revocar Registro de Dispositivo",
+    "search": "Buscar por nombre, documento o teléfono",
+    "empty": "Aún no hay conductores. Use + para agregar el primero.",
+    "manage": "Credenciales y dispositivos",
+    "access": "Credencial",
+    "accessNone": "Sin credencial"
   },
   "workforce": {
     "selectDriver": "Conductor",
     "selectDriverPlaceholder": "Seleccione un conductor",
     "selectDriverHint": "Seleccione un conductor para administrar sus credenciales, dispositivos, habilitaciones y asignaciones.",
-    "searchDriver": "Filtrar conductores",
-    "noDriverMatches": "Ningún conductor coincide con el filtro.",
     "credentials": {
       "title": "Credenciales y Dispositivos del Conductor",
       "login": "Usuario",

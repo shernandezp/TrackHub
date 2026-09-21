@@ -18,7 +18,6 @@ source "$SCRIPT_DIR/repo-config.sh"
 
 
 export COMPOSE_BAKE=false
-export COMPOSE_PARALLEL_LIMIT="${DEPLOY_BUILD_PARALLEL:-1}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -106,6 +105,63 @@ check_prerequisites() {
         exit 1
     fi
     print_success "Docker daemon is running"
+}
+
+# Building is the step that takes a host down: a dozen .NET restores in parallel exhaust
+# memory and, on Azure, the VM's outbound SNAT ports (NuGet then fails with TLS EOFs and
+# 100 s timeouts). Everything here fails in seconds instead of hours.
+check_build_capacity() {
+    print_info "Checking build capacity..."
+
+    local docker_root avail_gb avail_mb swap_mb
+    docker_root=$(docker info -f '{{.DockerRootDir}}' 2>/dev/null || echo /var/lib/docker)
+    avail_gb=$(df -BG --output=avail "$docker_root" | tail -1 | tr -dc '0-9')
+    if [ "${avail_gb:-0}" -lt 10 ]; then
+        print_error "Only ${avail_gb} GB free under $docker_root; image builds need at least 10 GB."
+        print_error "Run: docker builder prune -f && docker image prune -f"
+        exit 1
+    fi
+    print_success "Disk: ${avail_gb} GB free"
+
+    avail_mb=$(free -m | awk '/^Mem:/ {print $7}')
+    swap_mb=$(free -m | awk '/^Swap:/ {print $2}')
+    if [ "${avail_mb:-0}" -lt 1536 ]; then
+        print_error "Only ${avail_mb} MB of memory available; a .NET image build needs 1.5 GB or more."
+        exit 1
+    fi
+    if [ "${swap_mb:-0}" -eq 0 ]; then
+        print_warning "No swap configured: a build spike cannot be absorbed (see INSTALL.md, Server Requirements)"
+    fi
+    print_success "Memory: ${avail_mb} MB available, ${swap_mb} MB swap"
+
+    if ! curl -fsS -m 15 -o /dev/null https://api.nuget.org/v3/index.json; then
+        print_error "nuget.org is unreachable or too slow from this host; every restore would time out."
+        print_error "Check outbound connectivity, then retry."
+        exit 1
+    fi
+    print_success "nuget.org reachable"
+}
+
+# One image at a time. COMPOSE_PARALLEL_LIMIT does not bound "docker compose build", and
+# every Dockerfile shares one BuildKit NuGet cache, so serial builds also download each
+# package once instead of once per image.
+build_images() {
+    local no_cache=()
+    [ "$NO_CACHE" = true ] && no_cache=(--no-cache)
+    local svc
+    while IFS= read -r svc; do
+        [ -z "$svc" ] && continue
+        print_info "Building $svc..."
+        docker compose -f "$COMPOSE_FILE" build "${no_cache[@]}" "$svc"
+    done < <(docker compose -f "$COMPOSE_FILE" config --services)
+}
+
+# Superseded layers and images otherwise accumulate until the disk is full. The kept
+# storage covers the layer cache of the current images plus the shared NuGet cache.
+prune_build_leftovers() {
+    print_info "Pruning superseded images and build cache..."
+    docker image prune -f > /dev/null || true
+    docker builder prune -f --keep-storage 15G > /dev/null || true
 }
 
 # The compose files and this script ARE deployment inputs: deploying from a stale
@@ -313,18 +369,14 @@ deploy() {
     # Build or pull images FIRST, while the current stack keeps running.
     # The stack is only taken down once new images exist, so a failed build
     # leaves the running deployment untouched.
+    docker compose -f "$COMPOSE_FILE" config -q
     if [ "$BUILD_TYPE" == "--build" ]; then
         if [ "$DEPLOYMENT_TYPE" != "frontend" ]; then
             ensure_trackhubcommon
         fi
+        check_build_capacity
         tag_rollback_point
-        if [ "$NO_CACHE" = true ]; then
-            print_info "Building images without Docker layer cache (--no-cache)..."
-            docker compose -f "$COMPOSE_FILE" build --no-cache
-        else
-            print_info "Building images (layer cache detects source changes)..."
-            docker compose -f "$COMPOSE_FILE" build
-        fi
+        build_images
     else
         print_info "Pulling images..."
         docker compose -f "$COMPOSE_FILE" pull
@@ -381,6 +433,10 @@ deploy() {
     else
         print_info "Starting all services..."
         docker compose -f "$COMPOSE_FILE" up -d --force-recreate --no-build
+    fi
+
+    if [ "$BUILD_TYPE" == "--build" ]; then
+        prune_build_leftovers
     fi
     
     print_success "Deployment complete!"

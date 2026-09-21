@@ -18,7 +18,7 @@ import type { AppErrorDetail } from 'utils/errorHandler';
 
 export interface GraphQLErrorEntry {
   message?: string;
-  extensions?: { code?: string };
+  extensions?: { code?: string; errors?: Record<string, string[]> };
   code?: string;
 }
 
@@ -95,6 +95,14 @@ export async function extractRestErrorEntries(data: unknown): Promise<GraphQLErr
   return [];
 }
 
+
+// See fromGraphQLErrors.
+const REFUSAL_CODES = new Set(['VALIDATION_ERROR', 'CONFLICT', 'NOT_FOUND']);
+
+function refusalMessage(entry: GraphQLErrorEntry): string {
+  const fieldMessages = Object.values(entry.extensions?.errors ?? {}).flat();
+  return fieldMessages.length > 0 ? fieldMessages.join(' ') : (entry.message ?? 'The request could not be completed.');
+}
 
 /** Shown for any failure the UI has no specific explanation for. */
 export const UNEXPECTED_ERROR_I18N_KEY = 'errors.unexpected';
@@ -190,6 +198,17 @@ export class ApiError extends Error {
       return new ApiError(mapped.message ?? code, {
         code,
         i18nKey: ERROR_CODE_I18N[code],
+        graphQLErrors: errors,
+      });
+    }
+
+    // A coded refusal carries text the handler wrote for a person ("An assignment for this template
+    // and scope already exists.", the validator's per-field sentences), so it is shown as-is instead
+    // of the generic line that hides why a save was refused.
+    const refused = errors.find((e) => REFUSAL_CODES.has(codeOf(e) ?? ''));
+    if (refused) {
+      return new ApiError(refusalMessage(refused), {
+        code: codeOf(refused),
         graphQLErrors: errors,
       });
     }
