@@ -25,9 +25,8 @@ namespace Common.Infrastructure.Time;
 
 /// <summary>
 /// The calendar of an account, asked of Manager with the host's own service identity and cached.
-/// The query sits behind the <c>AccountFeatures/Read</c> permission every service client already
-/// holds for its feature flags, so no new grant is needed. An unreachable Manager answers UTC for
-/// a while rather than failing the request: a day boundary off by a few hours beats a 500.
+/// The query needs AccountFeatures/Read; a client without it, or an unreachable Manager, gets UTC for
+/// one minute and a logged warning.
 /// </summary>
 public sealed class ManagerAccountTimeZoneResolver(
     IGraphQLClientFactory graphQLClient,

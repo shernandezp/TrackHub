@@ -34,4 +34,7 @@ public sealed class InProcessGraphQLClientFactory(IReadOnlyDictionary<string, IR
     // The service-identity flag only changes which credentials the HTTP client would carry;
     // in-process there is no transport, so both identities hit the same executor.
     public IGraphQLClient CreateClient(string name, bool asService) => CreateClient(name);
+
+    // There is no AuthorityServer in-process, so the harness answers null; callers skip the fetch.
+    public Task<string?> GetClientCredentialsTokenAsync() => Task.FromResult<string?>(null);
 }

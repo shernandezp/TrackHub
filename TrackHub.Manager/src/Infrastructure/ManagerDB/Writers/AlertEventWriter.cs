@@ -13,6 +13,13 @@ public sealed class AlertEventWriter(IApplicationDbContext context, ICurrentPrin
         await RequireResourceInAccountAsync(accountId, alertEvent.ResourceType, alertEvent.ResourceId, cancellationToken);
         var entity = await Context.AlertEvents
             .AsTracking().FirstOrDefaultAsync(x => x.AccountId == accountId && x.DeduplicationKey == alertEvent.DeduplicationKey && x.Status != "Resolved", cancellationToken);
+        // A Resolved emission is a recorded fact; a retry of it under the same key records nothing new.
+        if (entity == null && string.Equals(alertEvent.Status, "Resolved", StringComparison.Ordinal)
+            && await Context.AlertEvents.FirstOrDefaultAsync(x => x.AccountId == accountId && x.DeduplicationKey == alertEvent.DeduplicationKey, cancellationToken) is { } recorded)
+        {
+            return ToVm(recorded);
+        }
+
         if (entity == null)
         {
             entity = new AlertEvent(accountId, alertEvent.EventType, alertEvent.Severity, alertEvent.SourceModule, alertEvent.ResourceType, alertEvent.ResourceId, alertEvent.Status, alertEvent.PayloadJson, alertEvent.DeduplicationKey);
@@ -22,6 +29,11 @@ public sealed class AlertEventWriter(IApplicationDbContext context, ICurrentPrin
         {
             entity.LastSeenAt = DateTimeOffset.UtcNow;
             entity.PayloadJson = alertEvent.PayloadJson;
+            // An emitter reporting its own recovery resolves the alert it raised under that key.
+            if (string.Equals(alertEvent.Status, "Resolved", StringComparison.Ordinal))
+            {
+                entity.Status = "Resolved";
+            }
         }
 
         try

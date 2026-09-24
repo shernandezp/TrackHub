@@ -347,9 +347,17 @@ export default function App() {
     });
 
   const loadingValue = useMemo(() => ({ loading, setLoading }), [loading]);
+  const reloadAccountContext = useCallback(async () => {
+    const context = await getAccountContext().catch(() => null);
+    if (context) {
+      setAccountStatus(context.status);
+      setBranding(context.branding);
+      setAccountFeatures(context.features || []);
+    }
+  }, []);
   const featuresValue = useMemo(
-    () => ({ features: accountFeatures, isFeatureEnabled: featureEnabled }),
-    [accountFeatures, featureEnabled]);
+    () => ({ features: accountFeatures, isFeatureEnabled: featureEnabled, reload: reloadAccountContext }),
+    [accountFeatures, featureEnabled, reloadAccountContext]);
   const permissionsValue = useMemo(
     () => ({ actions: authorizedActions, can, loaded: permissionsLoaded }),
     [authorizedActions, can, permissionsLoaded]);

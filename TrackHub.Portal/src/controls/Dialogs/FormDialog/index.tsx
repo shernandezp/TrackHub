@@ -14,6 +14,7 @@
 *  limitations under the License.
 */
 
+import { useState } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
@@ -41,6 +42,17 @@ const FormDialog = ({
         fullWidth = true,
     }: FormDialogProps) => {
     const { t } = useTranslation();
+    // A save in flight disables Save, so a double click cannot submit twice.
+    const [saving, setSaving] = useState(false);
+    const save = async () => {
+        if (saving) return;
+        setSaving(true);
+        try {
+            await handleSave();
+        } finally {
+            setSaving(false);
+        }
+    };
     const handleClose = () => {
         handleCancel();
         setOpen(false);
@@ -60,7 +72,7 @@ const FormDialog = ({
             </DialogContent>
             <DialogActions>
                 <Button onClick={handleClose}>{t('generic.cancel')}</Button>
-                <Button onClick={handleSave} autoFocus>{t('generic.save')}</Button>
+                <Button onClick={save} disabled={saving} autoFocus>{t('generic.save')}</Button>
             </DialogActions>
         </Dialog>
     );

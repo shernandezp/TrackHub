@@ -112,11 +112,25 @@ public sealed class NotificationDispatchStore(IApplicationDbContext context) : I
         {
             // Recorded directly, no rule evaluation, so a failing channel can never notify itself
             // into a loop; it stays visible in the alert feed.
-            context.AlertEvents.Add(new AlertEvent(
-                outcome.AccountId, AlertEventTypes.NotificationDeliveryFailed, AlertSeverities.Warning,
-                "Notifications", "NotificationDelivery", outcome.NotificationDeliveryId.ToString(), "Open",
-                JsonSerializer.Serialize(new { outcome.Channel, outcome.Attempts, outcome.Error }),
-                $"delivery-failed:{outcome.NotificationDeliveryId:N}"));
+            // A retry that fails again folds into the open alert: the open-dedup index refuses a second insert.
+            var key = $"delivery-failed:{outcome.NotificationDeliveryId:N}";
+            var payload = JsonSerializer.Serialize(new { outcome.Channel, outcome.Attempts, outcome.Error });
+            var open = await context.AlertEvents
+                .AsTracking()
+                .FirstOrDefaultAsync(a => a.AccountId == outcome.AccountId && a.DeduplicationKey == key && a.Status != "Resolved", cancellationToken);
+
+            if (open is null)
+            {
+                context.AlertEvents.Add(new AlertEvent(
+                    outcome.AccountId, AlertEventTypes.NotificationDeliveryFailed, AlertSeverities.Warning,
+                    "Notifications", "NotificationDelivery", outcome.NotificationDeliveryId.ToString(), "Open",
+                    payload, key));
+            }
+            else
+            {
+                open.LastSeenAt = DateTimeOffset.UtcNow;
+                open.PayloadJson = payload;
+            }
         }
 
         await context.SaveChangesAsync(cancellationToken);
