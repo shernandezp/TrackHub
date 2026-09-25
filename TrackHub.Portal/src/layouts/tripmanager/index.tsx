@@ -86,8 +86,6 @@ import type {
 import {
   toIso,
   toLocalInput,
-  dayStartIso,
-  dayEndIso,
   newClientEventId,
   buildDeliveryPayload,
   buildPodPayload,
@@ -107,6 +105,7 @@ import {
   DELIVERY_REQUIRED_FIELDS,
   POD_REQUIRED_FIELDS,
 } from './tripWriteForms';
+import { useAccountCalendar } from 'context/account';
 import type {
   DeliveryFormValues,
   DeliveryStatus,
@@ -220,11 +219,12 @@ function TripManager() {
 
   const filteringExceptions = exception !== ALL;
 
+  const calendar = useAccountCalendar();
   const filters = useMemo<TripListFilters>(
     () => ({
       statuses: status === ALL ? null : [status],
-      from: dayStartIso(from),
-      to: dayEndIso(to),
+      from: calendar.dayStartIso(from),
+      to: calendar.dayEndIso(to),
       transporterId: transporterFilter === ALL ? null : transporterFilter,
       driverId: driverFilter === ALL ? null : driverFilter,
       search: search.trim() || null,
@@ -236,7 +236,7 @@ function TripManager() {
       skip: filteringExceptions ? 0 : page * PAGE_SIZE,
       take: filteringExceptions ? EXCEPTION_SCAN_SIZE : PAGE_SIZE,
     }),
-    [status, from, to, transporterFilter, driverFilter, search, page, filteringExceptions]
+    [calendar, status, from, to, transporterFilter, driverFilter, search, page, filteringExceptions]
   );
 
   /* --------------------------------------------------------------- data */

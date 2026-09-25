@@ -108,6 +108,7 @@ export const GetAccountContextDocument = graphql(`
     accountContext {
       status
       statusId
+      timeZoneId
       branding {
         accountId
         displayName

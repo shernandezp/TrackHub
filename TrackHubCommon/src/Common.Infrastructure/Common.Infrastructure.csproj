@@ -15,7 +15,6 @@
     <PackageReference Include="Serilog.Enrichers.Environment" />
     <PackageReference Include="Serilog.Settings.Configuration" />
     <PackageReference Include="Serilog.Sinks.PostgreSQL" />
-    <PackageReference Include="Serilog.Sinks.PostgreSQL.Configuration" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common.Application\Common.Application.csproj" />

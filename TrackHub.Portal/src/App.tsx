@@ -89,6 +89,7 @@ import ErrorBoundary from "components/ErrorBoundary";
 import SuspensionScreen from "components/SuspensionScreen";
 import PrincipalTypes from "constants/principalTypes";
 import HelpProvider from "context/help";
+import { CurrentAccountContext } from "context/account";
 import { FeaturesContext, isFeatureActive } from "context/features";
 import { PermissionsContext, buildPermissionIndex } from "context/permissions";
 import { getAuthorizedActions } from "api/security/permissions";
@@ -123,6 +124,7 @@ export default function App() {
   const [bootstrapLoaded, setBootstrapLoaded] = useState(false);
   const [accountSettings, setAccountSettings] = useState<Partial<AccountSettings>>({});
   const [accountFeatures, setAccountFeatures] = useState<AccountContext['features']>([]);
+  const [accountTimeZoneId, setAccountTimeZoneId] = useState<string | null>(null);
   const [authorizedActions, setAuthorizedActions] = useState<AuthorizedAction[]>([]);
   const [permissionsLoaded, setPermissionsLoaded] = useState(false);
   const [accountStatus, setAccountStatus] = useState<AccountStatus | null>(null);
@@ -205,6 +207,7 @@ export default function App() {
         setAccountStatus(context.status);
         setBranding(context.branding);
         setAccountFeatures(context.features || []);
+        setAccountTimeZoneId(context.timeZoneId ?? null);
       }
     };
 
@@ -353,11 +356,13 @@ export default function App() {
       setAccountStatus(context.status);
       setBranding(context.branding);
       setAccountFeatures(context.features || []);
+      setAccountTimeZoneId(context.timeZoneId ?? null);
     }
   }, []);
   const featuresValue = useMemo(
     () => ({ features: accountFeatures, isFeatureEnabled: featureEnabled, reload: reloadAccountContext }),
     [accountFeatures, featureEnabled, reloadAccountContext]);
+  const accountValue = useMemo(() => ({ timeZoneId: accountTimeZoneId }), [accountTimeZoneId]);
   const permissionsValue = useMemo(
     () => ({ actions: authorizedActions, can, loaded: permissionsLoaded }),
     [authorizedActions, can, permissionsLoaded]);
@@ -404,6 +409,7 @@ export default function App() {
           {isAuthenticated && !accountOperational && !onPublicPage ? (
             <SuspensionScreen status={accountStatus} branding={branding} />
           ) : (
+          <CurrentAccountContext.Provider value={accountValue}>
           <FeaturesContext.Provider value={featuresValue}>
           <PermissionsContext.Provider value={permissionsValue}>
           <HelpProvider allowedScreens={allowedScreens} isFeatureEnabled={featureEnabled}>
@@ -439,6 +445,7 @@ export default function App() {
           </HelpProvider>
           </PermissionsContext.Provider>
           </FeaturesContext.Provider>
+          </CurrentAccountContext.Provider>
           )}
         </ErrorBoundary>
         {loading && (

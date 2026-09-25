@@ -188,6 +188,38 @@ echo "=========================================="
 echo ""
 
 # -----------------------------------------------------------------------------
+# Step 3b: UTC session time zone on every database (idempotent - runs every deploy)
+# -----------------------------------------------------------------------------
+# The services pin their own sessions to UTC; this covers psql, cron and every hand-run script so
+# no result ever depends on the host's zone.
+pin_utc_timezone() {
+    local connection_string=$1
+    local host port user pass db
+
+    host=$(echo "$connection_string" | grep -oP 'server=\K[^;]+')
+    port=$(echo "$connection_string" | grep -oP 'port=\K[^;]+'); port=${port:-5432}
+    user=$(echo "$connection_string" | grep -oP 'user id=\K[^;]+')
+    pass=$(echo "$connection_string" | grep -oP 'password=\K[^;]+')
+    db=$(echo "$connection_string" | grep -oP 'database=\K[^;]+')
+    [ -z "$db" ] && return 0
+
+    if PGPASSWORD="$pass" psql -h "$host" -p "$port" -U "$user" -d "$db" -q \
+        -c "ALTER DATABASE \"$db\" SET timezone TO 'UTC'"; then
+        print_success "Database $db: session time zone pinned to UTC."
+    else
+        print_warning "Could not pin the time zone of $db (needs its owner or a superuser); sessions keep the server default."
+    fi
+}
+
+echo ""
+echo "=========================================="
+echo "Step 3b: Pinning database time zones to UTC"
+echo "=========================================="
+for conn in "$DB_CONNECTION_SECURITY" "$DB_CONNECTION_MANAGER" "${DB_CONNECTION_LOGGING:-}"; do
+    [ -n "$conn" ] && pin_utc_timezone "$conn"
+done
+
+# -----------------------------------------------------------------------------
 # Step 4: Sync User and Account IDs (ONE-TIME, destructive - guarded by flag)
 # -----------------------------------------------------------------------------
 if [ -f "$FLAG_FILE" ]; then

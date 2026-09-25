@@ -32,6 +32,7 @@ public static class DatabaseConnectionStrings
     public const int DefaultCommandTimeoutSeconds = 30;
     public const int DefaultMaxAutoPrepare = 20;
     public const int DefaultAutoPrepareMinUsages = 2;
+    public const string DefaultTimezone = "UTC";
 
     public const string SectionName = "Database";
 
@@ -83,6 +84,12 @@ public static class DatabaseConnectionStrings
         if (!IsStated(stated, "Auto Prepare Min Usages", "AutoPrepareMinUsages"))
         {
             builder.AutoPrepareMinUsages = Value(section, "AutoPrepareMinUsages", DefaultAutoPrepareMinUsages);
+        }
+
+        // A UTC session on every connection, so no SQL result depends on the server zone.
+        if (!IsStated(stated, "Timezone"))
+        {
+            builder.Timezone = DefaultTimezone;
         }
 
         return builder.ConnectionString;

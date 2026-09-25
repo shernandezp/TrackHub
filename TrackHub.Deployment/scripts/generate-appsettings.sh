@@ -109,9 +109,9 @@ VALID_AUDIENCE=${VALID_AUDIENCE:-"trackhub_api"}
 # (keep them in sync with the template when adding a setting).
 
 # Serilog + Columns blocks, kept in sync with config/appsettings.template.json.
-# The PostgreSQL sink resolves "connectionString" as a connection string NAME
-# ("Logging"), and needs the "Using" directive plus the top-level "Columns" block.
-# The PostgreSQL sink also carries "restrictedToMinimumLevel": "Warning" so production
+# The TrackHubPostgreSQL sink (Common.Infrastructure) resolves "connectionString" as a
+# connection string NAME ("Logging") and owns its column set, so no "Columns" block is needed.
+# It also carries "restrictedToMinimumLevel": "Warning" so production
 # stops flooding the logs table with Information; Console keeps the "MinimumLevel"
 # default (Information). This note cannot live inside the heredoc: a "#" there would be
 # emitted verbatim and break the JSON.
@@ -119,7 +119,7 @@ serilog_section() {
     cat << EOF
   "Serilog": {
     "Using": [
-      "Serilog.Sinks.PostgreSQL.Configuration"
+      "Common.Infrastructure"
     ],
     "MinimumLevel": {
       "Default": "Information",
@@ -134,52 +134,15 @@ serilog_section() {
     "WriteTo": [
       { "Name": "Console" },
       {
-        "Name": "PostgreSQL",
+        "Name": "TrackHubPostgreSQL",
         "Args": {
           "restrictedToMinimumLevel": "Warning",
           "connectionString": "Logging",
-          "tableName": "logs",
-          "needAutoCreateTable": true,
           "batchSizeLimit": 50,
           "period": "00:00:02"
         }
       }
     ]
-  },
-  "Columns": {
-    "message": "RenderedMessageColumnWriter",
-    "message_template": "MessageTemplateColumnWriter",
-    "level": {
-      "Name": "LevelColumnWriter",
-      "Args": {
-        "renderAsText": true,
-        "dbType": "Varchar"
-      }
-    },
-    "raise_date": "TimestampColumnWriter",
-    "exception": "ExceptionColumnWriter",
-    "properties": "LogEventSerializedColumnWriter",
-    "machine_name": {
-      "Name": "SinglePropertyColumnWriter",
-      "Args": {
-        "propertyName": "MachineName",
-        "writeMethod": "Raw"
-      }
-    },
-    "application": {
-      "Name": "SinglePropertyColumnWriter",
-      "Args": {
-        "propertyName": "Application",
-        "writeMethod": "Raw"
-      }
-    },
-    "environment_name": {
-      "Name": "SinglePropertyColumnWriter",
-      "Args": {
-        "propertyName": "EnvironmentName",
-        "writeMethod": "Raw"
-      }
-    }
   }
 EOF
 }

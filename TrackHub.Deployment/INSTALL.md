@@ -1209,31 +1209,31 @@ least the sum of every service process's `Maximum Pool Size` (20 by default, see
 `Database:MaxPoolSize`) plus headroom; Npgsql pools **per process**, not per service.
 
 
-### Why every service runs in UTC
+### Time zones
 
-The Dockerfiles set `TZ=UTC`, and that is load-bearing rather than tidiness.
+Every timestamp column is `timestamp with time zone`: PostgreSQL stores a UTC instant and the
+session zone only changes how it is printed, so a dump restored on a host in another zone keeps
+every instant. Three layers keep results independent of the host's zone:
 
-Serilog's PostgreSQL sink writes `raise_date` with its default `TimestampColumnWriter`, which emits
-`logEvent.Timestamp.DateTime` — **the writing process's LOCAL wall clock** — into a `timestamp
-without time zone` column. The column carries no zone, so nothing downstream can recover one.
+- Services pin their own sessions. Common's connection-string helper adds `Timezone=UTC` unless
+  the string states one, and the Dockerfiles set `TZ=UTC`.
+- `db-init` runs `ALTER DATABASE ... SET timezone TO 'UTC'` on every database on every deploy
+  (Step 3b), so psql, cron and hand-run scripts get a UTC session too. The statement needs the
+  database's owner or a superuser; when the service user is neither, db-init prints a warning and
+  you run it once by hand as `postgres`. A dump does not carry the setting: re-run db-init, or the
+  statement by hand, after a restore.
+- The log sink writes `raise_date` as a UTC instant into a `timestamp with time zone` column
+  whatever zone the process runs in (`UtcTimestampColumnWriter` in Common).
+  `scripts/sql/purge-functions-logs.sql` converts a `logs` table created by the old sink; it is
+  idempotent, and the conversion rewrites the table under an exclusive lock, so run it while the
+  services are down or accept a short logging stall. The sink is configured as
+  `"Name": "TrackHubPostgreSQL"` with `"Using": ["Common.Infrastructure"]`: an appsettings file
+  from before this change still names `Serilog.Sinks.PostgreSQL.Configuration`, an assembly that
+  no longer ships, and the service fails at startup until the file is regenerated.
 
-Two consequences follow, and both are silent:
+Calendar questions — which day an instant belongs to — are answered in the account's IANA zone
+(`app.accounts.timezoneid`), never in the server's.
 
-- Logs from services in different zones cannot be compared or ordered against each other.
-- Log retention compares that column against a UTC cutoff, so under any non-UTC zone it deletes
-  rows early by exactly the offset. Measured on a `UTC-04:00` workstation, a row seconds old was
-  removed by an "older than one hour" cutoff.
-
-Switching the sink to `timestamptz` does **not** fix it and makes things worse: Npgsql accepts only
-offset `0` for that type, and the sink hands it `DateTimeOffset.Now` with the local offset, so every
-batch is rejected — and Serilog swallows sink exceptions, so logging simply stops with nothing in
-the logs to say so.
-
-With `TZ=UTC` the local wall clock IS the UTC wall clock, the column is unambiguous and retention is
-exact. If you ever set a different `TZ` on a service, expect both effects above.
-
-> On a developer workstation the host zone applies and log retention will over-delete. That affects
-> local `public.logs` only; it is not worth working around.
 ### Partitioning the Position History
 
 `telemetry.transporter_position_history` is the only table whose growth justifies partitioning: at
@@ -1248,26 +1248,26 @@ Order matters:
 
 1. Apply migrations — `PartitionReadyPositionHistoryKeys` puts `sourcetimestamp` into both keys,
    which is what PostgreSQL requires before the table can be partitioned at all.
-2. Run the cutover with a **future** instant, normally the start of next month:
+2. Run the cutover:
 
 ```bash
-psql -h "$DB_HOST" -U postgres -d TrackHub \
-  -v cutover="'2026-11-01 00:00:00+00'" \
-  -f scripts/sql/partition-position-history.sql
+psql -h "$DB_HOST" -U postgres -d TrackHub -f scripts/sql/partition-position-history.sql
 ```
 
-No data is copied: the existing table is validated against the cutover bound and then attached as
-the first partition, so the only exclusive lock is the one that swaps the names. Telemetry's
-retention job creates each following month three months ahead and drops the months every account
-has aged past.
+The script renames the existing table, creates the partitioned one with a month per partition
+covering the data plus three months ahead, copies the rows and drops the old table — budget for
+the copy on a large table. Month bounds are UTC midnights; the script forces a UTC session.
+`ops.maintain_position_partitions()` (part of `ops.purge_all()`) then creates each following
+month three months ahead and drops the months every account has aged past. Nothing inside the
+services does this: schedule it (see Retention).
 
-Afterwards `transporter_position_history_legacy` still holds the pre-cutover rows and drains as
-retention deletes them. Once `SELECT count(*)` on it reaches zero, detach and drop it:
+A partition created from a session in another zone is cut at that zone's midnight, overlaps the
+month the function wants to create, and the new rows silently land in the DEFAULT partition.
+`scripts/sql/realign-position-partitions.sql` rebuilds such partitions with UTC bounds and is a
+no-op on a correct layout; it copies rows, so run it in a maintenance window:
 
-```sql
-ALTER TABLE telemetry.transporter_position_history
-    DETACH PARTITION telemetry.transporter_position_history_legacy;
-DROP TABLE telemetry.transporter_position_history_legacy;
+```bash
+psql -h "$DB_HOST" -U postgres -d TrackHub -f scripts/sql/realign-position-partitions.sql
 ```
 
 > **Idempotency becomes per-partition.** A unique index on a partitioned table must contain the
@@ -1980,7 +1980,8 @@ notification delivery still references, and events of trips that have not reache
 
 `ops.maintain_position_partitions()` creates the months covering the retention window plus three
 ahead and drops whole months once the longest retention on the platform has passed them. Run it
-at least monthly even if you purge nothing, or new rows land in the DEFAULT partition.
+at least monthly even if you purge nothing, or new rows land in the DEFAULT partition. It forces a UTC session for its month
+bounds whatever zone the caller has.
 
 Document *storage* is the exception: reclaiming the bytes behind superseded or voided document
 versions needs the object store, not SQL, so `DocumentRetentionCleanupJob` still runs inside

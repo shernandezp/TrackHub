@@ -29,7 +29,8 @@ public class GetAccountContextQueryHandler(
     IUserReader userReader,
     IAccountOperationalStatusReader statusReader,
     IAccountBrandingReader brandingReader,
-    IAccountFeatureReader featureReader) : IRequestHandler<GetAccountContextQuery, AccountContextVm>
+    IAccountFeatureReader featureReader,
+    IAccountReader accountReader) : IRequestHandler<GetAccountContextQuery, AccountContextVm>
 {
     public async Task<AccountContextVm> Handle(GetAccountContextQuery request, CancellationToken cancellationToken)
     {
@@ -38,8 +39,9 @@ public class GetAccountContextQueryHandler(
         var status = await statusReader.GetAccountStatusAsync(accountId, cancellationToken) ?? AccountStatus.Active;
         var branding = await brandingReader.GetBrandingAsync(accountId, cancellationToken);
         var features = await featureReader.GetAccountFeaturesAsync(accountId, cancellationToken);
+        var timeZoneId = await accountReader.GetTimeZoneAsync(accountId, cancellationToken);
 
-        return new AccountContextVm(status, (short)status, branding, features);
+        return new AccountContextVm(status, (short)status, branding, features, timeZoneId);
     }
 
     private async Task<Guid> ResolveAccountIdAsync(CancellationToken cancellationToken)
