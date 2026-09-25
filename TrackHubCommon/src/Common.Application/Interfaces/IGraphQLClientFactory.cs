@@ -27,4 +27,7 @@ public interface IGraphQLClientFactory
     /// calling user's permissions.
     /// </summary>
     IGraphQLClient CreateClient(string name, bool asService);
+
+    /// <summary>The host's cached client-credentials token, for the rare outbound call that is not GraphQL.</summary>
+    Task<string?> GetClientCredentialsTokenAsync();
 }

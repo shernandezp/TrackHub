@@ -371,6 +371,7 @@ type AccountContextVm {
   statusId: Short!
   branding: AccountBrandingVm!
   features: [AccountFeatureVm!]!
+  timeZoneId: String!
 }
 
 type AccountFeatureVm {

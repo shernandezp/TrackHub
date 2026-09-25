@@ -13,14 +13,18 @@
 //  limitations under the License.
 //
 
-namespace TrackHub.Manager.Domain.Models;
+using NpgsqlTypes;
+using Serilog.Events;
+using Serilog.Sinks.PostgreSQL;
 
-// Single bootstrap read for the current principal's account: lifecycle status, branding, and the
-// effective feature set. Consolidates what the portal shell and mobile need at login/sync.
-public readonly record struct AccountContextVm(
-    AccountStatus Status,
-    short StatusId,
-    AccountBrandingVm Branding,
-    IReadOnlyCollection<AccountFeatureVm> Features,
-    string TimeZoneId
-    );
+namespace Common.Infrastructure.Logging;
+
+/// <summary>
+/// Writes the event instant as UTC into a <c>timestamp with time zone</c> column. The sink's own
+/// writer emits the process's local wall clock, which only means UTC while the process runs in UTC.
+/// </summary>
+public sealed class UtcTimestampColumnWriter() : ColumnWriterBase(NpgsqlDbType.TimestampTz)
+{
+    public override object GetValue(LogEvent logEvent, IFormatProvider? formatProvider = null)
+        => logEvent.Timestamp.UtcDateTime;
+}

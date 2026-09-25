@@ -176,24 +176,31 @@ check_deployment_freshness() {
         return 0
     fi
 
-    if [ ! -d "$PROJECT_DIR/.git" ] || ! command -v git &> /dev/null; then
+    # The .git directory lives at the monorepo root, not in this folder: resolve the checkout root.
+    local repo_root
+    if ! command -v git &> /dev/null; then
+        print_warning "git is not installed; cannot verify this checkout is current"
+        return 0
+    fi
+    repo_root="$(git -C "$PROJECT_DIR" rev-parse --show-toplevel 2>/dev/null)"
+    if [ -z "$repo_root" ]; then
         print_warning "Deployment folder is not a git checkout; cannot verify it is current"
         return 0
     fi
 
     # Never prompt for credentials here: an unreachable/unauthenticated remote is a
     # warning, not a blocker (the server may deploy while offline).
-    if ! GIT_TERMINAL_PROMPT=0 git -C "$PROJECT_DIR" fetch --quiet 2>/dev/null; then
+    if ! GIT_TERMINAL_PROMPT=0 git -C "$repo_root" fetch --quiet 2>/dev/null; then
         print_warning "Could not reach the deployment repo remote; skipping freshness check"
         return 0
     fi
 
     local behind
-    behind="$(git -C "$PROJECT_DIR" rev-list --count 'HEAD..@{upstream}' 2>/dev/null || echo 0)"
+    behind="$(git -C "$repo_root" rev-list --count 'HEAD..@{upstream}' 2>/dev/null || echo 0)"
     if [ "${behind:-0}" -gt 0 ]; then
         print_error "This deployment checkout is $behind commit(s) behind its upstream."
         print_info "The compose files/scripts about to be used are OUTDATED. Update first:"
-        print_info "  git -C $PROJECT_DIR pull"
+        print_info "  git -C $repo_root pull"
         print_info "Or re-run with --skip-git-check to deploy the old configuration anyway."
         exit 1
     fi
@@ -212,6 +219,36 @@ check_configuration() {
         exit 1
     fi
     print_success ".env file exists"
+
+    # These keys have no defaults in the compose files; an empty or placeholder value deploys a
+    # Telemetry service with no connection string and service clients that cannot authenticate.
+    # .env is grepped rather than sourced: values may contain shell metacharacters.
+    if [ "$DEPLOYMENT_TYPE" != "frontend" ] && [ "$DEPLOYMENT_TYPE" != "portal" ]; then
+        local required_keys=(
+            DB_CONNECTION_TELEMETRY
+            SYNCWORKER_CLIENT_SECRET
+            ROUTER_CLIENT_SECRET
+            SECURITY_CLIENT_SECRET
+            GEOFENCE_CLIENT_SECRET
+            TRIP_CLIENT_SECRET
+            REPORTING_CLIENT_SECRET
+        )
+        local missing=()
+        local key value
+        for key in "${required_keys[@]}"; do
+            value="$(grep -E "^${key}=" "$PROJECT_DIR/.env" | tail -n 1 | cut -d= -f2-)"
+            case "$value" in
+                ""|your-*) missing+=("$key") ;;
+            esac
+        done
+        if [ ${#missing[@]} -gt 0 ]; then
+            print_error "Missing or placeholder values in .env: ${missing[*]}"
+            print_info "These keys have no defaults — set real values in $PROJECT_DIR/.env"
+            print_info "(the *_CLIENT_SECRET values must match config/clients.json)"
+            exit 1
+        fi
+        print_success "Required .env values are set"
+    fi
     
     # Check certificates
     if [ ! -f "$PROJECT_DIR/certificates/certificate.pfx" ]; then
@@ -281,20 +318,29 @@ check_split_target() {
     fi
 }
 
-ensure_trackhubcommon() {
-    # Backend images build TrackHubCommon straight from source (the services
-    # reference it as a ProjectReference), so it must be present in the build
-    # context (the workspace root) alongside the service directories.
-    # It is part of this repository, so a missing directory means a broken or
-    # partial checkout rather than a repo that still needs cloning — say so
-    # instead of failing later inside "docker compose build".
-    local workspace_dir
+ensure_source_repo() {
+    # Every image builds from the monorepo root, so each source directory must be present there;
+    # a missing one otherwise surfaces deep inside "docker compose build" as a cache-key error.
+    local repo="$1" target="$2"
+    [ -d "$target" ] && return 0
+    print_error "$repo is missing from this checkout ($(dirname "$target"))"
+    print_info "Re-sync the checkout: ./scripts/clone-repos.sh"
+    exit 1
+}
+
+ensure_source_repos() {
+    local workspace_dir repo
     workspace_dir="$(dirname "$PROJECT_DIR")"
-    if [ ! -d "$workspace_dir/TrackHubCommon" ]; then
-        print_error "TrackHubCommon is missing from this checkout ($workspace_dir)"
-        print_info "Re-sync the checkout: ./scripts/clone-repos.sh"
-        exit 1
+
+    if [ "$DEPLOYMENT_TYPE" = "frontend" ] || [ "$DEPLOYMENT_TYPE" = "portal" ]; then
+        ensure_source_repo "TrackHub.Portal" "$workspace_dir/TrackHub.Portal"
+        return 0
     fi
+
+    for repo in "${TRACKHUB_REPOS[@]}"; do
+        [ "$repo" = "TrackHub.Portal" ] && [ "$DEPLOYMENT_TYPE" = "backend" ] && continue
+        ensure_source_repo "$repo" "$workspace_dir/$repo"
+    done
 }
 
 ensure_generated_config() {
@@ -371,9 +417,7 @@ deploy() {
     # leaves the running deployment untouched.
     docker compose -f "$COMPOSE_FILE" config -q
     if [ "$BUILD_TYPE" == "--build" ]; then
-        if [ "$DEPLOYMENT_TYPE" != "frontend" ]; then
-            ensure_trackhubcommon
-        fi
+        ensure_source_repos
         check_build_capacity
         tag_rollback_point
         build_images

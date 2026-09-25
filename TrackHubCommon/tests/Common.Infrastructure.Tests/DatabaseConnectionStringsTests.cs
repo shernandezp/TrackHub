@@ -33,13 +33,14 @@ public class DatabaseConnectionStringsTests
         builder.CommandTimeout.Should().Be(DatabaseConnectionStrings.DefaultCommandTimeoutSeconds);
         builder.MaxAutoPrepare.Should().Be(DatabaseConnectionStrings.DefaultMaxAutoPrepare);
         builder.AutoPrepareMinUsages.Should().Be(DatabaseConnectionStrings.DefaultAutoPrepareMinUsages);
+        builder.Timezone.Should().Be(DatabaseConnectionStrings.DefaultTimezone);
         builder.Database.Should().Be("TrackHub");
     }
 
     [Fact]
     public void Normalize_keeps_every_value_the_connection_string_states()
     {
-        var stated = $"{Raw};Maximum Pool Size=7;Timeout=3;Command Timeout=0;Max Auto Prepare=0;Auto Prepare Min Usages=9";
+        var stated = $"{Raw};Maximum Pool Size=7;Timeout=3;Command Timeout=0;Max Auto Prepare=0;Auto Prepare Min Usages=9;Timezone=America/Bogota";
 
         var builder = new NpgsqlConnectionStringBuilder(DatabaseConnectionStrings.Normalize(stated));
 
@@ -48,6 +49,7 @@ public class DatabaseConnectionStringsTests
         builder.CommandTimeout.Should().Be(0);
         builder.MaxAutoPrepare.Should().Be(0);
         builder.AutoPrepareMinUsages.Should().Be(9);
+        builder.Timezone.Should().Be("America/Bogota");
     }
 
     [Fact]

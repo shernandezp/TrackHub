@@ -15,6 +15,7 @@
 */
 
 import { useState, useEffect, useContext } from 'react';
+import { useSearchParams } from 'react-router';
 import Grid from "@mui/material/Grid";
 import ArgonBox from "components/ArgonBox";
 import DashboardLayout from "controls/LayoutContainers/DashboardLayout";
@@ -45,6 +46,16 @@ function Reports() {
 
   const reports = catalogQuery.data ?? [];
   const running = previewMutation.isPending || downloadMutation.isPending;
+
+  // Another screen opens Reports on one report with ?report=<code>.
+  const [searchParams] = useSearchParams();
+  const requestedReport = searchParams.get('report');
+  useEffect(() => {
+    if (!selected && requestedReport) {
+      const match = reports.find((report) => report.code === requestedReport);
+      if (match) setSelected(match);
+    }
+  }, [reports, requestedReport, selected]);
 
   useEffect(() => {
     setLoading(catalogQuery.isFetching || running);

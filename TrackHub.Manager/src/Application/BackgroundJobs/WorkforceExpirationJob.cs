@@ -51,7 +51,7 @@ public sealed class WorkforceExpirationJob(
         var raised = 0;
         foreach (var qualification in candidates)
         {
-            var accountToday = (await zones.ResolveAsync(qualification.AccountId, cancellationToken)).Today();
+            var accountToday = (await zones.ResolveAsync(qualification.AccountId, cancellationToken)).DateOf(now);
             var threshold = ThresholdFor(qualification.ExpiresAt, accountToday);
             if (threshold is null)
             {

@@ -26,6 +26,7 @@
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from 'api/manager/accounts';
+import { useFeatures } from 'context/features';
 import type { AccountDtoInput, UpdateAccountDtoInput, AccountStatus } from 'api/manager/accounts';
 import type { ListParams } from 'api/core/paging';
 
@@ -67,13 +68,15 @@ export function useCreateAccount() {
 
 export function useUpdateAccount() {
   const queryClient = useQueryClient();
+  const { reload } = useFeatures();
   return useMutation({
     mutationFn: ({
       accountId,
       ...account
     }: Omit<UpdateAccountDtoInput, 'accountId'> & { accountId: string }) =>
       api.updateAccount(accountId, account),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: accountKeys.all }),
+    // The bootstrap context carries the account zone; a zone change must not wait for a page reload.
+    onSuccess: () => Promise.all([queryClient.invalidateQueries({ queryKey: accountKeys.all }), reload()]),
   });
 }
 

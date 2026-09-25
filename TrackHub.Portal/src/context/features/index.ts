@@ -24,6 +24,7 @@ export interface FeaturesContextValue {
   features: AccountFeature[];
   /** Whether the account feature is enabled and inside its effective window. */
   isFeatureEnabled: (featureKey?: string | null) => boolean;
+  reload: () => Promise<void>;
 }
 
 /**
@@ -51,6 +52,7 @@ export function isFeatureActive(
 export const FeaturesContext = createContext<FeaturesContextValue>({
   features: [],
   isFeatureEnabled: () => true,
+  reload: async () => {},
 });
 
 /** Public API for components: `const { isFeatureEnabled } = useFeatures();`. */
