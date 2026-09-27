@@ -15,10 +15,7 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 CERT_DIR="$PROJECT_DIR/certificates"
 WEBROOT="$PROJECT_DIR/certbot/webroot"
 
-# Compose file resolution — recreating nginx from the base file alone drops the
-# trackhub.d mount and with it every routed upstream.
-source "$SCRIPT_DIR/compose-files.sh"
-compose_args_for "$PROJECT_DIR/docker-compose.yml"
+COMPOSE_ARGS=(-f "$PROJECT_DIR/docker-compose.yml")
 
 # Colors (disabled if not interactive)
 if [ -t 1 ]; then

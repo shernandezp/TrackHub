@@ -57,6 +57,7 @@ public abstract class PositionReaderTestsBase<TPositionReader>
             TransporterId = transporterId ?? Guid.NewGuid(),
             Identifier = identifier,
             Name = name,
+            DeviceName = name,
             Serial = serial,
             TransporterType = "Truck",
             TransporterTypeId = (short)TransporterType.Truck
