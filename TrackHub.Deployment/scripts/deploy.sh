@@ -437,7 +437,7 @@ deploy() {
 
         # Derive the service list from the compose file in use so that --skip-init
         # works for every compose file. Never fall back to a command that would
-        # start db-init (it runs the one-time destructive User/Account ID sync).
+        # start db-init.
         local services=()
         local nginx_services=()
         while IFS= read -r svc; do
@@ -461,10 +461,9 @@ deploy() {
         # so any dependency-resolving "up" would start db-init - exactly what
         # --skip-init must prevent. The tradeoff is that Compose no longer orders the
         # listed services either, so we restore the one ordering that actually matters
-        # by hand: nginx is started last. Nginx resolves every upstream host at config
-        # load and dies with "host not found in upstream" when the API containers do
-        # not exist yet. The APIs themselves tolerate any start order (they retry their
-        # dependencies), so two waves are enough.
+        # by hand: nginx is started last, once the upstream containers exist. The APIs
+        # themselves tolerate any start order (they retry their dependencies), so two
+        # waves are enough.
         if [ ${#services[@]} -gt 0 ]; then
             print_info "Services: ${services[*]}"
             docker compose -f "$COMPOSE_FILE" up -d --force-recreate --no-build --no-deps "${services[@]}"

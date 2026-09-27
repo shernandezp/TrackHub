@@ -41,7 +41,7 @@ import { usePermissions } from 'context/permissions';
 import { PermissionResources, PermissionActions } from 'constants/permissions';
 import { useAccountByUser } from 'queries/accounts';
 import { useTransporterLookupByUser } from 'queries/transporters';
-import { useDriversByAccount } from 'queries/drivers';
+import { useDriverLookup, useDriverNames } from 'queries/drivers';
 import { usePointOfInterestLookup } from 'queries/pointsOfInterest';
 import { useAllGeofences } from 'queries/geofences';
 import {
@@ -247,8 +247,6 @@ function TripManager() {
   // transporter-TYPE list from, so the picker feed is enough — no full drain.
   const transportersQuery = useTransporterLookupByUser();
   const transporters = useMemo(() => transportersQuery.data ?? [], [transportersQuery.data]);
-  const driversQuery = useDriversByAccount(accountId, { enabled: !!accountId });
-  const drivers = useMemo(() => driversQuery.data ?? [], [driversQuery.data]);
   // The POI lookup carries the pin colour and the popup's type/description/address
   // that RoutePlanner renders, so the picker feed is enough — no full drain.
   const poisQuery = usePointOfInterestLookup();
@@ -264,6 +262,20 @@ function TripManager() {
   const tripsQuery = useTrips(filters);
   const trips = useMemo(() => tripsQuery.data?.items ?? [], [tripsQuery.data]);
   const totalCount = tripsQuery.data?.totalCount ?? 0;
+
+  // Names and ids only, under Trips/Read: the active set feeds the filter, the ids on the board
+  // resolve their names even for drivers since deactivated. The pickers search the server.
+  const activeDriversQuery = useDriverLookup();
+  const tripDriverIds = useMemo(
+    () => Array.from(new Set(trips.map((trip) => trip.driverId).filter((id): id is string => !!id))),
+    [trips]
+  );
+  const driverNamesQuery = useDriverNames(tripDriverIds);
+  const drivers = useMemo(() => {
+    const byId = new Map((activeDriversQuery.data ?? []).map((driver) => [driver.driverId, driver]));
+    for (const driver of driverNamesQuery.data ?? []) byId.set(driver.driverId, driver);
+    return Array.from(byId.values());
+  }, [activeDriversQuery.data, driverNamesQuery.data]);
 
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
 
@@ -353,6 +365,7 @@ function TripManager() {
     if (edit && detail) {
       setTripValues({
         tripId: detail.trip.tripId,
+        lastModified: detail.trip.lastModified,
         code: detail.trip.code,
         transporterId: detail.trip.transporterId,
         driverId: detail.trip.driverId ?? '',
@@ -429,7 +442,11 @@ function TripManager() {
     };
     try {
       if (tripValues.tripId) {
-        await updateTrip.mutateAsync({ tripId: tripValues.tripId, trip: payload });
+        await updateTrip.mutateAsync({
+          tripId: tripValues.tripId,
+          trip: payload,
+          expectedLastModified: tripValues.lastModified,
+        });
       } else {
         const created = await createTrip.mutateAsync(payload);
         // The queued destinations become stops one by one, in list order; a

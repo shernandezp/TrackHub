@@ -245,6 +245,7 @@ public class GeofenceDetectionServiceTests
         // Assert
         _alertEmitterMock.Verify(e => e.EmitGeofenceEnteredAsync(
             It.Is<GeofenceAlertDto>(a => a.GeofenceEventId == createdEventId && a.GeofenceId == geofenceId), It.IsAny<CancellationToken>()), Times.Once);
+        _geofenceEventWriterMock.Verify(w => w.StampEntryAlertedAsync(createdEventId, It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Once);
         _alertEmitterMock.Verify(e => e.EmitGeofenceExitedAsync(It.IsAny<GeofenceAlertDto>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -438,5 +439,7 @@ public class GeofenceDetectionServiceTests
             Assert.That(result.EventsUpdated, Is.Zero);
         }
         _alertEmitterMock.Verify(e => e.EmitGeofenceEnteredAsync(It.IsAny<GeofenceAlertDto>(), It.IsAny<CancellationToken>()), Times.Once);
+        _geofenceEventWriterMock.Verify(w => w.StampEntryAlertedAsync(It.IsAny<Guid>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never,
+            "an unstamped visit is what the retry loop looks for");
     }
 }

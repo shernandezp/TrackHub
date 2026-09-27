@@ -44,6 +44,10 @@ public class GeofenceEvent(
     /// One-time dwell alert emission stamp for this visit (null = not alerted).
     /// </summary>
     public DateTimeOffset? DwellAlertedAt { get; set; }
+    // Alert markers, stamped after a successful emission (or at once when the geofence does not
+    // alert on that edge) so the retry loop can find visits whose alert never reached Manager.
+    public DateTimeOffset? EntryAlertedAt { get; set; }
+    public DateTimeOffset? ExitAlertedAt { get; set; }
     // Navigation properties
     public Geofence? Geofence { get; set; }
 }

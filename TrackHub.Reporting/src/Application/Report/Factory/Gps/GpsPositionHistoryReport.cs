@@ -1,3 +1,4 @@
+using TrackHub.Reporting.Domain.Paging;
 using Common.Application.Interfaces;
 using Common.Domain.Constants;
 using TrackHub.Reporting.Domain.Interfaces;
@@ -23,14 +24,17 @@ public sealed class GpsPositionHistoryReport(
         Guid? transporterId = filters.GetGuid(FilterNames.Transporter);
         Guid? deviceId = filters.GetGuid(FilterNames.Device);
         var take = GpsReportSupport.ResolveTake(filters, limits);
-        // The window goes to the SOURCE: filtering here intersected the caller's range with the
-        // newest N rows the reader had already truncated to, so an older period exported almost
-        // nothing on an active fleet.
+        // The window goes to the SOURCE and the feed is followed to its end: one capped page was
+        // the newest N fixes, so a monthly export of an active fleet covered its last few hours.
         var from = filters.GetDate(FilterNames.From);
         var to = filters.GetDate(FilterNames.To);
-        var history = await telemetry.GetPositionHistoryAsync(accountId, transporterId, deviceId, take, from, to, cancellationToken);
+        var history = await FeedDrain.DrainByCursorAsync<Domain.Models.Manager.ManagerTransporterPositionHistoryVm>(async cursor =>
+        {
+            var page = await telemetry.GetPositionHistoryAsync(accountId, transporterId, deviceId, take, from, to, cursor, cancellationToken);
+            return (page.Items, page.HasMore, page.NextCursor);
+        });
 
-        var rows = history.Items
+        var rows = history
             .OrderByDescending(p => p.SourceTimestamp)
             .Select(p => new GpsPositionHistoryRowVm(
                 p.TransporterId,

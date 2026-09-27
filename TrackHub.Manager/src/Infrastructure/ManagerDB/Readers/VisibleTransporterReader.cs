@@ -28,20 +28,15 @@ public sealed class VisibleTransporterReader(IApplicationDbContext context, ICur
     {
         var scopedAccountId = RequireAccountAccess(accountId);
 
-        // Administrators, Managers, and global service clients read account-wide; plain users are
-        // narrowed to the transporters in the groups they belong to. Same privileged-bypass rule as
-        // the POI reads (GetPointsOfInterestByAccount) and the module-07 replay group check.
-        var query = IsPrivileged
-            ? Context.Transporters
-                .Where(t => t.AccountId == scopedAccountId)
-                .Select(t => t.TransporterId)
-            : Context.UsersGroup
-                .Where(ug => ug.UserId == userId)
-                .SelectMany(ug => ug.Group.Transporters)
-                .Where(t => t.AccountId == scopedAccountId)
-                .Select(t => t.TransporterId);
+        // The caller's own token decides for the caller; for any other user the replicated role
+        // does, so a service asking on a user's behalf never inherits its own account-wide reach.
+        var privileged = Principal.UserId == userId
+            ? IsPrivileged
+            : await TransporterVisibility.IsPrivilegedAsync(Context, userId, cancellationToken);
 
-        var ids = await query.Distinct().ToListAsync(cancellationToken);
+        var ids = await TransporterVisibility.Query(Context, userId, scopedAccountId, privileged)
+            .Select(t => t.TransporterId)
+            .ToListAsync(cancellationToken);
         return ids.ToHashSet();
     }
 }

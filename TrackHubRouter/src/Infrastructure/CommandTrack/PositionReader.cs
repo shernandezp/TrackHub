@@ -47,7 +47,7 @@ public sealed class PositionReader(ICredentialHttpClientFactory httpClientFactor
         var devicesList = devices as IReadOnlyList<DeviceTransporterVm> ?? [.. devices];
 
         // Names are not unique in the catalog; the first row wins rather than the whole read failing.
-        var devicesDictionary = devicesList.ToDeviceLookup(device => device.Name);
+        var devicesDictionary = devicesList.ToDeviceLookup(device => device.DeviceName);
         var results = new List<PositionVm>();
         foreach (var chunk in devicesList.Chunk(ProviderBatching.MaxIdsPerRequest))
         {
@@ -65,7 +65,7 @@ public sealed class PositionReader(ICredentialHttpClientFactory httpClientFactor
 
     public async Task<IEnumerable<PositionVm>> GetPositionAsync(DateTimeOffset from, DateTimeOffset to, DeviceTransporterVm deviceDto, CancellationToken cancellationToken)
     {
-        var url = $"DataConnectAPI/api/Position/{deviceDto.Name}/{from.ToIso8601String()}/{to.ToIso8601String()}";
+        var url = $"DataConnectAPI/api/Position/{deviceDto.DeviceName}/{from.ToIso8601String()}/{to.ToIso8601String()}";
         var positions = await WithReauthenticationAsync(
             () => HttpClientService.GetAsync<IEnumerable<Position>>(url, Header, cancellationToken),
             cancellationToken);

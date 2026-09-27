@@ -25,6 +25,10 @@ public static class DependencyInjection
     {
         // User-provisioning writer carries mutations — no retry.
         services.AddGraphQLClient(Clients.Security);
+        // Driver offboarding revokes Security credentials under Manager's own identity: the caller's
+        // token is not what Security grants that to.
+        services.AddGraphQLServiceClient(Clients.Security);
+        services.AddScoped<IDriverCredentialRevoker, DriverCredentialRevoker>();
 
         services.AddScoped<ISecurityWriter, SecurityWriter>();
 

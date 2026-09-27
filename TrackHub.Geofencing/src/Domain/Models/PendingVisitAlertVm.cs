@@ -13,13 +13,21 @@
 //  limitations under the License.
 //
 
-namespace TrackHub.Manager.Application.Device.Commands.Wipe;
+namespace TrackHub.Geofencing.Domain.Models;
 
-public sealed class WipeDevicesCommandValidator : AbstractValidator<WipeDevicesCommand>
-{
-    public WipeDevicesCommandValidator()
-    {
-        RuleFor(x => x.OperatorId)
-            .NotEmpty();
-    }
-}
+/// <summary>A visit whose entry or exit alert has not reached Manager yet.</summary>
+public readonly record struct PendingVisitAlertVm(
+    Guid GeofenceEventId,
+    Guid AccountId,
+    Guid TransporterId,
+    Guid GeofenceId,
+    string GeofenceName,
+    short GeofenceType,
+    DateTimeOffset EventDateTime,
+    DateTimeOffset? DepartureTimestamp,
+    double Latitude,
+    double Longitude,
+    bool EntryPending,
+    bool AlertOnEntry,
+    bool ExitPending,
+    bool AlertOnExit);

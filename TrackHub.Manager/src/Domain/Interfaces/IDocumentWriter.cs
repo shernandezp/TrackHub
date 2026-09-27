@@ -2,7 +2,6 @@ namespace TrackHub.Manager.Domain.Interfaces;
 
 public interface IDocumentWriter
 {
-    Task<DocumentVm> CreateDocumentMetadataAsync(DocumentDto document, CancellationToken cancellationToken);
 
     /// <summary>
     /// Registers a document whose bytes have just been streamed to storage under a server-generated key

@@ -18,11 +18,9 @@ public interface IOperatorHealthCheckSystemWriter : IOperatorHealthCheckWriter;
 
 public interface IDeviceSyncWriter
 {
-    Task ResetAsync(Guid accountId, Guid operatorId, CancellationToken cancellationToken);
-
     // Returns the device-sync counts so the Router can record exactly one sync run
     // per attempt; Manager no longer records the run itself.
-    Task<DeviceSyncCountsVm> SynchronizeAsync(Guid accountId, Guid operatorId, IEnumerable<SynchronizedDeviceDto> devices, string correlationId, string triggerType, bool autoAssignNewDevices, CancellationToken cancellationToken);
+    Task<DeviceSyncCountsVm> SynchronizeAsync(Guid accountId, Guid operatorId, IEnumerable<SynchronizedDeviceDto> devices, string correlationId, string triggerType, bool autoAssignNewDevices, bool resetDeviceCatalog, CancellationToken cancellationToken);
 }
 
 public interface IBackgroundJobRunRecorder
@@ -40,4 +38,5 @@ public interface IBackgroundJobRunRecorder
 public interface IAlertEventWriter
 {
     Task RecordAsync(AlertEventDto dto, CancellationToken cancellationToken);
+    Task ResolveAsync(Guid accountId, string resourceType, string resourceId, IReadOnlyCollection<string> eventTypes, CancellationToken cancellationToken);
 }

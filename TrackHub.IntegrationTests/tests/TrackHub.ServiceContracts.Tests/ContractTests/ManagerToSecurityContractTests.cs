@@ -43,4 +43,14 @@ public class ManagerToSecurityContractTests
             () => "Manager→Security SecurityWriter.CreateUser no longer matches the Security schema: "
                 + string.Join("; ", result.Errors.Select(e => e.Message)));
     }
+
+    [Test]
+    public void RevokeDriverCredentialsMutation_IsValidAgainstSecuritySchema()
+    {
+        var document = Utf8GraphQLParser.Parse(DriverCredentialRevoker.RevokeDriverCredentialsMutation);
+        var result = Validator.Validate(_schema, document);
+        Assert.That(result.HasErrors, Is.False,
+            () => "Manager→Security DriverCredentialRevoker.RevokeDriverCredentials no longer matches the Security schema: "
+                + string.Join("; ", result.Errors.Select(e => e.Message)));
+    }
 }

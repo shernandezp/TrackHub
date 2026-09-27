@@ -56,7 +56,7 @@ public class PositionHistoryKeysetPagingTests
 
         for (var page = 0; page < 10; page++)
         {
-            var result = await reader.GetAsync(ForAccount(accountId), 3, null, null, cursor, CancellationToken.None);
+            var result = await reader.GetAsync(ForAccount(accountId), 3, null, null, cursor, null, CancellationToken.None);
             seen.AddRange(result.Items.Select(x => x.TransporterPositionHistoryId));
 
             if (!result.HasMore)
@@ -89,8 +89,8 @@ public class PositionHistoryKeysetPagingTests
         context.SaveChanges();
         var reader = new TransporterPositionHistoryReader(context, TestDb.PrincipalFor(accountId));
 
-        var first = await reader.GetAsync(ForAccount(accountId), 2, Instant.AddHours(-3), Instant, null, CancellationToken.None);
-        var second = await reader.GetAsync(ForAccount(accountId), 2, Instant.AddHours(-3), Instant, first.NextCursor, CancellationToken.None);
+        var first = await reader.GetAsync(ForAccount(accountId), 2, Instant.AddHours(-3), Instant, null, null, CancellationToken.None);
+        var second = await reader.GetAsync(ForAccount(accountId), 2, Instant.AddHours(-3), Instant, first.NextCursor, null, CancellationToken.None);
 
         using (Assert.EnterMultipleScope())
         {
@@ -110,7 +110,7 @@ public class PositionHistoryKeysetPagingTests
         context.SaveChanges();
 
         var reader = new TransporterPositionHistoryReader(context, TestDb.PrincipalFor(accountId));
-        var page = await reader.GetAsync(ForAccount(accountId), 2, null, null, null, CancellationToken.None);
+        var page = await reader.GetAsync(ForAccount(accountId), 2, null, null, null, null, CancellationToken.None);
 
         using (Assert.EnterMultipleScope())
         {
@@ -128,7 +128,7 @@ public class PositionHistoryKeysetPagingTests
         context.SaveChanges();
 
         var reader = new TransporterPositionHistoryReader(context, TestDb.PrincipalFor(accountId));
-        var page = await reader.GetAsync(ForAccount(accountId), 50, null, null, "not-a-cursor", CancellationToken.None);
+        var page = await reader.GetAsync(ForAccount(accountId), 50, null, null, "not-a-cursor", null, CancellationToken.None);
 
         Assert.That(page.Items, Has.Count.EqualTo(1));
     }
@@ -147,7 +147,7 @@ public class PositionHistoryKeysetPagingTests
         context.SaveChanges();
         var reader = new TransporterPositionHistoryReader(context, TestDb.PrincipalFor(accountId));
 
-        var page = await reader.GetAsync(ForAccount(accountId), 2, null, null, null, CancellationToken.None);
+        var page = await reader.GetAsync(ForAccount(accountId), 2, null, null, null, null, CancellationToken.None);
 
         Assert.That(FeedCursor.TryDecode(page.NextCursor, out var at, out var id), Is.True);
         using (Assert.EnterMultipleScope())

@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2026 Sergio Hernandez. All rights reserved.
+// Copyright (c) 2025 Sergio Hernandez. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License").
 //  You may not use this file except in compliance with the License.
@@ -33,4 +33,13 @@ public sealed class UserUpdated
                     cancellationToken);
         }
     }
+
+    // The role Manager's replica carries: the most privileged one, by the seeded hierarchy order
+    // (Administrator < Manager < User by id), which is also the rule the AuthorityServer stamps into
+    // the access token.
+    public static string? EffectiveRole(IReadOnlyCollection<RoleVm>? roles)
+        => roles is { Count: > 0 } ? roles.MinBy(r => r.RoleId).Name : null;
+
+    public static Notification Mirror(UserVm user)
+        => new(user.UserId, new UpdateUserShrankDto(user.UserId, user.Username, user.Active, EffectiveRole(user.Roles)));
 }

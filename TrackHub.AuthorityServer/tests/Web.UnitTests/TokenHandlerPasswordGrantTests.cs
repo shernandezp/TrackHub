@@ -23,8 +23,10 @@ namespace TrackHub.AuthorityServer.Web.UnitTests;
 [TestFixture]
 public class TokenHandlerPasswordGrantTests
 {
+    private static readonly Guid Stamp = Guid.NewGuid();
+
     private static UserVm User(Guid userId, Guid accountId) => new(
-        userId, "admin", string.Empty, "email@mail.com", DateTimeOffset.UtcNow, true, 0, null, accountId);
+        userId, "admin", string.Empty, "email@mail.com", DateTimeOffset.UtcNow, true, 0, null, accountId, Stamp);
 
     [Test]
     public void CreateUserPrincipal_CarriesTheUserClaimsForTheAccessToken()
@@ -40,6 +42,7 @@ public class TokenHandlerPasswordGrantTests
             Assert.That(principal.FindFirst("principal_type")?.Value, Is.EqualTo("User"));
             Assert.That(principal.FindFirst("user_id")?.Value, Is.EqualTo(userId.ToString()));
             Assert.That(principal.FindFirst("account_id")?.Value, Is.EqualTo(accountId.ToString()));
+            Assert.That(principal.FindFirst("security_stamp")?.Value, Is.EqualTo(Stamp.ToString()));
             Assert.That(principal.FindFirst(ClaimTypes.Role)?.Value, Is.EqualTo("Administrator"));
             Assert.That(principal.Claims.All(c => c.GetDestinations().Contains(OpenIddictConstants.Destinations.AccessToken)), Is.True);
         });

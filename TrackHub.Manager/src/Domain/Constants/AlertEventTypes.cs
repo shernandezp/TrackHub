@@ -27,6 +27,13 @@ public static class AlertEventTypes
     public const string CommunicationLoss = nameof(CommunicationLoss);
     public const string GpsCredentialExpiring = nameof(GpsCredentialExpiring);
     public const string GpsOperatorPositionSyncFailed = nameof(GpsOperatorPositionSyncFailed);
+    public const string GpsOperatorDeviceSyncFailed = nameof(GpsOperatorDeviceSyncFailed);
+    public const string GpsOperatorOffline = nameof(GpsOperatorOffline);
+    public const string GpsOperatorRecovered = nameof(GpsOperatorRecovered);
+    public const string GpsDeviceDetected = nameof(GpsDeviceDetected);
+    public const string GpsDeviceRemoved = nameof(GpsDeviceRemoved);
+    public const string GpsDuplicateDeviceIdentifier = nameof(GpsDuplicateDeviceIdentifier);
+    public const string GpsAutoAssignGroupAmbiguous = nameof(GpsAutoAssignGroupAmbiguous);
     public const string DocumentExpiring = nameof(DocumentExpiring);
     public const string DocumentExpired = nameof(DocumentExpired);
     public const string DocumentScanFailed = nameof(DocumentScanFailed);
@@ -51,7 +58,9 @@ public static class AlertEventTypes
     public static readonly IReadOnlyCollection<string> All =
     [
         GeofenceEntered, GeofenceExited, GeofenceDwellExceeded, CommunicationLoss,
-        GpsCredentialExpiring, GpsOperatorPositionSyncFailed, DocumentExpiring, DocumentExpired,
+        GpsCredentialExpiring, GpsOperatorPositionSyncFailed, GpsOperatorDeviceSyncFailed, GpsOperatorOffline,
+        GpsOperatorRecovered, GpsDeviceDetected, GpsDeviceRemoved, GpsDuplicateDeviceIdentifier,
+        GpsAutoAssignGroupAmbiguous, DocumentExpiring, DocumentExpired,
         DocumentScanFailed, NotificationDeliveryFailed, DriverQualificationExpiring, DriverQualificationExpired,
         TripAssigned, TripStarted, TripStopArrived, TripStopDeparted, TripDelayed,
         TripRouteDeviation, TripPodSubmitted, TripCompleted, TripCancelled, TripStartDue

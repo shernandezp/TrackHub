@@ -7,22 +7,9 @@ using TrackHub.Manager.Infrastructure.Interfaces;
 
 namespace TrackHub.Manager.Infrastructure.ManagerDB.Writers;
 
-public sealed class DocumentWriter(IApplicationDbContext context, ICurrentPrincipal principal, IDocumentAccessPolicy accessPolicy)
+public sealed class DocumentWriter(IApplicationDbContext context, ICurrentPrincipal principal, IDocumentAccessPolicy accessPolicy, IAlertRecorder alerts)
     : AccountScopedDataAccess(context, principal), IDocumentWriter
 {
-    public async Task<DocumentVm> CreateDocumentMetadataAsync(DocumentDto document, CancellationToken cancellationToken)
-    {
-        var accountId = RequireAccountWriteAccess(document.AccountId);
-        await EnsureOwnerWriteAccessAsync(accountId, document.OwnerEntityType, document.OwnerEntityId, cancellationToken);
-
-        var entity = BuildDocument(accountId, document);
-        await Context.Documents.AddAsync(entity, cancellationToken);
-        AddDocumentVersion(entity, document.StorageProvider, document.StorageKey, document.Sha256Hash, document.SizeBytes, document.ContentType, document.FileName, document.ScanStatus, reason: null);
-        AddAuditEvent(accountId, "CreateDocument", "Document", entity.DocumentId.ToString(), null, AuditValues(entity));
-        await Context.SaveChangesAsync(cancellationToken);
-        return ToVm(entity);
-    }
-
     public async Task<DocumentVm> RegisterUploadedDocumentAsync(Guid documentId, DocumentDto document, CancellationToken cancellationToken)
     {
         var accountId = RequireAccountWriteAccess(document.AccountId);
@@ -80,7 +67,7 @@ public sealed class DocumentWriter(IApplicationDbContext context, ICurrentPrinci
         => await UpdateDocumentAsync(documentId, "ExpireDocument", x => { x.ExpiresAt = expiresAt; x.Status = DocumentStatuses.Expired; }, cancellationToken);
 
     public async Task DeleteDocumentReferenceAsync(Guid documentId, CancellationToken cancellationToken)
-        => await UpdateDocumentAsync(documentId, "DeleteDocumentReference", x => x.Status = DocumentStatuses.Deleted, cancellationToken);
+        => await UpdateDocumentAsync(documentId, "DeleteDocumentReference", x => x.Status = DocumentStatuses.Deleted, cancellationToken, revokeShares: true);
 
     public async Task<DocumentVm> ReplaceDocumentVersionAsync(Guid documentId, DocumentVersionDto newVersion, CancellationToken cancellationToken)
     {
@@ -104,16 +91,31 @@ public sealed class DocumentWriter(IApplicationDbContext context, ICurrentPrinci
         entity.SizeBytes = newVersion.SizeBytes;
         entity.ContentType = newVersion.ContentType;
         entity.FileName = newVersion.FileName;
-        entity.Status = DocumentStatuses.Active;
+        var renewed = newVersion.ExpiresAt is { } expiresAt && expiresAt != entity.ExpiresAt;
+        if (renewed)
+        {
+            entity.ExpiresAt = newVersion.ExpiresAt;
+        }
+
+        // An expired document stays expired until a version brings a future expiry with it.
+        entity.Status = entity.Status == DocumentStatuses.Expired && !(entity.ExpiresAt > DateTimeOffset.UtcNow)
+            ? DocumentStatuses.Expired
+            : DocumentStatuses.Active;
         entity.ScanStatus = DocumentScanStatuses.Quarantined;
 
         AddAuditEvent(entity.AccountId, "ReplaceDocumentVersion", "Document", entity.DocumentId.ToString(), oldValues, AuditValues(entity));
         await Context.SaveChangesAsync(cancellationToken);
+
+        if (renewed)
+        {
+            await alerts.ResolveOpenAsync(entity.AccountId, "Document", entity.DocumentId.ToString(),
+                [AlertEventTypes.DocumentExpiring, AlertEventTypes.DocumentExpired], cancellationToken);
+        }
         return ToVm(entity);
     }
 
     public async Task VoidDocumentAsync(Guid documentId, string reason, CancellationToken cancellationToken)
-        => await UpdateDocumentAsync(documentId, "VoidDocument", x => x.Status = DocumentStatuses.Voided, cancellationToken, reason);
+        => await UpdateDocumentAsync(documentId, "VoidDocument", x => x.Status = DocumentStatuses.Voided, cancellationToken, reason, revokeShares: true);
 
     public async Task<DocumentSignatureVm> SignDocumentAsync(DocumentSignatureDto signature, CancellationToken cancellationToken)
     {
@@ -181,7 +183,7 @@ public sealed class DocumentWriter(IApplicationDbContext context, ICurrentPrinci
         await Context.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task UpdateDocumentAsync(Guid documentId, string action, Action<Document> update, CancellationToken cancellationToken, string? reason = null)
+    private async Task UpdateDocumentAsync(Guid documentId, string action, Action<Document> update, CancellationToken cancellationToken, string? reason = null, bool revokeShares = false)
     {
         var entity = await Context.Documents
             .AsTracking().FirstOrDefaultAsync(x => x.DocumentId == documentId, cancellationToken)
@@ -189,6 +191,22 @@ public sealed class DocumentWriter(IApplicationDbContext context, ICurrentPrinci
         RequireAccountWriteAccess(entity.AccountId);
         var oldValues = AuditValues(entity);
         update(entity);
+        if (revokeShares)
+        {
+            // Same save as the status change: a deleted or voided document must not stay reachable
+            // through a public link for even one request.
+            var resourceId = entity.DocumentId.ToString();
+            var shares = await Context.PublicLinkGrants
+                .AsTracking()
+                .Where(g => g.AccountId == entity.AccountId && g.ResourceType == DocumentSharing.ResourceType && g.ResourceId == resourceId && g.RevokedAt == null)
+                .ToListAsync(cancellationToken);
+            foreach (var share in shares)
+            {
+                share.RevokedAt = DateTimeOffset.UtcNow;
+                share.RevokedBy = ActorId();
+            }
+        }
+
         AddAuditEvent(entity.AccountId, action, "Document", entity.DocumentId.ToString(), oldValues, AuditValues(entity, reason));
         await Context.SaveChangesAsync(cancellationToken);
     }

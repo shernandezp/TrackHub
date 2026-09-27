@@ -124,6 +124,7 @@ export default function App() {
   const [bootstrapLoaded, setBootstrapLoaded] = useState(false);
   const [accountSettings, setAccountSettings] = useState<Partial<AccountSettings>>({});
   const [accountFeatures, setAccountFeatures] = useState<AccountContext['features']>([]);
+  const [featuresLoaded, setFeaturesLoaded] = useState(false);
   const [accountTimeZoneId, setAccountTimeZoneId] = useState<string | null>(null);
   const [authorizedActions, setAuthorizedActions] = useState<AuthorizedAction[]>([]);
   const [permissionsLoaded, setPermissionsLoaded] = useState(false);
@@ -207,6 +208,7 @@ export default function App() {
         setAccountStatus(context.status);
         setBranding(context.branding);
         setAccountFeatures(context.features || []);
+        setFeaturesLoaded(true);
         setAccountTimeZoneId(context.timeZoneId ?? null);
       }
     };
@@ -439,7 +441,13 @@ export default function App() {
         <Suspense fallback={null}>
           <Routes>
             {getRoutes(enabledRoutes)}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            {/* Feature-gated routes are absent until the account context loads; deciding the
+                catch-all before that bounced every reload or deep link of such a screen to the
+                dashboard. Signed-out visitors have no context to wait for. */}
+            <Route
+              path="*"
+              element={isAuthenticated && !featuresLoaded ? null : <Navigate to="/dashboard" replace />}
+            />
           </Routes>
         </Suspense>
           </HelpProvider>

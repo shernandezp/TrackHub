@@ -46,6 +46,7 @@ public sealed class User(string username,
     public DateTimeOffset? LockedUntil { get; set; }
     public Guid AccountId { get; set; } = accountId;
     public bool IntegrationUser { get; set; } = integrationUser;
+    public Guid SecurityStamp { get; set; } = Guid.NewGuid();
     public Client? Client { get; set; }
     public ICollection<Role> Roles { get; } = [];
     public ICollection<Policy> Policies { get; } = [];

@@ -129,6 +129,7 @@ public class RouterToManagerRoundTripTests
             correlationId: "corr-sync-1",
             triggerType: "MANUAL",
             autoAssignNewDevices: true,
+            resetDeviceCatalog: false,
             CancellationToken.None);
 
         using (Assert.EnterMultipleScope())

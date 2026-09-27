@@ -103,6 +103,10 @@ public sealed class UserWriter(IApplicationDbContext context, ICurrentPrincipal 
         user.LastName = userDto.LastName;
         user.SecondSurname = userDto.SecondSurname;
         user.DOB = userDto.DOB;
+        if (user.Active && !userDto.Active)
+        {
+            user.SecurityStamp = Guid.NewGuid();
+        }
         user.Active = userDto.Active;
         user.IntegrationUser = userDto.IntegrationUser;
         user.LoginAttempts = 0;
@@ -163,6 +167,7 @@ public sealed class UserWriter(IApplicationDbContext context, ICurrentPrincipal 
 
         user.Password = password;
         user.Active = true;
+        user.SecurityStamp = Guid.NewGuid();
 
         await Context.SaveChangesAsync(cancellationToken);
     }

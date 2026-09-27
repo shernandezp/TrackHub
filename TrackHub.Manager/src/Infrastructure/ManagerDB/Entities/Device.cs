@@ -35,6 +35,7 @@ public sealed class Device(
     public DateTimeOffset LastSyncedAt { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset? LastAssignedAt { get; set; }
     public DateTimeOffset? IgnoredAt { get; set; }
+    public DateTimeOffset? RemovedAt { get; set; }
 
     public ICollection<TransporterDeviceAssignment> Assignments { get; } = [];
 

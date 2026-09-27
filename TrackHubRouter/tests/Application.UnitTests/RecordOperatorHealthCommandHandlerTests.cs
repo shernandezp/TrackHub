@@ -148,8 +148,10 @@ public class RecordOperatorHealthCommandHandlerTests : TestsContext
         _healthWriterMock.Verify(w => w.RecordAsync(
             It.Is<OperatorHealthCheckDto>(c => c.Status == "HEALTHY"), It.IsAny<CancellationToken>()), Times.Once);
         _alertWriterMock.Verify(w => w.RecordAsync(
-            It.Is<AlertEventDto>(a => a.EventType == "GpsOperatorRecovered" && a.Severity == "Info"),
+            It.Is<AlertEventDto>(a => a.EventType == "GpsOperatorRecovered" && a.Severity == "Info" && a.Status == "Resolved"),
             It.IsAny<CancellationToken>()), Times.Once);
+        _alertWriterMock.Verify(w => w.ResolveAsync(op.AccountId, "Operator", op.OperatorId.ToString(),
+            It.Is<IReadOnlyCollection<string>>(t => t.Single() == "GpsOperatorOffline"), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]

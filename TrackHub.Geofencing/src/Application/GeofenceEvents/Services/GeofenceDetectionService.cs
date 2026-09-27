@@ -74,8 +74,8 @@ public class GeofenceDetectionService(
             }
         }
 
-        // Post-commit, best-effort alert emission: failures are logged and never
-        // fail position processing; Manager-side AlertEvent dedup makes retries safe.
+        // Post-commit, best-effort alert emission: a failure is logged, the visit stays unstamped
+        // and the retry loop (VisitAlertRetryService) picks it up.
         if (entries.Count > 0 || exits.Count > 0)
             await EmitAlertsAsync(accountId, entries, exits, cancellationToken);
 
@@ -177,6 +177,7 @@ public class GeofenceDetectionService(
             try
             {
                 await alertEmitter.EmitGeofenceEnteredAsync(ToAlertDto(accountId, entry, info, dwellSeconds: null), cancellationToken);
+                await geofenceEventWriter.StampEntryAlertedAsync(entry.GeofenceEventId, DateTimeOffset.UtcNow, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -195,6 +196,7 @@ public class GeofenceDetectionService(
                     ? (long?)null
                     : (long)(exit.DepartureTimestamp.Value - exit.Timestamp).TotalSeconds;
                 await alertEmitter.EmitGeofenceExitedAsync(ToAlertDto(accountId, exit, info, dwellSeconds), cancellationToken);
+                await geofenceEventWriter.StampExitAlertedAsync(exit.GeofenceEventId, DateTimeOffset.UtcNow, cancellationToken);
             }
             catch (Exception ex)
             {

@@ -20,5 +20,6 @@ public sealed class Group
 {
     public long GroupId { get; set; }
     public Guid AccountId { get; set; }
+    public bool Active { get; set; }
     public ICollection<Transporter> Transporters { get; set; } = [];
 }

@@ -21,3 +21,6 @@ public readonly record struct OperatorSyncRunVm(
     string? ErrorCode,
     string? ErrorMessage,
     string? CorrelationId);
+
+/// <summary>Cursor-paged sync runs, newest first, for drains that must see a whole window.</summary>
+public readonly record struct OperatorSyncRunPageVm(IReadOnlyCollection<OperatorSyncRunVm> Items, bool HasMore, string? NextCursor);

@@ -96,7 +96,8 @@ if ($Reset) {
 # DEFAULT: routed to the Docker container "$Service".
 # Set-DebugTarget.ps1 rewrites this file to point at a service running in Visual Studio.
 upstream $upstream {
-    server ${Service}:8080;
+    zone $Service 64k;
+    server ${Service}:8080 resolve;
 }
 "@ | Set-Content -Path $UpstreamFile -Encoding ascii
 

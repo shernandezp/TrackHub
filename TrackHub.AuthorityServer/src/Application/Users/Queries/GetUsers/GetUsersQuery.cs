@@ -52,6 +52,16 @@ public class GetUsersQueryHandler(IUserReader reader, IUserWriter writer, ILogge
 
         var now = DateTimeOffset.UtcNow;
 
+        // A locked account answers the generic rejection for any password and counts nothing:
+        // answering "locked" only to the right password would confirm it, and counting attempts
+        // during the lock would let a guesser extend it indefinitely.
+        if (user.LockedUntil.HasValue && user.LockedUntil.Value > now)
+        {
+            DummyHash.VerifyHashedPassword(request.Password);
+            logger.LogInformation("Login rejected: {UserId} is locked until {LockedUntil}.", user.UserId, user.LockedUntil);
+            throw new AuthenticationException(CredentialsRejected);
+        }
+
         if (!user.Password.VerifyHashedPassword(request.Password))
         {
             await RecordFailureAsync(user, now, cancellationToken);
@@ -69,9 +79,6 @@ public class GetUsersQueryHandler(IUserReader reader, IUserWriter writer, ILogge
 
         if (user.AccountId == Guid.Empty)
             throw new AuthenticationException("User account is missing tenant assignment");
-
-        if (user.LockedUntil.HasValue && user.LockedUntil.Value > now)
-            throw new AuthenticationException("User account is temporarily locked. Please try again later.");
 
         await writer.RecordLoginSuccessAsync(user.UserId, cancellationToken);
         user.Password = string.Empty;

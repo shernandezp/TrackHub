@@ -41,7 +41,7 @@ public class BatchedPositionsTests
         var context = TestDb.NewContext();
         context.Transporters.Add(new Transporter { TransporterId = transporterA, AccountId = accountId, Name = "A", TransporterTypeId = 1 });
         context.Transporters.Add(new Transporter { TransporterId = transporterB, AccountId = accountId, Name = "B", TransporterTypeId = 1 });
-        context.Groups.Add(new Group { GroupId = groupId, AccountId = accountId });
+        context.Groups.Add(new Group { GroupId = groupId, AccountId = accountId, Active = true });
         context.Set<TransporterGroup>().Add(new TransporterGroup { TransporterId = transporterA, GroupId = groupId });
         context.Set<TransporterGroup>().Add(new TransporterGroup { TransporterId = transporterB, GroupId = groupId });
         context.UsersGroup.Add(new UserGroup { UserId = userId, GroupId = groupId });

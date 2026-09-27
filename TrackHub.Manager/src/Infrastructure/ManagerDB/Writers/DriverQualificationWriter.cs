@@ -7,7 +7,7 @@ using TrackHub.Manager.Infrastructure.Interfaces;
 
 namespace TrackHub.Manager.Infrastructure.ManagerDB.Writers;
 
-public sealed class DriverQualificationWriter(IApplicationDbContext context, ICurrentPrincipal principal) : AccountScopedDataAccess(context, principal), IDriverQualificationWriter
+public sealed class DriverQualificationWriter(IApplicationDbContext context, ICurrentPrincipal principal, IAlertRecorder alerts) : AccountScopedDataAccess(context, principal), IDriverQualificationWriter
 {
     public async Task<DriverQualificationVm> CreateDriverQualificationAsync(DriverQualificationDto qualification, CancellationToken cancellationToken)
     {
@@ -39,6 +39,7 @@ public sealed class DriverQualificationWriter(IApplicationDbContext context, ICu
         await RequireDocumentInAccountAsync(qualification.DocumentId, entity.AccountId, cancellationToken);
 
         var oldValues = AuditValues(entity);
+        var renewed = entity.ExpiresAt != qualification.ExpiresAt;
         entity.DriverId = qualification.DriverId;
         entity.QualificationType = qualification.QualificationType;
         entity.Category = qualification.Category;
@@ -52,6 +53,12 @@ public sealed class DriverQualificationWriter(IApplicationDbContext context, ICu
         entity.AddDomainEvent(new DriverQualificationUpdatedEvent(entity.AccountId, entity.DriverQualificationId, entity.DriverId, entity.QualificationType, entity.ExpiresAt));
         AddAuditEvent(entity.AccountId, "UpdateDriverQualification", "DriverQualification", entity.DriverQualificationId.ToString(), oldValues, AuditValues(entity));
         await Context.SaveChangesAsync(cancellationToken);
+
+        if (renewed)
+        {
+            await alerts.ResolveOpenAsync(entity.AccountId, "DriverQualification", entity.DriverQualificationId.ToString(),
+                [AlertEventTypes.DriverQualificationExpiring, AlertEventTypes.DriverQualificationExpired], cancellationToken);
+        }
     }
 
     // Hard delete: the before-image is preserved in the audit event, which is the record of history.

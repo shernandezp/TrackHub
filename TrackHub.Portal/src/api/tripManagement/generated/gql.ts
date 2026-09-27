@@ -34,7 +34,7 @@ type Documents = {
     "\n  query GetTollStationDetail($tollStationId: UUID!) {\n    tollStationDetail(query: { tollStationId: $tollStationId }) {\n      station {\n        ...TollStationFields\n      }\n      tariffs {\n        ...TollTariffFields\n      }\n    }\n  }\n": typeof types.GetTollStationDetailDocument,
     "\n  query EstimateTolls($routePlanId: UUID!, $tollVehicleClass: String) {\n    estimateTolls(query: { routePlanId: $routePlanId, tollVehicleClass: $tollVehicleClass }) {\n      tollVehicleClass\n      estimatedTollAmount\n      currency\n      tollStatus\n      stations {\n        ...TollStationMatchFields\n      }\n    }\n  }\n": typeof types.EstimateTollsDocument,
     "\n  mutation CreateTrip($trip: TripDtoInput!) {\n    createTrip(command: { trip: $trip }) {\n      ...TripSummaryFields\n    }\n  }\n": typeof types.CreateTripDocument,
-    "\n  mutation UpdateTrip($tripId: UUID!, $trip: TripDtoInput!) {\n    updateTrip(command: { tripId: $tripId, trip: $trip })\n  }\n": typeof types.UpdateTripDocument,
+    "\n  mutation UpdateTrip($tripId: UUID!, $trip: TripDtoInput!, $expectedLastModified: DateTime) {\n    updateTrip(command: { tripId: $tripId, trip: $trip, expectedLastModified: $expectedLastModified })\n  }\n": typeof types.UpdateTripDocument,
     "\n  mutation DeleteTrip($id: UUID!) {\n    deleteTrip(id: $id)\n  }\n": typeof types.DeleteTripDocument,
     "\n  mutation AssignTrip($tripId: UUID!, $driverId: UUID!, $transporterId: UUID) {\n    assignTrip(command: { tripId: $tripId, driverId: $driverId, transporterId: $transporterId }) {\n      tripAssignmentId\n      tripId\n      driverId\n      transporterId\n      status\n      assignedAt\n      acknowledgedAt\n      endedAt\n    }\n  }\n": typeof types.AssignTripDocument,
     "\n  mutation PlanTripRoute($tripId: UUID!, $corridorMeters: Int, $tollVehicleClass: String) {\n    planTripRoute(\n      command: {\n        tripId: $tripId\n        corridorMeters: $corridorMeters\n        tollVehicleClass: $tollVehicleClass\n      }\n    ) {\n      ...RoutePlanFields\n    }\n  }\n": typeof types.PlanTripRouteDocument,
@@ -93,7 +93,7 @@ const documents: Documents = {
     "\n  query GetTollStationDetail($tollStationId: UUID!) {\n    tollStationDetail(query: { tollStationId: $tollStationId }) {\n      station {\n        ...TollStationFields\n      }\n      tariffs {\n        ...TollTariffFields\n      }\n    }\n  }\n": types.GetTollStationDetailDocument,
     "\n  query EstimateTolls($routePlanId: UUID!, $tollVehicleClass: String) {\n    estimateTolls(query: { routePlanId: $routePlanId, tollVehicleClass: $tollVehicleClass }) {\n      tollVehicleClass\n      estimatedTollAmount\n      currency\n      tollStatus\n      stations {\n        ...TollStationMatchFields\n      }\n    }\n  }\n": types.EstimateTollsDocument,
     "\n  mutation CreateTrip($trip: TripDtoInput!) {\n    createTrip(command: { trip: $trip }) {\n      ...TripSummaryFields\n    }\n  }\n": types.CreateTripDocument,
-    "\n  mutation UpdateTrip($tripId: UUID!, $trip: TripDtoInput!) {\n    updateTrip(command: { tripId: $tripId, trip: $trip })\n  }\n": types.UpdateTripDocument,
+    "\n  mutation UpdateTrip($tripId: UUID!, $trip: TripDtoInput!, $expectedLastModified: DateTime) {\n    updateTrip(command: { tripId: $tripId, trip: $trip, expectedLastModified: $expectedLastModified })\n  }\n": types.UpdateTripDocument,
     "\n  mutation DeleteTrip($id: UUID!) {\n    deleteTrip(id: $id)\n  }\n": types.DeleteTripDocument,
     "\n  mutation AssignTrip($tripId: UUID!, $driverId: UUID!, $transporterId: UUID) {\n    assignTrip(command: { tripId: $tripId, driverId: $driverId, transporterId: $transporterId }) {\n      tripAssignmentId\n      tripId\n      driverId\n      transporterId\n      status\n      assignedAt\n      acknowledgedAt\n      endedAt\n    }\n  }\n": types.AssignTripDocument,
     "\n  mutation PlanTripRoute($tripId: UUID!, $corridorMeters: Int, $tollVehicleClass: String) {\n    planTripRoute(\n      command: {\n        tripId: $tripId\n        corridorMeters: $corridorMeters\n        tollVehicleClass: $tollVehicleClass\n      }\n    ) {\n      ...RoutePlanFields\n    }\n  }\n": types.PlanTripRouteDocument,
@@ -229,7 +229,7 @@ export function graphql(source: "\n  mutation CreateTrip($trip: TripDtoInput!) {
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  mutation UpdateTrip($tripId: UUID!, $trip: TripDtoInput!) {\n    updateTrip(command: { tripId: $tripId, trip: $trip })\n  }\n"): (typeof documents)["\n  mutation UpdateTrip($tripId: UUID!, $trip: TripDtoInput!) {\n    updateTrip(command: { tripId: $tripId, trip: $trip })\n  }\n"];
+export function graphql(source: "\n  mutation UpdateTrip($tripId: UUID!, $trip: TripDtoInput!, $expectedLastModified: DateTime) {\n    updateTrip(command: { tripId: $tripId, trip: $trip, expectedLastModified: $expectedLastModified })\n  }\n"): (typeof documents)["\n  mutation UpdateTrip($tripId: UUID!, $trip: TripDtoInput!, $expectedLastModified: DateTime) {\n    updateTrip(command: { tripId: $tripId, trip: $trip, expectedLastModified: $expectedLastModified })\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

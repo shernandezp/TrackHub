@@ -31,5 +31,6 @@ public sealed class User(
     public int LoginAttempts { get; set; }
     public DateTimeOffset? LockedUntil { get; set; }
     public Guid AccountId { get; set; } = accountId;
+    public Guid SecurityStamp { get; set; }
     public Client? Client { get; set; }
 }

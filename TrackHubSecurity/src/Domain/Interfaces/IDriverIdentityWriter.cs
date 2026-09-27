@@ -22,6 +22,7 @@ public interface IDriverIdentityWriter
     Task LockDriverCredentialAsync(Guid driverCredentialId, DateTimeOffset lockedUntil, CancellationToken cancellationToken);
     Task ResetDriverCredentialAsync(Guid driverCredentialId, string password, bool resetRequired, CancellationToken cancellationToken);
     Task RevokeDriverCredentialAsync(Guid driverCredentialId, CancellationToken cancellationToken);
+    Task RevokeDriverCredentialsAsync(Guid driverId, Guid accountId, CancellationToken cancellationToken);
     Task<DriverDeviceRegistrationVm> RegisterDriverDeviceAsync(DriverDeviceRegistrationDto device, CancellationToken cancellationToken);
     Task UpdateDriverDevicePushTokenAsync(Guid driverDeviceRegistrationId, string? pushToken, string? appVersion, CancellationToken cancellationToken);
     Task RevokeDriverDeviceAsync(Guid driverDeviceRegistrationId, string revokedBy, CancellationToken cancellationToken);

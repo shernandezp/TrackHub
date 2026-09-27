@@ -29,7 +29,8 @@ public sealed class DeviceTransporterReader(IApplicationDbContext context, ICurr
                 a.Device.Serial,
                 a.Transporter.Name,
                 (TransporterType)a.Transporter.TransporterTypeId,
-                a.Transporter.TransporterTypeId))
+                a.Transporter.TransporterTypeId,
+                a.Device.Name))
             .Distinct()
             .ToListAsync(cancellationToken);
     }
@@ -48,7 +49,8 @@ public sealed class DeviceTransporterReader(IApplicationDbContext context, ICurr
                 a.Device.Serial,
                 a.Transporter.Name,
                 (TransporterType)a.Transporter.TransporterTypeId,
-                a.Transporter.TransporterTypeId))
+                a.Transporter.TransporterTypeId,
+                a.Device.Name))
             .Distinct()
             .ToListAsync(cancellationToken);
     }
@@ -67,7 +69,8 @@ public sealed class DeviceTransporterReader(IApplicationDbContext context, ICurr
                 a.Device.Serial,
                 a.Transporter.Name,
                 (TransporterType)a.Transporter.TransporterTypeId,
-                a.Transporter.TransporterTypeId))
+                a.Transporter.TransporterTypeId,
+                a.Device.Name))
             .Distinct()
             .ToListAsync(cancellationToken);
     }
@@ -93,7 +96,8 @@ public sealed class DeviceTransporterReader(IApplicationDbContext context, ICurr
                 a.Device.Serial,
                 a.Transporter.Name,
                 (TransporterType)a.Transporter.TransporterTypeId,
-                a.Transporter.TransporterTypeId))
+                a.Transporter.TransporterTypeId,
+                a.Device.Name))
             .FirstOrDefaultAsync(cancellationToken);
         ReaderResults.EnsureFound(found, nameof(Entities.TransporterDeviceAssignment), transporterId.ToString());
         return found;

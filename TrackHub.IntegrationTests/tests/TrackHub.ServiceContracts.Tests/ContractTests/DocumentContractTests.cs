@@ -86,11 +86,6 @@ public class DocumentContractTests
             }
         }";
 
-    private const string CreateDocumentMetadataMutation = @"
-        mutation($document: DocumentDtoInput!) {
-            createDocumentMetadata(command: { document: $document }) { documentId fileName category status }
-        }";
-
     private const string ReplaceDocumentVersionMutation = @"
         mutation($documentId: UUID!, $newVersion: DocumentVersionDtoInput!) {
             replaceDocumentVersion(command: { documentId: $documentId, newVersion: $newVersion }) { documentId currentVersion scanStatus }
@@ -137,7 +132,6 @@ public class DocumentContractTests
         yield return new TestCaseData("Portal.expiringDocuments", ExpiringDocumentsQuery);
         yield return new TestCaseData("Portal.documentShares", DocumentSharesQuery);
         yield return new TestCaseData("Portal.documentTypes", DocumentTypesQuery);
-        yield return new TestCaseData("Portal.createDocumentMetadata", CreateDocumentMetadataMutation);
         yield return new TestCaseData("Portal.replaceDocumentVersion", ReplaceDocumentVersionMutation);
         yield return new TestCaseData("Portal.voidDocument", VoidDocumentMutation);
         yield return new TestCaseData("Portal.expireDocument", ExpireDocumentMutation);

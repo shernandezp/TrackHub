@@ -38,6 +38,8 @@ public class GeofenceEventConfiguration : IEntityTypeConfiguration<GeofenceEvent
         builder.Property(x => x.Latitude).HasColumnName("latitude");
         builder.Property(x => x.Longitude).HasColumnName("longitude");
         builder.Property(x => x.DwellAlertedAt).HasColumnName("dwellalertedat");
+        builder.Property(x => x.EntryAlertedAt).HasColumnName("entryalertedat");
+        builder.Property(x => x.ExitAlertedAt).HasColumnName("exitalertedat");
         // Indexes
         builder.HasIndex(x => x.TransporterId).HasDatabaseName("ix_geofenceevent_transporterid");
         builder.HasIndex(x => x.GeofenceId).HasDatabaseName("ix_geofenceevent_geofenceid");

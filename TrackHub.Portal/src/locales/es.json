@@ -303,6 +303,7 @@
     "maxPerHour": "Máximo por Hora",
     "webhookUrl": "URL del Webhook",
     "webhookSecret": "Secreto del Webhook",
+    "webhookSecretKept": "Hay un secreto guardado; déjelo en blanco para conservarlo",
     "enabled": "Habilitada",
     "disable": "Deshabilitar"
   },
@@ -485,7 +486,8 @@
         "quarantined": "En Cuarentena",
         "infected": "Infectado"
       }
-    }
+    },
+    "expiresAtKeepsCurrent": "Deje en blanco para conservar el vencimiento actual"
   },
   "supportGrants": {
     "title": "Concesiones de Soporte",
@@ -512,6 +514,7 @@
     "reportRowLimitExceeded": "Este reporte devolvió demasiadas filas. Refine los filtros o exporte a Excel.",
     "tripNotActive": "El viaje no está en curso, por lo que no se puede registrar la acción.",
     "tripAlreadyTerminal": "El viaje ya finalizó y no admite más cambios.",
+    "tripModifiedConcurrently": "El viaje cambió mientras lo editaba. Recárguelo y aplique sus cambios de nuevo.",
     "tripInvalidTransition": "Ese cambio de estado no es válido desde el estado actual del viaje.",
     "stopAlreadyDeparted": "De esta parada ya se registró la salida; sus horas no se pueden modificar.",
     "stopNotArrived": "Registre primero la llegada a la parada y luego la salida.",
@@ -1268,7 +1271,7 @@
       "showRecentlyAddedOnly": "Mostrar solo recién agregados",
       "healthHistory": "Ver Historial de Salud",
       "resetSync": "Reiniciar Sincronización",
-      "resetSyncConfirm": "Esto eliminará los dispositivos sincronizados de este operador y las unidades que solo existían para esos dispositivos, luego iniciará una nueva sincronización. ¿Continuar?",
+      "resetSyncConfirm": "Esto volverá a ejecutar la detección de dispositivos de este operador: los dispositivos que ya no están en el catálogo del proveedor se retiran y se terminan sus asignaciones, los ignorados se detectan de nuevo y las unidades conservan su identidad e historial. ¿Continuar?",
       "deleteDeviceConfirm": "¿Eliminar este dispositivo sincronizado? El historial de asignación quedará disponible en los registros de auditoría.",
       "assignDevice": "Asignar Dispositivo",
       "deleteDevice": "Eliminar dispositivo"

@@ -4,7 +4,6 @@ namespace TrackHub.Manager.Web.GraphQL.Mutation;
 
 public partial class Mutation
 {
-    public async Task<DocumentVm> CreateDocumentMetadata([Service] ISender sender, CreateDocumentMetadataCommand command, CancellationToken cancellationToken) => await sender.Send(command, cancellationToken);
     public async Task<bool> MarkDocumentUploaded([Service] ISender sender, MarkDocumentUploadedCommand command, CancellationToken cancellationToken) { await sender.Send(command, cancellationToken); return true; }
     public async Task<bool> MarkDocumentScanResult([Service] ISender sender, MarkDocumentScanResultCommand command, CancellationToken cancellationToken) { await sender.Send(command, cancellationToken); return true; }
     public async Task<bool> ExpireDocument([Service] ISender sender, ExpireDocumentCommand command, CancellationToken cancellationToken) { await sender.Send(command, cancellationToken); return true; }

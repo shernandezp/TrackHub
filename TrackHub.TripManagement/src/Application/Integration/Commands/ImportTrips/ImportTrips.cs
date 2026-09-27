@@ -119,7 +119,7 @@ public sealed class ImportTripsCommandHandler(
             if (TripStatuses.IsTerminal(current.Status))
                 return new TripImportResultVm(item.ExternalReference, false, current.TripId, TripErrorCodes.TripAlreadyTerminal, "Trip is closed.");
 
-            await writer.UpdateTripAsync(current.TripId, dto, accountId, cancellationToken);
+            await writer.UpdateTripAsync(current.TripId, dto, accountId, null, cancellationToken);
 
             // The stops payload used to be dropped here without a word, so a partner's weekly
             // re-upload could revise a trip's header and never its route — the one thing a re-plan

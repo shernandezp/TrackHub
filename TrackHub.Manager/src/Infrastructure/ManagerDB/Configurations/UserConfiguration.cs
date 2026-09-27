@@ -31,6 +31,7 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.Username).HasColumnName("username");
         builder.Property(x => x.Active).HasColumnName("active");
         builder.Property(x => x.AccountId).HasColumnName("accountid");
+        builder.Property(x => x.Role).HasColumnName("role").HasMaxLength(ColumnMetadata.DefaultNameLength);
 
         builder.Property(t => t.Username)
             .HasMaxLength(ColumnMetadata.DefaultUserNameLength)

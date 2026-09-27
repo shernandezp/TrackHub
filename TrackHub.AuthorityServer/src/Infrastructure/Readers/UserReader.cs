@@ -34,7 +34,8 @@ public sealed class UserReader(SecurityDbContext context) : IUserReader
                 u.Active,
                 u.LoginAttempts,
                 u.LockedUntil,
-                u.AccountId))
+                u.AccountId,
+                u.SecurityStamp))
             .SingleOrDefaultAsync(cancellationToken);
     }
 
@@ -66,7 +67,8 @@ public sealed class UserReader(SecurityDbContext context) : IUserReader
                 u.Active,
                 u.LoginAttempts,
                 u.LockedUntil,
-                u.AccountId))
+                u.AccountId,
+                u.SecurityStamp))
             .SingleOrDefaultAsync(cancellationToken);
     }
 }

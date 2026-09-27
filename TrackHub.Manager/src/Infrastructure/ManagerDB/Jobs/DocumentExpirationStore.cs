@@ -38,38 +38,6 @@ public sealed class DocumentExpirationStore(IApplicationDbContext context) : IDo
         => await context.BackgroundJobRuns.AnyAsync(
             r => r.JobKey == JobKey && r.IdempotencyKey == idempotencyKey && r.Status == "Succeeded", cancellationToken);
 
-    public async Task<AlertEventVm> RecordDedupedAlertAsync(AlertEventDto alertEvent, CancellationToken cancellationToken)
-    {
-        context.ChangeTracker.Clear();
-
-        var entity = await context.AlertEvents
-            .AsTracking().FirstOrDefaultAsync(
-            e => e.AccountId == alertEvent.AccountId
-                && e.DeduplicationKey == alertEvent.DeduplicationKey
-                && e.Status != "Resolved",
-            cancellationToken);
-
-        if (entity is null)
-        {
-            entity = new AlertEvent(
-                alertEvent.AccountId, alertEvent.EventType, alertEvent.Severity, alertEvent.SourceModule,
-                alertEvent.ResourceType, alertEvent.ResourceId, alertEvent.Status, alertEvent.PayloadJson, alertEvent.DeduplicationKey);
-            context.AlertEvents.Add(entity);
-        }
-        else
-        {
-            entity.LastSeenAt = DateTimeOffset.UtcNow;
-            entity.PayloadJson = alertEvent.PayloadJson;
-        }
-
-        await context.SaveChangesAsync(cancellationToken);
-
-        return new AlertEventVm(
-            entity.AlertEventId, entity.AccountId, entity.EventType, entity.Severity, entity.SourceModule,
-            entity.ResourceType, entity.ResourceId, entity.Status, entity.FirstSeenAt, entity.LastSeenAt,
-            entity.PayloadJson, entity.DeduplicationKey, entity.LastModified);
-    }
-
     public async Task CompleteAsync(
         Guid documentId, Guid accountId, bool markExpired, string idempotencyKey,
         DateTimeOffset startedAt, CancellationToken cancellationToken)

@@ -1,13 +1,10 @@
 namespace TrackHub.Router.Infrastructure.ManagerApi;
 
+// Service identity: the manual "sync now" runs off the request on SyncDispatchService, where no
+// caller headers exist to propagate, and the worker loop never had any.
 public class DeviceSyncWriter(IGraphQLClientFactory graphQLClient)
-    : GraphQLService(graphQLClient.CreateClient(Clients.Manager)), IDeviceSyncWriter
+    : GraphQLService(graphQLClient.CreateClient(Clients.Manager, asService: true)), IDeviceSyncWriter
 {
-    internal const string WipeDevicesMutation = @"
-                mutation($operatorId: UUID!) {
-                    wipeDevices(operatorId: $operatorId)
-                }";
-
     internal const string SynchronizeOperatorDevicesMutation = @"
                 mutation($command: SynchronizeOperatorDevicesCommandInput!) {
                     synchronizeOperatorDevices(command: $command) {
@@ -19,16 +16,6 @@ public class DeviceSyncWriter(IGraphQLClientFactory graphQLClient)
                     }
                 }";
 
-    public async Task ResetAsync(Guid accountId, Guid operatorId, CancellationToken cancellationToken)
-    {
-        var request = new GraphQLRequest
-        {
-            Query = WipeDevicesMutation,
-            Variables = new { operatorId }
-        };
-        await MutationAsync<object>(request, cancellationToken);
-    }
-
     public async Task<DeviceSyncCountsVm> SynchronizeAsync(
         Guid accountId,
         Guid operatorId,
@@ -36,6 +23,7 @@ public class DeviceSyncWriter(IGraphQLClientFactory graphQLClient)
         string correlationId,
         string triggerType,
         bool autoAssignNewDevices,
+        bool resetDeviceCatalog,
         CancellationToken cancellationToken)
     {
         var request = new GraphQLRequest
@@ -50,6 +38,7 @@ public class DeviceSyncWriter(IGraphQLClientFactory graphQLClient)
                     correlationId,
                     triggerType,
                     autoAssignNewDevices,
+                    resetDeviceCatalog,
                     devices = devices.Select(d => new
                     {
                         accountId = d.AccountId,

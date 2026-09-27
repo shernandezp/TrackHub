@@ -16,6 +16,9 @@
 namespace TrackHub.Manager.Application.Users.Commands.Update;
 
 [Authorize(Resource = Resources.Users, Action = Actions.Edit)]
+// The mirror arrives from Security's outbox loop under security_client, a global service
+// identity with no account claim; UserWriter.RequireReplicaAccess still scopes the row.
+[AllowCrossAccount("Security replicates user changes here from its outbox loop under security_client (no account claim). UserWriter.RequireReplicaAccess checks the replica row's owning account for every other caller.")]
 // Enforcement: UserWriter loads the replica row and RequireReplicaAccess checks its owning
 // account (same-account / global service / Administrator — Security-parity policy).
 [AccountScopeEnforcedInHandler]

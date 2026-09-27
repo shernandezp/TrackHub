@@ -94,7 +94,8 @@ public class LoginController(ISender sender, IStringLocalizer<LoginController> l
                     new("driver_id", driver.DriverId.ToString()),
                     new("driver_credential_id", driver.DriverCredentialId.ToString()),
                     new("account_id", driver.AccountId.ToString()),
-                    new("client_id", DriverMobileClientId)
+                    new("client_id", DriverMobileClientId),
+                    new(SubjectValidity.SecurityStampClaim, driver.SecurityStamp.ToString())
                 };
 
                 await HttpContext.SignInAsync(new ClaimsPrincipal(new ClaimsIdentity(driverClaims, CookieAuthenticationDefaults.AuthenticationScheme)));
@@ -109,7 +110,8 @@ public class LoginController(ISender sender, IStringLocalizer<LoginController> l
                 new(ClaimTypes.Sid, $"{user.UserId}"),
                 new("principal_type", "User"),
                 new("user_id", $"{user.UserId}"),
-                new("account_id", $"{user.AccountId}")
+                new("account_id", $"{user.AccountId}"),
+                new(SubjectValidity.SecurityStampClaim, $"{user.SecurityStamp}")
             };
 
             // The role claim feeds ICurrentPrincipal.Role on every resource service (privileged

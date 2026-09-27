@@ -41,6 +41,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.LockedUntil).HasColumnName("lockeduntil");
         builder.Property(x => x.AccountId).HasColumnName("accountid");
         builder.Property(x => x.IntegrationUser).HasColumnName("integrationuser");
+        builder.Property(x => x.SecurityStamp).HasColumnName("securitystamp");
 
         builder.Property(t => t.Username)
             .HasMaxLength(ColumnMetadata.DefaultUserNameLength)

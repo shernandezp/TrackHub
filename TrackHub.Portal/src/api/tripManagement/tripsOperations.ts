@@ -441,8 +441,8 @@ export const CreateTripDocument = graphql(`
 `);
 
 export const UpdateTripDocument = graphql(`
-  mutation UpdateTrip($tripId: UUID!, $trip: TripDtoInput!) {
-    updateTrip(command: { tripId: $tripId, trip: $trip })
+  mutation UpdateTrip($tripId: UUID!, $trip: TripDtoInput!, $expectedLastModified: DateTime) {
+    updateTrip(command: { tripId: $tripId, trip: $trip, expectedLastModified: $expectedLastModified })
   }
 `);
 

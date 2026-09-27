@@ -4,8 +4,10 @@
 //  You may not use this file except in compliance with the License.
 //
 
+using TrackHub.Reporting.Domain.Paging;
 using Common.Application.Interfaces;
 using TrackHub.Reporting.Domain.Interfaces;
+using TrackHub.Reporting.Domain.Interfaces.Telemetry;
 using TrackHub.Reporting.Domain.Options;
 using TrackHub.Reporting.Domain.Records;
 
@@ -32,5 +34,19 @@ internal static class GpsReportSupport
         }
 
         return (int)Math.Min(maxRows.Value, limits.MaxExportRows);
+    }
+
+    // The window goes to the source and the feed is followed to its end; a capped newest-first
+    // page filtered in memory made a monthly statistic cover the last day or two.
+    public static async Task<IReadOnlyCollection<Domain.Models.Manager.ManagerOperatorSyncRunVm>> DrainSyncRunsAsync(
+        IGpsTelemetryReader telemetry, Guid accountId, Guid? operatorId, FilterDto filters, int take, CancellationToken cancellationToken)
+    {
+        var from = filters.GetDate(FilterNames.From);
+        var to = filters.GetDate(FilterNames.To);
+        return await FeedDrain.DrainByCursorAsync<Domain.Models.Manager.ManagerOperatorSyncRunVm>(async cursor =>
+        {
+            var page = await telemetry.GetOperatorSyncRunFeedAsync(accountId, operatorId, from, to, take, cursor, cancellationToken);
+            return (page.Items, page.HasMore, page.NextCursor);
+        });
     }
 }

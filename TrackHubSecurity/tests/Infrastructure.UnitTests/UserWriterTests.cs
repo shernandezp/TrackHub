@@ -133,6 +133,35 @@ internal class UserWriterTests : Context
     }
 
     [Test]
+    public async Task UpdatePasswordAsync_ReStampsTheUser_SoLiveSessionsEnd()
+    {
+        var user = GetUser();
+        var before = user.SecurityStamp;
+        _dbContextMock.Setup(m => m.Users.FindAsync(It.IsAny<object[]>(), It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        _dbContextMock.Setup(m => m.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+
+        await _userWriter.UpdatePasswordAsync(new UserPasswordDto { UserId = user.UserId, Password = "newPassword" }, verifyCurrentPassword: false, CancellationToken.None);
+
+        Assert.That(user.SecurityStamp, Is.Not.EqualTo(before));
+    }
+
+    [Test]
+    public async Task UpdateUserAsync_ReStampsOnlyWhenTheUserIsDeactivated()
+    {
+        var user = GetUser();
+        user.Active = true;
+        var before = user.SecurityStamp;
+        _dbContextMock.Setup(m => m.Users.FindAsync(It.IsAny<object[]>(), It.IsAny<CancellationToken>())).ReturnsAsync(user);
+        _dbContextMock.Setup(m => m.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+
+        await _userWriter.UpdateUserAsync(new UpdateUserDto { UserId = user.UserId, Username = user.Username, EmailAddress = user.EmailAddress, Active = true }, CancellationToken.None);
+        Assert.That(user.SecurityStamp, Is.EqualTo(before), "a profile edit that keeps the user active must not end their sessions");
+
+        await _userWriter.UpdateUserAsync(new UpdateUserDto { UserId = user.UserId, Username = user.Username, EmailAddress = user.EmailAddress, Active = false }, CancellationToken.None);
+        Assert.That(user.SecurityStamp, Is.Not.EqualTo(before), "deactivation must end the user's sessions");
+    }
+
+    [Test]
     public async Task DeleteUserAsync_ValidUserId_DeletesUser()
     {
         // Arrange

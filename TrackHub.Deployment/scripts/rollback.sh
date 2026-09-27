@@ -275,11 +275,8 @@ rollback_service() {
     print_info "Setting $image:$tag as latest..."
     docker tag "$image:$tag" "$image:latest"
     
-    # Restart the container
-    print_info "Restarting $container..."
+    print_info "Recreating $container..."
     cd "$PROJECT_DIR"
-    docker compose -f "$COMPOSE_FILE" stop "$service" 2>/dev/null || true
-    docker compose -f "$COMPOSE_FILE" rm -f "$service" 2>/dev/null || true
     docker compose -f "$COMPOSE_FILE" up -d --force-recreate --no-build --no-deps "$service"
 
     print_success "Rolled back $service to $tag"

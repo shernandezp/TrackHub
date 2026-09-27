@@ -19,3 +19,5 @@ public readonly record struct ManagerOperatorSyncRunVm(
     string? ErrorCode,
     string? ErrorMessage,
     string? CorrelationId);
+
+public readonly record struct ManagerOperatorSyncRunPageVm(IReadOnlyCollection<ManagerOperatorSyncRunVm> Items, bool HasMore, string? NextCursor);

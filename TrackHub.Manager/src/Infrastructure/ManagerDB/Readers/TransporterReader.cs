@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Application.Exceptions;
 using Common.Application.Interfaces;
 using TrackHub.Manager.Infrastructure.Interfaces;
 using TransporterType = Common.Domain.Enums.TransporterType;
@@ -49,6 +50,11 @@ public sealed class TransporterReader(IApplicationDbContext context, ICurrentPri
         ReaderResults.EnsureFound(row, nameof(Entities.Transporter), id.ToString());
 
         RequireAccountAccess(row.AccountId);
+        if (!IsPrivileged && !await Scope(row.AccountId).AnyAsync(t => t.TransporterId == id, cancellationToken))
+        {
+            throw new NotFoundException(nameof(Entities.Transporter), id.ToString());
+        }
+
         return row.Vm;
     }
 
@@ -91,6 +97,13 @@ public sealed class TransporterReader(IApplicationDbContext context, ICurrentPri
         }
 
         RequireAccountAccess(groupAccountId.Value);
+
+        // A group the caller does not belong to does not exist for them (an invisible id is NotFound).
+        if (!IsPrivileged && !await Context.UsersGroup
+                .AnyAsync(ug => ug.GroupId == groupId && ug.UserId == Principal.UserId && ug.Group.Active, cancellationToken))
+        {
+            throw new NotFoundException(nameof(Entities.Group), groupId.ToString());
+        }
 
         var query = ApplySearch(
             Context.Groups
@@ -138,7 +151,7 @@ public sealed class TransporterReader(IApplicationDbContext context, ICurrentPri
 
         RequireAccountAccess(subjectAccountId.Value);
 
-        var query = ApplySearch(VisibleToUser(userId), search);
+        var query = ApplySearch(await VisibleToUserAsync(userId, subjectAccountId.Value, cancellationToken), search);
 
         var totalCount = await query.CountAsync(cancellationToken);
         var items = await query
@@ -167,7 +180,7 @@ public sealed class TransporterReader(IApplicationDbContext context, ICurrentPri
     /// <returns>A task that represents the asynchronous operation. The task result contains a page of TransporterVm objects.</returns>
     public async Task<TransportersPageVm> GetTransportersByAccountAsync(Guid accountId, int skip, int take, string? search, CancellationToken cancellationToken)
     {
-        var query = ApplySearch(ByAccount(accountId), search);
+        var query = ApplySearch(Scope(accountId), search);
 
         var totalCount = await query.CountAsync(cancellationToken);
         var items = await query
@@ -191,7 +204,7 @@ public sealed class TransporterReader(IApplicationDbContext context, ICurrentPri
     /// rather than bind a truncated picker.
     /// </summary>
     public async Task<IReadOnlyCollection<TransporterLookupVm>> GetTransporterLookupByAccountAsync(Guid accountId, int fetchSize, CancellationToken cancellationToken)
-        => await ByAccount(accountId)
+        => await Scope(accountId)
             .OrderBy(t => t.Name)
             .ThenBy(t => t.TransporterId)
             .Take(fetchSize)
@@ -220,7 +233,7 @@ public sealed class TransporterReader(IApplicationDbContext context, ICurrentPri
 
         RequireAccountAccess(subjectAccountId.Value);
 
-        return await VisibleToUser(userId)
+        return await (await VisibleToUserAsync(userId, subjectAccountId.Value, cancellationToken))
             .OrderBy(t => t.Name)
             .ThenBy(t => t.TransporterId)
             .Take(fetchSize)
@@ -250,12 +263,21 @@ public sealed class TransporterReader(IApplicationDbContext context, ICurrentPri
         => Context.Transporters
             .Where(t => t.AccountId == accountId);
 
-    private IQueryable<Entities.Transporter> VisibleToUser(Guid userId)
-        => Context.Users
-            .Where(u => u.UserId == userId)
-            .SelectMany(u => u.Groups)
-            .SelectMany(g => g.Transporters)
-            .Distinct();
+    // The account-wide reads narrow to the caller's own visibility unless the token is privileged.
+    private IQueryable<Entities.Transporter> Scope(Guid accountId)
+        => IsPrivileged
+            ? ByAccount(accountId)
+            : TransporterVisibility.Query(Context, Principal.UserId ?? Guid.Empty, accountId, privileged: false);
+
+    // The named user's visibility: their token decides when they are the caller, the replicated
+    // role otherwise.
+    private async Task<IQueryable<Entities.Transporter>> VisibleToUserAsync(Guid userId, Guid accountId, CancellationToken cancellationToken)
+    {
+        var privileged = Principal.UserId == userId
+            ? IsPrivileged
+            : await TransporterVisibility.IsPrivilegedAsync(Context, userId, cancellationToken);
+        return TransporterVisibility.Query(Context, userId, accountId, privileged);
+    }
 
     private static IQueryable<Entities.Transporter> ApplySearch(IQueryable<Entities.Transporter> query, string? search)
         => string.IsNullOrWhiteSpace(search)

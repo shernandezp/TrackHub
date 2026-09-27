@@ -9,7 +9,7 @@ namespace TrackHub.Telemetry.Infrastructure.TelemetryDB.Readers;
 public sealed class TransporterPositionHistoryReader(IApplicationDbContext context, ICurrentPrincipal principal)
     : AccountScopedDataAccess(context, principal), ITransporterPositionHistoryReader
 {
-    public async Task<TransporterPositionHistoryPageVm> GetAsync(Filters filters, int take, DateTimeOffset? from, DateTimeOffset? to, string? cursor, CancellationToken cancellationToken)
+    public async Task<TransporterPositionHistoryPageVm> GetAsync(Filters filters, int take, DateTimeOffset? from, DateTimeOffset? to, string? cursor, IReadOnlySet<Guid>? visibleTransporterIds, CancellationToken cancellationToken)
     {
         var pageSize = Math.Clamp(take <= 0 ? 100 : take, 1, 1000);
         var q = Context.TransporterPositionHistory.AsQueryable();
@@ -31,6 +31,12 @@ public sealed class TransporterPositionHistoryReader(IApplicationDbContext conte
         {
             var acct = Principal.AccountId.Value;
             q = q.Where(x => x.AccountId == acct);
+        }
+
+        if (visibleTransporterIds is not null)
+        {
+            var ids = visibleTransporterIds.ToArray();
+            q = q.Where(x => ids.Contains(x.TransporterId));
         }
 
         // Strict tuple comparison against the sort key, which ends on the unique id: the seek lands

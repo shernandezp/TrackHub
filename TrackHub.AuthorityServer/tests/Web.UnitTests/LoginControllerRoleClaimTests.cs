@@ -74,8 +74,10 @@ public class LoginControllerRoleClaimTests
     [TearDown]
     public void TearDown() => _controller.Dispose();
 
+    private static readonly Guid Stamp = Guid.NewGuid();
+
     private static UserVm User(Guid userId) => new(
-        userId, "admin", "hashed", "email@mail.com", DateTimeOffset.UtcNow, true, 0, null, Guid.NewGuid());
+        userId, "admin", "hashed", "email@mail.com", DateTimeOffset.UtcNow, true, 0, null, Guid.NewGuid(), Stamp);
 
     private async Task<ClaimsPrincipal> LoginAsync(Guid userId, string? role)
     {
@@ -114,5 +116,6 @@ public class LoginControllerRoleClaimTests
         Assert.That(principal.FindFirst("user_id")?.Value, Is.EqualTo(userId.ToString()));
         Assert.That(principal.FindFirst("principal_type")?.Value, Is.EqualTo("User"));
         Assert.That(principal.FindFirst("account_id")?.Value, Is.Not.Null.And.Not.Empty);
+        Assert.That(principal.FindFirst("security_stamp")?.Value, Is.EqualTo(Stamp.ToString()), "the authorize endpoint re-validates the cookie against this stamp");
     }
 }

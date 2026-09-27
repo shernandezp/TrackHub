@@ -15,61 +15,93 @@ public sealed class DeviceWriter(IApplicationDbContext context, ICurrentPrincipa
     /// row and its own SaveChangesAsync — roughly 3 000 round trips and 2 000 audit rows for a
     /// 1 000-device operator, with no rollback if it failed half way.
     /// </summary>
-    public async Task<IReadOnlyList<DeviceVm>> UpsertSynchronizedDevicesAsync(
-        Guid operatorId, IReadOnlyCollection<DeviceDto> devices, CancellationToken cancellationToken)
+    // One save for the whole catalog: upserts, revivals, and retirements of devices the provider no
+    // longer lists (their active assignments end here, so the transporter keeps its id and history).
+    public async Task<DeviceReconciliationVm> ReconcileSynchronizedDevicesAsync(
+        Guid operatorId, IReadOnlyCollection<DeviceDto> devices, bool resetDeviceCatalog, CancellationToken cancellationToken)
     {
-        if (devices.Count == 0)
-        {
-            return [];
-        }
-
-        var accountId = RequireAccountWriteAccess(devices.First().AccountId);
-        var operatorAccountId = await Context.Operators
+        var accountId = await Context.Operators
             .Where(o => o.OperatorId == operatorId)
             .Select(o => (Guid?)o.AccountId)
             .FirstOrDefaultAsync(cancellationToken)
             ?? throw new NotFoundException(nameof(Entities.Operator), operatorId.ToString());
+        RequireAccountWriteAccess(accountId);
 
-        if (operatorAccountId != accountId)
+        if (devices.Any(d => d.AccountId != accountId || d.OperatorId != operatorId))
         {
             throw new ForbiddenAccessException();
         }
 
-        var identifiers = devices.Select(d => d.Identifier).Distinct().ToList();
-        var existingByIdentifier = await Context.Devices
+        var existing = await Context.Devices
             .AsTracking()
-            .Where(d => d.AccountId == accountId && d.OperatorId == operatorId && identifiers.Contains(d.Identifier))
-            .ToDictionaryAsync(d => d.Identifier, cancellationToken);
+            .Include(d => d.Assignments.Where(a => a.Status == (int)AssignmentStatus.Active))
+            .Where(d => d.AccountId == accountId && d.OperatorId == operatorId)
+            .ToListAsync(cancellationToken);
+        var existingByIdentifier = existing.ToDictionary(d => d.Identifier);
+
+        if (devices.Count == 0 && existing.Exists(d => d.DetectedStatus != (int)DetectedStatus.Removed))
+        {
+            throw new ConflictException("The provider returned an empty device catalog for an operator that has synchronized devices; nothing was changed.");
+        }
 
         var now = DateTimeOffset.UtcNow;
         var results = new List<DeviceVm>(devices.Count);
-        var createdCount = 0;
+        var added = new List<DeviceVm>();
+        var incoming = new HashSet<int>();
 
         foreach (var deviceDto in devices)
         {
+            incoming.Add(deviceDto.Identifier);
             Entities.Device device;
-            if (existingByIdentifier.TryGetValue(deviceDto.Identifier, out var existing))
+            if (existingByIdentifier.TryGetValue(deviceDto.Identifier, out var known))
             {
-                Apply(existing, deviceDto, now);
-                device = existing;
+                var revived = known.DetectedStatus == (int)DetectedStatus.Removed;
+                if (revived || (resetDeviceCatalog && known.DetectedStatus == (int)DetectedStatus.Ignored))
+                {
+                    known.DetectedStatus = (int)DetectedStatus.New;
+                    known.RemovedAt = null;
+                    known.IgnoredAt = null;
+                }
+
+                Apply(known, deviceDto, now);
+                device = known;
+                if (revived)
+                {
+                    added.Add(ToVm(device));
+                }
             }
             else
             {
                 device = NewSynchronizedDevice(deviceDto, accountId, now);
                 await Context.Devices.AddAsync(device, cancellationToken);
                 existingByIdentifier[deviceDto.Identifier] = device;
-                createdCount++;
+                added.Add(ToVm(device));
             }
 
             results.Add(ToVm(device));
         }
 
+        var retired = new List<DeviceVm>();
+        foreach (var missing in existing.Where(d => !incoming.Contains(d.Identifier) && d.DetectedStatus != (int)DetectedStatus.Removed))
+        {
+            missing.DetectedStatus = (int)DetectedStatus.Removed;
+            missing.RemovedAt = now;
+            foreach (var assignment in missing.Assignments.Where(a => a.Status == (int)AssignmentStatus.Active))
+            {
+                assignment.Status = (int)AssignmentStatus.Ended;
+                assignment.EffectiveTo = now;
+                assignment.AssignmentReason = "Removed from provider catalog";
+            }
+
+            retired.Add(ToVm(missing));
+        }
+
         AddAuditEvent(accountId, "SynchronizedDevice.Synced", "SynchronizedDevice", operatorId.ToString(), null,
-            $"{{\"devices\":{devices.Count},\"created\":{createdCount}}}");
+            $"{{\"devices\":{devices.Count},\"added\":{added.Count},\"retired\":{retired.Count},\"reset\":{resetDeviceCatalog.ToString().ToLowerInvariant()}}}");
 
         await Context.SaveChangesAsync(cancellationToken);
 
-        return results;
+        return new DeviceReconciliationVm(results, added, retired);
     }
 
     private static Entities.Device NewSynchronizedDevice(DeviceDto deviceDto, Guid accountId, DateTimeOffset now)
@@ -273,52 +305,5 @@ public sealed class DeviceWriter(IApplicationDbContext context, ICurrentPrincipa
         AddAuditEvent(device.AccountId, "SynchronizedDevice.Deleted",
             "SynchronizedDevice", deviceId.ToString(), null, null);
         await Context.SaveChangesAsync(cancellationToken);
-    }
-
-    public async Task<int> DeleteDevicesByOperatorAsync(Guid operatorId, CancellationToken cancellationToken)
-    {
-        var devices = await Context.Devices
-            .Where(d => d.OperatorId == operatorId
-                && (CanAccessAllAccounts || d.AccountId == Principal.AccountId))
-            .ToListAsync(cancellationToken);
-
-        if (devices.Count == 0) return 0;
-
-        var deviceIds = devices.Select(d => d.DeviceId).ToHashSet();
-        var transporterIdsWithWipedDevices = await Context.TransporterDeviceAssignments
-            .Where(a => deviceIds.Contains(a.DeviceId))
-            .Select(a => a.TransporterId)
-            .Distinct()
-            .ToListAsync(cancellationToken);
-
-        var transportersToDelete = await Context.Transporters
-            .Where(t => transporterIdsWithWipedDevices.Contains(t.TransporterId)
-                && !t.Assignments.Any(a => !deviceIds.Contains(a.DeviceId)))
-            .ToListAsync(cancellationToken);
-        var transporterIdsToDelete = transportersToDelete.Select(t => t.TransporterId).ToHashSet();
-
-        if (transporterIdsToDelete.Count > 0)
-        {
-            var positions = await Context.TransporterPositions
-                .AsTracking()
-                .Where(p => transporterIdsToDelete.Contains(p.TransporterId))
-                .ToListAsync(cancellationToken);
-            Context.TransporterPositions.RemoveRange(positions);
-        }
-
-        foreach (var d in devices)
-        {
-            Context.Devices.Remove(d);
-            AddAuditEvent(d.AccountId, "SynchronizedDevice.Wiped",
-                "SynchronizedDevice", d.DeviceId.ToString(), null, null);
-        }
-        foreach (var t in transportersToDelete)
-        {
-            Context.Transporters.Remove(t);
-            AddAuditEvent(t.AccountId, "Transporter.WipedWithSynchronizedDevices",
-                "Transporter", t.TransporterId.ToString(), null, $"{{\"operatorId\":\"{operatorId}\"}}");
-        }
-        await Context.SaveChangesAsync(cancellationToken);
-        return devices.Count;
     }
 }

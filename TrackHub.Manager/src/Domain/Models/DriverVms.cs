@@ -9,3 +9,6 @@ public readonly record struct DriverVm(Guid DriverId, Guid AccountId, string Nam
 /// default-transporter entry — a real assignment row always populates them.
 /// </summary>
 public readonly record struct DriverAssignmentVm(Guid DriverId, Guid AccountId, string ResourceType, string ResourceId, bool Active, DateTimeOffset? StartsAt = null, DateTimeOffset? EndsAt = null, string? AssignmentType = null);
+
+/// <summary>Picker projection: the two fields a dispatcher needs to choose or name a driver, nothing personal.</summary>
+public readonly record struct DriverLookupVm(Guid DriverId, string Name, bool Active);

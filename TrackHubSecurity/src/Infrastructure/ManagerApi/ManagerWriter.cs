@@ -8,23 +8,24 @@ using Common.Domain.Constants;
 
 namespace TrackHub.Security.Infrastructure.ManagerApi;
 
-// This class represents the ManagerWriter responsible for writing operations related to the manager entity.
+// The user replica is dispatched from the outbox loop, outside any HTTP request, so the
+// calls run under security_client rather than a propagated caller token (which does not exist there).
 public class ManagerWriter(IGraphQLClientFactory graphQLClient)
-    : GraphQLService(graphQLClient.CreateClient(Clients.Manager)), IManagerWriter
+    : GraphQLService(graphQLClient.CreateClient(Clients.Manager, asService: true)), IManagerWriter
 {
     // Single source of truth for the mutations this writer sends; the
     // ServiceContracts tests validate these exact strings against the Manager schema.
     internal const string CreateUserMutation = @"
-                    mutation($accountId: UUID!, $active: Boolean!, $userId: UUID!, $username: String!) {
-                      createUser(command: { user: { accountId: $accountId, active: $active, userId: $userId, username: $username } }) {
+                    mutation($accountId: UUID!, $active: Boolean!, $userId: UUID!, $username: String!, $role: String) {
+                      createUser(command: { user: { accountId: $accountId, active: $active, userId: $userId, username: $username, role: $role } }) {
                         userId
                       }
                     }";
 
     internal const string UpdateUserMutation = @"
-                    mutation($id:UUID!, $active: Boolean!, $userId: UUID!, $username: String!) {
+                    mutation($id:UUID!, $active: Boolean!, $userId: UUID!, $username: String!, $role: String) {
                       updateUser(id: $id,
-                            command: { user: { active: $active, userId: $userId, username: $username } })
+                            command: { user: { active: $active, userId: $userId, username: $username, role: $role } })
                     }";
 
     internal const string DeleteUserMutation = @"
@@ -45,7 +46,8 @@ public class ManagerWriter(IGraphQLClientFactory graphQLClient)
                 // replica invisible to the vw_users views (WHERE active) until an update ran.
                 active = user.Active,
                 user.UserId,
-                user.Username
+                user.Username,
+                user.Role
             }
         };
         var result = await MutationAsync<UserShrankVm>(request, token);
@@ -63,7 +65,8 @@ public class ManagerWriter(IGraphQLClientFactory graphQLClient)
                 id,
                 user.Active,
                 user.UserId,
-                user.Username
+                user.Username,
+                user.Role
             }
         };
         var result = await MutationAsync<bool>(request, token);

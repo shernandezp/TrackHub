@@ -1,4 +1,6 @@
 \set ON_ERROR_STOP on
+-- Month bounds are UTC midnights whatever zone this session has.
+SET timezone TO 'UTC';
 
 DO $$
 DECLARE

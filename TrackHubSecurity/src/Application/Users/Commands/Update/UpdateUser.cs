@@ -24,7 +24,7 @@ namespace TrackHub.Security.Application.Users.Commands.Update;
 // owning account before mutating it.
 [AccountScopeEnforcedInHandler]
 public readonly record struct UpdateUserCommand(UpdateUserDto User) : IRequest;
-public class UpdateUserCommandHandler(IUserWriter writer, IPublisher publisher, ICurrentPrincipal principal) : IRequestHandler<UpdateUserCommand>
+public class UpdateUserCommandHandler(IUserWriter writer, IUserReader reader, IPublisher publisher, ICurrentPrincipal principal) : IRequestHandler<UpdateUserCommand>
 {
 
     /// <summary>
@@ -39,7 +39,8 @@ public class UpdateUserCommandHandler(IUserWriter writer, IPublisher publisher, 
         await writer.UpdateUserAsync(request.User, cancellationToken);
 
         // Create a shrank version of the updated user
-        var user = new UpdateUserShrankDto(request.User.UserId, request.User.Username, request.User.Active);
+        var role = UserUpdated.EffectiveRole((await reader.GetUserAsync(request.User.UserId, cancellationToken)).Roles);
+        var user = new UpdateUserShrankDto(request.User.UserId, request.User.Username, request.User.Active, role);
 
         // Publish a notification for the user update
         await publisher.Publish(new UserUpdated.Notification(request.User.UserId, user), cancellationToken);

@@ -27,6 +27,7 @@ public sealed class GroupConfiguration : IEntityTypeConfiguration<Group>
         builder.HasKey(x => x.GroupId);
         builder.Property(x => x.GroupId).HasColumnName("id");
         builder.Property(x => x.AccountId).HasColumnName("accountid");
+        builder.Property(x => x.Active).HasColumnName("active");
         builder.HasMany(e => e.Transporters).WithMany().UsingEntity<TransporterGroup>();
     }
 }

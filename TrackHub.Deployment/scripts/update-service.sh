@@ -107,15 +107,6 @@ update_service() {
             || print_info "Nothing to preserve — first deployment of $service"
     fi
 
-    # Stop the service
-    print_info "Stopping $service..."
-    docker compose -f "$compose_file" stop "$service" || true
-    
-    # Remove the container
-    print_info "Removing old container..."
-    docker compose -f "$compose_file" rm -f "$service" || true
-    
-    # Rebuild the image
     if [ "$NO_CACHE" = true ]; then
         print_info "Rebuilding $service image without Docker layer cache (--no-cache)..."
         docker compose -f "$compose_file" build --no-cache "$service"
@@ -123,9 +114,11 @@ update_service() {
         print_info "Rebuilding $service image (layer cache detects source changes)..."
         docker compose -f "$compose_file" build "$service"
     fi
-    
-    # Start the service
-    print_info "Starting $service..."
+
+    # Replace the container. nginx resolves upstream names at runtime (resolver +
+    # "server ... resolve" in nginx.conf), so the new container's address is picked up
+    # without recreating or reloading the proxy.
+    print_info "Recreating $service..."
     docker compose -f "$compose_file" up -d --force-recreate --no-build --no-deps "$service"
     
     # Wait for health check

@@ -24,4 +24,12 @@ public sealed record DriverCredentialAuthenticationVm(
     DateTimeOffset? LockedUntil,
     DateTimeOffset? VerifiedAt,
     bool Active,
-    bool ResetRequired);
+    bool ResetRequired,
+    Guid SecurityStamp);
+
+/// <summary>The state a live driver session is re-validated against; the stamp changes whenever the credential is activated, locked, reset or revoked.</summary>
+public sealed record DriverCredentialSessionVm(
+    bool Active,
+    DateTimeOffset? LockedUntil,
+    bool ResetRequired,
+    Guid SecurityStamp);

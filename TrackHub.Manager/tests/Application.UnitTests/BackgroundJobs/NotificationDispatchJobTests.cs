@@ -93,33 +93,11 @@ public class NotificationDispatchJobTests
     }
 
     [Test]
-    public void Entitlements_NotificationsDisabled_HoldsEveryChannel()
-    {
-        var entitlements = new DispatchEntitlements(None, All, All);
-
-        Assert.That(entitlements.Allows(AccountId, NotificationChannels.InApp), Is.False);
-    }
-
-    [Test]
-    public void Entitlements_BillableChannelsNeedTheirOwnKey()
-    {
-        var entitlements = new DispatchEntitlements(All, None, All);
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(entitlements.Allows(AccountId, NotificationChannels.Email), Is.False);
-            Assert.That(entitlements.Allows(AccountId, NotificationChannels.WhatsApp), Is.True);
-            Assert.That(entitlements.Allows(AccountId, NotificationChannels.InApp), Is.True);
-            Assert.That(entitlements.Allows(AccountId, NotificationChannels.Webhook), Is.True);
-        });
-    }
-
-    [Test]
     public async Task TheBackoffLadderIsPassedAsOneCutoffPerAttempt()
     {
         var store = new Mock<INotificationDispatchStore>();
         store.Setup(s => s.GetStrandedSendingAsync(It.IsAny<DateTimeOffset>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
-        store.Setup(s => s.GetEligiblePendingAsync(It.IsAny<IReadOnlyList<DateTimeOffset>>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        store.Setup(s => s.GetEligiblePendingAsync(It.IsAny<IReadOnlyList<DateTimeOffset>>(), It.IsAny<DateTimeOffset>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
         await CreateJob(store).RunOnceAsync(Now, CancellationToken.None);
@@ -128,7 +106,7 @@ public class NotificationDispatchJobTests
             It.Is<IReadOnlyList<DateTimeOffset>>(c => c.Count == 4
                 && c[0] == Now.AddMinutes(-1) && c[1] == Now.AddMinutes(-5)
                 && c[2] == Now.AddMinutes(-15) && c[3] == Now.AddMinutes(-60)),
-            NotificationDispatchJob.BatchSize, It.IsAny<CancellationToken>()), Times.Once);
+            It.IsAny<DateTimeOffset>(), NotificationDispatchJob.BatchSize, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
@@ -138,7 +116,7 @@ public class NotificationDispatchJobTests
         var store = new Mock<INotificationDispatchStore>();
         store.Setup(s => s.GetStrandedSendingAsync(It.IsAny<DateTimeOffset>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([stranded]);
-        store.Setup(s => s.GetEligiblePendingAsync(It.IsAny<IReadOnlyList<DateTimeOffset>>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        store.Setup(s => s.GetEligiblePendingAsync(It.IsAny<IReadOnlyList<DateTimeOffset>>(), It.IsAny<DateTimeOffset>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
         await CreateJob(store).RunOnceAsync(Now, CancellationToken.None);
@@ -151,24 +129,6 @@ public class NotificationDispatchJobTests
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    [Test]
-    public async Task HeldDeliveriesAreNeverMarkedSending()
-    {
-        var store = new Mock<INotificationDispatchStore>();
-        store.Setup(s => s.GetStrandedSendingAsync(It.IsAny<DateTimeOffset>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
-        store.Setup(s => s.GetEligiblePendingAsync(It.IsAny<IReadOnlyList<DateTimeOffset>>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([Delivery()]);
-        var features = new Mock<IAccountFeatureGate>();
-        features.Setup(f => f.EnabledAmongAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<string>(),
-            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
-
-        await CreateJob(store, features).RunOnceAsync(Now, CancellationToken.None);
-
-        store.Verify(s => s.MarkSendingAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
-        store.Verify(s => s.RecordJobRunAsync(It.IsAny<string>(), It.IsAny<string>(),
-            It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
-
     // One row whose outcome cannot be written must not abandon the rest of the batch: it stays in
     // Sending and the next cycle's reclaim puts it back on the ladder.
     [Test]
@@ -178,7 +138,7 @@ public class NotificationDispatchJobTests
         var healthy = Delivery();
         var store = new Mock<INotificationDispatchStore>();
         store.Setup(s => s.GetStrandedSendingAsync(It.IsAny<DateTimeOffset>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
-        store.Setup(s => s.GetEligiblePendingAsync(It.IsAny<IReadOnlyList<DateTimeOffset>>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        store.Setup(s => s.GetEligiblePendingAsync(It.IsAny<IReadOnlyList<DateTimeOffset>>(), It.IsAny<DateTimeOffset>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([poison, healthy]);
         store.Setup(s => s.ApplyOutcomeAsync(
                 It.Is<DeliveryOutcome>(o => o.NotificationDeliveryId == poison.NotificationDeliveryId),
@@ -201,7 +161,7 @@ public class NotificationDispatchJobTests
         var delivery = Delivery(attempts: NotificationDispatchJob.MaxAttempts - 1);
         var store = new Mock<INotificationDispatchStore>();
         store.Setup(s => s.GetStrandedSendingAsync(It.IsAny<DateTimeOffset>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
-        store.Setup(s => s.GetEligiblePendingAsync(It.IsAny<IReadOnlyList<DateTimeOffset>>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        store.Setup(s => s.GetEligiblePendingAsync(It.IsAny<IReadOnlyList<DateTimeOffset>>(), It.IsAny<DateTimeOffset>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([delivery]);
         store.Setup(s => s.MarkSendingAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new TimeoutException("db timeout"));
@@ -214,17 +174,11 @@ public class NotificationDispatchJobTests
     }
 
     private static NotificationDispatchJob CreateJob(
-        Mock<INotificationDispatchStore> store, Mock<IAccountFeatureGate>? features = null)
+        Mock<INotificationDispatchStore> store)
     {
-        if (features is null)
-        {
-            features = new Mock<IAccountFeatureGate>();
-            features.Setup(f => f.EnabledAmongAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<string>(),
-                It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>())).ReturnsAsync([AccountId]);
-        }
 
         return new NotificationDispatchJob(
-            store.Object, features.Object, Mock.Of<INotificationRenderer>(), [], Mock.Of<IPublisher>(),
+            store.Object, Mock.Of<INotificationRenderer>(), [], Mock.Of<IPublisher>(), Mock.Of<IAlertRecorder>(),
             JobTestHelpers.Configuration(), Mock.Of<ILogger<NotificationDispatchJob>>());
     }
 }

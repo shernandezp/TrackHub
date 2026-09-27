@@ -396,6 +396,13 @@ public sealed class TripDetectionService(
             state.OutsideSince.Remove(stop.TripStopId);
             count++;
             await EmitStopAlertAsync(state, accountId, stop, TripEventTypes.TripStopArrived, position, cancellationToken);
+
+            if (stop.DelayAlertedAt is not null)
+            {
+                await ResolveAlertAsync(TripEventTypes.TripDelayed, TripAlertSeverities.Warning, $"trip-delayed:{stop.TripStopId:N}",
+                    new TripAlertDto(accountId, state.TripId, stop.TripStopId, state.Code, state.TransporterId, state.DriverId,
+                        stop.Name, position.DeviceDateTime, null, stop.PlannedArrivalTo, null, position.Latitude, position.Longitude), cancellationToken);
+            }
         }
 
         return count;
@@ -495,9 +502,17 @@ public sealed class TripDetectionService(
             // with a new episode start and therefore a new idempotency key (acceptance 14).
             if (state.ConsecutiveOutside != 0 || state.DeviationOpenedAt is not null)
             {
+                var closedEpisode = state.DeviationOpenedAt;
                 state.ConsecutiveOutside = 0;
                 state.DeviationOpenedAt = null;
                 unitOfWork.SetDeviationState(state.TripId, null, 0);
+
+                if (closedEpisode is { } openedAt)
+                {
+                    await ResolveAlertAsync(TripEventTypes.TripRouteDeviation, TripAlertSeverities.Warning, DeviationKey(state.TripId, openedAt),
+                        new TripAlertDto(accountId, state.TripId, null, state.Code, state.TransporterId, state.DriverId, null,
+                            position.DeviceDateTime, null, null, null, position.Latitude, position.Longitude), cancellationToken);
+                }
             }
 
             return 0;
@@ -521,7 +536,7 @@ public sealed class TripDetectionService(
             await alertEmitter.EmitAsync(
                 TripEventTypes.TripRouteDeviation,
                 TripAlertSeverities.Warning,
-                $"trip-deviation:{state.TripId:N}",
+                DeviationKey(state.TripId, episodeStart),
                 new TripAlertDto(accountId, state.TripId, null, state.Code, state.TransporterId, state.DriverId, null,
                     position.DeviceDateTime, null, null, null, position.Latitude, position.Longitude),
                 cancellationToken);
@@ -545,7 +560,7 @@ public sealed class TripDetectionService(
         await tripEventWriter.AppendAsync(
             accountId, state.TripId, null, TripEventTypes.TripRouteDeviation, position.DeviceDateTime,
             TripEventSources.Detection, null,
-            $"trip-deviation:{state.TripId:N}:{episodeStart.UtcTicks}", cancellationToken);
+            DeviationKey(state.TripId, episodeStart), cancellationToken);
 
         return 1;
     }
@@ -584,6 +599,21 @@ public sealed class TripDetectionService(
         {
             // The stop closure it followed is already recorded; the sweep retries the completion.
             logger.LogError(ex, "Auto-completion failed for trip {TripId}; the sweep will retry it", state.TripId);
+        }
+    }
+
+    private static string DeviationKey(Guid tripId, DateTimeOffset episodeStart) => $"trip-deviation:{tripId:N}:{episodeStart.UtcTicks}";
+
+    // Best-effort like every emission: a recovery that fails to reach Manager leaves the alert for a person to close.
+    private async Task ResolveAlertAsync(string eventType, string severity, string deduplicationKey, TripAlertDto alert, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await alertEmitter.ResolveAsync(eventType, severity, deduplicationKey, alert, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to resolve {EventType} alert {DeduplicationKey}", eventType, deduplicationKey);
         }
     }
 

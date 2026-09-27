@@ -162,6 +162,41 @@ public sealed class GeofenceEventReader(IApplicationDbContext context) : IGeofen
         return await query.Take(MaxCandidatesPerCycle).ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyCollection<PendingVisitAlertVm>> GetPendingVisitAlertsAsync(CancellationToken cancellationToken)
+    {
+        const int MaxCandidatesPerCycle = 1000;
+        var now = DateTimeOffset.UtcNow;
+        var query = from evt in context.GeofenceEvents
+                    join g in context.Geofences on evt.GeofenceId equals g.GeofenceId
+                    where evt.EntryAlertedAt == null || (evt.DepartureTimestamp != null && evt.ExitAlertedAt == null)
+                    where g.Active
+                    where context.Accounts.Any(a => a.AccountId == evt.AccountId
+                        && (a.Status == (short)AccountStatus.Active || a.Status == (short)AccountStatus.Trial))
+                    where context.AccountFeatures.Any(f => f.AccountId == evt.AccountId
+                        && f.FeatureKey == FeatureKeys.Geofencing
+                        && f.Enabled
+                        && (f.EffectiveFrom == null || f.EffectiveFrom <= now)
+                        && (f.EffectiveTo == null || f.EffectiveTo >= now))
+                    orderby evt.EventDateTime
+                    select new PendingVisitAlertVm(
+                        evt.GeofenceEventId,
+                        evt.AccountId,
+                        evt.TransporterId,
+                        evt.GeofenceId,
+                        g.Name,
+                        g.Type,
+                        evt.EventDateTime,
+                        evt.DepartureTimestamp,
+                        evt.Latitude,
+                        evt.Longitude,
+                        evt.EntryAlertedAt == null,
+                        g.AlertOnEntry,
+                        evt.DepartureTimestamp != null && evt.ExitAlertedAt == null,
+                        g.AlertOnExit);
+
+        return await query.Take(MaxCandidatesPerCycle).ToListAsync(cancellationToken);
+    }
+
     private static string FormatTotalTime(DateTimeOffset dateTimeIn, DateTimeOffset? dateTimeOut)
     {
         if (dateTimeOut == null) return string.Empty;

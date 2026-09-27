@@ -230,3 +230,13 @@ export const EndDriverAssignmentDocument = graphql(`
     )
   }
 `);
+
+export const GetDriverLookupDocument = graphql(`
+  query GetDriverLookup($search: String, $driverIds: [UUID!]) {
+    driverLookup(query: { search: $search, driverIds: $driverIds }) {
+      driverId
+      name
+      active
+    }
+  }
+`);

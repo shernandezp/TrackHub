@@ -34,7 +34,7 @@ public interface INotificationDispatchStore
     /// caller owns, one cutoff per attempt count 1..n; the last entry covers every further attempt.
     /// </summary>
     Task<IReadOnlyCollection<DispatchDeliveryVm>> GetEligiblePendingAsync(
-        IReadOnlyList<DateTimeOffset> attemptCutoffs, int batchSize, CancellationToken cancellationToken);
+        IReadOnlyList<DateTimeOffset> attemptCutoffs, DateTimeOffset now, int batchSize, CancellationToken cancellationToken);
 
     Task MarkSendingAsync(Guid notificationDeliveryId, CancellationToken cancellationToken);
 

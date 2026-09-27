@@ -8,6 +8,7 @@ import { CrudFlow } from '../pages/crud';
 import { ConfirmDialog, FormDialog } from '../pages/dialogs';
 import type { ApiClient } from '../fixtures/api';
 import type { CleanupRegistry } from '../fixtures/data';
+import type { Translator } from '../fixtures/i18n';
 import type { Locator, Page } from '@playwright/test';
 
 /**
@@ -33,6 +34,17 @@ async function selectFirstMatching(
 ): Promise<void> {
   await scope.locator(`#${id}`).click();
   await page.getByRole('option', { name: optionLabel, exact: true }).click();
+}
+
+/** Opens the driver's detail dialog, which lands on the credentials (app access) panel. */
+async function openDriverAccess(page: Page, t: Translator, driverName: string): Promise<Locator> {
+  const drivers = new CrudFlow(page, 'drivers', t).section;
+  await drivers.expand();
+  const row = await drivers.findRow(driverName);
+  await row.getByRole('button', { name: t('driver.manage') }).click();
+  const dialog = page.getByRole('dialog').filter({ hasText: driverName });
+  await expect(dialog).toBeVisible();
+  return dialog;
 }
 
 test.describe('account management — fleet & tracking', () => {
@@ -262,28 +274,31 @@ test.describe('account management — fleet & tracking', () => {
       .toContain(t('generic.no'));
   });
 
-  test('the driver credentials, qualifications and assignment sections render', async ({
+  test('the driver access dialog, qualifications and assignment sections render', async ({
     page,
     shell,
     t,
+    api,
+    cleanup,
   }) => {
+    const driver = await seedDriver(api, cleanup);
     await shell.open('manageAdmin');
 
-    for (const key of [
-      'driver-credentials',
-      'driver-qualifications',
-      'driver-assignments',
-      'qualification-expirations',
-    ]) {
+    for (const key of ['driver-qualifications', 'driver-assignments', 'qualification-expirations']) {
       const section = new CrudFlow(page, key, t).section;
       await section.expand();
       await expect(section.root).toBeVisible();
-      // The three driver-scoped sections ask for a driver first, and say so
+      // The two driver-scoped sections ask for a driver first, and say so
       // rather than rendering an empty table that means nothing.
       if (key !== 'qualification-expirations') {
         await expect(section.root.getByText(t('workforce.selectDriverHint'))).toBeVisible();
       }
     }
+
+    // Credentials live in the per-driver detail dialog: the table keeps one action per driver.
+    const dialog = await openDriverAccess(page, t, driver);
+    await expect(dialog.getByText(t('workforce.credentials.title'))).toBeVisible();
+    await expect(dialog.getByText(t('workforce.credentials.empty'))).toBeVisible({ timeout: 45_000 });
   });
 
   test('a manager issues a driver credential and walks its lifecycle', async ({
@@ -297,19 +312,10 @@ test.describe('account management — fleet & tracking', () => {
     const login = `e2e${unique().replace(/-/g, '')}`;
 
     await shell.open('manageAdmin');
-    const section = new CrudFlow(page, 'driver-credentials', t).section;
-    await section.expand();
+    const dialog = await openDriverAccess(page, t, driver);
+    await expect(dialog.getByText(t('workforce.credentials.empty'))).toBeVisible({ timeout: 45_000 });
 
-    // Nothing can be issued until a driver is chosen.
-    await expect(
-      section.root.getByRole('button', { name: t('workforce.credentials.create') })
-    ).toBeDisabled();
-    await selectFirstMatching(page, section.root, 'credentialDriverId', driver);
-    await expect(section.root.getByText(t('workforce.credentials.empty'))).toBeVisible({
-      timeout: 45_000,
-    });
-
-    await section.root.getByRole('button', { name: t('workforce.credentials.create') }).click();
+    await dialog.getByRole('button', { name: t('workforce.credentials.create') }).click();
     const form = new FormDialog(page, t);
     await form.waitOpen();
     await form.save();
@@ -321,47 +327,37 @@ test.describe('account management — fleet & tracking', () => {
 
     // A credential that has never been used reads "Pending Activation" — saying
     // "Revoked" for one that was simply never activated was a lie (spec 09 AC7).
-    const row = async () => section.findRow(login);
-    await expect(await row()).toContainText(t('workforce.credentials.statusPending'), {
-      timeout: 45_000,
-    });
+    const row = () => dialog.locator('[data-testid^="row-"]').filter({ hasText: login }).first();
+    await expect(row()).toContainText(t('workforce.credentials.statusPending'), { timeout: 45_000 });
 
-    await (await row()).getByRole('button', { name: t('workforce.credentials.activate') }).click();
+    await row().getByRole('button', { name: t('workforce.credentials.activate') }).click();
     await form.waitOpen();
     await form.field('credentialPassword').fill('E2eDriver9!');
     await form.saveAndClose();
-    await expect(await row()).toContainText(t('workforce.credentials.statusActive'), {
-      timeout: 45_000,
-    });
+    await expect(row()).toContainText(t('workforce.credentials.statusActive'), { timeout: 45_000 });
 
     // Locking is a dated block, not a deletion.
-    await (await row()).getByRole('button', { name: t('workforce.credentials.lock') }).click();
+    await row().getByRole('button', { name: t('workforce.credentials.lock') }).click();
     await form.waitOpen();
     await form
       .field('credentialLockedUntil')
       .fill(new Date(Date.now() + 60 * 60 * 1000).toISOString().slice(0, 16));
     await form.saveAndClose();
-    await expect(await row()).toContainText(t('workforce.credentials.statusLocked'), {
-      timeout: 45_000,
-    });
+    await expect(row()).toContainText(t('workforce.credentials.statusLocked'), { timeout: 45_000 });
 
     // Activate is offered from every state, so no state is a dead end.
-    await (await row()).getByRole('button', { name: t('workforce.credentials.activate') }).click();
+    await row().getByRole('button', { name: t('workforce.credentials.activate') }).click();
     await form.waitOpen();
     await form.field('credentialPassword').fill('E2eDriver9!');
     await form.saveAndClose();
-    await expect(await row()).toContainText(t('workforce.credentials.statusActive'), {
-      timeout: 45_000,
-    });
+    await expect(row()).toContainText(t('workforce.credentials.statusActive'), { timeout: 45_000 });
 
     // Revoking keeps the record and stops the sign-in.
-    await (await row()).getByRole('button', { name: t('workforce.credentials.revoke') }).click();
+    await row().getByRole('button', { name: t('workforce.credentials.revoke') }).click();
     const confirm = new ConfirmDialog(page, t);
     await expect(confirm.root.getByText(t('workforce.credentials.revokeConfirm'))).toBeVisible();
     await confirm.confirm();
-    await expect(await row()).toContainText(t('workforce.credentials.statusRevoked'), {
-      timeout: 45_000,
-    });
+    await expect(row()).toContainText(t('workforce.credentials.statusRevoked'), { timeout: 45_000 });
   });
 
   test('a manager records a qualification with an expiry, edits it and deletes it', async ({

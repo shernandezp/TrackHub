@@ -35,4 +35,5 @@ public sealed class DriverCredential(
     public DateTimeOffset? LastLoginAt { get; set; }
     public bool Active { get; set; } = active;
     public bool ResetRequired { get; set; }
+    public Guid SecurityStamp { get; set; } = Guid.NewGuid();
 }

@@ -120,6 +120,9 @@ public class RecordOperatorHealthCommandHandler(
             else if (!string.Equals(previousStatus, "HEALTHY", StringComparison.OrdinalIgnoreCase)
                      && !string.IsNullOrEmpty(previousStatus))
             {
+                // Recovery closes the outage alert and records itself once, already resolved: an
+                // informational event nobody has to act on.
+                await alertWriter.ResolveAsync(request.Operator.AccountId, "Operator", request.Operator.OperatorId.ToString(), ["GpsOperatorOffline"], cancellationToken);
                 await alertWriter.RecordAsync(new AlertEventDto(
                     AccountId: request.Operator.AccountId,
                     EventType: "GpsOperatorRecovered",
@@ -127,9 +130,9 @@ public class RecordOperatorHealthCommandHandler(
                     SourceModule: "TrackHub.Router.SyncWorker",
                     ResourceType: "Operator",
                     ResourceId: request.Operator.OperatorId.ToString(),
-                    Status: "Open",
+                    Status: "Resolved",
                     PayloadJson: BuildAlertPayload(null, "Operator connectivity restored"),
-                    DeduplicationKey: $"operator-recovered:{request.Operator.OperatorId}:{DateTimeOffset.UtcNow:yyyyMMddHHmm}"), cancellationToken);
+                    DeduplicationKey: $"operator-recovered:{request.Operator.OperatorId}:{startedAt.UtcTicks}"), cancellationToken);
             }
         }
         catch (Exception ex)

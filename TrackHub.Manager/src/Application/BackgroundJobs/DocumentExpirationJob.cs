@@ -15,19 +15,20 @@
 
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using TrackHub.Manager.Application.AlertEvents;
 using TrackHub.Manager.Domain.Constants;
 
 namespace TrackHub.Manager.Application.BackgroundJobs;
 
 /// <summary>
-/// Raises exactly one DocumentExpiring per (document, threshold) across the 30/15/7-day bands and a
+/// Raises exactly one DocumentExpiring per (document, expiry, threshold) across the 30/15/7-day bands and a
 /// DocumentExpired past due, then transitions the document. Skips accounts without the `documents`
 /// feature — this is a billing surface, unlike the scan job.
 /// </summary>
 public sealed class DocumentExpirationJob(
     IAccountFeatureGate features,
     IDocumentExpirationStore store,
-    IAlertRuleEvaluator evaluator,
+    IAlertRecorder recorder,
     ILogger<DocumentExpirationJob> logger) : IScheduledJob
 {
     public static TimeSpan Interval => TimeSpan.FromHours(12);
@@ -101,15 +102,12 @@ public sealed class DocumentExpirationJob(
         return crossed.Count == 0 ? null : crossed.Min().ToString();
     }
 
-    // The idempotency marker is written LAST, after the fan-out and the Active -> Expired transition
-    // have both succeeded. Writing it first burned the key before the work was known to have happened,
-    // and the key carries no date, so a throw in between stranded the document forever. The alert event
-    // is deduplicated and the evaluator suppresses a repeat delivery for one it already fanned out, so
-    // a retry after a partial failure resumes rather than duplicating.
+    // The idempotency marker is written LAST, after the alert and the Active -> Expired transition have
+    // both succeeded; a retry after a partial failure repeats an alert the recorder folds.
     private async Task<bool> TryRaiseAsync(
         ExpiringDocumentVm document, string threshold, DateTimeOffset now, CancellationToken cancellationToken)
     {
-        var idempotencyKey = $"{document.DocumentId:N}:{threshold}";
+        var idempotencyKey = $"{document.DocumentId:N}:{document.ExpiresAt.UtcTicks}:{threshold}";
         if (await store.JobRunSucceededAsync(idempotencyKey, cancellationToken))
         {
             return false;
@@ -118,7 +116,7 @@ public sealed class DocumentExpirationJob(
         var isExpired = threshold == ExpiredThreshold;
         var eventType = isExpired ? AlertEventTypes.DocumentExpired : AlertEventTypes.DocumentExpiring;
 
-        var alertEvent = await store.RecordDedupedAlertAsync(new AlertEventDto(
+        await recorder.RecordAsync(new AlertEventDto(
             document.AccountId,
             eventType,
             isExpired ? AlertSeverities.High : AlertSeverities.Warning,
@@ -127,9 +125,8 @@ public sealed class DocumentExpirationJob(
             document.DocumentId.ToString(),
             "Open",
             JsonSerializer.Serialize(new { threshold, category = document.Category, expiresAt = document.ExpiresAt }),
-            $"{eventType}:{document.DocumentId:N}:{threshold}"), cancellationToken);
+            AlertKeys.DocumentExpiration(eventType, document.DocumentId, document.ExpiresAt, threshold)), cancellationToken);
 
-        await evaluator.EvaluateAsync(alertEvent, cancellationToken);
         await store.CompleteAsync(document.DocumentId, document.AccountId, isExpired, idempotencyKey, now, cancellationToken);
         return true;
     }

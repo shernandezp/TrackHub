@@ -21,5 +21,6 @@ public readonly record struct DeviceTransporterVm(
     string Serial,
     string Name,
     string TransporterType,
-    short TransporterTypeId
+    short TransporterTypeId,
+    string DeviceName = ""
     );

@@ -17,4 +17,5 @@ namespace TrackHub.Manager.Domain.Records;
 public record struct UpdateUserDto(
     Guid UserId,
     string Username,
-    bool Active);
+    bool Active,
+    string? Role = null);

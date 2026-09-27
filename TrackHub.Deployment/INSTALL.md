@@ -732,58 +732,10 @@ docker logs -f trackhub-db-init
 
 ### Step 10: Sync User and Account IDs
 
-The User and Account IDs between the two databases are automatically synchronized during database initialization. However, if you need to run this manually (or re-run it), use the sync script:
+The seeders create the administrator and the master account under the well-known
+`PlatformBootstrap` ids in both databases, so `security.users`, `app.users` and
+`app.accounts` agree by construction. There is no id sync step and nothing to run here.
 
-```bash
-# Run the sync script
-./scripts/sync-user-account-ids.sh
-
-# Or run without confirmation prompt
-./scripts/sync-user-account-ids.sh --yes
-```
-
-**What this script does:**
-
-1. Gets the user ID from `TrackHubSecurity.security.users`
-2. Updates `TrackHub.app.users.userid` with the security user ID
-3. Updates `TrackHub.app.user_settings.userid` with the security user ID
-4. Gets the account ID from `TrackHub.app.accounts`
-5. Updates `TrackHubSecurity.security.users.accountid` with the account ID
-
-> The tables are **plural** (`security.users`, `app.users`, `app.accounts`). Older versions
-> of this guide used singular names; those relations do not exist.
-
-**Manual sync (if needed):**
-
-If you prefer to sync manually via SQL — run the first two statements against the
-**TrackHubSecurity** database and the rest against **TrackHub** (they are separate
-databases; you cannot cross-query them in one connection):
-
-```sql
--- In TrackHubSecurity:
-SELECT id FROM security.users;
--- Example result: 550e8400-e29b-41d4-a716-446655440000
-
--- In TrackHub:
-SELECT userid FROM app.users;
--- Example result: 11111111-1111-1111-1111-111111111111
-
-UPDATE app.users
-SET userid = '550e8400-e29b-41d4-a716-446655440000'
-WHERE userid = '11111111-1111-1111-1111-111111111111';
-
-UPDATE app.user_settings
-SET userid = '550e8400-e29b-41d4-a716-446655440000'
-WHERE userid = '11111111-1111-1111-1111-111111111111';
-
-SELECT accountid FROM app.accounts;
--- Example result: 660e8400-e29b-41d4-a716-446655440000
-
--- Back in TrackHubSecurity:
-UPDATE security.users
-SET accountid = '660e8400-e29b-41d4-a716-446655440000'
-WHERE id = '550e8400-e29b-41d4-a716-446655440000';
-```
 
 ### Step 11: Verify Deployment
 
@@ -1224,9 +1176,7 @@ every instant. Three layers keep results independent of the host's zone:
   statement by hand, after a restore.
 - The log sink writes `raise_date` as a UTC instant into a `timestamp with time zone` column
   whatever zone the process runs in (`UtcTimestampColumnWriter` in Common).
-  `scripts/sql/purge-functions-logs.sql` converts a `logs` table created by the old sink; it is
-  idempotent, and the conversion rewrites the table under an exclusive lock, so run it while the
-  services are down or accept a short logging stall. The sink is configured as
+  The sink is configured as
   `"Name": "TrackHubPostgreSQL"` with `"Using": ["Common.Infrastructure"]`: an appsettings file
   from before this change still names `Serilog.Sinks.PostgreSQL.Configuration`, an assembly that
   no longer ships, and the service fails at startup until the file is regenerated.
@@ -1260,15 +1210,6 @@ the copy on a large table. Month bounds are UTC midnights; the script forces a U
 `ops.maintain_position_partitions()` (part of `ops.purge_all()`) then creates each following
 month three months ahead and drops the months every account has aged past. Nothing inside the
 services does this: schedule it (see Retention).
-
-A partition created from a session in another zone is cut at that zone's midnight, overlaps the
-month the function wants to create, and the new rows silently land in the DEFAULT partition.
-`scripts/sql/realign-position-partitions.sql` rebuilds such partitions with UTC bounds and is a
-no-op on a correct layout; it copies rows, so run it in a maintenance window:
-
-```bash
-psql -h "$DB_HOST" -U postgres -d TrackHub -f scripts/sql/realign-position-partitions.sql
-```
 
 > **Idempotency becomes per-partition.** A unique index on a partitioned table must contain the
 > partition key, so the same `idempotencykey` in two different months is no longer rejected by the
@@ -1310,9 +1251,8 @@ The `db-init` container runs on **every deploy** and performs:
 1. **ClientSeeder** - Upserts the OAuth scopes and clients from `config/clients.json` (idempotent)
 2. **Security DBInitializer** - Seeds security resources, roles, and service-client registrations (idempotent)
 3. **Manager DBInitializer** - Seeds master data (report catalog, transporter types, master account/user) (idempotent)
-4. **Sync User/Account IDs** - One-time foreign-key alignment between the two databases, guarded by a flag file (`db-init-flag` volume)
 
-Steps 1–3 are idempotent: they upsert or skip anything that already exists, so re-running adds any clients/resources present in `config/clients.json` and the seed data while leaving existing rows untouched. Only step 4 is gated by the flag file.
+Every step upserts or skips anything that already exists, so re-running adds any clients/resources present in `config/clients.json` and the seed data while leaving existing rows untouched. Running it against an existing database is safe and is the normal path; the seeded administrator and master account use the well-known `PlatformBootstrap` ids in both databases, so there is no cross-database id alignment to protect.
 
 > **Schema vs. seed:** the DBInitializers **seed data only** — they assume the database
 > schema already exists. EF Core **schema migrations ("DB updates") are applied separately**
@@ -1322,68 +1262,15 @@ Steps 1–3 are idempotent: they upsert or skip anything that already exists, so
 > (`trip` schema) and the `telemetry` schema (owned by Manager migrations) — before or
 > alongside a deploy.
 
-Steps 1–3 are safe to re-run, but **step 4 is a one-time destructive ID sync gated by a
-flag file that lives in a volume**. When you move to a *new* server the flag volume starts
-empty, so step 4 would run again against your already-synced data. Use one of the options
-below to skip it.
+### Skipping the Seed (optional)
 
-### Option 1: Use --skip-init Flag (Recommended)
+If the new server must not write seed data (for example while the old server is still live against the same database), deploy without db-init:
 
 ```bash
 ./scripts/deploy.sh full --build --skip-init
 ```
 
-This preserves the normal cached build and forced recreation behavior while skipping database initialization.
-
-### Option 2: Deploy Without db-init Manually
-
-Start all services except db-init:
-
-```bash
-# Configure your .env with existing database connection strings
-cp .env.example .env
-nano .env  # Set DB_CONNECTION_SECURITY and DB_CONNECTION_MANAGER
-
-# Build images (cached; source changes are detected automatically) and deploy without db-init
-docker compose build
-docker compose up -d --force-recreate --no-build --no-deps nginx frontend authority security manager router geofencing tripmanagement telemetry reporting syncworker
-```
-
-### Option 3: Pre-create the Initialization Flag
-
-If you want to use the normal deployment process but skip initialization:
-
-The volume is **prefixed with the Compose project name** (derived from the deployment
-directory), so do not guess it — create the stack's volumes first, then look the name up:
-
-```bash
-# Create the volumes without starting anything, then find the real flag volume name
-docker compose create
-docker volume ls | grep db-init-flag        # e.g. trackhubdeployment_db-init-flag
-
-# Mark initialization as already done
-docker run --rm -v <that-volume-name>:/flags alpine touch /flags/db-initialized
-
-# Now deploy normally - db-init will detect the flag and skip
-./scripts/deploy.sh full --build
-```
-
-> Creating a volume named `deployment_db-init-flag` by hand does **not** work — Compose
-> mounts a differently-prefixed volume, so db-init would still run the one-time ID sync.
-
-### Option 4: Comment Out db-init in docker-compose.yml
-
-Edit `docker-compose.yml` and comment out the db-init service (note the build context is
-the **workspace root**, one level above the deployment folder):
-
-```yaml
-# db-init:
-#   build:
-#     context: ..
-#     dockerfile: TrackHub.Deployment/docker/Dockerfile.db-init
-#   ...
-```
-
+This preserves the normal cached build and forced recreation behavior, starts every other service with nginx last, and never starts db-init.
 Then remove the dependency from the authority service.
 
 ### Migration Checklist
@@ -1394,7 +1281,7 @@ Then remove the dependency from the authority service.
 - [ ] Copy OpenIddict certificate (`certificate.pfx`)
 - [ ] Update `.env` with correct database connection strings
 - [ ] Update `.env` with new server's domain (if changed)
-- [ ] Choose one of the skip options above
+- [ ] Decide whether db-init runs (default, safe) or `--skip-init`
 - [ ] Deploy and verify services connect properly
 - [ ] Test authentication flow
 - [ ] Test API endpoints
@@ -1647,8 +1534,7 @@ cd /opt/trackhub/TrackHub.Deployment
 
 `deploy.sh full` runs `db-init`, which re-seeds idempotently — registering the new
 `router_client`/`security_client` and any new scopes/permissions — and force-recreates
-every container (so the Authority picks up the new `OPENIDDICT_SCOPES`). The one-time
-User/Account ID sync is skipped because its flag already exists.
+every container (so the Authority picks up the new `OPENIDDICT_SCOPES`).
 
 Images build **one at a time**, and every Dockerfile shares one BuildKit NuGet cache, so each
 package is downloaded once per host rather than once per image. Before building, the script
@@ -2160,8 +2046,6 @@ environment:
 > - **`manager-documents`** — *every uploaded document*. This data is **not** in PostgreSQL
 >   and **not** covered by `backup-database.sh`. Archive it first (see
 >   [Backing Up Uploaded Documents](#backing-up-uploaded-documents)).
-> - **`db-init-flag`** — removing it **re-arms the one-time User/Account ID sync**, which
->   rewrites user and account IDs on the next deploy against your existing databases.
 >
 > For a normal restart use `docker compose down --remove-orphans` (no `-v`).
 

@@ -1,3 +1,5 @@
+using Common.Application.Interfaces;
+
 namespace TrackHub.Manager.Application.Drivers.Queries;
 
 [Authorize(Resource = Resources.Drivers, Action = Actions.Read)]
@@ -33,4 +35,21 @@ public readonly record struct ValidateDriverAssignmentQuery(Guid DriverId, strin
 public class ValidateDriverAssignmentQueryHandler(IDriverReader reader) : IRequestHandler<ValidateDriverAssignmentQuery, bool>
 {
     public async Task<bool> Handle(ValidateDriverAssignmentQuery request, CancellationToken cancellationToken) => await reader.ValidateDriverAssignmentAsync(request.DriverId, request.ResourceType, request.ResourceId, cancellationToken);
+}
+
+// The trip board's driver picker: a dispatcher holds Trips/Read, not Drivers/Read, and needs names
+// and ids, never the phone, document or licence the full driver read carries.
+[Authorize(Resource = Resources.Trips, Action = Actions.Read)]
+[AccountScopeEnforcedInHandler]
+public readonly record struct GetDriverLookupQuery(string? Search = null, IReadOnlyCollection<Guid>? DriverIds = null) : IRequest<IReadOnlyCollection<DriverLookupVm>>;
+public class GetDriverLookupQueryHandler(IDriverReader reader, IUserReader userReader, IUser user) : IRequestHandler<GetDriverLookupQuery, IReadOnlyCollection<DriverLookupVm>>
+{
+    private Guid UserId { get; } = Guid.TryParse(user.Id, out var userId) ? userId : throw new UnauthorizedAccessException();
+
+    public async Task<IReadOnlyCollection<DriverLookupVm>> Handle(GetDriverLookupQuery request, CancellationToken cancellationToken)
+    {
+        var caller = await userReader.GetUserAsync(UserId, cancellationToken);
+        var rows = await reader.GetDriverLookupAsync(caller.AccountId, request.Search, request.DriverIds, Lookups.LookupLimits.FetchSize, cancellationToken);
+        return Lookups.LookupLimits.EnsureWithinCeiling(rows, "driverLookup");
+    }
 }

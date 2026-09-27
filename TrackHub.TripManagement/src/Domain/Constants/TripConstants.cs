@@ -335,6 +335,7 @@ public static class TripErrorCodes
 {
     public const string TripNotActive = "TRIP_NOT_ACTIVE";
     public const string TripAlreadyTerminal = "TRIP_ALREADY_TERMINAL";
+    public const string TripModifiedConcurrently = "TRIP_MODIFIED_CONCURRENTLY";
     public const string InvalidTransition = "TRIP_INVALID_TRANSITION";
     public const string StopAlreadyDeparted = "STOP_ALREADY_DEPARTED";
     public const string StopNotArrived = "STOP_NOT_ARRIVED";

@@ -28,7 +28,6 @@ public interface IDocumentExpirationStore
     /// Deduplicates on (AccountId, DeduplicationKey, Status != Resolved) the way AlertEventWriter does,
     /// and persists before the caller fans out so the deliveries can carry the alert event id.
     /// </summary>
-    Task<AlertEventVm> RecordDedupedAlertAsync(AlertEventDto alertEvent, CancellationToken cancellationToken);
 
     /// <summary>
     /// The Active → Expired transition and the idempotency marker, written last: the marker carries no

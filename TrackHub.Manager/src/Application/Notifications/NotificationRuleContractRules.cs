@@ -25,11 +25,19 @@ namespace TrackHub.Manager.Application.Notifications;
 /// </summary>
 public static class NotificationRuleContractRules
 {
-    public static void Apply<T>(AbstractValidator<T> validator, Func<T, NotificationRuleDto> selector)
+    // An update may omit the webhook secret: reads never return it and the writer keeps the stored one.
+    public static void Apply<T>(AbstractValidator<T> validator, Func<T, NotificationRuleDto> selector, bool requireWebhookSecret = true)
     {
+        if (requireWebhookSecret)
+        {
+            validator.RuleFor(x => selector(x)).Must(HaveWebhookSecretWhenSelected).OverridePropertyName("ConfigurationJson")
+                .WithMessage("Rules with the Webhook channel require configurationJson.webhookSecret.");
+        }
+
         validator.RuleFor(x => selector(x).RuleKey).NotEmpty().MaximumLength(255).OverridePropertyName("RuleKey");
         validator.RuleFor(x => selector(x).RuleType).NotEmpty().MaximumLength(255).OverridePropertyName("RuleType");
-        validator.RuleFor(x => selector(x).TriggerEvent).NotEmpty().MaximumLength(255).OverridePropertyName("TriggerEvent");
+        validator.RuleFor(x => selector(x).TriggerEvent).NotEmpty().MaximumLength(255).Must(AlertEventTypes.All.Contains).OverridePropertyName("TriggerEvent")
+            .WithMessage("triggerEvent must be one of the platform alert event types.");
         validator.RuleFor(x => selector(x).ChannelsJson).Must(BeValidChannels).OverridePropertyName("ChannelsJson")
             .WithMessage("channelsJson must be a JSON string array of known channels (InApp, Email, Webhook, WhatsApp, Push).");
         validator.RuleFor(x => selector(x).RecipientSelector).Must(BeValidRecipientSelector).OverridePropertyName("RecipientSelector")
@@ -37,7 +45,20 @@ public static class NotificationRuleContractRules
         validator.RuleFor(x => selector(x).ThrottlingJson).Must(BeValidThrottling).OverridePropertyName("ThrottlingJson")
             .WithMessage("throttlingJson must match { dedupeWindowMinutes >= 0, digest None|Hourly|Daily, maxPerHour >= 1 }.");
         validator.RuleFor(x => selector(x)).Must(HaveWebhookConfigurationWhenSelected).OverridePropertyName("ConfigurationJson")
-            .WithMessage("Rules with the Webhook channel require configurationJson.webhookUrl (absolute http/https) and webhookSecret.");
+            .WithMessage("Rules with the Webhook channel require configurationJson.webhookUrl (absolute http/https).");
+    }
+
+    public static bool HaveWebhookSecretWhenSelected(NotificationRuleDto dto)
+    {
+        try
+        {
+            return !NotificationRuleContracts.ParseChannels(dto.ChannelsJson).Contains(NotificationChannels.Webhook)
+                || !string.IsNullOrWhiteSpace(NotificationRuleContracts.ParseConfiguration(dto.ConfigurationJson).WebhookSecret);
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
     }
 
     public static bool BeValidChannels(string? channelsJson)
@@ -93,8 +114,7 @@ public static class NotificationRuleContractRules
 
             var configuration = NotificationRuleContracts.ParseConfiguration(dto.ConfigurationJson);
             return Uri.TryCreate(configuration.WebhookUrl, UriKind.Absolute, out var uri)
-                && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp)
-                && !string.IsNullOrWhiteSpace(configuration.WebhookSecret);
+                && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp);
         }
         catch (JsonException)
         {

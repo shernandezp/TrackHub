@@ -20,6 +20,7 @@ public sealed class NotificationTemplateReader(IApplicationDbContext context, IC
     public async Task<IReadOnlyCollection<NotificationTemplateVm>> GetNotificationTemplatesAsync(Guid accountId, CancellationToken cancellationToken)
     {
         var scopedAccountId = RequireAccountAccess(accountId);
+        RequirePrivileged();
 
         var overrides = await Context.NotificationTemplates
             .Where(x => x.AccountId == scopedAccountId)

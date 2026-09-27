@@ -37,18 +37,18 @@ public class DocumentWriterTests
         => new(accountId, DocumentOwnerTypes.Transporter, Guid.NewGuid().ToString(), "User", "u", "local", "key", "application/pdf", 10, "hash", DocumentClassifications.Internal, status, null, "Owner", scan, "soat.pdf", "SOAT");
 
     [Test]
-    public async Task CreateDocumentMetadataAsync_CreatesDocumentVersionAndAudit()
+    public async Task RegisterUploadedDocumentAsync_CreatesDocumentVersionAndAudit()
     {
-        await using var context = NewContext(nameof(CreateDocumentMetadataAsync_CreatesDocumentVersionAndAudit));
+        await using var context = NewContext(nameof(RegisterUploadedDocumentAsync_CreatesDocumentVersionAndAudit));
         var accountId = Guid.NewGuid();
-        var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy());
+        var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy(), Mock.Of<IAlertRecorder>());
 
-        var vm = await writer.CreateDocumentMetadataAsync(Dto(accountId), CancellationToken.None);
+        var vm = await writer.RegisterUploadedDocumentAsync(Guid.NewGuid(), Dto(accountId), CancellationToken.None);
 
         Assert.That(vm.Category, Is.EqualTo("SOAT"));
         Assert.That(vm.CurrentVersion, Is.EqualTo(1));
         Assert.That(context.DocumentVersions.Count(v => v.DocumentId == vm.DocumentId), Is.EqualTo(1));
-        Assert.That(context.AuditEvents.Any(e => e.Action == "CreateDocument"), Is.True);
+        Assert.That(context.AuditEvents.Any(e => e.Action == "UploadDocument"), Is.True);
     }
 
     [Test]
@@ -56,7 +56,7 @@ public class DocumentWriterTests
     {
         await using var context = NewContext(nameof(RegisterUploadedDocumentAsync_IsQuarantined_NoDownloadUrl));
         var accountId = Guid.NewGuid();
-        var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy());
+        var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy(), Mock.Of<IAlertRecorder>());
         var documentId = Guid.NewGuid();
 
         var vm = await writer.RegisterUploadedDocumentAsync(documentId, Dto(accountId, "Uploaded", "Quarantined"), CancellationToken.None);
@@ -72,23 +72,23 @@ public class DocumentWriterTests
     {
         using var context = NewContext(nameof(RegisterUploadedDocumentAsync_NonPrivilegedOwnerDenied_Throws));
         var accountId = Guid.NewGuid();
-        var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy(privileged: false, ownerAllowed: false));
+        var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy(privileged: false, ownerAllowed: false), Mock.Of<IAlertRecorder>());
 
         Assert.ThrowsAsync<ForbiddenAccessException>(() =>
             writer.RegisterUploadedDocumentAsync(Guid.NewGuid(), Dto(accountId, "Uploaded", "Quarantined"), CancellationToken.None));
     }
 
     [Test]
-    public void CreateDocumentMetadataAsync_PrivilegedButCrossAccountOwner_Throws()
+    public void RegisterUploadedDocumentAsync_PrivilegedButCrossAccountOwner_Throws()
     {
         // AC1: even a privileged principal cannot attach to a registered owner the resolver rejects
         // (e.g. a transporter in another account) — the owner check runs for everyone.
-        using var context = NewContext(nameof(CreateDocumentMetadataAsync_PrivilegedButCrossAccountOwner_Throws));
+        using var context = NewContext(nameof(RegisterUploadedDocumentAsync_PrivilegedButCrossAccountOwner_Throws));
         var accountId = Guid.NewGuid();
-        var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy(privileged: true, ownerAllowed: false));
+        var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy(privileged: true, ownerAllowed: false), Mock.Of<IAlertRecorder>());
 
         Assert.ThrowsAsync<ForbiddenAccessException>(() =>
-            writer.CreateDocumentMetadataAsync(Dto(accountId), CancellationToken.None));
+            writer.RegisterUploadedDocumentAsync(Guid.NewGuid(), Dto(accountId), CancellationToken.None));
     }
 
     [Test]
@@ -96,7 +96,7 @@ public class DocumentWriterTests
     {
         await using var context = NewContext(nameof(MarkDocumentScanResultAsync_Clean_ActivatesUploadedDocument));
         var accountId = Guid.NewGuid();
-        var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy());
+        var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy(), Mock.Of<IAlertRecorder>());
         var id = Guid.NewGuid();
         await writer.RegisterUploadedDocumentAsync(id, Dto(accountId, "Uploaded", "Quarantined"), CancellationToken.None);
 
@@ -112,8 +112,8 @@ public class DocumentWriterTests
     {
         await using var context = NewContext(nameof(ReplaceDocumentVersionAsync_IncrementsVersion_AndReQuarantines));
         var accountId = Guid.NewGuid();
-        var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy());
-        var created = await writer.CreateDocumentMetadataAsync(Dto(accountId), CancellationToken.None);
+        var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy(), Mock.Of<IAlertRecorder>());
+        var created = await writer.RegisterUploadedDocumentAsync(Guid.NewGuid(), Dto(accountId), CancellationToken.None);
 
         var vm = await writer.ReplaceDocumentVersionAsync(created.DocumentId,
             new DocumentVersionDto(created.DocumentId, "local", "key2", "hash2", 20, "application/pdf", "soat-v2.pdf", "renewal"),
@@ -129,8 +129,8 @@ public class DocumentWriterTests
     {
         await using var context = NewContext(nameof(SignDocumentAsync_RecordsSignatureAndAudit));
         var accountId = Guid.NewGuid();
-        var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy());
-        var doc = await writer.CreateDocumentMetadataAsync(Dto(accountId), CancellationToken.None);
+        var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy(), Mock.Of<IAlertRecorder>());
+        var doc = await writer.RegisterUploadedDocumentAsync(Guid.NewGuid(), Dto(accountId), CancellationToken.None);
 
         var sig = await writer.SignDocumentAsync(
             new DocumentSignatureDto(doc.DocumentId, "User", "u", "Jane Driver", "I accept the terms."),
@@ -147,8 +147,8 @@ public class DocumentWriterTests
     {
         await using var context = NewContext(nameof(VoidDocumentAsync_SetsVoided));
         var accountId = Guid.NewGuid();
-        var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy());
-        var doc = await writer.CreateDocumentMetadataAsync(Dto(accountId), CancellationToken.None);
+        var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy(), Mock.Of<IAlertRecorder>());
+        var doc = await writer.RegisterUploadedDocumentAsync(Guid.NewGuid(), Dto(accountId), CancellationToken.None);
 
         await writer.VoidDocumentAsync(doc.DocumentId, "superseded", CancellationToken.None);
 
@@ -160,12 +160,55 @@ public class DocumentWriterTests
     {
         await using var context = NewContext(nameof(ConfigureDocumentTypeAsync_UpsertsSingleRow));
         var accountId = Guid.NewGuid();
-        var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy());
+        var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy(), Mock.Of<IAlertRecorder>());
 
         await writer.ConfigureDocumentTypeAsync(new DocumentTypeDto(accountId, "SOAT", "SOAT policy", true, true, 365), CancellationToken.None);
         var updated = await writer.ConfigureDocumentTypeAsync(new DocumentTypeDto(accountId, "SOAT", "SOAT (renamed)", false, true, 180), CancellationToken.None);
 
         Assert.That(updated.DisplayName, Is.EqualTo("SOAT (renamed)"));
         Assert.That(context.DocumentTypes.Count(t => t.AccountId == accountId && t.Category == "SOAT"), Is.EqualTo(1));
+    }
+
+    private static DocumentVersionDto Version(Guid documentId, DateTimeOffset? expiresAt = null)
+        => new(documentId, "local", $"key-{Guid.NewGuid():N}", "hash-2", 20, "application/pdf", "renewed.pdf", null, expiresAt);
+
+    [Test]
+    public async Task ReplaceDocumentVersionAsync_ExpiredDocumentWithoutANewExpiry_StaysExpired()
+    {
+        await using var context = NewContext(nameof(ReplaceDocumentVersionAsync_ExpiredDocumentWithoutANewExpiry_StaysExpired));
+        var accountId = Guid.NewGuid();
+        var alerts = new Mock<IAlertRecorder>();
+        var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy(), alerts.Object);
+        var documentId = Guid.NewGuid();
+        await writer.RegisterUploadedDocumentAsync(documentId, Dto(accountId), CancellationToken.None);
+        await writer.ExpireDocumentAsync(documentId, DateTimeOffset.UtcNow.AddDays(-1), CancellationToken.None);
+
+        var vm = await writer.ReplaceDocumentVersionAsync(documentId, Version(documentId), CancellationToken.None);
+
+        Assert.That(vm.Status, Is.EqualTo(DocumentStatuses.Expired));
+        alerts.Verify(a => a.ResolveOpenAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Test]
+    public async Task ReplaceDocumentVersionAsync_WithAFutureExpiry_ReactivatesAndResolvesTheExpiryAlerts()
+    {
+        await using var context = NewContext(nameof(ReplaceDocumentVersionAsync_WithAFutureExpiry_ReactivatesAndResolvesTheExpiryAlerts));
+        var accountId = Guid.NewGuid();
+        var alerts = new Mock<IAlertRecorder>();
+        var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy(), alerts.Object);
+        var documentId = Guid.NewGuid();
+        await writer.RegisterUploadedDocumentAsync(documentId, Dto(accountId), CancellationToken.None);
+        await writer.ExpireDocumentAsync(documentId, DateTimeOffset.UtcNow.AddDays(-1), CancellationToken.None);
+        var renewedUntil = DateTimeOffset.UtcNow.AddYears(1);
+
+        var vm = await writer.ReplaceDocumentVersionAsync(documentId, Version(documentId, renewedUntil), CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(vm.Status, Is.EqualTo(DocumentStatuses.Active));
+            Assert.That(vm.ExpiresAt, Is.EqualTo(renewedUntil));
+        });
+        alerts.Verify(a => a.ResolveOpenAsync(accountId, "Document", documentId.ToString(),
+            It.Is<IReadOnlyCollection<string>>(t => t.Contains(AlertEventTypes.DocumentExpiring) && t.Contains(AlertEventTypes.DocumentExpired)), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

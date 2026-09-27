@@ -33,7 +33,7 @@ public class DeleteUserRoleCommandHandlerTests
     {
         var userId = Guid.NewGuid();
         var roleId = 4;
-        var handler = new DeleteUserRoleCommandHandler(_writerMock.Object, new Mock<Common.Mediator.IPublisher>().Object, new Mock<Common.Application.Interfaces.ICurrentPrincipal>().Object);
+        var handler = new DeleteUserRoleCommandHandler(_writerMock.Object, Mock.Of<IUserReader>(), new Mock<Common.Mediator.IPublisher>().Object, new Mock<Common.Application.Interfaces.ICurrentPrincipal>().Object);
 
         await handler.Handle(new DeleteUserRoleCommand(userId, roleId), CancellationToken.None);
 
@@ -44,7 +44,7 @@ public class DeleteUserRoleCommandHandlerTests
     public async Task Handle_DifferentRoleId_PassesCorrectValues()
     {
         var userId = Guid.NewGuid();
-        var handler = new DeleteUserRoleCommandHandler(_writerMock.Object, new Mock<Common.Mediator.IPublisher>().Object, new Mock<Common.Application.Interfaces.ICurrentPrincipal>().Object);
+        var handler = new DeleteUserRoleCommandHandler(_writerMock.Object, Mock.Of<IUserReader>(), new Mock<Common.Mediator.IPublisher>().Object, new Mock<Common.Application.Interfaces.ICurrentPrincipal>().Object);
 
         await handler.Handle(new DeleteUserRoleCommand(userId, 9), CancellationToken.None);
 

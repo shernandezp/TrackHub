@@ -87,15 +87,6 @@ public sealed class NotificationTemplateWriter(IApplicationDbContext context, IC
         RequireAccountWriteAccess(entity.AccountId.Value);
     }
 
-    // Templates are an administrative surface; the Notifications action grants are
-    // held by every portal role for the self-service surfaces, so admin-only is enforced here.
-    private void RequirePrivileged()
-    {
-        if (!IsPrivileged)
-        {
-            throw new ForbiddenAccessException("Only administrators or managers may manage notification templates.");
-        }
-    }
 
     private static NotificationTemplateVm ToVm(NotificationTemplate x) => new(x.NotificationTemplateId, x.AccountId, x.TemplateKey, x.Channel, x.Locale, x.Subject, x.Body, x.Active, x.LastModified);
     private static string Describe(NotificationTemplate template)

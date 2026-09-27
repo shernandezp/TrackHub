@@ -21,7 +21,7 @@ namespace TrackHub.Reporting.Domain.Interfaces.Telemetry;
 public interface IGpsTelemetryReader
 {
     Task<ManagerOperatorHealthSummaryVm> GetOperatorHealthSummaryAsync(Guid operatorId, int lookbackHours, CancellationToken cancellationToken);
-    Task<IReadOnlyCollection<ManagerOperatorSyncRunVm>> GetOperatorSyncRunsAsync(Guid accountId, Guid? operatorId, int take, CancellationToken cancellationToken);
+    Task<ManagerOperatorSyncRunPageVm> GetOperatorSyncRunFeedAsync(Guid accountId, Guid? operatorId, DateTimeOffset? from, DateTimeOffset? to, int take, string? cursor, CancellationToken cancellationToken);
     Task<IReadOnlyCollection<ManagerTransporterPositionVm>> GetLatestPositionsAsync(Guid operatorId, CancellationToken cancellationToken);
-    Task<ManagerTransporterPositionHistoryPageVm> GetPositionHistoryAsync(Guid accountId, Guid? transporterId, Guid? deviceId, int take, DateTimeOffset? from, DateTimeOffset? to, CancellationToken cancellationToken);
+    Task<ManagerTransporterPositionHistoryPageVm> GetPositionHistoryAsync(Guid accountId, Guid? transporterId, Guid? deviceId, int take, DateTimeOffset? from, DateTimeOffset? to, string? cursor, CancellationToken cancellationToken);
 }

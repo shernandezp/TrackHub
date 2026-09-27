@@ -26,9 +26,11 @@ import ArgonTypography from 'components/ArgonTypography';
 import FormDialog from 'controls/Dialogs/FormDialog';
 import CustomTextField from 'controls/Dialogs/CustomTextField';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
+import SearchSelect from 'edition/SearchSelect';
+import { useDriverSearchOptions } from 'queries/drivers';
 import type { FormChangeHandler } from 'controls/Dialogs/useForm';
 import type { Transporter } from 'api/manager/transporters';
-import type { Driver } from 'api/manager/drivers';
+import type { DriverLookup } from 'api/manager/drivers';
 import type { PointOfInterestLookup } from 'api/manager/pointsOfInterest';
 import type { Geofence } from 'api/geofencing/geofencing';
 import type { Trip, TollVehicleClass } from 'api/tripManagement/trips';
@@ -43,6 +45,8 @@ import type { StopActivity, TripDestinationDraft, TripType } from '../../tripWri
 /** Dialog/form state for a trip. Strings throughout — the caller coerces on save. */
 export interface TripFormValues {
   tripId?: string;
+  /** The instant of the trip row the dialog loaded; the save is refused if it moved since. */
+  lastModified?: string | null;
   code?: string;
   transporterId?: string;
   driverId?: string;
@@ -78,7 +82,7 @@ interface TripDialogProps {
   handleChange: FormChangeHandler;
   errors: Record<string, string>;
   transporters: Transporter[];
-  drivers: Driver[];
+  drivers: DriverLookup[];
   vehicleClasses: TollVehicleClass[];
   pois: PointOfInterestLookup[];
   geofences: Geofence[];
@@ -163,9 +167,7 @@ function TripDialog({
     value: transporter.transporterId,
     label: transporter.name,
   }));
-  const driverOptions = drivers
-    .filter((driver) => driver.active)
-    .map((driver) => ({ value: driver.driverId, label: driver.name }));
+  const driverLabel = drivers.find((driver) => driver.driverId === values.driverId)?.name ?? null;
   // Only active classes are offerable; an inactive class stays on historical
   // trips but must not be picked for a new one.
   const classOptions = vehicleClasses
@@ -319,14 +321,13 @@ function TripDialog({
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
-            <CustomSelect
-              list={driverOptions}
-              handleChange={handleChange}
-              name="driverId"
+            <SearchSelect
               id="driverId"
               label={t('trips.driver')}
-              value={values.driverId}
-              numericValue={false}
+              value={values.driverId || null}
+              valueLabel={driverLabel}
+              onChange={(option) => handleChange({ target: { name: 'driverId', value: option?.value ?? '' } })}
+              useOptions={useDriverSearchOptions}
               placeholder={t('trips.assignment.selectDriver')}
             />
           </Grid>

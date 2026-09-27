@@ -237,7 +237,6 @@ TrackHub.Deployment/
     ├── renew-ssl.sh             # SSL auto-renewal (Let's Encrypt)
     ├── generate-appsettings.sh  # Generate appsettings.json files
     ├── sync-config.sh           # Sync all configuration
-    ├── sync-user-account-ids.sh # Sync User/Account IDs between DBs
     └── init-databases.sh        # Database initialization
 ```
 

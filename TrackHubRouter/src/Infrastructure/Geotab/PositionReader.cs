@@ -56,7 +56,7 @@ public sealed class PositionReader(IProviderSessionStore sessionStore)
             return [];
         }
         // Names are not unique in the catalog; the first row wins rather than the whole read failing.
-        var devicesDictionary = devices.GroupBy(device => device.Name).ToDictionary(group => group.Key, group => group.First());
+        var devicesDictionary = devices.GroupBy(device => device.DeviceName).ToDictionary(group => group.Key, group => group.First());
         return positions.MapToPositionVm(devicesDictionary).Distinct();
     }
 

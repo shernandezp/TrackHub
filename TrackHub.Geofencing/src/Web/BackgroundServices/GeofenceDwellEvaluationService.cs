@@ -73,5 +73,9 @@ public sealed class GeofenceDwellEvaluationService(
         var alerted = await evaluationService.EvaluateDwellAsync(cancellationToken);
         if (alerted > 0)
             logger.LogInformation("Geofence dwell evaluation emitted {Alerted} alert(s)", alerted);
+
+        var retried = await scope.ServiceProvider.GetRequiredService<IVisitAlertRetryService>().RetryPendingAlertsAsync(cancellationToken);
+        if (retried > 0)
+            logger.LogInformation("Geofence visit alert retry emitted {Retried} alert(s)", retried);
     }
 }

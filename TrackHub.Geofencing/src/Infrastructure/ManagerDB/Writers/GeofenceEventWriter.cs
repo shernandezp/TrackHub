@@ -42,7 +42,10 @@ public sealed class GeofenceEventWriter(IApplicationDbContext context) : IGeofen
             geofenceEvent.AccountId,
             geofenceEvent.EventDateTime,
             geofenceEvent.Latitude,
-            geofenceEvent.Longitude);
+            geofenceEvent.Longitude)
+        {
+            EntryAlertedAt = geofence.AlertOnEntry ? null : geofenceEvent.EventDateTime,
+        };
 
         await context.GeofenceEvents.AddAsync(evt, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
@@ -61,6 +64,11 @@ public sealed class GeofenceEventWriter(IApplicationDbContext context) : IGeofen
         context.GeofenceEvents.Attach(evt);
 
         evt.DepartureTimestamp = departureTimestamp;
+        if (!await context.Geofences.Where(g => g.GeofenceId == evt.GeofenceId).Select(g => g.AlertOnExit).FirstOrDefaultAsync(cancellationToken))
+        {
+            evt.ExitAlertedAt = departureTimestamp;
+        }
+
         await context.SaveChangesAsync(cancellationToken);
 
         return CastVm(evt);
@@ -77,6 +85,22 @@ public sealed class GeofenceEventWriter(IApplicationDbContext context) : IGeofen
         context.GeofenceEvents.Attach(evt);
 
         evt.DwellAlertedAt = alertedAt;
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    public Task StampEntryAlertedAsync(Guid geofenceEventId, DateTimeOffset alertedAt, CancellationToken cancellationToken)
+        => StampAsync(geofenceEventId, evt => evt.EntryAlertedAt = alertedAt, cancellationToken);
+
+    public Task StampExitAlertedAsync(Guid geofenceEventId, DateTimeOffset alertedAt, CancellationToken cancellationToken)
+        => StampAsync(geofenceEventId, evt => evt.ExitAlertedAt = alertedAt, cancellationToken);
+
+    private async Task StampAsync(Guid geofenceEventId, Action<GeofenceEvent> stamp, CancellationToken cancellationToken)
+    {
+        var evt = await context.GeofenceEvents.FindAsync([geofenceEventId], cancellationToken)
+            ?? throw new KeyNotFoundException($"GeofenceEvent with ID {geofenceEventId} not found.");
+
+        context.GeofenceEvents.Attach(evt);
+        stamp(evt);
         await context.SaveChangesAsync(cancellationToken);
     }
 
