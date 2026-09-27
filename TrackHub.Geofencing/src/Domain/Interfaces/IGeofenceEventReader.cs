@@ -53,4 +53,6 @@ public interface IGeofenceEventReader
     /// </summary>
     Task<IReadOnlyCollection<DwellAlertCandidateVm>> GetDwellAlertCandidatesAsync(
         CancellationToken cancellationToken);
+
+    Task<IReadOnlyCollection<PendingVisitAlertVm>> GetPendingVisitAlertsAsync(CancellationToken cancellationToken);
 }

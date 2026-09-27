@@ -16,6 +16,8 @@
 namespace TrackHub.Manager.Application.Users.Commands.Delete;
 
 [Authorize(Resource = Resources.Users, Action = Actions.Delete)]
+// Same outbox identity as UpdateUserCommand.
+[AllowCrossAccount("Security replicates user deletions here from its outbox loop under security_client (no account claim). UserWriter.RequireReplicaAccess checks the replica row's owning account for every other caller.")]
 // Enforcement: UserWriter loads the replica row and RequireReplicaAccess checks its owning
 // account (same-account / global service / Administrator — Security-parity policy).
 [AccountScopeEnforcedInHandler]

@@ -161,4 +161,12 @@ public class NotificationValidatorTests
         var result = validator.Validate(new SendTestNotificationCommand(Guid.NewGuid(), "Push", null));
         Assert.That(result.Errors.Any(e => e.PropertyName == "Channel"), Is.True);
     }
+
+    [Test]
+    public void CreateNotificationRule_UnknownTriggerEvent_Fails()
+    {
+        var validator = new CreateNotificationRuleCommandValidator();
+        var result = validator.Validate(new CreateNotificationRuleCommand(Rule() with { TriggerEvent = "Smoke" }));
+        Assert.That(result.Errors.Any(e => e.PropertyName == "TriggerEvent"), Is.True);
+    }
 }

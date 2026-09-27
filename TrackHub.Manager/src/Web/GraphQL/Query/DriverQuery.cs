@@ -11,4 +11,5 @@ public partial class Query
     public async Task<IReadOnlyCollection<DriverQualificationVm>> GetDriverQualifications([Service] ISender sender, [AsParameters] GetDriverQualificationsQuery query, CancellationToken cancellationToken) => await sender.Send(query, cancellationToken);
     public async Task<IReadOnlyCollection<DriverTransporterAssignmentVm>> GetDriverAssignmentHistory([Service] ISender sender, [AsParameters] GetDriverAssignmentHistoryQuery query, CancellationToken cancellationToken) => await sender.Send(query, cancellationToken);
     public async Task<MyDriverProfileVm> GetMyDriverProfile([Service] ISender sender, CancellationToken cancellationToken) => await sender.Send(new GetMyDriverProfileQuery(), cancellationToken);
+    public async Task<IReadOnlyCollection<DriverLookupVm>> GetDriverLookup([Service] ISender sender, [AsParameters] GetDriverLookupQuery query, CancellationToken cancellationToken) => await sender.Send(query, cancellationToken);
 }

@@ -51,8 +51,8 @@ public class UpdatePasswordCommandHandler(IUserWriter writer, IUserReader reader
             // flipped, since the caller is already an active, visible user.
             if (isManager)
             {
-                var username = await reader.GetUserNameAsync(request.User.UserId, cancellationToken);
-                var updatedUser = new UpdateUserShrankDto(request.User.UserId, username, true);
+                var subject = await reader.GetUserAsync(request.User.UserId, cancellationToken);
+                var updatedUser = new UpdateUserShrankDto(request.User.UserId, subject.Username, true, UserUpdated.EffectiveRole(subject.Roles));
                 await publisher.Publish(new UserUpdated.Notification(request.User.UserId, updatedUser), cancellationToken);
             }
 

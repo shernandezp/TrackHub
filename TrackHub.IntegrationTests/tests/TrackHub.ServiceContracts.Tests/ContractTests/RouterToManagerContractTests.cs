@@ -40,8 +40,8 @@ public class RouterToManagerContractTests
         yield return new TestCaseData("AccountReader.IsFeatureEnabled", AccountReader.ValidateFeatureEnabledQuery);
         yield return new TestCaseData("AccountReader.GetAllAccountFeatures", AccountReader.AllAccountFeaturesQuery);
         yield return new TestCaseData("AlertEventWriter.Record", AlertEventWriter.RecordAlertEventMutation);
+        yield return new TestCaseData("AlertEventWriter.Resolve", AlertEventWriter.ResolveAlertEventsMutation);
         yield return new TestCaseData("CredentialWriter.UpdateToken", ManagerApi.CredentialWriter.UpdateTokenMutation);
-        yield return new TestCaseData("DeviceSyncWriter.Reset", DeviceSyncWriter.WipeDevicesMutation);
         yield return new TestCaseData("DeviceSyncWriter.Synchronize", DeviceSyncWriter.SynchronizeOperatorDevicesMutation);
         yield return new TestCaseData("DeviceTransporterReader.GetVisibleByOperator", DeviceTransporterReader.VisibleDeviceTransportersByOperatorQuery);
         yield return new TestCaseData("DeviceTransporterReader.GetAssignedByOperator", DeviceTransporterReader.AssignedDeviceTransportersByOperatorQuery);

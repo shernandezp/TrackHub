@@ -16,12 +16,13 @@
 using System.Text.Json;
 using Common.Domain.Time;
 using Microsoft.Extensions.Logging;
+using TrackHub.Manager.Application.AlertEvents;
 using TrackHub.Manager.Domain.Constants;
 
 namespace TrackHub.Manager.Application.BackgroundJobs;
 
 /// <summary>
-/// Raises exactly one qualification alert per (qualification, threshold) across the 30/15/7/0-day
+/// Raises exactly one qualification alert per (qualification, expiry, threshold) across the 30/15/7/0-day
 /// bands (spec 09 §10). Idempotency lives in BackgroundJobRun, so a threshold is never re-notified,
 /// including across restarts. Qualification alerting is a `workforce` capability (AC6).
 /// </summary>
@@ -29,7 +30,7 @@ public sealed class WorkforceExpirationJob(
     IAccountFeatureGate features,
     IWorkforceExpirationStore store,
     IAccountTimeZoneResolver zones,
-    IAlertRuleEvaluator evaluator,
+    IAlertRecorder recorder,
     ILogger<WorkforceExpirationJob> logger) : IScheduledJob
 {
     public static TimeSpan Interval => TimeSpan.FromHours(24);
@@ -94,7 +95,7 @@ public sealed class WorkforceExpirationJob(
     private async Task<bool> TryRaiseAsync(
         ExpiringQualificationVm qualification, int threshold, DateTimeOffset now, CancellationToken cancellationToken)
     {
-        var idempotencyKey = $"{qualification.DriverQualificationId:N}:{threshold}";
+        var idempotencyKey = $"{qualification.DriverQualificationId:N}:{qualification.ExpiresAt:yyyyMMdd}:{threshold}";
         if (await store.JobRunSucceededAsync(idempotencyKey, cancellationToken))
         {
             return false;
@@ -113,26 +114,19 @@ public sealed class WorkforceExpirationJob(
             expiresAt = qualification.ExpiresAt.ToString("O"),
         });
 
-        var alertEvent = await store.RecordAlertAsync(
-            new AlertEventDto(
-                qualification.AccountId,
-                isExpired ? AlertEventTypes.DriverQualificationExpired : AlertEventTypes.DriverQualificationExpiring,
-                isExpired ? AlertSeverities.High : AlertSeverities.Warning,
-                "Workforce",
-                "DriverQualification",
-                qualification.DriverQualificationId.ToString(),
-                "Open",
-                payloadJson,
-                $"driver-qual:{qualification.DriverQualificationId:N}:{threshold}"),
+        await recorder.RecordAsync(new AlertEventDto(
             qualification.AccountId,
+            isExpired ? AlertEventTypes.DriverQualificationExpired : AlertEventTypes.DriverQualificationExpiring,
+            isExpired ? AlertSeverities.High : AlertSeverities.Warning,
+            "Workforce",
+            "DriverQualification",
             qualification.DriverQualificationId.ToString(),
-            idempotencyKey,
-            now,
-            cancellationToken);
+            "Open",
+            payloadJson,
+            AlertKeys.DriverQualification(qualification.DriverQualificationId, qualification.ExpiresAt, threshold)), cancellationToken);
 
-        // The fan-out follows the commit deliberately: a failed fan-out leaves a recorded-but-undelivered
-        // alert, which is logged — preferable to evaluating first and risking duplicates after a crash.
-        await evaluator.EvaluateAsync(alertEvent, cancellationToken);
+        // The marker follows the emission: a crash in between repeats an alert the recorder folds, never loses one.
+        await store.RecordJobRunAsync(qualification.AccountId, qualification.DriverQualificationId.ToString(), idempotencyKey, now, cancellationToken);
         return true;
     }
 }

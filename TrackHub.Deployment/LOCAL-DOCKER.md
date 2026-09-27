@@ -156,15 +156,6 @@ Two things make that safe, and both matter:
   that already exists: seeding from it rewrites every service-client secret and the portal's
   redirect URIs with those literal strings, and the whole stack 401s. That is the failure
   this file used to describe as "the seeder clobbered `manager_client`".
-* **Step 4 of `init-databases.sh` - the one-time User/Account ID sync - is destructive**
-  and is the only step that is. It is guarded by `/app/flags/db-initialized` on the
-  `db-init-flag` volume, so it runs at most once per environment. On an already-seeded
-  local database it must never run; create the flag before the first seeder run on a clone
-  whose databases were seeded some other way:
-
-  ```powershell
-  docker run --rm -v trackhub-local_db-init-flag:/flags alpine touch /flags/db-initialized
-  ```
 
 The client secrets in `.env.local` must match `local/clients.json`. They do: both are
 committed with working dev values, the same way `appsettings.json` carries the local DB

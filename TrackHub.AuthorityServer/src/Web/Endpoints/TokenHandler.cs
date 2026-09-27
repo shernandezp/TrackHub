@@ -272,7 +272,8 @@ public sealed class TokenHandler(
             AccessTokenClaim(OpenIddictConstants.Claims.Subject, subject),
             AccessTokenClaim("principal_type", "User"),
             AccessTokenClaim("user_id", subject),
-            AccessTokenClaim("account_id", user.AccountId.ToString())
+            AccessTokenClaim("account_id", user.AccountId.ToString()),
+            AccessTokenClaim(SubjectValidity.SecurityStampClaim, user.SecurityStamp.ToString())
         };
 
         if (!string.IsNullOrEmpty(role))

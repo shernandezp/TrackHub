@@ -38,6 +38,7 @@ public class LookupProjectionTests
     {
         var principal = new Mock<ICurrentPrincipal>();
         principal.SetupGet(p => p.PrincipalType).Returns(PrincipalType.User);
+        principal.SetupGet(p => p.Role).Returns("Manager");
         principal.SetupGet(p => p.AccountId).Returns(accountId);
         return principal.Object;
     }

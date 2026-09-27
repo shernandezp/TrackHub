@@ -42,7 +42,7 @@ public class NotificationReaderTests
         await context.NotificationDeliveries.AddAsync(new NotificationDelivery(accountId, null, null, NotificationChannels.Email, RecipientPrincipalTypes.Contact, "operations@example.com", DeliveryStatuses.Sent));
         await context.SaveChangesAsync(CancellationToken.None);
 
-        var reader = NewReader(context, Principal(accountId));
+        var reader = NewReader(context, Principal(accountId, role: "Manager"));
         var result = await reader.GetNotificationDeliveriesAsync(accountId, null, null, null, null, 0, 50, CancellationToken.None);
 
         Assert.That(result.Single().Recipient, Is.EqualTo("***.com"));
@@ -57,7 +57,7 @@ public class NotificationReaderTests
         await context.NotificationDeliveries.AddAsync(new NotificationDelivery(accountId, null, null, NotificationChannels.InApp, RecipientPrincipalTypes.User, Guid.NewGuid().ToString(), DeliveryStatuses.Failed));
         await context.SaveChangesAsync(CancellationToken.None);
 
-        var reader = NewReader(context, Principal(accountId));
+        var reader = NewReader(context, Principal(accountId, role: "Manager"));
         var result = await reader.GetNotificationDeliveriesAsync(accountId, DeliveryStatuses.Failed, null, null, null, 0, 50, CancellationToken.None);
 
         Assert.That(result, Has.Count.EqualTo(1));
@@ -165,7 +165,7 @@ public class NotificationReaderTests
         await context.NotificationDeliveries.AddAsync(new NotificationDelivery(accountId, null, null, NotificationChannels.Email, RecipientPrincipalTypes.Contact, "a@b.com", DeliveryStatuses.Failed) { Attempts = 5, Created = now });
         await context.SaveChangesAsync(CancellationToken.None);
 
-        var reader = NewReader(context, Principal(accountId));
+        var reader = NewReader(context, Principal(accountId, role: "Manager"));
         var result = await reader.GetDeliveryHealthAsync(accountId, DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(1), CancellationToken.None);
 
         Assert.That(result, Has.Count.EqualTo(2));

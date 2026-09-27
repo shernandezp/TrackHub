@@ -19,4 +19,5 @@ public record struct UserShrankDto(
     Guid UserId,
     string Username,
     Guid AccountId,
-    bool Active);
+    bool Active,
+    string? Role = null);

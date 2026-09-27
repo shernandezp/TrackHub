@@ -32,6 +32,7 @@ internal class DeviceConfiguration : IEntityTypeConfiguration<Device>
         builder.Property(x => x.LastSyncedAt).HasColumnName("lastsyncedat");
         builder.Property(x => x.LastAssignedAt).HasColumnName("lastassignedat");
         builder.Property(x => x.IgnoredAt).HasColumnName("ignoredat");
+        builder.Property(x => x.RemovedAt).HasColumnName("removedat");
 
         builder
             .HasOne(e => e.Operator)

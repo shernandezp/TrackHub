@@ -36,7 +36,7 @@ public sealed class VisibleTransporterReader(IApplicationDbContext context, ICur
                 .Where(t => t.AccountId == scopedAccountId)
                 .Select(t => t.TransporterId)
             : Context.UsersGroup
-                .Where(ug => ug.UserId == userId)
+                .Where(ug => ug.UserId == userId && ug.Group.Active && ug.Group.AccountId == scopedAccountId)
                 .SelectMany(ug => ug.Group.Transporters)
                 .Where(t => t.AccountId == scopedAccountId)
                 .Select(t => t.TransporterId);

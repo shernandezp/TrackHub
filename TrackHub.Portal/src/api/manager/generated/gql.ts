@@ -87,6 +87,7 @@ type Documents = {
     "\n  mutation DeleteDriverQualification($driverQualificationId: UUID!) {\n    deleteDriverQualification(command: { driverQualificationId: $driverQualificationId })\n  }\n": typeof types.DeleteDriverQualificationDocument,
     "\n  mutation AssignDriverToTransporter(\n    $driverId: UUID!\n    $transporterId: UUID!\n    $startsAt: DateTime!\n    $assignmentType: String!\n  ) {\n    assignDriverToTransporter(\n      command: {\n        driverId: $driverId\n        transporterId: $transporterId\n        startsAt: $startsAt\n        assignmentType: $assignmentType\n      }\n    ) {\n      ...DriverTransporterAssignmentItem\n    }\n  }\n": typeof types.AssignDriverToTransporterDocument,
     "\n  mutation EndDriverAssignment($driverTransporterAssignmentId: UUID!, $endsAt: DateTime) {\n    endDriverAssignment(\n      command: { driverTransporterAssignmentId: $driverTransporterAssignmentId, endsAt: $endsAt }\n    )\n  }\n": typeof types.EndDriverAssignmentDocument,
+    "\n  query GetDriverLookup($search: String, $driverIds: [UUID!]) {\n    driverLookup(query: { search: $search, driverIds: $driverIds }) {\n      driverId\n      name\n      active\n    }\n  }\n": typeof types.GetDriverLookupDocument,
     "\n  fragment GeocodingProviderItem on GeocodingProviderVm {\n    geocodingProviderId\n    name\n    type\n    endpointUri\n    apiKey\n    requestsPerSecond\n    timeoutSeconds\n    configurationJson\n    active\n  }\n": typeof types.GeocodingProviderItemFragmentDoc,
     "\n  query GetGeocodingProviders {\n    geocodingProviders {\n      ...GeocodingProviderItem\n    }\n  }\n": typeof types.GetGeocodingProvidersDocument,
     "\n  mutation CreateGeocodingProvider($geocodingProvider: GeocodingProviderDtoInput!) {\n    createGeocodingProvider(command: { geocodingProvider: $geocodingProvider }) {\n      ...GeocodingProviderItem\n    }\n  }\n": typeof types.CreateGeocodingProviderDocument,
@@ -255,6 +256,7 @@ const documents: Documents = {
     "\n  mutation DeleteDriverQualification($driverQualificationId: UUID!) {\n    deleteDriverQualification(command: { driverQualificationId: $driverQualificationId })\n  }\n": types.DeleteDriverQualificationDocument,
     "\n  mutation AssignDriverToTransporter(\n    $driverId: UUID!\n    $transporterId: UUID!\n    $startsAt: DateTime!\n    $assignmentType: String!\n  ) {\n    assignDriverToTransporter(\n      command: {\n        driverId: $driverId\n        transporterId: $transporterId\n        startsAt: $startsAt\n        assignmentType: $assignmentType\n      }\n    ) {\n      ...DriverTransporterAssignmentItem\n    }\n  }\n": types.AssignDriverToTransporterDocument,
     "\n  mutation EndDriverAssignment($driverTransporterAssignmentId: UUID!, $endsAt: DateTime) {\n    endDriverAssignment(\n      command: { driverTransporterAssignmentId: $driverTransporterAssignmentId, endsAt: $endsAt }\n    )\n  }\n": types.EndDriverAssignmentDocument,
+    "\n  query GetDriverLookup($search: String, $driverIds: [UUID!]) {\n    driverLookup(query: { search: $search, driverIds: $driverIds }) {\n      driverId\n      name\n      active\n    }\n  }\n": types.GetDriverLookupDocument,
     "\n  fragment GeocodingProviderItem on GeocodingProviderVm {\n    geocodingProviderId\n    name\n    type\n    endpointUri\n    apiKey\n    requestsPerSecond\n    timeoutSeconds\n    configurationJson\n    active\n  }\n": types.GeocodingProviderItemFragmentDoc,
     "\n  query GetGeocodingProviders {\n    geocodingProviders {\n      ...GeocodingProviderItem\n    }\n  }\n": types.GetGeocodingProvidersDocument,
     "\n  mutation CreateGeocodingProvider($geocodingProvider: GeocodingProviderDtoInput!) {\n    createGeocodingProvider(command: { geocodingProvider: $geocodingProvider }) {\n      ...GeocodingProviderItem\n    }\n  }\n": types.CreateGeocodingProviderDocument,
@@ -656,6 +658,10 @@ export function graphql(source: "\n  mutation AssignDriverToTransporter(\n    $d
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation EndDriverAssignment($driverTransporterAssignmentId: UUID!, $endsAt: DateTime) {\n    endDriverAssignment(\n      command: { driverTransporterAssignmentId: $driverTransporterAssignmentId, endsAt: $endsAt }\n    )\n  }\n"): (typeof documents)["\n  mutation EndDriverAssignment($driverTransporterAssignmentId: UUID!, $endsAt: DateTime) {\n    endDriverAssignment(\n      command: { driverTransporterAssignmentId: $driverTransporterAssignmentId, endsAt: $endsAt }\n    )\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query GetDriverLookup($search: String, $driverIds: [UUID!]) {\n    driverLookup(query: { search: $search, driverIds: $driverIds }) {\n      driverId\n      name\n      active\n    }\n  }\n"): (typeof documents)["\n  query GetDriverLookup($search: String, $driverIds: [UUID!]) {\n    driverLookup(query: { search: $search, driverIds: $driverIds }) {\n      driverId\n      name\n      active\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

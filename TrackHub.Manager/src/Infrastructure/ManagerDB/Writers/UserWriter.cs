@@ -57,7 +57,10 @@ public sealed class UserWriter(IApplicationDbContext context, ICurrentPrincipal 
             userDto.UserId,
             userDto.Username,
             userDto.Active,
-            userDto.AccountId);
+            userDto.AccountId)
+        {
+            Role = userDto.Role
+        };
 
         await context.Users.AddAsync(user, cancellationToken);
         AddAuditEvent(user.AccountId, "CreateUserReplica", $"{user.UserId}", null,
@@ -89,6 +92,7 @@ public sealed class UserWriter(IApplicationDbContext context, ICurrentPrincipal 
         var previous = $$"""{"username":{{AuditJson.Quote(user.Username)}},"active":{{user.Active.ToString().ToLowerInvariant()}}}""";
         user.Username = userDto.Username;
         user.Active = userDto.Active;
+        user.Role = userDto.Role;
 
         AddAuditEvent(user.AccountId, "UpdateUserReplica", $"{user.UserId}", previous,
             $$"""{"username":{{AuditJson.Quote(user.Username)}},"active":{{user.Active.ToString().ToLowerInvariant()}}}""");

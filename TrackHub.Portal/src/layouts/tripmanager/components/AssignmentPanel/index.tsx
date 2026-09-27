@@ -22,14 +22,17 @@ import ArgonBadge from 'components/ArgonBadge';
 import ArgonButton from 'components/ArgonButton';
 import ArgonTypography from 'components/ArgonTypography';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
+import SearchSelect from 'edition/SearchSelect';
+import { useDriverSearchOptions } from 'queries/drivers';
 import { formatDateTime } from 'utils/dateUtils';
-import type { Driver } from 'api/manager/drivers';
+import type { DriverLookup } from 'api/manager/drivers';
 import type { Transporter } from 'api/manager/transporters';
 import type { TripDetail } from 'api/tripManagement/trips';
 
 interface AssignmentPanelProps {
   detail: TripDetail;
-  drivers: Driver[];
+  /** Names for the drivers this trip references; the picker searches the server itself. */
+  drivers: DriverLookup[];
   transporters: Transporter[];
   onAssign: (driverId: string, transporterId: string | null) => void;
   assigning: boolean;
@@ -48,6 +51,7 @@ function AssignmentPanel({
   const { t } = useTranslation();
   const assignment = detail.assignment;
   const [driverId, setDriverId] = useState<string>(assignment?.driverId ?? '');
+  const [pickedDriverName, setPickedDriverName] = useState<string | null>(null);
   const [transporterId, setTransporterId] = useState<string>(
     assignment?.transporterId ?? detail.trip.transporterId
   );
@@ -106,16 +110,16 @@ function AssignmentPanel({
       {editable && (
         <ArgonBox display="flex" gap={1} alignItems="flex-end" flexWrap="wrap">
           <ArgonBox width="240px">
-            <CustomSelect
-              list={drivers
-                .filter((driver) => driver.active)
-                .map((driver) => ({ value: driver.driverId, label: driver.name }))}
-              handleChange={(event) => setDriverId(String(event.target.value ?? ''))}
-              name="assignDriverId"
+            <SearchSelect
               id="assignDriverId"
               label={t('trips.assignment.driver')}
-              value={driverId}
-              numericValue={false}
+              value={driverId || null}
+              valueLabel={pickedDriverName ?? (driverId ? driverName(driverId) : null)}
+              onChange={(option) => {
+                setDriverId(option?.value ?? '');
+                setPickedDriverName(option?.label ?? null);
+              }}
+              useOptions={useDriverSearchOptions}
               placeholder={t('trips.assignment.selectDriver')}
             />
           </ArgonBox>

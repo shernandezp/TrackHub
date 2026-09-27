@@ -28,9 +28,11 @@ import type {
   DriverActiveAssignmentItemFragment as DriverActiveAssignmentItemType,
   DriverDtoInput,
   DriverQualificationDtoInput,
+  GetDriverLookupQuery,
 } from './generated/graphql';
 import {
   GetDriversByAccountDocument,
+  GetDriverLookupDocument,
   CreateDriverDocument,
   UpdateDriverDocument,
   DeactivateDriverDocument,
@@ -45,6 +47,8 @@ import {
 } from './driverOperations';
 
 export type Driver = DriverItemType;
+/** Picker projection (id, name, active) served under Trips/Read: no phone, document or licence. */
+export type DriverLookup = GetDriverLookupQuery['driverLookup'][number];
 export type DriverQualification = DriverQualificationItemType;
 export type DriverTransporterAssignment = DriverAssignmentItemType;
 /** Time-aware active assignment projection (spec 09 §7.2); no assignment row id. */
@@ -260,4 +264,16 @@ export async function endDriverAssignment(
     endsAt,
   });
   return data.endDriverAssignment;
+}
+
+/**
+ * Names and ids for pickers and boards. A search offers the account's active drivers; a list of
+ * ids names exactly those drivers, active or not.
+ */
+export async function getDriverLookup(search?: string | null, driverIds?: string[] | null): Promise<DriverLookup[]> {
+  const data = await executeGraphQL('manager', GetDriverLookupDocument, {
+    search: search || null,
+    driverIds: driverIds && driverIds.length > 0 ? driverIds : null,
+  });
+  return data.driverLookup;
 }

@@ -20,7 +20,7 @@ public interface ITripWriter
 {
     Task<TripVm> CreateTripAsync(TripDto trip, Guid accountId, CancellationToken cancellationToken);
 
-    Task UpdateTripAsync(Guid tripId, TripDto trip, Guid accountId, CancellationToken cancellationToken);
+    Task UpdateTripAsync(Guid tripId, TripDto trip, Guid accountId, DateTimeOffset? expectedLastModified, CancellationToken cancellationToken);
 
     /// <summary>
     /// Permitted only for a <c>Created</c> trip with no <c>TripEvent</c> rows; anything else is a

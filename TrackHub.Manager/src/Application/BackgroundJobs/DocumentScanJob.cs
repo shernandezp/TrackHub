@@ -14,6 +14,8 @@
 //
 
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
+using TrackHub.Manager.Application.AlertEvents;
 using TrackHub.Manager.Domain.Constants;
 
 namespace TrackHub.Manager.Application.BackgroundJobs;
@@ -26,6 +28,7 @@ namespace TrackHub.Manager.Application.BackgroundJobs;
 public sealed class DocumentScanJob(
     IDocumentScanStore store,
     IDocumentScanner scanner,
+    IAlertRecorder recorder,
     ILogger<DocumentScanJob> logger) : IScheduledJob
 {
     public static TimeSpan Interval => TimeSpan.FromSeconds(30);
@@ -48,8 +51,18 @@ public sealed class DocumentScanJob(
                     continue;
                 }
 
-                var scanStatus = await scanner.ScanAsync(document.StorageKey, cancellationToken);
-                await store.ApplyScanResultAsync(document, Classify(document, scanStatus), idempotencyKey, startedAt, cancellationToken);
+                var outcome = Classify(document, await scanner.ScanAsync(document.StorageKey, cancellationToken));
+                if (outcome.RaiseInfectedAlert)
+                {
+                    // Before the marker, so a crash in between repeats an alert the recorder folds rather than losing it.
+                    await recorder.RecordAsync(new AlertEventDto(
+                        document.AccountId, AlertEventTypes.DocumentScanFailed, AlertSeverities.High, "Documents",
+                        "Document", document.DocumentId.ToString(), "Open",
+                        JsonSerializer.Serialize(new { reason = "infected", category = document.Category }),
+                        AlertKeys.DocumentInfected(document.DocumentId, document.CurrentVersion)), cancellationToken);
+                }
+
+                await store.ApplyScanResultAsync(document, outcome, idempotencyKey, startedAt, cancellationToken);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
             catch (Exception ex)

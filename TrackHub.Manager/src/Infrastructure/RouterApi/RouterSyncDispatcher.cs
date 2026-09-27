@@ -22,7 +22,7 @@ using TrackHub.Manager.Domain.Interfaces;
 namespace TrackHub.Manager.Infrastructure.RouterApi;
 
 public sealed class RouterSyncDispatcher(IGraphQLClientFactory graphQLClient)
-    : GraphQLService(graphQLClient.CreateClient(Clients.Router)), ISyncDispatcher
+    : GraphQLService(graphQLClient.CreateClient(Clients.Router, asService: true)), ISyncDispatcher
 {
     // Single source of truth for the mutation this dispatcher sends; the
     // ServiceContracts tests validate this exact string against the Router schema.

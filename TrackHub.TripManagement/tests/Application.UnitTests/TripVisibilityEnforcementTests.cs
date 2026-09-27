@@ -68,18 +68,39 @@ public class TripVisibilityEnforcementTests
         Assert.That(scope, Is.EqualTo(TestFactory.UserId), "a dispatcher stays group-scoped on the report path");
     }
 
-    /// <summary>The service identity (non-Guid subject) sees the whole requested account.</summary>
-    [Test]
-    public async Task ReportScope_ServiceIdentity_IsAccountWide()
+    private static Mock<IUser> ServiceIdentity(Guid? accountId)
     {
         var service = new Mock<IUser>();
-        service.SetupGet(u => u.Id).Returns("reporting_client");
+        service.SetupGet(u => u.Id).Returns("acme-erp-3f2a");
         service.SetupGet(u => u.PrincipalType).Returns(PrincipalType.ServiceClient);
+        service.SetupGet(u => u.AccountId).Returns(accountId);
+        return service;
+    }
+
+    /// <summary>A service identity sees the whole account its token is bound to.</summary>
+    [Test]
+    public async Task ReportScope_ServiceIdentity_IsAccountWideForItsOwnAccount()
+    {
+        var accountId = Guid.NewGuid();
 
         var scope = await TripVisibility.ResolveReportScopeAsync(
-            service.Object, TestFactory.UserReader().Object, Guid.NewGuid(), CancellationToken.None);
+            ServiceIdentity(accountId).Object, TestFactory.UserReader().Object, accountId, CancellationToken.None);
 
         Assert.That(scope, Is.Null);
+    }
+
+    /// <summary>A partner credential of one tenant must never read another tenant's feeds.</summary>
+    [Test]
+    public void ReportScope_ServiceIdentity_RequestingAnotherAccount_IsForbidden()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.ThrowsAsync<ForbiddenAccessException>(() => TripVisibility.ResolveReportScopeAsync(
+                ServiceIdentity(Guid.NewGuid()).Object, TestFactory.UserReader().Object, Guid.NewGuid(), CancellationToken.None));
+            Assert.ThrowsAsync<ForbiddenAccessException>(() => TripVisibility.ResolveReportScopeAsync(
+                ServiceIdentity(null).Object, TestFactory.UserReader().Object, Guid.NewGuid(), CancellationToken.None),
+                "a global identity with no account claim has no tenant to read for");
+        });
     }
 
     // -----------------------------------------------------------------------------------------

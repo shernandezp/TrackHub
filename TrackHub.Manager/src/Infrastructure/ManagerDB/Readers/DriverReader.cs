@@ -167,4 +167,30 @@ public sealed class DriverReader(IApplicationDbContext context, ICurrentPrincipa
 
         return new MyDriverProfileVm(driver, qualifications, assignments);
     }
+
+    public async Task<IReadOnlyCollection<DriverLookupVm>> GetDriverLookupAsync(Guid accountId, string? search, IReadOnlyCollection<Guid>? driverIds, int fetchSize, CancellationToken cancellationToken)
+    {
+        var scopedAccountId = RequireAccountAccess(accountId);
+        var query = Context.Drivers.Where(x => x.AccountId == scopedAccountId);
+        if (driverIds is { Count: > 0 })
+        {
+            var ids = driverIds.ToArray();
+            query = query.Where(x => ids.Contains(x.DriverId));
+        }
+        else
+        {
+            query = query.Where(x => x.Active);
+        }
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(x => EF.Functions.ILike(x.Name, SearchPattern.Contains(search), SearchPattern.Escape));
+        }
+
+        return await query
+            .OrderBy(x => x.Name).ThenBy(x => x.DriverId)
+            .Take(fetchSize)
+            .Select(x => new DriverLookupVm(x.DriverId, x.Name, x.Active))
+            .ToListAsync(cancellationToken);
+    }
 }

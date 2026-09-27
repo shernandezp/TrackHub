@@ -28,6 +28,7 @@ public class DeviceTransporterReader(IGraphQLClientFactory graphQLClient)
                         identifier,
                         serial,
                         name,
+                        deviceName,
                         transporterType,
                         transporterTypeId
                     }
@@ -42,6 +43,7 @@ public class DeviceTransporterReader(IGraphQLClientFactory graphQLClient)
                         identifier,
                         serial,
                         name,
+                        deviceName,
                         transporterType,
                         transporterTypeId
                     }
@@ -55,6 +57,7 @@ public class DeviceTransporterReader(IGraphQLClientFactory graphQLClient)
                         identifier,
                         serial,
                         name,
+                        deviceName,
                         transporterType,
                         transporterTypeId
                     }

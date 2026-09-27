@@ -1,7 +1,6 @@
 using Common.Application.Exceptions;
 using Common.Application.Interfaces;
 using TrackHub.Manager.Application.AlertEvents.Commands;
-using TrackHub.Manager.Application.AlertEvents.Events;
 using TrackHub.Manager.Application.Notifications.Commands;
 using TrackHub.Manager.Domain.Interfaces;
 using TrackHub.Manager.Domain.Records;
@@ -45,20 +44,18 @@ public class NotificationCommandHandlerTests
     }
 
     [Test]
-    public async Task RecordAlertEvent_PublishesAlertEventRecordedNotification()
+    public async Task RecordAlertEvent_AnswersTheRecordedEvent()
     {
         var accountId = Guid.NewGuid();
         var dto = new AlertEventDto(accountId, "CommunicationLoss", "Warning", "Notifications", "Transporter", "id", "Open", null, "dedup");
         var vm = new AlertEventVm(Guid.NewGuid(), accountId, dto.EventType, dto.Severity, dto.SourceModule, dto.ResourceType, dto.ResourceId, dto.Status, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, null, dto.DeduplicationKey, DateTimeOffset.UtcNow);
         var writer = new Mock<IAlertEventWriter>();
-        writer.Setup(w => w.RecordAlertEventAsync(dto, It.IsAny<CancellationToken>())).ReturnsAsync(vm);
-        var publisher = new Mock<IPublisher>();
-        var handler = new RecordAlertEventCommandHandler(writer.Object, publisher.Object);
+        writer.Setup(w => w.RecordAlertEventAsync(dto, It.IsAny<CancellationToken>())).ReturnsAsync(new AlertRecordResult(vm, AlertTransition.Opened));
+        var handler = new RecordAlertEventCommandHandler(writer.Object);
 
         var result = await handler.Handle(new RecordAlertEventCommand(dto), CancellationToken.None);
 
         Assert.That(result.AlertEventId, Is.EqualTo(vm.AlertEventId));
-        publisher.Verify(p => p.Publish(It.Is<AlertEventRecorded.Notification>(n => n.AlertEvent.AlertEventId == vm.AlertEventId), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]

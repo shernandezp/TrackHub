@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using TrackHub.TripManagement.Application.Common;
 using TrackHub.TripManagement.Application.TripEvents.Services;
 using TrackHub.TripManagement.Application.Trips.Services.Interfaces;
 
@@ -50,6 +51,20 @@ public class TripDetectionServiceTests
         harness.StopWriter.Verify(w => w.RecordStopProgressAsync(
             TestFactory.TripId, TestFactory.StopId, TestFactory.AccountId, TripStopStatuses.Arrived, T0, 4.7, -74.0,
             TripEventSources.Detection, $"trip-arrive:{TestFactory.StopId:N}", null, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Test]
+    public async Task Arrival_ResolvesTheDelayAlertRaisedForThatStop()
+    {
+        var harness = new DetectionHarness(stops: [TestFactory.OpenStop(TestFactory.StopId) with { DelayAlertedAt = T0.AddMinutes(-30) }]);
+        harness.StopsContainingPoint(TestFactory.StopId);
+
+        await harness.Service().ProcessPositionsAsync(
+            [TestFactory.Position(4.7, -74.0, T0)], TestFactory.AccountId, CancellationToken.None);
+
+        harness.AlertEmitter.Verify(e => e.ResolveAsync(
+            TripEventTypes.TripDelayed, TripAlertSeverities.Warning, $"trip-delayed:{TestFactory.StopId:N}",
+            It.Is<TripAlertDto>(a => a.TripStopId == TestFactory.StopId), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
@@ -352,6 +367,21 @@ public class TripDetectionServiceTests
             TestFactory.AccountId, CancellationToken.None);
 
         Assert.That(result.DeviationsRaised, Is.Zero);
+    }
+
+    [Test]
+    public async Task Deviation_ReEntryResolvesTheOpenEpisodeAlert()
+    {
+        var harness = new DetectionHarness(hasReadyPlan: true, deviationOpenedAt: T0, consecutiveOutsideFixes: 3);
+        harness.StopsContainingPoint();
+        harness.InsideCorridor = true;
+
+        await harness.Service().ProcessPositionsAsync(
+            [TestFactory.Position(4.7, -74.0, T0.AddMinutes(10))], TestFactory.AccountId, CancellationToken.None);
+
+        harness.AlertEmitter.Verify(e => e.ResolveAsync(
+            TripEventTypes.TripRouteDeviation, TripAlertSeverities.Warning, $"trip-deviation:{TestFactory.TripId:N}:{T0.UtcTicks}",
+            It.IsAny<TripAlertDto>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]

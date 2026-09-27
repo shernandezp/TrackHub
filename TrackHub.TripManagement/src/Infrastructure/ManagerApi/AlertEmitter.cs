@@ -33,7 +33,13 @@ public class AlertEmitter(IGraphQLClientFactory graphQLClient)
 
     private static readonly JsonSerializerOptions PayloadOptions = new(JsonSerializerDefaults.Web);
 
-    public async Task EmitAsync(string eventType, string severity, string deduplicationKey, TripAlertDto alert, CancellationToken cancellationToken)
+    public Task EmitAsync(string eventType, string severity, string deduplicationKey, TripAlertDto alert, CancellationToken cancellationToken)
+        => SendAsync(eventType, severity, deduplicationKey, alert, "Open", cancellationToken);
+
+    public Task ResolveAsync(string eventType, string severity, string deduplicationKey, TripAlertDto alert, CancellationToken cancellationToken)
+        => SendAsync(eventType, severity, deduplicationKey, alert, "Resolved", cancellationToken);
+
+    private async Task SendAsync(string eventType, string severity, string deduplicationKey, TripAlertDto alert, string status, CancellationToken cancellationToken)
     {
         var request = new GraphQLRequest
         {
@@ -50,7 +56,7 @@ public class AlertEmitter(IGraphQLClientFactory graphQLClient)
                         sourceModule = TripSharing.SourceModule,
                         resourceType = TripSharing.ResourceType,
                         resourceId = alert.TripId.ToString(),
-                        status = "Open",
+                        status,
                         payloadJson = JsonSerializer.Serialize(new
                         {
                             alert.AccountId,

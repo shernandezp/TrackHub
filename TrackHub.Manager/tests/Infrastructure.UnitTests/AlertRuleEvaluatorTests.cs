@@ -126,6 +126,7 @@ public class AlertRuleEvaluatorTests
         var subscriberId = Guid.NewGuid();
         await using var context = NewContext(nameof(EvaluateAsync_EnabledSubscriptionForEventType_AddsSubscriberDelivery));
         await SeedFeatureAsync(context, accountId, FeatureKeys.Notifications);
+        await context.Users.AddAsync(new User(subscriberId, "subscriber", true, accountId) { Role = Roles.Manager });
         await context.AlertSubscriptions.AddAsync(new AlertSubscription(accountId, RecipientPrincipalTypes.User, subscriberId, "CommunicationLoss", NotificationChannels.InApp, null, true));
         await context.NotificationRules.AddAsync(new NotificationRule(accountId, "comm-loss", "Notifications", true, "CommunicationLoss",
             """{"roles":["Administrator"]}""", """["InApp"]""", null, null));
@@ -193,5 +194,66 @@ public class AlertRuleEvaluatorTests
         var created = await NewEvaluator(context).EvaluateAsync(Event(accountId), CancellationToken.None);
 
         Assert.That(created, Is.Zero);
+    }
+
+    [Test]
+    public async Task EvaluateAsync_TwoMatchingRules_SubscribersAreDeliveredOnce()
+    {
+        var accountId = Guid.NewGuid();
+        var subscriberId = Guid.NewGuid();
+        await using var context = NewContext(nameof(EvaluateAsync_TwoMatchingRules_SubscribersAreDeliveredOnce));
+        await SeedFeatureAsync(context, accountId, FeatureKeys.Notifications);
+        await context.Users.AddAsync(new User(subscriberId, "subscriber", true, accountId) { Role = Roles.Manager });
+        await context.AlertSubscriptions.AddAsync(new AlertSubscription(accountId, RecipientPrincipalTypes.User, subscriberId, "CommunicationLoss", NotificationChannels.InApp, null, true));
+        await context.NotificationRules.AddRangeAsync(
+            new NotificationRule(accountId, "comm-loss-a", "Notifications", true, "CommunicationLoss", """{"roles":["Administrator"]}""", """["InApp"]""", null, null),
+            new NotificationRule(accountId, "comm-loss-b", "Notifications", true, "CommunicationLoss", """{"roles":["Manager"]}""", """["InApp"]""", null, null));
+        await context.SaveChangesAsync(CancellationToken.None);
+
+        var created = await NewEvaluator(context).EvaluateAsync(Event(accountId), CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(created, Is.EqualTo(3), "two role rows and ONE subscriber row");
+            Assert.That(context.NotificationDeliveries.Count(d => d.Recipient == subscriberId.ToString()), Is.EqualTo(1));
+        });
+    }
+
+    [Test]
+    public async Task EvaluateAsync_FailureAlertAboutAFailureAlertDelivery_CreatesNothing()
+    {
+        var accountId = Guid.NewGuid();
+        await using var context = NewContext(nameof(EvaluateAsync_FailureAlertAboutAFailureAlertDelivery_CreatesNothing));
+        await SeedFeatureAsync(context, accountId, FeatureKeys.Notifications);
+        var rule = new NotificationRule(accountId, "delivery-failed", "Notifications", true, AlertEventTypes.NotificationDeliveryFailed, """{"roles":["Administrator"]}""", """["InApp"]""", null, null);
+        var firstFailure = new AlertEvent(accountId, AlertEventTypes.NotificationDeliveryFailed, "Warning", "Notifications", "NotificationDelivery", Guid.NewGuid().ToString(), "Open", null, "delivery-failed:1");
+        var deliveryOfTheFailure = new NotificationDelivery(accountId, rule.NotificationRuleId, firstFailure.AlertEventId, NotificationChannels.InApp, RecipientPrincipalTypes.Role, "Administrator", DeliveryStatuses.Failed);
+        await context.NotificationRules.AddAsync(rule);
+        await context.AlertEvents.AddAsync(firstFailure);
+        await context.NotificationDeliveries.AddAsync(deliveryOfTheFailure);
+        await context.SaveChangesAsync(CancellationToken.None);
+
+        var secondFailure = new AlertEventVm(Guid.NewGuid(), accountId, AlertEventTypes.NotificationDeliveryFailed, "Warning", "Notifications",
+            "NotificationDelivery", deliveryOfTheFailure.NotificationDeliveryId.ToString(), "Open", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, null, "delivery-failed:2", DateTimeOffset.UtcNow);
+        var created = await NewEvaluator(context).EvaluateAsync(secondFailure, CancellationToken.None);
+
+        Assert.That(created, Is.EqualTo(0));
+        Assert.That(context.NotificationDeliveries.Count(), Is.EqualTo(1));
+    }
+
+    [Test]
+    public async Task EvaluateAsync_RuleWithAnUnparseableSelector_DoesNotTakeTheOtherRulesDown()
+    {
+        var accountId = Guid.NewGuid();
+        await using var context = NewContext(nameof(EvaluateAsync_RuleWithAnUnparseableSelector_DoesNotTakeTheOtherRulesDown));
+        await SeedFeatureAsync(context, accountId, FeatureKeys.Notifications);
+        await context.NotificationRules.AddRangeAsync(
+            new NotificationRule(accountId, "legacy", "Notifications", true, "CommunicationLoss", "Role:Manager", """["InApp"]""", null, null),
+            new NotificationRule(accountId, "sound", "Notifications", true, "CommunicationLoss", """{"roles":["Administrator"]}""", """["InApp"]""", null, null));
+        await context.SaveChangesAsync(CancellationToken.None);
+
+        var created = await NewEvaluator(context).EvaluateAsync(Event(accountId), CancellationToken.None);
+
+        Assert.That(created, Is.EqualTo(1));
     }
 }

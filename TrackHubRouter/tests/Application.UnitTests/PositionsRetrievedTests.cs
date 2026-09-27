@@ -76,6 +76,8 @@ public class PositionsRetrievedTests : TestsContext
         geofenceWriterMock.Verify(x => x.ProcessPositionsAsync(It.IsAny<IEnumerable<PositionVm>>(), account.AccountId, It.IsAny<CancellationToken>()), Times.Once);
         syncRunMock.Verify(x => x.RecordAsync(It.Is<OperatorSyncRunDto>(d => d.Result == "SUCCEEDED" && d.PositionsAccepted == 1), It.IsAny<CancellationToken>()), Times.Once);
         alertMock.Verify(x => x.RecordAsync(It.IsAny<AlertEventDto>(), It.IsAny<CancellationToken>()), Times.Never);
+        alertMock.Verify(x => x.ResolveAsync(account.AccountId, "Operator", It.IsAny<string>(),
+            It.Is<IReadOnlyCollection<string>>(t => t.Single() == "GpsOperatorPositionSyncFailed"), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]

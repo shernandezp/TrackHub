@@ -46,6 +46,7 @@ public sealed class GeofenceWriter(IApplicationDbContext context, IUser user) : 
         };
 
         await context.Geofences.AddAsync(geofence, cancellationToken);
+        await ReconcileOpenVisitsAsync(geofence, cancellationToken);
         AddAuditEvent(accountId, "CreateGeofence", geofence.GeofenceId, null, ToAuditJson(geofence));
         await context.SaveChangesAsync(cancellationToken);
 
@@ -61,6 +62,8 @@ public sealed class GeofenceWriter(IApplicationDbContext context, IUser user) : 
         context.Geofences.Attach(geofence);
 
         var (geom, circleCenter) = BuildGeometry(geofenceDto);
+        var wasActive = geofence.Active;
+        var reshaped = !geofence.Geom.EqualsTopologically(geom);
         geofence.Geom = geom;
         geofence.CircleCenter = circleCenter;
         geofence.CircleRadiusMeters = circleCenter is null ? null : geofenceDto.CircleRadiusMeters;
@@ -74,6 +77,13 @@ public sealed class GeofenceWriter(IApplicationDbContext context, IUser user) : 
         geofence.DwellThresholdMinutes = geofenceDto.DwellThresholdMinutes;
         AddAuditEvent(geofence.AccountId, "UpdateGeofence", geofence.GeofenceId, oldValues, ToAuditJson(geofence));
 
+        // Units already inside a zone that appears, and units left outside a zone that shrinks or
+        // closes, are initial state: recorded as visits, never announced as movement.
+        if (wasActive != geofence.Active || reshaped)
+        {
+            await ReconcileOpenVisitsAsync(geofence, cancellationToken);
+        }
+
         await context.SaveChangesAsync(cancellationToken);
     }
 
@@ -82,20 +92,58 @@ public sealed class GeofenceWriter(IApplicationDbContext context, IUser user) : 
         var geofence = await context.Geofences.FindAsync([geofenceId], cancellationToken)
             ?? throw new NotFoundException(nameof(Geofence), $"{geofenceId}");
 
-        // Visit rows reference the geofence with DeleteBehavior.Restrict — without this check
-        // the delete dies in SaveChanges as a masked execution error. History is deliberately
-        // preserved: deactivation is the supported way to retire a zone.
-        var hasVisits = await context.GeofenceEvents
-            .AnyAsync(e => e.GeofenceId == geofenceId, cancellationToken);
-        if (hasVisits)
+        // Completed visits are history and are preserved: deactivation is the supported way to
+        // retire a zone. Open visits are current state (units inside right now, including the
+        // initial-state rows a new zone is seeded with) and leave with the zone.
+        var hasHistory = await context.GeofenceEvents
+            .AnyAsync(e => e.GeofenceId == geofenceId && e.DepartureTimestamp != null, cancellationToken);
+        if (hasHistory)
             throw new Common.Application.Exceptions.ConflictException(
                 "This geofence has recorded visit history and cannot be deleted. Deactivate it instead to keep the history.");
+
+        var openVisits = await context.GeofenceEvents
+            .AsTracking()
+            .Where(e => e.GeofenceId == geofenceId)
+            .ToListAsync(cancellationToken);
+        context.GeofenceEvents.RemoveRange(openVisits);
 
         context.Geofences.Attach(geofence);
         AddAuditEvent(geofence.AccountId, "DeleteGeofence", geofence.GeofenceId, ToAuditJson(geofence), null);
 
         context.Geofences.Remove(geofence);
         await context.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task ReconcileOpenVisitsAsync(Geofence geofence, CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var open = await context.GeofenceEvents
+            .AsTracking()
+            .Where(e => e.GeofenceId == geofence.GeofenceId && e.DepartureTimestamp == null)
+            .ToListAsync(cancellationToken);
+        var geom = geofence.Geom;
+        var inside = geofence.Active
+            ? await context.Transporters
+                .Where(t => t.AccountId == geofence.AccountId && geom.Intersects(t.Geom))
+                .Select(t => new { t.TransporterId, t.Geom })
+                .ToListAsync(cancellationToken)
+            : [];
+        var insideIds = inside.Select(t => t.TransporterId).ToHashSet();
+        var openIds = open.Select(v => v.TransporterId).ToHashSet();
+
+        foreach (var visit in open.Where(v => !insideIds.Contains(v.TransporterId)))
+        {
+            visit.DepartureTimestamp = now;
+            visit.ExitAlertedAt = now;
+        }
+
+        foreach (var transporter in inside.Where(t => !openIds.Contains(t.TransporterId)))
+        {
+            context.GeofenceEvents.Add(new GeofenceEvent(transporter.TransporterId, geofence.GeofenceId, geofence.AccountId, now, transporter.Geom.Y, transporter.Geom.X)
+            {
+                EntryAlertedAt = now,
+            });
+        }
     }
 
     private static (Polygon Geom, Point? CircleCenter) BuildGeometry(GeofenceDto geofenceDto)

@@ -18,7 +18,7 @@ namespace TrackHub.Geofencing.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.10")
+                .HasAnnotation("ProductVersion", "10.0.12")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "postgis");
@@ -279,9 +279,17 @@ namespace TrackHub.Geofencing.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("dwellalertedat");
 
+                    b.Property<DateTimeOffset?>("EntryAlertedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("entryalertedat");
+
                     b.Property<DateTimeOffset>("EventDateTime")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("datetime");
+
+                    b.Property<DateTimeOffset?>("ExitAlertedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("exitalertedat");
 
                     b.Property<Guid>("GeofenceId")
                         .HasColumnType("uuid")
@@ -344,25 +352,6 @@ namespace TrackHub.Geofencing.Infrastructure.Migrations
                     b.ToView("vw_transporter_position", "geofencing");
                 });
 
-            modelBuilder.Entity("TrackHub.Geofencing.Infrastructure.Entities.VwVisibleTransporter", b =>
-                {
-                    b.Property<Guid>("AccountId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("accountid");
-
-                    b.Property<Guid>("TransporterId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("transporterid");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("userid");
-
-                    b.ToTable((string)null);
-
-                    b.ToView("vw_visible_transporter", "geofencing");
-                });
-
             modelBuilder.Entity("TrackHub.Geofencing.Infrastructure.Entities.VwUser", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -383,6 +372,25 @@ namespace TrackHub.Geofencing.Infrastructure.Migrations
                     b.ToTable((string)null);
 
                     b.ToView("vw_users", "geofencing");
+                });
+
+            modelBuilder.Entity("TrackHub.Geofencing.Infrastructure.Entities.VwVisibleTransporter", b =>
+                {
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("accountid");
+
+                    b.Property<Guid>("TransporterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("transporterid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("userid");
+
+                    b.ToTable((string)null);
+
+                    b.ToView("vw_visible_transporter", "geofencing");
                 });
 
             modelBuilder.Entity("TrackHub.Geofencing.Infrastructure.Entities.GeofenceEvent", b =>

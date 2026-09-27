@@ -37,10 +37,17 @@ public sealed class NotificationDispatchStore(IApplicationDbContext context) : I
     // attempt N waits backoff(N) before the next try. Manual retries clear Error and are picked up
     // immediately. The ladder is the caller's, passed in as one cutoff per attempt count.
     public async Task<IReadOnlyCollection<DispatchDeliveryVm>> GetEligiblePendingAsync(
-        IReadOnlyList<DateTimeOffset> attemptCutoffs, int batchSize, CancellationToken cancellationToken)
+        IReadOnlyList<DateTimeOffset> attemptCutoffs, DateTimeOffset now, int batchSize, CancellationToken cancellationToken)
     {
         Guard.Against.Expression(c => c != 4, attemptCutoffs.Count, "The dispatch backoff ladder must have four rungs.");
         var (first, second, third, rest) = (attemptCutoffs[0], attemptCutoffs[1], attemptCutoffs[2], attemptCutoffs[3]);
+
+        // Entitlements are part of the selection, not a post-filter: a held delivery (channel or
+        // notifications switched off for its account) stays Pending but never occupies a batch slot,
+        // so a backlog of held rows cannot starve every other account's sends.
+        var enabled = context.AccountFeatures.Where(f => f.Enabled
+            && (f.EffectiveFrom == null || f.EffectiveFrom <= now)
+            && (f.EffectiveTo == null || f.EffectiveTo >= now));
 
         return await Project(context.NotificationDeliveries
                 .Where(d => d.Status == DeliveryStatuses.Pending
@@ -49,7 +56,15 @@ public sealed class NotificationDispatchStore(IApplicationDbContext context) : I
                         || (d.Attempts == 1 && d.LastModified <= first)
                         || (d.Attempts == 2 && d.LastModified <= second)
                         || (d.Attempts == 3 && d.LastModified <= third)
-                        || (d.Attempts >= 4 && d.LastModified <= rest)))
+                        || (d.Attempts >= 4 && d.LastModified <= rest))
+                    && enabled.Any(f => f.AccountId == d.AccountId && f.FeatureKey == FeatureKeys.Notifications)
+                    && (d.Channel == NotificationChannels.Email
+                            ? enabled.Any(f => f.AccountId == d.AccountId && f.FeatureKey == FeatureKeys.NotificationsEmail)
+                        : d.Channel == NotificationChannels.WhatsApp
+                            ? enabled.Any(f => f.AccountId == d.AccountId && f.FeatureKey == FeatureKeys.NotificationsWhatsApp)
+                        : d.Channel == NotificationChannels.Push
+                            ? enabled.Any(f => f.AccountId == d.AccountId && f.FeatureKey == FeatureKeys.DriverMobile)
+                        : true))
                 .OrderBy(d => d.Created)
                 .Take(batchSize))
             .ToListAsync(cancellationToken);
@@ -106,31 +121,6 @@ public sealed class NotificationDispatchStore(IApplicationDbContext context) : I
         {
             delivery.SentAt = DateTimeOffset.UtcNow;
             delivery.ProviderMessageId = outcome.ProviderMessageId;
-        }
-
-        if (outcome.RaiseFailureAlert)
-        {
-            // Recorded directly, no rule evaluation, so a failing channel can never notify itself
-            // into a loop; it stays visible in the alert feed.
-            // A retry that fails again folds into the open alert: the open-dedup index refuses a second insert.
-            var key = $"delivery-failed:{outcome.NotificationDeliveryId:N}";
-            var payload = JsonSerializer.Serialize(new { outcome.Channel, outcome.Attempts, outcome.Error });
-            var open = await context.AlertEvents
-                .AsTracking()
-                .FirstOrDefaultAsync(a => a.AccountId == outcome.AccountId && a.DeduplicationKey == key && a.Status != "Resolved", cancellationToken);
-
-            if (open is null)
-            {
-                context.AlertEvents.Add(new AlertEvent(
-                    outcome.AccountId, AlertEventTypes.NotificationDeliveryFailed, AlertSeverities.Warning,
-                    "Notifications", "NotificationDelivery", outcome.NotificationDeliveryId.ToString(), "Open",
-                    payload, key));
-            }
-            else
-            {
-                open.LastSeenAt = DateTimeOffset.UtcNow;
-                open.PayloadJson = payload;
-            }
         }
 
         await context.SaveChangesAsync(cancellationToken);

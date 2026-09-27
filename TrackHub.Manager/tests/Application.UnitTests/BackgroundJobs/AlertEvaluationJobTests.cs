@@ -32,14 +32,20 @@ public class AlertEvaluationJobTests
 
     private Mock<IAccountFeatureGate> _features = null!;
     private Mock<IAlertEvaluationStore> _store = null!;
-    private Mock<IAlertRuleEvaluator> _evaluator = null!;
+    private Mock<IAlertRecorder> _recorder = null!;
 
     [SetUp]
     public void SetUp()
     {
         _features = new Mock<IAccountFeatureGate>();
         _store = new Mock<IAlertEvaluationStore>();
-        _evaluator = new Mock<IAlertRuleEvaluator>();
+        _recorder = new Mock<IAlertRecorder>();
+        _recorder.Setup(r => r.RecordAsync(It.IsAny<AlertEventDto>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AlertEventDto dto, CancellationToken _) => new AlertRecordResult(Vm(dto), AlertTransition.Opened));
+        _store.Setup(s => s.RecordedKeysAsync(It.IsAny<Guid>(), It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+        _store.Setup(s => s.GetOpenAlertsAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
 
         _features.Setup(f => f.EnabledActiveAccountsAsync(It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
@@ -57,7 +63,10 @@ public class AlertEvaluationJobTests
 
     private AlertEvaluationJob CreateJob() => new(
         _features.Object,
-        _store.Object, _evaluator.Object, Mock.Of<ILogger<AlertEvaluationJob>>());
+        _store.Object, _recorder.Object, Mock.Of<ILogger<AlertEvaluationJob>>());
+
+    private static AlertEventVm Vm(AlertEventDto dto) => new(Guid.NewGuid(), dto.AccountId, dto.EventType, dto.Severity, dto.SourceModule,
+        dto.ResourceType, dto.ResourceId, dto.Status, Now, Now, dto.PayloadJson, dto.DeduplicationKey, Now);
 
     private static NotificationRuleVm Rule(string triggerEvent, string? configurationJson)
         => new(Guid.NewGuid(), AccountId, "rule", "Alert", true, triggerEvent, "role:Administrator", "[]", null, configurationJson, Now);
@@ -94,7 +103,7 @@ public class AlertEvaluationJobTests
     }
 
     [Test]
-    public async Task CommunicationLoss_DedupedAwayAlert_IsNotEvaluatedAndRecordsNoRun()
+    public async Task CommunicationLoss_EpisodeAlreadyRecorded_IsNotRaisedAgainAndRecordsNoRun()
     {
         NotificationsEnabledFor(AccountId);
         _store.Setup(s => s.GetEnabledRulesAsync(It.IsAny<IReadOnlyCollection<Guid>>(),
@@ -102,12 +111,12 @@ public class AlertEvaluationJobTests
             .ReturnsAsync([Rule(AlertEventTypes.CommunicationLoss, null)]);
         _store.Setup(s => s.GetStaleTransportersAsync(It.IsAny<Guid>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([new StaleTransporterVm(Guid.NewGuid(), "Truck 1", Now.AddHours(-3))]);
-        _store.Setup(s => s.RecordDedupedAlertAsync(It.IsAny<AlertEventDto>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AlertEventVm?)null);
+        _store.Setup(s => s.RecordedKeysAsync(AccountId, It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Guid _, IReadOnlyCollection<string> keys, CancellationToken _) => [.. keys]);
 
         await CreateJob().RunOnceAsync(Now, CancellationToken.None);
 
-        _evaluator.Verify(e => e.EvaluateAsync(It.IsAny<AlertEventVm>(), It.IsAny<CancellationToken>()), Times.Never);
+        _recorder.Verify(r => r.RecordAsync(It.IsAny<AlertEventDto>(), It.IsAny<CancellationToken>()), Times.Never);
         _store.Verify(s => s.RecordJobRunAsync(AlertEvaluationJob.JobKey, null, It.IsAny<string>(),
             It.Is<string>(k => k.StartsWith("comm-loss:")), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -204,9 +213,6 @@ public class AlertEvaluationJobTests
         var operatorId = Guid.NewGuid();
         _store.Setup(s => s.GetExpiringCredentialsAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([new ExpiringCredentialVm(Guid.NewGuid(), operatorId, AccountId, Now.AddDays(2), null, Now.AddDays(2))]);
-        _store.Setup(s => s.RecordDedupedAlertAsync(It.IsAny<AlertEventDto>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new AlertEventVm(Guid.NewGuid(), AccountId, AlertEventTypes.GpsCredentialExpiring,
-                AlertSeverities.Warning, "GpsIntegration", "Operator", operatorId.ToString(), "Open", Now, Now, null, "k", Now));
 
         await CreateJob().RunOnceAsync(Now, CancellationToken.None);
 
@@ -214,7 +220,7 @@ public class AlertEvaluationJobTests
             It.IsAny<IReadOnlyCollection<Guid>>(),
             Now.AddDays(AlertEvaluationJob.CredentialExpiryWithinDays),
             It.IsAny<CancellationToken>()), Times.Once);
-        _evaluator.Verify(e => e.EvaluateAsync(It.IsAny<AlertEventVm>(), It.IsAny<CancellationToken>()), Times.Once);
+        _recorder.Verify(r => r.RecordAsync(It.Is<AlertEventDto>(a => a.DeduplicationKey == $"gps-credential-expiring:{operatorId:N}:{Now.AddDays(2).UtcTicks}"), It.IsAny<CancellationToken>()), Times.Once);
         _store.Verify(s => s.RecordJobRunAsync(AlertEvaluationJob.JobKey, null, "1",
             $"credential-scan:{Now:yyyyMMdd}", Now, It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -225,5 +231,32 @@ public class AlertEvaluationJobTests
         await CreateJob().RunOnceAsync(Now, CancellationToken.None);
 
         _store.Verify(s => s.GetOpenCriticalAlertsAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Test]
+    public async Task CommunicationLoss_TransporterReportingAgain_ResolvesItsOpenAlert()
+    {
+        NotificationsEnabledFor(AccountId);
+        var recoveredId = Guid.NewGuid();
+        var stillSilentId = Guid.NewGuid();
+        _store.Setup(s => s.GetEnabledRulesAsync(It.IsAny<IReadOnlyCollection<Guid>>(),
+                It.Is<IReadOnlyCollection<string>>(e => e.Contains(AlertEventTypes.CommunicationLoss)), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([Rule(AlertEventTypes.CommunicationLoss, null)]);
+        _store.Setup(s => s.GetStaleTransportersAsync(It.IsAny<Guid>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new StaleTransporterVm(stillSilentId, "Truck 2", Now.AddHours(-3))]);
+        _store.Setup(s => s.GetOpenAlertsAsync(It.IsAny<IReadOnlyCollection<Guid>>(), AlertEventTypes.CommunicationLoss, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([
+                new AlertEventVm(Guid.NewGuid(), AccountId, AlertEventTypes.CommunicationLoss, "Warning", "Notifications", "Transporter", recoveredId.ToString(), "Open", Now, Now, null, "k1", Now),
+                new AlertEventVm(Guid.NewGuid(), AccountId, AlertEventTypes.CommunicationLoss, "Warning", "Notifications", "Transporter", stillSilentId.ToString(), "Open", Now, Now, null, "k2", Now),
+            ]);
+        _store.Setup(s => s.RecordedKeysAsync(AccountId, It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Guid _, IReadOnlyCollection<string> keys, CancellationToken _) => [.. keys]);
+
+        await CreateJob().RunOnceAsync(Now, CancellationToken.None);
+
+        _recorder.Verify(r => r.ResolveOpenAsync(AccountId, "Transporter", recoveredId.ToString(),
+            It.Is<IReadOnlyCollection<string>>(t => t.Single() == AlertEventTypes.CommunicationLoss), It.IsAny<CancellationToken>()), Times.Once);
+        _recorder.Verify(r => r.ResolveOpenAsync(AccountId, "Transporter", stillSilentId.ToString(),
+            It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

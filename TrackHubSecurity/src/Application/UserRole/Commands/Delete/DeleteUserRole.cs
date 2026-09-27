@@ -16,6 +16,7 @@
 
 using Common.Application.Interfaces;
 using TrackHub.Security.Application.Audit.Events;
+using TrackHub.Security.Application.Users.Events;
 
 namespace TrackHub.Security.Application.UserRole.Commands.Delete;
 
@@ -25,12 +26,12 @@ namespace TrackHub.Security.Application.UserRole.Commands.Delete;
 [AccountScopeEnforcedInHandler]
 public readonly record struct DeleteUserRoleCommand(Guid UserId, int RoleId) : IRequest;
 
-public class DeleteUserRoleCommandHandler(IUserRoleWriter writer, IPublisher publisher, ICurrentPrincipal principal) : IRequestHandler<DeleteUserRoleCommand>
+public class DeleteUserRoleCommandHandler(IUserRoleWriter writer, IUserReader reader, IPublisher publisher, ICurrentPrincipal principal) : IRequestHandler<DeleteUserRoleCommand>
 {
-    // Implement the Handle method to handle the DeleteUserRoleCommand
     public async Task Handle(DeleteUserRoleCommand request, CancellationToken cancellationToken)
     {
         await writer.DeleteUserRoleAsync(request.UserId, request.RoleId, cancellationToken);
+        await publisher.Publish(UserUpdated.Mirror(await reader.GetUserAsync(request.UserId, cancellationToken)), cancellationToken);
         await publisher.Publish(SecurityAudit.Event(principal, "UserRoleRemoved", "UserRole", $"{request.UserId}:{request.RoleId}", principal.AccountId), cancellationToken);
     }
 

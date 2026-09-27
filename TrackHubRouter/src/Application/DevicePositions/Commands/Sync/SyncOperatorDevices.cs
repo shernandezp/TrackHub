@@ -103,10 +103,6 @@ public class SyncOperatorDevicesCommandHandler(
             devices = (await reader.GetDevicesAsync(cancellationToken))?.ToArray() ?? [];
             providerReached = true;
             providerCompletedAt = DateTimeOffset.UtcNow;
-            if (request.ResetDeviceCatalog)
-            {
-                await deviceSyncWriter.ResetAsync(request.Operator.AccountId, request.Operator.OperatorId, cancellationToken);
-            }
 
             var dtos = devices.Select(d => new SynchronizedDeviceDto(
                 AccountId: request.Operator.AccountId,
@@ -120,7 +116,8 @@ public class SyncOperatorDevicesCommandHandler(
                 ProviderMetadataHash: d.ProviderMetadataHash,
                 ProviderStatus: d.ProviderStatus));
 
-            // Manager returns the counts and no longer records the run.
+            // Manager reconciles the catalog in one unit of work (a reset re-detects ignored devices
+            // there, nothing is wiped) and returns the counts; the Router records the run.
             counts = await deviceSyncWriter.SynchronizeAsync(
                 request.Operator.AccountId,
                 request.Operator.OperatorId,
@@ -128,6 +125,7 @@ public class SyncOperatorDevicesCommandHandler(
                 correlationId,
                 request.TriggerType,
                 request.AutoAssignNewDevices,
+                request.ResetDeviceCatalog,
                 cancellationToken);
 
             // The catalog may have changed (devices added/removed) — drop the cached copy so the
@@ -193,7 +191,11 @@ public class SyncOperatorDevicesCommandHandler(
                 RetryCount: 0,
                 CorrelationId: correlationId), cancellationToken);
 
-            if (!succeeded)
+            if (succeeded)
+            {
+                await alertWriter.ResolveAsync(request.Operator.AccountId, "Operator", request.Operator.OperatorId.ToString(), ["GpsOperatorDeviceSyncFailed"], cancellationToken);
+            }
+            else
             {
                 await alertWriter.RecordAsync(new AlertEventDto(
                     AccountId: request.Operator.AccountId,
@@ -204,7 +206,7 @@ public class SyncOperatorDevicesCommandHandler(
                     ResourceId: request.Operator.OperatorId.ToString(),
                     Status: "Open",
                     PayloadJson: System.Text.Json.JsonSerializer.Serialize(new { errorCode, message = errorMessage ?? "Device sync failed" }),
-                    DeduplicationKey: $"device-sync-failed:{request.Operator.OperatorId}:{DateTimeOffset.UtcNow:yyyyMMddHH}"), cancellationToken);
+                    DeduplicationKey: $"device-sync-failed:{request.Operator.OperatorId}"), cancellationToken);
             }
         }
         catch (Exception ex)

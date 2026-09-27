@@ -22,6 +22,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from 'api/manager/drivers';
+import type { SearchOptionsHook } from 'edition/SearchSelect';
 import type {
   DriverDtoInput,
   DriverQualificationDtoInput,
@@ -33,6 +34,8 @@ export const driverKeys = {
   // 'all-pages' pins the page dimension into the key: the entry holds the
   // exhaustively-paged account list, never a single clamped page.
   byAccount: (accountId: string) => [...driverKeys.all, 'byAccount', accountId, 'all-pages'] as const,
+  lookup: (search: string) => [...driverKeys.all, 'lookup', search] as const,
+  names: (driverIds: readonly string[]) => [...driverKeys.all, 'names', ...driverIds] as const,
 };
 
 export const driverQualificationKeys = {
@@ -216,3 +219,28 @@ export function useEndDriverAssignment() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: driverAssignmentKeys.all }),
   });
 }
+
+/** Active drivers as picker rows (names and ids only); the server caps the set. */
+export function useDriverLookup(search = '') {
+  return useQuery({
+    queryKey: driverKeys.lookup(search),
+    queryFn: () => api.getDriverLookup(search, null),
+  });
+}
+
+/** Names for the driver ids a board shows, active or not. */
+export function useDriverNames(driverIds: string[]) {
+  return useQuery({
+    queryKey: driverKeys.names(driverIds),
+    queryFn: () => api.getDriverLookup(null, driverIds),
+    enabled: driverIds.length > 0,
+  });
+}
+
+export const useDriverSearchOptions: SearchOptionsHook = (search) => {
+  const { data, isFetching } = useDriverLookup(search);
+  return {
+    options: (data ?? []).map((driver) => ({ value: driver.driverId, label: driver.name })),
+    loading: isFetching,
+  };
+};

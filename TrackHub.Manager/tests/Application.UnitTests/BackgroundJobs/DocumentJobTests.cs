@@ -70,7 +70,7 @@ public class DocumentJobTests
         store.Setup(s => s.JobRunSucceededAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
         var scanner = new Mock<IDocumentScanner>();
 
-        await new DocumentScanJob(store.Object, scanner.Object, Mock.Of<ILogger<DocumentScanJob>>())
+        await new DocumentScanJob(store.Object, scanner.Object, Mock.Of<IAlertRecorder>(), Mock.Of<ILogger<DocumentScanJob>>())
             .RunOnceAsync(Now, CancellationToken.None);
 
         scanner.Verify(s => s.ScanAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -88,7 +88,7 @@ public class DocumentJobTests
             .ThrowsAsync(new InvalidOperationException("scanner down"))
             .ReturnsAsync(DocumentScanStatuses.Clean);
 
-        await new DocumentScanJob(store.Object, scanner.Object, Mock.Of<ILogger<DocumentScanJob>>())
+        await new DocumentScanJob(store.Object, scanner.Object, Mock.Of<IAlertRecorder>(), Mock.Of<ILogger<DocumentScanJob>>())
             .RunOnceAsync(Now, CancellationToken.None);
 
         store.Verify(s => s.RecordFailureAsync(failing.DocumentId, AccountId, It.IsAny<string>(), It.IsAny<DateTimeOffset>(),
@@ -117,7 +117,7 @@ public class DocumentJobTests
             .ReturnsAsync([]);
         var store = new Mock<IDocumentExpirationStore>();
 
-        await new DocumentExpirationJob(features.Object, store.Object, Mock.Of<IAlertRuleEvaluator>(), Mock.Of<ILogger<DocumentExpirationJob>>())
+        await new DocumentExpirationJob(features.Object, store.Object, Mock.Of<IAlertRecorder>(), Mock.Of<ILogger<DocumentExpirationJob>>())
             .RunOnceAsync(Now, CancellationToken.None);
 
         store.Verify(s => s.GetExpiringAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -133,14 +133,11 @@ public class DocumentJobTests
         var store = new Mock<IDocumentExpirationStore>();
         store.Setup(s => s.GetExpiringAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([document]);
-        store.Setup(s => s.RecordDedupedAlertAsync(It.IsAny<AlertEventDto>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new AlertEventVm(Guid.NewGuid(), AccountId, AlertEventTypes.DocumentExpired, AlertSeverities.High,
-                "Documents", "Document", document.DocumentId.ToString(), "Open", Now, Now, null, "dedup", Now));
 
-        await new DocumentExpirationJob(features.Object, store.Object, Mock.Of<IAlertRuleEvaluator>(), Mock.Of<ILogger<DocumentExpirationJob>>())
+        await new DocumentExpirationJob(features.Object, store.Object, Mock.Of<IAlertRecorder>(), Mock.Of<ILogger<DocumentExpirationJob>>())
             .RunOnceAsync(Now, CancellationToken.None);
 
-        store.Verify(s => s.CompleteAsync(document.DocumentId, AccountId, true, $"{document.DocumentId:N}:expired",
+        store.Verify(s => s.CompleteAsync(document.DocumentId, AccountId, true, $"{document.DocumentId:N}:{document.ExpiresAt.UtcTicks}:expired",
             Now, It.IsAny<CancellationToken>()), Times.Once);
     }
 

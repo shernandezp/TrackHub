@@ -2,27 +2,6 @@ using TrackHub.Manager.Domain.Constants;
 
 namespace TrackHub.Manager.Application.Documents.Commands;
 
-// Low-level metadata primitive stays ungated so embedded module panels keep working.
-[Authorize(Resource = Resources.Documents, Action = Actions.Write)]
-public readonly record struct CreateDocumentMetadataCommand(DocumentDto Document) : IRequest<DocumentVm>;
-public class CreateDocumentMetadataCommandHandler(IDocumentWriter writer) : IRequestHandler<CreateDocumentMetadataCommand, DocumentVm>
-{
-    public async Task<DocumentVm> Handle(CreateDocumentMetadataCommand request, CancellationToken cancellationToken) => await writer.CreateDocumentMetadataAsync(request.Document, cancellationToken);
-}
-public class CreateDocumentMetadataCommandValidator : AbstractValidator<CreateDocumentMetadataCommand>
-{
-    public CreateDocumentMetadataCommandValidator()
-    {
-        RuleFor(x => x.Document.OwnerEntityType).NotEmpty();
-        RuleFor(x => x.Document.OwnerEntityId).NotEmpty();
-        RuleFor(x => x.Document.FileName).NotEmpty();
-        RuleFor(x => x.Document.Category).NotEmpty();
-        RuleFor(x => x.Document.Classification).Must(DocumentClassifications.IsValid).WithMessage("Invalid document classification.");
-        RuleFor(x => x.Document.Status).Must(DocumentStatuses.IsValid).WithMessage("Invalid document status.");
-        RuleFor(x => x.Document.ScanStatus).Must(DocumentScanStatuses.IsValid).WithMessage("Invalid scan status.");
-    }
-}
-
 // Runs the upload endpoint's authorization and tenant scope BEFORE any byte reaches storage.
 // Registering afterwards meant an unauthorized caller had already filled the document store, and
 // the compensating delete is best-effort inside a catch.

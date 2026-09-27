@@ -63,13 +63,18 @@ public sealed class TripWriter(IApplicationDbContext context, IUser user) : ITri
 
         entity.AddDomainEvent(new TripDomainEvent(TripEventTypes.TripCreated, accountId, entity.TripId));
         await context.Trips.AddAsync(entity, cancellationToken);
+        if (trip.DriverId is { } driverId)
+        {
+            await SyncAssignmentAsync(entity, driverId, DateTimeOffset.UtcNow, cancellationToken);
+        }
+
         AddAuditEvent(accountId, "CreateTrip", entity.TripId);
         await context.SaveChangesAsync(cancellationToken);
 
         return TripMapper.ToVm(entity, 0);
     }
 
-    public async Task UpdateTripAsync(Guid tripId, TripDto trip, Guid accountId, CancellationToken cancellationToken)
+    public async Task UpdateTripAsync(Guid tripId, TripDto trip, Guid accountId, DateTimeOffset? expectedLastModified, CancellationToken cancellationToken)
     {
         var entity = await FindAsync(tripId, accountId, cancellationToken);
 
@@ -77,6 +82,13 @@ public sealed class TripWriter(IApplicationDbContext context, IUser user) : ITri
         if (TripStatuses.IsTerminal(entity.Status))
         {
             throw ConflictException.WithCode(TripErrorCodes.TripAlreadyTerminal);
+        }
+
+        // The dialog carries the instant of the row it loaded; a later assign or edit moved it, so
+        // saving would silently undo that change.
+        if (expectedLastModified is { } expected && entity.LastModified != expected)
+        {
+            throw ConflictException.WithCode(TripErrorCodes.TripModifiedConcurrently);
         }
 
         await GuardUniqueCodeAsync(accountId, trip.Code, tripId, cancellationToken);
@@ -98,7 +110,7 @@ public sealed class TripWriter(IApplicationDbContext context, IUser user) : ITri
 
         entity.Code = trip.Code;
         entity.TransporterId = trip.TransporterId;
-        entity.DriverId = trip.DriverId;
+        await SyncAssignmentAsync(entity, trip.DriverId, DateTimeOffset.UtcNow, cancellationToken);
         entity.ServiceOrderId = trip.ServiceOrderId;
         entity.ExternalReference = trip.ExternalReference;
         entity.CustomerName = trip.CustomerName;
@@ -319,41 +331,13 @@ public sealed class TripWriter(IApplicationDbContext context, IUser user) : ITri
             throw ConflictException.WithCode(TripErrorCodes.TripAlreadyTerminal);
         }
 
-        var now = DateTimeOffset.UtcNow;
-
-        // Exactly one Active assignment per trip: the prior one is ENDED, never deleted, so the
-        // handover history survives.
-        var current = await context.TripAssignments
-            .AsTracking()
-            .Where(a => a.TripId == tripId && a.Status == TripAssignmentStatuses.Active)
-            .ToListAsync(cancellationToken);
-
-        foreach (var previous in current)
-        {
-            previous.Status = TripAssignmentStatuses.Ended;
-            previous.EndedAt = now;
-        }
-
-        var assignment = new TripAssignment
-        {
-            AccountId = accountId,
-            TripId = tripId,
-            DriverId = driverId,
-            TransporterId = transporterId ?? entity.TransporterId,
-            Status = TripAssignmentStatuses.Active,
-            AssignedAt = now,
-        };
-
-        entity.DriverId = driverId;
         if (transporterId is { } newTransporterId)
         {
             entity.TransporterId = newTransporterId;
         }
 
-        assignment.AddDomainEvent(new TripDomainEvent(
-            TripEventTypes.TripAssigned, accountId, tripId, assignment.TripAssignmentId));
-
-        await context.TripAssignments.AddAsync(assignment, cancellationToken);
+        var assignment = await SyncAssignmentAsync(entity, driverId, DateTimeOffset.UtcNow, cancellationToken, force: true)
+            ?? throw new InvalidOperationException("Assigning a driver always yields an assignment.");
         AddAuditEvent(accountId, "AssignTrip", tripId);
 
         try
@@ -367,6 +351,51 @@ public sealed class TripWriter(IApplicationDbContext context, IUser user) : ITri
         }
 
         return TripMapper.ToVm(assignment);
+    }
+
+    // The assignment is the only writer of a trip's driver: a driver reads trips through the Active
+    // TripAssignment, so a DriverId written anywhere else is a driver who never sees the trip.
+    // Exactly one Active assignment per trip; the prior one is ENDED, never deleted.
+    private async Task<TripAssignment?> SyncAssignmentAsync(Trip entity, Guid? driverId, DateTimeOffset now, CancellationToken cancellationToken, bool force = false)
+    {
+        var current = await context.TripAssignments
+            .AsTracking()
+            .Where(a => a.TripId == entity.TripId && a.Status == TripAssignmentStatuses.Active)
+            .ToListAsync(cancellationToken);
+
+        var unchanged = !force
+            && entity.DriverId == driverId
+            && (driverId is null ? current.Count == 0 : current.Exists(a => a.DriverId == driverId && a.TransporterId == entity.TransporterId));
+        if (unchanged)
+        {
+            return null;
+        }
+
+        foreach (var previous in current)
+        {
+            previous.Status = TripAssignmentStatuses.Ended;
+            previous.EndedAt = now;
+        }
+
+        entity.DriverId = driverId;
+        if (driverId is not { } assignee)
+        {
+            return null;
+        }
+
+        var assignment = new TripAssignment
+        {
+            AccountId = entity.AccountId,
+            TripId = entity.TripId,
+            DriverId = assignee,
+            TransporterId = entity.TransporterId,
+            Status = TripAssignmentStatuses.Active,
+            AssignedAt = now,
+        };
+        assignment.AddDomainEvent(new TripDomainEvent(
+            TripEventTypes.TripAssigned, entity.AccountId, entity.TripId, assignment.TripAssignmentId));
+        await context.TripAssignments.AddAsync(assignment, cancellationToken);
+        return assignment;
     }
 
     /// <summary>

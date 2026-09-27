@@ -46,4 +46,8 @@ public interface IGeofenceEventWriter
         Guid geofenceEventId,
         DateTimeOffset alertedAt,
         CancellationToken cancellationToken);
+
+    Task StampEntryAlertedAsync(Guid geofenceEventId, DateTimeOffset alertedAt, CancellationToken cancellationToken);
+
+    Task StampExitAlertedAsync(Guid geofenceEventId, DateTimeOffset alertedAt, CancellationToken cancellationToken);
 }

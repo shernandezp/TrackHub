@@ -193,6 +193,11 @@ services:
       - AuthorityServer__ValidateAudience=true
       - AuthorityServer__ValidateIssuer=true
       - AuthorityServer__ValidateIssuerSigningKey=true
+      # Manager's own service identity: it revokes driver credentials in Security and relays
+      # manual device syncs to the Router under manager_client, never under the caller's token.
+      - AuthorityServer__ClientId=${MANAGER_CLIENT_ID:-manager_client}
+      - AuthorityServer__ClientSecret=${MANAGER_CLIENT_SECRET}
+      - AuthorityServer__Scope=service_scope
       - AppSettings__GraphQLIdentityService=${GRAPHQL_IDENTITY_SERVICE}
       - AppSettings__GraphQLSecurityService=${GRAPHQL_SECURITY_SERVICE}
       - AppSettings__GraphQLRouterService=${GRAPHQL_ROUTER_SERVICE}
@@ -552,7 +557,6 @@ services:
       - DB_CONNECTION_MANAGER=${DB_CONNECTION_MANAGER}
     volumes:
       - ./config/clients.json:/app/clients.json:ro
-      - db-init-flag:/app/flags
     networks:
       - trackhub-network
 
@@ -626,8 +630,6 @@ networks:
 # =============================================================================
 volumes:
   trackhub-frontend:
-    driver: local
-  db-init-flag:
     driver: local
   manager-documents:
     driver: local

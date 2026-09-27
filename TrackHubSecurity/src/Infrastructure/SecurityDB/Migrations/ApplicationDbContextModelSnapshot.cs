@@ -17,7 +17,7 @@ namespace TrackHub.Security.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.11")
+                .HasAnnotation("ProductVersion", "10.0.12")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -164,6 +164,10 @@ namespace TrackHub.Security.Infrastructure.Migrations
                     b.Property<bool>("ResetRequired")
                         .HasColumnType("boolean")
                         .HasColumnName("resetrequired");
+
+                    b.Property<Guid>("SecurityStamp")
+                        .HasColumnType("uuid")
+                        .HasColumnName("securitystamp");
 
                     b.Property<DateTimeOffset?>("VerifiedAt")
                         .HasColumnType("timestamp with time zone")
@@ -643,6 +647,10 @@ namespace TrackHub.Security.Infrastructure.Migrations
                     b.Property<string>("SecondSurname")
                         .HasColumnType("text")
                         .HasColumnName("secondsurname");
+
+                    b.Property<Guid>("SecurityStamp")
+                        .HasColumnType("uuid")
+                        .HasColumnName("securitystamp");
 
                     b.Property<string>("Username")
                         .IsRequired()

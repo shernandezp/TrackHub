@@ -303,6 +303,7 @@
     "maxPerHour": "Max per Hour",
     "webhookUrl": "Webhook URL",
     "webhookSecret": "Webhook Secret",
+    "webhookSecretKept": "A secret is stored; leave blank to keep it",
     "enabled": "Enabled",
     "disable": "Disable"
   },
@@ -485,7 +486,8 @@
         "quarantined": "Quarantined",
         "infected": "Infected"
       }
-    }
+    },
+    "expiresAtKeepsCurrent": "Leave blank to keep the current expiry"
   },
   "supportGrants": {
     "title": "Support Grants",
@@ -512,6 +514,7 @@
     "reportRowLimitExceeded": "This report returned too many rows. Narrow your filters or export to Excel.",
     "tripNotActive": "This trip is not in progress, so the action cannot be recorded.",
     "tripAlreadyTerminal": "This trip is already finished and can no longer be changed.",
+    "tripModifiedConcurrently": "This trip changed while you were editing it. Reload it and apply your changes again.",
     "tripInvalidTransition": "That status change is not allowed from the trip’s current status.",
     "stopAlreadyDeparted": "This stop has already been departed; its times cannot be changed.",
     "stopNotArrived": "Record the arrival at this stop before recording the departure.",
@@ -1268,7 +1271,7 @@
       "showRecentlyAddedOnly": "Show recently added only",
       "healthHistory": "View Health History",
       "resetSync": "Reset Sync",
-      "resetSyncConfirm": "This will delete the synchronized devices for this operator and any units that only existed for those devices, then start a new sync. Continue?",
+      "resetSyncConfirm": "This will re-run device detection for this operator: devices no longer in the provider catalog are retired and their unit assignments ended, ignored devices are detected again, and units keep their identity and history. Continue?",
       "deleteDeviceConfirm": "Delete this synchronized device? Assignment history remains available in audit logs.",
       "assignDevice": "Assign Device",
       "deleteDevice": "Delete device"

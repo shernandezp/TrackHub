@@ -105,11 +105,11 @@ function DocumentPanel({ accountId = null, ownerEntityType, ownerEntityId = null
     }
   };
 
-  const handleReplace = async ({ file, reason }: UploadPayload) => {
+  const handleReplace = async ({ file, reason, expiresAt }: UploadPayload) => {
     if (!active) return;
     setLoading(true);
     try {
-      await uploadDocumentVersion(active.documentId, file, { reason });
+      await uploadDocumentVersion(active.documentId, file, { reason, expiresAt });
       await load();
     } catch (error) {
       notifyApiError(error);

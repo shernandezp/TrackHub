@@ -32,28 +32,41 @@ public sealed class SubjectValidity(
     IUserReader userReader,
     IDriverCredentialReader driverCredentialReader)
 {
+    // Re-stamped by Security on deactivation, password change, lock, reset and revocation; a
+    // session minted before that (or one predating the claim) no longer matches and ends here.
+    public const string SecurityStampClaim = "security_stamp";
+
     public async Task<bool> IsStillValidAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(principal);
 
         var principalType = principal.FindFirst("principal_type")?.Value ?? "User";
 
-        if (string.Equals(principalType, "Driver", StringComparison.OrdinalIgnoreCase))
-        {
-            // The credential the session was issued from is what must still be active: a driver may
-            // hold several, and revoking one has to end ITS sessions even while the others live on.
-            if (Guid.TryParse(principal.FindFirst("driver_credential_id")?.Value, out var credentialId))
-            {
-                return await driverCredentialReader.IsCredentialActiveAsync(credentialId, cancellationToken);
-            }
-
-            return Guid.TryParse(principal.FindFirst("driver_id")?.Value, out var driverId)
-                && await driverCredentialReader.HasActiveCredentialAsync(driverId, cancellationToken);
-        }
-
         if (string.Equals(principalType, "ServiceClient", StringComparison.OrdinalIgnoreCase))
         {
             return true;
+        }
+
+        if (!Guid.TryParse(principal.FindFirst(SecurityStampClaim)?.Value, out var sessionStamp))
+        {
+            return false;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+
+        if (string.Equals(principalType, "Driver", StringComparison.OrdinalIgnoreCase))
+        {
+            if (!Guid.TryParse(principal.FindFirst("driver_credential_id")?.Value, out var credentialId))
+            {
+                return false;
+            }
+
+            var credential = await driverCredentialReader.GetCredentialSessionAsync(credentialId, cancellationToken);
+            return credential is not null
+                && credential.Active
+                && !credential.ResetRequired
+                && (credential.LockedUntil is null || credential.LockedUntil <= now)
+                && credential.SecurityStamp == sessionStamp;
         }
 
         var subject = principal.FindFirst("user_id")?.Value
@@ -68,6 +81,7 @@ public sealed class SubjectValidity(
         var user = await userReader.GetUserAsync(userId, cancellationToken);
         return user != default
             && user.Active
-            && (user.LockedUntil is null || user.LockedUntil <= DateTimeOffset.UtcNow);
+            && (user.LockedUntil is null || user.LockedUntil <= now)
+            && user.SecurityStamp == sessionStamp;
     }
 }

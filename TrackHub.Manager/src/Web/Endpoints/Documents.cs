@@ -137,7 +137,7 @@ public sealed class Documents : Common.Web.Infrastructure.EndpointGroupBase
             stored = await storage.SaveAsync(storageKey, stream, contentType, cancellationToken);
         }
 
-        var versionDto = new DocumentVersionDto(documentId, storage.Provider, storageKey, stored.Sha256Hash, stored.SizeBytes, contentType, fileName, NullIfEmpty(form["reason"]));
+        var versionDto = new DocumentVersionDto(documentId, storage.Provider, storageKey, stored.Sha256Hash, stored.SizeBytes, contentType, fileName, NullIfEmpty(form["reason"]), ParseDate(form["expiresAt"]));
         try
         {
             var vm = await sender.Send(new ReplaceDocumentVersionCommand(documentId, versionDto), cancellationToken);
@@ -155,6 +155,10 @@ public sealed class Documents : Common.Web.Infrastructure.EndpointGroupBase
     public static async Task<IResult> Download(Guid documentId, ISender sender, IDocumentStorage storage, ApplicationDbContext context, IUser user, CancellationToken cancellationToken)
     {
         var vm = await sender.Send(new GetDocumentQuery(documentId), cancellationToken);
+        if (!DocumentStatuses.IsServable(vm.Status))
+        {
+            return Results.NotFound();
+        }
 
         if (!string.Equals(vm.ScanStatus, DocumentScanStatuses.Clean, StringComparison.OrdinalIgnoreCase))
         {
@@ -236,7 +240,7 @@ public sealed class Documents : Common.Web.Infrastructure.EndpointGroupBase
         }
 
         var document = await context.Documents.FirstOrDefaultAsync(x => x.DocumentId == documentId && x.AccountId == accountId, cancellationToken);
-        if (document is null || !string.Equals(document.ScanStatus, DocumentScanStatuses.Clean, StringComparison.OrdinalIgnoreCase))
+        if (document is null || !DocumentStatuses.IsServable(document.Status) || !string.Equals(document.ScanStatus, DocumentScanStatuses.Clean, StringComparison.OrdinalIgnoreCase))
         {
             return Results.NotFound();
         }

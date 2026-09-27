@@ -34,7 +34,7 @@ public class VisibilityTests
         var context = TestDb.NewContext();
         context.Transporters.Add(new Transporter { TransporterId = inGroup, AccountId = accountId, Name = "In", TransporterTypeId = 1 });
         context.Transporters.Add(new Transporter { TransporterId = outOfGroup, AccountId = accountId, Name = "Out", TransporterTypeId = 1 });
-        context.Groups.Add(new Group { GroupId = groupId, AccountId = accountId });
+        context.Groups.Add(new Group { GroupId = groupId, AccountId = accountId, Active = true });
         context.Set<TransporterGroup>().Add(new TransporterGroup { TransporterId = inGroup, GroupId = groupId });
         context.UsersGroup.Add(new UserGroup { UserId = userId, GroupId = groupId });
         context.SaveChanges();

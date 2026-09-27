@@ -31,6 +31,7 @@ public static class DependencyInjection
         // Register geofence detection service
         services.AddScoped<IGeofenceDetectionService, GeofenceDetectionService>();
         services.AddScoped<IDwellEvaluationService, DwellEvaluationService>();
+        services.AddScoped<IVisitAlertRetryService, VisitAlertRetryService>();
 
         return services;
     }

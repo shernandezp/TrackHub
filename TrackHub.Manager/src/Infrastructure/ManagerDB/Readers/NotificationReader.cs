@@ -14,17 +14,23 @@ public sealed class NotificationReader(IApplicationDbContext context, ICurrentPr
     public async Task<IReadOnlyCollection<NotificationRuleVm>> GetNotificationRulesAsync(Guid accountId, int skip, int take, CancellationToken cancellationToken)
     {
         var scopedAccountId = RequireAccountAccess(accountId);
-        return await Context.NotificationRules
+        RequirePrivileged();
+        var rows = await Context.NotificationRules
             .Where(x => x.AccountId == scopedAccountId)
             .OrderBy(x => x.RuleKey).ThenBy(x => x.NotificationRuleId)
             .Skip(Offset(skip)).Take(PageSize(take))
-            .Select(x => new NotificationRuleVm(x.NotificationRuleId, x.AccountId, x.RuleKey, x.RuleType, x.Enabled, x.TriggerEvent, x.RecipientSelector, x.ChannelsJson, x.ThrottlingJson, x.ConfigurationJson, x.LastModified))
             .ToListAsync(cancellationToken);
+
+        return rows
+            .Select(x => new NotificationRuleVm(x.NotificationRuleId, x.AccountId, x.RuleKey, x.RuleType, x.Enabled, x.TriggerEvent, x.RecipientSelector, x.ChannelsJson, x.ThrottlingJson,
+                Services.NotificationRuleConfigurationJson.Redact(x.ConfigurationJson), x.LastModified))
+            .ToList();
     }
 
     public async Task<IReadOnlyCollection<NotificationDeliveryVm>> GetNotificationDeliveriesAsync(Guid accountId, string? status, string? channel, DateTimeOffset? from, DateTimeOffset? to, int skip, int take, CancellationToken cancellationToken)
     {
         var scopedAccountId = RequireAccountAccess(accountId);
+        RequirePrivileged();
         var query = Context.NotificationDeliveries.Where(x => x.AccountId == scopedAccountId);
         if (!string.IsNullOrEmpty(status))
         {
@@ -128,6 +134,7 @@ public sealed class NotificationReader(IApplicationDbContext context, ICurrentPr
     public async Task<IReadOnlyCollection<DeliveryHealthVm>> GetDeliveryHealthAsync(Guid accountId, DateTimeOffset from, DateTimeOffset to, CancellationToken cancellationToken)
     {
         var scopedAccountId = RequireAccountAccess(accountId);
+        RequirePrivileged();
         return await Context.NotificationDeliveries
             .Where(x => x.AccountId == scopedAccountId && x.Created >= from && x.Created <= to)
             .GroupBy(x => new { x.Channel, x.Status })

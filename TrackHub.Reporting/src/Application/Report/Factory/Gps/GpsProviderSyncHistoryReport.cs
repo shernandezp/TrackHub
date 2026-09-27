@@ -22,12 +22,7 @@ public sealed class GpsProviderSyncHistoryReport(
         var accountId = await GpsReportSupport.RequireAccountAsync(user, features, FeatureKeys.GpsIntegration, cancellationToken);
         Guid? operatorId = filters.GetGuid(FilterNames.Operator);
         var take = GpsReportSupport.ResolveTake(filters, limits, 500);
-        var runs = await telemetry.GetOperatorSyncRunsAsync(accountId, operatorId, take, cancellationToken);
-        IEnumerable<Domain.Models.Manager.ManagerOperatorSyncRunVm> filtered = runs;
-        if (filters.GetDate(FilterNames.From) is { } from)
-            filtered = filtered.Where(r => r.StartedAt >= from);
-        if (filters.GetDate(FilterNames.To) is { } to)
-            filtered = filtered.Where(r => r.StartedAt <= to);
+        var filtered = await GpsReportSupport.DrainSyncRunsAsync(telemetry, accountId, operatorId, filters, take, cancellationToken);
         var rows = filtered.Select(r => new GpsProviderSyncHistoryRowVm(
             r.OperatorId,
             r.StartedAt,

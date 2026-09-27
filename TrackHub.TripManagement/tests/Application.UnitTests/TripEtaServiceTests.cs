@@ -375,11 +375,11 @@ public class TripEtaServiceTests
 
         Assert.That(raised, Is.EqualTo(1));
         harness.AlertEmitter.Verify(e => e.EmitAsync(
-            TripEventTypes.TripStartDue, TripAlertSeverities.Info, $"trip-startdue:{TestFactory.TripId:N}",
+            TripEventTypes.TripStartDue, TripAlertSeverities.Info, It.Is<string>(k => k.StartsWith($"trip-startdue:{TestFactory.TripId:N}:")),
             It.IsAny<TripAlertDto>(), It.IsAny<CancellationToken>()), Times.Once);
         harness.EventWriter.Verify(w => w.AppendAsync(
             TestFactory.AccountId, TestFactory.TripId, null, TripEventTypes.TripStartDue, It.IsAny<DateTimeOffset>(),
-            TripEventSources.Job, null, $"trip-start-due:{TestFactory.TripId:N}", It.IsAny<CancellationToken>()), Times.Once);
+            TripEventSources.Job, null, It.Is<string>(k => k.StartsWith($"trip-start-due:{TestFactory.TripId:N}:")), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
@@ -408,7 +408,7 @@ public class TripEtaServiceTests
         var harness = new EtaHarness();
         harness.WithTripDueToStart(TestFactory.Trip(TripStatuses.Created));
         harness.EventWriter
-            .Setup(w => w.HasEventAsync(TestFactory.AccountId, $"trip-start-due:{TestFactory.TripId:N}", It.IsAny<CancellationToken>()))
+            .Setup(w => w.HasEventAsync(TestFactory.AccountId, It.Is<string>(k => k.StartsWith($"trip-start-due:{TestFactory.TripId:N}:")), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         var raised = await harness.Service().RaiseStartRemindersAsync(CancellationToken.None);
@@ -450,7 +450,7 @@ public class TripEtaServiceTests
             TestFactory.Trip(TripStatuses.Created),
             TestFactory.Trip(TripStatuses.Created, secondTripId));
         harness.AlertEmitter
-            .Setup(e => e.EmitAsync(TripEventTypes.TripStartDue, It.IsAny<string>(), $"trip-startdue:{TestFactory.TripId:N}", It.IsAny<TripAlertDto>(), It.IsAny<CancellationToken>()))
+            .Setup(e => e.EmitAsync(TripEventTypes.TripStartDue, It.IsAny<string>(), It.Is<string>(k => k.StartsWith($"trip-startdue:{TestFactory.TripId:N}:")), It.IsAny<TripAlertDto>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("Manager is down"));
 
         var raised = await harness.Service().RaiseStartRemindersAsync(CancellationToken.None);

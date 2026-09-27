@@ -36,9 +36,8 @@
 #
 #  5. db-init runs, seeding from local/clients.json — the committed dev seed, not
 #     config/clients.json.example, whose <<GENERATE_A_SECURE_SECRET>> / <<YOUR_DOMAIN>>
-#     placeholders would be written over every client registration. Steps 1-3 are
-#     idempotent upserts; step 4 (the one-time destructive user/account-ID sync) is
-#     guarded by the db-init-flag volume.
+#     placeholders would be written over every client registration. Every step is an
+#     idempotent upsert.
 #
 #  6. appsettings mounts are redirected to local/generated/ so the production
 #     generated/ directory is never written to from this clone.

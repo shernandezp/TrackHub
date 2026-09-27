@@ -819,6 +819,10 @@ namespace TrackHub.Manager.Infrastructure.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("providerstatus");
 
+                    b.Property<DateTimeOffset?>("RemovedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("removedat");
+
                     b.Property<string>("Serial")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -2538,9 +2542,12 @@ namespace TrackHub.Manager.Infrastructure.Migrations
             modelBuilder.Entity("TrackHub.Manager.Infrastructure.Entities.TransporterPositionHistory", b =>
                 {
                     b.Property<Guid>("TransporterPositionHistoryId")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("SourceTimestamp")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("sourcetimestamp");
 
                     b.Property<Guid>("AccountId")
                         .HasColumnType("uuid")
@@ -2603,10 +2610,6 @@ namespace TrackHub.Manager.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("receivedat");
 
-                    b.Property<DateTimeOffset>("SourceTimestamp")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("sourcetimestamp");
-
                     b.Property<double>("Speed")
                         .HasColumnType("double precision")
                         .HasColumnName("speed");
@@ -2620,14 +2623,15 @@ namespace TrackHub.Manager.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("transporterid");
 
-                    b.HasKey("TransporterPositionHistoryId");
+                    b.HasKey("TransporterPositionHistoryId", "SourceTimestamp");
 
-                    b.HasIndex("IdempotencyKey")
+                    b.HasIndex("AccountId", "SourceTimestamp")
+                        .IsDescending(false, true);
+
+                    b.HasIndex("IdempotencyKey", "SourceTimestamp")
                         .IsUnique();
 
                     b.HasIndex("AccountId", "DeviceId", "SourceTimestamp");
-
-                    b.HasIndex("AccountId", "OperatorId", "SourceTimestamp");
 
                     b.HasIndex("AccountId", "TransporterId", "SourceTimestamp");
 
@@ -2690,6 +2694,11 @@ namespace TrackHub.Manager.Infrastructure.Migrations
                     b.Property<bool>("Active")
                         .HasColumnType("boolean")
                         .HasColumnName("active");
+
+                    b.Property<string>("Role")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("role");
 
                     b.Property<string>("Username")
                         .IsRequired()

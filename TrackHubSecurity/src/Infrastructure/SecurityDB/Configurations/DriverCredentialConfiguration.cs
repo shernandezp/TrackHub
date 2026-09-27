@@ -35,6 +35,7 @@ public class DriverCredentialConfiguration : IEntityTypeConfiguration<DriverCred
         builder.Property(x => x.LastLoginAt).HasColumnName("lastloginat");
         builder.Property(x => x.Active).HasColumnName("active");
         builder.Property(x => x.ResetRequired).HasColumnName("resetrequired");
+        builder.Property(x => x.SecurityStamp).HasColumnName("securitystamp");
 
         builder.Property(x => x.NormalizedLogin).HasMaxLength(ColumnMetadata.DefaultUserNameLength).IsRequired();
         builder.Property(x => x.PasswordHash).HasMaxLength(ColumnMetadata.DefaultPasswordLength).IsRequired();

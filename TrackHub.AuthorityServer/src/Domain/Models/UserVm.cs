@@ -23,4 +23,5 @@ public record struct UserVm(
     bool Active,
     int LoginAttempts,
     DateTimeOffset? LockedUntil,
-    Guid AccountId);
+    Guid AccountId,
+    Guid SecurityStamp);

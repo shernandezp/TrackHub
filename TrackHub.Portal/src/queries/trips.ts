@@ -130,8 +130,15 @@ export function useCreateTrip() {
 export function useUpdateTrip() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ tripId, trip }: { tripId: string; trip: TripDtoInput }) =>
-      api.updateTrip(tripId, trip),
+    mutationFn: ({
+      tripId,
+      trip,
+      expectedLastModified,
+    }: {
+      tripId: string;
+      trip: TripDtoInput;
+      expectedLastModified?: string | null;
+    }) => api.updateTrip(tripId, trip, expectedLastModified),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: tripKeys.all }),
   });
 }

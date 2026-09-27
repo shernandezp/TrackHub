@@ -53,10 +53,15 @@ BEGIN
     RETURN total;
 END $$;
 
+-- Month bounds are UTC midnights whatever zone the caller's session has.
 CREATE OR REPLACE FUNCTION ops.maintain_position_partitions(p_now timestamptz DEFAULT now())
-RETURNS TABLE(action text, partition_name text) LANGUAGE plpgsql AS $$
-DECLARE longest int; cutoff timestamptz; m date; part text; rec record;
+RETURNS TABLE(action text, partition_name text) LANGUAGE plpgsql SET timezone TO 'UTC' AS $$
+DECLARE longest int; cutoff timestamptz; m date; part text; rec record; legacy_empty boolean;
 BEGIN
+    IF (SELECT relkind FROM pg_class WHERE oid = to_regclass('telemetry.transporter_position_history')) IS DISTINCT FROM 'p' THEN
+        RETURN;
+    END IF;
+
     SELECT GREATEST(30, COALESCE(max(r.retention_days), 30)) INTO longest
     FROM ops.position_retention_days(p_now) r;
     cutoff := p_now - make_interval(days => longest);
@@ -93,12 +98,15 @@ BEGIN
         END IF;
     END LOOP;
 
+    -- The legacy table is referenced dynamically: a static reference fails to plan once it is gone.
     IF EXISTS (SELECT 1 FROM pg_class c JOIN pg_inherits inh ON inh.inhrelid = c.oid
                WHERE inh.inhparent = 'telemetry.transporter_position_history'::regclass
-                 AND c.relname = 'transporter_position_history_legacy')
-       AND NOT EXISTS (SELECT 1 FROM telemetry.transporter_position_history_legacy LIMIT 1) THEN
-        EXECUTE 'DROP TABLE telemetry.transporter_position_history_legacy';
-        action := 'dropped'; partition_name := 'transporter_position_history_legacy'; RETURN NEXT;
+                 AND c.relname = 'transporter_position_history_legacy') THEN
+        EXECUTE 'SELECT NOT EXISTS (SELECT 1 FROM telemetry.transporter_position_history_legacy LIMIT 1)' INTO legacy_empty;
+        IF legacy_empty THEN
+            EXECUTE 'DROP TABLE telemetry.transporter_position_history_legacy';
+            action := 'dropped'; partition_name := 'transporter_position_history_legacy'; RETURN NEXT;
+        END IF;
     END IF;
 END $$;
 

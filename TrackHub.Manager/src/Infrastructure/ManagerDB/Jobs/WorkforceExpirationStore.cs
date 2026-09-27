@@ -40,27 +40,14 @@ public sealed class WorkforceExpirationStore(IApplicationDbContext context) : IW
         => await context.BackgroundJobRuns.AnyAsync(
             r => r.JobKey == JobKey && r.IdempotencyKey == idempotencyKey && r.Status == "Succeeded", cancellationToken);
 
-    public async Task<AlertEventVm> RecordAlertAsync(
-        AlertEventDto alertEvent, Guid accountId, string resourceKey, string idempotencyKey,
-        DateTimeOffset startedAt, CancellationToken cancellationToken)
+    public async Task RecordJobRunAsync(Guid accountId, string resourceKey, string idempotencyKey, DateTimeOffset startedAt, CancellationToken cancellationToken)
     {
         context.ChangeTracker.Clear();
-
-        var entity = new AlertEvent(
-            alertEvent.AccountId, alertEvent.EventType, alertEvent.Severity, alertEvent.SourceModule,
-            alertEvent.ResourceType, alertEvent.ResourceId, alertEvent.Status, alertEvent.PayloadJson, alertEvent.DeduplicationKey);
-        context.AlertEvents.Add(entity);
         context.BackgroundJobRuns.Add(new BackgroundJobRun(
             JobKey, accountId, resourceKey, idempotencyKey, "Succeeded", 1, startedAt)
         {
             CompletedAt = DateTimeOffset.UtcNow,
         });
-
         await context.SaveChangesAsync(cancellationToken);
-
-        return new AlertEventVm(
-            entity.AlertEventId, entity.AccountId, entity.EventType, entity.Severity, entity.SourceModule,
-            entity.ResourceType, entity.ResourceId, entity.Status, entity.FirstSeenAt, entity.LastSeenAt,
-            entity.PayloadJson, entity.DeduplicationKey, entity.LastModified);
     }
 }

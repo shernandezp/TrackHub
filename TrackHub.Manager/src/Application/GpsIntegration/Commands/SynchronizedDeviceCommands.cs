@@ -1,3 +1,4 @@
+using TrackHub.Manager.Domain.Constants;
 using System.Text.Json;
 using Common.Application.Paging;
 using Microsoft.Extensions.Logging;
@@ -12,7 +13,8 @@ public readonly record struct SynchronizeOperatorDevicesCommand(
     IReadOnlyCollection<DeviceDto> Devices,
     string CorrelationId,
     string TriggerType = "AUTOMATIC",
-    bool? AutoAssignNewDevices = null) : IRequest<OperatorSyncRunVm>;
+    bool? AutoAssignNewDevices = null,
+    bool ResetDeviceCatalog = false) : IRequest<OperatorSyncRunVm>;
 
 public class SynchronizeOperatorDevicesCommandHandler(
     IDeviceWriter deviceWriter,
@@ -24,7 +26,7 @@ public class SynchronizeOperatorDevicesCommandHandler(
     IGroupWriter groupWriter,
     ITransporterGroupWriter transporterGroupWriter,
     IOperatorWriter operatorWriter,
-    IAlertEventWriter alertWriter,
+    IAlertRecorder alertRecorder,
     ILogger<SynchronizeOperatorDevicesCommandHandler> logger)
     : IRequestHandler<SynchronizeOperatorDevicesCommand, OperatorSyncRunVm>
 {
@@ -36,26 +38,19 @@ public class SynchronizeOperatorDevicesCommandHandler(
             throw new ForbiddenAccessException();
         }
 
-        var existing = await deviceReader.GetDevicesByOperatorAsync(request.OperatorId, cancellationToken);
-        var existingByIdentifier = existing
-            .GroupBy(d => d.Identifier)
-            .ToDictionary(g => g.Key, g => g.First());
-
-        var incomingIdentifiers = new HashSet<int>();
         var newlyAdded = new List<DeviceDto>();
         var newlyAddedDevices = new List<(DeviceDto Incoming, DeviceVm Device)>();
         int added = 0, updated = 0, ignored = 0;
 
-        // One unit of work for the whole catalog: per device this issued four round trips and its
-        // own save, and a failure half way left the catalog partially written with no rollback.
-        var upsertedDevices = await deviceWriter.UpsertSynchronizedDevicesAsync(
-            request.OperatorId, request.Devices, cancellationToken);
+        // One unit of work for the whole catalog, retirements included; a device the provider lists
+        // again comes back as Added and is re-assigned below rather than duplicated.
+        var reconciliation = await deviceWriter.ReconcileSynchronizedDevicesAsync(
+            request.OperatorId, request.Devices, request.ResetDeviceCatalog, cancellationToken);
+        var addedIds = reconciliation.Added.Select(d => d.DeviceId).ToHashSet();
 
-        foreach (var (incoming, upserted) in request.Devices.Zip(upsertedDevices))
+        foreach (var (incoming, upserted) in request.Devices.Zip(reconciliation.Devices))
         {
-            incomingIdentifiers.Add(incoming.Identifier);
-
-            if (!existingByIdentifier.ContainsKey(incoming.Identifier))
+            if (addedIds.Contains(upserted.DeviceId))
             {
                 added++;
                 newlyAdded.Add(incoming);
@@ -70,10 +65,7 @@ public class SynchronizeOperatorDevicesCommandHandler(
                 ignored++;
         }
 
-        var removed = existingByIdentifier
-            .Where(kvp => !incomingIdentifiers.Contains(kvp.Key))
-            .Select(kvp => kvp.Value)
-            .ToList();
+        var removed = reconciliation.Retired;
 
         var autoAssign = default(AutoAssignOutcome);
         if (request.AutoAssignNewDevices ?? true)
@@ -136,9 +128,11 @@ public class SynchronizeOperatorDevicesCommandHandler(
         {
             foreach (var device in newlyAdded)
             {
-                await alertWriter.RecordAlertEventAsync(new AlertEventDto(
+                // A device the provider lists again closes the alert its disappearance raised.
+                await alertRecorder.ResolveOpenAsync(request.AccountId, "SynchronizedDevice", device.Identifier.ToString(), [AlertEventTypes.GpsDeviceRemoved], cancellationToken);
+                await alertRecorder.RecordAsync(new AlertEventDto(
                     request.AccountId,
-                    EventType: "GpsDeviceDetected",
+                    EventType: AlertEventTypes.GpsDeviceDetected,
                     Severity: "Info",
                     SourceModule: "GpsIntegration",
                     ResourceType: "SynchronizedDevice",
@@ -150,9 +144,9 @@ public class SynchronizeOperatorDevicesCommandHandler(
             }
             foreach (var device in removed)
             {
-                await alertWriter.RecordAlertEventAsync(new AlertEventDto(
+                await alertRecorder.RecordAsync(new AlertEventDto(
                     request.AccountId,
-                    EventType: "GpsDeviceRemoved",
+                    EventType: AlertEventTypes.GpsDeviceRemoved,
                     Severity: "Warning",
                     SourceModule: "GpsIntegration",
                     ResourceType: "SynchronizedDevice",
@@ -164,9 +158,9 @@ public class SynchronizeOperatorDevicesCommandHandler(
             }
             foreach (var (serial, otherOperatorId) in duplicates)
             {
-                await alertWriter.RecordAlertEventAsync(new AlertEventDto(
+                await alertRecorder.RecordAsync(new AlertEventDto(
                     request.AccountId,
-                    EventType: "GpsDuplicateDeviceIdentifier",
+                    EventType: AlertEventTypes.GpsDuplicateDeviceIdentifier,
                     Severity: "Warning",
                     SourceModule: "GpsIntegration",
                     ResourceType: "SynchronizedDevice",
@@ -178,9 +172,9 @@ public class SynchronizeOperatorDevicesCommandHandler(
             }
             if (autoAssign is { Provisioned: > 0, Ambiguous: true })
             {
-                await alertWriter.RecordAlertEventAsync(new AlertEventDto(
+                await alertRecorder.RecordAsync(new AlertEventDto(
                     request.AccountId,
-                    EventType: "GpsAutoAssignGroupAmbiguous",
+                    EventType: AlertEventTypes.GpsAutoAssignGroupAmbiguous,
                     Severity: "Warning",
                     SourceModule: "GpsIntegration",
                     ResourceType: "Operator",

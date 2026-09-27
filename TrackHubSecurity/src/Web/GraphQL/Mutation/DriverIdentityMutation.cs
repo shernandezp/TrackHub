@@ -27,6 +27,7 @@ public partial class Mutation
     public async Task<bool> LockDriverCredential([Service] ISender sender, LockDriverCredentialCommand command, CancellationToken cancellationToken) { await sender.Send(command, cancellationToken); return true; }
     public async Task<bool> ResetDriverCredential([Service] ISender sender, ResetDriverCredentialCommand command, CancellationToken cancellationToken) { await sender.Send(command, cancellationToken); return true; }
     public async Task<bool> RevokeDriverCredential([Service] ISender sender, RevokeDriverCredentialCommand command, CancellationToken cancellationToken) { await sender.Send(command, cancellationToken); return true; }
+    public async Task<bool> RevokeDriverCredentials([Service] ISender sender, RevokeDriverCredentialsCommand command, CancellationToken cancellationToken) { await sender.Send(command, cancellationToken); return true; }
 
     public async Task<DriverDeviceRegistrationVm> RegisterDriverDevice([Service] ISender sender, RegisterDriverDeviceCommand command, CancellationToken cancellationToken)
         => await sender.Send(command, cancellationToken);

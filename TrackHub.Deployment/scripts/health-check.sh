@@ -77,24 +77,64 @@ print_header() {
     echo -e "${NC}"
 }
 
+# An unknown route falls through to the SPA's index.html with HTTP 200, so "health" checks
+# the service's own "Healthy" body and "graphql" expects a bearer challenge or JSON.
 check_endpoint() {
     local name=$1
     local url=$2
-    
+    local kind=${3:-status}
+
     printf "%-20s" "$name:"
-    
-    response=$(curl -sk -o /dev/null -w "%{http_code}" "$url" 2>/dev/null || echo "000")
-    
-    if [ "$response" == "200" ]; then
-        echo -e "${GREEN}✓ Healthy (HTTP $response)${NC}"
-        return 0
-    elif [ "$response" == "000" ]; then
+
+    local response status body headers
+    if [ "$kind" == "graphql" ]; then
+        headers=$(curl -sk -o /dev/null -D - -X POST -H "Content-Type: application/json" \
+            --data '{"query":"{ __typename }"}' "$url" 2>/dev/null) || headers=""
+        status=$(printf '%s' "$headers" | head -n 1 | awk '{print $2}')
+    else
+        response=$(curl -sk -w '\n%{http_code}' "$url" 2>/dev/null) || response=""
+        status=${response##*$'\n'}
+        body=${response%$'\n'*}
+    fi
+    [ -z "$status" ] && status="000"
+
+    if [ "$status" == "000" ]; then
         echo -e "${RED}✗ Connection Failed${NC}"
         return 1
-    else
-        echo -e "${YELLOW}⚠ HTTP $response${NC}"
-        return 1
     fi
+
+    case "$kind" in
+        graphql)
+            if printf '%s' "$headers" | grep -qi '^www-authenticate:' \
+                || printf '%s' "$headers" | grep -qi '^content-type:.*json'; then
+                echo -e "${GREEN}✓ Reachable (HTTP $status)${NC}"
+                return 0
+            fi
+            echo -e "${RED}✗ Not routed to the service (HTTP $status, no GraphQL answer)${NC}"
+            return 1
+            ;;
+        health)
+            if [ "$status" == "200" ] && [ "$body" == "Healthy" ]; then
+                echo -e "${GREEN}✓ Healthy (HTTP $status)${NC}"
+                return 0
+            fi
+            case "$body" in
+                Healthy|Degraded|Unhealthy)
+                    echo -e "${YELLOW}⚠ $body (HTTP $status)${NC}" ;;
+                *)
+                    echo -e "${RED}✗ Not routed to the service (HTTP $status)${NC}" ;;
+            esac
+            return 1
+            ;;
+        *)
+            if [ "$status" == "200" ]; then
+                echo -e "${GREEN}✓ Healthy (HTTP $status)${NC}"
+                return 0
+            fi
+            echo -e "${YELLOW}⚠ HTTP $status${NC}"
+            return 1
+            ;;
+    esac
 }
 
 check_container() {
@@ -154,12 +194,13 @@ check_service_endpoint() {
     local service=$1
     local name=$2
     local url=$3
+    local kind=${4:-status}
     if ! is_deployed "$service"; then
         printf "%-20s" "$name:"
         echo -e "${BLUE}- Not in $(basename "$COMPOSE_FILE") (skipped)${NC}"
         return 0
     fi
-    check_endpoint "$name" "$url"
+    check_endpoint "$name" "$url" "$kind"
     record $?
 }
 
@@ -190,24 +231,24 @@ echo ""
 echo "HTTP Health Endpoints:"
 echo "----------------------"
 check_service_endpoint "nginx"      "Nginx"      "$PROTOCOL://$DOMAIN/health"
-check_service_endpoint "authority"  "Authority"  "$PROTOCOL://$DOMAIN/health/authority"
-check_service_endpoint "security"   "Security"   "$PROTOCOL://$DOMAIN/health/security"
-check_service_endpoint "manager"    "Manager"    "$PROTOCOL://$DOMAIN/health/manager"
-check_service_endpoint "router"     "Router"     "$PROTOCOL://$DOMAIN/health/router"
-check_service_endpoint "geofencing" "Geofencing" "$PROTOCOL://$DOMAIN/health/geofencing"
-check_service_endpoint "tripmanagement" "Trip Management" "$PROTOCOL://$DOMAIN/health/trip"
-check_service_endpoint "telemetry"  "Telemetry"  "$PROTOCOL://$DOMAIN/health/telemetry"
-check_service_endpoint "reporting"  "Reporting"  "$PROTOCOL://$DOMAIN/health/reporting"
+check_service_endpoint "authority"  "Authority"  "$PROTOCOL://$DOMAIN/health/authority" health
+check_service_endpoint "security"   "Security"   "$PROTOCOL://$DOMAIN/health/security" health
+check_service_endpoint "manager"    "Manager"    "$PROTOCOL://$DOMAIN/health/manager" health
+check_service_endpoint "router"     "Router"     "$PROTOCOL://$DOMAIN/health/router" health
+check_service_endpoint "geofencing" "Geofencing" "$PROTOCOL://$DOMAIN/health/geofencing" health
+check_service_endpoint "tripmanagement" "Trip Management" "$PROTOCOL://$DOMAIN/health/trip" health
+check_service_endpoint "telemetry"  "Telemetry"  "$PROTOCOL://$DOMAIN/health/telemetry" health
+check_service_endpoint "reporting"  "Reporting"  "$PROTOCOL://$DOMAIN/health/reporting" health
 
 echo ""
 echo "GraphQL Endpoints:"
 echo "------------------"
-check_service_endpoint "security"   "Security GraphQL"  "$PROTOCOL://$DOMAIN/Security/graphql/"
-check_service_endpoint "manager"    "Manager GraphQL"   "$PROTOCOL://$DOMAIN/Manager/graphql/"
-check_service_endpoint "router"     "Router GraphQL"    "$PROTOCOL://$DOMAIN/Router/graphql/"
-check_service_endpoint "geofencing" "Geofence GraphQL"  "$PROTOCOL://$DOMAIN/Geofence/graphql/"
-check_service_endpoint "tripmanagement" "Trip GraphQL"  "$PROTOCOL://$DOMAIN/Trip/graphql/"
-check_service_endpoint "telemetry"  "Telemetry GraphQL" "$PROTOCOL://$DOMAIN/Telemetry/graphql/"
+check_service_endpoint "security"   "Security GraphQL"  "$PROTOCOL://$DOMAIN/Security/graphql/" graphql
+check_service_endpoint "manager"    "Manager GraphQL"   "$PROTOCOL://$DOMAIN/Manager/graphql/" graphql
+check_service_endpoint "router"     "Router GraphQL"    "$PROTOCOL://$DOMAIN/Router/graphql/" graphql
+check_service_endpoint "geofencing" "Geofence GraphQL"  "$PROTOCOL://$DOMAIN/Geofence/graphql/" graphql
+check_service_endpoint "tripmanagement" "Trip GraphQL"  "$PROTOCOL://$DOMAIN/Trip/graphql/" graphql
+check_service_endpoint "telemetry"  "Telemetry GraphQL" "$PROTOCOL://$DOMAIN/Telemetry/graphql/" graphql
 
 echo ""
 echo "Public Surfaces (no authentication):"

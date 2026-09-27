@@ -36,6 +36,7 @@ public sealed class DriverCredentialConfiguration : IEntityTypeConfiguration<Dri
         builder.Property(x => x.LastLoginAt).HasColumnName("lastloginat");
         builder.Property(x => x.Active).HasColumnName("active");
         builder.Property(x => x.ResetRequired).HasColumnName("resetrequired");
+        builder.Property(x => x.SecurityStamp).HasColumnName("securitystamp");
         builder.Property(x => x.LastModified).HasColumnName("LastModified");
 
         builder.Property(x => x.NormalizedLogin).HasMaxLength(ColumnMetadata.DefaultUserNameLength).IsRequired();

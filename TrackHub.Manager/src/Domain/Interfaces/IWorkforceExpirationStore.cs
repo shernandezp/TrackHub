@@ -29,7 +29,5 @@ public interface IWorkforceExpirationStore
     /// The alert event and its idempotency marker commit together, BEFORE notification fan-out, so
     /// "exactly one alert event per threshold" holds even if delivery then fails.
     /// </summary>
-    Task<AlertEventVm> RecordAlertAsync(
-        AlertEventDto alertEvent, Guid accountId, string resourceKey, string idempotencyKey,
-        DateTimeOffset startedAt, CancellationToken cancellationToken);
+    Task RecordJobRunAsync(Guid accountId, string resourceKey, string idempotencyKey, DateTimeOffset startedAt, CancellationToken cancellationToken);
 }

@@ -17,3 +17,21 @@ public class GetOperatorSyncRunsQueryHandler(IOperatorSyncRunReader reader)
         return reader.GetAsync(new Filters(dict), request.Take, cancellationToken);
     }
 }
+
+// The report drains page this feed to the end of the window, so it takes the window at the source
+// and pages by cursor with a unique tie-break instead of handing back the newest capped list.
+[Authorize(Resource = Resources.OperatorSyncRuns, Action = Actions.Read)]
+public readonly record struct GetOperatorSyncRunFeedQuery(
+    Guid AccountId,
+    Guid? OperatorId = null,
+    DateTimeOffset? From = null,
+    DateTimeOffset? To = null,
+    int Take = 500,
+    string? Cursor = null) : IRequest<OperatorSyncRunPageVm>;
+
+public class GetOperatorSyncRunFeedQueryHandler(IOperatorSyncRunReader reader)
+    : IRequestHandler<GetOperatorSyncRunFeedQuery, OperatorSyncRunPageVm>
+{
+    public Task<OperatorSyncRunPageVm> Handle(GetOperatorSyncRunFeedQuery request, CancellationToken cancellationToken)
+        => reader.GetFeedAsync(request.AccountId, request.OperatorId, request.From, request.To, request.Take, request.Cursor, cancellationToken);
+}

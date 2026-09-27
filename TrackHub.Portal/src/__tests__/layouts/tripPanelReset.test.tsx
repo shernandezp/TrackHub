@@ -27,11 +27,16 @@
  */
 
 import { render, screen, fireEvent } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TestWrapper } from '../components/testHelpers';
 import AssignmentPanel from 'layouts/tripmanager/components/AssignmentPanel';
 import type { TripDetail } from 'api/tripManagement/trips';
 import type { Driver } from 'api/manager/drivers';
 import type { Transporter } from 'api/manager/transporters';
+
+vi.mock('api/manager/drivers', () => ({
+  getDriverLookup: vi.fn().mockResolvedValue([]),
+}));
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
@@ -126,19 +131,22 @@ const detailFor = (tripId: string, driverId: string): TripDetail => ({
 
 test('switching trips does not carry the previous trip’s driver into Assign', () => {
   const onAssign = vi.fn();
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   // Rendered exactly as the board renders it, key included.
   const panel = (detail: TripDetail) => (
-    <TestWrapper>
-      <AssignmentPanel
-        key={detail.trip.tripId}
-        detail={detail}
-        drivers={drivers}
-        transporters={transporters}
-        onAssign={onAssign}
-        assigning={false}
-        editable
-      />
-    </TestWrapper>
+    <QueryClientProvider client={queryClient}>
+      <TestWrapper>
+        <AssignmentPanel
+          key={detail.trip.tripId}
+          detail={detail}
+          drivers={drivers}
+          transporters={transporters}
+          onAssign={onAssign}
+          assigning={false}
+          editable
+        />
+      </TestWrapper>
+    </QueryClientProvider>
   );
 
   const view = render(panel(detailFor(TRIP_A, DRIVER_A)));

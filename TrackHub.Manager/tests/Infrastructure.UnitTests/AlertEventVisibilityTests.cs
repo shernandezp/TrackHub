@@ -5,6 +5,8 @@ using TrackHub.Manager.Domain.Records;
 using TrackHub.Manager.Infrastructure;
 using TrackHub.Manager.Infrastructure.Interfaces;
 using TrackHub.Manager.Infrastructure.ManagerDB.Readers;
+using Microsoft.Extensions.Logging.Abstractions;
+using TrackHub.Manager.Infrastructure.ManagerDB.Services;
 using TrackHub.Manager.Infrastructure.ManagerDB.Writers;
 
 namespace Infrastructure.UnitTests;
@@ -79,7 +81,7 @@ public class AlertEventVisibilityTests
         await context.Transporters.AddAsync(foreignTransporter);
         await context.SaveChangesAsync(CancellationToken.None);
 
-        var writer = new AlertEventWriter(context as IApplicationDbContext, Principal(accountId, userId: Guid.NewGuid(), role: "Administrator"));
+        var writer = new AlertEventWriter(context as IApplicationDbContext, Principal(accountId, userId: Guid.NewGuid(), role: "Administrator"), new AlertRecorder(context as IApplicationDbContext, Mock.Of<IAlertRuleEvaluator>(), NullLogger<AlertRecorder>.Instance));
 
         Assert.ThrowsAsync<ForbiddenAccessException>(async () => await writer.RecordAlertEventAsync(
             new AlertEventDto(accountId, "CommunicationLoss", "Warning", "Notifications", "Transporter", foreignTransporter.TransporterId.ToString(), "Open", null, "dedup-1"), CancellationToken.None));
@@ -94,11 +96,11 @@ public class AlertEventVisibilityTests
         await context.Transporters.AddAsync(transporter);
         await context.SaveChangesAsync(CancellationToken.None);
 
-        var writer = new AlertEventWriter(context as IApplicationDbContext, Principal(accountId, userId: Guid.NewGuid(), role: "Administrator"));
+        var writer = new AlertEventWriter(context as IApplicationDbContext, Principal(accountId, userId: Guid.NewGuid(), role: "Administrator"), new AlertRecorder(context as IApplicationDbContext, Mock.Of<IAlertRuleEvaluator>(), NullLogger<AlertRecorder>.Instance));
         var result = await writer.RecordAlertEventAsync(
             new AlertEventDto(accountId, "CommunicationLoss", "Warning", "Notifications", "Transporter", transporter.TransporterId.ToString(), "Open", null, "dedup-2"), CancellationToken.None);
 
-        Assert.That(result.ResourceId, Is.EqualTo(transporter.TransporterId.ToString()));
+        Assert.That(result.Event.ResourceId, Is.EqualTo(transporter.TransporterId.ToString()));
     }
 
     [Test]
@@ -107,10 +109,10 @@ public class AlertEventVisibilityTests
         var accountId = Guid.NewGuid();
         await using var context = NewContext(nameof(RecordAlertEventAsync_UnmappedResourceType_PassesThrough));
 
-        var writer = new AlertEventWriter(context as IApplicationDbContext, Principal(accountId, userId: Guid.NewGuid(), role: "Administrator"));
+        var writer = new AlertEventWriter(context as IApplicationDbContext, Principal(accountId, userId: Guid.NewGuid(), role: "Administrator"), new AlertRecorder(context as IApplicationDbContext, Mock.Of<IAlertRuleEvaluator>(), NullLogger<AlertRecorder>.Instance));
         var result = await writer.RecordAlertEventAsync(
             new AlertEventDto(accountId, "GeofenceEntered", "Info", "Geofencing", "Geofence", Guid.NewGuid().ToString(), "Open", null, "dedup-3"), CancellationToken.None);
 
-        Assert.That(result.AlertEventId, Is.Not.EqualTo(Guid.Empty));
+        Assert.That(result.Event.AlertEventId, Is.Not.EqualTo(Guid.Empty));
     }
 }

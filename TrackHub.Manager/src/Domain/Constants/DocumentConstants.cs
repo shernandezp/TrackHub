@@ -26,6 +26,8 @@ public static class DocumentStatuses
     public const string Voided = nameof(Voided);
     public const string Deleted = nameof(Deleted);
 
+    public static bool IsServable(string? status) => status is Active or Expired;
+
     public static readonly IReadOnlyCollection<string> All =
         [Pending, Uploaded, Active, Expired, Replaced, Voided, Deleted];
 

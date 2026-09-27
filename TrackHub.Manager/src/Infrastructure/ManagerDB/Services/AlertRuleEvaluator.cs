@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Common.Domain.Constants;
 using Microsoft.Extensions.Logging;
 using TrackHub.Manager.Domain.Constants;
@@ -7,9 +8,8 @@ using TrackHub.Manager.Infrastructure.Interfaces;
 namespace TrackHub.Manager.Infrastructure.ManagerDB.Services;
 
 /// <summary>
-/// Rule evaluation for recorded alert events. Runs post-commit inside the
-/// recordAlertEvent pipeline via the AlertEventRecorded notification; per-rule failures are logged
-/// and never propagate. Channel entitlements are checked here (skip creating what could never send)
+/// Rule evaluation for recorded alert events, run by the AlertRecorder after the row is saved;
+/// per-rule failures are logged and never propagate. Channel entitlements are checked here (skip creating what could never send)
 /// and re-checked at dispatch time.
 /// </summary>
 public sealed class AlertRuleEvaluator(IApplicationDbContext context, ILogger<AlertRuleEvaluator> logger) : IAlertRuleEvaluator
@@ -34,6 +34,11 @@ public sealed class AlertRuleEvaluator(IApplicationDbContext context, ILogger<Al
             return 0;
         }
 
+        if (await IsFailureOfAFailureAlertAsync(alertEvent, cancellationToken))
+        {
+            return 0;
+        }
+
         var rules = await context.NotificationRules
             .Where(r => r.AccountId == alertEvent.AccountId && r.Enabled && r.TriggerEvent == alertEvent.EventType)
             .ToListAsync(cancellationToken);
@@ -45,12 +50,19 @@ public sealed class AlertRuleEvaluator(IApplicationDbContext context, ILogger<Al
         var emailEnabled = await FeatureEnabledAsync(alertEvent.AccountId, FeatureKeys.NotificationsEmail, now, cancellationToken);
         var whatsAppEnabled = await FeatureEnabledAsync(alertEvent.AccountId, FeatureKeys.NotificationsWhatsApp, now, cancellationToken);
 
+        // Self-service subscriptions fan out once per event, carried by the first rule that admits them.
+        var subscriptionCarrier = rules
+            .Where(AdmitsSubscribers)
+            .OrderBy(r => r.RuleKey, StringComparer.Ordinal)
+            .ThenBy(r => r.NotificationRuleId)
+            .FirstOrDefault();
+
         var created = 0;
         foreach (var rule in rules)
         {
             try
             {
-                created += await EvaluateRuleAsync(rule, alertEvent, emailEnabled, whatsAppEnabled, now, cancellationToken);
+                created += await EvaluateRuleAsync(rule, alertEvent, emailEnabled, whatsAppEnabled, ReferenceEquals(rule, subscriptionCarrier), now, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -66,7 +78,7 @@ public sealed class AlertRuleEvaluator(IApplicationDbContext context, ILogger<Al
         return created;
     }
 
-    private async Task<int> EvaluateRuleAsync(NotificationRule rule, AlertEventVm alertEvent, bool emailEnabled, bool whatsAppEnabled, DateTimeOffset now, CancellationToken cancellationToken)
+    private async Task<int> EvaluateRuleAsync(NotificationRule rule, AlertEventVm alertEvent, bool emailEnabled, bool whatsAppEnabled, bool includeSubscribers, DateTimeOffset now, CancellationToken cancellationToken)
     {
         var throttling = NotificationRuleContracts.ParseThrottling(rule.ThrottlingJson);
         var dedupeWindowMinutes = throttling.DedupeWindowMinutes ?? DefaultDedupeWindowMinutes;
@@ -102,13 +114,8 @@ public sealed class AlertRuleEvaluator(IApplicationDbContext context, ILogger<Al
         var selector = NotificationRuleContracts.ParseRecipientSelector(rule.RecipientSelector);
         var configuration = NotificationRuleContracts.ParseConfiguration(rule.ConfigurationJson);
 
-        // Self-service subscriptions fan out unless the rule explicitly opts out with subscribers: false.
-        var includeSubscribers = selector.Subscribers ?? true;
         var subscriptions = includeSubscribers
-            ? await context.AlertSubscriptions
-                .Where(s => s.AccountId == alertEvent.AccountId && s.Enabled
-                    && (s.EventTypeFilter == null || s.EventTypeFilter == alertEvent.EventType))
-                .ToListAsync(cancellationToken)
+            ? await SubscriptionsAllowedToSeeAsync(alertEvent, cancellationToken)
             : [];
 
         var recipients = new HashSet<(string Channel, string PrincipalType, string Recipient)>();
@@ -167,6 +174,69 @@ public sealed class AlertRuleEvaluator(IApplicationDbContext context, ILogger<Al
 
         return recipients.Count;
     }
+
+    // A rule whose selector does not parse fails on its own below; it must not take the event's other rules with it.
+    private static bool AdmitsSubscribers(NotificationRule rule)
+    {
+        try
+        {
+            return NotificationRuleContracts.ParseRecipientSelector(rule.RecipientSelector).Subscribers ?? true;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+    }
+
+    // A delivery that fails while carrying a delivery-failure alert must not spawn a third alert.
+    private async Task<bool> IsFailureOfAFailureAlertAsync(AlertEventVm alertEvent, CancellationToken cancellationToken)
+        => alertEvent.EventType == AlertEventTypes.NotificationDeliveryFailed
+            && Guid.TryParse(alertEvent.ResourceId, out var deliveryId)
+            && await (from d in context.NotificationDeliveries
+                      join a in context.AlertEvents on d.AlertEventId equals a.AlertEventId
+                      where d.NotificationDeliveryId == deliveryId
+                      select a.EventType)
+                .AnyAsync(t => t == AlertEventTypes.NotificationDeliveryFailed, cancellationToken);
+
+    // E-mail and WhatsApp are rendered here, so a subscriber's group scope has to be applied here too
+    // (the in-app feed re-applies it at read time): users through the one visibility predicate,
+    // drivers through their default or currently assigned vehicle.
+    private async Task<List<AlertSubscription>> SubscriptionsAllowedToSeeAsync(AlertEventVm alertEvent, CancellationToken cancellationToken)
+    {
+        var subscriptions = await context.AlertSubscriptions
+            .Where(s => s.AccountId == alertEvent.AccountId && s.Enabled
+                && (s.EventTypeFilter == null || s.EventTypeFilter == alertEvent.EventType))
+            .ToListAsync(cancellationToken);
+
+        if (subscriptions.Count == 0 || alertEvent.ResourceType != "Transporter" || !Guid.TryParse(alertEvent.ResourceId, out var transporterId))
+        {
+            return subscriptions;
+        }
+
+        var allowed = new List<AlertSubscription>(subscriptions.Count);
+        foreach (var subscription in subscriptions)
+        {
+            var visible = subscription.PrincipalType switch
+            {
+                RecipientPrincipalTypes.User => await TransporterVisibility.IsPrivilegedAsync(context, subscription.PrincipalId, cancellationToken)
+                    || await TransporterVisibility.Query(context, subscription.PrincipalId, alertEvent.AccountId, privileged: false)
+                        .AnyAsync(t => t.TransporterId == transporterId, cancellationToken),
+                RecipientPrincipalTypes.Driver => await DriverSeesAsync(subscription.PrincipalId, transporterId, cancellationToken),
+                _ => false,
+            };
+
+            if (visible)
+            {
+                allowed.Add(subscription);
+            }
+        }
+
+        return allowed;
+    }
+
+    private async Task<bool> DriverSeesAsync(Guid driverId, Guid transporterId, CancellationToken cancellationToken)
+        => await context.Drivers.AnyAsync(d => d.DriverId == driverId && d.DefaultTransporterId == transporterId, cancellationToken)
+            || await context.DriverTransporterAssignments.AnyAsync(a => a.DriverId == driverId && a.TransporterId == transporterId && a.Status == DriverAssignmentStatuses.Active, cancellationToken);
 
     private async Task ResolveInAppRecipientsAsync(Guid accountId, RecipientSelectorModel selector, HashSet<(string, string, string)> recipients, CancellationToken cancellationToken)
     {

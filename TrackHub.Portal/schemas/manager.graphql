@@ -88,6 +88,8 @@ type Query {
   driverAssignmentHistory(query: GetDriverAssignmentHistoryQueryInput!): [DriverTransporterAssignmentVm!]!
     @cost(weight: "10")
   myDriverProfile: MyDriverProfileVm! @cost(weight: "10")
+  driverLookup(query: GetDriverLookupQueryInput!): [DriverLookupVm!]!
+    @cost(weight: "10")
   geocodingProviders: [GeocodingProviderVm!]! @cost(weight: "10")
   activeGeocodingProvider: GeocodingProviderTokenVm @cost(weight: "10")
   gpsIntegrationDashboard(query: GetGpsIntegrationDashboardQueryInput!): GpsIntegrationDashboardVm!
@@ -199,6 +201,8 @@ type Mutation {
     @cost(weight: "10")
   recordAlertEvent(command: RecordAlertEventCommandInput!): AlertEventVm!
     @cost(weight: "10")
+  resolveAlertEvents(command: ResolveAlertEventsCommandInput!): Int!
+    @cost(weight: "10")
   acknowledgeAlertEvent(command: AcknowledgeAlertEventCommandInput!): Boolean!
     @cost(weight: "10")
   resolveAlertEvent(command: ResolveAlertEventCommandInput!): Boolean!
@@ -221,10 +225,7 @@ type Mutation {
   updateToken(id: UUID!, command: UpdateTokenCommandInput!): Boolean!
     @cost(weight: "10")
   deleteCredential(id: UUID!): UUID! @cost(weight: "10")
-  wipeDevices(operatorId: UUID!): UUID! @cost(weight: "10")
   deleteDevice(deviceId: UUID!): UUID! @cost(weight: "10")
-  createDocumentMetadata(command: CreateDocumentMetadataCommandInput!): DocumentVm!
-    @cost(weight: "10")
   markDocumentUploaded(command: MarkDocumentUploadedCommandInput!): Boolean!
     @cost(weight: "10")
   markDocumentScanResult(command: MarkDocumentScanResultCommandInput!): Boolean!
@@ -591,6 +592,7 @@ type DeviceTransporterVm {
   name: String!
   transporterType: TransporterType!
   transporterTypeId: Short!
+  deviceName: String!
 }
 
 type DeviceVm {
@@ -690,6 +692,12 @@ type DriverAssignmentVm {
   startsAt: DateTime
   endsAt: DateTime
   assignmentType: String
+}
+
+type DriverLookupVm {
+  driverId: UUID!
+  name: String!
+  active: Boolean!
 }
 
 type DriverQualificationVm {
@@ -1253,10 +1261,6 @@ input CreateCredentialCommandInput {
   credential: CredentialDtoInput!
 }
 
-input CreateDocumentMetadataCommandInput {
-  document: DocumentDtoInput!
-}
-
 input CreateDriverCommandInput {
   driver: DriverDtoInput!
 }
@@ -1375,32 +1379,6 @@ input DisableNotificationRuleCommandInput {
   notificationRuleId: UUID!
 }
 
-input DocumentDtoInput {
-  accountId: UUID!
-  ownerEntityType: String!
-  ownerEntityId: String!
-  uploadedByPrincipalType: String!
-  uploadedByPrincipalId: String!
-  storageProvider: String!
-  storageKey: String!
-  contentType: String!
-  sizeBytes: Long!
-  sha256Hash: String!
-  classification: String!
-  status: String!
-  expiresAt: DateTime
-  visibilityScope: String!
-  scanStatus: String!
-  fileName: String! = ""
-  category: String! = ""
-  title: String
-  description: String
-  capturedLatitude: Float
-  capturedLongitude: Float
-  capturedAtDeviceTime: DateTime
-  sourceDeviceRegistrationId: UUID
-}
-
 input DocumentSearchFilterInput {
   ownerEntityType: String
   ownerEntityId: String
@@ -1442,6 +1420,7 @@ input DocumentVersionDtoInput {
   contentType: String!
   fileName: String!
   reason: String
+  expiresAt: DateTime
 }
 
 input DriverDtoInput {
@@ -1692,6 +1671,11 @@ input GetDriverAssignmentHistoryQueryInput {
 
 input GetDriverAssignmentsQueryInput {
   driverId: UUID!
+}
+
+input GetDriverLookupQueryInput {
+  search: String
+  driverIds: [UUID!]
 }
 
 input GetDriverQualificationsQueryInput {
@@ -1997,6 +1981,13 @@ input ResolveAlertEventCommandInput {
   alertEventId: UUID!
 }
 
+input ResolveAlertEventsCommandInput {
+  accountId: UUID!
+  resourceType: String!
+  resourceId: String!
+  eventTypes: [String!]!
+}
+
 input ResolvePublicLinkGrantCommandInput {
   publicLinkGrantId: UUID!
   accountId: UUID!
@@ -2061,6 +2052,7 @@ input SynchronizeOperatorDevicesCommandInput {
   correlationId: String!
   triggerType: String! = "AUTOMATIC"
   autoAssignNewDevices: Boolean
+  resetDeviceCatalog: Boolean! = false
 }
 
 input TransporterDeviceAssignmentDtoInput {
@@ -2292,6 +2284,7 @@ input UpdateUserDtoInput {
   userId: UUID!
   username: String!
   active: Boolean!
+  role: String
 }
 
 input UpdateUserSettingsCommandInput {
@@ -2303,6 +2296,7 @@ input UserDtoInput {
   username: String!
   active: Boolean!
   accountId: UUID!
+  role: String
 }
 
 input UserGroupDtoInput {

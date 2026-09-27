@@ -47,6 +47,7 @@ export const ERROR_CODE_I18N: Record<string, string> = {
   // TrackHub.TripManagement Domain/Constants/TripConstants.cs → TripErrorCodes
   TRIP_NOT_ACTIVE: 'errors.tripNotActive',
   TRIP_ALREADY_TERMINAL: 'errors.tripAlreadyTerminal',
+  TRIP_MODIFIED_CONCURRENTLY: 'errors.tripModifiedConcurrently',
   TRIP_INVALID_TRANSITION: 'errors.tripInvalidTransition',
   STOP_ALREADY_DEPARTED: 'errors.stopAlreadyDeparted',
   STOP_NOT_ARRIVED: 'errors.stopNotArrived',

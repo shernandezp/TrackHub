@@ -4,6 +4,7 @@ using Common.Infrastructure.Interceptors;
 using Common.Mediator;
 using Moq;
 using TrackHub.Manager.Domain.Constants;
+using TrackHub.Manager.Domain.Interfaces;
 using TrackHub.Manager.Domain.Records;
 using TrackHub.Manager.Infrastructure;
 using TrackHub.Manager.Infrastructure.Events;
@@ -63,7 +64,7 @@ public class WorkforceDomainEventTests
         using var context = NewContext(nameof(QualificationLifecycle_DispatchesCreatedUpdatedAndDeleted));
         var accountId = Guid.NewGuid();
         var driver = SeedDriver(context, accountId);
-        var writer = new DriverQualificationWriter(context, Principal(accountId));
+        var writer = new DriverQualificationWriter(context, Principal(accountId), Mock.Of<IAlertRecorder>());
 
         var created = await writer.CreateDriverQualificationAsync(Dto(accountId, driver.DriverId), CancellationToken.None);
         Assert.That(_published.OfType<DriverQualificationCreatedEvent>().Single().DriverQualificationId,

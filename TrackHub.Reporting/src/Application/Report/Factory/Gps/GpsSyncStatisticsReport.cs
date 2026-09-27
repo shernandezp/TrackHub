@@ -25,15 +25,9 @@ public sealed class GpsSyncStatisticsReport(
     {
         var accountId = await GpsReportSupport.RequireAccountAsync(user, features, FeatureKeys.GpsIntegration, cancellationToken);
         var take = GpsReportSupport.ResolveTake(filters, limits);
-        var runs = await telemetry.GetOperatorSyncRunsAsync(accountId, null, take, cancellationToken);
+        var filtered = await GpsReportSupport.DrainSyncRunsAsync(telemetry, accountId, null, filters, take, cancellationToken);
         var operators = (await manager.GetOperatorsAsync(cancellationToken))
             .ToDictionary(o => o.OperatorId, o => o.Name);
-
-        IEnumerable<Domain.Models.Manager.ManagerOperatorSyncRunVm> filtered = runs;
-        if (filters.GetDate(FilterNames.From) is { } from)
-            filtered = filtered.Where(r => r.StartedAt >= from);
-        if (filters.GetDate(FilterNames.To) is { } to)
-            filtered = filtered.Where(r => r.StartedAt <= to);
 
         var calendar = await (zones ?? UtcAccountTimeZoneResolver.Instance).ResolveAsync(accountId, cancellationToken);
         var rows = filtered

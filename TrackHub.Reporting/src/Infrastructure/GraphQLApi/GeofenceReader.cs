@@ -1,3 +1,4 @@
+using TrackHub.Reporting.Domain.Paging;
 using TrackHub.Reporting.Domain.Interfaces.Geofence;
 using TrackHub.Reporting.Domain.Records;
 
@@ -35,12 +36,6 @@ public class GeofenceReader(IGraphQLClientFactory graphQLClient)
                     }
                 }";
 
-    // Producer-side page clamp is 500; loop until the page count is reached. The row ceiling
-    // is a defensive source-fetch cap — the governed export limit is enforced downstream
-    // (AppSettings:Reporting), same rationale as DocumentReportReader.MaxRows.
-    private const int PageSize = 500;
-    private const int MaxRows = 100_000;
-
     /// <summary>
     /// Retrieves the device positions asynchronously
     /// </summary>
@@ -61,10 +56,7 @@ public class GeofenceReader(IGraphQLClientFactory graphQLClient)
     /// transporter/geofence, draining the producer's server-side pages.
     /// </summary>
     public async Task<IEnumerable<GeofenceEventReportVm>> GetGeofenceEventsAsync(FilterDto filters, CancellationToken cancellationToken)
-    {
-        var rows = new List<GeofenceEventReportVm>();
-
-        while (rows.Count < MaxRows)
+        => await FeedDrain.DrainAsync<GeofenceEventReportVm>(async (skip, take) =>
         {
             var request = new GraphQLRequest
             {
@@ -75,21 +67,13 @@ public class GeofenceReader(IGraphQLClientFactory graphQLClient)
                     to = filters.GetDate(FilterNames.To),
                     transporterId = filters.GetGuid(FilterNames.Transporter),
                     geofenceId = filters.GetGuid(FilterNames.Geofence),
-                    skip = rows.Count,
-                    take = PageSize
+                    skip,
+                    take
                 }
             };
             var page = await QueryAsync<GeofenceEventsPageVm>(request, cancellationToken);
-            var items = page.Items as ICollection<GeofenceEventReportVm> ?? [.. page.Items ?? []];
-            if (items.Count == 0)
-                break;
-
-            rows.AddRange(items);
-            if (rows.Count >= page.TotalCount || items.Count < PageSize)
-                break;
-        }
-
-        return rows;
-    }
+            var items = page.Items as IReadOnlyCollection<GeofenceEventReportVm> ?? [.. page.Items ?? []];
+            return (items, page.TotalCount);
+        });
 }
 

@@ -4,6 +4,7 @@ public interface IDriverReader
 {
     Task<DriverVm> GetDriverAsync(Guid driverId, CancellationToken cancellationToken);
     Task<IReadOnlyCollection<DriverVm>> GetDriversByAccountAsync(Guid accountId, int skip, int take, CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<DriverLookupVm>> GetDriverLookupAsync(Guid accountId, string? search, IReadOnlyCollection<Guid>? driverIds, int fetchSize, CancellationToken cancellationToken);
     Task<IReadOnlyCollection<DriverAssignmentVm>> GetDriverAssignmentsAsync(Guid driverId, CancellationToken cancellationToken);
     Task<bool> ValidateDriverAssignmentAsync(Guid driverId, string resourceType, string resourceId, CancellationToken cancellationToken);
 

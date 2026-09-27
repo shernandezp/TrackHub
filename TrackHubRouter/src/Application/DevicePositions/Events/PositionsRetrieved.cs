@@ -194,7 +194,11 @@ public sealed class PositionsRetrieved
                         ErrorMessage: errorMessage,
                         CorrelationId: notification.CorrelationId), cancellationToken);
 
-                    if (result == "FAILED")
+                    if (result != "FAILED")
+                    {
+                        await alertWriter.ResolveAsync(notification.Settings.AccountId, "Operator", notification.Operator.OperatorId.ToString(), ["GpsOperatorPositionSyncFailed"], cancellationToken);
+                    }
+                    else
                     {
                         await alertWriter.RecordAsync(new AlertEventDto(
                             AccountId: notification.Settings.AccountId,
@@ -205,7 +209,7 @@ public sealed class PositionsRetrieved
                             ResourceId: notification.Operator.OperatorId.ToString(),
                             Status: "Open",
                             PayloadJson: System.Text.Json.JsonSerializer.Serialize(new { errorCode, message = errorMessage ?? "Position sync failed" }),
-                            DeduplicationKey: $"position-sync-failed:{notification.Operator.OperatorId}:{DateTimeOffset.UtcNow:yyyyMMddHH}"), cancellationToken);
+                            DeduplicationKey: $"position-sync-failed:{notification.Operator.OperatorId}"), cancellationToken);
                     }
                 }
                 catch (Exception ex)

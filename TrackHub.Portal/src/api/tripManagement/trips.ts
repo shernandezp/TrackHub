@@ -256,8 +256,16 @@ export async function createTrip(trip: TripDtoInput): Promise<Trip> {
   return data.createTrip;
 }
 
-export async function updateTrip(tripId: string, trip: TripDtoInput): Promise<boolean> {
-  const data = await executeGraphQL('tripManagement', UpdateTripDocument, { tripId, trip });
+export async function updateTrip(
+  tripId: string,
+  trip: TripDtoInput,
+  expectedLastModified?: string | null
+): Promise<boolean> {
+  const data = await executeGraphQL('tripManagement', UpdateTripDocument, {
+    tripId,
+    trip,
+    expectedLastModified: expectedLastModified ?? null,
+  });
   return data.updateTrip;
 }
 

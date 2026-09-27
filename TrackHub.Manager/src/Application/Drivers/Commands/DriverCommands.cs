@@ -59,9 +59,20 @@ public class CreateDriverCommandValidator : AbstractValidator<CreateDriverComman
 
 [Authorize(Resource = Resources.Drivers, Action = Actions.Edit)]
 public readonly record struct UpdateDriverCommand(Guid DriverId, DriverDto Driver) : IRequest;
-public class UpdateDriverCommandHandler(IDriverWriter writer) : IRequestHandler<UpdateDriverCommand>
+public class UpdateDriverCommandHandler(IDriverReader reader, IDriverCredentialRevoker revoker, IDriverWriter writer) : IRequestHandler<UpdateDriverCommand>
 {
-    public async Task Handle(UpdateDriverCommand request, CancellationToken cancellationToken) => await writer.UpdateDriverAsync(request.DriverId, request.Driver, cancellationToken);
+    // Credentials are revoked BEFORE the local write: a Security outage then fails the command and
+    // the driver stays active, never active-here-but-still-signing-in.
+    public async Task Handle(UpdateDriverCommand request, CancellationToken cancellationToken)
+    {
+        var current = await reader.GetDriverAsync(request.DriverId, cancellationToken);
+        if (current.Active && !request.Driver.Active)
+        {
+            await revoker.RevokeDriverCredentialsAsync(current.DriverId, current.AccountId, cancellationToken);
+        }
+
+        await writer.UpdateDriverAsync(request.DriverId, request.Driver, cancellationToken);
+    }
 }
 public class UpdateDriverCommandValidator : AbstractValidator<UpdateDriverCommand>
 {
@@ -77,9 +88,14 @@ public class UpdateDriverCommandValidator : AbstractValidator<UpdateDriverComman
 // checks the loaded row's owning account (RequireAccountAccess) or filters on the caller's scope.
 [AccountScopeEnforcedInHandler]
 public readonly record struct DeactivateDriverCommand(Guid DriverId) : IRequest;
-public class DeactivateDriverCommandHandler(IDriverWriter writer) : IRequestHandler<DeactivateDriverCommand>
+public class DeactivateDriverCommandHandler(IDriverReader reader, IDriverCredentialRevoker revoker, IDriverWriter writer) : IRequestHandler<DeactivateDriverCommand>
 {
-    public async Task Handle(DeactivateDriverCommand request, CancellationToken cancellationToken) => await writer.DeactivateDriverAsync(request.DriverId, cancellationToken);
+    public async Task Handle(DeactivateDriverCommand request, CancellationToken cancellationToken)
+    {
+        var current = await reader.GetDriverAsync(request.DriverId, cancellationToken);
+        await revoker.RevokeDriverCredentialsAsync(current.DriverId, current.AccountId, cancellationToken);
+        await writer.DeactivateDriverAsync(request.DriverId, cancellationToken);
+    }
 }
 public class DeactivateDriverCommandValidator : AbstractValidator<DeactivateDriverCommand>
 {

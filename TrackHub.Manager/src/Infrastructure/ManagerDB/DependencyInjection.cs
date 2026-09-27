@@ -112,6 +112,7 @@ public static class DependencyInjection
         services.AddScoped<INotificationTemplateReader, NotificationTemplateReader>();
         services.AddScoped<INotificationTemplateWriter, NotificationTemplateWriter>();
         services.AddScoped<IAlertRuleEvaluator, TrackHub.Manager.Infrastructure.ManagerDB.Services.AlertRuleEvaluator>();
+        services.AddScoped<IAlertRecorder, TrackHub.Manager.Infrastructure.ManagerDB.Services.AlertRecorder>();
         services.AddScoped<IAccountFeatureGate, TrackHub.Manager.Infrastructure.ManagerDB.Jobs.AccountFeatureGate>();
         services.AddScoped<INotificationRenderer, TrackHub.Manager.Infrastructure.ManagerDB.Jobs.NotificationRenderer>();
         services.AddScoped<IAlertEvaluationStore, TrackHub.Manager.Infrastructure.ManagerDB.Jobs.AlertEvaluationStore>();

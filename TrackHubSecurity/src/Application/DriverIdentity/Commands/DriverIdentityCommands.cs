@@ -116,3 +116,28 @@ public class RevokeDriverDeviceCommandHandler(IDriverIdentityWriter writer, IPub
         await publisher.Publish(SecurityAudit.Event(principal, "RevokeDriverDevice", "DriverDeviceRegistration", request.DriverDeviceRegistrationId.ToString(), principal.AccountId), cancellationToken);
     }
 }
+
+/// <summary>
+/// Ends every live credential of a driver Manager just deactivated. ServiceClient-only: Manager's
+/// global manager_client identity carries no account claim, so the command names the account and
+/// the writer scopes on both ids.
+/// </summary>
+[Authorize(Resource = Resources.Drivers, Action = Actions.Custom, PrincipalTypes = "ServiceClient")]
+[AllowCrossAccount("Driver offboarding: Manager's global manager_client identity carries no account claim; the command names the driver and its account and only ever deactivates that driver's credentials.")]
+public readonly record struct RevokeDriverCredentialsCommand(Guid DriverId, Guid AccountId) : IRequest;
+public class RevokeDriverCredentialsCommandHandler(IDriverIdentityWriter writer, IPublisher publisher, ICurrentPrincipal principal) : IRequestHandler<RevokeDriverCredentialsCommand>
+{
+    public async Task Handle(RevokeDriverCredentialsCommand request, CancellationToken cancellationToken)
+    {
+        await writer.RevokeDriverCredentialsAsync(request.DriverId, request.AccountId, cancellationToken);
+        await publisher.Publish(SecurityAudit.Event(principal, "RevokeDriverCredentials", "Driver", request.DriverId.ToString(), request.AccountId), cancellationToken);
+    }
+}
+public class RevokeDriverCredentialsCommandValidator : AbstractValidator<RevokeDriverCredentialsCommand>
+{
+    public RevokeDriverCredentialsCommandValidator()
+    {
+        RuleFor(x => x.DriverId).NotEmpty();
+        RuleFor(x => x.AccountId).NotEmpty();
+    }
+}

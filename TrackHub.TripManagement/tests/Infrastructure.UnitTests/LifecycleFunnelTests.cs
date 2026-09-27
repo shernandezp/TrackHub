@@ -256,7 +256,7 @@ public class LifecycleFunnelTests
         var writer = new TripWriter(context, User().Object);
         await writer.ArmTripAsync(TripId, WriterTestData.AccountId, CancellationToken.None);
 
-        await writer.UpdateTripAsync(TripId, Dto(originLatitude: 5.10), WriterTestData.AccountId, CancellationToken.None);
+        await writer.UpdateTripAsync(TripId, Dto(originLatitude: 5.10), WriterTestData.AccountId, null, CancellationToken.None);
 
         var trip = await context.Trips.FirstAsync(t => t.TripId == TripId, CancellationToken.None);
 
@@ -274,7 +274,7 @@ public class LifecycleFunnelTests
         var writer = new TripWriter(context, User().Object);
 
         var ex = Assert.ThrowsAsync<ConflictException>(async () => await writer.UpdateTripAsync(
-            TripId, Dto(originLatitude: 5.10), WriterTestData.AccountId, CancellationToken.None));
+            TripId, Dto(originLatitude: 5.10), WriterTestData.AccountId, null, CancellationToken.None));
 
         Assert.That(ex!.Message, Does.Contain(TripErrorCodes.TripArmed));
     }
@@ -287,7 +287,7 @@ public class LifecycleFunnelTests
         using var context = await SeededAsync(TripStatuses.InProgress);
         var writer = new TripWriter(context, User().Object);
 
-        await writer.UpdateTripAsync(TripId, Dto(notes: "Dock 3, ask for Ana"), WriterTestData.AccountId, CancellationToken.None);
+        await writer.UpdateTripAsync(TripId, Dto(notes: "Dock 3, ask for Ana"), WriterTestData.AccountId, null, CancellationToken.None);
 
         var trip = await context.Trips.FirstAsync(t => t.TripId == TripId, CancellationToken.None);
         Assert.That(trip.Notes, Is.EqualTo("Dock 3, ask for Ana"));

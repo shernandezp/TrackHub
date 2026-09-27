@@ -36,7 +36,7 @@ public class CreateUserRoleCommandHandlerTests
         _writerMock.Setup(w => w.CreateUserRoleAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedVm);
 
-        var handler = new CreateUserRoleCommandHandler(_writerMock.Object, new Mock<Common.Mediator.IPublisher>().Object, new Mock<Common.Application.Interfaces.ICurrentPrincipal>().Object);
+        var handler = new CreateUserRoleCommandHandler(_writerMock.Object, Mock.Of<IUserReader>(), new Mock<Common.Mediator.IPublisher>().Object, new Mock<Common.Application.Interfaces.ICurrentPrincipal>().Object);
         var result = await handler.Handle(new CreateUserRoleCommand(dto), CancellationToken.None);
 
         Assert.That(result, Is.EqualTo(expectedVm));

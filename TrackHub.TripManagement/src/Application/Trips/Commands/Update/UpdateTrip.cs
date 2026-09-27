@@ -24,7 +24,7 @@ namespace TrackHub.TripManagement.Application.Trips.Commands.Update;
 // Enforcement: the handler derives the caller's own account and passes it to the reader/writer,
 // which filters every row on it (TripVisibility is the single visibility resolver - spec 11).
 [AccountScopeEnforcedInHandler]
-public readonly record struct UpdateTripCommand(Guid TripId, TripDto Trip) : IRequest;
+public readonly record struct UpdateTripCommand(Guid TripId, TripDto Trip, DateTimeOffset? ExpectedLastModified = null) : IRequest;
 
 public sealed class UpdateTripCommandHandler(
     ITripWriter writer,
@@ -66,7 +66,7 @@ public sealed class UpdateTripCommandHandler(
                 throw ConflictException.WithCode(TripErrorCodes.DuplicateTripCode);
         }
 
-        await writer.UpdateTripAsync(request.TripId, request.Trip, caller.AccountId, cancellationToken);
+        await writer.UpdateTripAsync(request.TripId, request.Trip, caller.AccountId, request.ExpectedLastModified, cancellationToken);
 
         var occurredAt = DateTimeOffset.UtcNow;
         await tripEventWriter.AppendAsync(

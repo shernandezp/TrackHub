@@ -16,6 +16,7 @@
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using TrackHub.Manager.Application.AlertEvents;
 using TrackHub.Manager.Application.Notifications.Events;
 using TrackHub.Manager.Domain.Constants;
 
@@ -25,15 +26,13 @@ namespace TrackHub.Manager.Application.BackgroundJobs;
 /// Dispatches Pending deliveries through the registered channel providers, retrying with exponential
 /// backoff and then failing permanently with the provider error. A Sending in-flight status prevents
 /// double-send on overlapping cycles, and a row left in Sending by a crashed cycle is reclaimed.
-/// Channel entitlements are re-checked here: deliveries on a disabled billable channel are HELD (left
-/// Pending), so disabling a feature stops sends immediately without deleting configuration.
 /// </summary>
 public sealed class NotificationDispatchJob(
     INotificationDispatchStore store,
-    IAccountFeatureGate features,
     INotificationRenderer renderer,
     IEnumerable<INotificationChannelProvider> channelProviders,
     IPublisher publisher,
+    IAlertRecorder recorder,
     IConfiguration configuration,
     ILogger<NotificationDispatchJob> logger) : IScheduledJob
 {
@@ -52,23 +51,17 @@ public sealed class NotificationDispatchJob(
         await ReclaimStrandedAsync(now, cancellationToken);
 
         var eligible = await store.GetEligiblePendingAsync(
-            [.. RetryBackoffMinutes.Select(minutes => now.AddMinutes(-minutes))], BatchSize, cancellationToken);
+            [.. RetryBackoffMinutes.Select(minutes => now.AddMinutes(-minutes))], now, BatchSize, cancellationToken);
         if (eligible.Count == 0)
         {
             return;
         }
 
-        var entitlements = await ResolveEntitlementsAsync(eligible, now, cancellationToken);
         var processed = 0;
         var failed = 0;
 
         foreach (var delivery in eligible)
         {
-            if (!entitlements.Allows(delivery.AccountId, delivery.Channel))
-            {
-                continue; // held: feature disabled, configuration preserved
-            }
-
             var outcome = await ProcessAsync(delivery, cancellationToken);
             if (outcome is null)
             {
@@ -114,6 +107,7 @@ public sealed class NotificationDispatchJob(
         try
         {
             await store.ApplyOutcomeAsync(outcome, cancellationToken);
+            await RecordOutcomeAlertsAsync(outcome, cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -165,26 +159,25 @@ public sealed class NotificationDispatchJob(
         var error = $"Dispatch was interrupted: the delivery stayed in {DeliveryStatuses.Sending} for more than {reclaimMinutes} minute(s).";
         foreach (var delivery in stranded)
         {
-            await store.ApplyOutcomeAsync(
-                Outcome(delivery, new NotificationSendResult(false, null, error), false), cancellationToken);
+            var outcome = Outcome(delivery, new NotificationSendResult(false, null, error), false);
+            await store.ApplyOutcomeAsync(outcome, cancellationToken);
+            await RecordOutcomeAlertsAsync(outcome, cancellationToken);
         }
 
         logger.LogWarning("Reclaimed {Count} delivery(ies) stranded in {Status} for more than {Minutes} minute(s).",
             stranded.Count, DeliveryStatuses.Sending, reclaimMinutes);
     }
 
-    private async Task<DispatchEntitlements> ResolveEntitlementsAsync(
-        IReadOnlyCollection<DispatchDeliveryVm> eligible, DateTimeOffset now, CancellationToken cancellationToken)
+    private async Task RecordOutcomeAlertsAsync(DeliveryOutcome outcome, CancellationToken cancellationToken)
     {
-        var accountIds = eligible.Select(d => d.AccountId).Distinct().ToList();
-
-        async Task<IReadOnlySet<Guid>> EnabledAsync(string featureKey)
-            => (await features.EnabledAmongAsync(accountIds, featureKey, now, cancellationToken)).ToHashSet();
-
-        return new DispatchEntitlements(
-            await EnabledAsync(FeatureKeys.Notifications),
-            await EnabledAsync(FeatureKeys.NotificationsEmail),
-            await EnabledAsync(FeatureKeys.NotificationsWhatsApp));
+        if (outcome.RaiseFailureAlert)
+        {
+            await recorder.RecordAsync(new AlertEventDto(
+                outcome.AccountId, AlertEventTypes.NotificationDeliveryFailed, AlertSeverities.Warning, "Notifications",
+                "NotificationDelivery", outcome.NotificationDeliveryId.ToString(), "Open",
+                JsonSerializer.Serialize(new { outcome.Channel, outcome.Attempts, outcome.Error }),
+                AlertKeys.DeliveryFailed(outcome.NotificationDeliveryId)), cancellationToken);
+        }
     }
 
     private async Task<(NotificationSendResult Result, bool Terminal)> DispatchAsync(
@@ -296,21 +289,3 @@ public sealed class NotificationDispatchJob(
     }
 }
 
-/// <summary>
-/// Which accounts may receive on which channel this cycle. The base `notifications` feature gates ALL
-/// dispatch for an account; Email and WhatsApp additionally need their own billable key.
-/// </summary>
-public readonly record struct DispatchEntitlements(
-    IReadOnlySet<Guid> Notifications,
-    IReadOnlySet<Guid> Email,
-    IReadOnlySet<Guid> WhatsApp)
-{
-    public bool Allows(Guid accountId, string channel)
-        => Notifications.Contains(accountId)
-            && channel switch
-            {
-                NotificationChannels.Email => Email.Contains(accountId),
-                NotificationChannels.WhatsApp => WhatsApp.Contains(accountId),
-                _ => true,
-            };
-}

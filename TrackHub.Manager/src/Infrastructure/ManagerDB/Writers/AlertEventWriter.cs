@@ -5,67 +5,20 @@ using TrackHub.Manager.Infrastructure.Interfaces;
 
 namespace TrackHub.Manager.Infrastructure.ManagerDB.Writers;
 
-public sealed class AlertEventWriter(IApplicationDbContext context, ICurrentPrincipal principal) : AccountScopedDataAccess(context, principal), IAlertEventWriter
+public sealed class AlertEventWriter(IApplicationDbContext context, ICurrentPrincipal principal, IAlertRecorder recorder) : AccountScopedDataAccess(context, principal), IAlertEventWriter
 {
-    public async Task<AlertEventVm> RecordAlertEventAsync(AlertEventDto alertEvent, CancellationToken cancellationToken)
+    public async Task<AlertRecordResult> RecordAlertEventAsync(AlertEventDto alertEvent, CancellationToken cancellationToken)
     {
         var accountId = RequireAccountWriteAccess(alertEvent.AccountId);
         await RequireResourceInAccountAsync(accountId, alertEvent.ResourceType, alertEvent.ResourceId, cancellationToken);
-        var entity = await Context.AlertEvents
-            .AsTracking().FirstOrDefaultAsync(x => x.AccountId == accountId && x.DeduplicationKey == alertEvent.DeduplicationKey && x.Status != "Resolved", cancellationToken);
-        // A Resolved emission is a recorded fact; a retry of it under the same key records nothing new.
-        if (entity == null && string.Equals(alertEvent.Status, "Resolved", StringComparison.Ordinal)
-            && await Context.AlertEvents.FirstOrDefaultAsync(x => x.AccountId == accountId && x.DeduplicationKey == alertEvent.DeduplicationKey, cancellationToken) is { } recorded)
-        {
-            return ToVm(recorded);
-        }
-
-        if (entity == null)
-        {
-            entity = new AlertEvent(accountId, alertEvent.EventType, alertEvent.Severity, alertEvent.SourceModule, alertEvent.ResourceType, alertEvent.ResourceId, alertEvent.Status, alertEvent.PayloadJson, alertEvent.DeduplicationKey);
-            await Context.AlertEvents.AddAsync(entity, cancellationToken);
-        }
-        else
-        {
-            entity.LastSeenAt = DateTimeOffset.UtcNow;
-            entity.PayloadJson = alertEvent.PayloadJson;
-            // An emitter reporting its own recovery resolves the alert it raised under that key.
-            if (string.Equals(alertEvent.Status, "Resolved", StringComparison.Ordinal))
-            {
-                entity.Status = "Resolved";
-            }
-        }
-
-        try
-        {
-            await Context.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateException exception) when (IsOpenAlertDuplicate(exception))
-        {
-            // Another emission won the insert. The filtered unique index is the real guard; fold
-            // into the row it created rather than failing an alert nobody asked to be unique-checked.
-            foreach (var entry in Context.ChangeTracker.Entries().ToList())
-            {
-                entry.State = EntityState.Detached;
-            }
-
-            var winner = await Context.AlertEvents
-                .AsTracking()
-                .FirstAsync(x => x.AccountId == accountId && x.DeduplicationKey == alertEvent.DeduplicationKey && x.Status != "Resolved", cancellationToken);
-
-            winner.LastSeenAt = DateTimeOffset.UtcNow;
-            winner.PayloadJson = alertEvent.PayloadJson;
-            await Context.SaveChangesAsync(cancellationToken);
-            return ToVm(winner);
-        }
-
-        return ToVm(entity);
+        return await recorder.RecordAsync(alertEvent, cancellationToken);
     }
 
-    private static bool IsOpenAlertDuplicate(DbUpdateException exception)
-        => exception.InnerException is Npgsql.PostgresException postgres
-            && string.Equals(postgres.SqlState, "23505", StringComparison.Ordinal)
-            && postgres.ConstraintName?.Contains("alert_events_open_dedup", StringComparison.OrdinalIgnoreCase) == true;
+    public async Task<int> ResolveAlertEventsAsync(Guid accountId, string resourceType, string resourceId, IReadOnlyCollection<string> eventTypes, CancellationToken cancellationToken)
+    {
+        RequireAccountWriteAccess(accountId);
+        return await recorder.ResolveOpenAsync(accountId, resourceType, resourceId, eventTypes, cancellationToken);
+    }
 
     public async Task AcknowledgeAlertEventAsync(Guid alertEventId, CancellationToken cancellationToken) => await UpdateStatusAsync(alertEventId, "Acknowledged", cancellationToken);
     public async Task ResolveAlertEventAsync(Guid alertEventId, CancellationToken cancellationToken) => await UpdateStatusAsync(alertEventId, "Resolved", cancellationToken);
@@ -108,6 +61,4 @@ public sealed class AlertEventWriter(IApplicationDbContext context, ICurrentPrin
             throw new ForbiddenAccessException($"Alert source resource {resourceType} {resourceId} does not belong to account {accountId}.");
         }
     }
-
-    private static AlertEventVm ToVm(AlertEvent x) => new(x.AlertEventId, x.AccountId, x.EventType, x.Severity, x.SourceModule, x.ResourceType, x.ResourceId, x.Status, x.FirstSeenAt, x.LastSeenAt, x.PayloadJson, x.DeduplicationKey, x.LastModified);
 }

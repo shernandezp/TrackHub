@@ -63,15 +63,6 @@ public sealed class DocumentScanStore(IApplicationDbContext context) : IDocument
             version.ScanStatus = outcome.ScanStatus;
         }
 
-        if (outcome.RaiseInfectedAlert)
-        {
-            context.AlertEvents.Add(new AlertEvent(
-                document.AccountId, AlertEventTypes.DocumentScanFailed, AlertSeverities.High, "Documents",
-                "Document", document.DocumentId.ToString(), "Open",
-                $$"""{"reason":"infected","category":"{{document.Category}}"}""",
-                $"document-infected:{document.DocumentId:N}:{document.CurrentVersion}"));
-        }
-
         context.AuditEvents.Add(new AuditEvent(
             document.AccountId, "System", JobKey, "DocumentScanCompleted", "Document", document.DocumentId.ToString(),
             "Succeeded", null, $$"""{"scanStatus":"{{outcome.ScanStatus}}"}""", null, null, null, null));

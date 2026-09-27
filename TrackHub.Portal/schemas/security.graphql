@@ -61,6 +61,8 @@ type Mutation {
     @cost(weight: "10")
   revokeDriverCredential(command: RevokeDriverCredentialCommandInput!): Boolean!
     @cost(weight: "10")
+  revokeDriverCredentials(command: RevokeDriverCredentialsCommandInput!): Boolean!
+    @cost(weight: "10")
   registerDriverDevice(command: RegisterDriverDeviceCommandInput!): DriverDeviceRegistrationVm!
     @cost(weight: "10")
   updateDriverDevicePushToken(command: UpdateDriverDevicePushTokenCommandInput!): Boolean!
@@ -486,6 +488,11 @@ input ResourceActionRoleDtoInput {
 
 input RevokeDriverCredentialCommandInput {
   driverCredentialId: UUID!
+}
+
+input RevokeDriverCredentialsCommandInput {
+  driverId: UUID!
+  accountId: UUID!
 }
 
 input RevokeDriverDeviceCommandInput {

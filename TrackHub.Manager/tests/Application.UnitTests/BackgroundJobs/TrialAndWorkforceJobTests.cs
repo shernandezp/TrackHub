@@ -146,22 +146,19 @@ public class TrialAndWorkforceJobTests
         store.Setup(s => s.GetExpiringAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([qualification]);
         store.Setup(s => s.JobRunSucceededAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
-        store.Setup(s => s.RecordAlertAsync(It.IsAny<AlertEventDto>(), It.IsAny<Guid>(), It.IsAny<string>(),
-                It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new AlertEventVm(Guid.NewGuid(), AccountId, AlertEventTypes.DriverQualificationExpiring,
-                AlertSeverities.Warning, "Workforce", "DriverQualification", qualification.DriverQualificationId.ToString(),
-                "Open", now, now, null, "dedup", now));
 
         var zones = new Mock<IAccountTimeZoneResolver>();
+        var recorder = new Mock<IAlertRecorder>();
         zones.Setup(z => z.ResolveAsync(AccountId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(AccountTimeZone.For("America/Bogota"));
 
         await new WorkforceExpirationJob(features.Object, store.Object, zones.Object,
-                Mock.Of<IAlertRuleEvaluator>(), Mock.Of<ILogger<WorkforceExpirationJob>>())
+                recorder.Object, Mock.Of<ILogger<WorkforceExpirationJob>>())
             .RunOnceAsync(now, CancellationToken.None);
 
-        store.Verify(s => s.RecordAlertAsync(It.IsAny<AlertEventDto>(), AccountId, It.IsAny<string>(),
-            $"{qualification.DriverQualificationId:N}:7", now, It.IsAny<CancellationToken>()), Times.Once);
+        store.Verify(s => s.RecordJobRunAsync(AccountId, It.IsAny<string>(),
+            $"{qualification.DriverQualificationId:N}:20260921:7", now, It.IsAny<CancellationToken>()), Times.Once);
+        recorder.Verify(r => r.RecordAsync(It.Is<AlertEventDto>(a => a.DeduplicationKey == $"driver-qual:{qualification.DriverQualificationId:N}:20260921:7"), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
@@ -178,14 +175,13 @@ public class TrialAndWorkforceJobTests
 
         var zones = new Mock<IAccountTimeZoneResolver>();
         zones.Setup(z => z.ResolveAsync(AccountId, It.IsAny<CancellationToken>())).ReturnsAsync(AccountTimeZone.Utc);
-        var evaluator = new Mock<IAlertRuleEvaluator>();
+        var recorder = new Mock<IAlertRecorder>();
 
-        await new WorkforceExpirationJob(features.Object, store.Object, zones.Object, evaluator.Object,
+        await new WorkforceExpirationJob(features.Object, store.Object, zones.Object, recorder.Object,
                 Mock.Of<ILogger<WorkforceExpirationJob>>())
             .RunOnceAsync(Now, CancellationToken.None);
 
-        store.Verify(s => s.RecordAlertAsync(It.IsAny<AlertEventDto>(), It.IsAny<Guid>(), It.IsAny<string>(),
-            It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
-        evaluator.Verify(e => e.EvaluateAsync(It.IsAny<AlertEventVm>(), It.IsAny<CancellationToken>()), Times.Never);
+        store.Verify(s => s.RecordJobRunAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
+        recorder.Verify(r => r.RecordAsync(It.IsAny<AlertEventDto>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

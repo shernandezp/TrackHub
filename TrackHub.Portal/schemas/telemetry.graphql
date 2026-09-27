@@ -12,6 +12,8 @@ type Query {
     @cost(weight: "10")
   operatorSyncRuns(query: GetOperatorSyncRunsQueryInput!): [OperatorSyncRunVm!]!
     @cost(weight: "10")
+  operatorSyncRunFeed(query: GetOperatorSyncRunFeedQueryInput!): OperatorSyncRunPageVm!
+    @cost(weight: "10")
   platformSyncActivity(query: GetPlatformSyncActivityQueryInput!): PlatformSyncActivityVm!
     @cost(weight: "10")
   positionHistory(query: GetPositionHistoryQueryInput!): [TransporterPositionHistoryVm!]!
@@ -94,6 +96,12 @@ type OperatorHealthVm {
   lastFailureCode: String
   lastFailureMessage: String
   lastLatencyMs: Int
+}
+
+type OperatorSyncRunPageVm {
+  items: [OperatorSyncRunVm!]!
+  hasMore: Boolean!
+  nextCursor: String
 }
 
 type OperatorSyncRunVm {
@@ -207,6 +215,15 @@ input GetOperatorHealthQueryInput {
 input GetOperatorHealthSummaryQueryInput {
   operatorId: UUID!
   lookbackHours: Int! = 24
+}
+
+input GetOperatorSyncRunFeedQueryInput {
+  accountId: UUID!
+  operatorId: UUID
+  from: DateTime
+  to: DateTime
+  take: Int! = 500
+  cursor: String
 }
 
 input GetOperatorSyncRunsQueryInput {

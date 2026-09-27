@@ -217,7 +217,7 @@ public sealed class TripEtaService(
                     // failure meant the reminder was never retried and the account got it zero
                     // times rather than once. Same rule the delay and deviation paths follow —
                     // the marker is written only after a successful emission.
-                    var idempotencyKey = $"trip-start-due:{trip.TripId:N}";
+                    var idempotencyKey = $"trip-start-due:{trip.TripId:N}:{trip.PlannedStartAt.UtcTicks}";
 
                     if (await tripEventWriter.HasEventAsync(accountId, idempotencyKey, cancellationToken))
                         continue;
@@ -225,7 +225,7 @@ public sealed class TripEtaService(
                     await alertEmitter.EmitAsync(
                         TripEventTypes.TripStartDue,
                         TripAlertSeverities.Info,
-                        $"trip-startdue:{trip.TripId:N}",
+                        $"trip-startdue:{trip.TripId:N}:{trip.PlannedStartAt.UtcTicks}",
                         new TripAlertDto(accountId, trip.TripId, null, trip.Code, trip.TransporterId, trip.DriverId, null,
                             trip.PlannedStartAt, null, null, null, null, null),
                         cancellationToken);

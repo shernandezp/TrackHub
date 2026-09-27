@@ -25,15 +25,7 @@ public sealed class GpsLatestPositionFreshnessReport(
         var now = DateTimeOffset.UtcNow;
         foreach (var op in operators.Where(o => o.Enabled))
         {
-            IReadOnlyCollection<Domain.Models.Manager.ManagerTransporterPositionVm> positions;
-            try
-            {
-                positions = await telemetry.GetLatestPositionsAsync(op.OperatorId, cancellationToken);
-            }
-            catch
-            {
-                continue;
-            }
+            var positions = await telemetry.GetLatestPositionsAsync(op.OperatorId, cancellationToken);
             foreach (var p in positions)
             {
                 rows.Add(new GpsLatestPositionFreshnessRowVm(

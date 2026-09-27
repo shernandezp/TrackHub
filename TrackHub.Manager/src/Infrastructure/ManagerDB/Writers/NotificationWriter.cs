@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Common.Application.Exceptions;
 using Common.Application.Interfaces;
+using TrackHub.Manager.Application.Notifications;
 using TrackHub.Manager.Domain.Constants;
 using TrackHub.Manager.Infrastructure.Entities;
 using TrackHub.Manager.Infrastructure.Interfaces;
@@ -41,7 +42,12 @@ public sealed class NotificationWriter(IApplicationDbContext context, ICurrentPr
         entity.RecipientSelector = notificationRule.RecipientSelector;
         entity.ChannelsJson = notificationRule.ChannelsJson;
         entity.ThrottlingJson = notificationRule.ThrottlingJson;
-        entity.ConfigurationJson = notificationRule.ConfigurationJson;
+        entity.ConfigurationJson = Services.NotificationRuleConfigurationJson.PreserveSecret(notificationRule.ConfigurationJson, entity.ConfigurationJson);
+        if (!NotificationRuleContractRules.HaveWebhookSecretWhenSelected(notificationRule with { ConfigurationJson = entity.ConfigurationJson }))
+        {
+            throw new ValidationException([new FluentValidation.Results.ValidationFailure(nameof(notificationRule.ConfigurationJson), "Rules with the Webhook channel require configurationJson.webhookSecret.")]);
+        }
+
         AddAuditEvent(entity.AccountId, "UpdateNotificationRule", "NotificationRule", $"{entity.NotificationRuleId}", previous, Describe(entity));
         await Context.SaveChangesAsync(cancellationToken);
     }
@@ -102,16 +108,6 @@ public sealed class NotificationWriter(IApplicationDbContext context, ICurrentPr
         }
     }
 
-    // Rules, deliveries, and retries are administrative surfaces: the Notifications
-    // resource-action grants are held by every portal role for the self-service surfaces
-    // (feed/mark-read/subscriptions), so the admin-only distinction is enforced here.
-    private void RequirePrivileged()
-    {
-        if (!IsPrivileged)
-        {
-            throw new ForbiddenAccessException("Only administrators or managers may manage notification rules and deliveries.");
-        }
-    }
 
     // Cross-account recipients are invalid: every explicit user/driver id in the
     // selector must belong to the rule's account. Malformed JSON is rejected upstream by the

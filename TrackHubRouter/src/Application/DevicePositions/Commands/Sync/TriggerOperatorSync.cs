@@ -21,15 +21,12 @@ using TrackHub.Router.Domain.Exceptions;
 
 namespace TrackHub.Router.Application.DevicePositions.Commands.Sync;
 
-// Manual sync is an expected user feature: it is authorized with the same Credentials/Custom grant
-// that portal roles hold for PingOperator (NOT restricted to service clients), so users keep the
-// "sync now" capability while the pipeline enforces authentication + permission instead of relying
-// solely on Manager's upstream check. Rate-limited because each accepted trigger reaches the
-// external provider on demand.
-// Operators/Custom — see PingOperator. Operating an integration does not require credential-viewing
-// permission; the Router fetches the credential with its own service identity.
-[Authorize(Resource = Resources.Operators, Action = Actions.Custom)]
-[RateLimiting(PermitLimit = 6, WindowSeconds = 60)]
+// Manager is the single entry for "sync now": it holds the user-facing grant check
+// (SynchronizedDevices/Execute) and the per-operator throttle, then relays here under its global
+// manager_client identity. Accepting a user token here would let a role without that grant, and
+// without the throttle, reach the provider and reset the catalog.
+[Authorize(Resource = Resources.SynchronizedDevices, Action = Actions.Execute, PrincipalTypes = "ServiceClient")]
+[AllowCrossAccount("Manager relays a tenant's manual sync under its global manager_client identity, which carries no account claim; the operator row binds the account and the handler rejects a mismatch.")]
 public readonly record struct TriggerOperatorSyncCommand(
     Guid AccountId,
     Guid OperatorId,

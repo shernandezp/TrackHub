@@ -29,4 +29,7 @@ public interface IAlertEmitter
     /// Layer B round-trip test (rules.md).
     /// </summary>
     Task EmitAsync(string eventType, string severity, string deduplicationKey, TripAlertDto alert, CancellationToken cancellationToken);
+
+    /// <summary>Closes the alert this service raised under <paramref name="deduplicationKey"/>; a no-op when nothing is open.</summary>
+    Task ResolveAsync(string eventType, string severity, string deduplicationKey, TripAlertDto alert, CancellationToken cancellationToken);
 }

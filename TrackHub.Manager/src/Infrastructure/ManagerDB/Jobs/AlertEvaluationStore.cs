@@ -99,34 +99,20 @@ public sealed class AlertEvaluationStore(IApplicationDbContext context) : IAlert
         await context.SaveChangesAsync(cancellationToken);
     }
 
-    // Mirrors the AlertEventWriter dedup rule: (AccountId, DeduplicationKey, Status != Resolved)
-    // coalesces into the existing open event. Returns the Vm to evaluate (null when only touched).
-    public async Task<AlertEventVm?> RecordDedupedAlertAsync(AlertEventDto alertEvent, CancellationToken cancellationToken)
-    {
-        var existing = await context.AlertEvents
-            .AsTracking().FirstOrDefaultAsync(
-            e => e.AccountId == alertEvent.AccountId
-                && e.DeduplicationKey == alertEvent.DeduplicationKey
-                && e.Status != "Resolved",
-            cancellationToken);
+    public async Task<IReadOnlyCollection<string>> RecordedKeysAsync(
+        Guid accountId, IReadOnlyCollection<string> deduplicationKeys, CancellationToken cancellationToken)
+        => await context.AlertEvents
+            .Where(e => e.AccountId == accountId && deduplicationKeys.Contains(e.DeduplicationKey))
+            .Select(e => e.DeduplicationKey)
+            .Distinct()
+            .ToListAsync(cancellationToken);
 
-        if (existing is not null)
-        {
-            existing.LastSeenAt = DateTimeOffset.UtcNow;
-            existing.PayloadJson = alertEvent.PayloadJson;
-            await context.SaveChangesAsync(cancellationToken);
-            return null;
-        }
-
-        var entity = new AlertEvent(
-            alertEvent.AccountId, alertEvent.EventType, alertEvent.Severity, alertEvent.SourceModule,
-            alertEvent.ResourceType, alertEvent.ResourceId, alertEvent.Status, alertEvent.PayloadJson, alertEvent.DeduplicationKey);
-        context.AlertEvents.Add(entity);
-        await context.SaveChangesAsync(cancellationToken);
-
-        return new AlertEventVm(
-            entity.AlertEventId, entity.AccountId, entity.EventType, entity.Severity, entity.SourceModule,
-            entity.ResourceType, entity.ResourceId, entity.Status, entity.FirstSeenAt, entity.LastSeenAt,
-            entity.PayloadJson, entity.DeduplicationKey, entity.LastModified);
-    }
+    public async Task<IReadOnlyCollection<AlertEventVm>> GetOpenAlertsAsync(
+        IReadOnlyCollection<Guid> accountIds, string eventType, CancellationToken cancellationToken)
+        => await context.AlertEvents
+            .Where(e => accountIds.Contains(e.AccountId) && e.EventType == eventType && e.Status != "Resolved")
+            .Select(e => new AlertEventVm(
+                e.AlertEventId, e.AccountId, e.EventType, e.Severity, e.SourceModule, e.ResourceType,
+                e.ResourceId, e.Status, e.FirstSeenAt, e.LastSeenAt, e.PayloadJson, e.DeduplicationKey, e.LastModified))
+            .ToListAsync(cancellationToken);
 }

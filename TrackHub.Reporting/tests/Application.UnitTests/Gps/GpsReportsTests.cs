@@ -83,7 +83,7 @@ public class GpsReportsTests
             .ThrowsAsync(new FeatureDisabledException(FeatureKeys.GpsPositionHistory));
         var report = new GpsPositionHistoryReport(_user.Object, _features.Object, _telemetry.Object, _limits);
         Assert.ThrowsAsync<FeatureDisabledException>(() => report.GetDatasetAsync(_filters, CancellationToken.None));
-        _telemetry.Verify(m => m.GetPositionHistoryAsync(It.IsAny<Guid>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()), Times.Never);
+        _telemetry.Verify(m => m.GetPositionHistoryAsync(It.IsAny<Guid>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Test]
@@ -131,8 +131,8 @@ public class GpsReportsTests
             DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddSeconds(2),
             DevicesSeen: 10, DevicesAdded: 2, DevicesUpdated: 3, DevicesRemoved: 0, DevicesIgnored: 1,
             PositionsRead: 100, PositionsAccepted: 95, PositionsRejected: 5, ErrorCode: null, ErrorMessage: null, CorrelationId: null);
-        _telemetry.Setup(m => m.GetOperatorSyncRunsAsync(_accountId, null, It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(List(run));
+        _telemetry.Setup(m => m.GetOperatorSyncRunFeedAsync(_accountId, null, It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<int>(), null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ManagerOperatorSyncRunPageVm(List(run), false, null));
         _manager.Setup(m => m.GetOperatorsAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(List(new ManagerOperatorVm(opId, "Op1", true)));
 

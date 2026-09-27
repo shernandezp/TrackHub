@@ -339,6 +339,11 @@ function NotificationRuleDialog({
               fullWidth
               value={values.webhookSecret || ''}
               onChange={handleChange}
+              helperText={
+                values.extraConfiguration?.webhookSecretSet === true && !values.webhookSecret
+                  ? t('notificationRules.webhookSecretKept')
+                  : undefined
+              }
             />
           </>
         )}

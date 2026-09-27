@@ -22,6 +22,7 @@ public class TransporterReaderTests
         var principal = new Mock<ICurrentPrincipal>();
         principal.SetupGet(p => p.AccountId).Returns(accountId);
         principal.SetupGet(p => p.PrincipalType).Returns(PrincipalType.User);
+        principal.SetupGet(p => p.Role).Returns("Manager");
         return principal.Object;
     }
 

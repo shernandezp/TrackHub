@@ -15,6 +15,7 @@
 
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using TrackHub.Manager.Application.AlertEvents;
 using TrackHub.Manager.Domain.Constants;
 
 namespace TrackHub.Manager.Application.BackgroundJobs;
@@ -27,7 +28,7 @@ namespace TrackHub.Manager.Application.BackgroundJobs;
 public sealed class AlertEvaluationJob(
     IAccountFeatureGate features,
     IAlertEvaluationStore store,
-    IAlertRuleEvaluator evaluator,
+    IAlertRecorder recorder,
     ILogger<AlertEvaluationJob> logger) : IScheduledJob
 {
     public static TimeSpan Interval => TimeSpan.FromMinutes(5);
@@ -51,63 +52,121 @@ public sealed class AlertEvaluationJob(
         await EmitCredentialExpiryDailyAsync(now, cancellationToken);
     }
 
+    // An episode is one silence, identified by the last fix before it: it alerts once however long
+    // it lasts, a manual resolve holds, and the next fix both closes it and starts the clock for a
+    // fresh one. Several rules on one account contribute their stale sets to the same picture.
     private async Task DetectCommunicationLossAsync(
         IReadOnlyCollection<Guid> accountIds, DateTimeOffset now, CancellationToken cancellationToken)
     {
         var rules = await store.GetEnabledRulesAsync(
             accountIds, [AlertEventTypes.CommunicationLoss], cancellationToken);
+        var openAlerts = (await store.GetOpenAlertsAsync(accountIds, AlertEventTypes.CommunicationLoss, cancellationToken))
+            .ToLookup(a => a.AccountId);
         var raised = 0;
+        var recovered = 0;
 
-        foreach (var rule in rules)
+        // No enabled rule means nobody wants the alert any more: what is still open is closed.
+        foreach (var orphan in openAlerts.Where(g => !rules.Any(r => r.AccountId == g.Key)).SelectMany(g => g))
+        {
+            recovered += await recorder.ResolveOpenAsync(orphan.AccountId, "Transporter", orphan.ResourceId, [AlertEventTypes.CommunicationLoss], cancellationToken);
+        }
+
+        foreach (var accountRules in rules.GroupBy(r => r.AccountId))
         {
             try
             {
-                var thresholdMinutes = NotificationRuleContracts.ParseConfiguration(rule.ConfigurationJson).ThresholdMinutes
-                    ?? DefaultCommunicationLossThresholdMinutes;
-                var cutoff = now.AddMinutes(-Math.Max(1, thresholdMinutes));
-
-                // A transporter that never reported is a provisioning state, not communication loss.
-                var stale = await store.GetStaleTransportersAsync(rule.AccountId, cutoff, cancellationToken);
-
-                foreach (var transporter in stale)
+                var stale = new Dictionary<Guid, (StaleTransporterVm Transporter, int ThresholdMinutes)>();
+                foreach (var rule in accountRules)
                 {
-                    var alertEvent = await store.RecordDedupedAlertAsync(new AlertEventDto(
-                        rule.AccountId,
-                        AlertEventTypes.CommunicationLoss,
-                        AlertSeverities.Warning,
-                        "Notifications",
-                        "Transporter",
-                        transporter.TransporterId.ToString(),
-                        "Open",
-                        JsonSerializer.Serialize(new
-                        {
-                            transporter.TransporterId,
-                            transporter.Name,
-                            transporter.LastPositionAt,
-                            ThresholdMinutes = thresholdMinutes,
-                        }),
-                        $"comm-loss:{transporter.TransporterId:N}:{now:yyyyMMdd}"), cancellationToken);
+                    var thresholdMinutes = NotificationRuleContracts.ParseConfiguration(rule.ConfigurationJson).ThresholdMinutes
+                        ?? DefaultCommunicationLossThresholdMinutes;
+                    var cutoff = now.AddMinutes(-Math.Max(1, thresholdMinutes));
 
-                    if (alertEvent is not null)
+                    // A transporter that never reported is a provisioning state, not communication loss.
+                    foreach (var transporter in await store.GetStaleTransportersAsync(rule.AccountId, cutoff, cancellationToken))
                     {
-                        await evaluator.EvaluateAsync(alertEvent.Value, cancellationToken);
-                        raised++;
+                        stale.TryAdd(transporter.TransporterId, (transporter, thresholdMinutes));
                     }
                 }
+
+                raised += await RaiseCommunicationLossAsync(accountRules.Key, stale, cancellationToken);
+                recovered += await RecoverCommunicationLossAsync(accountRules.Key, openAlerts[accountRules.Key], stale.Keys, cancellationToken);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Communication-loss detection failed for rule {RuleKey} (account {AccountId}).", rule.RuleKey, rule.AccountId);
+                logger.LogError(ex, "Communication-loss detection failed for account {AccountId}.", accountRules.Key);
             }
         }
 
-        if (raised > 0)
+        if (raised > 0 || recovered > 0)
         {
             await store.RecordJobRunAsync(
                 JobKey, null, raised.ToString(), $"comm-loss:{now:yyyyMMddHHmmssfff}", now, cancellationToken);
-            logger.LogInformation("Communication-loss detection raised {Count} alert(s).", raised);
+            logger.LogInformation("Communication-loss detection raised {Raised} and resolved {Recovered} alert(s).", raised, recovered);
         }
+    }
+
+    private async Task<int> RaiseCommunicationLossAsync(
+        Guid accountId,
+        IReadOnlyDictionary<Guid, (StaleTransporterVm Transporter, int ThresholdMinutes)> stale,
+        CancellationToken cancellationToken)
+    {
+        if (stale.Count == 0)
+        {
+            return 0;
+        }
+
+        var episodes = stale.Values.ToDictionary(s => AlertKeys.CommunicationLoss(s.Transporter.TransporterId, s.Transporter.LastPositionAt));
+        var known = (await store.RecordedKeysAsync(accountId, [.. episodes.Keys], cancellationToken)).ToHashSet(StringComparer.Ordinal);
+        var raised = 0;
+
+        foreach (var (key, (transporter, thresholdMinutes)) in episodes)
+        {
+            if (known.Contains(key))
+            {
+                continue;
+            }
+
+            var result = await recorder.RecordAsync(new AlertEventDto(
+                accountId,
+                AlertEventTypes.CommunicationLoss,
+                AlertSeverities.Warning,
+                "Notifications",
+                "Transporter",
+                transporter.TransporterId.ToString(),
+                "Open",
+                JsonSerializer.Serialize(new
+                {
+                    transporter.TransporterId,
+                    transporter.Name,
+                    transporter.LastPositionAt,
+                    ThresholdMinutes = thresholdMinutes,
+                }),
+                key), cancellationToken);
+
+            if (result.Transition == AlertTransition.Opened)
+            {
+                raised++;
+            }
+        }
+
+        return raised;
+    }
+
+    private async Task<int> RecoverCommunicationLossAsync(
+        Guid accountId, IEnumerable<AlertEventVm> openAlerts, IReadOnlyCollection<Guid> stillStale, CancellationToken cancellationToken)
+    {
+        var recovered = 0;
+        foreach (var alert in openAlerts)
+        {
+            if (Guid.TryParse(alert.ResourceId, out var transporterId) && !stillStale.Contains(transporterId))
+            {
+                recovered += await recorder.ResolveOpenAsync(accountId, "Transporter", alert.ResourceId, [AlertEventTypes.CommunicationLoss], cancellationToken);
+            }
+        }
+
+        return recovered;
     }
 
     // Single-step deterministic escalation: a critical alert unacknowledged past the rule's
@@ -165,8 +224,10 @@ public sealed class AlertEvaluationJob(
         }
     }
 
-    // Mirrors EmitExpiringCredentialAlertsCommand (same dedup keys, so manual runs coalesce) for
-    // accounts with gps.integration enabled.
+
+    // Same keys as EmitExpiringCredentialAlertsCommand, so manual runs coalesce. A credential
+    // alerts once per expiry instant; renewing it (a later expiry) resolves the open alert and
+    // starts a new episode when that expiry comes within range.
     private async Task EmitCredentialExpiryDailyAsync(DateTimeOffset now, CancellationToken cancellationToken)
     {
         var idempotencyKey = $"credential-scan:{now:yyyyMMdd}";
@@ -181,11 +242,12 @@ public sealed class AlertEvaluationJob(
 
         if (gpsAccounts.Count > 0)
         {
-            foreach (var credential in await store.GetExpiringCredentialsAsync(gpsAccounts, cutoff, cancellationToken))
+            var expiring = await store.GetExpiringCredentialsAsync(gpsAccounts, cutoff, cancellationToken);
+            foreach (var credential in expiring)
             {
                 try
                 {
-                    var alertEvent = await store.RecordDedupedAlertAsync(new AlertEventDto(
+                    var result = await recorder.RecordAsync(new AlertEventDto(
                         credential.AccountId,
                         AlertEventTypes.GpsCredentialExpiring,
                         AlertSeverities.Warning,
@@ -201,11 +263,10 @@ public sealed class AlertEvaluationJob(
                             credential.RefreshTokenExpiration,
                             WithinDays = CredentialExpiryWithinDays,
                         }),
-                        $"gps-credential-expiring:{credential.OperatorId:N}:{now:yyyyMMdd}"), cancellationToken);
+                        AlertKeys.GpsCredentialExpiring(credential.OperatorId, credential.EarliestExpirationAt)), cancellationToken);
 
-                    if (alertEvent is not null)
+                    if (result.Transition == AlertTransition.Opened)
                     {
-                        await evaluator.EvaluateAsync(alertEvent.Value, cancellationToken);
                         emitted++;
                     }
                 }
@@ -213,6 +274,19 @@ public sealed class AlertEvaluationJob(
                 catch (Exception ex)
                 {
                     logger.LogError(ex, "Credential-expiry alert failed for operator {OperatorId}.", credential.OperatorId);
+                }
+            }
+
+            // An open alert whose baseline no longer matches the credential (renewed, replaced or gone) is recovered;
+            // one raised manually with a wider window keeps its own baseline and stays open.
+            var currentKeys = (await store.GetExpiringCredentialsAsync(gpsAccounts, DateTimeOffset.MaxValue, cancellationToken))
+                .GroupBy(c => c.OperatorId)
+                .ToDictionary(g => g.Key.ToString(), g => AlertKeys.GpsCredentialExpiring(g.Key, g.Min(c => c.EarliestExpirationAt)));
+            foreach (var alert in await store.GetOpenAlertsAsync(gpsAccounts, AlertEventTypes.GpsCredentialExpiring, cancellationToken))
+            {
+                if (!currentKeys.TryGetValue(alert.ResourceId, out var currentKey) || currentKey != alert.DeduplicationKey)
+                {
+                    await recorder.ResolveOpenAsync(alert.AccountId, "Operator", alert.ResourceId, [AlertEventTypes.GpsCredentialExpiring], cancellationToken);
                 }
             }
         }

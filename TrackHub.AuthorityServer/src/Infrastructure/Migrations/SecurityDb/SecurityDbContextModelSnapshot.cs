@@ -17,7 +17,7 @@ namespace TrackHub.AuthorityServer.Infrastructure.Migrations.SecurityDb
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.10")
+                .HasAnnotation("ProductVersion", "10.0.12")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -121,6 +121,10 @@ namespace TrackHub.AuthorityServer.Infrastructure.Migrations.SecurityDb
                         .HasColumnType("boolean")
                         .HasColumnName("resetrequired");
 
+                    b.Property<Guid>("SecurityStamp")
+                        .HasColumnType("uuid")
+                        .HasColumnName("securitystamp");
+
                     b.Property<DateTimeOffset?>("VerifiedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("verifiedat");
@@ -150,6 +154,46 @@ namespace TrackHub.AuthorityServer.Infrastructure.Migrations.SecurityDb
                     b.HasKey("RoleId");
 
                     b.ToTable("roles", "security", t =>
+                        {
+                            t.ExcludeFromMigrations();
+                        });
+                });
+
+            modelBuilder.Entity("TrackHub.AuthorityServer.Infrastructure.Entities.ServiceClientPermission", b =>
+                {
+                    b.Property<Guid>("ServiceClientPermissionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("accountid");
+
+                    b.Property<bool>("Active")
+                        .HasColumnType("boolean")
+                        .HasColumnName("active");
+
+                    b.Property<bool>("AllowCrossAccount")
+                        .HasColumnType("boolean")
+                        .HasColumnName("allowcrossaccount");
+
+                    b.Property<string>("ClientId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("clientid");
+
+                    b.Property<DateTimeOffset?>("EffectiveFrom")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("effectivefrom");
+
+                    b.Property<DateTimeOffset?>("EffectiveTo")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("effectiveto");
+
+                    b.HasKey("ServiceClientPermissionId");
+
+                    b.ToTable("service_client_permissions", "security", t =>
                         {
                             t.ExcludeFromMigrations();
                         });
@@ -201,6 +245,10 @@ namespace TrackHub.AuthorityServer.Infrastructure.Migrations.SecurityDb
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
                         .HasColumnName("password");
+
+                    b.Property<Guid>("SecurityStamp")
+                        .HasColumnType("uuid")
+                        .HasColumnName("securitystamp");
 
                     b.Property<string>("Username")
                         .IsRequired()

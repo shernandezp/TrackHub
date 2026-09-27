@@ -28,6 +28,16 @@ public abstract class AccountScopedDataAccess(IApplicationDbContext context, ICu
     protected Guid RequireAccountAccess(Guid accountId)
         => RequireAccountAccess(accountId, forWrite: false);
 
+    // Administrative surfaces (notification rules, deliveries, templates): the Notifications grants
+    // are held by every portal role for the self-service feed, so the admin-only line is drawn here.
+    protected void RequirePrivileged()
+    {
+        if (!IsPrivileged)
+        {
+            throw new ForbiddenAccessException("Only administrators or managers may manage notification rules and deliveries.");
+        }
+    }
+
     /// <summary>
     /// Account-access check for mutation paths: a support-grant-based access requires a writable
     /// (AccessLevel = Full) grant. Writers call this instead of <see cref="RequireAccountAccess(Guid)"/>.

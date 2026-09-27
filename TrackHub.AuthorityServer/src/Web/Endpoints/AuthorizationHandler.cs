@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using TrackHub.AuthorityServer.Domain.Interfaces;
 using TrackHub.AuthorityServer.Web.Helpers;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
@@ -24,7 +25,7 @@ using Microsoft.AspNetCore;
 namespace TrackHub.AuthorityServer.Web.Endpoints;
 
 // This class handles the authorization process.
-public sealed class AuthorizationHandler(SubjectValidity subjectValidity)
+public sealed class AuthorizationHandler(SubjectValidity subjectValidity, IUserReader userReader)
 {
     private const string DriverMobileClientId = "driver_mobile_client";
 
@@ -86,6 +87,7 @@ public sealed class AuthorizationHandler(SubjectValidity subjectValidity)
             AccessTokenClaim(OpenIddictConstants.Claims.Subject, subject),
             AccessTokenClaim("principal_type", principalType)
         };
+        AddRequiredClaim(cookiePrincipal, claims, SubjectValidity.SecurityStampClaim);
 
         if (string.Equals(principalType, "Driver", StringComparison.OrdinalIgnoreCase))
         {
@@ -96,7 +98,8 @@ public sealed class AuthorizationHandler(SubjectValidity subjectValidity)
         }
         else
         {
-            if (!TryAddClaim(cookiePrincipal, claims, "account_id"))
+            if (!TryAddClaim(cookiePrincipal, claims, "account_id")
+                || !Guid.TryParse(subject, out var userId))
             {
                 await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
                 await ChallengeWithCurrentRequestAsync(context);
@@ -105,10 +108,14 @@ public sealed class AuthorizationHandler(SubjectValidity subjectValidity)
 
             claims.Add(AccessTokenClaim("user_id", subject));
 
-            // Forward the user's role into the access token (resource services derive
-            // ICurrentPrincipal.Role from it). Older cookies may predate the claim — the user
-            // picks it up on their next login.
-            TryAddClaim(cookiePrincipal, claims, ClaimTypes.Role);
+            // Security stays the role source of truth: the role is resolved on every code flow, not
+            // copied from the cookie, so a demotion takes effect on the next page load rather than
+            // surviving until the user signs out.
+            var role = await userReader.GetUserRoleAsync(userId, context.RequestAborted);
+            if (!string.IsNullOrEmpty(role))
+            {
+                claims.Add(AccessTokenClaim(ClaimTypes.Role, role));
+            }
         }
 
         // Create a claims identity and principal.

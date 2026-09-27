@@ -10,4 +10,5 @@ public readonly record struct DocumentVersionDto(
     long SizeBytes,
     string ContentType,
     string FileName,
-    string? Reason = null);
+    string? Reason = null,
+    DateTimeOffset? ExpiresAt = null);

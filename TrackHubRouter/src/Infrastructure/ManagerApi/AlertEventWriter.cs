@@ -11,6 +11,11 @@ public class AlertEventWriter(IGraphQLClientFactory graphQLClient)
                     recordAlertEvent(command: $command) { alertEventId }
                 }";
 
+    internal const string ResolveAlertEventsMutation = @"
+                mutation($command: ResolveAlertEventsCommandInput!) {
+                    resolveAlertEvents(command: $command)
+                }";
+
     public async Task RecordAsync(AlertEventDto dto, CancellationToken cancellationToken)
     {
         var request = new GraphQLRequest
@@ -34,6 +39,16 @@ public class AlertEventWriter(IGraphQLClientFactory graphQLClient)
                     }
                 }
             }
+        };
+        await MutationAsync<object>(request, cancellationToken);
+    }
+
+    public async Task ResolveAsync(Guid accountId, string resourceType, string resourceId, IReadOnlyCollection<string> eventTypes, CancellationToken cancellationToken)
+    {
+        var request = new GraphQLRequest
+        {
+            Query = ResolveAlertEventsMutation,
+            Variables = new { command = new { accountId, resourceType, resourceId, eventTypes } }
         };
         await MutationAsync<object>(request, cancellationToken);
     }

@@ -39,7 +39,7 @@ public class UpdateNotificationRuleCommandValidator : AbstractValidator<UpdateNo
 {
     public UpdateNotificationRuleCommandValidator()
     {
-        NotificationRuleContractRules.Apply(this, x => x.NotificationRule);
+        NotificationRuleContractRules.Apply(this, x => x.NotificationRule, requireWebhookSecret: false);
     }
 }
 

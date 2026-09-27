@@ -30,4 +30,5 @@ public sealed class DriverCredential : BaseAuditableEntity
     public DateTimeOffset? LastLoginAt { get; set; }
     public bool Active { get; set; }
     public bool ResetRequired { get; set; }
+    public Guid SecurityStamp { get; set; }
 }

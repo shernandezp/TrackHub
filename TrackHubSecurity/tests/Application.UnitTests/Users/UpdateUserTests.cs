@@ -47,7 +47,7 @@ internal class UpdateUserTests
         _writerMock.Setup(m => m.UpdateUserAsync(userDto, cancellationToken))
                   .Returns(Task.CompletedTask); // UpdateUserAsync returns a completed task
 
-        var handler = new UpdateUserCommandHandler(_writerMock.Object, _publisherMock.Object, _principalMock.Object);
+        var handler = new UpdateUserCommandHandler(_writerMock.Object, Mock.Of<IUserReader>(), _publisherMock.Object, _principalMock.Object);
         var command = new UpdateUserCommand { User = userDto };
 
         // Act

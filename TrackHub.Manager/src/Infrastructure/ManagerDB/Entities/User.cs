@@ -25,6 +25,7 @@ public sealed class User(Guid userId,
     public Guid UserId { get; set; } = userId;
     public string Username { get; set; } = username;
     public bool Active { get; set; } = active;
+    public string? Role { get; set; }
     public Guid AccountId { get; set; } = accountId;
     public ICollection<Group> Groups { get; set; } = [];
     public UserSettings? UserSettings { get; set; }

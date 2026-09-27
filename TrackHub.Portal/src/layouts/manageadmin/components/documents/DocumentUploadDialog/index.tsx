@@ -190,19 +190,18 @@ function DocumentUploadDialog({ open, setOpen, onUpload, categories = [], replac
           />
         )}
 
-        {!replaceMode && (
-          <CustomTextField
-            margin="normal"
-            name="expiresAt"
-            id="expiresAt"
-            label={t('documentManagement.expiresAt')}
-            type="datetime-local"
-            fullWidth
-            slotProps={{ inputLabel: { shrink: true } }}
-            value={values.expiresAt || ''}
-            onChange={handleChange}
-          />
-        )}
+        <CustomTextField
+          margin="normal"
+          name="expiresAt"
+          id="expiresAt"
+          label={t('documentManagement.expiresAt')}
+          type="datetime-local"
+          fullWidth
+          slotProps={{ inputLabel: { shrink: true } }}
+          value={values.expiresAt || ''}
+          onChange={handleChange}
+          helperText={replaceMode ? t('documentManagement.expiresAtKeepsCurrent') : undefined}
+        />
 
         {replaceMode && (
           <CustomTextField

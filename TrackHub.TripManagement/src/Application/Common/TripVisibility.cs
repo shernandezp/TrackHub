@@ -207,10 +207,10 @@ public static class TripVisibility
         => Guid.TryParse(user.Id, out var userId) ? userId : throw new UnauthorizedAccessException();
 
     /// <summary>
-    /// The export/report path, where the account travels on the request because Reporting calls
-    /// under a service identity. A USER caller may only ask for their own account (acceptance 1)
-    /// and is group-scoped exactly as on the list and detail paths (acceptance 3); a service client
-    /// is already constrained by its seeded grants and sees the whole account.
+    /// The export/report path, where the account travels on the request. A USER caller may only ask
+    /// for their own account (acceptance 1) and is group-scoped exactly as on the list and detail
+    /// paths (acceptance 3); a service client sees the whole account, but only the account its token
+    /// is bound to — an integration credential of one tenant must never read another's feeds.
     /// </summary>
     public static async Task<Guid?> ResolveReportScopeAsync(
         IUser user,
@@ -219,7 +219,12 @@ public static class TripVisibility
         CancellationToken cancellationToken)
     {
         if (!Guid.TryParse(user.Id, out var userId))
+        {
+            if (user.AccountId != requestedAccountId)
+                throw new ForbiddenAccessException(Resources.Trips, Actions.Export, "Account mismatch.");
+
             return null;
+        }
 
         var caller = await userReader.GetUserAsync(userId, cancellationToken);
         if (caller.AccountId != requestedAccountId)

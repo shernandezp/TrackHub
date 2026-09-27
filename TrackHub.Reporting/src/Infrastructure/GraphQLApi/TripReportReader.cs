@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using TrackHub.Reporting.Domain.Paging;
 using Common.Application.Interfaces;
 using TrackHub.Reporting.Domain.Interfaces;
 using TrackHub.Reporting.Domain.Interfaces.Trip;
@@ -144,12 +145,6 @@ public class TripReportReader(IGraphQLClientFactory graphQLClient, IUser user, I
                     }
                 }";
 
-    // Producer-side page clamp is 500; loop until the page count is reached. The row ceiling is a
-    // defensive source-fetch cap — the governed export limit is enforced downstream
-    // (AppSettings:Reporting), the same rationale as GeofenceReader.MaxRows.
-    private const int PageSize = 500;
-    private const int MaxRows = 100_000;
-
     private Guid AccountId => user.AccountId ?? throw new UnauthorizedAccessException();
 
     public Task EnsureTripManagementFeatureAsync(CancellationToken cancellationToken)
@@ -195,10 +190,7 @@ public class TripReportReader(IGraphQLClientFactory graphQLClient, IUser user, I
         CancellationToken cancellationToken)
     {
         var accountId = AccountId;
-        var rows = new List<TRow>();
-        var skip = 0;
-
-        while (rows.Count < MaxRows)
+        var rows = await FeedDrain.DrainByNextSkipAsync<TRow>(async (skip, take) =>
         {
             var request = new GraphQLRequest
             {
@@ -211,32 +203,15 @@ public class TripReportReader(IGraphQLClientFactory graphQLClient, IUser user, I
                     transporterId,
                     driverId,
                     skip,
-                    take = PageSize
+                    take
                 }
             };
 
             var page = await QueryAsync<TPage>(request, cancellationToken);
             var pageItems = itemsOf(page);
-            var items = pageItems as ICollection<TRow> ?? [.. pageItems ?? []];
-
-            rows.AddRange(items);
-
-            if (!hasMoreOf(page))
-            {
-                break;
-            }
-
-            var nextSkip = nextSkipOf(page);
-            if (nextSkip <= skip)
-            {
-                // The producer did not advance. Bail rather than spin: a feed that reports HasMore
-                // without moving its cursor is a bug on the producer side, and an infinite loop
-                // here would hang a report request instead of surfacing it.
-                break;
-            }
-
-            skip = nextSkip;
-        }
+            var items = pageItems as IReadOnlyCollection<TRow> ?? [.. pageItems ?? []];
+            return (items, hasMoreOf(page), nextSkipOf(page));
+        });
 
         return rows;
     }

@@ -194,7 +194,7 @@ public class TripReportReaderPagingTests
     // A producer that keeps returning full pages with an absurd totalCount must not be followed
     // forever: the loop is bounded by the 100k defensive source-fetch cap.
     [Test]
-    public async Task AlwaysFullPages_StopsAtTheDefensiveRowCapInsteadOfLoopingForever()
+    public void AlwaysFullPages_ReadsOnePagePastTheCapAndRaises()
     {
         var requests = 0;
         _client
@@ -209,12 +209,13 @@ public class TripReportReaderPagingTests
                 });
             });
 
-        var trips = await _reader.GetTripsAsync(null, null, null, null, CancellationToken.None);
+        var ex = Assert.ThrowsAsync<TrackHub.Reporting.Domain.Exceptions.ReportLimitExceededException>(
+            () => _reader.GetTripsAsync(null, null, null, null, CancellationToken.None));
 
         Assert.Multiple(() =>
         {
-            Assert.That(requests, Is.EqualTo(MaxRows / PageSize));
-            Assert.That(trips, Has.Count.EqualTo(MaxRows));
+            Assert.That(ex!.MaxRows, Is.EqualTo(MaxRows), "a drain that stopped exactly at the cap shipped a clean-looking truncated export");
+            Assert.That(requests, Is.EqualTo(MaxRows / PageSize + 1));
         });
     }
 

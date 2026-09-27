@@ -52,7 +52,8 @@ public class GetUsersQueryHandlerTests
             Active: true,
             LoginAttempts: loginAttempts,
             LockedUntil: lockedUntil,
-            AccountId: Guid.NewGuid());
+            AccountId: Guid.NewGuid(),
+            SecurityStamp: Guid.NewGuid());
 
     private GetUsersQueryHandler Handler() => new(_reader.Object, _writer.Object, NullLogger<GetUsersQueryHandler>.Instance);
 
@@ -103,20 +104,19 @@ public class GetUsersQueryHandlerTests
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    [Test]
-    public void LockedAccount_DeniesBeforePasswordCheck_WithoutTouchingCounter()
+    [TestCase(CorrectPassword)]
+    [TestCase(WrongPassword)]
+    public void LockedAccount_AnswersTheGenericRejection_WithoutTouchingCounter(string password)
     {
-        // Even with the CORRECT password, a currently-locked account is denied and the counter is untouched.
         var user = ActiveUser(loginAttempts: 5, lockedUntil: DateTimeOffset.UtcNow.AddMinutes(10));
         SetupReader(user);
 
         var ex = Assert.ThrowsAsync<AuthenticationException>(async () =>
-            await Handler().Handle(new GetUsersQuery(user.EmailAddress, CorrectPassword), CancellationToken.None));
+            await Handler().Handle(new GetUsersQuery(user.EmailAddress, password), CancellationToken.None));
 
-        Assert.That(ex!.Message, Does.Contain("locked").IgnoreCase);
-        Assert.That(ex.Message, Does.Not.Contain("Password").IgnoreCase, "the lock message must not reveal password correctness");
+        Assert.That(ex!.Message, Is.EqualTo("Email or password is incorrect"), "a distinct answer to the right password would confirm it");
         _writer.Verify(w => w.RecordLoginSuccessAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
-        _writer.Verify(w => w.RecordLoginFailureAsync(It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()), Times.Never);
+        _writer.Verify(w => w.RecordLoginFailureAsync(It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()), Times.Never, "counting during the lock would let a guesser extend it forever");
     }
 
     [Test]

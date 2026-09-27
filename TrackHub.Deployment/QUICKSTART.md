@@ -130,7 +130,7 @@ nano .env
 Replace `DB_HOST` with your PostgreSQL server address (`localhost` if on the same server).
 
 > ⚠️ Write the user field as **`user id=`** — *with a space*. The deployment scripts
-> (`init-databases.sh`, `backup-database.sh`, `sync-user-account-ids.sh`) parse the
+> (`init-databases.sh`, `backup-database.sh`) parse the
 > connection string on that exact key. Writing `userid=` makes the user parse as empty
 > and **`db-init` fails on first deploy**.
 
@@ -370,8 +370,7 @@ does not create tables. Apply the migrations, then re-run `./scripts/deploy.sh f
 
 The `-v` flag deletes the volumes, which destroys **every uploaded document** (the
 `manager-documents` volume — this data is *not* in PostgreSQL and not covered by
-`backup-database.sh`) and removes the `db-init` flag, which re-arms the one-time
-User/Account ID sync on the next deploy. Use `docker compose down --remove-orphans`.
+`backup-database.sh`). Use `docker compose down --remove-orphans`.
 
 **Certificate errors?**
 ```bash
