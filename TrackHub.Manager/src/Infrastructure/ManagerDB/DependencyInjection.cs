@@ -69,9 +69,11 @@ public static class DependencyInjection
         services.AddScoped<ICredentialWriter, CredentialWriter>();
         services.AddScoped<ICredentialReader, CredentialReader>();
         services.AddScoped<ITransporterWriter, TransporterWriter>();
-        services.AddScoped<ITransporterPositionWriter, TransporterPositionWriter>();
         services.AddScoped<ITransporterGroupWriter, TransporterGroupWriter>();
         services.AddScoped<IDeviceWriter, DeviceWriter>();
+        services.AddScoped<IOperatorCatalogGate, OperatorCatalogGate>();
+        services.AddScoped<IAtomicWrite, AtomicWrite>();
+        services.AddScoped<ISaveChangesInterceptor, EditVersionInterceptor>();
         services.AddScoped<IDeviceReader, DeviceReader>();
         services.AddScoped<IDeviceTransporterReader, DeviceTransporterReader>();
         services.AddScoped<ITransporterReader, TransporterReader>();

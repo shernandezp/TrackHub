@@ -16,6 +16,7 @@
 using Common.Application.Exceptions;
 using TrackHub.TripManagement.Infrastructure.TripDB.Events;
 using TrackHub.TripManagement.Infrastructure.TripDB.Readers;
+using Common.Infrastructure;
 
 namespace TrackHub.TripManagement.Infrastructure.TripDB.Writers;
 
@@ -31,6 +32,8 @@ namespace TrackHub.TripManagement.Infrastructure.TripDB.Writers;
 /// </summary>
 public sealed class TripStopWriter(IApplicationDbContext context) : ITripStopWriter
 {
+    private const int MaxConcurrencyAttempts = 3;
+
     public async Task<TripStopVm> AddStopAsync(Guid tripId, Guid accountId, TripStopDto stop, CancellationToken cancellationToken)
     {
         var trip = await context.Trips.FirstOrDefaultAsync(t => t.TripId == tripId && t.AccountId == accountId, cancellationToken)
@@ -92,6 +95,7 @@ public sealed class TripStopWriter(IApplicationDbContext context) : ITripStopWri
     public async Task UpdateStopAsync(Guid tripStopId, Guid accountId, TripStopDto stop, CancellationToken cancellationToken)
     {
         var entity = await FindAsync(tripStopId, accountId, null, cancellationToken);
+        await TripEditGuard.EnsureEditableAsync(context, entity.TripId, accountId, cancellationToken);
 
         if (TripStopStatuses.IsClosed(entity.Status))
         {
@@ -136,12 +140,13 @@ public sealed class TripStopWriter(IApplicationDbContext context) : ITripStopWri
         }
 
         entity.AddDomainEvent(new TripDomainEvent(TripEventTypes.TripUpdated, accountId, entity.TripId, entity.TripStopId));
-        await context.SaveChangesAsync(cancellationToken);
+        await SaveEditAsync(cancellationToken);
     }
 
     public async Task RemoveStopAsync(Guid tripStopId, Guid accountId, CancellationToken cancellationToken)
     {
         var entity = await FindAsync(tripStopId, accountId, null, cancellationToken);
+        await TripEditGuard.EnsureEditableAsync(context, entity.TripId, accountId, cancellationToken);
 
         // An Arrived or Departed stop is recorded history and cannot be removed (spec 11 7.3).
         if (!string.Equals(entity.Status, TripStopStatuses.Pending, StringComparison.Ordinal))
@@ -151,7 +156,7 @@ public sealed class TripStopWriter(IApplicationDbContext context) : ITripStopWri
 
         var tripId = entity.TripId;
         context.TripStops.Remove(entity);
-        await context.SaveChangesAsync(cancellationToken);
+        await SaveEditAsync(cancellationToken);
 
         await RenumberAsync(tripId, cancellationToken);
     }
@@ -187,7 +192,7 @@ public sealed class TripStopWriter(IApplicationDbContext context) : ITripStopWri
         // hazard `ReorderStopsAsync` avoids with its negative-range two-pass.
         if (existing.Count > 0)
         {
-            await context.SaveChangesAsync(cancellationToken);
+            await SaveEditAsync(cancellationToken);
         }
 
         var sequence = 1;
@@ -218,11 +223,13 @@ public sealed class TripStopWriter(IApplicationDbContext context) : ITripStopWri
         }
 
         trip.AddDomainEvent(new TripDomainEvent(TripEventTypes.TripUpdated, accountId, tripId));
-        await context.SaveChangesAsync(cancellationToken);
+        await SaveEditAsync(cancellationToken);
     }
 
     public async Task ReorderStopsAsync(Guid tripId, Guid accountId, IReadOnlyCollection<Guid> orderedStopIds, CancellationToken cancellationToken)
     {
+        await TripEditGuard.EnsureEditableAsync(context, tripId, accountId, cancellationToken);
+
         var stops = await context.TripStops
             .AsTracking()
             .Where(s => s.TripId == tripId && s.AccountId == accountId)
@@ -270,14 +277,14 @@ public sealed class TripStopWriter(IApplicationDbContext context) : ITripStopWri
             stop.Sequence = -(i + 1);
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await SaveEditAsync(cancellationToken);
 
         foreach (var stop in stops)
         {
             stop.Sequence = -stop.Sequence;
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await SaveEditAsync(cancellationToken);
     }
 
     public async Task<bool> RecordStopProgressAsync(
@@ -293,9 +300,49 @@ public sealed class TripStopWriter(IApplicationDbContext context) : ITripStopWri
         string? reason,
         CancellationToken cancellationToken)
     {
+        // The stop carries a row version: a save built on a stop another writer has since moved is
+        // refused, and the event is re-decided against the stop as it now is, never written over it.
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                return await TryRecordStopProgressAsync(
+                    tripId, tripStopId, accountId, toStatus, occurredAt, latitude, longitude, source, idempotencyKey, reason, attempt > 1, cancellationToken);
+            }
+            catch (DbUpdateConcurrencyException) when (attempt < MaxConcurrencyAttempts)
+            {
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                throw ConflictException.WithCode(TripErrorCodes.TripModifiedConcurrently);
+            }
+        }
+    }
+
+    private async Task<bool> TryRecordStopProgressAsync(
+        Guid tripId,
+        Guid tripStopId,
+        Guid accountId,
+        string toStatus,
+        DateTimeOffset occurredAt,
+        double? latitude,
+        double? longitude,
+        string source,
+        string idempotencyKey,
+        string? reason,
+        bool retry,
+        CancellationToken cancellationToken)
+    {
+
         // Resolved by (stop, account, TRIP): without the trip the caller's active-trip check and
         // the row actually written could belong to two different trips.
         var entity = await FindAsync(tripStopId, accountId, tripId, cancellationToken);
+
+        // Another writer made this very transition while ours was being saved: it is already recorded.
+        if (retry && string.Equals(entity.Status, toStatus, StringComparison.Ordinal))
+        {
+            return false;
+        }
 
         // IDEMPOTENCY IS CHECKED BEFORE THE TRANSITION GUARD, and the order is the whole point.
         //
@@ -313,6 +360,11 @@ public sealed class TripStopWriter(IApplicationDbContext context) : ITripStopWri
         }
 
         GuardStopTransition(entity.Status, toStatus);
+
+        if (source is TripEventSources.Portal or TripEventSources.Driver)
+        {
+            await GuardManualProgressAsync(entity, toStatus, occurredAt, source, cancellationToken);
+        }
 
         var tripEvent = new TripEvent
         {
@@ -378,39 +430,91 @@ public sealed class TripStopWriter(IApplicationDbContext context) : ITripStopWri
             context.TripStops.Entry(entity).State = EntityState.Detached;
             return false;
         }
-    }
-
-    public async Task SetStopOutsideSinceAsync(Guid tripStopId, Guid accountId, DateTimeOffset? outsideSinceAt, CancellationToken cancellationToken)
-    {
-        var entity = await context.TripStops
-            .AsTracking()
-            .FirstOrDefaultAsync(s => s.TripStopId == tripStopId && s.AccountId == accountId, cancellationToken);
-
-        if (entity is null || entity.OutsideSinceAt == outsideSinceAt)
+        catch (DbUpdateConcurrencyException exception)
         {
-            return;
+            context.TripEvents.Entry(tripEvent).State = EntityState.Detached;
+            context.TripStops.Entry(entity).State = EntityState.Detached;
+
+            // Only a conflict on this stop is worth re-deciding; one on another row would repeat.
+            if (exception.Entries.Any(e => !ReferenceEquals(e.Entity, entity)))
+            {
+                throw ConflictException.WithCode(TripErrorCodes.TripModifiedConcurrently);
+            }
+
+            throw;
         }
-
-        entity.OutsideSinceAt = outsideSinceAt;
-        await context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task UpdateStopEtaAsync(Guid tripStopId, Guid accountId, DateTimeOffset? etaAt, string etaSource, CancellationToken cancellationToken)
+    public Task SetStopOutsideSinceAsync(Guid tripStopId, Guid accountId, DateTimeOffset? outsideSinceAt, CancellationToken cancellationToken)
+        => ApplyToStopAsync(tripStopId, accountId, stop =>
+        {
+            if (stop.OutsideSinceAt == outsideSinceAt)
+            {
+                return false;
+            }
+
+            stop.OutsideSinceAt = outsideSinceAt;
+            return true;
+        }, cancellationToken);
+
+    public Task UpdateStopEtaAsync(Guid tripStopId, Guid accountId, DateTimeOffset? etaAt, string etaSource, CancellationToken cancellationToken)
+        => ApplyToStopAsync(tripStopId, accountId, stop =>
+        {
+            stop.EtaAt = etaAt;
+            stop.EtaSource = etaSource;
+            return true;
+        }, cancellationToken);
+
+    // One-shot marker, stamped only AFTER the alert was successfully emitted (the geofence dwell
+    // precedent) so a failed emission is retried rather than lost.
+    public Task MarkStopDelayAlertedAsync(Guid tripStopId, Guid accountId, DateTimeOffset alertedAt, CancellationToken cancellationToken)
+        => ApplyToStopAsync(tripStopId, accountId, stop =>
+        {
+            stop.DelayAlertedAt ??= alertedAt;
+            return true;
+        }, cancellationToken);
+
+    // Automation's own fields on a stop: a conflict means another writer moved the row, so the
+    // change is re-applied to the stop as it now is.
+    private async Task ApplyToStopAsync(Guid tripStopId, Guid accountId, Func<TripStop, bool> apply, CancellationToken cancellationToken)
     {
-        var entity = await FindAsync(tripStopId, accountId, null, cancellationToken);
-        entity.EtaAt = etaAt;
-        entity.EtaSource = etaSource;
-        await context.SaveChangesAsync(cancellationToken);
+        for (var attempt = 1; ; attempt++)
+        {
+            var entity = await context.TripStops
+                .AsTracking()
+                .FirstOrDefaultAsync(s => s.TripStopId == tripStopId && s.AccountId == accountId, cancellationToken)
+                ?? throw new NotFoundException($"{tripStopId}", nameof(TripStop));
+
+            if (!apply(entity))
+            {
+                return;
+            }
+
+            try
+            {
+                await context.SaveChangesAsync(cancellationToken);
+                return;
+            }
+            catch (DbUpdateConcurrencyException) when (attempt < MaxConcurrencyAttempts)
+            {
+                context.TripStops.Entry(entity).State = EntityState.Detached;
+            }
+        }
     }
 
-    public async Task MarkStopDelayAlertedAsync(Guid tripStopId, Guid accountId, DateTimeOffset alertedAt, CancellationToken cancellationToken)
+    // A dispatcher's structural edit built on stops another writer has since moved is refused
+    // rather than written over them.
+    private async Task SaveEditAsync(CancellationToken cancellationToken)
     {
-        var entity = await FindAsync(tripStopId, accountId, null, cancellationToken);
-
-        // One-shot marker, stamped only AFTER the alert was successfully emitted (the geofence
-        // dwell precedent) so a failed emission is retried rather than lost.
-        entity.DelayAlertedAt ??= alertedAt;
-        await context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            context.ChangeTracker.Clear();
+            throw ConflictException.WithCode(TripErrorCodes.TripModifiedConcurrently);
+        }
     }
 
     private static string EventTypeFor(string toStatus) => toStatus switch
@@ -469,7 +573,7 @@ public sealed class TripStopWriter(IApplicationDbContext context) : ITripStopWri
 
         if (changed)
         {
-            await context.SaveChangesAsync(cancellationToken);
+            await SaveEditAsync(cancellationToken);
         }
     }
 
@@ -510,6 +614,31 @@ public sealed class TripStopWriter(IApplicationDbContext context) : ITripStopWri
             && string.Equals(toStatus, TripStopStatuses.Skipped, StringComparison.Ordinal))
         {
             throw ConflictException.WithCode(TripErrorCodes.InvalidTransition);
+        }
+    }
+
+    // Detection measures its own instants; a person's claimed instant must fit the trip's timeline,
+    // and a stop that needs proof of delivery is not departed by hand before the proof exists.
+    private async Task GuardManualProgressAsync(TripStop stop, string toStatus, DateTimeOffset occurredAt, string source, CancellationToken cancellationToken)
+    {
+        var startedAt = await context.Trips
+            .Where(t => t.TripId == stop.TripId)
+            .Select(t => t.ActualStartAt)
+            .FirstAsync(cancellationToken);
+        var departing = string.Equals(toStatus, TripStopStatuses.Departed, StringComparison.Ordinal);
+        var notBefore = departing && stop.ActualArrivalAt is { } arrivedAt && (startedAt is null || arrivedAt > startedAt)
+            ? arrivedAt
+            : startedAt;
+
+        if (!TripEventTime.IsAcceptable(occurredAt, source, notBefore, DateTimeOffset.UtcNow))
+        {
+            throw ConflictException.WithCode(TripErrorCodes.EventTimeOutOfRange);
+        }
+
+        if (departing && stop.RequiresPod
+            && !await context.ProofsOfDelivery.AnyAsync(p => p.TripStopId == stop.TripStopId, cancellationToken))
+        {
+            throw ConflictException.WithCode(TripErrorCodes.PodRequired);
         }
     }
 

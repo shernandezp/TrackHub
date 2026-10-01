@@ -14,6 +14,7 @@
 *  limitations under the License.
 */
 
+import { useRef, useState } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from '@mui/material';
@@ -28,10 +29,26 @@ interface ConfirmDialogProps {
 
 const ConfirmDialog = ({ title, message, open, setOpen, onConfirm }: ConfirmDialogProps) => {
   const { t } = useTranslation();
+  const pending = useRef(false);
+  const [confirming, setConfirming] = useState(false);
+  const confirm = async () => {
+    if (pending.current) return;
+    pending.current = true;
+    setConfirming(true);
+    try {
+      await onConfirm();
+    } finally {
+      pending.current = false;
+      setConfirming(false);
+    }
+  };
+  const close = () => {
+    if (!pending.current) setOpen(false);
+  };
   return (
     <Dialog
       open={open}
-      onClose={() => setOpen(false)}
+      onClose={close}
       aria-labelledby="alert-dialog-title"
       aria-describedby="alert-dialog-description"
       data-testid="dialog-confirm"
@@ -43,10 +60,10 @@ const ConfirmDialog = ({ title, message, open, setOpen, onConfirm }: ConfirmDial
         </DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => setOpen(false)} color="primary">
+        <Button onClick={close} disabled={confirming} color="primary">
           {t('generic.cancel')}
         </Button>
-        <Button onClick={onConfirm} color="primary" autoFocus>
+        <Button onClick={confirm} disabled={confirming} color="primary" autoFocus>
           {t('generic.confirm')}
         </Button>
       </DialogActions>

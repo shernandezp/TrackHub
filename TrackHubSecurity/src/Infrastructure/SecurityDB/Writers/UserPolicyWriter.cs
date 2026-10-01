@@ -69,10 +69,6 @@ public sealed class UserPolicyWriter(IApplicationDbContext context, ICurrentPrin
         await Context.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task RequireTargetUserAccessAsync(Guid userId, CancellationToken cancellationToken)
-    {
-        var target = await Context.Users.FindAsync([userId], cancellationToken)
-            ?? throw new NotFoundException(nameof(User), $"{userId}");
-        await RequireAccountAccessAsync(target.AccountId, cancellationToken);
-    }
+    private Task RequireTargetUserAccessAsync(Guid userId, CancellationToken cancellationToken)
+        => RequireUserForChangeAsync(userId, cancellationToken);
 }

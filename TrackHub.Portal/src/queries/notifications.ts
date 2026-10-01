@@ -37,7 +37,7 @@ export function useMyNotifications(
 ) {
   return useQuery({
     queryKey: notificationKeys.my(unreadOnly),
-    queryFn: () => api.getMyNotifications(unreadOnly, 0, FEED_SIZE),
+    queryFn: ({ signal }) => api.getMyNotifications(unreadOnly, 0, FEED_SIZE, { signal }),
     enabled: options.enabled ?? true,
     refetchInterval: 60000,
   });

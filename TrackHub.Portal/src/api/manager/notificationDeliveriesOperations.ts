@@ -62,7 +62,10 @@ export const GetNotificationDeliveriesDocument = graphql(`
         take: $take
       }
     ) {
-      ...NotificationDeliveryItem
+      items {
+        ...NotificationDeliveryItem
+      }
+      totalCount
     }
   }
 `);

@@ -26,12 +26,12 @@ test.describe('account management — alerts & notifications', () => {
     await rules.open();
     // A rule is disabled, never deleted, so cleanup goes through the API.
     cleanup.add(`notification rule ${ruleKey}`, async () => {
-      const found = await api.tryGql<{ notificationRules: { notificationRuleId: string; ruleKey: string; enabled: boolean }[] }>(
+      const found = await api.tryGql<{ notificationRules: { items: { notificationRuleId: string; ruleKey: string; enabled: boolean }[] } }>(
         'manager',
-        'query($accountId: UUID!, $skip: Int!, $take: Int!) { notificationRules(query: { accountId: $accountId, skip: $skip, take: $take }) { notificationRuleId ruleKey enabled } }',
+        'query($accountId: UUID!, $skip: Int!, $take: Int!) { notificationRules(query: { accountId: $accountId, skip: $skip, take: $take }) { items { notificationRuleId ruleKey enabled } } }',
         { accountId: await api.accountId(), skip: 0, take: 500 }
       );
-      const rule = found?.notificationRules.find((row) => row.ruleKey === ruleKey && row.enabled);
+      const rule = found?.notificationRules.items.find((row) => row.ruleKey === ruleKey && row.enabled);
       if (rule) {
         await api.tryGql(
           'manager',

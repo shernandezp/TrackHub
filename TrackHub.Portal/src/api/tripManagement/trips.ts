@@ -21,6 +21,7 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { RequestOptions } from 'api/core/errors';
 import type {
   TripSummaryFieldsFragment,
   TripStopFieldsFragment,
@@ -91,9 +92,11 @@ import {
   CreateTollVehicleClassDocument,
   UpdateTollVehicleClassDocument,
   DeactivateTollVehicleClassDocument,
+  ReactivateTollVehicleClassDocument,
   CreateTollStationDocument,
   UpdateTollStationDocument,
   DeactivateTollStationDocument,
+  ReactivateTollStationDocument,
   CreateTollTariffDocument,
   UpdateTollTariffDocument,
   DeleteTollTariffDocument,
@@ -147,6 +150,7 @@ export interface TripListFilters {
   search?: string | null;
   skip?: number | null;
   take?: number | null;
+  exception?: string | null;
 }
 
 /** Server-side filters accepted by {@link getTollStations}. */
@@ -160,7 +164,7 @@ export interface TollStationFilters {
 
 /* ---------------------------------------------------------------- queries */
 
-export async function getTrips(filters: TripListFilters = {}): Promise<TripsPage> {
+export async function getTrips(filters: TripListFilters = {}, options?: RequestOptions): Promise<TripsPage> {
   const data = await executeGraphQL('tripManagement', GetTripsDocument, {
     statuses: filters.statuses ?? null,
     from: filters.from ?? null,
@@ -171,25 +175,27 @@ export async function getTrips(filters: TripListFilters = {}): Promise<TripsPage
     search: filters.search ?? null,
     skip: filters.skip ?? null,
     take: filters.take ?? null,
-  });
+    exception: filters.exception ?? null,
+  }, options);
   return data.trips;
 }
 
-export async function getTripDetail(tripId: string): Promise<TripDetail> {
-  const data = await executeGraphQL('tripManagement', GetTripDetailDocument, { tripId });
+export async function getTripDetail(tripId: string, options?: RequestOptions): Promise<TripDetail> {
+  const data = await executeGraphQL('tripManagement', GetTripDetailDocument, { tripId }, options);
   return data.tripDetail;
 }
 
 export async function getTripTimeline(
   tripId: string,
   cursor: string | null = null,
-  take = 100
+  take = 100,
+  options?: RequestOptions
 ): Promise<TripTimelinePage> {
   const data = await executeGraphQL('tripManagement', GetTripTimelineDocument, {
     tripId,
     cursor,
     take,
-  });
+  }, options);
   return data.tripTimelineFeed;
 }
 
@@ -200,22 +206,24 @@ export async function getTripTimeline(
  */
 export async function getTripRouteReplay(
   tripId: string,
-  maxPoints?: number | null
+  maxPoints?: number | null,
+  options?: RequestOptions
 ): Promise<RouteReplay> {
   const data = await executeGraphQL('tripManagement', GetTripRouteReplayDocument, {
     tripId,
     maxPoints: maxPoints ?? null,
-  });
+  }, options);
   return data.tripRouteReplay;
 }
 
-export async function getTollVehicleClasses(): Promise<TollVehicleClass[]> {
-  const data = await executeGraphQL('tripManagement', GetTollVehicleClassesDocument);
+export async function getTollVehicleClasses(options?: RequestOptions): Promise<TollVehicleClass[]> {
+  const data = await executeGraphQL('tripManagement', GetTollVehicleClassesDocument, undefined, options);
   return data.tollVehicleClasses;
 }
 
 export async function getTollStations(
-  filters: TollStationFilters = {}
+  filters: TollStationFilters = {},
+  options?: RequestOptions
 ): Promise<TollStationsPage> {
   const data = await executeGraphQL('tripManagement', GetTollStationsDocument, {
     search: filters.search ?? null,
@@ -223,14 +231,14 @@ export async function getTollStations(
     active: filters.active ?? null,
     skip: filters.skip ?? null,
     take: filters.take ?? null,
-  });
+  }, options);
   return data.tollStations;
 }
 
-export async function getTollStationDetail(tollStationId: string): Promise<TollStationDetail> {
+export async function getTollStationDetail(tollStationId: string, options?: RequestOptions): Promise<TollStationDetail> {
   const data = await executeGraphQL('tripManagement', GetTollStationDetailDocument, {
     tollStationId,
-  });
+  }, options);
   return data.tollStationDetail;
 }
 
@@ -240,12 +248,13 @@ export async function getTollStationDetail(tollStationId: string): Promise<TollS
  */
 export async function estimateTolls(
   routePlanId: string,
-  tollVehicleClass?: string | null
+  tollVehicleClass?: string | null,
+  options?: RequestOptions
 ): Promise<TollEstimate> {
   const data = await executeGraphQL('tripManagement', EstimateTollsDocument, {
     routePlanId,
     tollVehicleClass: tollVehicleClass ?? null,
-  });
+  }, options);
   return data.estimateTolls;
 }
 
@@ -562,6 +571,13 @@ export async function deactivateTollVehicleClass(tollVehicleClassId: string): Pr
   return data.deactivateTollVehicleClass;
 }
 
+export async function reactivateTollVehicleClass(tollVehicleClassId: string): Promise<string> {
+  const data = await executeGraphQL('tripManagement', ReactivateTollVehicleClassDocument, {
+    id: tollVehicleClassId,
+  });
+  return data.reactivateTollVehicleClass;
+}
+
 export async function createTollStation(station: TollStationDtoInput): Promise<TollStation> {
   const data = await executeGraphQL('tripManagement', CreateTollStationDocument, { station });
   return data.createTollStation;
@@ -583,6 +599,13 @@ export async function deactivateTollStation(tollStationId: string): Promise<stri
     id: tollStationId,
   });
   return data.deactivateTollStation;
+}
+
+export async function reactivateTollStation(tollStationId: string): Promise<string> {
+  const data = await executeGraphQL('tripManagement', ReactivateTollStationDocument, {
+    id: tollStationId,
+  });
+  return data.reactivateTollStation;
 }
 
 export async function createTollTariff(tariff: TollTariffDtoInput): Promise<TollTariff> {

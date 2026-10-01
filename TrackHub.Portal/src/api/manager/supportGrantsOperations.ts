@@ -57,17 +57,17 @@ export const CreateAccountSupportGrantDocument = graphql(`
 `);
 
 export const ApproveAccountSupportGrantDocument = graphql(`
-  mutation ApproveAccountSupportGrant($accountSupportGrantId: UUID!, $approvedBy: String!) {
+  mutation ApproveAccountSupportGrant($accountSupportGrantId: UUID!) {
     approveAccountSupportGrant(
-      command: { accountSupportGrantId: $accountSupportGrantId, approvedBy: $approvedBy }
+      command: { accountSupportGrantId: $accountSupportGrantId }
     )
   }
 `);
 
 export const RevokeAccountSupportGrantDocument = graphql(`
-  mutation RevokeAccountSupportGrant($accountSupportGrantId: UUID!, $revokedBy: String!) {
+  mutation RevokeAccountSupportGrant($accountSupportGrantId: UUID!) {
     revokeAccountSupportGrant(
-      command: { accountSupportGrantId: $accountSupportGrantId, revokedBy: $revokedBy }
+      command: { accountSupportGrantId: $accountSupportGrantId }
     )
   }
 `);

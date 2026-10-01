@@ -23,6 +23,8 @@ namespace TrackHub.Telemetry.Application.GpsIntegration.Commands;
 public readonly record struct PersistResolvedAddressCommand(
     Guid? TransporterPositionHistoryId,
     Guid? TransporterId,
+    double Latitude,
+    double Longitude,
     string? Address,
     string? City,
     string? State,
@@ -34,6 +36,8 @@ public class PersistResolvedAddressCommandHandler(IResolvedAddressWriter writer)
         => await writer.PersistResolvedAddressAsync(
             request.TransporterPositionHistoryId,
             request.TransporterId,
+            request.Latitude,
+            request.Longitude,
             request.Address,
             request.City,
             request.State,

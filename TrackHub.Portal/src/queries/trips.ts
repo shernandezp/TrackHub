@@ -75,7 +75,7 @@ export const TRIP_BOARD_POLL_MS = 30_000;
 export function useTrips(filters: TripListFilters = {}, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: tripKeys.list(filters),
-    queryFn: () => api.getTrips(filters),
+    queryFn: ({ signal }) => api.getTrips(filters, { signal }),
     enabled: options.enabled ?? true,
     refetchInterval: TRIP_BOARD_POLL_MS,
     // A backgrounded tab stops hitting the backend; the focus refetch below is what
@@ -88,7 +88,7 @@ export function useTrips(filters: TripListFilters = {}, options: { enabled?: boo
 export function useTripDetail(tripId: string | null | undefined) {
   return useQuery({
     queryKey: tripKeys.detail(tripId ?? ''),
-    queryFn: () => api.getTripDetail(tripId as string),
+    queryFn: ({ signal }) => api.getTripDetail(tripId as string, { signal }),
     enabled: !!tripId,
     // The workspace tracks one trip in flight — its stops close without anyone here
     // pressing anything, so it polls on the same cadence as the board.
@@ -101,7 +101,7 @@ export function useTripDetail(tripId: string | null | undefined) {
 export function useTripTimeline(tripId: string | null | undefined, cursor: string | null = null, take = 100) {
   return useQuery({
     queryKey: tripKeys.timeline(tripId ?? '', cursor, take),
-    queryFn: () => api.getTripTimeline(tripId as string, cursor, take),
+    queryFn: ({ signal }) => api.getTripTimeline(tripId as string, cursor, take, { signal }),
     enabled: !!tripId,
   });
 }
@@ -114,7 +114,7 @@ export function useTripRouteReplay(
 ) {
   return useQuery({
     queryKey: tripKeys.replay(tripId ?? '', maxPoints),
-    queryFn: () => api.getTripRouteReplay(tripId as string, maxPoints),
+    queryFn: ({ signal }) => api.getTripRouteReplay(tripId as string, maxPoints, { signal }),
     enabled: (options.enabled ?? true) && !!tripId,
   });
 }
@@ -434,7 +434,7 @@ export function useRevokeTripShare() {
 export function useTollVehicleClasses(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: tripKeys.vehicleClasses(),
-    queryFn: api.getTollVehicleClasses,
+    queryFn: ({ signal }) => api.getTollVehicleClasses({ signal }),
     enabled: options.enabled ?? true,
   });
 }
@@ -445,7 +445,7 @@ export function useTollStations(
 ) {
   return useQuery({
     queryKey: tripKeys.stations(filters),
-    queryFn: () => api.getTollStations(filters),
+    queryFn: ({ signal }) => api.getTollStations(filters, { signal }),
     enabled: options.enabled ?? true,
   });
 }
@@ -454,7 +454,7 @@ export function useTollStations(
 export function useTollStationDetail(tollStationId: string | null | undefined) {
   return useQuery({
     queryKey: tripKeys.stationDetail(tollStationId ?? ''),
-    queryFn: () => api.getTollStationDetail(tollStationId as string),
+    queryFn: ({ signal }) => api.getTollStationDetail(tollStationId as string, { signal }),
     enabled: !!tollStationId,
   });
 }
@@ -466,7 +466,7 @@ export function useTollEstimate(
 ) {
   return useQuery({
     queryKey: tripKeys.estimate(routePlanId ?? '', tollVehicleClass),
-    queryFn: () => api.estimateTolls(routePlanId as string, tollVehicleClass),
+    queryFn: ({ signal }) => api.estimateTolls(routePlanId as string, tollVehicleClass, { signal }),
     enabled: (options.enabled ?? true) && !!routePlanId,
   });
 }
@@ -502,6 +502,14 @@ export function useDeactivateTollVehicleClass() {
   });
 }
 
+export function useReactivateTollVehicleClass() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (tollVehicleClassId: string) => api.reactivateTollVehicleClass(tollVehicleClassId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: tripKeys.tolls }),
+  });
+}
+
 export function useCreateTollStation() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -528,6 +536,14 @@ export function useDeactivateTollStation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (tollStationId: string) => api.deactivateTollStation(tollStationId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: tripKeys.tolls }),
+  });
+}
+
+export function useReactivateTollStation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (tollStationId: string) => api.reactivateTollStation(tollStationId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: tripKeys.tolls }),
   });
 }
@@ -593,7 +609,7 @@ export function useDeclareTripInTransit() {
 export function usePublicTrip(params: PublicTripLinkParams | null) {
   return useQuery({
     queryKey: tripKeys.publicTrip(params),
-    queryFn: () => publicApi.getPublicTrip(params as PublicTripLinkParams),
+    queryFn: ({ signal }) => publicApi.getPublicTrip(params as PublicTripLinkParams, { signal }),
     enabled: !!params,
     retry: false,
   });

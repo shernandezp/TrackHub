@@ -1,7 +1,7 @@
-using TrackHub.Manager.Domain.Constants;
 using System.Text.Json;
 using Common.Application.Paging;
 using Microsoft.Extensions.Logging;
+using TrackHub.Manager.Domain.Constants;
 
 namespace TrackHub.Manager.Application.GpsIntegration.Commands;
 
@@ -26,6 +26,7 @@ public class SynchronizeOperatorDevicesCommandHandler(
     IGroupWriter groupWriter,
     ITransporterGroupWriter transporterGroupWriter,
     IOperatorWriter operatorWriter,
+    IAtomicWrite atomicWrite,
     IAlertRecorder alertRecorder,
     ILogger<SynchronizeOperatorDevicesCommandHandler> logger)
     : IRequestHandler<SynchronizeOperatorDevicesCommand, OperatorSyncRunVm>
@@ -39,7 +40,7 @@ public class SynchronizeOperatorDevicesCommandHandler(
         }
 
         var newlyAdded = new List<DeviceDto>();
-        var newlyAddedDevices = new List<(DeviceDto Incoming, DeviceVm Device)>();
+        var awaitingProvision = new List<(DeviceDto Incoming, DeviceVm Device)>();
         int added = 0, updated = 0, ignored = 0;
 
         // One unit of work for the whole catalog, retirements included; a device the provider lists
@@ -54,7 +55,6 @@ public class SynchronizeOperatorDevicesCommandHandler(
             {
                 added++;
                 newlyAdded.Add(incoming);
-                newlyAddedDevices.Add((incoming, upserted));
             }
             else
             {
@@ -63,6 +63,11 @@ public class SynchronizeOperatorDevicesCommandHandler(
 
             if (upserted.DetectedStatus == DetectedStatus.Ignored)
                 ignored++;
+
+            // Still New = never assigned nor ignored, whether it arrived now or an earlier provisioning
+            // failed part-way: the state, not this run's diff, decides what is left to provision.
+            if (upserted.DetectedStatus == DetectedStatus.New)
+                awaitingProvision.Add((incoming, upserted));
         }
 
         var removed = reconciliation.Retired;
@@ -70,7 +75,7 @@ public class SynchronizeOperatorDevicesCommandHandler(
         var autoAssign = default(AutoAssignOutcome);
         if (request.AutoAssignNewDevices ?? true)
         {
-            autoAssign = await AutoAssignNewDevicesAsync(request.AccountId, newlyAddedDevices, cancellationToken);
+            autoAssign = await AutoAssignNewDevicesAsync(request.AccountId, awaitingProvision, cancellationToken);
         }
 
         var duplicates = new List<(string Serial, Guid OtherOperatorId)>();
@@ -133,7 +138,7 @@ public class SynchronizeOperatorDevicesCommandHandler(
                 await alertRecorder.RecordAsync(new AlertEventDto(
                     request.AccountId,
                     EventType: AlertEventTypes.GpsDeviceDetected,
-                    Severity: "Info",
+                    Severity: AlertSeverities.Info,
                     SourceModule: "GpsIntegration",
                     ResourceType: "SynchronizedDevice",
                     ResourceId: device.Identifier.ToString(),
@@ -147,7 +152,7 @@ public class SynchronizeOperatorDevicesCommandHandler(
                 await alertRecorder.RecordAsync(new AlertEventDto(
                     request.AccountId,
                     EventType: AlertEventTypes.GpsDeviceRemoved,
-                    Severity: "Warning",
+                    Severity: AlertSeverities.Warning,
                     SourceModule: "GpsIntegration",
                     ResourceType: "SynchronizedDevice",
                     ResourceId: device.Identifier.ToString(),
@@ -161,7 +166,7 @@ public class SynchronizeOperatorDevicesCommandHandler(
                 await alertRecorder.RecordAsync(new AlertEventDto(
                     request.AccountId,
                     EventType: AlertEventTypes.GpsDuplicateDeviceIdentifier,
-                    Severity: "Warning",
+                    Severity: AlertSeverities.Warning,
                     SourceModule: "GpsIntegration",
                     ResourceType: "SynchronizedDevice",
                     ResourceId: serial,
@@ -175,7 +180,7 @@ public class SynchronizeOperatorDevicesCommandHandler(
                 await alertRecorder.RecordAsync(new AlertEventDto(
                     request.AccountId,
                     EventType: AlertEventTypes.GpsAutoAssignGroupAmbiguous,
-                    Severity: "Warning",
+                    Severity: AlertSeverities.Warning,
                     SourceModule: "GpsIntegration",
                     ResourceType: "Operator",
                     ResourceId: request.OperatorId.ToString(),
@@ -208,48 +213,71 @@ public class SynchronizeOperatorDevicesCommandHandler(
 
         foreach (var (incoming, device) in devices)
         {
-            var name = ResolveTransporterName(incoming);
-
-            // Adopt an existing same-name transporter with no active device before provisioning a
-            // new one: a first sync against pre-existing data (re-onboarding, environment cutover)
-            // must reconcile with the account's fleet, not clone it. An adopted transporter keeps
-            // its group memberships — the account already manages its visibility.
-            var adoptedId = await transporterReader.FindAdoptableTransporterAsync(accountId, name, cancellationToken);
-            var transporterId = adoptedId ?? Guid.Empty;
-            if (adoptedId is null)
+            try
             {
-                var transporter = await transporterWriter.CreateTransporterAsync(
-                    new TransporterDto(
-                        name,
-                        ResolveTransporterTypeId(incoming.DeviceTypeId),
-                        accountId),
+                provisioned += await atomicWrite.RunAsync(
+                    () => ProvisionAsync(accountId, incoming, device, target, cancellationToken),
                     cancellationToken);
-                transporterId = transporter.TransporterId;
-                provisioned++;
-
-                // Manual group management can move it later; the sync never moves it again.
-                foreach (var groupId in target.GroupIds)
-                {
-                    await transporterGroupWriter.CreateTransporterGroupAsync(
-                        new TransporterGroupDto(transporterId, groupId),
-                        cancellationToken);
-                }
             }
-
-            await assignmentWriter.AssignAsync(
-                new TransporterDeviceAssignmentDto(
-                    accountId,
-                    transporterId,
-                    device.DeviceId,
-                    Priority: 0,
-                    IsPrimary: true,
-                    AssignmentReason: adoptedId is null
-                        ? "Initial provider sync"
-                        : "Initial provider sync (adopted existing transporter)"),
-                cancellationToken);
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                // Rolled back whole, so the device stays New and the next sync provisions it again.
+                logger.LogWarning(ex, "Provisioning device {DeviceId} failed; the next sync retries it.", device.DeviceId);
+            }
         }
 
         return new AutoAssignOutcome(provisioned, target.Ambiguous);
+    }
+
+    private async Task<int> ProvisionAsync(
+        Guid accountId,
+        DeviceDto incoming,
+        DeviceVm device,
+        AutoProvisionGroupTarget target,
+        CancellationToken cancellationToken)
+    {
+        var provisioned = 0;
+        var name = ResolveTransporterName(incoming);
+
+        // Adopt an existing same-name transporter with no active device before provisioning a
+        // new one: a first sync against pre-existing data (re-onboarding, environment cutover)
+        // must reconcile with the account's fleet, not clone it. An adopted transporter keeps
+        // its group memberships — the account already manages its visibility.
+        var adoptedId = await transporterReader.FindAdoptableTransporterAsync(accountId, name, cancellationToken);
+        var transporterId = adoptedId ?? Guid.Empty;
+        if (adoptedId is null)
+        {
+            var transporter = await transporterWriter.CreateTransporterAsync(
+                new TransporterDto(
+                    name,
+                    ResolveTransporterTypeId(incoming.DeviceTypeId),
+                    accountId),
+                cancellationToken);
+            transporterId = transporter.TransporterId;
+            provisioned++;
+
+            // Manual group management can move it later; the sync never moves it again.
+            foreach (var groupId in target.GroupIds)
+            {
+                await transporterGroupWriter.CreateTransporterGroupAsync(
+                    new TransporterGroupDto(transporterId, groupId),
+                    cancellationToken);
+            }
+        }
+
+        await assignmentWriter.AssignAsync(
+            new TransporterDeviceAssignmentDto(
+                accountId,
+                transporterId,
+                device.DeviceId,
+                Priority: 0,
+                IsPrimary: true,
+                AssignmentReason: adoptedId is null
+                    ? "Initial provider sync"
+                    : "Initial provider sync (adopted existing transporter)"),
+            cancellationToken);
+
+        return provisioned;
     }
 
     private static string ResolveTransporterName(DeviceDto device)

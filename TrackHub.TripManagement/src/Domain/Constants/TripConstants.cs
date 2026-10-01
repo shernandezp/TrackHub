@@ -340,6 +340,9 @@ public static class TripErrorCodes
     public const string StopAlreadyDeparted = "STOP_ALREADY_DEPARTED";
     public const string StopNotArrived = "STOP_NOT_ARRIVED";
     public const string StopAlreadySkipped = "STOP_ALREADY_SKIPPED";
+    public const string DeliveryOutcomeRecorded = "DELIVERY_OUTCOME_RECORDED";
+    public const string EventTimeOutOfRange = "TRIP_EVENT_TIME_OUT_OF_RANGE";
+    public const string PodRequired = "POD_REQUIRED";
     public const string StopsNotComplete = "TRIP_STOPS_NOT_COMPLETE";
     public const string PodDocumentNotClean = "POD_DOCUMENT_NOT_CLEAN";
     public const string DuplicateTripCode = "TRIP_DUPLICATE_CODE";
@@ -382,6 +385,8 @@ public static class TripErrorCodes
     /// <summary>Kept unprefixed: it is already on the wire in the CSV row-error report.</summary>
     public const string UnknownVehicleClass = "UNKNOWN_VEHICLE_CLASS";
     public const string ShareRevoked = "TRIP_SHARE_REVOKED";
+    public const string TripImportInvalidRow = "TRIP_IMPORT_INVALID_ROW";
+    public const string TollImportInvalidRow = "TOLL_IMPORT_INVALID_ROW";
 }
 
 /// <summary>

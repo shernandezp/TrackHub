@@ -33,6 +33,8 @@ namespace TrackHub.TripManagement.Application.Integration.Commands.ImportTrips;
 /// </summary>
 [Authorize(Resource = Resources.Trips, Action = Actions.Write, PrincipalTypes = "ServiceClient")]
 [RequireFeature(FeatureKeys.TripManagement)]
+// Enforcement: each item's transporter, driver and geofences are checked against AccountId.
+[AccountScopeEnforcedInHandler]
 public readonly record struct ImportTripsCommand(Guid AccountId, IReadOnlyCollection<TripImportDto> Trips)
     : IRequest<IReadOnlyCollection<TripImportResultVm>>;
 
@@ -42,6 +44,8 @@ public sealed class ImportTripsCommandHandler(
     ITripStopWriter stopWriter,
     IManagerValidationClient managerValidationClient,
     ITripStartBackfillService backfillService,
+    ITransporterTollClassStore tollClassStore,
+    ITripTransaction transaction,
     ILogger<ImportTripsCommandHandler> logger) : IRequestHandler<ImportTripsCommand, IReadOnlyCollection<TripImportResultVm>>
 {
     public async Task<IReadOnlyCollection<TripImportResultVm>> Handle(ImportTripsCommand request, CancellationToken cancellationToken)
@@ -73,77 +77,79 @@ public sealed class ImportTripsCommandHandler(
         // the batch: the exception is caught by Handle and reported against this row alone.
         await TripVisibility.EnsureTransporterInAccountAsync(reader, accountId, item.TransporterId, cancellationToken);
 
-        // The driver needs the SAME check the portal create/update paths apply. Without it a partner
-        // scoped to account A could import a trip carrying account B's driverId: nothing here has an
-        // FK to app.drivers, and the report readers resolve driver names by UNSCOPED id, so B's
-        // driver name would render inside A's trip and stop reports (acceptance 2). Manager's
-        // assignment rule is the account boundary here — the transporter is already confirmed
-        // in-account above, and a driver only qualifies through an assignment to it.
-        if (item.DriverId is { } driverId)
-        {
-            var assignable = await managerValidationClient.ValidateDriverAssignmentAsync(
-                driverId, "Transporter", item.TransporterId, cancellationToken);
-            if (!assignable)
-                throw new ForbiddenAccessException(Resources.Trips, Actions.Write, TripErrorCodes.DriverNotAssignable);
-        }
-
         foreach (var stop in item.Stops)
             await TripVisibility.EnsureGeofenceInAccountAsync(reader, stop.GeofenceId, accountId, cancellationToken);
 
         await TripVisibility.EnsureGeofenceInAccountAsync(reader, item.OriginGeofenceId, accountId, cancellationToken);
 
         var existing = await TripLookup.FindByExternalReferenceAsync(reader, accountId, item.ExternalReference, cancellationToken);
+        if (existing is { } current && TripStatuses.IsTerminal(current.Status))
+            return new TripImportResultVm(item.ExternalReference, false, current.TripId, TripErrorCodes.TripAlreadyTerminal, "Trip is closed.");
 
-        // The partner contract carries no origin radius, so a re-send must not silently reset one a
-        // dispatcher widened in the portal — that would shrink a large yard's origin zone back to
-        // 150 m and quietly stop the trip auto-starting.
+        // Only a trip still in Created may be re-routed: once it is running, its stops carry
+        // measurements and a replacement would erase them.
+        if (existing is { } running && item.Stops.Count > 0 && !string.Equals(running.Status, TripStatuses.Created, StringComparison.Ordinal))
+            return new TripImportResultVm(item.ExternalReference, false, running.TripId, TripErrorCodes.TripNotActive, "Stops cannot be replaced once the trip has started.");
+
+        // The driver needs the SAME check the portal create/update paths apply. Without it a partner
+        // scoped to account A could import a trip carrying account B's driverId: nothing here has an
+        // FK to app.drivers, and the report readers resolve driver names by UNSCOPED id, so B's
+        // driver name would render inside A's trip and stop reports (acceptance 2). Manager's
+        // assignment rule is the account boundary here — the transporter is already confirmed
+        // in-account above, and a driver only qualifies through an assignment to it. A driver carried
+        // over from the stored trip is checked again when the partner moves the trip to another unit.
+        var driverId = item.DriverId ?? existing?.DriverId;
+        if (driverId is { } effectiveDriverId && (item.DriverId is not null || existing?.TransporterId != item.TransporterId))
+        {
+            var assignable = await managerValidationClient.ValidateDriverAssignmentAsync(
+                effectiveDriverId, "Transporter", item.TransporterId, cancellationToken);
+            if (!assignable)
+                throw new ForbiddenAccessException(Resources.Trips, Actions.Write, TripErrorCodes.DriverNotAssignable);
+        }
+
+        // A re-send updates only what the partner contract carries: an optional field the partner
+        // left out keeps the value a dispatcher set, and fields outside the contract (service order,
+        // origin radius, toll class) are never touched.
         var dto = new TripDto(
             item.Code,
             item.TransporterId,
-            item.DriverId,
-            null,
+            driverId,
+            existing?.ServiceOrderId,
             item.ExternalReference,
-            item.CustomerName,
+            item.CustomerName ?? existing?.CustomerName,
             item.OriginName,
             item.OriginLatitude,
             item.OriginLongitude,
-            item.OriginGeofenceId,
+            item.OriginGeofenceId ?? existing?.OriginGeofenceId,
             existing?.OriginRadiusMeters ?? TripGeometry.DefaultRadiusMeters,
             item.PlannedStartAt,
-            item.PlannedEndAt,
-            item.Notes,
-            null);
+            item.PlannedEndAt ?? existing?.PlannedEndAt,
+            item.Notes ?? existing?.Notes,
+            existing?.TollVehicleClass);
 
-        if (existing is { } current)
+        if (string.IsNullOrWhiteSpace(dto.TollVehicleClass) || existing?.TransporterId != item.TransporterId)
+            dto = dto with { TollVehicleClass = await tollClassStore.ResolveClassAsync(accountId, item.TransporterId, cancellationToken) ?? dto.TollVehicleClass };
+
+        var tripId = existing?.TripId ?? Guid.Empty;
+        await transaction.ExecuteAsync(async token =>
         {
-            if (TripStatuses.IsTerminal(current.Status))
-                return new TripImportResultVm(item.ExternalReference, false, current.TripId, TripErrorCodes.TripAlreadyTerminal, "Trip is closed.");
-
-            await writer.UpdateTripAsync(current.TripId, dto, accountId, null, cancellationToken);
-
-            // The stops payload used to be dropped here without a word, so a partner's weekly
-            // re-upload could revise a trip's header and never its route — the one thing a re-plan
-            // usually changes (spec 11a §9.2). Only a trip still in Created may be re-routed: once
-            // it is running, its stops carry measurements and a replacement would erase them.
-            if (item.Stops.Count > 0)
+            if (existing is { } current)
             {
-                if (!string.Equals(current.Status, TripStatuses.Created, StringComparison.Ordinal))
-                    return new TripImportResultVm(item.ExternalReference, false, current.TripId, TripErrorCodes.TripNotActive, "Stops cannot be replaced once the trip has started.");
-
-                await stopWriter.ReplaceStopsAsync(current.TripId, accountId, item.Stops, cancellationToken);
+                await writer.UpdateTripAsync(current.TripId, dto, accountId, null, token);
+                if (item.Stops.Count > 0)
+                    await stopWriter.ReplaceStopsAsync(current.TripId, accountId, item.Stops, token);
+                return;
             }
 
-            await DeclareInTransitIfRequestedAsync(current.TripId, accountId, item, cancellationToken);
-            return new TripImportResultVm(item.ExternalReference, true, current.TripId, null, null);
-        }
+            tripId = (await writer.CreateTripAsync(dto, accountId, token)).TripId;
+            foreach (var stop in item.Stops)
+                await stopWriter.AddStopAsync(tripId, accountId, stop, token);
+        }, cancellationToken);
 
-        var created = await writer.CreateTripAsync(dto, accountId, cancellationToken);
-        foreach (var stop in item.Stops)
-            await stopWriter.AddStopAsync(created.TripId, accountId, stop, cancellationToken);
-
-        await DeclareInTransitIfRequestedAsync(created.TripId, accountId, item, cancellationToken);
-        return new TripImportResultVm(item.ExternalReference, true, created.TripId, null, null);
+        await DeclareInTransitIfRequestedAsync(tripId, accountId, item, cancellationToken);
+        return new TripImportResultVm(item.ExternalReference, true, tripId, null, null);
     }
+
 
     /// <summary>
     /// A partner that reports <c>startedAt</c> is telling us the truck already left. Backfill runs

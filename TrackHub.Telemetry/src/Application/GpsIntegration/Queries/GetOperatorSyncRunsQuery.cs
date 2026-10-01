@@ -4,6 +4,8 @@ namespace TrackHub.Telemetry.Application.GpsIntegration.Queries;
 
 [Authorize(Resource = Resources.OperatorSyncRuns, Action = Actions.Read)]
 
+// Enforcement: OperatorSyncRunReader restricts to the caller's account unless it reads all accounts.
+[AccountScopeEnforcedInHandler]
 public readonly record struct GetOperatorSyncRunsQuery(Guid? AccountId, Guid? OperatorId, int Take = 50) : IRequest<IReadOnlyCollection<OperatorSyncRunVm>>;
 
 public class GetOperatorSyncRunsQueryHandler(IOperatorSyncRunReader reader)
@@ -21,6 +23,8 @@ public class GetOperatorSyncRunsQueryHandler(IOperatorSyncRunReader reader)
 // The report drains page this feed to the end of the window, so it takes the window at the source
 // and pages by cursor with a unique tie-break instead of handing back the newest capped list.
 [Authorize(Resource = Resources.OperatorSyncRuns, Action = Actions.Read)]
+// Enforcement: the feed filters on AccountId; OperatorId only narrows within it.
+[AccountScopeEnforcedInHandler]
 public readonly record struct GetOperatorSyncRunFeedQuery(
     Guid AccountId,
     Guid? OperatorId = null,

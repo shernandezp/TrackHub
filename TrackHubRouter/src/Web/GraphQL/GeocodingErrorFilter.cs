@@ -15,6 +15,7 @@
 
 using HotChocolate;
 using HotChocolate.Execution;
+using TrackHub.Router.Domain.Constants;
 using TrackHub.Router.Domain.Exceptions;
 
 namespace TrackHub.Router.Web.GraphQL;
@@ -27,7 +28,7 @@ public sealed class GeocodingErrorFilter : IErrorFilter
         => error.Exception is GeocodingUnavailableException unavailable
             ? ErrorBuilder.FromError(error)
                 .SetMessage(unavailable.Message)
-                .SetCode("GEOCODER_UNAVAILABLE")
+                .SetCode(RouterErrorCodes.GeocoderUnavailable)
                 .Build()
             : error;
 }

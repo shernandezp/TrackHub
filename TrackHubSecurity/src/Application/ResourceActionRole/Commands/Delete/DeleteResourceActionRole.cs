@@ -19,6 +19,7 @@ using TrackHub.Security.Application.Audit.Events;
 namespace TrackHub.Security.Application.ResourceActionRole.Commands.Delete;
 
 [Authorize(Resource = Resources.Permissions, Action = Actions.Delete)]
+[PlatformScoped("Seeded RBAC catalog: roles, policies and their resource/action grants are platform definitions, Administrator-only to change.")]
 public readonly record struct DeleteResourceActionRoleCommand(int ResourceId, int ActionId, int RoleId) : IRequest;
 
 public class DeleteResourceActionRoleCommandHandler(IResourceActionRoleWriter writer, IUserReader userReader, IUser user, IPublisher publisher) : IRequestHandler<DeleteResourceActionRoleCommand>

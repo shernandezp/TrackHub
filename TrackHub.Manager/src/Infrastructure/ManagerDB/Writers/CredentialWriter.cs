@@ -74,7 +74,7 @@ public sealed class CredentialWriter(IApplicationDbContext context, ICurrentPrin
             .AsTracking().Include(c => c.Operator)
             .FirstOrDefaultAsync(c => c.CredentialId == credentialDto.CredentialId, cancellationToken)
             ?? throw new NotFoundException(nameof(Credential), $"{credentialDto.CredentialId}");
-        RequireAccountWriteAccess(credential.Operator.AccountId);
+        RequireRowAccess(credential.Operator.AccountId, nameof(Credential), credential.CredentialId, forWrite: true);
 
         var previousUri = credential.Uri;
         credential.Uri = credentialDto.Uri;
@@ -113,7 +113,7 @@ public sealed class CredentialWriter(IApplicationDbContext context, ICurrentPrin
             .AsTracking().Include(c => c.Operator)
             .FirstOrDefaultAsync(c => c.CredentialId == credentialDto.CredentialId, cancellationToken)
             ?? throw new NotFoundException(nameof(Credential), $"{credentialDto.CredentialId}");
-        RequireAccountWriteAccess(credential.Operator.AccountId);
+        RequireRowAccess(credential.Operator.AccountId, nameof(Credential), credential.CredentialId, forWrite: true);
 
         var salt = Convert.FromBase64String(credential.Salt);
         credential.Token = credentialDto.Token?.EncryptData(key, salt);
@@ -138,7 +138,7 @@ public sealed class CredentialWriter(IApplicationDbContext context, ICurrentPrin
             .AsTracking().Include(c => c.Operator)
             .FirstOrDefaultAsync(c => c.CredentialId == credentialId, cancellationToken)
             ?? throw new NotFoundException(nameof(Credential), $"{credentialId}");
-        RequireAccountWriteAccess(credential.Operator.AccountId);
+        RequireRowAccess(credential.Operator.AccountId, nameof(Credential), credential.CredentialId, forWrite: true);
 
         AddAuditEvent(credential.Operator.AccountId, "DeleteCredential", "Credential", $"{credential.CredentialId}",
             $$"""{"operatorId":"{{credential.OperatorId}}","uri":{{AuditJson.Quote(credential.Uri)}}}""", null);
@@ -159,7 +159,7 @@ public sealed class CredentialWriter(IApplicationDbContext context, ICurrentPrin
         {
             return;
         }
-        RequireAccountWriteAccess(credential.Operator.AccountId);
+        RequireRowAccess(credential.Operator.AccountId, nameof(Credential), credential.CredentialId, forWrite: true);
 
         AddAuditEvent(credential.Operator.AccountId, "DeleteCredential", "Credential", $"{credential.CredentialId}",
             $$"""{"operatorId":"{{credential.OperatorId}}","uri":{{AuditJson.Quote(credential.Uri)}}}""", null);
@@ -174,7 +174,7 @@ public sealed class CredentialWriter(IApplicationDbContext context, ICurrentPrin
             .Select(o => (Guid?)o.AccountId)
             .FirstOrDefaultAsync(cancellationToken)
             ?? throw new NotFoundException(nameof(Operator), $"{operatorId}");
-        RequireAccountWriteAccess(accountId);
+        RequireRowAccess(accountId, nameof(Operator), operatorId, forWrite: true);
         return accountId;
     }
 

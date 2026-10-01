@@ -19,7 +19,6 @@ public static class DependencyInjection
     {
         var assembly = Assembly.GetExecutingAssembly();
         services.AddApplicationServices(assembly, false);
-        services.AddDistributedMemoryCache();
 
         services.AddScoped<IReport, LiveReport>();
         services.AddScoped<IReport, PositionRecord>();

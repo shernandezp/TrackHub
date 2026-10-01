@@ -39,8 +39,8 @@ export const PointOfInterestItemFragment = graphql(`
 `);
 
 export const GetPointsOfInterestByAccountDocument = graphql(`
-  query GetPointsOfInterestByAccount($skip: Int, $take: Int, $search: String) {
-    pointsOfInterestByAccount(query: { skip: $skip, take: $take, search: $search }) {
+  query GetPointsOfInterestByAccount($skip: Int, $take: Int, $search: String, $active: Boolean) {
+    pointsOfInterestByAccount(query: { skip: $skip, take: $take, search: $search, active: $active }) {
       items {
         ...PointOfInterestItem
       }

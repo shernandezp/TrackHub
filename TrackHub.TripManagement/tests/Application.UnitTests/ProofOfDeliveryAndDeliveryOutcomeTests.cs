@@ -30,10 +30,11 @@ public class ProofOfDeliveryAndDeliveryOutcomeTests
     private static readonly Guid DocumentId = Guid.Parse("99999999-9999-9999-9999-999999999999");
     private static readonly Guid DeliveryId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
 
-    [Test]
-    public async Task Pod_WithCleanDocuments_IsRecordedAndKeyedOnTheClientEventId()
+    [TestCase("Clean")]
+    [TestCase("NotScanned")]
+    public async Task Pod_WithServableDocuments_IsRecordedAndKeyedOnTheClientEventId(string scanStatus)
     {
-        var harness = new PodHarness("Clean", TestFactory.AccountId);
+        var harness = new PodHarness(scanStatus, TestFactory.AccountId);
 
         await harness.Handler().Handle(new RecordProofOfDeliveryCommand(TestFactory.TripId, Pod()), CancellationToken.None);
 
@@ -145,7 +146,7 @@ public class ProofOfDeliveryAndDeliveryOutcomeTests
 
         harness.Writer.Verify(w => w.UpdateDeliveryOutcomeAsync(
             DeliveryId, TestFactory.AccountId, DeliveryStatuses.Delivered, null,
-            $"trip-delivery-outcome:{DeliveryId:N}:{ClientEventId:N}", It.IsAny<CancellationToken>()), Times.Once);
+            $"trip-delivery-outcome:{DeliveryId:N}:{ClientEventId:N}", It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
@@ -161,6 +162,22 @@ public class ProofOfDeliveryAndDeliveryOutcomeTests
         harness.EventWriter.Verify(w => w.AppendAsync(
             It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<Guid?>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>(),
             It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Test]
+    public void DeliveryOutcome_ForADeliveryOfAnotherTrip_IsNotFound()
+    {
+        var harness = new OutcomeHarness();
+        harness.Reader.Setup(r => r.FindVisibleTripIdByDeliveryAsync(
+                DeliveryId, TestFactory.AccountId, It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Guid.NewGuid());
+
+        Assert.ThrowsAsync<Ardalis.GuardClauses.NotFoundException>(async () => await harness.Handler().Handle(
+            new UpdateDeliveryOutcomeCommand(TestFactory.TripId, DeliveryId, DeliveryStatuses.Delivered, null, ClientEventId),
+            CancellationToken.None));
+
+        harness.Writer.Verify(w => w.UpdateDeliveryOutcomeAsync(
+            It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     private static ProofOfDeliveryDto Pod()
@@ -269,7 +286,7 @@ public class ProofOfDeliveryAndDeliveryOutcomeTests
                     It.IsAny<Guid>(), TestFactory.AccountId, It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(TestFactory.TripId);
             Writer.Setup(w => w.UpdateDeliveryOutcomeAsync(
-                    It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                    It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(recorded);
             EventWriter.Setup(w => w.AppendAsync(
                     It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<Guid?>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>(),

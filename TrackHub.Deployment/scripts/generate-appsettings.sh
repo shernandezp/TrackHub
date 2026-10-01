@@ -108,6 +108,31 @@ VALID_AUDIENCE=${VALID_AUDIENCE:-"trackhub_api"}
 # variable mapping; the generators below are the single source of truth for what is written
 # (keep them in sync with the template when adding a setting).
 
+# Every value is written into a JSON string: a secret carrying a quote, a backslash or a line break
+# must not end that string early.
+json_escape() {
+    local value=$1 bs='\'
+    value=${value//"$bs"/"$bs$bs"}
+    value=${value//'"'/"$bs\""}
+    value=${value//$'\n'/"${bs}n"}
+    value=${value//$'\r'/"${bs}r"}
+    value=${value//$'\t'/"${bs}t"}
+    printf '%s' "$value"
+}
+
+# A service that cannot parse its appsettings.json crash-loops; refuse to write one instead.
+validate_json() {
+    local file=$1
+    if python3 -c "" > /dev/null 2>&1; then
+        python3 -c 'import json, sys; json.load(open(sys.argv[1], encoding="utf-8"))' "$file" \
+            || { print_error "Generated $file is not valid JSON."; exit 1; }
+    elif jq --version > /dev/null 2>&1; then
+        jq empty "$file" || { print_error "Generated $file is not valid JSON."; exit 1; }
+    else
+        print_warning "Neither python3 nor jq is installed; $file was not validated."
+    fi
+}
+
 # Serilog + Columns blocks, kept in sync with config/appsettings.template.json.
 # The TrackHubPostgreSQL sink (Common.Infrastructure) resolves "connectionString" as a
 # connection string NAME ("Logging") and owns its column set, so no "Columns" block is needed.
@@ -152,19 +177,19 @@ generate_authority() {
     cat << EOF
 {
   "ConnectionStrings": {
-    "Security": "${DB_CONNECTION_SECURITY}",
-    "Logging": "${DB_CONNECTION_LOGGING}"
+    "Security": "$(json_escape "${DB_CONNECTION_SECURITY}")",
+    "Logging": "$(json_escape "${DB_CONNECTION_LOGGING}")"
   },
 $(serilog_section),
   "OpenIddict": {
     "LoadCertFromFile": true,
-    "Path": "${CERTIFICATE_PATH}",
-    "Password": "${CERTIFICATE_PASSWORD}",
-    "Thumbprint": "${CERTIFICATE_THUMBPRINT}",
-    "Scopes": "${OPENIDDICT_SCOPES}"
+    "Path": "$(json_escape "${CERTIFICATE_PATH}")",
+    "Password": "$(json_escape "${CERTIFICATE_PASSWORD}")",
+    "Thumbprint": "$(json_escape "${CERTIFICATE_THUMBPRINT}")",
+    "Scopes": "$(json_escape "${OPENIDDICT_SCOPES}")"
   },
   "AllowedHosts": "*",
-  "AllowedCorsOrigins": "${ALLOWED_CORS_ORIGINS}"
+  "AllowedCorsOrigins": "$(json_escape "${ALLOWED_CORS_ORIGINS}")"
 }
 EOF
 }
@@ -174,32 +199,32 @@ generate_security() {
     cat << EOF
 {
   "ConnectionStrings": {
-    "Security": "${DB_CONNECTION_SECURITY}",
-    "Logging": "${DB_CONNECTION_LOGGING}"
+    "Security": "$(json_escape "${DB_CONNECTION_SECURITY}")",
+    "Logging": "$(json_escape "${DB_CONNECTION_LOGGING}")"
   },
 $(serilog_section),
   "AuthorityServer": {
-    "Authority": "${AUTHORITY_URL}",
+    "Authority": "$(json_escape "${AUTHORITY_URL}")",
     "ValidateAudience": true,
-    "ValidAudience": "${VALID_AUDIENCE}",
+    "ValidAudience": "$(json_escape "${VALID_AUDIENCE}")",
     "ValidateIssuer": true,
     "ValidateIssuerSigningKey": true,
-    "ClientId": "${SECURITY_CLIENT_ID}",
-    "ClientSecret": "${SECURITY_CLIENT_SECRET}",
+    "ClientId": "$(json_escape "${SECURITY_CLIENT_ID}")",
+    "ClientSecret": "$(json_escape "${SECURITY_CLIENT_SECRET}")",
     "Scope": "service_scope"
   },
   "OpenIddict": {
     "LoadCertFromFile": true,
-    "Path": "${CERTIFICATE_PATH}",
-    "Password": "${CERTIFICATE_PASSWORD}",
-    "Thumbprint": "${CERTIFICATE_THUMBPRINT}"
+    "Path": "$(json_escape "${CERTIFICATE_PATH}")",
+    "Password": "$(json_escape "${CERTIFICATE_PASSWORD}")",
+    "Thumbprint": "$(json_escape "${CERTIFICATE_THUMBPRINT}")"
   },
   "AppSettings": {
-    "GraphQLManagerService": "${GRAPHQL_MANAGER_SERVICE}",
-    "EncryptionKey": "${ENCRYPTION_KEY}"
+    "GraphQLManagerService": "$(json_escape "${GRAPHQL_MANAGER_SERVICE}")",
+    "EncryptionKey": "$(json_escape "${ENCRYPTION_KEY}")"
   },
   "AllowedHosts": "*",
-  "AllowedCorsOrigins": "${ALLOWED_CORS_ORIGINS}"
+  "AllowedCorsOrigins": "$(json_escape "${ALLOWED_CORS_ORIGINS}")"
 }
 EOF
 }
@@ -221,70 +246,70 @@ generate_manager() {
     cat << EOF
 {
   "ConnectionStrings": {
-    "DefaultConnection": "${DB_CONNECTION_MANAGER}",
-    "Logging": "${DB_CONNECTION_LOGGING}"
+    "DefaultConnection": "$(json_escape "${DB_CONNECTION_MANAGER}")",
+    "Logging": "$(json_escape "${DB_CONNECTION_LOGGING}")"
   },
 $(serilog_section),
   "AuthorityServer": {
-    "Authority": "${AUTHORITY_URL}",
-    "ClientId": "${MANAGER_CLIENT_ID:-manager_client}",
-    "ClientSecret": "${MANAGER_CLIENT_SECRET}",
+    "Authority": "$(json_escape "${AUTHORITY_URL}")",
+    "ClientId": "$(json_escape "${MANAGER_CLIENT_ID:-manager_client}")",
+    "ClientSecret": "$(json_escape "${MANAGER_CLIENT_SECRET}")",
     "Scope": "service_scope",
     "ValidateAudience": true,
-    "ValidAudience": "${VALID_AUDIENCE}",
+    "ValidAudience": "$(json_escape "${VALID_AUDIENCE}")",
     "ValidateIssuer": true,
     "ValidateIssuerSigningKey": true
   },
   "AppSettings": {
-    "GraphQLIdentityService": "${GRAPHQL_IDENTITY_SERVICE}",
-    "GraphQLSecurityService": "${GRAPHQL_SECURITY_SERVICE}",
-    "GraphQLRouterService": "${GRAPHQL_ROUTER_SERVICE}",
-    "EncryptionKey": "${ENCRYPTION_KEY}",
-    "PortalBaseUrl": "${PORTAL_BASE_URL:-https://${DOMAIN}}",
-    "NotificationSendingReclaimMinutes": "${NOTIFICATION_SENDING_RECLAIM_MINUTES:-10}",
+    "GraphQLIdentityService": "$(json_escape "${GRAPHQL_IDENTITY_SERVICE}")",
+    "GraphQLSecurityService": "$(json_escape "${GRAPHQL_SECURITY_SERVICE}")",
+    "GraphQLRouterService": "$(json_escape "${GRAPHQL_ROUTER_SERVICE}")",
+    "EncryptionKey": "$(json_escape "${ENCRYPTION_KEY}")",
+    "PortalBaseUrl": "$(json_escape "${PORTAL_BASE_URL:-https://${DOMAIN}}")",
+    "NotificationSendingReclaimMinutes": "$(json_escape "${NOTIFICATION_SENDING_RECLAIM_MINUTES:-10}")",
     "Smtp": {
-      "Host": "${SMTP_HOST:-}",
-      "Port": "${SMTP_PORT:-25}",
-      "Username": "${SMTP_USERNAME:-}",
-      "Password": "${SMTP_PASSWORD:-}",
-      "UseStartTls": "${SMTP_USE_STARTTLS:-false}",
-      "FromAddress": "${SMTP_FROM_ADDRESS:-alerts@trackhub.local}",
-      "FromName": "${SMTP_FROM_NAME:-TrackHub Alerts}"
+      "Host": "$(json_escape "${SMTP_HOST:-}")",
+      "Port": "$(json_escape "${SMTP_PORT:-25}")",
+      "Username": "$(json_escape "${SMTP_USERNAME:-}")",
+      "Password": "$(json_escape "${SMTP_PASSWORD:-}")",
+      "UseStartTls": "$(json_escape "${SMTP_USE_STARTTLS:-false}")",
+      "FromAddress": "$(json_escape "${SMTP_FROM_ADDRESS:-alerts@trackhub.local}")",
+      "FromName": "$(json_escape "${SMTP_FROM_NAME:-TrackHub Alerts}")"
     },
     "WhatsApp": {
-      "ApiBaseUrl": "${WHATSAPP_API_BASE_URL:-https://graph.facebook.com/v21.0}",
-      "PhoneNumberId": "${WHATSAPP_PHONE_NUMBER_ID:-}",
-      "AccessToken": "${WHATSAPP_ACCESS_TOKEN:-}",
-      "TemplateName": "${WHATSAPP_TEMPLATE_NAME:-trackhub_alert}"
+      "ApiBaseUrl": "$(json_escape "${WHATSAPP_API_BASE_URL:-https://graph.facebook.com/v21.0}")",
+      "PhoneNumberId": "$(json_escape "${WHATSAPP_PHONE_NUMBER_ID:-}")",
+      "AccessToken": "$(json_escape "${WHATSAPP_ACCESS_TOKEN:-}")",
+      "TemplateName": "$(json_escape "${WHATSAPP_TEMPLATE_NAME:-trackhub_alert}")"
     }
   },
   "DocumentStorage": {
-    "Provider": "${DOCUMENT_STORAGE_PROVIDER:-LocalFileSystem}",
-    "LocalRootPath": "${DOCUMENT_STORAGE_LOCAL_ROOT:-/app/documents}",
-    "RetentionDays": "${DOCUMENT_RETENTION_DAYS:-1825}",
+    "Provider": "$(json_escape "${DOCUMENT_STORAGE_PROVIDER:-LocalFileSystem}")",
+    "LocalRootPath": "$(json_escape "${DOCUMENT_STORAGE_LOCAL_ROOT:-/app/documents}")",
+    "RetentionDays": "$(json_escape "${DOCUMENT_RETENTION_DAYS:-1825}")",
     "S3": {
-      "BucketName": "${DOCUMENT_S3_BUCKET_NAME:-}",
-      "Region": "${DOCUMENT_S3_REGION:-}",
-      "ServiceUrl": "${DOCUMENT_S3_SERVICE_URL:-}",
-      "ForcePathStyle": "${DOCUMENT_S3_FORCE_PATH_STYLE:-}",
-      "AccessKey": "${DOCUMENT_S3_ACCESS_KEY:-}",
-      "SecretKey": "${DOCUMENT_S3_SECRET_KEY:-}",
-      "PresignedExpiryMinutes": "${DOCUMENT_S3_PRESIGNED_EXPIRY_MINUTES:-}"
+      "BucketName": "$(json_escape "${DOCUMENT_S3_BUCKET_NAME:-}")",
+      "Region": "$(json_escape "${DOCUMENT_S3_REGION:-}")",
+      "ServiceUrl": "$(json_escape "${DOCUMENT_S3_SERVICE_URL:-}")",
+      "ForcePathStyle": "$(json_escape "${DOCUMENT_S3_FORCE_PATH_STYLE:-}")",
+      "AccessKey": "$(json_escape "${DOCUMENT_S3_ACCESS_KEY:-}")",
+      "SecretKey": "$(json_escape "${DOCUMENT_S3_SECRET_KEY:-}")",
+      "PresignedExpiryMinutes": "$(json_escape "${DOCUMENT_S3_PRESIGNED_EXPIRY_MINUTES:-}")"
     },
     "AzureBlob": {
-      "ConnectionString": "${DOCUMENT_AZURE_CONNECTION_STRING:-}",
-      "ContainerName": "${DOCUMENT_AZURE_CONTAINER_NAME:-}",
-      "SasExpiryMinutes": "${DOCUMENT_AZURE_SAS_EXPIRY_MINUTES:-}"
+      "ConnectionString": "$(json_escape "${DOCUMENT_AZURE_CONNECTION_STRING:-}")",
+      "ContainerName": "$(json_escape "${DOCUMENT_AZURE_CONTAINER_NAME:-}")",
+      "SasExpiryMinutes": "$(json_escape "${DOCUMENT_AZURE_SAS_EXPIRY_MINUTES:-}")"
     }
   },
   "OpenIddict": {
     "LoadCertFromFile": true,
-    "Path": "${CERTIFICATE_PATH}",
-    "Password": "${CERTIFICATE_PASSWORD}",
-    "Thumbprint": "${CERTIFICATE_THUMBPRINT}"
+    "Path": "$(json_escape "${CERTIFICATE_PATH}")",
+    "Password": "$(json_escape "${CERTIFICATE_PASSWORD}")",
+    "Thumbprint": "$(json_escape "${CERTIFICATE_THUMBPRINT}")"
   },
   "AllowedHosts": "*",
-  "AllowedCorsOrigins": "${ALLOWED_CORS_ORIGINS}"
+  "AllowedCorsOrigins": "$(json_escape "${ALLOWED_CORS_ORIGINS}")"
 }
 EOF
 }
@@ -294,26 +319,26 @@ generate_router() {
     cat << EOF
 {
   "ConnectionStrings": {
-    "Logging": "${DB_CONNECTION_LOGGING}"
+    "Logging": "$(json_escape "${DB_CONNECTION_LOGGING}")"
   },
 $(serilog_section),
   "AuthorityServer": {
-    "Authority": "${AUTHORITY_URL}",
+    "Authority": "$(json_escape "${AUTHORITY_URL}")",
     "ValidateAudience": true,
-    "ValidAudience": "${VALID_AUDIENCE}",
+    "ValidAudience": "$(json_escape "${VALID_AUDIENCE}")",
     "ValidateIssuer": true,
     "ValidateIssuerSigningKey": true,
-    "ClientId": "${ROUTER_CLIENT_ID}",
-    "ClientSecret": "${ROUTER_CLIENT_SECRET}",
+    "ClientId": "$(json_escape "${ROUTER_CLIENT_ID}")",
+    "ClientSecret": "$(json_escape "${ROUTER_CLIENT_SECRET}")",
     "Scope": "service_scope"
   },
   "AppSettings": {
-    "GraphQLIdentityService": "${GRAPHQL_IDENTITY_SERVICE}",
-    "GraphQLManagerService": "${GRAPHQL_MANAGER_SERVICE}",
-    "GraphQLTelemetryService": "${GRAPHQL_TELEMETRY_SERVICE}",
-    "GraphQLGeofenceService": "${GRAPHQL_GEOFENCE_SERVICE}",
-    "GraphQLTripManagementService": "${GRAPHQL_TRIP_SERVICE}",
-    "EncryptionKey": "${ENCRYPTION_KEY}",
+    "GraphQLIdentityService": "$(json_escape "${GRAPHQL_IDENTITY_SERVICE}")",
+    "GraphQLManagerService": "$(json_escape "${GRAPHQL_MANAGER_SERVICE}")",
+    "GraphQLTelemetryService": "$(json_escape "${GRAPHQL_TELEMETRY_SERVICE}")",
+    "GraphQLGeofenceService": "$(json_escape "${GRAPHQL_GEOFENCE_SERVICE}")",
+    "GraphQLTripManagementService": "$(json_escape "${GRAPHQL_TRIP_SERVICE}")",
+    "EncryptionKey": "$(json_escape "${ENCRYPTION_KEY}")",
     "Protocols": [
       "CommandTrack",
       "Flespi",
@@ -328,12 +353,12 @@ $(serilog_section),
   },
   "OpenIddict": {
     "LoadCertFromFile": true,
-    "Path": "${CERTIFICATE_PATH}",
-    "Password": "${CERTIFICATE_PASSWORD}",
-    "Thumbprint": "${CERTIFICATE_THUMBPRINT}"
+    "Path": "$(json_escape "${CERTIFICATE_PATH}")",
+    "Password": "$(json_escape "${CERTIFICATE_PASSWORD}")",
+    "Thumbprint": "$(json_escape "${CERTIFICATE_THUMBPRINT}")"
   },
   "AllowedHosts": "*",
-  "AllowedCorsOrigins": "${ALLOWED_CORS_ORIGINS}"
+  "AllowedCorsOrigins": "$(json_escape "${ALLOWED_CORS_ORIGINS}")"
 }
 EOF
 }
@@ -343,32 +368,32 @@ generate_geofencing() {
     cat << EOF
 {
   "ConnectionStrings": {
-    "DefaultConnection": "${DB_CONNECTION_MANAGER}",
-    "Logging": "${DB_CONNECTION_LOGGING}"
+    "DefaultConnection": "$(json_escape "${DB_CONNECTION_MANAGER}")",
+    "Logging": "$(json_escape "${DB_CONNECTION_LOGGING}")"
   },
 $(serilog_section),
   "AuthorityServer": {
-    "Authority": "${AUTHORITY_URL}",
+    "Authority": "$(json_escape "${AUTHORITY_URL}")",
     "ValidateAudience": true,
-    "ValidAudience": "${VALID_AUDIENCE}",
+    "ValidAudience": "$(json_escape "${VALID_AUDIENCE}")",
     "ValidateIssuer": true,
     "ValidateIssuerSigningKey": true,
-    "ClientId": "${GEOFENCE_CLIENT_ID}",
-    "ClientSecret": "${GEOFENCE_CLIENT_SECRET}",
+    "ClientId": "$(json_escape "${GEOFENCE_CLIENT_ID}")",
+    "ClientSecret": "$(json_escape "${GEOFENCE_CLIENT_SECRET}")",
     "Scope": "service_scope"
   },
   "AppSettings": {
-    "GraphQLIdentityService": "${GRAPHQL_IDENTITY_SERVICE}",
-    "GraphQLManagerService": "${GRAPHQL_MANAGER_SERVICE}"
+    "GraphQLIdentityService": "$(json_escape "${GRAPHQL_IDENTITY_SERVICE}")",
+    "GraphQLManagerService": "$(json_escape "${GRAPHQL_MANAGER_SERVICE}")"
   },
   "OpenIddict": {
     "LoadCertFromFile": true,
-    "Path": "${CERTIFICATE_PATH}",
-    "Password": "${CERTIFICATE_PASSWORD}",
-    "Thumbprint": "${CERTIFICATE_THUMBPRINT}"
+    "Path": "$(json_escape "${CERTIFICATE_PATH}")",
+    "Password": "$(json_escape "${CERTIFICATE_PASSWORD}")",
+    "Thumbprint": "$(json_escape "${CERTIFICATE_THUMBPRINT}")"
   },
   "AllowedHosts": "*",
-  "AllowedCorsOrigins": "${ALLOWED_CORS_ORIGINS}"
+  "AllowedCorsOrigins": "$(json_escape "${ALLOWED_CORS_ORIGINS}")"
 }
 EOF
 }
@@ -386,29 +411,29 @@ generate_tripmanagement() {
     cat << EOF
 {
   "ConnectionStrings": {
-    "DefaultConnection": "${DB_CONNECTION_MANAGER}",
-    "Logging": "${DB_CONNECTION_LOGGING}"
+    "DefaultConnection": "$(json_escape "${DB_CONNECTION_MANAGER}")",
+    "Logging": "$(json_escape "${DB_CONNECTION_LOGGING}")"
   },
 $(serilog_section),
   "AuthorityServer": {
-    "Authority": "${AUTHORITY_URL}",
+    "Authority": "$(json_escape "${AUTHORITY_URL}")",
     "ValidateAudience": true,
-    "ValidAudience": "${VALID_AUDIENCE}",
+    "ValidAudience": "$(json_escape "${VALID_AUDIENCE}")",
     "ValidateIssuer": true,
     "ValidateIssuerSigningKey": true,
-    "ClientId": "${TRIP_CLIENT_ID}",
-    "ClientSecret": "${TRIP_CLIENT_SECRET}",
+    "ClientId": "$(json_escape "${TRIP_CLIENT_ID}")",
+    "ClientSecret": "$(json_escape "${TRIP_CLIENT_SECRET}")",
     "Scope": "service_scope"
   },
   "AppSettings": {
-    "GraphQLIdentityService": "${GRAPHQL_IDENTITY_SERVICE}",
-    "GraphQLManagerService": "${GRAPHQL_MANAGER_SERVICE}",
-    "GraphQLTelemetryService": "${GRAPHQL_TELEMETRY_SERVICE}",
+    "GraphQLIdentityService": "$(json_escape "${GRAPHQL_IDENTITY_SERVICE}")",
+    "GraphQLManagerService": "$(json_escape "${GRAPHQL_MANAGER_SERVICE}")",
+    "GraphQLTelemetryService": "$(json_escape "${GRAPHQL_TELEMETRY_SERVICE}")",
     "Routing": {
-      "Provider": "${ROUTING_PROVIDER:-OpenRouteService}",
-      "BaseUrl": "${ORS_BASE_URL:-https://api.openrouteservice.org}",
-      "ApiKey": "${ORS_API_KEY}",
-      "Profile": "${ORS_PROFILE:-driving-hgv}",
+      "Provider": "$(json_escape "${ROUTING_PROVIDER:-OpenRouteService}")",
+      "BaseUrl": "$(json_escape "${ORS_BASE_URL:-https://api.openrouteservice.org}")",
+      "ApiKey": "$(json_escape "${ORS_API_KEY}")",
+      "Profile": "$(json_escape "${ORS_PROFILE:-driving-hgv}")",
       "RequestsPerSecond": ${ORS_REQUESTS_PER_SECOND:-2},
       "TimeoutSeconds": ${ORS_TIMEOUT_SECONDS:-30},
       "MaxWaypoints": ${ORS_MAX_WAYPOINTS:-50},
@@ -419,12 +444,12 @@ $(serilog_section),
   },
   "OpenIddict": {
     "LoadCertFromFile": true,
-    "Path": "${CERTIFICATE_PATH}",
-    "Password": "${CERTIFICATE_PASSWORD}",
-    "Thumbprint": "${CERTIFICATE_THUMBPRINT}"
+    "Path": "$(json_escape "${CERTIFICATE_PATH}")",
+    "Password": "$(json_escape "${CERTIFICATE_PASSWORD}")",
+    "Thumbprint": "$(json_escape "${CERTIFICATE_THUMBPRINT}")"
   },
   "AllowedHosts": "*",
-  "AllowedCorsOrigins": "${ALLOWED_CORS_ORIGINS}"
+  "AllowedCorsOrigins": "$(json_escape "${ALLOWED_CORS_ORIGINS}")"
 }
 EOF
 }
@@ -436,26 +461,26 @@ generate_reporting() {
     cat << EOF
 {
   "ConnectionStrings": {
-    "Logging": "${DB_CONNECTION_LOGGING}"
+    "Logging": "$(json_escape "${DB_CONNECTION_LOGGING}")"
   },
 $(serilog_section),
   "AuthorityServer": {
-    "Authority": "${AUTHORITY_URL}",
+    "Authority": "$(json_escape "${AUTHORITY_URL}")",
     "ValidateAudience": true,
-    "ValidAudience": "${VALID_AUDIENCE}",
+    "ValidAudience": "$(json_escape "${VALID_AUDIENCE}")",
     "ValidateIssuer": true,
     "ValidateIssuerSigningKey": true,
-    "ClientId": "${REPORTING_CLIENT_ID}",
-    "ClientSecret": "${REPORTING_CLIENT_SECRET}",
+    "ClientId": "$(json_escape "${REPORTING_CLIENT_ID}")",
+    "ClientSecret": "$(json_escape "${REPORTING_CLIENT_SECRET}")",
     "Scope": "service_scope"
   },
   "AppSettings": {
-    "GraphQLIdentityService": "${GRAPHQL_IDENTITY_SERVICE}",
-    "GraphQLRouterService": "${GRAPHQL_ROUTER_SERVICE}",
-    "GraphQLGeofenceService": "${GRAPHQL_GEOFENCE_SERVICE}",
-    "GraphQLManagerService": "${GRAPHQL_MANAGER_SERVICE}",
-    "GraphQLTelemetryService": "${GRAPHQL_TELEMETRY_SERVICE}",
-    "GraphQLTripManagementService": "${GRAPHQL_TRIP_SERVICE}",
+    "GraphQLIdentityService": "$(json_escape "${GRAPHQL_IDENTITY_SERVICE}")",
+    "GraphQLRouterService": "$(json_escape "${GRAPHQL_ROUTER_SERVICE}")",
+    "GraphQLGeofenceService": "$(json_escape "${GRAPHQL_GEOFENCE_SERVICE}")",
+    "GraphQLManagerService": "$(json_escape "${GRAPHQL_MANAGER_SERVICE}")",
+    "GraphQLTelemetryService": "$(json_escape "${GRAPHQL_TELEMETRY_SERVICE}")",
+    "GraphQLTripManagementService": "$(json_escape "${GRAPHQL_TRIP_SERVICE}")",
     "Reporting": {
       "MaxExportRows": ${REPORTING_MAX_EXPORT_ROWS:-100000},
       "MaxPdfRows": ${REPORTING_MAX_PDF_ROWS:-500},
@@ -464,12 +489,12 @@ $(serilog_section),
   },
   "OpenIddict": {
     "LoadCertFromFile": true,
-    "Path": "${CERTIFICATE_PATH}",
-    "Password": "${CERTIFICATE_PASSWORD}",
-    "Thumbprint": "${CERTIFICATE_THUMBPRINT}"
+    "Path": "$(json_escape "${CERTIFICATE_PATH}")",
+    "Password": "$(json_escape "${CERTIFICATE_PASSWORD}")",
+    "Thumbprint": "$(json_escape "${CERTIFICATE_THUMBPRINT}")"
   },
   "AllowedHosts": "*",
-  "AllowedCorsOrigins": "${ALLOWED_CORS_ORIGINS}"
+  "AllowedCorsOrigins": "$(json_escape "${ALLOWED_CORS_ORIGINS}")"
 }
 EOF
 }
@@ -479,28 +504,28 @@ generate_telemetry() {
     cat << EOF
 {
   "ConnectionStrings": {
-    "DefaultConnection": "${DB_CONNECTION_TELEMETRY}",
-    "Logging": "${DB_CONNECTION_LOGGING}"
+    "DefaultConnection": "$(json_escape "${DB_CONNECTION_TELEMETRY}")",
+    "Logging": "$(json_escape "${DB_CONNECTION_LOGGING}")"
   },
 $(serilog_section),
   "AuthorityServer": {
-    "Authority": "${AUTHORITY_URL}",
+    "Authority": "$(json_escape "${AUTHORITY_URL}")",
     "ValidateAudience": true,
-    "ValidAudience": "${VALID_AUDIENCE}",
+    "ValidAudience": "$(json_escape "${VALID_AUDIENCE}")",
     "ValidateIssuer": true,
     "ValidateIssuerSigningKey": true
   },
   "AppSettings": {
-    "GraphQLIdentityService": "${GRAPHQL_IDENTITY_SERVICE}"
+    "GraphQLIdentityService": "$(json_escape "${GRAPHQL_IDENTITY_SERVICE}")"
   },
   "OpenIddict": {
     "LoadCertFromFile": true,
-    "Path": "${CERTIFICATE_PATH}",
-    "Password": "${CERTIFICATE_PASSWORD}",
-    "Thumbprint": "${CERTIFICATE_THUMBPRINT}"
+    "Path": "$(json_escape "${CERTIFICATE_PATH}")",
+    "Password": "$(json_escape "${CERTIFICATE_PASSWORD}")",
+    "Thumbprint": "$(json_escape "${CERTIFICATE_THUMBPRINT}")"
   },
   "AllowedHosts": "*",
-  "AllowedCorsOrigins": "${ALLOWED_CORS_ORIGINS}"
+  "AllowedCorsOrigins": "$(json_escape "${ALLOWED_CORS_ORIGINS}")"
 }
 EOF
 }
@@ -516,23 +541,23 @@ generate_syncworker() {
     cat << EOF
 {
   "ConnectionStrings": {
-    "Logging": "${DB_CONNECTION_LOGGING}"
+    "Logging": "$(json_escape "${DB_CONNECTION_LOGGING}")"
   },
 $(serilog_section),
   "AuthorityServer": {
-    "Authority": "${AUTHORITY_URL}",
-    "ClientId": "${SYNCWORKER_CLIENT_ID}",
-    "ClientSecret": "${SYNCWORKER_CLIENT_SECRET}",
+    "Authority": "$(json_escape "${AUTHORITY_URL}")",
+    "ClientId": "$(json_escape "${SYNCWORKER_CLIENT_ID}")",
+    "ClientSecret": "$(json_escape "${SYNCWORKER_CLIENT_SECRET}")",
     "IsService": true,
     "Scope": "service_scope"
   },
   "AppSettings": {
-    "GraphQLIdentityService": "${GRAPHQL_IDENTITY_SERVICE}",
-    "GraphQLManagerService": "${GRAPHQL_MANAGER_SERVICE}",
-    "GraphQLTelemetryService": "${GRAPHQL_TELEMETRY_SERVICE}",
-    "GraphQLGeofenceService": "${GRAPHQL_GEOFENCE_SERVICE}",
-    "GraphQLTripManagementService": "${GRAPHQL_TRIP_SERVICE}",
-    "EncryptionKey": "${ENCRYPTION_KEY}",
+    "GraphQLIdentityService": "$(json_escape "${GRAPHQL_IDENTITY_SERVICE}")",
+    "GraphQLManagerService": "$(json_escape "${GRAPHQL_MANAGER_SERVICE}")",
+    "GraphQLTelemetryService": "$(json_escape "${GRAPHQL_TELEMETRY_SERVICE}")",
+    "GraphQLGeofenceService": "$(json_escape "${GRAPHQL_GEOFENCE_SERVICE}")",
+    "GraphQLTripManagementService": "$(json_escape "${GRAPHQL_TRIP_SERVICE}")",
+    "EncryptionKey": "$(json_escape "${ENCRYPTION_KEY}")",
     "Protocols": [
       "CommandTrack",
       "Flespi",
@@ -547,9 +572,9 @@ $(serilog_section),
   },
   "OpenIddict": {
     "LoadCertFromFile": true,
-    "Path": "${CERTIFICATE_PATH}",
-    "Password": "${CERTIFICATE_PASSWORD}",
-    "Thumbprint": "${CERTIFICATE_THUMBPRINT}"
+    "Path": "$(json_escape "${CERTIFICATE_PATH}")",
+    "Password": "$(json_escape "${CERTIFICATE_PASSWORD}")",
+    "Thumbprint": "$(json_escape "${CERTIFICATE_THUMBPRINT}")"
   }
 }
 EOF
@@ -581,9 +606,11 @@ process_service() {
         # credentials, and the deployment host is shared: they are owner-only from creation.
         mkdir -p "$OUTPUT_DIR"
         chmod 700 "$OUTPUT_DIR"
-        echo "$content" > "$OUTPUT_DIR/appsettings.$service.json"
+        echo "$content" > "$OUTPUT_DIR/appsettings.$service.json.tmp"
+        chmod 600 "$OUTPUT_DIR/appsettings.$service.json.tmp"
+        validate_json "$OUTPUT_DIR/appsettings.$service.json.tmp"
+        mv -f "$OUTPUT_DIR/appsettings.$service.json.tmp" "$OUTPUT_DIR/appsettings.$service.json"
         print_success "Generated: $OUTPUT_DIR/appsettings.$service.json"
-        chmod 600 "$OUTPUT_DIR/appsettings.$service.json"
     else
         echo "# =============================================="
         echo "# $service - appsettings.json"

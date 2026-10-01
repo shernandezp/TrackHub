@@ -13,6 +13,10 @@
 //  limitations under the License.
 //
 
+using System.Collections.Concurrent;
+using TrackHub.Router.Domain.Exceptions;
+using TrackHub.Router.Domain.Models;
+
 namespace TrackHub.Router.Domain.Helpers;
 
 /// <summary>
@@ -27,4 +31,37 @@ namespace TrackHub.Router.Domain.Helpers;
 public static class ProviderConcurrency
 {
     public const int MaxConcurrentDeviceReads = 6;
+
+    public static async Task<IReadOnlyCollection<PositionVm>> ReadEachDeviceAsync(
+        IEnumerable<DeviceTransporterVm> devices,
+        Func<DeviceTransporterVm, CancellationToken, Task<PositionVm>> read,
+        CancellationToken cancellationToken)
+    {
+        var batch = devices.ToArray();
+        var positions = new ConcurrentBag<PositionVm>();
+        var failures = new ConcurrentQueue<Exception>();
+        await Parallel.ForEachAsync(
+            batch,
+            new ParallelOptions { MaxDegreeOfParallelism = MaxConcurrentDeviceReads, CancellationToken = cancellationToken },
+            async (device, token) =>
+            {
+                try
+                {
+                    var position = await read(device, token);
+                    if (position.TransporterId != Guid.Empty)
+                    {
+                        positions.Add(position);
+                    }
+                }
+                catch (Exception ex) when (!token.IsCancellationRequested)
+                {
+                    failures.Enqueue(ex);
+                }
+            });
+
+        IReadOnlyCollection<PositionVm> distinct = [.. positions.Distinct()];
+        return failures.TryPeek(out var first)
+            ? throw new PartialPositionReadException(distinct, failures.Count, batch.Length, first)
+            : distinct;
+    }
 }

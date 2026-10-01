@@ -36,7 +36,6 @@ public class WriterAuditCoverageTests
         "DirectApiUsageSink.cs",
         "DriverStatusEventWriter.cs",
         "PublicLinkGrantResolver.cs",
-        "TransporterPositionWriter.cs",
         // Per-user UI preferences (language, theme, navbar): no security or compliance meaning.
         "UserSettingsWriter.cs",
     ];
@@ -47,6 +46,8 @@ public class WriterAuditCoverageTests
     [
         "OperatorWriter.MarkManualSyncTriggeredAsync",
         "OperatorWriter.UpdateSyncSummaryAsync",
+        "OperatorWriter.SetSyncBackoffAsync",
+        "OperatorWriter.ClearSyncBackoffAsync",
         "NotificationWriter.CreateNotificationDeliveryAsync",
         "NotificationWriter.MarkNotificationReadAsync",
     ];

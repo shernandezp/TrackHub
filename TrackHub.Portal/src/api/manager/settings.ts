@@ -60,6 +60,7 @@ export async function updateAccountSettings(
       onlineInterval: accountSettings.onlineInterval,
       refreshMap: accountSettings.refreshMap,
       refreshMapInterval: accountSettings.refreshMapInterval,
+      expectedVersion: accountSettings.expectedVersion ?? null,
     },
   });
   return data.updateAccountSettings;

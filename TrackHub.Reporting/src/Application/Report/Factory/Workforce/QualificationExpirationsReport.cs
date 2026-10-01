@@ -13,6 +13,8 @@
 //  limitations under the License.
 //
 
+using Common.Application.Interfaces;
+using Common.Domain.Time;
 using TrackHub.Reporting.Domain.Interfaces.Factory;
 using TrackHub.Reporting.Domain.Interfaces.Manager;
 using TrackHub.Reporting.Domain.Models;
@@ -22,7 +24,7 @@ namespace TrackHub.Reporting.Application.Report.Factory.Workforce;
 
 // Driver qualification expirations (spec 09 §13). Qualifications expiring inside the window
 // (withinDays, default 30), nearest expiry first. Short report — also SupportsPdf.
-public sealed class QualificationExpirationsReport(IWorkforceReportReader reader) : IReport
+public sealed class QualificationExpirationsReport(IWorkforceReportReader reader, IUser user, IAccountTimeZoneResolver zones) : IReport
 {
     private const int DefaultWithinDays = 30;
 
@@ -34,6 +36,7 @@ public sealed class QualificationExpirationsReport(IWorkforceReportReader reader
 
         var withinDays = (int)(filters.GetNumber(FilterNames.WithinDays) ?? DefaultWithinDays);
         var qualifications = await reader.GetDriverQualificationsAsync(null, withinDays, cancellationToken);
+        var today = (await ReportCalendar.ForCallerAsync(user, zones, cancellationToken)).Today();
 
         var rows = qualifications
             .OrderBy(q => q.ExpiresAt ?? DateOnly.MaxValue)
@@ -45,9 +48,9 @@ public sealed class QualificationExpirationsReport(IWorkforceReportReader reader
 
                 q.Number.OrEmpty(),
                 q.IssuingAuthority.OrEmpty(),
-                q.IssuedAt.ToUtcInstant(),
-                q.ExpiresAt.ToUtcInstant(),
-                q.ExpiresAt.DaysUntil(),
+                q.IssuedAt,
+                q.ExpiresAt,
+                q.ExpiresAt.DaysUntil(today),
                 q.Status))
             .ToList();
 

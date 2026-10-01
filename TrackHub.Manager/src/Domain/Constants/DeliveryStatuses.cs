@@ -26,8 +26,10 @@ public static class DeliveryStatuses
     public const string Deferred = nameof(Deferred);
     /// <summary>A deferred delivery that has been folded into a digest summary delivery.</summary>
     public const string Digested = nameof(Digested);
+    /// <summary>A deferred delivery whose account is gone or whose rule is gone or disabled; it is never sent.</summary>
+    public const string Expired = nameof(Expired);
 
-    public static readonly IReadOnlyCollection<string> All = [Pending, Sending, Sent, Failed, Deferred, Digested];
+    public static readonly IReadOnlyCollection<string> All = [Pending, Sending, Sent, Failed, Deferred, Digested, Expired];
 
     public static bool IsValid(string? value) => value != null && All.Contains(value);
 }

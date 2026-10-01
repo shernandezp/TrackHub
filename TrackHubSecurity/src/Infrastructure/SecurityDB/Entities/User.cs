@@ -14,6 +14,7 @@
 //
 
 using Common.Infrastructure;
+using Common.Domain.Helpers;
 
 namespace TrackHub.Security.Infrastructure.Entities;
 
@@ -34,7 +35,7 @@ public sealed class User(string username,
     public Guid UserId { get; private set; } = Guid.NewGuid();
     public string Username { get; set; } = username;
     public string Password { get; set; } = password;
-    public string EmailAddress { get; set; } = emailAddress;
+    public string EmailAddress { get; set => field = EmailAddresses.Normalize(value); } = EmailAddresses.Normalize(emailAddress);
     public string FirstName { get; set; } = firstName;
     public string? SecondName { get; set; } = secondName;
     public string LastName { get; set; } = lastName;

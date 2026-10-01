@@ -26,6 +26,15 @@ public sealed class OutboxReader(IApplicationDbContext context) : IOutboxReader
     {
         var now = DateTimeOffset.UtcNow;
 
+        // An exhausted message keeps its entity blocked until it is replayed or discarded, and an
+        // in-flight one until it lands: a later message must never overtake either.
+        var blocked = (await context.OutboxMessages.AsNoTracking()
+            .Where(x => (x.Status == OutboxMessageStatuses.Failed || x.Status == OutboxMessageStatuses.Dispatching) && x.OrderingKey != null)
+            .Select(x => x.OrderingKey!)
+            .Distinct()
+            .ToListAsync(cancellationToken))
+            .ToHashSet(StringComparer.Ordinal);
+
         var pending = await context.OutboxMessages.AsNoTracking()
             .Where(x => x.Status == OutboxMessageStatuses.Pending)
             .OrderBy(x => x.Sequence)
@@ -41,7 +50,6 @@ public sealed class OutboxReader(IApplicationDbContext context) : IOutboxReader
             })
             .ToListAsync(cancellationToken);
 
-        var blocked = new HashSet<string>(StringComparer.Ordinal);
         var dispatchable = new List<OutboxMessageVm>();
 
         foreach (var message in pending)
@@ -71,4 +79,16 @@ public sealed class OutboxReader(IApplicationDbContext context) : IOutboxReader
 
         return dispatchable;
     }
+
+    public async Task<int> CountFailedAsync(CancellationToken cancellationToken)
+        => await context.OutboxMessages.CountAsync(x => x.Status == OutboxMessageStatuses.Failed, cancellationToken);
+
+    public async Task<IReadOnlyCollection<FailedOutboxMessageVm>> GetFailedAsync(int take, CancellationToken cancellationToken)
+        => await context.OutboxMessages.AsNoTracking()
+            .Where(x => x.Status == OutboxMessageStatuses.Failed)
+            .OrderBy(x => x.Sequence)
+            .Take(take)
+            .Select(x => new FailedOutboxMessageVm(
+                x.OutboxMessageId, x.MessageType, x.OrderingKey, x.AttemptCount, x.LastError, x.CreatedAt, x.ProcessedAt))
+            .ToListAsync(cancellationToken);
 }

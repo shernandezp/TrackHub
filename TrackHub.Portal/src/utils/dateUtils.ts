@@ -86,22 +86,19 @@ export function formatDateOnly(value: string | null | undefined): string {
 }
 
 /**
- * Whole calendar days from *today* (in the viewer's timezone) until a DateOnly
- * value; negative once the day has passed, 0 on the day itself. Both sides are
- * reduced to calendar days before subtracting, so the result never shifts by one
- * near midnight or for negative UTC offsets.
+ * Whole calendar days from `today` until a DateOnly value; negative once the day
+ * has passed, 0 on the day itself. `today` is a calendar day (`yyyy-MM-dd`) taken
+ * from the ACCOUNT calendar: an expiry is a fleet date, so the viewer's browser
+ * zone must not move it.
  */
-export function daysUntilDateOnly(
-    value: string | null | undefined,
-    today: Date = new Date()
-): number | null {
+export function daysUntilDateOnly(value: string | null | undefined, today: string): number | null {
     const parts = parseDateOnly(value);
-    if (!parts) return null;
+    const start = parseDateOnly(today);
+    if (!parts || !start) return null;
     // Both endpoints are built as UTC midnights of their calendar day, so the
     // difference is an exact whole number of days with no DST or offset drift.
     const target = Date.UTC(parts.year, parts.month - 1, parts.day);
-    const start = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
-    return Math.round((target - start) / 86_400_000);
+    return Math.round((target - Date.UTC(start.year, start.month - 1, start.day)) / 86_400_000);
 }
 
 /**

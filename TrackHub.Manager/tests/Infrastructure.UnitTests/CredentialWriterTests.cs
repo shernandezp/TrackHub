@@ -47,9 +47,9 @@ public class CredentialWriterTests
     }
 
     [Test]
-    public async Task CreateCredentialAsync_PrincipalFromDifferentAccount_ThrowsForbidden()
+    public async Task CreateCredentialAsync_PrincipalFromDifferentAccount_ThrowsNotFound()
     {
-        await using var context = NewContext(nameof(CreateCredentialAsync_PrincipalFromDifferentAccount_ThrowsForbidden));
+        await using var context = NewContext(nameof(CreateCredentialAsync_PrincipalFromDifferentAccount_ThrowsNotFound));
         var @operator = new Operator("Provider", null, null, null, null, null, 1, Guid.NewGuid());
         await context.Operators.AddAsync(@operator);
         await context.SaveChangesAsync(CancellationToken.None);
@@ -62,14 +62,14 @@ public class CredentialWriterTests
         var writer = new CredentialWriter(context as IApplicationDbContext, Principal(Guid.NewGuid()));
         var dto = new CredentialDto("https://provider.example", "user", "pass", null, null, @operator.OperatorId);
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(async () =>
+        Assert.ThrowsAsync<NotFoundException>(async () =>
             await writer.CreateCredentialAsync(dto, [1, 2, 3, 4, 5, 6, 7, 8], EncryptionKey, CancellationToken.None));
     }
 
     [Test]
-    public async Task UpdateCredentialAsync_PrincipalFromDifferentAccount_ThrowsForbidden()
+    public async Task UpdateCredentialAsync_PrincipalFromDifferentAccount_ThrowsNotFound()
     {
-        await using var context = NewContext(nameof(UpdateCredentialAsync_PrincipalFromDifferentAccount_ThrowsForbidden));
+        await using var context = NewContext(nameof(UpdateCredentialAsync_PrincipalFromDifferentAccount_ThrowsNotFound));
         var @operator = new Operator("Provider", null, null, null, null, null, 1, Guid.NewGuid());
         var credential = CredentialFor(@operator);
         await context.Operators.AddAsync(@operator);
@@ -84,7 +84,7 @@ public class CredentialWriterTests
         var writer = new CredentialWriter(context as IApplicationDbContext, Principal(Guid.NewGuid()));
         var dto = new UpdateCredentialDto(credential.CredentialId, "https://changed.example", "new-user", "new-pass", "new-key", "new-key-2");
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(async () =>
+        Assert.ThrowsAsync<NotFoundException>(async () =>
             await writer.UpdateCredentialAsync(dto, [1, 2, 3, 4, 5, 6, 7, 8], EncryptionKey, CancellationToken.None));
     }
 
@@ -116,9 +116,9 @@ public class CredentialWriterTests
     }
 
     [Test]
-    public async Task UpdateTokenAsync_PrincipalFromDifferentAccount_ThrowsForbidden()
+    public async Task UpdateTokenAsync_PrincipalFromDifferentAccount_ThrowsNotFound()
     {
-        await using var context = NewContext(nameof(UpdateTokenAsync_PrincipalFromDifferentAccount_ThrowsForbidden));
+        await using var context = NewContext(nameof(UpdateTokenAsync_PrincipalFromDifferentAccount_ThrowsNotFound));
         var @operator = new Operator("Provider", null, null, null, null, null, 1, Guid.NewGuid());
         var credential = CredentialFor(@operator);
         await context.Operators.AddAsync(@operator);
@@ -133,7 +133,7 @@ public class CredentialWriterTests
         var writer = new CredentialWriter(context as IApplicationDbContext, Principal(Guid.NewGuid()));
         var dto = new UpdateTokenDto(credential.CredentialId, "token", DateTimeOffset.UtcNow.AddHours(1), "refresh", DateTimeOffset.UtcNow.AddDays(1));
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(async () =>
+        Assert.ThrowsAsync<NotFoundException>(async () =>
             await writer.UpdateTokenAsync(dto, EncryptionKey, CancellationToken.None));
     }
 
@@ -208,9 +208,9 @@ public class CredentialWriterTests
     }
 
     [Test]
-    public async Task DeleteCredentialByOperatorAsync_PrincipalFromDifferentAccount_ThrowsForbidden()
+    public async Task DeleteCredentialByOperatorAsync_PrincipalFromDifferentAccount_ThrowsNotFound()
     {
-        await using var context = NewContext(nameof(DeleteCredentialByOperatorAsync_PrincipalFromDifferentAccount_ThrowsForbidden));
+        await using var context = NewContext(nameof(DeleteCredentialByOperatorAsync_PrincipalFromDifferentAccount_ThrowsNotFound));
         var @operator = new Operator("Provider", null, null, null, null, null, 1, Guid.NewGuid());
         var credential = CredentialFor(@operator);
         await context.Operators.AddAsync(@operator);
@@ -224,7 +224,7 @@ public class CredentialWriterTests
 
         var writer = new CredentialWriter(context as IApplicationDbContext, Principal(Guid.NewGuid()));
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(async () =>
+        Assert.ThrowsAsync<NotFoundException>(async () =>
             await writer.DeleteCredentialByOperatorAsync(@operator.OperatorId, CancellationToken.None));
     }
 }

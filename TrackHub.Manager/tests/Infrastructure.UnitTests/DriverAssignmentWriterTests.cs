@@ -257,6 +257,26 @@ public class DriverAssignmentWriterTests
     }
 
     [Test]
+    public async Task End_AfterAScheduledEndHasPassed_IsRefused()
+    {
+        using var context = NewContext(nameof(End_AfterAScheduledEndHasPassed_IsRefused));
+        var accountId = Guid.NewGuid();
+        var (driver, transporter) = Seed(context, accountId);
+        var writer = new DriverAssignmentWriter(context, Principal(accountId));
+        var created = await writer.AssignDriverToTransporterAsync(driver.DriverId, transporter.TransporterId,
+            DateTimeOffset.UtcNow.AddDays(-3), DriverAssignmentTypes.Regular, CancellationToken.None);
+        await writer.EndDriverAssignmentAsync(created.DriverTransporterAssignmentId, DateTimeOffset.UtcNow.AddDays(1), CancellationToken.None);
+        context.ChangeTracker.Clear();
+        var lapsed = context.DriverTransporterAssignments.AsTracking().Single();
+        lapsed.EndsAt = DateTimeOffset.UtcNow.AddMinutes(-1);
+        await context.SaveChangesAsync();
+        context.ChangeTracker.Clear();
+
+        Assert.ThrowsAsync<ConflictException>(() =>
+            writer.EndDriverAssignmentAsync(created.DriverTransporterAssignmentId, DateTimeOffset.UtcNow.AddDays(5), CancellationToken.None));
+    }
+
+    [Test]
     public async Task End_BeforeStart_FailsValidation()
     {
         using var context = NewContext(nameof(End_BeforeStart_FailsValidation));

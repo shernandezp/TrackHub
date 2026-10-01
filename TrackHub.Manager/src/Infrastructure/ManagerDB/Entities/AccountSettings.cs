@@ -17,8 +17,10 @@ using Common.Infrastructure;
 
 namespace TrackHub.Manager.Infrastructure.Entities;
 
-public class AccountSettings (Guid accountId) : BaseAuditableEntity
+public class AccountSettings (Guid accountId) : BaseAuditableEntity, IEditVersioned
 {
+    public uint Version { get; set; }
+
     public Guid AccountId { get; set; } = accountId;
     public string Maps { get; set; } = "OSM";
     public string? MapsKey { get; set; } = "";

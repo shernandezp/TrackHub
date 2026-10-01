@@ -36,8 +36,14 @@ public class FeedCursorTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]
+    public void Reads_an_absent_cursor_as_the_first_page(string? cursor)
+        => FeedCursor.TryDecode(cursor, out _, out _).Should().BeFalse();
+
+    [Theory]
     [InlineData("not base64 at all")]
     [InlineData("bm90LWEtY3Vyc29y")]
-    public void Reads_anything_else_as_no_cursor(string? cursor)
-        => FeedCursor.TryDecode(cursor, out _, out _).Should().BeFalse();
+    public void Refuses_a_cursor_it_did_not_issue(string cursor)
+        => FluentActions.Invoking(() => FeedCursor.TryDecode(cursor, out _, out _))
+            .Should().Throw<Common.Application.Exceptions.ValidationException>()
+            .Which.Code.Should().Be(FeedCursor.InvalidCursorCode);
 }

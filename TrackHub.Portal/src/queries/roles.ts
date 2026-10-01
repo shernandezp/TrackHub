@@ -35,7 +35,7 @@ export const roleKeys = {
 export function useRoles(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: roleKeys.list(),
-    queryFn: api.getRoles,
+    queryFn: ({ signal }) => api.getRoles({ signal }),
     enabled: options.enabled ?? true,
   });
 }
@@ -43,7 +43,7 @@ export function useRoles(options: { enabled?: boolean } = {}) {
 export function useRoleResources(roleId: number | undefined) {
   return useQuery({
     queryKey: roleKeys.resources(roleId ?? -1),
-    queryFn: () => api.getResourcesByRole(roleId as number),
+    queryFn: ({ signal }) => api.getResourcesByRole(roleId as number, { signal }),
     enabled: roleId !== undefined && roleId > 0,
   });
 }
@@ -51,7 +51,7 @@ export function useRoleResources(roleId: number | undefined) {
 export function useUsersByRole(roleId: number | undefined) {
   return useQuery({
     queryKey: roleKeys.users(roleId ?? -1),
-    queryFn: () => api.getUserLookupByRole(roleId as number),
+    queryFn: ({ signal }) => api.getUserLookupByRole(roleId as number, { signal }),
     enabled: roleId !== undefined && roleId > 0,
   });
 }

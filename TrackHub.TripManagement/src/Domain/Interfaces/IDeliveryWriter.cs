@@ -32,6 +32,7 @@ public interface IDeliveryWriter
         string status,
         string? observations,
         string idempotencyKey,
+        string source,
         CancellationToken cancellationToken);
 
     Task DeleteDeliveryAsync(Guid deliveryId, Guid accountId, CancellationToken cancellationToken);

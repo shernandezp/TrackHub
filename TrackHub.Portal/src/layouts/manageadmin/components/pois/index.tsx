@@ -50,7 +50,7 @@ function ManagePois() {
   const {
     data,
     totalCount,
-    groupOptions,
+    groupNames,
     open,
     confirmOpen,
     onSave,
@@ -114,7 +114,7 @@ function ManagePois() {
         values={values}
         handleChange={handleChange}
         errors={errors}
-        groupOptions={groupOptions}
+        groupNames={groupNames}
       />
 
       <ConfirmDialog

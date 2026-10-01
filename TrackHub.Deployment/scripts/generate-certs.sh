@@ -42,13 +42,27 @@ if [ -f "$PROJECT_DIR/.env" ]; then
     set +a
 fi
 
-# Parameters
-DOMAIN="${1:-$DOMAIN}"
-EMAIL="${2:-$LETSENCRYPT_EMAIL}"
-OPENIDDICT_PASSWORD="${3:-${CERTIFICATE_PASSWORD:-openiddict}}"
+# Parameters: <domain> [email] [openiddict_password] [--rotate-openiddict]
+ROTATE_OPENIDDICT=false
+POSITIONAL=()
+for arg in "$@"; do
+    case "$arg" in
+        --rotate-openiddict) ROTATE_OPENIDDICT=true ;;
+        *) POSITIONAL+=("$arg") ;;
+    esac
+done
+DOMAIN="${POSITIONAL[0]:-$DOMAIN}"
+EMAIL="${POSITIONAL[1]:-$LETSENCRYPT_EMAIL}"
+export OPENIDDICT_PASSWORD="${POSITIONAL[2]:-${CERTIFICATE_PASSWORD:-}}"
+
+if [ -z "$OPENIDDICT_PASSWORD" ]; then
+    print_error "CERTIFICATE_PASSWORD is required: set it in .env (it protects the token-signing key)."
+    exit 1
+fi
+
 
 if [ -z "$DOMAIN" ]; then
-    print_error "Domain is required. Usage: $0 <domain> [email] [openiddict_password]"
+    print_error "Domain is required. Usage: $0 <domain> [email] [openiddict_password] [--rotate-openiddict]"
     print_info "Or set DOMAIN in your .env file"
     exit 1
 fi
@@ -124,22 +138,34 @@ else
 fi
 
 # =============================================================================
-# Generate OpenIddict certificate (self-signed, used internally)
+# OpenIddict certificate (self-signed; signs and encrypts every token)
 # =============================================================================
-print_info "Generating OpenIddict certificate..."
+# Replacing it invalidates every issued token and signs every user out, so an existing certificate
+# is kept and only checked; --rotate-openiddict replaces it deliberately.
 cd "$CERT_DIR"
 
-openssl req -x509 -newkey rsa:4096 -keyout openiddict.key -out openiddict.crt \
-    -days 7300 -nodes \
-    -subj "/C=US/ST=State/L=City/O=Organization/CN=TrackHub OpenIddict"
+if [ -f certificate.pfx ] && [ "$ROTATE_OPENIDDICT" != true ]; then
+    if openssl pkcs12 -in certificate.pfx -passin env:OPENIDDICT_PASSWORD -noout 2> /dev/null; then
+        print_success "OpenIddict certificate kept: certificate.pfx opens with CERTIFICATE_PASSWORD"
+    else
+        print_error "certificate.pfx does not open with CERTIFICATE_PASSWORD; fix the password or rerun with --rotate-openiddict."
+        exit 1
+    fi
+else
+    [ -f certificate.pfx ] && print_warning "Rotating the OpenIddict certificate: every user will have to sign in again."
+    print_info "Generating OpenIddict certificate..."
+    (
+        umask 077
+        openssl req -x509 -newkey rsa:4096 -keyout openiddict.key -out openiddict.crt \
+            -days 7300 -nodes \
+            -subj "/C=US/ST=State/L=City/O=Organization/CN=TrackHub OpenIddict"
+        openssl pkcs12 -export -out certificate.pfx -inkey openiddict.key -in openiddict.crt \
+            -passout env:OPENIDDICT_PASSWORD
+        rm -f openiddict.key openiddict.crt
+    )
+    print_success "OpenIddict certificate generated: certificate.pfx"
+fi
 
-openssl pkcs12 -export -out certificate.pfx -inkey openiddict.key -in openiddict.crt \
-    -passout pass:$OPENIDDICT_PASSWORD
-
-# Cleanup temporary OpenIddict files
-rm -f openiddict.key openiddict.crt
-
-print_success "OpenIddict certificate generated: certificate.pfx"
 
 # =============================================================================
 # Setup auto-renewal cron job
@@ -164,7 +190,6 @@ echo "  - fullchain.pem (Nginx SSL certificate)"
 echo "  - privkey.pem (Nginx SSL private key)"
 echo ""
 print_info "OpenIddict Certificate:"
-echo "  - certificate.pfx (password: $OPENIDDICT_PASSWORD)"
+echo "  - certificate.pfx (protected by CERTIFICATE_PASSWORD)"
 echo ""
 print_info "Certificates will auto-renew via cron. Check logs at /var/log/trackhub-ssl-renewal.log"
-print_warning "Remember to update CERTIFICATE_PASSWORD in .env if you changed the default password"

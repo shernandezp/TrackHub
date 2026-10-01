@@ -22,7 +22,7 @@ public class GetAccountSettingsQueryTests
     public async Task Handle_ReturnsSettings()
     {
         var id = Guid.NewGuid();
-        var vm = new AccountSettingsVm(id, "", "", 0, false, 0);
+        var vm = new AccountSettingsVm(id, "", "", 0, false, 0, 0);
         _readerMock.Setup(r => r.GetAccountSettingsAsync(id, CancellationToken.None)).ReturnsAsync(vm);
 
         var result = await _handler.Handle(new GetAccountSettingsQuery(id), CancellationToken.None);

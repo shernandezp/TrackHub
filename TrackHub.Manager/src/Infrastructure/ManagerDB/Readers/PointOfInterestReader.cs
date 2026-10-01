@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Infrastructure;
 using Common.Application.Interfaces;
 using TrackHub.Manager.Infrastructure.Interfaces;
 
@@ -40,15 +41,16 @@ public sealed class PointOfInterestReader(IApplicationDbContext context, ICurren
             .FirstOrDefaultAsync(cancellationToken);
         ReaderResults.EnsureFound(poi, nameof(Entities.PointOfInterest), id.ToString());
 
-        RequireAccountAccess(poi.AccountId);
+        RequireRowAccess(poi.AccountId, nameof(Entities.PointOfInterest), id.ToString(), forWrite: false);
         return poi;
     }
 
     // When visibleToUserId is set, POIs restricted to a Group outside that user's groups
     // are excluded; POIs with no Group are visible to every account user with read access.
-    public async Task<PointsOfInterestPageVm> GetPointsOfInterestByAccountAsync(Guid accountId, Guid? visibleToUserId, int skip, int take, string? search, CancellationToken cancellationToken)
+    public async Task<PointsOfInterestPageVm> GetPointsOfInterestByAccountAsync(Guid accountId, Guid? visibleToUserId, int skip, int take, string? search, bool? active, CancellationToken cancellationToken)
     {
-        var query = ApplySearch(Visible(accountId, visibleToUserId), search);
+        var query = ApplySearch(Visible(accountId, visibleToUserId), search)
+            .Where(p => active == null || p.Active == active);
 
         var totalCount = await query.CountAsync(cancellationToken);
         // POI names repeat freely (every depot may hold several "Gate"), so the primary key is what

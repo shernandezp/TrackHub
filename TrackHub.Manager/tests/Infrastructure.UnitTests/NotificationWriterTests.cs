@@ -141,17 +141,17 @@ public class NotificationWriterTests
     }
 
     [Test]
-    public async Task MarkNotificationReadAsync_NotTheRecipient_ThrowsForbidden()
+    public async Task MarkNotificationReadAsync_NotTheRecipient_ThrowsNotFound()
     {
         var accountId = Guid.NewGuid();
-        await using var context = NewContext(nameof(MarkNotificationReadAsync_NotTheRecipient_ThrowsForbidden));
+        await using var context = NewContext(nameof(MarkNotificationReadAsync_NotTheRecipient_ThrowsNotFound));
         var delivery = new NotificationDelivery(accountId, null, null, NotificationChannels.InApp, RecipientPrincipalTypes.User, Guid.NewGuid().ToString(), DeliveryStatuses.Sent);
         await context.NotificationDeliveries.AddAsync(delivery);
         await context.SaveChangesAsync(CancellationToken.None);
 
         var writer = new NotificationWriter(context as IApplicationDbContext, Principal(accountId, userId: Guid.NewGuid()));
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(async () => await writer.MarkNotificationReadAsync(delivery.NotificationDeliveryId, CancellationToken.None));
+        Assert.ThrowsAsync<NotFoundException>(async () => await writer.MarkNotificationReadAsync(delivery.NotificationDeliveryId, CancellationToken.None));
     }
 
     [Test]

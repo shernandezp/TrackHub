@@ -22,4 +22,7 @@ public interface IDeviceTransporterReader
     Task<IEnumerable<DeviceTransporterVm>> GetVisibleDeviceTransportersByOperatorAsync(Guid operatorId, CancellationToken cancellationToken);
     Task<IEnumerable<DeviceTransporterVm>> GetDeviceTransporterAsync(Guid accountId, Guid operatorId, CancellationToken cancellationToken);
     Task<DeviceTransporterVm> GetDevicesTransporterAsync(Guid transporterId, CancellationToken cancellationToken);
+
+    // Under the caller's token: Manager answers only a group the caller may see.
+    Task<IReadOnlyCollection<Guid>> GetTransporterIdsByGroupAsync(long groupId, CancellationToken cancellationToken);
 }

@@ -23,16 +23,14 @@ export type UnitStatus = 'moving' | 'stopped' | 'offline';
 
 /**
  * Client-side narrowing options for {@link filterPositions}. Every field is a
- * pure narrowing of the already-authorized set; a null/undefined membership set
- * means "no narrowing".
+ * pure narrowing of the already-authorized set; group/operator narrowing is
+ * applied server-side by devicePositionsByUser.
  */
 export interface PositionFilterOptions {
   transporterType?: string;
   status?: string;
   searchText?: string;
   onlineInterval?: number;
-  groupTransporterIds?: Set<string> | null;
-  operatorTransporterIds?: Set<string> | null;
 }
 
 export function countRecentDevices(positions: Position[], interval: number): number {
@@ -88,22 +86,14 @@ export function countRecentDevices(positions: Position[], interval: number): num
    * Client-side narrowing of the already-authorized position set.
    * Filters never widen the set the user was authorized to receive.
    * @param positions - Positions returned by devicePositionsByUser.
-   * @param options - Narrowing options. The membership sets are Sets of
-   *   transporterIds resolved for the selected group/operator; null/undefined
-   *   means no narrowing.
+   * @param options - Narrowing options.
    * @returns Filtered positions.
    */
   export function filterPositions(
     positions: Position[],
-    { transporterType, status, searchText, onlineInterval, groupTransporterIds, operatorTransporterIds }: PositionFilterOptions = {}
+    { transporterType, status, searchText, onlineInterval }: PositionFilterOptions = {}
   ): Position[] {
     let filtered = positions || [];
-    if (groupTransporterIds) {
-      filtered = filtered.filter(position => groupTransporterIds.has(position.transporterId));
-    }
-    if (operatorTransporterIds) {
-      filtered = filtered.filter(position => operatorTransporterIds.has(position.transporterId));
-    }
     if (transporterType && transporterType !== 'all') {
       filtered = filtered.filter(position => position.transporterType === transporterType);
     }

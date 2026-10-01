@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Infrastructure;
 using Common.Application.Paging;
 
 namespace TrackHub.TripManagement.Infrastructure.TripDB.Readers;
@@ -75,6 +76,7 @@ public sealed class TripReader(IApplicationDbContext context, IAccountFeatureRea
         Guid? driverId,
         string? customer,
         string? search,
+        string? exception,
         int skip,
         int take,
         CancellationToken cancellationToken)
@@ -109,18 +111,47 @@ public sealed class TripReader(IApplicationDbContext context, IAccountFeatureRea
 
         if (!string.IsNullOrWhiteSpace(customer))
         {
-            query = query.Where(t => t.CustomerName != null && EF.Functions.ILike(t.CustomerName, $"%{customer}%"));
+            query = query.Where(t => t.CustomerName != null && EF.Functions.ILike(t.CustomerName, SearchPattern.Contains(customer), SearchPattern.Escape));
         }
 
         if (!string.IsNullOrWhiteSpace(search))
         {
             query = query.Where(t =>
-                EF.Functions.ILike(t.Code, $"%{search}%")
-                || (t.ExternalReference != null && EF.Functions.ILike(t.ExternalReference, $"%{search}%"))
-                || EF.Functions.ILike(t.OriginName, $"%{search}%"));
+                EF.Functions.ILike(t.Code, SearchPattern.Contains(search), SearchPattern.Escape)
+                || (t.ExternalReference != null && EF.Functions.ILike(t.ExternalReference, SearchPattern.Contains(search), SearchPattern.Escape))
+                || EF.Functions.ILike(t.OriginName, SearchPattern.Contains(search), SearchPattern.Escape));
+        }
+
+        if (exception is not null)
+        {
+            var config = await accountFeatureReader.GetAccountConfigAsync(accountId, cancellationToken);
+            query = WithException(query, exception, DateTimeOffset.UtcNow.AddMinutes(-config.OverdueGraceMinutes));
         }
 
         return await PageAsync(query, skip, take, cancellationToken);
+    }
+
+    // Mirrors TripPhaseResolver in SQL, so the filter pages over every matching trip instead of a window.
+    private IQueryable<Trip> WithException(IQueryable<Trip> query, string exception, DateTimeOffset overdueBefore)
+    {
+        var stops = context.TripStops;
+        var running = query.Where(t => t.Status == TripStatuses.InProgress && !(t.OriginArrivedAt != null && t.OriginDepartedAt == null));
+
+        return exception switch
+        {
+            TripExceptions.Overdue => query.Where(t => t.Status == TripStatuses.Created && t.PlannedStartAt < overdueBefore),
+            TripExceptions.OffCorridor => query.Where(t => t.DeviationOpenedAt != null),
+            TripExceptions.StalledFinalStop => running.Where(t =>
+                stops.Any(s => s.TripId == t.TripId && s.Status == TripStopStatuses.Arrived)
+                && !stops.Any(s => s.TripId == t.TripId && s.Status == TripStopStatuses.Pending)),
+            TripExceptions.Delayed => running.Where(t =>
+                stops.Any(s => s.TripId == t.TripId && s.Status == TripStopStatuses.Arrived)
+                    ? stops.Where(s => s.TripId == t.TripId && s.Status == TripStopStatuses.Arrived)
+                        .OrderBy(s => s.Sequence).Select(s => s.DelayAlertedAt).FirstOrDefault() != null
+                    : stops.Where(s => s.TripId == t.TripId && s.Status == TripStopStatuses.Pending)
+                        .OrderBy(s => s.Sequence).Select(s => s.DelayAlertedAt).FirstOrDefault() != null),
+            _ => throw new ArgumentOutOfRangeException(nameof(exception), exception, "Unknown trip exception."),
+        };
     }
 
     public async Task<TripDetailVm> GetTripDetailAsync(Guid tripId, Guid accountId, Guid? userId, CancellationToken cancellationToken)
@@ -559,7 +590,9 @@ public sealed class TripReader(IApplicationDbContext context, IAccountFeatureRea
         // de-duplicate cheaply (rules.md: never Distinct over a json-bearing projection).
         var query = from plan in context.RoutePlans
                     join trip in trips on plan.TripId equals trip.TripId
-                    where plan.Status == RoutePlanStatuses.Ready && plan.TollStationsJson != null
+                    where plan.Status == RoutePlanStatuses.Ready
+                        && plan.TollStationsJson != null
+                        && trip.RoutePlanId == plan.RoutePlanId
                     select new { Plan = plan, Trip = trip };
 
         var totalCount = await query.CountAsync(cancellationToken);

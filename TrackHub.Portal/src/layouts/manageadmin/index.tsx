@@ -36,6 +36,7 @@ import ManageNotificationTemplates from "layouts/manageadmin/components/notifica
 import ManagePublicLinks from "layouts/manageadmin/components/publicLinks";
 import ManageDocuments from "layouts/manageadmin/components/documents";
 import ManageBackgroundJobs from "layouts/manageadmin/components/backgroundJobs";
+import ManageTollClasses from "layouts/manageadmin/components/tollClasses";
 import ArgonBox from "components/ArgonBox";
 import ArgonTypography from "components/ArgonTypography";
 import DashboardLayout from "controls/LayoutContainers/DashboardLayout";
@@ -64,6 +65,7 @@ const SECTION_GROUPS: Record<SectionGroupKey, SectionEntry[]> = {
     { Section: ManageDrivers },
     { Section: ManageGroups },
     { Section: ManagePois },
+    { Section: ManageTollClasses, featureKey: 'trip-management' },
   ],
   access: [{ Section: ManageUsers }, { Section: ManageRoles }, { Section: ManagePolicies }],
   alerts: [

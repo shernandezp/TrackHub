@@ -20,5 +20,5 @@ public readonly record struct UpdateAccountDto(
     string? Description,
     short TypeId,
     bool Active,
-    string? TimeZoneId = null
-    );
+    string? TimeZoneId = null,
+    uint? ExpectedVersion = null);

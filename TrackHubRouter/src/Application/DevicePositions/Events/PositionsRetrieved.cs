@@ -51,8 +51,8 @@ public sealed class PositionsRetrieved
                 int positionsAccepted = 0;
                 string? errorCode = notification.ProviderErrorCode;
                 string? errorMessage = notification.ProviderErrorMessage;
-                // A provider fetch that threw is a FAILED run, not a silent "0 fixes" success
-                //The provider error is carried on the notification.
+                // A provider error is never a silent "0 fixes" success: with nothing read the run FAILED,
+                // with some devices read (a partial provider read) it PARTIALLY_SUCCEEDED.
                 var providerFailed = notification.ProviderErrorCode is not null;
                 var result = providerFailed ? "FAILED" : "SUCCEEDED";
 
@@ -67,11 +67,16 @@ public sealed class PositionsRetrieved
                 // prevents duplicates.
                 var validPositions = LatestPerTransporter(validPositionCandidates);
                 positionsAccepted = validPositions.Length;
-                if (invalidPositionCount > 0)
+                if (providerFailed || invalidPositionCount > 0)
                 {
                     result = validPositions.Length == 0 ? "FAILED" : "PARTIALLY_SUCCEEDED";
-                    errorCode = "InvalidPosition";
-                    errorMessage = $"{invalidPositionCount} position(s) rejected by validation.";
+                }
+
+                if (invalidPositionCount > 0)
+                {
+                    var rejected = $"{invalidPositionCount} position(s) rejected by validation.";
+                    errorCode ??= "InvalidPosition";
+                    errorMessage = errorMessage is null ? rejected : $"{errorMessage} {rejected}";
                 }
 
                 try

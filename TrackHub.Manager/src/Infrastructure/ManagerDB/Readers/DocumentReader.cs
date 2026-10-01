@@ -16,7 +16,7 @@ public sealed class DocumentReader(IApplicationDbContext context, ICurrentPrinci
     // Confidential/Legal are visible only to a cleared principal.
     private bool CanSeeSensitive => accessPolicy.IsClearedForClassification(DocumentClassifications.Confidential);
 
-    public async Task<IReadOnlyCollection<DocumentVm>> GetDocumentsForOwnerAsync(Guid accountId, string ownerEntityType, string ownerEntityId, DateTimeOffset? from, DateTimeOffset? to, int skip, int take, CancellationToken cancellationToken)
+    public async Task<DocumentsPageVm> GetDocumentsForOwnerAsync(Guid accountId, string ownerEntityType, string ownerEntityId, DateTimeOffset? from, DateTimeOffset? to, int skip, int take, CancellationToken cancellationToken)
     {
         var scopedAccountId = RequireAccountAccess(accountId);
 
@@ -27,19 +27,16 @@ public sealed class DocumentReader(IApplicationDbContext context, ICurrentPrinci
         }
 
         var canSeeSensitive = CanSeeSensitive;
-        var entities = await Context.Documents
+        var query = Context.Documents
             .Where(x => x.AccountId == scopedAccountId
                 && x.OwnerEntityType == ownerEntityType
                 && x.OwnerEntityId == ownerEntityId
                 && x.Status != DocumentStatuses.Deleted
                 && (canSeeSensitive || (x.Classification != DocumentClassifications.Confidential && x.Classification != DocumentClassifications.Legal))
                 && (!from.HasValue || x.LastModified >= from)
-                && (!to.HasValue || x.LastModified <= to))
-            .OrderByDescending(x => x.LastModified).ThenBy(x => x.DocumentId)
-            .Skip(Offset(skip)).Take(PageSize(take))
-            .ToListAsync(cancellationToken);
+                && (!to.HasValue || x.LastModified <= to));
 
-        return entities.Select(ToVm).ToList();
+        return await PageAsync(query.OrderByDescending(x => x.Created).ThenBy(x => x.DocumentId), skip, take, cancellationToken);
     }
 
     public async Task<DocumentVm> GetDocumentAsync(Guid documentId, CancellationToken cancellationToken)
@@ -128,7 +125,7 @@ public sealed class DocumentReader(IApplicationDbContext context, ICurrentPrinci
         return ToVm(entity);
     }
 
-    public async Task<IReadOnlyCollection<DocumentVm>> SearchDocumentsAsync(DocumentSearchFilter filter, int skip, int take, CancellationToken cancellationToken)
+    public async Task<DocumentsPageVm> SearchDocumentsAsync(DocumentSearchFilter filter, int skip, int take, CancellationToken cancellationToken)
     {
         var accountId = ResolveAccountScope(null)
             ?? throw new ForbiddenAccessException("Current principal must resolve an account id.");
@@ -186,15 +183,10 @@ public sealed class DocumentReader(IApplicationDbContext context, ICurrentPrinci
             query = query.Where(x => x.Status == DocumentStatuses.Active && x.ExpiresAt != null && x.ExpiresAt <= threshold);
         }
 
-        var entities = await query
-            .OrderByDescending(x => x.LastModified).ThenBy(x => x.DocumentId)
-            .Skip(Offset(skip)).Take(PageSize(take))
-            .ToListAsync(cancellationToken);
-
-        return entities.Select(ToVm).ToList();
+        return await PageAsync(query.OrderByDescending(x => x.Created).ThenBy(x => x.DocumentId), skip, take, cancellationToken);
     }
 
-    public async Task<IReadOnlyCollection<DocumentVm>> GetExpiringDocumentsAsync(int withinDays, int skip, int take, CancellationToken cancellationToken)
+    public async Task<DocumentsPageVm> GetExpiringDocumentsAsync(int withinDays, int skip, int take, CancellationToken cancellationToken)
     {
         var accountId = ResolveAccountScope(null)
             ?? throw new ForbiddenAccessException("Current principal must resolve an account id.");
@@ -217,12 +209,15 @@ public sealed class DocumentReader(IApplicationDbContext context, ICurrentPrinci
             query = query.Where(x => x.Classification != DocumentClassifications.Confidential && x.Classification != DocumentClassifications.Legal);
         }
 
-        var entities = await query
-            .OrderBy(x => x.ExpiresAt).ThenBy(x => x.DocumentId)
-            .Skip(Offset(skip)).Take(PageSize(take))
-            .ToListAsync(cancellationToken);
+        return await PageAsync(query.OrderBy(x => x.ExpiresAt).ThenBy(x => x.DocumentId), skip, take, cancellationToken);
+    }
 
-        return entities.Select(ToVm).ToList();
+    // Created, not LastModified: an edit or a scan verdict must not move a row between pages.
+    private async Task<DocumentsPageVm> PageAsync(IOrderedQueryable<Document> ordered, int skip, int take, CancellationToken cancellationToken)
+    {
+        var totalCount = await ordered.CountAsync(cancellationToken);
+        var entities = await ordered.Skip(Offset(skip)).Take(PageSize(take)).ToListAsync(cancellationToken);
+        return new DocumentsPageVm(entities.Select(ToVm).ToList(), totalCount);
     }
 
     public async Task<IReadOnlyCollection<PublicLinkGrantVm>> GetDocumentSharesAsync(Guid documentId, CancellationToken cancellationToken)
@@ -266,7 +261,10 @@ public sealed class DocumentReader(IApplicationDbContext context, ICurrentPrinci
         var entity = await Context.Documents.FirstOrDefaultAsync(x => x.DocumentId == documentId, cancellationToken)
             ?? throw new NotFoundException(nameof(Document), documentId.ToString());
 
-        RequireAccountAccess(entity.AccountId);
+        if (!HasAccountAccess(entity.AccountId, forWrite: false))
+        {
+            throw new NotFoundException(nameof(Document), documentId.ToString());
+        }
 
         if (!await accessPolicy.CanAccessOwnerAsync(entity.AccountId, entity.OwnerEntityType, entity.OwnerEntityId, forWrite: false, cancellationToken))
         {
@@ -285,8 +283,8 @@ public sealed class DocumentReader(IApplicationDbContext context, ICurrentPrinci
 
     private DocumentVm ToVm(Document x)
     {
-        // DownloadUrl is populated only after authorization + ScanStatus == Clean.
-        var downloadUrl = string.Equals(x.ScanStatus, DocumentScanStatuses.Clean, StringComparison.OrdinalIgnoreCase)
+        // DownloadUrl is populated only after authorization and a servable scan status.
+        var downloadUrl = DocumentScanStatuses.IsServable(x.ScanStatus)
             ? $"/documents/{x.DocumentId}/download"
             : null;
 

@@ -28,9 +28,26 @@ public static class FeedDrain
     public const int PageSize = 500;
     public const int MaxRows = 100_000;
 
+    private static readonly AsyncLocal<PreviewWindow?> Preview = new();
+
+    /// <summary>
+    /// For the rest of the calling flow the first <c>previewable</c> drain reads one page of
+    /// <paramref name="rows"/> and records the producer's total instead of walking the feed. Only
+    /// reports whose rows are the primary feed's rows in the producer's order may open it.
+    /// </summary>
+    public static PreviewWindow BeginPreview(int rows) => Preview.Value = new PreviewWindow(rows);
+
     public static async Task<IReadOnlyCollection<T>> DrainAsync<T>(
-        Func<int, int, Task<(IReadOnlyCollection<T>? Items, int TotalCount)>> fetch)
+        Func<int, int, Task<(IReadOnlyCollection<T>? Items, int TotalCount)>> fetch,
+        bool previewable = false)
     {
+        if (previewable && Preview.Value is { TotalCount: null } window)
+        {
+            var (firstPage, totalCount) = await fetch(0, Math.Min(window.Rows, PageSize));
+            window.TotalCount = totalCount;
+            return firstPage ?? [];
+        }
+
         var all = new List<T>();
         for (var skip = 0; all.Count <= MaxRows; skip += PageSize)
         {
@@ -91,4 +108,11 @@ public static class FeedDrain
 
     private static IReadOnlyCollection<T> WithinLimit<T>(List<T> rows)
         => rows.Count > MaxRows ? throw new ReportLimitExceededException(MaxRows) : rows;
+}
+
+public sealed class PreviewWindow(int rows)
+{
+    public int Rows { get; } = rows;
+
+    public int? TotalCount { get; internal set; }
 }

@@ -12,8 +12,10 @@ public sealed class Driver(
     string? employeeCode,
     string? licenseNumber,
     DateOnly? licenseExpiresAt,
-    Guid? defaultTransporterId) : BaseAuditableEntity
+    Guid? defaultTransporterId) : BaseAuditableEntity, IEditVersioned
 {
+    public uint Version { get; set; }
+
     public Guid DriverId { get; private set; } = Guid.NewGuid();
     public Guid AccountId { get; set; } = accountId;
     public string Name { get; set; } = name;

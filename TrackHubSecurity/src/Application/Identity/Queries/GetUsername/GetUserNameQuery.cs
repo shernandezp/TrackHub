@@ -18,6 +18,7 @@ using Common.Application.Interfaces;
 namespace TrackHub.Security.Application.Identity.Queries.GetUsername;
 
 [PlatformScoped("Authorization pipeline: username resolution for the platform's logging/diagnostics (LoggingBehavior in every service); IdentityCallerGuard.EnsureCallerIsSubjectUserOrService binds user callers to themselves. Trusted internal services may resolve any username; the response carries the username only.")]
+[AllowSuspendedAccount]
 public readonly record struct GetUserNameQuery(Guid UserId) : IRequest<string>;
 
 public class GetUsersQueryHandler(IIdentityService service, IUser user) : IRequestHandler<GetUserNameQuery, string>

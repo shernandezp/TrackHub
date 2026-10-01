@@ -25,6 +25,7 @@ public interface IApplicationDbContext
     DbSet<AccountFeature> AccountFeatures { get; set; }
     DbSet<Account> Accounts { get; set; }
     DbSet<AuditEvent> AuditEvents { get; set; }
+    DbSet<TransporterDetectionCursor> TransporterDetectionCursors { get; set; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

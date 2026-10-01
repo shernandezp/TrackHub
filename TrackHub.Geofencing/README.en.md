@@ -75,7 +75,6 @@ Full detail: **[Geofencing](https://github.com/shernandezp/TrackHub/wiki/Geofenc
 
 ## Project-specific notes
 
-- **Never add `[Caching]` to `geofencesByAccount`.** The cache key is built from request properties only and cannot scope to the caller's account, so a cached response leaks geofences across tenants. The query's `enableCaching` input is deliberately inert. This is the case that established the platform-wide rule.
 - **A geofence with recorded visits cannot be deleted** — the attempt returns `ConflictException` → `CONFLICT`. Visit history is permanent; deactivation is the supported way to retire a zone, and a deactivated geofence keeps its history readable.
 - **Alert emission uses this service's own `geofence_client` identity** (`CreateClient(Clients.Manager, asService: true)`), never the propagated caller token. That identity needs `Alerts/Write` and `BackgroundJobs/Write` seeded in `security.service_client_permissions`, or every emission returns `FORBIDDEN`.
 - **Emission is best-effort.** A failure logs and never fails position processing — a Manager outage must not stop detection or lose positions.

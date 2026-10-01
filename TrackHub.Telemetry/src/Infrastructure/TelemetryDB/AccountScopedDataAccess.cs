@@ -44,14 +44,29 @@ public abstract class AccountScopedDataAccess(IApplicationDbContext context, ICu
             throw new ForbiddenAccessException("Insufficient permissions. Required account access: a non-empty account id.");
         }
 
-        if (CanAccessAllAccounts
-            || Principal.AccountId == accountId
-            || UserBelongsToAccount(accountId))
+        if (HasAccountAccess(accountId))
         {
             return accountId;
         }
 
         throw new ForbiddenAccessException($"Insufficient permissions. Required account access: {accountId}.");
+    }
+
+    protected bool HasAccountAccess(Guid accountId)
+        => accountId != Guid.Empty
+            && (CanAccessAllAccounts || Principal.AccountId == accountId || UserBelongsToAccount(accountId));
+
+    // A foreign operator answers like a missing one, so its id cannot be probed.
+    protected async Task<Guid> RequireOperatorAsync(Guid operatorId, CancellationToken cancellationToken)
+    {
+        var accountId = await Context.Operators
+            .Where(o => o.OperatorId == operatorId)
+            .Select(o => (Guid?)o.AccountId)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return accountId is { } id && HasAccountAccess(id)
+            ? id
+            : throw new NotFoundException("Operator", operatorId.ToString());
     }
 
     private bool UserBelongsToAccount(Guid accountId)

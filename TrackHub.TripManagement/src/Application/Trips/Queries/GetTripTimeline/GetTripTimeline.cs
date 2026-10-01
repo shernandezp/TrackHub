@@ -18,7 +18,6 @@ using TrackHub.TripManagement.Application.Common;
 
 namespace TrackHub.TripManagement.Application.Trips.Queries.GetTripTimeline;
 
-// No [Caching] — scope comes from the caller identity (SVD-09). See GetTripsQuery.
 /// <summary>Paged <c>TripEvent</c> history: manual overrides and detections in one log.</summary>
 [Authorize(Resource = Resources.Trips, Action = Actions.Read)]
 [RequireFeature(FeatureKeys.TripManagement)]

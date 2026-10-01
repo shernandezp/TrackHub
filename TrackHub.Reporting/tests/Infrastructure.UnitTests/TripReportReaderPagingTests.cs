@@ -31,6 +31,9 @@ namespace TrackHub.Reporting.Infrastructure.UnitTests;
 [TestFixture]
 public class TripReportReaderPagingTests
 {
+    private static readonly DateTimeOffset From = new(2026, 8, 1, 0, 0, 0, TimeSpan.Zero);
+    private static readonly DateTimeOffset To = new(2026, 9, 1, 0, 0, 0, TimeSpan.Zero);
+
     private const int PageSize = 500;   // Mirrors TripReportReader.PageSize (producer's take clamp).
     private const int MaxRows = 100_000; // Mirrors TripReportReader.MaxRows (defensive source cap).
 
@@ -136,7 +139,7 @@ public class TripReportReaderPagingTests
     {
         RespondWith(37, 37);
 
-        var trips = await _reader.GetTripsAsync(null, null, null, null, CancellationToken.None);
+        var trips = await _reader.GetTripsAsync(From, To, null, null, CancellationToken.None);
 
         Assert.Multiple(() =>
         {
@@ -152,7 +155,7 @@ public class TripReportReaderPagingTests
     {
         RespondWith((PageSize * 2) + 12, PageSize, PageSize, 12);
 
-        var trips = await _reader.GetTripsAsync(null, null, null, null, CancellationToken.None);
+        var trips = await _reader.GetTripsAsync(From, To, null, null, CancellationToken.None);
 
         Assert.Multiple(() =>
         {
@@ -168,7 +171,7 @@ public class TripReportReaderPagingTests
     {
         RespondWith(PageSize * 2, PageSize, PageSize);
 
-        var trips = await _reader.GetTripsAsync(null, null, null, null, CancellationToken.None);
+        var trips = await _reader.GetTripsAsync(From, To, null, null, CancellationToken.None);
 
         Assert.Multiple(() =>
         {
@@ -182,7 +185,7 @@ public class TripReportReaderPagingTests
     {
         RespondWith(0, 0);
 
-        var trips = await _reader.GetTripsAsync(null, null, null, null, CancellationToken.None);
+        var trips = await _reader.GetTripsAsync(From, To, null, null, CancellationToken.None);
 
         Assert.Multiple(() =>
         {
@@ -210,7 +213,7 @@ public class TripReportReaderPagingTests
             });
 
         var ex = Assert.ThrowsAsync<TrackHub.Reporting.Domain.Exceptions.ReportLimitExceededException>(
-            () => _reader.GetTripsAsync(null, null, null, null, CancellationToken.None));
+            () => _reader.GetTripsAsync(From, To, null, null, CancellationToken.None));
 
         Assert.Multiple(() =>
         {
@@ -265,7 +268,7 @@ public class TripReportReaderPagingTests
                 });
             });
 
-        var tolls = await _reader.GetTripTollsAsync(null, null, null, null, CancellationToken.None);
+        var tolls = await _reader.GetTripTollsAsync(From, To, null, null, CancellationToken.None);
 
         Assert.Multiple(() =>
         {
@@ -297,7 +300,7 @@ public class TripReportReaderPagingTests
                 });
             });
 
-        var trips = await _reader.GetTripsAsync(null, null, null, null, CancellationToken.None);
+        var trips = await _reader.GetTripsAsync(From, To, null, null, CancellationToken.None);
 
         Assert.Multiple(() =>
         {
@@ -363,7 +366,7 @@ public class TripReportReaderPagingTests
                 });
             });
 
-        var stops = await _reader.GetTripStopsAsync(null, null, null, null, CancellationToken.None);
+        var stops = await _reader.GetTripStopsAsync(From, To, null, null, CancellationToken.None);
         Assert.Multiple(() =>
         {
             Assert.That(stops, Has.Count.EqualTo(PageSize));
@@ -371,7 +374,7 @@ public class TripReportReaderPagingTests
         });
 
         _requests.Clear();
-        var tolls = await _reader.GetTripTollsAsync(null, null, null, null, CancellationToken.None);
+        var tolls = await _reader.GetTripTollsAsync(From, To, null, null, CancellationToken.None);
         Assert.Multiple(() =>
         {
             Assert.That(tolls, Has.Count.EqualTo(2));
@@ -380,7 +383,7 @@ public class TripReportReaderPagingTests
         });
 
         _requests.Clear();
-        var pods = await _reader.GetTripProofsOfDeliveryAsync(null, null, null, null, CancellationToken.None);
+        var pods = await _reader.GetTripProofsOfDeliveryAsync(From, To, null, null, CancellationToken.None);
         Assert.Multiple(() =>
         {
             Assert.That(pods, Has.Count.EqualTo(3));

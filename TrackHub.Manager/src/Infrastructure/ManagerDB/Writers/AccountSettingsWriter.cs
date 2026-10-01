@@ -42,7 +42,8 @@ public sealed class AccountSettingsWriter(IApplicationDbContext context, ICurren
             accountSettings.MapsKey,
             accountSettings.OnlineInterval,
             accountSettings.RefreshMap,
-            accountSettings.RefreshMapInterval);
+            accountSettings.RefreshMapInterval,
+            accountSettings.Version);
     }
 
     /// <summary>
@@ -58,6 +59,7 @@ public sealed class AccountSettingsWriter(IApplicationDbContext context, ICurren
             ?? throw new NotFoundException(nameof(AccountSettings), $"{accountSettingsDto.AccountId}");
 
         context.AccountSettings.Attach(accountSettings);
+        RowVersion.Expect(context.AccountSettings, accountSettings, accountSettingsDto.ExpectedVersion);
 
         var previous = Describe(accountSettings);
 

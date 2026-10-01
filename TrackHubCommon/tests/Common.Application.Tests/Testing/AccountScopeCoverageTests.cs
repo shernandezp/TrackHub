@@ -45,7 +45,7 @@ public class AccountScopeCoverageTests
         public string Name { get; init; } = string.Empty;
     }
 
-    /// <summary>Keyed but account-bearing — the behavior scopes it off the wire account.</summary>
+    /// <summary>A key beside the wire account: the account check does not cover the second hop.</summary>
     public class AccountBearingKeyedRequest : IRequest<string>
     {
         public Guid AccountId { get; init; }
@@ -53,39 +53,37 @@ public class AccountScopeCoverageTests
         public Guid DeviceId { get; init; }
     }
 
-    // --- fixtures: [Caching] × scope shapes (SVD-09) ---------------------------------------
-
-    [Caching]
-    public class CachedCallerScopedRequest : IRequest<string>
-    {
-        public int Page { get; init; }
-    }
-
-    [Caching]
-    [AccountScopeEnforcedInHandler]
-    public class CachedEnforcedRequest : IRequest<string>
-    {
-        public Guid Id { get; init; }
-    }
-
-    [Caching]
-    [PlatformScoped("Test fixture standing in for a platform-owned catalog.")]
-    public class CachedPlatformScopedRequest : IRequest<string>
-    {
-        public int Page { get; init; }
-    }
-
-    [Caching]
-    public class CachedAccountBearingRequest : IRequest<string>
+    public class AccountOnlyRequest : IRequest<string>
     {
         public Guid AccountId { get; init; }
+
+        public int Take { get; init; }
+    }
+
+    /// <summary>An optional account names any account or none.</summary>
+    public class NullableAccountRequest : IRequest<string>
+    {
+        public Guid? AccountId { get; init; }
+    }
+
+    public class IntKeyRequest : IRequest<string>
+    {
+        public int RoleId { get; init; }
+    }
+
+    public class CatalogCodeRequest : IRequest<string>
+    {
+        public Guid AccountId { get; init; }
+
+        public short TransporterTypeId { get; init; }
+
+        public string TimeZoneId { get; init; } = string.Empty;
+
+        public IReadOnlyCollection<string> EventTypes { get; init; } = [];
     }
 
     private static IReadOnlyList<string> UndeclaredKeyed()
         => AccountScopeCoverage.UndeclaredKeyedRequests(typeof(AccountScopeCoverageTests).Assembly);
-
-    private static IReadOnlyList<string> CachedUnscoped()
-        => AccountScopeCoverage.CachedUnscopedRequests(typeof(AccountScopeCoverageTests).Assembly);
 
     [Fact]
     public void UndeclaredKeyedRequests_FindsRootLevelKey()
@@ -110,29 +108,19 @@ public class AccountScopeCoverageTests
             "a declared [AccountScopeEnforcedInHandler] request is covered");
         offenders.Should().NotContain(typeof(KeylessRequest).FullName,
             "a keyless request is caller-scoped and needs no marker");
-        offenders.Should().NotContain(typeof(AccountBearingKeyedRequest).FullName,
-            "an account-bearing request is scoped off its wire account");
+        offenders.Should().NotContain(typeof(AccountOnlyRequest).FullName,
+            "a required account is the scope itself");
+        offenders.Should().NotContain(typeof(CatalogCodeRequest).FullName,
+            "catalog codes and string lists name no tenant entity");
     }
 
     [Fact]
-    public void CachedUnscopedRequests_FlagsCallerScopedAndHandlerEnforcedCaching()
+    public void UndeclaredKeyedRequests_FindsSecondHopOptionalAccountAndIntKeys()
     {
-        var offenders = CachedUnscoped();
+        var offenders = UndeclaredKeyed();
 
-        offenders.Should().Contain(typeof(CachedCallerScopedRequest).FullName,
-            "a caller-scoped response cached under a request-only key is served across accounts");
-        offenders.Should().Contain(typeof(CachedEnforcedRequest).FullName,
-            "the cache short-circuits the handler that performs the ownership check");
-    }
-
-    [Fact]
-    public void CachedUnscopedRequests_AcceptsPlatformScopedAndAccountBearingCaching()
-    {
-        var offenders = CachedUnscoped();
-
-        offenders.Should().NotContain(typeof(CachedPlatformScopedRequest).FullName,
-            "platform-owned data is identical for every caller");
-        offenders.Should().NotContain(typeof(CachedAccountBearingRequest).FullName,
-            "the account is part of the request and therefore part of the cache key");
+        offenders.Should().Contain(typeof(AccountBearingKeyedRequest).FullName);
+        offenders.Should().Contain(typeof(NullableAccountRequest).FullName);
+        offenders.Should().Contain(typeof(IntKeyRequest).FullName);
     }
 }

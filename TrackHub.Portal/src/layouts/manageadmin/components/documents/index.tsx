@@ -15,10 +15,13 @@
 */
 
 import { useContext, useEffect, useRef, useState } from 'react';
+import { scanBadgeColor } from 'utils/documentScan';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from '@mui/material/Icon';
 import Table from "controls/Tables/Table";
+import ServerPagination from "controls/Tables/ServerPagination";
+import { useClampPage, useServerList } from "controls/Tables/useServerList";
 import TableAccordion from "controls/Accordions/TableAccordion";
 import ArgonBox from "components/ArgonBox";
 import ArgonButton from "components/ArgonButton";
@@ -35,8 +38,11 @@ import { useFeatures } from "context/features";
 import { notifyApiError } from "api/core/errors";
 import { searchDocuments, getExpiringDocuments, getDocumentTypes, downloadDocument, configureDocumentType, disableDocumentType } from "api/manager/documents";
 import type { DocumentVm, DocumentTypeVm, DocumentTypeDtoInput } from "api/manager/documents";
+import { useDocumentTypes } from "queries/documents";
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from "utils/dateUtils";
+
+const PAGE_SIZE = 25;
 
 // Change event shape emitted by the vendored dialog controls.
 
@@ -44,7 +50,6 @@ interface FilterValues { category?: string; status?: string; }
 
 const DOCUMENTS_FEATURE_KEY = "documents";
 
-const scanColor = (s: string): 'success' | 'error' | 'warning' | 'secondary' => (s === 'Clean' ? 'success' : (s === 'Infected' || s === 'Failed') ? 'error' : s === 'Quarantined' ? 'warning' : 'secondary');
 const cap = (v: ReactNode): ReactNode => <ArgonTypography variant="caption" color="secondary">{v ?? '-'}</ArgonTypography>;
 
 interface ContextState { library: boolean; expiring: boolean; types: boolean; }
@@ -65,6 +70,14 @@ function ManageDocuments() {
   const [filters, handleFilterChange] = useForm<FilterValues>({});
   const [typeValues, handleTypeChange, setTypeValues, setTypeErrors, validateType, typeErrors] = useForm<DocumentTypeFormValues>({});
   const bootstrap = useRef(false);
+  const [docsTotal, setDocsTotal] = useState(0);
+  const [expiringTotal, setExpiringTotal] = useState(0);
+  const library = useServerList(PAGE_SIZE);
+  const expiringList = useServerList(PAGE_SIZE);
+  useClampPage(library.page, PAGE_SIZE, docsTotal, library.setPage);
+  useClampPage(expiringList.page, PAGE_SIZE, expiringTotal, expiringList.setPage);
+  const { data: typeCatalog = [] } = useDocumentTypes(account?.accountId, { includeDisabled: true });
+  const categoryName = (category: string) => typeCatalog.find(type => type.category === category)?.displayName || category;
 
   const ensureAccount = async (): Promise<Account | null> => {
     if (bootstrap.current) return account;
@@ -84,8 +97,9 @@ function ManageDocuments() {
     try {
       const current = await ensureAccount();
       if (!current?.accountId) return;
-      const items = await searchDocuments({ category: filters.category || null, status: filters.status || null }, 0, 100);
-      setDocs(items || []);
+      const result = await searchDocuments({ category: filters.category || null, status: filters.status || null }, library.params.skip, library.params.take);
+      setDocs(result.items);
+      setDocsTotal(result.totalCount);
     } catch (error) {
       notifyApiError(error);
     } finally { setLoading(false); }
@@ -95,7 +109,9 @@ function ManageDocuments() {
     setLoading(true);
     try {
       await ensureAccount();
-      setExpiring((await getExpiringDocuments(30, 0, 100)) || []);
+      const result = await getExpiringDocuments(30, expiringList.params.skip, expiringList.params.take);
+      setExpiring(result.items);
+      setExpiringTotal(result.totalCount);
     } catch (error) {
       notifyApiError(error);
     } finally { setLoading(false); }
@@ -120,8 +136,8 @@ function ManageDocuments() {
     }
   };
 
-  useEffect(() => { if (ctx.library) loadLibrary(); /* eslint-disable-next-line */ }, [ctx.library]);
-  useEffect(() => { if (ctx.expiring) loadExpiring(); /* eslint-disable-next-line */ }, [ctx.expiring]);
+  useEffect(() => { if (ctx.library) loadLibrary(); /* eslint-disable-next-line */ }, [ctx.library, library.params]);
+  useEffect(() => { if (ctx.expiring) loadExpiring(); /* eslint-disable-next-line */ }, [ctx.expiring, expiringList.params]);
   useEffect(() => { if (ctx.types) loadTypes(); /* eslint-disable-next-line */ }, [ctx.types]);
 
   const handleAddType = () => { setTypeValues({}); setTypeErrors({}); };
@@ -163,7 +179,7 @@ function ManageDocuments() {
         <ArgonBox display="flex" gap={2} mb={1} alignItems="flex-end" flexWrap="wrap">
           <CustomTextField margin="none" name="category" id="filterCategory" label={t('documentManagement.category')} type="text" value={filters.category || ''} onChange={handleFilterChange} />
           <CustomTextField margin="none" name="status" id="filterStatus" label={t('documentManagement.status')} type="text" value={filters.status || ''} onChange={handleFilterChange} />
-          <ArgonButton color="primary" size="small" onClick={loadLibrary} aria-label={t('filters.search')}><Icon>search</Icon></ArgonButton>
+          <ArgonButton color="primary" size="small" onClick={() => (library.page === 0 ? loadLibrary() : library.setPage(0))} aria-label={t('filters.search')}><Icon>search</Icon></ArgonButton>
         </ArgonBox>
         <Table
           columns={[
@@ -179,17 +195,19 @@ function ManageDocuments() {
           rows={docs.map(d => ({
             fileName: <ArgonTypography variant="caption" fontWeight="medium">{d.title || d.fileName}</ArgonTypography>,
             owner: cap(`${d.ownerEntityType}:${(d.ownerEntityId || '').substring(0, 8)}`),
-            category: cap(d.category),
+            category: cap(categoryName(d.category)),
             classification: cap(t(`documentManagement.values.classification.${(d.classification || '').toLowerCase()}` as 'documentManagement.values.classification.public', { defaultValue: d.classification })),
             status: cap(t(`documentManagement.values.status.${(d.status || '').toLowerCase()}` as 'documentManagement.values.status.active', { defaultValue: d.status })),
-            scan: <ArgonBadge badgeContent={t(`documentManagement.values.scan.${(d.scanStatus || '').toLowerCase()}` as 'documentManagement.values.scan.clean', { defaultValue: d.scanStatus })} color={scanColor(d.scanStatus)} size="xs" container />,
+            scan: <ArgonBadge badgeContent={t(`documentManagement.values.scan.${(d.scanStatus || '').toLowerCase()}` as 'documentManagement.values.scan.clean', { defaultValue: d.scanStatus })} color={scanBadgeColor(d.scanStatus)} size="xs" container />,
             action: d.downloadUrl ? (
               <ArgonButton variant="text" color="dark" onClick={() => handleDownload(d.documentId, d.fileName)}><Icon>download</Icon></ArgonButton>
             ) : null,
             id: d.documentId,
           }))}
           selectedField="fileName"
+          serverPaged
         />
+        <ServerPagination page={library.page} pageSize={PAGE_SIZE} totalCount={docsTotal} pageLength={docs.length} onPageChange={library.setPage} />
       </TableAccordion>
 
       {/* Expiration dashboard */}
@@ -203,14 +221,16 @@ function ManageDocuments() {
             { name: 'id' },
           ]}
           rows={expiring.map(d => ({
-            category: <ArgonTypography variant="caption" fontWeight="medium">{d.category}</ArgonTypography>,
+            category: <ArgonTypography variant="caption" fontWeight="medium">{categoryName(d.category)}</ArgonTypography>,
             owner: cap(`${d.ownerEntityType}:${(d.ownerEntityId || '').substring(0, 8)}`),
             expires: cap(d.expiresAt ? formatDateTime(d.expiresAt) : '-'),
             status: cap(t(`documentManagement.values.status.${(d.status || '').toLowerCase()}` as 'documentManagement.values.status.active', { defaultValue: d.status })),
             id: d.documentId,
           }))}
           selectedField="category"
+          serverPaged
         />
+        <ServerPagination page={expiringList.page} pageSize={PAGE_SIZE} totalCount={expiringTotal} pageLength={expiring.length} onPageChange={expiringList.setPage} />
       </TableAccordion>
 
       {/* Document-type configuration */}

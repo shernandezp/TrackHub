@@ -10,4 +10,5 @@ public readonly record struct ReportMetadataVm(
     bool ManagerOnly,
     bool SupportsPdf,
     int SortOrder,
-    bool Active);
+    bool Active,
+    string? RequiredGrants = null);

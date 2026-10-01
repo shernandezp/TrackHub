@@ -40,7 +40,7 @@ public class WorkforceReportsTests
     public void Codes_MatchSpecConstants()
     {
         Assert.That(new DriverRegistryReport(_reader.Object).ReportCode, Is.EqualTo("workforce-driver-registry"));
-        Assert.That(new QualificationExpirationsReport(_reader.Object).ReportCode, Is.EqualTo("workforce-qualification-expirations"));
+        Assert.That(new QualificationExpirationsReport(_reader.Object, Mock.Of<Common.Application.Interfaces.IUser>(u => u.AccountId == Guid.NewGuid()), UtcZones()).ReportCode, Is.EqualTo("workforce-qualification-expirations"));
         Assert.That(new AssignmentHistoryReport(_reader.Object).ReportCode, Is.EqualTo("workforce-assignment-history"));
     }
 
@@ -60,7 +60,7 @@ public class WorkforceReportsTests
         // Case-insensitive alphabetical order.
         Assert.That(result.Cell(0, "DriverName"), Is.EqualTo("ana"));
         Assert.That(result.Cell(0, "DocumentNumber"), Is.EqualTo("123"));
-        Assert.That(result.Cell(0, "LicenseExpiresAt"), Is.EqualTo(new DateTimeOffset(2027, 3, 4, 0, 0, 0, TimeSpan.Zero)));
+        Assert.That(result.Cell(0, "LicenseExpiresAt"), Is.EqualTo(new DateOnly(2027, 3, 4)));
         Assert.That(result.Cell(0, "DefaultTransporterId"), Is.EqualTo(transporterId.ToString()));
         // Nulls become empty strings, never null cells.
         Assert.That(result.Cell(1, "Phone"), Is.EqualTo(string.Empty));
@@ -109,7 +109,7 @@ public class WorkforceReportsTests
             .ReturnsAsync(List<ReportDriverQualificationVm>())
             .Verifiable();
 
-        await new QualificationExpirationsReport(_reader.Object).GetDatasetAsync(_filters, CancellationToken.None);
+        await new QualificationExpirationsReport(_reader.Object, Mock.Of<Common.Application.Interfaces.IUser>(u => u.AccountId == Guid.NewGuid()), UtcZones()).GetDatasetAsync(_filters, CancellationToken.None);
 
         _reader.Verify();
     }
@@ -121,7 +121,7 @@ public class WorkforceReportsTests
             .ReturnsAsync(List<ReportDriverQualificationVm>())
             .Verifiable();
 
-        await new QualificationExpirationsReport(_reader.Object).GetDatasetAsync(
+        await new QualificationExpirationsReport(_reader.Object, Mock.Of<Common.Application.Interfaces.IUser>(u => u.AccountId == Guid.NewGuid()), UtcZones()).GetDatasetAsync(
             _filters with { Values = FilterValues.Of((FilterNames.WithinDays, "7")) }, CancellationToken.None);
 
         _reader.Verify();
@@ -135,7 +135,7 @@ public class WorkforceReportsTests
             new ReportDriverQualificationVm(Guid.NewGuid(), Guid.NewGuid(), "Nunca", "Other", null, null, null, null, null, "Valid"),
             new ReportDriverQualificationVm(Guid.NewGuid(), Guid.NewGuid(), "Ana", "MedicalExam", null, "M-1", null, Today.AddDays(3), null, "Valid")));
 
-        var result = await new QualificationExpirationsReport(_reader.Object).GetDatasetAsync(_filters, CancellationToken.None);
+        var result = await new QualificationExpirationsReport(_reader.Object, Mock.Of<Common.Application.Interfaces.IUser>(u => u.AccountId == Guid.NewGuid()), UtcZones()).GetDatasetAsync(_filters, CancellationToken.None);
 
         Assert.That(result.Column("DriverName"), Is.EqualTo(new object?[] { "Ana", "Carlos", "Nunca" }));
         Assert.That(result.Cell(2, "DaysRemaining"), Is.Null);
@@ -148,7 +148,7 @@ public class WorkforceReportsTests
             new ReportDriverQualificationVm(Guid.NewGuid(), Guid.NewGuid(), "Expired", "License", "C1", "L-0", null, Today.AddDays(-5), null, "Expired"),
             new ReportDriverQualificationVm(Guid.NewGuid(), Guid.NewGuid(), "Soon", "License", "C1", "L-2", null, Today.AddDays(10), null, "Valid")));
 
-        var result = await new QualificationExpirationsReport(_reader.Object).GetDatasetAsync(_filters, CancellationToken.None);
+        var result = await new QualificationExpirationsReport(_reader.Object, Mock.Of<Common.Application.Interfaces.IUser>(u => u.AccountId == Guid.NewGuid()), UtcZones()).GetDatasetAsync(_filters, CancellationToken.None);
 
         Assert.That(result.Cell(0, "DaysRemaining"), Is.EqualTo(-5));
         Assert.That(result.Cell(1, "DaysRemaining"), Is.EqualTo(10));
@@ -163,7 +163,7 @@ public class WorkforceReportsTests
         _reader.Setup(r => r.GetDriverQualificationsAsync(It.IsAny<Guid?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(List<ReportDriverQualificationVm>());
 
-        var result = await new QualificationExpirationsReport(_reader.Object).GetDatasetAsync(_filters, CancellationToken.None);
+        var result = await new QualificationExpirationsReport(_reader.Object, Mock.Of<Common.Application.Interfaces.IUser>(u => u.AccountId == Guid.NewGuid()), UtcZones()).GetDatasetAsync(_filters, CancellationToken.None);
 
         Assert.That(result.Columns.Select(c => c.PropertyName), Is.EqualTo(new[]
         {
@@ -201,7 +201,7 @@ public class WorkforceReportsTests
     [Test]
     public async Task AssignmentHistory_IgnoresUnparseableAndEmptyIdFilters()
     {
-        _reader.Setup(r => r.GetDriverAssignmentHistoryAsync(null, null, null, null, It.IsAny<CancellationToken>()))
+        _reader.Setup(r => r.GetDriverAssignmentHistoryAsync(null, null, It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(List<ReportDriverAssignmentVm>())
             .Verifiable();
 
@@ -222,7 +222,7 @@ public class WorkforceReportsTests
     [Test]
     public async Task AssignmentHistory_IgnoresUnrelatedFilterNames()
     {
-        _reader.Setup(r => r.GetDriverAssignmentHistoryAsync(null, null, null, null, It.IsAny<CancellationToken>()))
+        _reader.Setup(r => r.GetDriverAssignmentHistoryAsync(null, null, It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(List<ReportDriverAssignmentVm>())
             .Verifiable();
 
@@ -283,7 +283,7 @@ public class WorkforceReportsTests
         Assert.ThrowsAsync<UnauthorizedAccessException>(
             () => new DriverRegistryReport(_reader.Object).GetDatasetAsync(_filters, CancellationToken.None));
         Assert.ThrowsAsync<UnauthorizedAccessException>(
-            () => new QualificationExpirationsReport(_reader.Object).GetDatasetAsync(_filters, CancellationToken.None));
+            () => new QualificationExpirationsReport(_reader.Object, Mock.Of<Common.Application.Interfaces.IUser>(u => u.AccountId == Guid.NewGuid()), UtcZones()).GetDatasetAsync(_filters, CancellationToken.None));
         Assert.ThrowsAsync<UnauthorizedAccessException>(
             () => new AssignmentHistoryReport(_reader.Object).GetDatasetAsync(_filters, CancellationToken.None));
 
@@ -401,5 +401,12 @@ public class WorkforceReportsTests
                     $"{rowVm.Name}: '{language}' header \"{header}\" for column '{key}' is indistinguishable from {string.Join(", ", swallowedBy)}.");
             }
         }
+    }
+
+    private static Common.Domain.Time.IAccountTimeZoneResolver UtcZones()
+    {
+        var zones = new Mock<Common.Domain.Time.IAccountTimeZoneResolver>();
+        zones.Setup(z => z.ResolveAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(Common.Domain.Time.AccountTimeZone.Utc);
+        return zones.Object;
     }
 }

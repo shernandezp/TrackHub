@@ -37,7 +37,7 @@ public sealed class TrialExpirationStore(IApplicationDbContext context) : ITrial
     public async Task<IReadOnlyCollection<TrialFeatureVm>> GetAccountFeaturesAsync(Guid accountId, CancellationToken cancellationToken)
         => await context.AccountFeatures
             .Where(f => f.AccountId == accountId)
-            .Select(f => new TrialFeatureVm(f.Tier, f.EffectiveTo, f.ConfigurationJson))
+            .Select(f => new TrialFeatureVm(f.Tier, f.EffectiveTo))
             .ToListAsync(cancellationToken);
 
     public async Task<bool> JobRunSucceededAsync(string idempotencyKey, CancellationToken cancellationToken)

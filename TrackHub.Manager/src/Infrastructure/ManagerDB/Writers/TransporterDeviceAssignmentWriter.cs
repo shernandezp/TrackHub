@@ -17,27 +17,22 @@ public sealed class TransporterDeviceAssignmentWriter(IApplicationDbContext cont
         var scopedAccount = RequireAccountWriteAccess(dto.AccountId);
 
         var device = await Context.Devices
-            .AsTracking().Include(d => d.Operator)
-            .FirstOrDefaultAsync(d => d.DeviceId == dto.DeviceId, cancellationToken)
+            .AsTracking()
+            .FirstOrDefaultAsync(d => d.DeviceId == dto.DeviceId && d.AccountId == scopedAccount && d.Operator.AccountId == scopedAccount, cancellationToken)
             ?? throw new NotFoundException(nameof(Device), $"{dto.DeviceId}");
-        if (device.AccountId != scopedAccount || device.Operator.AccountId != scopedAccount)
+        if (!await Context.Transporters.AnyAsync(t => t.TransporterId == dto.TransporterId && t.AccountId == scopedAccount && t.RetiredAt == null, cancellationToken))
         {
-            throw new ForbiddenAccessException();
-        }
-        var transporter = await Context.Transporters.FirstOrDefaultAsync(t => t.TransporterId == dto.TransporterId, cancellationToken)
-            ?? throw new NotFoundException(nameof(Transporter), $"{dto.TransporterId}");
-        if (transporter.AccountId != scopedAccount || transporter.AccountId != device.AccountId)
-        {
-            throw new ForbiddenAccessException();
+            throw new NotFoundException(nameof(Transporter), $"{dto.TransporterId}");
         }
 
         var now = DateTimeOffset.UtcNow;
         var actorType = Principal.PrincipalType.ToString();
 
         // The context is NoTracking by default; attach every loaded row that gets mutated or
-        // the supersede/demote/device updates silently never reach SaveChanges.
+        // the supersede/demote/device updates silently never reach SaveChanges. A device has one
+        // active assignment account-wide, so its row on any transporter is superseded here.
         var existingActive = await Context.TransporterDeviceAssignments
-            .Where(a => a.TransporterId == dto.TransporterId && a.DeviceId == dto.DeviceId && a.Status == (int)AssignmentStatus.Active)
+            .Where(a => a.DeviceId == dto.DeviceId && a.Status == (int)AssignmentStatus.Active)
             .ToListAsync(cancellationToken);
         foreach (var prior in existingActive)
         {
@@ -79,7 +74,7 @@ public sealed class TransporterDeviceAssignmentWriter(IApplicationDbContext cont
         }
 
         AddAuditEvent(scopedAccount, "AssignDeviceToTransporter", nameof(TransporterDeviceAssignment), entity.TransporterDeviceAssignmentId.ToString(), null,
-            $"{{\"transporterId\":\"{dto.TransporterId}\",\"deviceId\":\"{dto.DeviceId}\",\"priority\":{dto.Priority},\"isPrimary\":{dto.IsPrimary.ToString().ToLowerInvariant()}}}");
+            AuditJson.Of(new { dto.TransporterId, dto.DeviceId, dto.Priority, dto.IsPrimary }));
 
         await Context.SaveChangesAsync(cancellationToken);
 
@@ -95,7 +90,7 @@ public sealed class TransporterDeviceAssignmentWriter(IApplicationDbContext cont
             .AsTracking()
             .FirstOrDefaultAsync(a => a.TransporterDeviceAssignmentId == assignmentId, cancellationToken)
             ?? throw new NotFoundException(nameof(TransporterDeviceAssignment), $"{assignmentId}");
-        RequireAccountWriteAccess(entity.AccountId);
+        RequireRowAccess(entity.AccountId, nameof(TransporterDeviceAssignment), $"{assignmentId}", forWrite: true);
         if (entity.Status != (int)AssignmentStatus.Active)
         {
             return;
@@ -109,7 +104,7 @@ public sealed class TransporterDeviceAssignmentWriter(IApplicationDbContext cont
             entity.AssignmentReason = reason;
         }
         AddAuditEvent(entity.AccountId, "EndDeviceTransporterAssignment", nameof(TransporterDeviceAssignment), entity.TransporterDeviceAssignmentId.ToString(), null,
-            $"{{\"reason\":{(reason is null ? "null" : $"\"{reason}\"")}}}");
+            AuditJson.Of(new { reason }));
         await Context.SaveChangesAsync(cancellationToken);
     }
 }

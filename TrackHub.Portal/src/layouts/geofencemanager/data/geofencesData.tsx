@@ -70,6 +70,7 @@ export interface GeofenceFormValues {
   alertOnEntry?: boolean;
   alertOnExit?: boolean;
   dwellThresholdMinutes?: number | string | null;
+  version?: number;
 }
 
 /** A column descriptor consumed by the `Table` control. */
@@ -177,6 +178,7 @@ function toGeofenceInput(geofence: GeofenceFormValues): GeofenceDtoInput {
     alertOnEntry: !!geofence.alertOnEntry,
     alertOnExit: !!geofence.alertOnExit,
     dwellThresholdMinutes: dwell,
+    expectedVersion: geofence.version ?? null,
   };
   if (geofence.shape === 'circle' && geofence.circleCenter && geofence.circleRadiusMeters) {
     return {
@@ -214,10 +216,10 @@ function useGeofencesTableData(
   // Full list feeds the map editor: all shapes stay visible/selectable while the
   // table pages independently. Drains every server page so accounts with >500
   // geofences are not silently truncated on the map.
-  const allGeofencesQuery = useAllGeofences(false, {}, { enabled: isAuthenticated });
+  const allGeofencesQuery = useAllGeofences({}, { enabled: isAuthenticated });
   const allGeofences = allGeofencesQuery.data ?? [];
   // Server-paged, filtered list feeds the table.
-  const pagedQuery = useGeofencesByAccount(false, listParams, { enabled: isAuthenticated });
+  const pagedQuery = useGeofencesByAccount(listParams, { enabled: isAuthenticated });
   const pageItems = pagedQuery.data?.items ?? [];
   const totalCount = pagedQuery.data?.totalCount ?? 0;
   const createGeofence = useCreateGeofence();

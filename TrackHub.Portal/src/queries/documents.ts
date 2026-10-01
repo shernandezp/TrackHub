@@ -43,7 +43,7 @@ export function useDocumentTypes(
   const includeDisabled = options.includeDisabled ?? false;
   return useQuery({
     queryKey: documentKeys.types(accountId ?? '', includeDisabled),
-    queryFn: () => api.getDocumentTypes(accountId as string, includeDisabled),
+    queryFn: ({ signal }) => api.getDocumentTypes(accountId as string, includeDisabled, { signal }),
     enabled: (options.enabled ?? true) && !!accountId,
   });
 }
@@ -60,8 +60,8 @@ export function useDocumentsForOwner(
 ) {
   return useQuery({
     queryKey: documentKeys.forOwner(accountId ?? '', ownerEntityType, ownerEntityId ?? ''),
-    queryFn: () =>
-      api.getDocumentsForOwner(accountId as string, ownerEntityType, ownerEntityId as string),
+    queryFn: ({ signal }) =>
+      api.getAllDocumentsForOwner(accountId as string, ownerEntityType, ownerEntityId as string, { signal }),
     enabled: (options.enabled ?? true) && !!accountId && !!ownerEntityId,
   });
 }

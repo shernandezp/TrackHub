@@ -51,6 +51,8 @@ builder.Services.AddCors(options => options
 
 var app = builder.Build();
 
+app.UseExceptionHandler(options => { });
+
 app.UseHeaderPropagation();
 
 // Enable CORS
@@ -70,8 +72,6 @@ app.UseStaticFiles();
 // pipeline inference.
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.UseExceptionHandler(options => { });
 
 app.MapGraphQL().RequireAuthorization();
 

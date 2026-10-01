@@ -4,6 +4,8 @@ namespace TrackHub.Manager.Application.Notifications.Commands;
 
 [Authorize(Resource = Resources.Notifications, Action = Actions.Write)]
 [RequireFeature(FeatureKeys.Notifications)]
+// Enforcement: the writer or reader checks every referenced id against the request's account.
+[AccountScopeEnforcedInHandler]
 public readonly record struct CreateAlertSubscriptionCommand(AlertSubscriptionDto Subscription) : IRequest<AlertSubscriptionVm>;
 public class CreateAlertSubscriptionCommandHandler(IAlertSubscriptionWriter writer, IFeatureFlagService featureFlags) : IRequestHandler<CreateAlertSubscriptionCommand, AlertSubscriptionVm>
 {
@@ -23,6 +25,8 @@ public class CreateAlertSubscriptionCommandValidator : AbstractValidator<CreateA
 
 [Authorize(Resource = Resources.Notifications, Action = Actions.Edit)]
 [RequireFeature(FeatureKeys.Notifications)]
+// Enforcement: the writer or reader checks every referenced id against the request's account.
+[AccountScopeEnforcedInHandler]
 public readonly record struct UpdateAlertSubscriptionCommand(Guid AlertSubscriptionId, AlertSubscriptionDto Subscription) : IRequest;
 public class UpdateAlertSubscriptionCommandHandler(IAlertSubscriptionWriter writer, IFeatureFlagService featureFlags) : IRequestHandler<UpdateAlertSubscriptionCommand>
 {

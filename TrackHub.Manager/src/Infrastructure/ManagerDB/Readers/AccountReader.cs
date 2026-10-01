@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Infrastructure;
 using Common.Domain.Time;
 using Common.Application.Interfaces;
 using Common.Domain.Enums;
@@ -49,7 +50,7 @@ public sealed class AccountReader(IApplicationDbContext context, ICurrentPrincip
                 a.Status,
                 a.Active,
                 a.TimeZoneId,
-                a.LastModified))
+                a.LastModified, a.Version))
             .FirstOrDefaultAsync(cancellationToken);
         ReaderResults.EnsureFound(found, nameof(Entities.Account), id.ToString());
         return found;
@@ -89,7 +90,7 @@ public sealed class AccountReader(IApplicationDbContext context, ICurrentPrincip
                 a.Status,
                 a.Active,
                 a.TimeZoneId,
-                a.LastModified))
+                a.LastModified, a.Version))
             .ToListAsync(cancellationToken);
 
         return new AccountsPageVm(items, totalCount);

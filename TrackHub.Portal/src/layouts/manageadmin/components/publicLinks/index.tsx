@@ -14,11 +14,13 @@
 *  limitations under the License.
 */
 
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from '@mui/material/Icon';
 import Table from "controls/Tables/Table";
+import ServerPagination from "controls/Tables/ServerPagination";
+import { useClampPage, useServerList } from "controls/Tables/useServerList";
 import TableAccordion from "controls/Accordions/TableAccordion";
 import ArgonButton from "components/ArgonButton";
 import ArgonTypography from "components/ArgonTypography";
@@ -33,8 +35,7 @@ import {
   revokePublicLinkGrant,
 } from "api/manager/publicLinks";
 import type { PublicLinkGrant, PublicLinkGrantDtoInput } from "api/manager/publicLinks";
-import { getAccountFeatures } from "api/manager/accountFeatures";
-import { getCurrentPrincipal } from "api/manager/principals";
+import { useFeatures } from "context/features";
 import { notifyApiError } from "api/core/errors";
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from "utils/dateUtils";
@@ -51,6 +52,8 @@ function TextCell({ children }: { children?: ReactNode }) {
   );
 }
 
+const PAGE_SIZE = 25;
+
 function ManagePublicLinks() {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
@@ -60,24 +63,23 @@ function ManagePublicLinks() {
   const [open, setOpen] = useState(false);
   const [values, handleChange, setValues, setErrors, validate, errors] = useForm<PublicLinkFormValues>({});
   const [mintedToken, setMintedToken] = useState<string | null>(null);
-  const [createEnabled, setCreateEnabled] = useState(false);
-  const loaded = useRef(false);
-  const [revokedBy, setRevokedBy] = useState('');
+  const { isFeatureEnabled } = useFeatures();
+  const createEnabled = isFeatureEnabled(PUBLIC_LINKS_FEATURE_KEY);
+  const [totalCount, setTotalCount] = useState(0);
+  const [pageLength, setPageLength] = useState(0);
+  const { page, setPage, params } = useServerList(PAGE_SIZE);
+  useClampPage(page, PAGE_SIZE, totalCount, setPage);
 
   const loadLinks = async () => {
     setLoading(true);
     try {
-      const principal = await getCurrentPrincipal();
-      setRevokedBy(principal?.userId || principal?.driverId || principal?.clientId || principal?.subjectId || '');
       const currentAccount = await getAccountByUser();
       if (!currentAccount?.accountId) return;
       setAccount(currentAccount);
-      // Creation is feature-gated (backend enforces FEATURE_DISABLED); listing/revoking stay available.
-      const features = await getAccountFeatures(currentAccount.accountId) || [];
-      const feature = features.find(item => item.featureKey === PUBLIC_LINKS_FEATURE_KEY);
-      setCreateEnabled(!!feature?.enabled);
-      const items = await getPublicLinkGrantsByAccount(currentAccount.accountId);
-      setLinks(items || []);
+      const items = await getPublicLinkGrantsByAccount(currentAccount.accountId, params.skip, params.take);
+      setLinks(items.items);
+      setTotalCount(items.totalCount);
+      setPageLength(items.items.length);
     } catch (error) {
       notifyApiError(error);
     } finally {
@@ -86,11 +88,10 @@ function ManagePublicLinks() {
   };
 
   useEffect(() => {
-    if (expanded && !loaded.current) {
-      loaded.current = true;
+    if (expanded) {
       loadLinks();
     }
-  }, [expanded]);
+  }, [expanded, params]);
 
   const handleAddClick = () => {
     setValues({});
@@ -102,19 +103,14 @@ function ManagePublicLinks() {
     if (!validate(['resourceType', 'resourceId', 'scopes', 'expiresAt']) || !account?.accountId) return;
     setLoading(true);
     try {
-      // createdByPrincipalId is required (String!) by the backend; the old
-      // string-built mutation never sent it, so create always failed. Source it
-      // from the current principal (same value used for revokedBy). validate()
-      // gates the required fields, so assert the mutation input at the boundary.
+      // validate() gates the required fields, so assert the mutation input at the boundary.
       const grant = {
         accountId: account.accountId,
         resourceType: values.resourceType,
         resourceId: values.resourceId,
         scopes: values.scopes,
         purpose: values.purpose || '',
-        subjectTokenIdHash: null,
         expiresAt: values.expiresAt ? new Date(values.expiresAt).toISOString() : null,
-        createdByPrincipalId: revokedBy,
       } as PublicLinkGrantDtoInput;
       const result = await createPublicLinkGrant(grant);
       if (result?.token) {
@@ -135,7 +131,7 @@ function ManagePublicLinks() {
     if (!link?.publicLinkGrantId) return;
     setLoading(true);
     try {
-      await revokePublicLinkGrant(link.publicLinkGrantId, revokedBy);
+      await revokePublicLinkGrant(link.publicLinkGrantId);
       await loadLinks();
     } catch (error) {
       notifyApiError(error);
@@ -179,7 +175,9 @@ function ManagePublicLinks() {
             id: link.publicLinkGrantId
           }))}
           selectedField="resource"
+          serverPaged
         />
+        <ServerPagination page={page} pageSize={PAGE_SIZE} totalCount={totalCount} pageLength={pageLength} onPageChange={setPage} />
       </TableAccordion>
       <PublicLinkDialog
         open={open}

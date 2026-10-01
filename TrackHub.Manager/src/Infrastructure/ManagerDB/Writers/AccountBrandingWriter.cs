@@ -14,6 +14,7 @@
 //
 
 using Common.Application.Interfaces;
+using TrackHub.Manager.Domain.Constants;
 using TrackHub.Manager.Infrastructure.Entities;
 using TrackHub.Manager.Infrastructure.Interfaces;
 
@@ -25,6 +26,13 @@ public sealed class AccountBrandingWriter(IApplicationDbContext context, ICurren
     public async Task<AccountBrandingVm> UpsertBrandingAsync(AccountBrandingDto branding, CancellationToken cancellationToken)
     {
         var accountId = RequireAccountWriteAccess(branding.AccountId);
+
+        if (branding.LogoDocumentId is { } logoId
+            && !await Context.Documents.AnyAsync(d => d.DocumentId == logoId && d.AccountId == accountId
+                && (d.Status == DocumentStatuses.Active || d.Status == DocumentStatuses.Expired), cancellationToken))
+        {
+            throw new NotFoundException(nameof(Document), logoId.ToString());
+        }
 
         var newValuesJson = BrandingJson(branding.DisplayName, branding.LogoDocumentId, branding.PrimaryColor, branding.ReportHeader);
 

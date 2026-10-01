@@ -22,6 +22,7 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { RequestOptions } from 'api/core/errors';
 import type {
   PolicyItemFragment as PolicyItemType,
   GetResourcesByPolicyQuery,
@@ -41,18 +42,18 @@ export type Policy = PolicyItemType;
 export type PolicyResources = GetResourcesByPolicyQuery['resourcesByPolicy'];
 export type PolicyUser = GetUserLookupByPolicyQuery['userLookupByPolicy'][number];
 
-export async function getPolicies(): Promise<Policy[]> {
-  const data = await executeGraphQL('security', GetPoliciesDocument);
+export async function getPolicies(options?: RequestOptions): Promise<Policy[]> {
+  const data = await executeGraphQL('security', GetPoliciesDocument, undefined, options);
   return data.policies;
 }
 
-export async function getResourcesByPolicy(policyId: number): Promise<PolicyResources> {
-  const data = await executeGraphQL('security', GetResourcesByPolicyDocument, { policyId });
+export async function getResourcesByPolicy(policyId: number, options?: RequestOptions): Promise<PolicyResources> {
+  const data = await executeGraphQL('security', GetResourcesByPolicyDocument, { policyId }, options);
   return data.resourcesByPolicy;
 }
 
-export async function getUserLookupByPolicy(policyId: number): Promise<PolicyUser[]> {
-  const data = await executeGraphQL('security', GetUserLookupByPolicyDocument, { policyId });
+export async function getUserLookupByPolicy(policyId: number, options?: RequestOptions): Promise<PolicyUser[]> {
+  const data = await executeGraphQL('security', GetUserLookupByPolicyDocument, { policyId }, options);
   return data.userLookupByPolicy;
 }
 

@@ -30,5 +30,8 @@ public class DocumentVersionConfiguration : IEntityTypeConfiguration<DocumentVer
         builder.Property(x => x.BytesPurgedAt).HasColumnName("bytespurgedat");
         builder.HasIndex(x => new { x.DocumentId, x.VersionNumber }).IsUnique();
         builder.HasIndex(x => x.AccountId);
+        builder.HasIndex(x => x.CreatedAt)
+            .HasFilter("scanstatus = 'Quarantined'")
+            .HasDatabaseName("ix_document_versions_quarantined");
     }
 }

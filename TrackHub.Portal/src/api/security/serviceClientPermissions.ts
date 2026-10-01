@@ -21,6 +21,7 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { RequestOptions } from 'api/core/errors';
 import type {
   ServiceClientPermissionItemFragment as ServiceClientPermissionItemType,
   ServiceClientPermissionDtoInput,
@@ -39,14 +40,15 @@ export async function getServiceClientPermissions(
   clientId: string | null = null,
   accountId: string | null = null,
   skip = 0,
-  take = 50
+  take = 50,
+  options?: RequestOptions
 ): Promise<ServiceClientPermission[]> {
   const data = await executeGraphQL('security', GetServiceClientPermissionsDocument, {
     clientId,
     accountId,
     skip,
     take,
-  });
+  }, options);
   return data.serviceClientPermissions;
 }
 

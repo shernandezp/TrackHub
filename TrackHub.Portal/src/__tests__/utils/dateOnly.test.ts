@@ -31,6 +31,7 @@ const { formatDateOnly, daysUntilDateOnly, formatDateTime } = await import('util
 const { daysUntil, expiryColor } = await import(
   'layouts/manageadmin/components/drivers/workforceShared'
 );
+const { accountCalendar, addDays } = await import('utils/accountCalendar');
 
 describe('negative-offset timezone fixture', () => {
   test('the process is really running at UTC-5', () => {
@@ -67,58 +68,59 @@ describe('formatDateOnly', () => {
 });
 
 describe('daysUntilDateOnly', () => {
-  // Late evening local time on 2027-03-01 — 03:30 UTC on the 2nd, the window
-  // where a UTC-based count is off by one.
-  const lateEvening = new Date(2027, 2, 1, 22, 30, 0);
+  const today = '2027-03-01';
 
   test('counts whole calendar days from today', () => {
-    expect(daysUntilDateOnly('2027-03-04', lateEvening)).toBe(3);
+    expect(daysUntilDateOnly('2027-03-04', today)).toBe(3);
   });
 
-  test('is zero on the expiry day itself, even late at night', () => {
-    expect(daysUntilDateOnly('2027-03-01', lateEvening)).toBe(0);
+  test('is zero on the expiry day itself', () => {
+    expect(daysUntilDateOnly('2027-03-01', today)).toBe(0);
   });
 
   test('is negative once the day has passed', () => {
-    expect(daysUntilDateOnly('2027-02-27', lateEvening)).toBe(-2);
+    expect(daysUntilDateOnly('2027-02-27', today)).toBe(-2);
   });
 
   test('crosses a month boundary correctly', () => {
-    expect(daysUntilDateOnly('2027-04-01', lateEvening)).toBe(31);
+    expect(daysUntilDateOnly('2027-04-01', today)).toBe(31);
   });
 
   test('crosses a DST-style boundary without drifting', () => {
-    expect(daysUntilDateOnly('2027-11-30', new Date(2027, 9, 31, 23, 59, 0))).toBe(30);
+    expect(daysUntilDateOnly('2027-11-30', '2027-10-31')).toBe(30);
   });
 
   test('returns null for absent or unparseable values', () => {
-    expect(daysUntilDateOnly(null)).toBeNull();
-    expect(daysUntilDateOnly('nope')).toBeNull();
+    expect(daysUntilDateOnly(null, today)).toBeNull();
+    expect(daysUntilDateOnly('nope', today)).toBeNull();
+    expect(daysUntilDateOnly('2027-03-04', 'nope')).toBeNull();
+  });
+
+  // Late evening in Bogota on 2027-03-01 is already the 2nd in Tokyo: an account on Tokyo time
+  // sees one day less left, whatever zone the viewer's browser is in.
+  test('counts from the ACCOUNT calendar day, not the browser day', () => {
+    const lateEvening = new Date(2027, 2, 1, 22, 30, 0);
+    const accountToday = accountCalendar('Asia/Tokyo', () => lateEvening).today();
+
+    expect(accountToday).toBe('2027-03-02');
+    expect(daysUntilDateOnly('2027-03-04', accountToday)).toBe(2);
   });
 });
 
 describe('workforce expiry helpers at UTC-5', () => {
+  const today = '2027-03-01';
+
   test('daysUntil delegates to the DateOnly-aware count', () => {
-    const today = new Date();
-    const iso = (offsetDays: number) => {
-      const target = new Date(today.getFullYear(), today.getMonth(), today.getDate() + offsetDays);
-      return `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, '0')}-${String(target.getDate()).padStart(2, '0')}`;
-    };
-    expect(daysUntil(iso(0))).toBe(0);
-    expect(daysUntil(iso(8))).toBe(8);
-    expect(daysUntil(iso(-1))).toBe(-1);
+    expect(daysUntil(today, today)).toBe(0);
+    expect(daysUntil(addDays(today, 8), today)).toBe(8);
+    expect(daysUntil(addDays(today, -1), today)).toBe(-1);
   });
 
   test('severity colour lands on the right side of the 7-day threshold', () => {
-    const today = new Date();
-    const iso = (offsetDays: number) => {
-      const target = new Date(today.getFullYear(), today.getMonth(), today.getDate() + offsetDays);
-      return `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, '0')}-${String(target.getDate()).padStart(2, '0')}`;
-    };
-    expect(expiryColor(iso(7))).toBe('error');
-    expect(expiryColor(iso(8))).toBe('warning');
-    expect(expiryColor(iso(-1))).toBe('dark');
-    expect(expiryColor(null)).toBe('secondary');
+    expect(expiryColor(addDays(today, 7), today)).toBe('error');
+    expect(expiryColor(addDays(today, 8), today)).toBe('warning');
+    expect(expiryColor(addDays(today, -1), today)).toBe('dark');
+    expect(expiryColor(null, today)).toBe('secondary');
   });
 });
 

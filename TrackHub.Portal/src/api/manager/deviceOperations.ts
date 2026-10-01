@@ -72,12 +72,11 @@ export const GetDevicesByAccountDocument = graphql(`
  * by design. `operatorId` is here so the dashboard's operator→device→transporter
  * join reads the lookup instead of draining the full device pages.
  */
-export const GetDeviceLookupDocument = graphql(`
-  query GetDeviceLookup {
-    deviceLookup {
+export const GetDeviceNameDocument = graphql(`
+  query GetDeviceName($id: UUID!) {
+    device(query: { id: $id }) {
       deviceId
       name
-      operatorId
     }
   }
 `);

@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Ardalis.GuardClauses;
 using Common.Application.Exceptions;
 using Common.Application.Interfaces;
 using Common.Domain.Constants;
@@ -57,16 +58,16 @@ internal class AccountScopeGuardTests
         => new(user.UserId, user.Username, user.EmailAddress, user.FirstName, user.SecondName, user.LastName, user.SecondSurname, user.DOB, true, false);
 
     [Test]
-    public async Task Reader_GetUser_ForeignAccount_IsForbidden()
+    public async Task Reader_GetUser_ForeignAccount_IsNotFound()
     {
-        await using var context = NewContext(nameof(Reader_GetUser_ForeignAccount_IsForbidden));
+        await using var context = NewContext(nameof(Reader_GetUser_ForeignAccount_IsNotFound));
         var target = NewUser(Guid.NewGuid(), "target");
         await context.Users.AddAsync(target);
         await context.SaveChangesAsync(CancellationToken.None);
 
         var reader = new UserReader(context, ForeignUser());
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(() => reader.GetUserAsync(target.UserId, CancellationToken.None));
+        Assert.ThrowsAsync<NotFoundException>(() => reader.GetUserAsync(target.UserId, CancellationToken.None));
     }
 
     [Test]
@@ -98,58 +99,58 @@ internal class AccountScopeGuardTests
     }
 
     [Test]
-    public async Task Writer_UpdateUser_ForeignAccount_IsForbidden_AndWritesNothing()
+    public async Task Writer_UpdateUser_ForeignAccount_IsNotFound_AndWritesNothing()
     {
-        await using var context = NewContext(nameof(Writer_UpdateUser_ForeignAccount_IsForbidden_AndWritesNothing));
+        await using var context = NewContext(nameof(Writer_UpdateUser_ForeignAccount_IsNotFound_AndWritesNothing));
         var target = NewUser(Guid.NewGuid(), "target");
         await context.Users.AddAsync(target);
         await context.SaveChangesAsync(CancellationToken.None);
 
         var writer = new UserWriter(context, ForeignUser());
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.UpdateUserAsync(
+        Assert.ThrowsAsync<NotFoundException>(() => writer.UpdateUserAsync(
             UpdateDtoFor(target) with { Username = "hijacked" }, CancellationToken.None));
         Assert.That((await context.Users.FindAsync(target.UserId))!.Username, Is.EqualTo("target"));
     }
 
     [Test]
-    public async Task Writer_UpdatePassword_ForeignAccount_IsForbidden()
+    public async Task Writer_UpdatePassword_ForeignAccount_IsNotFound()
     {
-        await using var context = NewContext(nameof(Writer_UpdatePassword_ForeignAccount_IsForbidden));
+        await using var context = NewContext(nameof(Writer_UpdatePassword_ForeignAccount_IsNotFound));
         var target = NewUser(Guid.NewGuid(), "target");
         await context.Users.AddAsync(target);
         await context.SaveChangesAsync(CancellationToken.None);
 
         var writer = new UserWriter(context, ForeignUser());
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.UpdatePasswordAsync(
+        Assert.ThrowsAsync<NotFoundException>(() => writer.UpdatePasswordAsync(
             new UserPasswordDto(target.UserId, "newPassword1!"), verifyCurrentPassword: false, CancellationToken.None));
     }
 
     [Test]
-    public async Task Writer_UnlockUser_ForeignAccount_IsForbidden()
+    public async Task Writer_UnlockUser_ForeignAccount_IsNotFound()
     {
-        await using var context = NewContext(nameof(Writer_UnlockUser_ForeignAccount_IsForbidden));
+        await using var context = NewContext(nameof(Writer_UnlockUser_ForeignAccount_IsNotFound));
         var target = NewUser(Guid.NewGuid(), "target");
         await context.Users.AddAsync(target);
         await context.SaveChangesAsync(CancellationToken.None);
 
         var writer = new UserWriter(context, ForeignUser());
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.UnlockUserAsync(target.UserId, CancellationToken.None));
+        Assert.ThrowsAsync<NotFoundException>(() => writer.UnlockUserAsync(target.UserId, CancellationToken.None));
     }
 
     [Test]
-    public async Task Writer_DeleteUser_ForeignAccount_IsForbidden_AndRowSurvives()
+    public async Task Writer_DeleteUser_ForeignAccount_IsNotFound_AndRowSurvives()
     {
-        await using var context = NewContext(nameof(Writer_DeleteUser_ForeignAccount_IsForbidden_AndRowSurvives));
+        await using var context = NewContext(nameof(Writer_DeleteUser_ForeignAccount_IsNotFound_AndRowSurvives));
         var target = NewUser(Guid.NewGuid(), "target");
         await context.Users.AddAsync(target);
         await context.SaveChangesAsync(CancellationToken.None);
 
         var writer = new UserWriter(context, ForeignUser());
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.DeleteUserAsync(target.UserId, CancellationToken.None));
+        Assert.ThrowsAsync<NotFoundException>(() => writer.DeleteUserAsync(target.UserId, CancellationToken.None));
         Assert.That(await context.Users.FindAsync(target.UserId), Is.Not.Null);
     }
 
@@ -178,30 +179,30 @@ internal class AccountScopeGuardTests
     }
 
     [Test]
-    public async Task RoleWriter_Grant_ForeignAccountTarget_IsForbidden()
+    public async Task RoleWriter_Grant_ForeignAccountTarget_IsNotFound()
     {
-        await using var context = NewContext(nameof(RoleWriter_Grant_ForeignAccountTarget_IsForbidden));
+        await using var context = NewContext(nameof(RoleWriter_Grant_ForeignAccountTarget_IsNotFound));
         var target = NewUser(Guid.NewGuid(), "target");
         await context.Users.AddAsync(target);
         await context.SaveChangesAsync(CancellationToken.None);
 
         var writer = new UserRoleWriter(context, ForeignUser());
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.CreateUserRoleAsync(
+        Assert.ThrowsAsync<NotFoundException>(() => writer.CreateUserRoleAsync(
             new UserRoleDto(target.UserId, 1), CancellationToken.None));
     }
 
     [Test]
-    public async Task PolicyWriter_Grant_ForeignAccountTarget_IsForbidden()
+    public async Task PolicyWriter_Grant_ForeignAccountTarget_IsNotFound()
     {
-        await using var context = NewContext(nameof(PolicyWriter_Grant_ForeignAccountTarget_IsForbidden));
+        await using var context = NewContext(nameof(PolicyWriter_Grant_ForeignAccountTarget_IsNotFound));
         var target = NewUser(Guid.NewGuid(), "target");
         await context.Users.AddAsync(target);
         await context.SaveChangesAsync(CancellationToken.None);
 
         var writer = new UserPolicyWriter(context, ForeignUser());
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.CreateUserPolicyAsync(
+        Assert.ThrowsAsync<NotFoundException>(() => writer.CreateUserPolicyAsync(
             new UserPolicyDto(target.UserId, 1), CancellationToken.None));
     }
 
@@ -243,6 +244,24 @@ internal class AccountScopeGuardTests
         var granted = await writer.CreateUserRoleAsync(new UserRoleDto(target.UserId, user.RoleId), CancellationToken.None);
 
         Assert.That(granted.RoleId, Is.EqualTo(user.RoleId));
+    }
+
+    [TestCase(Roles.Manager)]
+    [TestCase(Roles.Administrator)]
+    public async Task Writer_Manager_CannotDeleteAPeerOrAnAdministrator(string subjectRole)
+    {
+        await using var context = NewContext(nameof(Writer_Manager_CannotDeleteAPeerOrAnAdministrator) + subjectRole);
+        var accountId = Guid.NewGuid();
+        var target = NewUser(accountId, "target");
+        await context.Users.AddAsync(target);
+        var (administrator, manager, _) = await SeedRoleHierarchyAsync(context);
+        await context.UserRoles.AddAsync(new UserRole { UserId = target.UserId, RoleId = subjectRole == Roles.Manager ? manager.RoleId : administrator.RoleId });
+        await context.SaveChangesAsync(CancellationToken.None);
+
+        var writer = new UserWriter(context, Principal(PrincipalType.User, accountId, Roles.Manager));
+
+        Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.DeleteUserAsync(target.UserId, CancellationToken.None));
+        Assert.That(await context.Users.FindAsync(target.UserId), Is.Not.Null);
     }
 
     [Test]

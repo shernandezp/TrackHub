@@ -134,6 +134,7 @@
     "inGeofence": "En Geocerca",
     "transportersTitle": "Unidades",
     "positionsTitle": "Posiciones",
+    "driversTitle": "Conductores",
     "filterType": "Tipo de Unidad",
     "filterGroup": "Grupo",
     "filterOperator": "Operador",
@@ -255,6 +256,20 @@
     "title": "Eventos de Alerta",
     "type": "Tipo",
     "status": "Estado",
+    "severity": "Severidad",
+    "unit": "Unidad",
+    "firstSeen": "Primera vez",
+    "lastSeen": "Última vez",
+    "filterStatus": "Estado",
+    "filterSeverity": "Severidad",
+    "allStatuses": "Todos los estados",
+    "allSeverities": "Todas las severidades",
+    "severities": {
+      "Info": "Informativa",
+      "Warning": "Advertencia",
+      "High": "Alta",
+      "Critical": "Crítica"
+    },
     "acknowledge": "Reconocer Alerta",
     "resolve": "Resolver Alerta",
     "statuses": {
@@ -268,14 +283,30 @@
     "actor": "Actor",
     "resource": "Recurso",
     "result": "Resultado",
-    "occurredAt": "Ocurrió En"
+    "occurredAt": "Ocurrió En",
+    "loadMore": "Cargar más",
+    "results": {
+      "Success": "Exitoso",
+      "Failure": "Fallido",
+      "Denied": "Denegado"
+    },
+    "actorTypes": {
+      "User": "Usuario",
+      "Driver": "Conductor",
+      "ServiceClient": "Servicio"
+    }
   },
   "backgroundJobs": {
     "title": "Procesos en Segundo Plano",
     "job": "Proceso",
     "status": "Estado",
     "attempts": "Intentos",
-    "startedAt": "Inicio"
+    "startedAt": "Inicio",
+    "statuses": {
+      "Running": "En ejecución",
+      "Succeeded": "Completado",
+      "Failed": "Fallido"
+    }
   },
   "notificationRules": {
     "title": "Reglas de Notificación",
@@ -377,7 +408,8 @@
       "sent": "Enviada",
       "failed": "Fallida",
       "deferred": "Diferida",
-      "digested": "En resumen"
+      "digested": "En resumen",
+      "expired": "Vencida"
     }
   },
   "notificationTemplates": {
@@ -482,11 +514,13 @@
       "scan": {
         "pending": "Pendiente",
         "clean": "Limpio",
+        "notscanned": "Sin analizar",
         "failed": "Fallido",
         "quarantined": "En Cuarentena",
         "infected": "Infectado"
       }
     },
+    "noDocumentTypes": "Esta cuenta aún no tiene tipos de documento. Agregue uno primero en la sección Tipos de Documento.",
     "expiresAtKeepsCurrent": "Deje en blanco para conservar el vencimiento actual"
   },
   "supportGrants": {
@@ -537,7 +571,30 @@
     "unknownVehicleClass": "Esa clase de vehículo no está definida en esta cuenta.",
     "tripShareRevoked": "Este enlace de seguimiento fue revocado.",
     "lookupLimitExceeded": "Esta lista es demasiado grande para cargarse completa. Redúzcala con un filtro o una búsqueda antes de seleccionar.",
-    "seededCatalogLimitExceeded": "Este catálogo superó el tamaño admitido. Comuníquese con su administrador."
+    "seededCatalogLimitExceeded": "Este catálogo superó el tamaño admitido. Comuníquese con su administrador.",
+    "forbidden": "No tiene permiso para realizar esta acción.",
+    "unauthorized": "Su sesión expiró. Inicie sesión de nuevo.",
+    "tooManyRequests": "Demasiadas solicitudes. Espere un momento e intente de nuevo.",
+    "upstreamError": "Un servicio del que depende esta pantalla no responde. Intente de nuevo en unos minutos.",
+    "concurrentUpdate": "Otra persona modificó este registro mientras lo editaba. Recárguelo y aplique sus cambios de nuevo.",
+    "invalidCursor": "La posición de la lista ya no es válida. Recargue la lista desde el inicio.",
+    "publicLinkExpiryTooLong": "El enlace vence demasiado lejos en el futuro. Elija una fecha de vencimiento anterior.",
+    "geofenceIdMismatch": "La geocerca que se guarda no coincide con la abierta. Recárguela e intente de nuevo.",
+    "operatorNotFound": "No se encontró el operador GPS.",
+    "operatorDisabled": "El operador GPS está deshabilitado. Habilítelo antes de sincronizar.",
+    "providerCapabilityNotSupported": "El proveedor GPS de esta unidad no admite esta operación.",
+    "geocoderUnavailable": "La búsqueda de direcciones no está disponible por ahora; se muestran coordenadas.",
+    "positionHistoryLimitExceeded": "Este historial es demasiado grande para cargarlo de una vez. Elija un periodo más corto.",
+    "unpagedReadLimitExceeded": "Esta lista es demasiado grande para cargarla completa. Acótela con un filtro o una búsqueda.",
+    "reportWindowInvalid": "El periodo del reporte no es válido o supera el máximo permitido. Elija un rango más corto.",
+    "tripNotFound": "No se encontró el viaje.",
+    "tripForbidden": "No tiene acceso a este viaje.",
+    "deliveryOutcomeRecorded": "Esta entrega ya tiene un resultado registrado y no puede modificarse.",
+    "tripEventTimeOutOfRange": "La hora del evento está fuera del rango permitido. Verifique la fecha y la hora.",
+    "podRequired": "Esta parada requiere prueba de entrega antes de registrar la salida o completar el viaje.",
+    "podDocumentInvalid": "El adjunto de prueba de entrega no es un documento válido para esta parada.",
+    "tripImportInvalidRow": "Fila no válida",
+    "tollImportInvalidRow": "Fila no válida"
   },
   "driver": {
     "name": "Nombre",
@@ -656,6 +713,7 @@
       "emptyActive": "Este conductor no tiene asignaciones activas.",
       "defaultTransporter": "Unidad predeterminada",
       "defaultTransporterHint": "Definida en la ficha del conductor",
+      "windowInvalid": "Elija un período que termine el mismo día o después de su inicio y abarque menos de {{days}} días.",
       "tooManyResults": "Mostrando las primeras {{count}} filas. Ajuste los filtros para ver el resto.",
       "types": {
         "regular": "Regular",
@@ -1049,8 +1107,11 @@
     "details": "Detalle de la Unidad",
     "name": "Nombre",
     "type": "Tipo",
-    "deleteTitle": "Eliminar Unidad",
-    "deleteMessage": "¿Está seguro de que desea eliminar esta unidad?"
+    "deleteTitle": "Retirar Unidad",
+    "deleteMessage": "¿Retirar esta unidad? Deja de rastrearse y sale de todas las listas, pero su historial se conserva y puede restaurarse.",
+    "retire": "Retirar",
+    "restore": "Restaurar",
+    "showRetired": "Mostrar unidades retiradas"
   },
   "transporterMap": {
     "name": "Nombre",
@@ -1341,7 +1402,6 @@
       "operatorsLoad": "No se pudieron cargar los operadores",
       "devicesLoad": "No se pudieron cargar los dispositivos sincronizados",
       "assignmentsLoad": "No se pudieron cargar las asignaciones",
-      "retentionLoad": "No se pudo cargar la política de retención",
       "syncRunsLoad": "No se pudieron cargar las sincronizaciones",
       "alertsLoad": "No se pudieron cargar las alertas"
     },
@@ -1466,7 +1526,12 @@
         "document-expiration": "Avisos de vencimiento de documentos",
         "document-retention-cleanup": "Limpieza de retención de documentos",
         "trial-expiration": "Vencimiento de pruebas",
-        "geofence-dwell-evaluation": "Detección de permanencia en geocercas"
+        "geofence-dwell-evaluation": "Detección de permanencia en geocercas",
+        "workforce-expiration-scan": "Recordatorios de vencimiento del personal",
+        "trip-eta-refresh": "Actualización de ETA de viajes",
+        "trip-schedule-reminder": "Recordatorios de inicio de viajes",
+        "router-sync-worker": "Sincronizador GPS",
+        "platform-retention": "Limpieza de retención de la plataforma"
       }
     },
     "manage": {
@@ -1887,6 +1952,7 @@
     "scanStatuses": {
       "Pending": "Análisis pendiente",
       "Clean": "Limpio",
+      "NotScanned": "Sin analizar",
       "Infected": "Infectado",
       "Failed": "Análisis fallido",
       "Quarantined": "En Cuarentena"
@@ -1924,7 +1990,6 @@
     "notComputedHint": "No se han calculado peajes para este plan de ruta.",
     "mixedCurrencyHint": "Esta ruta atraviesa estaciones tarifadas en monedas distintas, por lo que ningún total único es significativo. A continuación se detalla el valor y la moneda de cada estación.",
     "transporterClass": {
-      "action": "Clases de peaje",
       "title": "Clases de peaje por vehículo",
       "description": "Asocie sus tipos de vehículo —o un vehículo concreto— a una clase de peaje. Los viajes nuevos toman su clase de peaje de esta asociación, así que sin ella el plan de ruta se calcula sin clase y la estimación de peajes nunca se activa.",
       "target": "Aplicar a",
@@ -1972,6 +2037,7 @@
       "addTariff": "Tarifa",
       "tariffDetails": "Detalle de la tarifa",
       "deactivate": "Desactivar",
+      "reactivate": "Reactivar",
       "deactivateClassTitle": "Desactivar clase de vehículo",
       "deactivateClassMessage": "¿Desactivar esta clase de vehículo? Se conservan las tarifas existentes y las estimaciones pasadas.",
       "deactivateStationTitle": "Desactivar estación de peaje",

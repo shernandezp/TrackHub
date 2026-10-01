@@ -238,11 +238,14 @@ internal sealed class CoreRbacSeedContribution : IRbacSeedContribution
             (Common.Domain.Constants.Resources.GeocodingProviders, Actions.Read),
         ]),
         // The security_client posts security audit events to Manager's central AuditEvent store and
-        // probes feature flags for its own gating.
+        // probes feature flags and account status for its own gating, and checks a driver's account
+        // before writing its credentials (validateDriverAccount).
         (["security_client"],
         [
             (Common.Domain.Constants.Resources.Audit, Actions.Write),
             (Common.Domain.Constants.Resources.AccountFeatures, Actions.Read),
+            (Common.Domain.Constants.Resources.Accounts, Actions.Read),
+            (Common.Domain.Constants.Resources.Drivers, Actions.Read),
         ]),
         // The geofence_client records geofence alert events (recordAlertEvent) and its dwell
         // evaluator's job runs (createBackgroundJobRun) in Manager — exactly two grants.

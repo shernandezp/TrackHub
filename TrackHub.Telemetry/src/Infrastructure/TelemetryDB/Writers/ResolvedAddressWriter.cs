@@ -20,13 +20,16 @@ namespace TrackHub.Telemetry.Infrastructure.TelemetryDB.Writers;
 
 // Writes reverse-geocoded addresses into the existing address columns of the stored
 // history row and/or the latest-position row. Idempotent: rows that already carry an
-// address are skipped so a repeated resolution never overwrites provider data.
+// address are skipped so a repeated resolution never overwrites provider data. Only a row whose own
+// fix is the geocoded coordinate is stamped: the caller chooses the coordinate, not the row.
 public sealed class ResolvedAddressWriter(IApplicationDbContext context, ICurrentPrincipal principal)
     : AccountScopedDataAccess(context, principal), IResolvedAddressWriter
 {
     public async Task<bool> PersistResolvedAddressAsync(
         Guid? transporterPositionHistoryId,
         Guid? transporterId,
+        double latitude,
+        double longitude,
         string? address,
         string? city,
         string? state,
@@ -45,7 +48,8 @@ public sealed class ResolvedAddressWriter(IApplicationDbContext context, ICurren
                 .FirstOrDefaultAsync(x => x.TransporterPositionHistoryId == transporterPositionHistoryId.Value
                     && x.TransporterId == transporterId.Value, cancellationToken);
 
-            if (historyRow is not null && string.IsNullOrWhiteSpace(historyRow.Address))
+            if (historyRow is not null && string.IsNullOrWhiteSpace(historyRow.Address)
+                && IsSameFix(historyRow.Latitude, historyRow.Longitude, latitude, longitude))
             {
                 RequireAccountAccess(historyRow.AccountId);
                 historyRow.Address = address;
@@ -62,7 +66,8 @@ public sealed class ResolvedAddressWriter(IApplicationDbContext context, ICurren
                 .AsTracking()
                 .FirstOrDefaultAsync(x => x.TransporterId == transporterId.Value, cancellationToken);
 
-            if (latestPosition is not null && string.IsNullOrWhiteSpace(latestPosition.Address))
+            if (latestPosition is not null && string.IsNullOrWhiteSpace(latestPosition.Address)
+                && IsSameFix(latestPosition.Latitude, latestPosition.Longitude, latitude, longitude))
             {
                 // transporter_position carries no accountid, so the owning account comes from the
                 // transporter registry. Only an account-bound caller needs checking: the Router's
@@ -91,4 +96,10 @@ public sealed class ResolvedAddressWriter(IApplicationDbContext context, ICurren
 
         return updated;
     }
+
+    // About a metre: clients round-trip coordinates through JSON and map widgets.
+    private const double FixTolerance = 0.00001;
+
+    private static bool IsSameFix(double rowLatitude, double rowLongitude, double latitude, double longitude)
+        => Math.Abs(rowLatitude - latitude) <= FixTolerance && Math.Abs(rowLongitude - longitude) <= FixTolerance;
 }

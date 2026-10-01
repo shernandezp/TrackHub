@@ -3,10 +3,12 @@ namespace TrackHub.Manager.Application.Documents.Queries;
 // Per-owner document panel (ungated — gated by the owning module's feature). Now applies owner group
 // visibility + classification filtering, not tenant scope alone.
 [Authorize(Resource = Resources.Documents, Action = Actions.Read)]
-public readonly record struct GetDocumentsForOwnerQuery(Guid AccountId, string OwnerEntityType, string OwnerEntityId, DateTimeOffset? From = null, DateTimeOffset? To = null, int Skip = 0, int Take = 50) : IRequest<IReadOnlyCollection<DocumentVm>>;
-public class GetDocumentsForOwnerQueryHandler(IDocumentReader reader) : IRequestHandler<GetDocumentsForOwnerQuery, IReadOnlyCollection<DocumentVm>>
+// Enforcement: the writer or reader checks every referenced id against the request's account.
+[AccountScopeEnforcedInHandler]
+public readonly record struct GetDocumentsForOwnerQuery(Guid AccountId, string OwnerEntityType, string OwnerEntityId, DateTimeOffset? From = null, DateTimeOffset? To = null, int Skip = 0, int Take = 50) : IRequest<DocumentsPageVm>;
+public class GetDocumentsForOwnerQueryHandler(IDocumentReader reader) : IRequestHandler<GetDocumentsForOwnerQuery, DocumentsPageVm>
 {
-    public async Task<IReadOnlyCollection<DocumentVm>> Handle(GetDocumentsForOwnerQuery request, CancellationToken cancellationToken) => await reader.GetDocumentsForOwnerAsync(request.AccountId, request.OwnerEntityType, request.OwnerEntityId, request.From, request.To, request.Skip, request.Take, cancellationToken);
+    public async Task<DocumentsPageVm> Handle(GetDocumentsForOwnerQuery request, CancellationToken cancellationToken) => await reader.GetDocumentsForOwnerAsync(request.AccountId, request.OwnerEntityType, request.OwnerEntityId, request.From, request.To, request.Skip, request.Take, cancellationToken);
 }
 
 // Drivers download their assigned documents via this query (assignment enforced in the reader).
@@ -29,6 +31,8 @@ public class GetDocumentVersionsQueryHandler(IDocumentReader reader) : IRequestH
 }
 
 [Authorize(Resource = Resources.Documents, Action = Actions.Read)]
+// Enforcement: the writer or reader checks every referenced id against the request's account.
+[AccountScopeEnforcedInHandler]
 public readonly record struct GetActiveDocumentByCategoryQuery(string OwnerEntityType, string OwnerEntityId, string Category) : IRequest<DocumentVm?>;
 public class GetActiveDocumentByCategoryQueryHandler(IDocumentReader reader) : IRequestHandler<GetActiveDocumentByCategoryQuery, DocumentVm?>
 {
@@ -48,18 +52,20 @@ public class GetDocumentSignaturesQueryHandler(IDocumentReader reader) : IReques
 // Standalone Document Management surfaces are gated by the `documents` feature.
 [Authorize(Resource = Resources.Documents, Action = Actions.Read)]
 [RequireFeature(FeatureKeys.Documents)]
-public readonly record struct SearchDocumentsQuery(DocumentSearchFilter Filter, int Skip = 0, int Take = 50) : IRequest<IReadOnlyCollection<DocumentVm>>;
-public class SearchDocumentsQueryHandler(IDocumentReader reader) : IRequestHandler<SearchDocumentsQuery, IReadOnlyCollection<DocumentVm>>
+// Enforcement: the writer or reader checks every referenced id against the request's account.
+[AccountScopeEnforcedInHandler]
+public readonly record struct SearchDocumentsQuery(DocumentSearchFilter Filter, int Skip = 0, int Take = 50) : IRequest<DocumentsPageVm>;
+public class SearchDocumentsQueryHandler(IDocumentReader reader) : IRequestHandler<SearchDocumentsQuery, DocumentsPageVm>
 {
-    public async Task<IReadOnlyCollection<DocumentVm>> Handle(SearchDocumentsQuery request, CancellationToken cancellationToken) => await reader.SearchDocumentsAsync(request.Filter, request.Skip, request.Take, cancellationToken);
+    public async Task<DocumentsPageVm> Handle(SearchDocumentsQuery request, CancellationToken cancellationToken) => await reader.SearchDocumentsAsync(request.Filter, request.Skip, request.Take, cancellationToken);
 }
 
 [Authorize(Resource = Resources.Documents, Action = Actions.Read)]
 [RequireFeature(FeatureKeys.Documents)]
-public readonly record struct GetExpiringDocumentsQuery(int WithinDays = 30, int Skip = 0, int Take = 50) : IRequest<IReadOnlyCollection<DocumentVm>>;
-public class GetExpiringDocumentsQueryHandler(IDocumentReader reader) : IRequestHandler<GetExpiringDocumentsQuery, IReadOnlyCollection<DocumentVm>>
+public readonly record struct GetExpiringDocumentsQuery(int WithinDays = 30, int Skip = 0, int Take = 50) : IRequest<DocumentsPageVm>;
+public class GetExpiringDocumentsQueryHandler(IDocumentReader reader) : IRequestHandler<GetExpiringDocumentsQuery, DocumentsPageVm>
 {
-    public async Task<IReadOnlyCollection<DocumentVm>> Handle(GetExpiringDocumentsQuery request, CancellationToken cancellationToken) => await reader.GetExpiringDocumentsAsync(request.WithinDays, request.Skip, request.Take, cancellationToken);
+    public async Task<DocumentsPageVm> Handle(GetExpiringDocumentsQuery request, CancellationToken cancellationToken) => await reader.GetExpiringDocumentsAsync(request.WithinDays, request.Skip, request.Take, cancellationToken);
 }
 
 [Authorize(Resource = Resources.Documents, Action = Actions.Read)]

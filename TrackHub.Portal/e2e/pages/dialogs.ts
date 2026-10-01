@@ -35,6 +35,23 @@ export async function selectFirstOption(
   throw new Error(`The "${id}" picker offers no selectable option.`);
 }
 
+/**
+ * Opens a picker and chooses `label`. Server-searched pickers list one page, so the label is
+ * typed first when the trigger is a text input.
+ */
+export async function pickOption(
+  page: Page,
+  trigger: Locator,
+  label: string | RegExp,
+  exact = false
+): Promise<void> {
+  await trigger.click();
+  if (typeof label === 'string' && (await trigger.evaluate((el) => el.tagName === 'INPUT'))) {
+    await trigger.fill(label);
+  }
+  await page.getByRole('option', { name: label, exact }).first().click();
+}
+
 export class FormDialog {
   constructor(
     readonly page: Page,
@@ -74,8 +91,7 @@ export class FormDialog {
    * portal outside the dialog, so the option is looked up on the page.
    */
   async select(id: string, optionLabel: string | RegExp): Promise<void> {
-    await this.root.locator(`#${id}`).click();
-    await this.page.getByRole('option', { name: optionLabel }).first().click();
+    await pickOption(this.page, this.root.locator(`#${id}`), optionLabel);
   }
 
   /**
@@ -173,8 +189,7 @@ export class AllocatorDialog {
 
   /** Picks the single entity in the dialog's select and adds it. */
   async add(optionLabel: string | RegExp): Promise<void> {
-    await this.root.getByRole('combobox').first().click();
-    await this.page.getByRole('option', { name: optionLabel }).first().click();
+    await pickOption(this.page, this.root.getByRole('combobox').first(), optionLabel);
     await this.root.getByRole('button', { name: this.t('generic.add') }).click();
   }
 

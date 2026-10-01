@@ -26,6 +26,8 @@ namespace TrackHub.TripManagement.Application.Integration.Commands.UpdateTripSta
 /// </summary>
 [Authorize(Resource = Resources.Trips, Action = Actions.Write, PrincipalTypes = "ServiceClient")]
 [RequireFeature(FeatureKeys.TripManagement)]
+// Enforcement: each item resolves its trip by external reference within AccountId.
+[AccountScopeEnforcedInHandler]
 public readonly record struct UpdateTripStatusCommand(
     Guid AccountId,
     IReadOnlyCollection<TripStatusUpdateItem> Updates) : IRequest<IReadOnlyCollection<TripImportResultVm>>;

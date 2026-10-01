@@ -21,22 +21,52 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { RequestOptions } from 'api/core/errors';
 import type { AlertEventItemFragment as AlertEventItemType } from './generated/graphql';
 import {
   GetAlertEventsDocument,
+  GetOpenAlertCountsDocument,
   AcknowledgeAlertEventDocument,
   ResolveAlertEventDocument,
 } from './alertEventsOperations';
 
 export type AlertEvent = AlertEventItemType;
 
+export interface AlertEventFilter {
+  status?: string | null;
+  severity?: string | null;
+  sourceModule?: string | null;
+  eventTypes?: string[] | null;
+}
+
+export interface AlertEventsPage {
+  items: AlertEvent[];
+  totalCount: number;
+}
+
 export async function getAlertEvents(
   accountId: string,
+  filter: AlertEventFilter = {},
   skip = 0,
-  take = 50
-): Promise<AlertEvent[]> {
-  const data = await executeGraphQL('manager', GetAlertEventsDocument, { accountId, skip, take });
+  take = 50,
+  options?: RequestOptions
+): Promise<AlertEventsPage> {
+  const data = await executeGraphQL('manager', GetAlertEventsDocument, {
+    accountId,
+    status: filter.status ?? null,
+    severity: filter.severity ?? null,
+    sourceModule: filter.sourceModule ?? null,
+    eventTypes: filter.eventTypes ?? null,
+    skip,
+    take,
+  }, options);
   return data.alertEvents;
+}
+
+/** Open alerts per severity, counted server-side over the caller's visible alerts. */
+export async function getOpenAlertCounts(accountId: string): Promise<Record<string, number>> {
+  const data = await executeGraphQL('manager', GetOpenAlertCountsDocument, { accountId });
+  return Object.fromEntries(data.openAlertCounts.map((row) => [row.severity, row.count]));
 }
 
 export async function acknowledgeAlertEvent(alertEventId: string): Promise<boolean> {

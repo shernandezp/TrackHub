@@ -81,7 +81,7 @@ public class NotificationAdminSurfaceTests
         await using var context = NewContext(nameof(RuleReads_RedactTheWebhookSecret));
         await SeedWebhookRuleAsync(context, accountId);
 
-        var rule = (await Reader(context, Principal(accountId, Roles.Manager)).GetNotificationRulesAsync(accountId, 0, 50, CancellationToken.None)).Single();
+        var rule = (await Reader(context, Principal(accountId, Roles.Manager)).GetNotificationRulesAsync(accountId, 0, 50, CancellationToken.None)).Items.Single();
         var configuration = JsonDocument.Parse(rule.ConfigurationJson!).RootElement;
 
         Assert.Multiple(() =>

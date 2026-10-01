@@ -51,4 +51,31 @@ public class UserReplicaRoleTests
         await writer.UpdateUserAsync(new UpdateUserDto(userId, "alice", true, Roles.Manager), CancellationToken.None);
         Assert.That((await context.Users.AsNoTracking().SingleAsync()).Role, Is.EqualTo(Roles.Manager));
     }
+
+    [Test]
+    public async Task AnUpdateForAUserWithNoReplica_CreatesItWhenItNamesTheAccount()
+    {
+        await using var context = NewContext(nameof(AnUpdateForAUserWithNoReplica_CreatesItWhenItNamesTheAccount));
+        var accountId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var writer = new UserWriter(context as IApplicationDbContext, Service());
+
+        await writer.UpdateUserAsync(new UpdateUserDto(userId, "legacy", true, Roles.Manager, accountId), CancellationToken.None);
+
+        var replica = await context.Users.AsNoTracking().SingleAsync();
+        Assert.Multiple(() =>
+        {
+            Assert.That(replica.AccountId, Is.EqualTo(accountId));
+            Assert.That(replica.Role, Is.EqualTo(Roles.Manager));
+        });
+    }
+
+    [Test]
+    public async Task AnUpdateForAUserWithNoReplica_AndNoAccount_IsNotFound()
+    {
+        await using var context = NewContext(nameof(AnUpdateForAUserWithNoReplica_AndNoAccount_IsNotFound));
+        var writer = new UserWriter(context as IApplicationDbContext, Service());
+
+        Assert.ThrowsAsync<NotFoundException>(() => writer.UpdateUserAsync(new UpdateUserDto(Guid.NewGuid(), "ghost", true), CancellationToken.None));
+    }
 }

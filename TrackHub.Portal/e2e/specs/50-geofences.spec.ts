@@ -54,7 +54,7 @@ test.describe('geofences', () => {
         geofencesByAccount: { items: { geofenceId: string; name: string }[] };
       }>(
         'geofencing',
-        'query($search: String) { geofencesByAccount(query: { enableCaching: false, take: 50, search: $search }) { items { geofenceId name } } }',
+        'query($search: String) { geofencesByAccount(query: { take: 50, search: $search }) { items { geofenceId name } } }',
         { search: name }
       );
       const geofence = found?.geofencesByAccount.items.find((row) => row.name === name);

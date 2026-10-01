@@ -20,7 +20,9 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { RequestOptions } from 'api/core/errors';
 import { fetchAllPages } from 'api/core/paging';
+import type { ListParams, Page } from 'api/core/paging';
 import type {
   DriverItemFragment as DriverItemType,
   DriverQualificationItemFragment as DriverQualificationItemType,
@@ -33,6 +35,7 @@ import type {
 import {
   GetDriversByAccountDocument,
   GetDriverLookupDocument,
+  GetDriverOptionsDocument,
   CreateDriverDocument,
   UpdateDriverDocument,
   DeactivateDriverDocument,
@@ -75,7 +78,8 @@ function toDriverDto(driver: DriverDtoInput): DriverDtoInput {
     employeeCode: driver.employeeCode ?? null,
     licenseNumber: driver.licenseNumber ?? null,
     licenseExpiresAt: driver.licenseExpiresAt ?? null,
-    defaultTransporterId: driver.defaultTransporterId ?? null,
+    defaultTransporterId: driver.defaultTransporterId || null,
+    expectedVersion: driver.expectedVersion ?? null,
   };
 }
 
@@ -83,13 +87,16 @@ function toDriverDto(driver: DriverDtoInput): DriverDtoInput {
 export async function getDriversByAccount(
   accountId: string,
   skip = 0,
-  take = 50
-): Promise<Driver[]> {
+  take = 50,
+  search: string | null = null,
+  options?: RequestOptions
+): Promise<Page<Driver>> {
   const data = await executeGraphQL('manager', GetDriversByAccountDocument, {
     accountId,
+    search,
     skip,
     take,
-  });
+  }, options);
   return data.driversByAccount;
 }
 
@@ -99,8 +106,8 @@ export async function getDriversByAccount(
  * past the page boundary unadministrable (no credential, no qualification, no
  * assignment could ever be created for them) with no error shown.
  */
-export async function getAllDriversByAccount(accountId: string): Promise<Driver[]> {
-  return fetchAllPages((skip, take) => getDriversByAccount(accountId, skip, take));
+export async function getAllDriversByAccount(accountId: string, options?: RequestOptions): Promise<Driver[]> {
+  return fetchAllPages(async (skip, take) => (await getDriversByAccount(accountId, skip, take, undefined, options)).items);
 }
 
 export async function createDriver(driver: DriverDtoInput): Promise<Driver> {
@@ -143,15 +150,16 @@ export async function getDriverQualifications(
   driverId: string | null = null,
   expiringWithinDays: number | null = null,
   skip = 0,
-  take = 100
-): Promise<DriverQualification[]> {
+  take = 100,
+  options?: RequestOptions
+): Promise<Page<DriverQualification>> {
   const data = await executeGraphQL('manager', GetDriverQualificationsDocument, {
     accountId,
     driverId,
     expiringWithinDays,
     skip,
     take,
-  });
+  }, options);
   return data.driverQualifications;
 }
 
@@ -159,10 +167,11 @@ export async function getDriverQualifications(
 export async function getAllDriverQualifications(
   accountId: string,
   driverId: string | null = null,
-  expiringWithinDays: number | null = null
+  expiringWithinDays: number | null = null,
+  options?: RequestOptions
 ): Promise<DriverQualification[]> {
-  return fetchAllPages((skip, take) =>
-    getDriverQualifications(accountId, driverId, expiringWithinDays, skip, take)
+  return fetchAllPages(async (skip, take) =>
+    (await getDriverQualifications(accountId, driverId, expiringWithinDays, skip, take, options)).items
   );
 }
 
@@ -197,8 +206,9 @@ export async function getDriverAssignmentHistory(
   accountId: string,
   filters: DriverAssignmentHistoryFilters = {},
   skip = 0,
-  take = 100
-): Promise<DriverTransporterAssignment[]> {
+  take = 100,
+  options?: RequestOptions
+): Promise<Page<DriverTransporterAssignment>> {
   const data = await executeGraphQL('manager', GetDriverAssignmentHistoryDocument, {
     accountId,
     driverId: filters.driverId || null,
@@ -207,7 +217,7 @@ export async function getDriverAssignmentHistory(
     to: filters.to || null,
     skip,
     take,
-  });
+  }, options);
   return data.driverAssignmentHistory;
 }
 
@@ -218,10 +228,11 @@ export async function getDriverAssignmentHistory(
  */
 export async function getAllDriverAssignmentHistory(
   accountId: string,
-  filters: DriverAssignmentHistoryFilters = {}
+  filters: DriverAssignmentHistoryFilters = {},
+  options?: RequestOptions
 ): Promise<DriverTransporterAssignment[]> {
-  return fetchAllPages((skip, take) =>
-    getDriverAssignmentHistory(accountId, filters, skip, take)
+  return fetchAllPages(async (skip, take) =>
+    (await getDriverAssignmentHistory(accountId, filters, skip, take, options)).items
   );
 }
 
@@ -235,8 +246,8 @@ export async function getAllDriverAssignmentHistory(
  * and the last entry may be the synthesized default-transporter one, which has
  * no underlying row at all.
  */
-export async function getDriverAssignments(driverId: string): Promise<DriverActiveAssignment[]> {
-  const data = await executeGraphQL('manager', GetDriverAssignmentsDocument, { driverId });
+export async function getDriverAssignments(driverId: string, options?: RequestOptions): Promise<DriverActiveAssignment[]> {
+  const data = await executeGraphQL('manager', GetDriverAssignmentsDocument, { driverId }, options);
   return data.driverAssignments;
 }
 
@@ -270,10 +281,20 @@ export async function endDriverAssignment(
  * Names and ids for pickers and boards. A search offers the account's active drivers; a list of
  * ids names exactly those drivers, active or not.
  */
-export async function getDriverLookup(search?: string | null, driverIds?: string[] | null): Promise<DriverLookup[]> {
+export async function getDriverLookup(search?: string | null, driverIds?: string[] | null, options?: RequestOptions): Promise<DriverLookup[]> {
   const data = await executeGraphQL('manager', GetDriverLookupDocument, {
     search: search || null,
     driverIds: driverIds && driverIds.length > 0 ? driverIds : null,
-  });
+  }, options);
   return data.driverLookup;
+}
+
+/** The account's drivers, active or not, for the driver-operations pickers (DriverOperations/Read). */
+export async function getDriverOptions(params: ListParams = {}, options?: RequestOptions): Promise<Page<DriverLookup>> {
+  const data = await executeGraphQL('manager', GetDriverOptionsDocument, {
+    search: params.search || null,
+    skip: params.skip ?? null,
+    take: params.take ?? null,
+  }, options);
+  return data.driverOptions;
 }

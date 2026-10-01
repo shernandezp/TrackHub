@@ -117,7 +117,10 @@ export const GetDocumentsForOwnerDocument = graphql(`
         take: $take
       }
     ) {
-      ...DocumentFields
+      items {
+        ...DocumentFields
+      }
+      totalCount
     }
   }
 `);
@@ -133,7 +136,10 @@ export const GetDocumentDocument = graphql(`
 export const SearchDocumentsDocument = graphql(`
   query SearchDocuments($filter: DocumentSearchFilterInput!, $skip: Int!, $take: Int!) {
     searchDocuments(query: { filter: $filter, skip: $skip, take: $take }) {
-      ...DocumentFields
+      items {
+        ...DocumentFields
+      }
+      totalCount
     }
   }
 `);
@@ -141,7 +147,10 @@ export const SearchDocumentsDocument = graphql(`
 export const GetExpiringDocumentsDocument = graphql(`
   query GetExpiringDocuments($withinDays: Int!, $skip: Int!, $take: Int!) {
     expiringDocuments(query: { withinDays: $withinDays, skip: $skip, take: $take }) {
-      ...DocumentFields
+      items {
+        ...DocumentFields
+      }
+      totalCount
     }
   }
 `);

@@ -35,12 +35,12 @@ export const poiKeys = {
 
 /** One server page of POIs (`{ items, totalCount }`) for the POI list. */
 export function usePointsOfInterestByAccount(
-  params: ListParams = {},
+  params: ListParams & { active?: boolean | null } = {},
   options: { enabled?: boolean } = {}
 ) {
   return useQuery({
     queryKey: poiKeys.byAccount(params),
-    queryFn: () => api.getPointsOfInterestByAccount(params),
+    queryFn: ({ signal }) => api.getPointsOfInterestByAccount(params, { signal }),
     enabled: options.enabled ?? true,
     // A page change swaps the query key; without a placeholder the list reads as EMPTY
     // (totalCount 0) while the next page loads, and the page clamp snaps it back to page one.
@@ -58,7 +58,7 @@ export function usePointsOfInterestByAccount(
 export function usePointOfInterestLookup(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: poiKeys.lookup(),
-    queryFn: api.getPointOfInterestLookup,
+    queryFn: ({ signal }) => api.getPointOfInterestLookup({ signal }),
     enabled: options.enabled ?? true,
   });
 }

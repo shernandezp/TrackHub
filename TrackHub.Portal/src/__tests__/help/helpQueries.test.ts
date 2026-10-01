@@ -65,7 +65,7 @@ describe('fetchHelpTopic', () => {
     const spy = mockFetch({ '/help/es/geofences.md': { body: TOPIC_MD } });
     const result = await fetchHelpTopic('es', { id: 'geofences', hash: 'abc123' });
     expect(result).toEqual({ markdown: '\n# Geofences\n\nBody.', resolvedLang: 'es' });
-    expect(spy).toHaveBeenCalledWith('/help/es/geofences.md?v=abc123');
+    expect(spy).toHaveBeenCalledWith('/help/es/geofences.md?v=abc123', expect.anything());
   });
 
   it('detects the SPA index.html fallback and retries in English', async () => {

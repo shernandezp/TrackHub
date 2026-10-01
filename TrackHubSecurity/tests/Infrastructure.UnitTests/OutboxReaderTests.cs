@@ -114,4 +114,34 @@ public class OutboxReaderTests
 
         Assert.That(due, Is.Empty);
     }
+
+    [Test]
+    public async Task GetDispatchable_AnExhaustedMessage_HoldsItsUserUntilReplayed()
+    {
+        using var context = NewContext(Guid.NewGuid().ToString());
+        var userId = Guid.NewGuid().ToString();
+        context.OutboxMessages.Add(new OutboxMessage(OutboxMessageTypes.UserUpdated, "{}", userId) { Status = OutboxMessageStatuses.Failed });
+        context.OutboxMessages.Add(Message(OutboxMessageTypes.UserUpdated, userId));
+        await context.SaveChangesAsync(CancellationToken.None);
+
+        var reader = new OutboxReader(context);
+        var due = await reader.GetDispatchableAsync(50, CancellationToken.None);
+
+        Assert.That(due, Is.Empty, "a later update must not overtake the one a replay will resend");
+        Assert.That(await reader.CountFailedAsync(CancellationToken.None), Is.EqualTo(1));
+    }
+
+    [Test]
+    public async Task GetDispatchable_AnInFlightMessage_HoldsItsUser()
+    {
+        using var context = NewContext(Guid.NewGuid().ToString());
+        var userId = Guid.NewGuid().ToString();
+        context.OutboxMessages.Add(new OutboxMessage(OutboxMessageTypes.UserCreated, "{}", userId) { Status = OutboxMessageStatuses.Dispatching });
+        context.OutboxMessages.Add(Message(OutboxMessageTypes.UserUpdated, userId));
+        await context.SaveChangesAsync(CancellationToken.None);
+
+        var due = await new OutboxReader(context).GetDispatchableAsync(50, CancellationToken.None);
+
+        Assert.That(due, Is.Empty, "an update must not overtake the create still in flight");
+    }
 }

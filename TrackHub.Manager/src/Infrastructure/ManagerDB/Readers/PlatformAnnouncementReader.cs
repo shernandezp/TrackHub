@@ -20,7 +20,7 @@ public sealed class PlatformAnnouncementReader(IApplicationDbContext context) : 
             .Skip(Math.Max(0, skip)).Take(Math.Clamp(take <= 0 ? 50 : take, 1, 500))
             .Select(x => new PlatformAnnouncementVm(
                 x.PlatformAnnouncementId, x.MessageEn, x.MessageEs,
-                (AnnouncementSeverity)x.Severity, x.StartsAt, x.EndsAt, x.Active, x.LastModified))
+                (AnnouncementSeverity)x.Severity, x.StartsAt, x.EndsAt, x.Active, x.LastModified, x.Version))
             .ToListAsync(cancellationToken);
 
     public async Task<IReadOnlyCollection<PlatformAnnouncementVm>> GetVisiblePlatformAnnouncementsAsync(DateTimeOffset asOf, CancellationToken cancellationToken)
@@ -31,6 +31,6 @@ public sealed class PlatformAnnouncementReader(IApplicationDbContext context) : 
             .OrderByDescending(x => x.Severity).ThenByDescending(x => x.StartsAt ?? x.Created)
             .Select(x => new PlatformAnnouncementVm(
                 x.PlatformAnnouncementId, x.MessageEn, x.MessageEs,
-                (AnnouncementSeverity)x.Severity, x.StartsAt, x.EndsAt, x.Active, x.LastModified))
+                (AnnouncementSeverity)x.Severity, x.StartsAt, x.EndsAt, x.Active, x.LastModified, x.Version))
             .ToListAsync(cancellationToken);
 }

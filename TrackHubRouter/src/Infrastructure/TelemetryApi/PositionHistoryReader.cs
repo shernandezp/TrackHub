@@ -13,44 +13,75 @@
 //  limitations under the License.
 //
 
+using System.Text.Json;
+using FluentValidation.Results;
+
 namespace TrackHub.Router.Infrastructure.TelemetryApi;
 
 // STORED replay source read. Uses the user-token Telemetry client so the Telemetry service enforces
-// the gps.positionHistory flag, PositionHistory authorization, and group visibility.
+// the gps.positionHistory flag, PositionHistory authorization, and group visibility. The window is
+// drained to the end; past MaxPoints the replay is refused rather than cut short.
 public class PositionHistoryReader(IGraphQLClientFactory graphQLClient)
     : GraphQLService(graphQLClient.CreateClient(Clients.Telemetry)), IPositionHistoryReader
 {
-    private const int MaxPoints = 10000;
+    internal const int MaxPoints = 100_000;
+    private const int PageSize = 500;
+    public const string LimitExceededCode = "POSITION_HISTORY_LIMIT_EXCEEDED";
 
-    internal const string PositionHistoryRangeQuery = @"
-                query($accountId: UUID!, $transporterId: UUID!, $from: DateTime!, $to: DateTime!, $maxPoints: Int!) {
-                    positionHistoryRange(query: { accountId: $accountId, transporterId: $transporterId, from: $from, to: $to, maxPoints: $maxPoints })
+    internal const string PositionHistoryFeedQuery = @"
+                query($accountId: UUID!, $transporterId: UUID!, $from: DateTime!, $to: DateTime!, $take: Int!, $cursor: String) {
+                    positionHistoryFeed(query: { accountId: $accountId, transporterId: $transporterId, from: $from, to: $to, take: $take, cursor: $cursor })
                     {
-                        sourceTimestamp
-                        latitude
-                        longitude
-                        altitude
-                        speed
-                        course
-                        eventId
-                        address
-                        city
-                        state
-                        country
-                        transporterId
+                        items {
+                            sourceTimestamp
+                            latitude
+                            longitude
+                            altitude
+                            speed
+                            course
+                            eventId
+                            address
+                            city
+                            state
+                            country
+                            attributes
+                            transporterId
+                        }
+                        hasMore
+                        nextCursor
                     }
                 }";
 
     public async Task<IEnumerable<PositionVm>> GetPositionHistoryRangeAsync(Guid accountId, Guid transporterId, DateTimeOffset from, DateTimeOffset to, CancellationToken cancellationToken)
     {
-        var request = new GraphQLRequest
+        var rows = new List<PositionHistoryRow>();
+        string? cursor = null;
+        while (true)
         {
-            Query = PositionHistoryRangeQuery,
-            Variables = new { accountId, transporterId, from, to, maxPoints = MaxPoints }
-        };
+            var page = await QueryAsync<PositionHistoryPage>(new GraphQLRequest
+            {
+                Query = PositionHistoryFeedQuery,
+                Variables = new { accountId, transporterId, from, to, take = PageSize, cursor }
+            }, cancellationToken);
+            rows.AddRange(page.Items ?? []);
 
-        var rows = await QueryAsync<IEnumerable<PositionHistoryRow>>(request, cancellationToken);
-        return (rows ?? []).Select(row => new PositionVm(
+            if (rows.Count > MaxPoints)
+            {
+                throw new Common.Application.Exceptions.ValidationException(LimitExceededCode,
+                    [new ValidationFailure("to", $"More than {MaxPoints} stored positions fall in this window; narrow it.")]);
+            }
+
+            if (!page.HasMore || string.IsNullOrEmpty(page.NextCursor) || page.NextCursor == cursor)
+            {
+                break;
+            }
+
+            cursor = page.NextCursor;
+        }
+
+        // The feed runs newest first.
+        rows.Reverse();
+        return rows.Select(row => new PositionVm(
             row.TransporterId,
             string.Empty,
             string.Empty,
@@ -66,8 +97,27 @@ public class PositionHistoryReader(IGraphQLClientFactory graphQLClient)
             row.City,
             row.State,
             row.Country,
-            null));
+            ParseAttributes(row.Attributes)));
     }
+
+    private static AttributesVm? ParseAttributes(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<AttributesVm>(json);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private sealed record PositionHistoryPage(IReadOnlyCollection<PositionHistoryRow>? Items, bool HasMore, string? NextCursor);
 
     private readonly record struct PositionHistoryRow(
         Guid TransporterId,
@@ -81,5 +131,6 @@ public class PositionHistoryReader(IGraphQLClientFactory graphQLClient)
         string? Address,
         string? City,
         string? State,
-        string? Country);
+        string? Country,
+        string? Attributes);
 }

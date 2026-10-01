@@ -13,17 +13,12 @@
 //  limitations under the License.
 //
 
+using Common.Application.Paging;
 using Common.Application.Interfaces;
 using TrackHub.TripManagement.Application.Common;
 
 namespace TrackHub.TripManagement.Application.Trips.Queries.GetTrips;
 
-// No [Caching] on this — or on ANY query in this module. CachingBehavior builds its cache key from
-// the request's own properties, and every trip query resolves its account and its group scope from
-// the CALLER's identity rather than from the request. A cached page would therefore be replayed to
-// the next caller with the same filters, across accounts and across groups (findings.md SVD-09,
-// proved by the geofencing case). Scope-from-identity and request-keyed caching are mutually
-// exclusive; identity wins.
 /// <summary>Paged dispatch board, group-filtered through <c>trip.vw_visible_transporter</c>.</summary>
 [Authorize(Resource = Resources.Trips, Action = Actions.Read)]
 [RequireFeature(FeatureKeys.TripManagement)]
@@ -39,23 +34,20 @@ public readonly record struct GetTripsQuery(
     string? Customer,
     string? Search,
     int? Skip,
-    int? Take) : IRequest<TripsPageVm>;
+    int? Take,
+    string? Exception = null) : IRequest<TripsPageVm>;
 
 public sealed class GetTripsQueryHandler(
     ITripReader reader,
     IUserReader userReader,
     IUser user) : IRequestHandler<GetTripsQuery, TripsPageVm>
 {
-    private const int DefaultPageSize = 50;
-    private const int MaxPageSize = 200;
-
     private Guid UserId { get; } = TripVisibility.RequireUserId(user);
 
     public async Task<TripsPageVm> Handle(GetTripsQuery request, CancellationToken cancellationToken)
     {
         var caller = await userReader.GetUserAsync(UserId, cancellationToken);
-        var skip = Math.Max(request.Skip ?? 0, 0);
-        var take = Math.Clamp(request.Take ?? DefaultPageSize, 1, MaxPageSize);
+        var (skip, take) = PageRequest.Clamp(request.Skip, request.Take);
 
         return await reader.GetTripsPageAsync(
             caller.AccountId,
@@ -67,6 +59,7 @@ public sealed class GetTripsQueryHandler(
             request.DriverId,
             request.Customer,
             request.Search,
+            request.Exception,
             skip,
             take,
             cancellationToken);
@@ -75,13 +68,29 @@ public sealed class GetTripsQueryHandler(
 
 public sealed class GetTripsValidator : AbstractValidator<GetTripsQuery>
 {
+    public const int MaxWindowDays = 366;
+
     public GetTripsValidator()
     {
         RuleFor(v => v.Skip).GreaterThanOrEqualTo(0).When(v => v.Skip.HasValue);
-        RuleFor(v => v.Take).InclusiveBetween(1, 200).When(v => v.Take.HasValue);
+        RuleFor(v => v.Take).InclusiveBetween(1, PageRequest.MaxPageSize).When(v => v.Take.HasValue);
+        RuleFor(v => v)
+            .Must(v => v.From!.Value <= v.To!.Value)
+            .When(v => v.From.HasValue && v.To.HasValue)
+            .WithName(nameof(GetTripsQuery.To))
+            .WithMessage("The date window must end after it starts.");
+        RuleFor(v => v)
+            .Must(v => v.To!.Value - v.From!.Value <= TimeSpan.FromDays(MaxWindowDays))
+            .When(v => v.From.HasValue && v.To.HasValue)
+            .WithName(nameof(GetTripsQuery.To))
+            .WithMessage($"The date window may span at most {MaxWindowDays} days.");
         RuleForEach(v => v.Statuses)
             .Must(TripStatuses.IsValid)
             .When(v => v.Statuses is not null)
             .WithMessage("Unknown trip status.");
+        RuleFor(v => v.Exception)
+            .Must(TripExceptions.IsValid)
+            .When(v => v.Exception is not null)
+            .WithMessage("Unknown trip exception.");
     }
 }

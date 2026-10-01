@@ -16,6 +16,7 @@
 namespace TrackHub.Security.Application.Policies.GetResources;
 
 [Authorize(Resource = Resources.Permissions, Action = Actions.Read)]
+[PlatformScoped("Seeded RBAC catalog: roles, policies and their resource/action grants are platform definitions, Administrator-only to change.")]
 public readonly record struct GetResourcesByPolicyQuery(int PolicyId) : IRequest<PolicyResourceVm>;
 
 // The GetResourcesByPolicyQueryHandler class is responsible for handling the GetResourcesByPolicyQuery query.

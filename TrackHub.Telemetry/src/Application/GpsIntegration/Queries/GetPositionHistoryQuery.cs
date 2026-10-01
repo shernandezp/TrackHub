@@ -6,6 +6,8 @@ namespace TrackHub.Telemetry.Application.GpsIntegration.Queries;
 
 [Authorize(Resource = Resources.PositionHistory, Action = Actions.Read)]
 [RequireFeature(FeatureKeys.GpsPositionHistory)]
+// Enforcement: the filter carries AccountId and a user's transporter must be visible to them.
+[AccountScopeEnforcedInHandler]
 public readonly record struct GetPositionHistoryQuery(
     Guid AccountId,
     Guid? TransporterId = null,

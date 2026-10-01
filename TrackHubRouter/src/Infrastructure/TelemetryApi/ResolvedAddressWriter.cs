@@ -28,7 +28,7 @@ public class ResolvedAddressWriter : GraphQLService, IResolvedAddressWriter
                     persistResolvedAddress(command: $command)
                 }";
 
-    public async Task<bool> PersistResolvedAddressAsync(Guid? transporterPositionHistoryId, Guid? transporterId, AddressVm address, CancellationToken cancellationToken)
+    public async Task<bool> PersistResolvedAddressAsync(Guid? transporterPositionHistoryId, Guid? transporterId, double latitude, double longitude, AddressVm address, CancellationToken cancellationToken)
     {
         var request = new GraphQLRequest
         {
@@ -39,6 +39,8 @@ public class ResolvedAddressWriter : GraphQLService, IResolvedAddressWriter
                 {
                     transporterPositionHistoryId,
                     transporterId,
+                    latitude,
+                    longitude,
                     address = address.Address,
                     city = address.City,
                     state = address.State,

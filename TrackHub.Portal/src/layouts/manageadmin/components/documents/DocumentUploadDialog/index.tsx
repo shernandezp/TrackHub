@@ -78,7 +78,10 @@ function DocumentUploadDialog({ open, setOpen, onUpload, categories = [], replac
     }
   };
 
+  const categoryOptions = (categories || []).map(c => ({ value: c.category, label: c.displayName || c.category }));
+
   const handleSave = async () => {
+    if (!replaceMode && categoryOptions.length === 0) return;
     const required = replaceMode ? [] : ['category'];
     if (!validate(required) || !file) {
       if (!file) setErrors({ ...errors, file: t('validation.required', { field: 'file' }) });
@@ -97,7 +100,6 @@ function DocumentUploadDialog({ open, setOpen, onUpload, categories = [], replac
     setOpen(false);
   };
 
-  const categoryOptions = (categories || []).map(c => ({ value: c.category, label: c.displayName || c.category }));
 
   return (
     <FormDialog
@@ -151,18 +153,7 @@ function DocumentUploadDialog({ open, setOpen, onUpload, categories = [], replac
             errorMsg={errors.category}
           />
         ) : (
-          <CustomTextField
-            margin="normal"
-            name="category"
-            id="category"
-            label={t('documentManagement.category')}
-            type="text"
-            fullWidth
-            value={values.category || ''}
-            onChange={handleChange}
-            required
-            errorMsg={errors.category}
-          />
+          <ArgonTypography variant="caption" color="error">{t('documentManagement.noDocumentTypes')}</ArgonTypography>
         ))}
 
         {!replaceMode && (

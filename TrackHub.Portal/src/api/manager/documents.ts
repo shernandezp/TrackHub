@@ -24,6 +24,9 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { RequestOptions } from 'api/core/errors';
+import { fetchAllPages } from 'api/core/paging';
+import type { Page } from 'api/core/paging';
 import { restRequest, downloadFile, FILE_TIMEOUT_MS } from 'api/core/restClient';
 import { REST_ENDPOINTS } from 'api/core/endpoints';
 import type {
@@ -64,16 +67,29 @@ export async function getDocumentsForOwner(
   ownerEntityType: string,
   ownerEntityId: string,
   skip = 0,
-  take = 50
-): Promise<DocumentVm[]> {
+  take = 50,
+  options?: RequestOptions
+): Promise<Page<DocumentVm>> {
   const data = await executeGraphQL('manager', GetDocumentsForOwnerDocument, {
     accountId,
     ownerEntityType,
     ownerEntityId,
     skip,
     take,
-  });
+  }, options);
   return data.documentsForOwner;
+}
+
+/** One owner's whole folder; refused rather than cut short past the fetch-all ceiling. */
+export async function getAllDocumentsForOwner(
+  accountId: string,
+  ownerEntityType: string,
+  ownerEntityId: string,
+  options?: RequestOptions
+): Promise<DocumentVm[]> {
+  return fetchAllPages(async (skip, take) =>
+    (await getDocumentsForOwner(accountId, ownerEntityType, ownerEntityId, skip, take, options)).items
+  );
 }
 
 export async function getDocument(documentId: string): Promise<DocumentVm> {
@@ -85,7 +101,7 @@ export async function searchDocuments(
   filter: DocumentSearchFilterInput = {},
   skip = 0,
   take = 50
-): Promise<DocumentVm[]> {
+): Promise<Page<DocumentVm>> {
   const data = await executeGraphQL('manager', SearchDocumentsDocument, { filter, skip, take });
   return data.searchDocuments;
 }
@@ -94,7 +110,7 @@ export async function getExpiringDocuments(
   withinDays = 30,
   skip = 0,
   take = 50
-): Promise<DocumentVm[]> {
+): Promise<Page<DocumentVm>> {
   const data = await executeGraphQL('manager', GetExpiringDocumentsDocument, {
     withinDays,
     skip,
@@ -105,12 +121,13 @@ export async function getExpiringDocuments(
 
 export async function getDocumentTypes(
   accountId: string,
-  includeDisabled = false
+  includeDisabled = false,
+  options?: RequestOptions
 ): Promise<DocumentTypeVm[]> {
   const data = await executeGraphQL('manager', GetDocumentTypesDocument, {
     accountId,
     includeDisabled,
-  });
+  }, options);
   return data.documentTypes;
 }
 

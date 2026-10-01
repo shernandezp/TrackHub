@@ -14,6 +14,7 @@
  *  limitations under the License.
  */
 
+using TrackHub.Reporting.Domain.Exceptions;
 using TrackHub.Reporting.Domain.Records;
 using Common.Application.Interfaces;
 using Common.Domain.Time;
@@ -27,6 +28,8 @@ namespace TrackHub.Reporting.Application.Report.Factory;
 /// </summary>
 public static class ReportCalendar
 {
+    public const int MaxWindowDays = 400;
+
     public static Task<AccountTimeZone> ForCallerAsync(IUser user, IAccountTimeZoneResolver zones, CancellationToken cancellationToken)
         => zones.ResolveAsync(user.AccountId ?? throw new UnauthorizedAccessException(), cancellationToken);
 
@@ -39,6 +42,32 @@ public static class ReportCalendar
         calendar ??= AccountTimeZone.Utc;
         var to = filters.GetDate(FilterNames.To) is { } t ? calendar.DateOf(t) : calendar.Today();
         var from = filters.GetDate(FilterNames.From) is { } f ? calendar.DateOf(f) : to.AddMonths(-1);
+        EnsureWithinLimit(to < from, to.DayNumber - from.DayNumber + 1);
         return (from, to);
+    }
+
+    /// <summary>
+    /// A report window as instants: the From/To filters, defaulting to the last month up to now.
+    /// </summary>
+    public static (DateTimeOffset From, DateTimeOffset To) Window(FilterDto filters)
+    {
+        var to = filters.GetDate(FilterNames.To) ?? DateTimeOffset.UtcNow;
+        var from = filters.GetDate(FilterNames.From) ?? to.AddMonths(-1);
+        EnsureWithinLimit(to < from, (int)Math.Ceiling((to - from).TotalDays));
+        return (from, to);
+    }
+
+    // The cap counts calendar days inclusively, the same way the producers' validators do.
+    private static void EnsureWithinLimit(bool reversed, int days)
+    {
+        if (reversed)
+        {
+            throw new ReportWindowInvalidException("The report window ends before it starts.", MaxWindowDays);
+        }
+
+        if (days > MaxWindowDays)
+        {
+            throw new ReportWindowInvalidException($"The report window is limited to {MaxWindowDays} days.", MaxWindowDays);
+        }
     }
 }

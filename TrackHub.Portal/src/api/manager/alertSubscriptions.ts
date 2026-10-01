@@ -20,6 +20,8 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { RequestOptions } from 'api/core/errors';
+import type { Page } from 'api/core/paging';
 import type {
   AlertSubscriptionItemFragment as AlertSubscriptionItemType,
   AlertSubscriptionDtoInput,
@@ -38,14 +40,15 @@ export async function getAlertSubscriptions(
   accountId: string,
   principalId: string | null = null,
   skip = 0,
-  take = 50
-): Promise<AlertSubscription[]> {
+  take = 50,
+  options?: RequestOptions
+): Promise<Page<AlertSubscription>> {
   const data = await executeGraphQL('manager', GetAlertSubscriptionsDocument, {
     accountId,
     principalId,
     skip,
     take,
-  });
+  }, options);
   return data.alertSubscriptions;
 }
 

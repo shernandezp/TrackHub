@@ -429,7 +429,9 @@ namespace TrackHub.Security.Infrastructure.Migrations
 
                     b.HasIndex("PolicyId");
 
-                    b.HasIndex("ResourceId", "ActionId");
+                    b.HasIndex("ResourceId", "ActionId", "PolicyId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_resource_action_policy_grant");
 
                     b.ToTable("resource_action_policy", "security");
                 });
@@ -459,7 +461,9 @@ namespace TrackHub.Security.Infrastructure.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.HasIndex("ResourceId", "ActionId");
+                    b.HasIndex("ResourceId", "ActionId", "RoleId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_resource_action_role_grant");
 
                     b.ToTable("resource_action_role", "security");
                 });

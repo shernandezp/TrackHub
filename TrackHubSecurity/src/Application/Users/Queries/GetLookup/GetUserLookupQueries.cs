@@ -13,8 +13,8 @@
 //  limitations under the License.
 //
 
+using Common.Application.Paging;
 using Common.Application.Interfaces;
-using TrackHub.Security.Application.Lookups;
 
 namespace TrackHub.Security.Application.Users.Queries.GetLookup;
 
@@ -42,6 +42,7 @@ public class GetUserLookupByAccountQueryHandler(IUserReader reader, IUser user)
 /// The members already holding a role — the right operand of the allocator's set difference.
 /// </summary>
 [Authorize(Resource = Resources.Users, Action = Actions.Read)]
+[AccountScopeEnforcedInHandler]
 public readonly record struct GetUserLookupByRoleQuery(int RoleId) : IRequest<IReadOnlyCollection<UserLookupVm>>;
 
 public class GetUserLookupByRoleQueryHandler(IUserReader reader, IUser user)
@@ -61,6 +62,7 @@ public class GetUserLookupByRoleQueryHandler(IUserReader reader, IUser user)
 /// The members already holding a policy — the right operand of the allocator's set difference.
 /// </summary>
 [Authorize(Resource = Resources.Users, Action = Actions.Read)]
+[AccountScopeEnforcedInHandler]
 public readonly record struct GetUserLookupByPolicyQuery(int PolicyId) : IRequest<IReadOnlyCollection<UserLookupVm>>;
 
 public class GetUserLookupByPolicyQueryHandler(IUserReader reader, IUser user)

@@ -26,7 +26,7 @@ public class DocumentContractTests
     private const string DocumentsForOwnerQuery = @"
         query($accountId: UUID!, $ownerEntityType: String!, $ownerEntityId: String!) {
             documentsForOwner(query: { accountId: $accountId, ownerEntityType: $ownerEntityType, ownerEntityId: $ownerEntityId, skip: 0, take: 50 }) {
-                documentId fileName category status scanStatus currentVersion downloadUrl classification
+                items { documentId fileName category status scanStatus currentVersion downloadUrl classification } totalCount
             }
         }";
 
@@ -61,14 +61,14 @@ public class DocumentContractTests
     private const string SearchDocumentsQuery = @"
         query {
             searchDocuments(query: { filter: { category: ""SOAT"", status: ""Active"", expiringWithinDays: 30 }, skip: 0, take: 50 }) {
-                documentId fileName category status classification
+                items { documentId fileName category status classification } totalCount
             }
         }";
 
     private const string ExpiringDocumentsQuery = @"
         query {
             expiringDocuments(query: { withinDays: 30, skip: 0, take: 50 }) {
-                documentId category expiresAt status
+                items { documentId category expiresAt status } totalCount
             }
         }";
 

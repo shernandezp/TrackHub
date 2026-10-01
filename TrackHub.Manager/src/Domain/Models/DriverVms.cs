@@ -1,6 +1,7 @@
 namespace TrackHub.Manager.Domain.Models;
 
-public readonly record struct DriverVm(Guid DriverId, Guid AccountId, string Name, string? Phone, string? DocumentType, string? DocumentNumber, bool Active, string? EmployeeCode, string? LicenseNumber, DateOnly? LicenseExpiresAt, Guid? DefaultTransporterId, DateTimeOffset LastModified);
+public readonly record struct DriverVm(Guid DriverId, Guid AccountId, string Name, string? Phone, string? DocumentType, string? DocumentNumber, bool Active, string? EmployeeCode, string? LicenseNumber, DateOnly? LicenseExpiresAt, Guid? DefaultTransporterId, DateTimeOffset LastModified,
+    uint Version);
 
 /// <summary>
 /// The legacy assignment projection consumed by <c>DocumentAccessPolicy</c> and spec 10. Spec 09 kept

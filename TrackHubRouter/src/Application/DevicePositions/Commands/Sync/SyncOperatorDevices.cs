@@ -46,7 +46,6 @@ public class SyncOperatorDevicesCommandHandler(
     IOperatorHealthCheckSystemWriter healthWriter,
     IAlertEventWriter alertWriter,
     IOperatorSyncLock syncLock,
-    IDeviceCatalogCache deviceCatalogCache,
     IProviderCapabilityCatalog capabilityCatalog,
     ILogger<SyncOperatorDevicesCommandHandler> logger) : IRequestHandler<SyncOperatorDevicesCommand, bool>
 {
@@ -127,10 +126,6 @@ public class SyncOperatorDevicesCommandHandler(
                 request.AutoAssignNewDevices,
                 request.ResetDeviceCatalog,
                 cancellationToken);
-
-            // The catalog may have changed (devices added/removed) — drop the cached copy so the
-            // position loop picks up the new set immediately (router-audit A-12).
-            deviceCatalogCache.Invalidate(request.Operator.OperatorId);
         }
         catch (Exception ex)
         {

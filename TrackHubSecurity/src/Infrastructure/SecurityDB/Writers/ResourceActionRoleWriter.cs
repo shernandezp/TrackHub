@@ -28,15 +28,21 @@ public sealed class ResourceActionRoleWriter(IApplicationDbContext context) : IR
     // returns: The created ResourceActionRoleVm.
     public async Task<ResourceActionRoleVm> CreateResourceActionRoleAsync(ResourceActionRoleDto resourceActionRoleDto, CancellationToken cancellationToken)
     {
-        var resourceActionRole = new ResourceActionRole
+        var resourceActionRole = await context.ResourceActionRole.FirstOrDefaultAsync(
+            r => r.ResourceId == resourceActionRoleDto.ResourceId && r.ActionId == resourceActionRoleDto.ActionId && r.RoleId == resourceActionRoleDto.RoleId,
+            cancellationToken);
+        if (resourceActionRole is null)
         {
-            ResourceId = resourceActionRoleDto.ResourceId,
-            ActionId = resourceActionRoleDto.ActionId,
-            RoleId = resourceActionRoleDto.RoleId
-        };
+            resourceActionRole = new ResourceActionRole
+            {
+                ResourceId = resourceActionRoleDto.ResourceId,
+                ActionId = resourceActionRoleDto.ActionId,
+                RoleId = resourceActionRoleDto.RoleId
+            };
 
-        await context.ResourceActionRole.AddAsync(resourceActionRole, cancellationToken);
-        await context.SaveChangesAsync(cancellationToken);
+            await context.ResourceActionRole.AddAsync(resourceActionRole, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
+        }
 
         return new ResourceActionRoleVm(
             resourceActionRole.ResourceActionRoleId,

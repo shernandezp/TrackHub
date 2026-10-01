@@ -15,6 +15,7 @@
 
 using System.Globalization;
 using System.Text;
+using FluentValidation.Results;
 
 namespace Common.Application.Paging;
 
@@ -29,14 +30,15 @@ namespace Common.Application.Paging;
 /// </summary>
 public static class FeedCursor
 {
+    public const string InvalidCursorCode = "INVALID_CURSOR";
+
     public static string Encode(DateTimeOffset at, Guid id)
         => Convert.ToBase64String(Encoding.UTF8.GetBytes(
             $"{at.UtcDateTime.ToString("O", CultureInfo.InvariantCulture)}|{id:D}"));
 
     /// <summary>
-    /// Returns false for anything that is not a cursor this class produced. A malformed marker reads
-    /// as "start from the beginning", never as an error: it is an opaque token the caller echoes
-    /// back, and one truncated by a URL is not worth a 400.
+    /// Returns false when no cursor was sent; throws for a malformed one: reading it as "start over"
+    /// would hand a paging client page one again and loop it forever.
     /// </summary>
     public static bool TryDecode(string? cursor, out DateTimeOffset at, out Guid id)
     {
@@ -49,15 +51,15 @@ public static class FeedCursor
         }
 
         Span<byte> buffer = stackalloc byte[128];
-        if (!Convert.TryFromBase64String(cursor, buffer, out var written))
+        if (Convert.TryFromBase64String(cursor, buffer, out var written)
+            && Encoding.UTF8.GetString(buffer[..written]).Split('|') is [var instant, var key]
+            && DateTimeOffset.TryParse(instant, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out at)
+            && Guid.TryParse(key, out id))
         {
-            return false;
+            return true;
         }
 
-        var parts = Encoding.UTF8.GetString(buffer[..written]).Split('|');
-
-        return parts.Length == 2
-            && DateTimeOffset.TryParse(parts[0], CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out at)
-            && Guid.TryParse(parts[1], out id);
+        throw new Exceptions.ValidationException(InvalidCursorCode,
+            [new ValidationFailure("cursor", "The cursor is malformed. Restart paging without a cursor.")]);
     }
 }

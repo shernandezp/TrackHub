@@ -14,19 +14,17 @@
 *  limitations under the License.
 */
 
-import { useEffect, useContext, useState } from 'react';
+import { useEffect, useContext, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import DynamicTableDialog from 'controls/Dialogs/TableDialogs/DynamicTableDialog';
-import CustomSelect from 'controls/Dialogs/CustomSelect';
-import type { FormChangeHandler } from 'controls/Dialogs/useForm';
-import { useUserLookupByAccount } from 'queries/users';
+import SearchSelect from 'edition/SearchSelect';
+import type { SearchOption } from 'edition/SearchSelect';
+import { excludingOptions, useAccountUserOptions } from 'edition/pickerOptions';
 import { useUsersByGroup, groupKeys } from 'queries/groups';
 import { createUserGroup, deleteUserGroup } from 'api/manager/groups';
 import { notifyApiError } from 'api/core/errors';
 import { LoadingContext } from 'LoadingContext';
-
-interface SelectOption { value: string; label: string; }
 
 interface UserAllocatorDialogProps {
   open: boolean;
@@ -38,50 +36,37 @@ function UserAllocatorDialog({ open, setOpen, groupId }: UserAllocatorDialogProp
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
   const queryClient = useQueryClient();
-  const [userId, setUserId] = useState('');
+  const [user, setUser] = useState<SearchOption | null>(null);
 
-  // Account users come from the security query layer; group membership now comes
-  // from the manager groups query layer (invalidated after each add/remove).
-  // Set difference: available = account users minus group members. Both operands
-  // must be complete, so the account side reads the unpaged lookup and the
-  // membership side is drained to exhaustion.
-  const accountUsersQuery = useUserLookupByAccount({ enabled: open });
-  const accountUsers = accountUsersQuery.data ?? [];
+  // Group membership is drained to exhaustion so the server-searched picker can hide every
+  // current member; it is invalidated after each add/remove.
   const assignedUsersQuery = useUsersByGroup(open ? groupId : undefined);
   const data = assignedUsersQuery.data ?? [];
+  const useAvailableUserOptions = useMemo(
+    () => excludingOptions(useAccountUserOptions, new Set(data.map((assigned) => assigned.userId))),
+    [data]
+  );
 
   const columns = [
     { field: 'username', headerName: t('user.username') }
   ];
 
-  const users: SelectOption[] = accountUsers
-    .filter(user => !data.some(assignedUser => assignedUser.userId === user.userId))
-    .map(user => ({
-      value: user.userId,
-      label: user.username
-    }));
-
   const reloadData = async () => {
     await queryClient.invalidateQueries({ queryKey: groupKeys.usersByGroup(groupId) });
-    setUserId('');
+    setUser(null);
   };
 
-  // Keep the global spinner UX while the account-user / membership lists load.
+  // Keep the global spinner UX while the membership list loads.
   useEffect(() => {
-    setLoading(accountUsersQuery.isFetching || assignedUsersQuery.isFetching);
-  }, [accountUsersQuery.isFetching, assignedUsersQuery.isFetching, setLoading]);
-
-  const handleChange: FormChangeHandler = (event) => {
-    setLoading(true);
-    setUserId(String(event.target.value ?? ''));
-    setLoading(false);
-  };
+    setLoading(assignedUsersQuery.isFetching);
+  }, [assignedUsersQuery.isFetching, setLoading]);
 
   const handleAdd = async () => {
+    if (!user) return;
     setLoading(true);
     try {
       // createUserGroup surfaces failures via the global toast (legacy handleError).
-      await createUserGroup(userId, groupId);
+      await createUserGroup(user.value, groupId);
     } catch (e) {
       notifyApiError(e);
     }
@@ -100,7 +85,7 @@ function UserAllocatorDialog({ open, setOpen, groupId }: UserAllocatorDialogProp
   };
 
   const handleClose = async () => {
-    setUserId('');
+    setUser(null);
     setOpen(false);
   };
 
@@ -113,15 +98,13 @@ function UserAllocatorDialog({ open, setOpen, groupId }: UserAllocatorDialogProp
       open={open}
       data={data}
       columns={columns}>
-      <CustomSelect
-        list={users}
-        name="userId"
+      <SearchSelect
         id="userId"
         label={t('user.singleTitle')}
-        value={userId}
-        handleChange={handleChange}
-        numericValue={false}
-        required
+        value={user?.value ?? null}
+        valueLabel={user?.label}
+        onChange={setUser}
+        useOptions={useAvailableUserOptions}
       />
     </DynamicTableDialog>
   );

@@ -85,8 +85,8 @@ export const PingOperatorDocument = graphql(`
 `);
 
 export const GetDevicePositionsByUserDocument = graphql(`
-  query GetDevicePositionsByUser {
-    devicePositionsByUser {
+  query GetDevicePositionsByUser($groupId: Long, $operatorId: UUID) {
+    devicePositionsByUser(groupId: $groupId, operatorId: $operatorId) {
       ...PositionFields
     }
   }

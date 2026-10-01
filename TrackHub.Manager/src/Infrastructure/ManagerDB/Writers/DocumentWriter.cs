@@ -1,5 +1,7 @@
 using Common.Application.Exceptions;
 using Common.Application.Interfaces;
+using Common.Domain.Enums;
+using Common.Domain.Evidence;
 using TrackHub.Manager.Domain.Constants;
 using TrackHub.Manager.Domain.Interfaces;
 using TrackHub.Manager.Infrastructure.Entities;
@@ -14,6 +16,7 @@ public sealed class DocumentWriter(IApplicationDbContext context, ICurrentPrinci
     {
         var accountId = RequireAccountWriteAccess(document.AccountId);
         await EnsureOwnerWriteAccessAsync(accountId, document.OwnerEntityType, document.OwnerEntityId, cancellationToken);
+        document = await ValidateUploadAsync(accountId, document, cancellationToken);
 
         var entity = BuildDocument(accountId, document);
         entity.DocumentId = documentId;
@@ -39,12 +42,12 @@ public sealed class DocumentWriter(IApplicationDbContext context, ICurrentPrinci
         var entity = await Context.Documents
             .AsTracking().FirstOrDefaultAsync(x => x.DocumentId == documentId, cancellationToken)
             ?? throw new NotFoundException(nameof(Document), documentId.ToString());
-        RequireAccountWriteAccess(entity.AccountId);
+        RequireRowAccess(entity.AccountId, nameof(Document), documentId.ToString(), forWrite: true);
         var oldValues = AuditValues(entity);
 
         entity.ScanStatus = scanStatus;
-        // Clean bytes graduate a still-quarantined document to Active.
-        if (string.Equals(scanStatus, DocumentScanStatuses.Clean, StringComparison.OrdinalIgnoreCase) && entity.Status == DocumentStatuses.Uploaded)
+        // Servable bytes graduate a still-quarantined document to Active.
+        if (DocumentScanStatuses.IsServable(scanStatus) && entity.Status == DocumentStatuses.Uploaded)
         {
             entity.Status = DocumentStatuses.Active;
         }
@@ -74,7 +77,7 @@ public sealed class DocumentWriter(IApplicationDbContext context, ICurrentPrinci
         var entity = await Context.Documents
             .AsTracking().FirstOrDefaultAsync(x => x.DocumentId == documentId, cancellationToken)
             ?? throw new NotFoundException(nameof(Document), documentId.ToString());
-        RequireAccountWriteAccess(entity.AccountId);
+        RequireRowAccess(entity.AccountId, nameof(Document), documentId.ToString(), forWrite: true);
         await EnsureOwnerWriteAccessAsync(entity.AccountId, entity.OwnerEntityType, entity.OwnerEntityId, cancellationToken);
 
         var oldValues = AuditValues(entity);
@@ -104,7 +107,16 @@ public sealed class DocumentWriter(IApplicationDbContext context, ICurrentPrinci
         entity.ScanStatus = DocumentScanStatuses.Quarantined;
 
         AddAuditEvent(entity.AccountId, "ReplaceDocumentVersion", "Document", entity.DocumentId.ToString(), oldValues, AuditValues(entity));
-        await Context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await Context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception) when (Common.Infrastructure.UniqueViolation.Matches(exception, "IX_document_versions_documentid_versionnumber"))
+        {
+            // Another upload took this version number first; nothing of this one was written.
+            Common.Infrastructure.UniqueViolation.Detach(Context.ChangeTracker);
+            throw new ConflictException("Another version of this document was uploaded at the same time. Reload it and try again.");
+        }
 
         if (renewed)
         {
@@ -121,19 +133,19 @@ public sealed class DocumentWriter(IApplicationDbContext context, ICurrentPrinci
     {
         var document = await Context.Documents.FirstOrDefaultAsync(x => x.DocumentId == signature.DocumentId, cancellationToken)
             ?? throw new NotFoundException(nameof(Document), signature.DocumentId.ToString());
-        RequireAccountWriteAccess(document.AccountId);
+        RequireRowAccess(document.AccountId, nameof(Document), signature.DocumentId.ToString(), forWrite: true);
         await EnsureOwnerWriteAccessAsync(document.AccountId, document.OwnerEntityType, document.OwnerEntityId, cancellationToken);
 
-        // A supplied signature image must itself be a Clean Signature-category document in the account (AC11).
+        // A supplied signature image must itself be a servable Signature-category document in the account (AC11).
         if (signature.SignatureImageDocumentId.HasValue)
         {
             var image = await Context.Documents.FirstOrDefaultAsync(x => x.DocumentId == signature.SignatureImageDocumentId.Value, cancellationToken)
                 ?? throw new NotFoundException(nameof(Document), signature.SignatureImageDocumentId.Value.ToString());
             if (image.AccountId != document.AccountId
                 || !string.Equals(image.Category, "Signature", StringComparison.OrdinalIgnoreCase)
-                || !string.Equals(image.ScanStatus, DocumentScanStatuses.Clean, StringComparison.OrdinalIgnoreCase))
+                || !DocumentScanStatuses.IsServable(image.ScanStatus))
             {
-                throw new ValidationException([new FluentValidation.Results.ValidationFailure(nameof(signature.SignatureImageDocumentId), "Signature image must be a Clean document of category 'Signature' in the same account.")]);
+                throw new ValidationException([new FluentValidation.Results.ValidationFailure(nameof(signature.SignatureImageDocumentId), "Signature image must be a servable document of category 'Signature' in the same account.")]);
             }
         }
 
@@ -177,7 +189,7 @@ public sealed class DocumentWriter(IApplicationDbContext context, ICurrentPrinci
         var entity = await Context.DocumentTypes
             .AsTracking().FirstOrDefaultAsync(t => t.DocumentTypeId == documentTypeId, cancellationToken)
             ?? throw new NotFoundException(nameof(DocumentType), documentTypeId.ToString());
-        RequireAccountWriteAccess(entity.AccountId);
+        RequireRowAccess(entity.AccountId, nameof(DocumentType), documentTypeId.ToString(), forWrite: true);
         entity.Enabled = false;
         AddAuditEvent(entity.AccountId, "DisableDocumentType", "DocumentType", entity.DocumentTypeId.ToString(), null, DocumentTypeAuditValues(entity));
         await Context.SaveChangesAsync(cancellationToken);
@@ -188,7 +200,7 @@ public sealed class DocumentWriter(IApplicationDbContext context, ICurrentPrinci
         var entity = await Context.Documents
             .AsTracking().FirstOrDefaultAsync(x => x.DocumentId == documentId, cancellationToken)
             ?? throw new NotFoundException(nameof(Document), documentId.ToString());
-        RequireAccountWriteAccess(entity.AccountId);
+        RequireRowAccess(entity.AccountId, nameof(Document), documentId.ToString(), forWrite: true);
         var oldValues = AuditValues(entity);
         update(entity);
         if (revokeShares)
@@ -209,6 +221,58 @@ public sealed class DocumentWriter(IApplicationDbContext context, ICurrentPrinci
 
         AddAuditEvent(entity.AccountId, action, "Document", entity.DocumentId.ToString(), oldValues, AuditValues(entity, reason));
         await Context.SaveChangesAsync(cancellationToken);
+    }
+
+    // What a principal may file: a driver only platform evidence, as an internal record with no
+    // expiry; anyone else the account's enabled document types or a platform module category.
+    private async Task<DocumentDto> ValidateUploadAsync(Guid accountId, DocumentDto document, CancellationToken cancellationToken)
+    {
+        var failures = new List<FluentValidation.Results.ValidationFailure>();
+        var classification = DocumentClassifications.Normalize(document.Classification);
+        if (classification is null)
+        {
+            failures.Add(new(nameof(document.Classification), "Unknown classification."));
+        }
+
+        if (!string.Equals(document.VisibilityScope?.Trim(), DocumentVisibilityScopes.Owner, StringComparison.OrdinalIgnoreCase))
+        {
+            failures.Add(new(nameof(document.VisibilityScope), "Unknown visibility scope."));
+        }
+
+        if (document.ExpiresAt is { } expiresAt && expiresAt <= DateTimeOffset.UtcNow)
+        {
+            failures.Add(new(nameof(document.ExpiresAt), "The expiry date must be in the future."));
+        }
+
+        if (Principal.PrincipalType == PrincipalType.Driver)
+        {
+            if (!PlatformDocumentCategories.DriverUploadable.Contains(document.Category))
+            {
+                failures.Add(new(nameof(document.Category), "Drivers may not file documents in this category."));
+            }
+
+            if (classification is not null && classification != DocumentClassifications.Internal)
+            {
+                failures.Add(new(nameof(document.Classification), "Drivers file internal documents only."));
+            }
+
+            if (document.ExpiresAt is not null)
+            {
+                failures.Add(new(nameof(document.ExpiresAt), "Drivers may not set an expiry date."));
+            }
+        }
+        else if (!PlatformDocumentCategories.All.Contains(document.Category)
+            && !await Context.DocumentTypes.AnyAsync(t => t.AccountId == accountId && t.Enabled && t.Category == document.Category, cancellationToken))
+        {
+            failures.Add(new(nameof(document.Category), "The category is not a document type of this account."));
+        }
+
+        if (failures.Count > 0)
+        {
+            throw new ValidationException(failures);
+        }
+
+        return document with { Classification = classification!, VisibilityScope = DocumentVisibilityScopes.Owner };
     }
 
     private async Task EnsureOwnerWriteAccessAsync(Guid accountId, string ownerEntityType, string ownerEntityId, CancellationToken cancellationToken)
@@ -255,7 +319,7 @@ public sealed class DocumentWriter(IApplicationDbContext context, ICurrentPrinci
 
     private DocumentVm ToVm(Document x)
     {
-        var downloadUrl = string.Equals(x.ScanStatus, DocumentScanStatuses.Clean, StringComparison.OrdinalIgnoreCase)
+        var downloadUrl = DocumentScanStatuses.IsServable(x.ScanStatus)
             ? $"/documents/{x.DocumentId}/download"
             : null;
         return new DocumentVm(x.DocumentId, x.AccountId, x.OwnerEntityType, x.OwnerEntityId, x.UploadedByPrincipalType, x.UploadedByPrincipalId, x.FileName, x.Category, x.Title, x.Description, x.ContentType, x.SizeBytes, x.Sha256Hash, x.Classification, x.Status, x.ExpiresAt, x.VisibilityScope, x.ScanStatus, x.CurrentVersion, downloadUrl, x.LastModified);

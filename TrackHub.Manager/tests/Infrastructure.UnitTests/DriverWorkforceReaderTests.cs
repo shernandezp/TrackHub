@@ -176,7 +176,7 @@ public class DriverWorkforceReaderTests
         context.SaveChanges();
 
         var reader = new DriverQualificationReader(context, Principal(accountId));
-        var expiring = await reader.GetDriverQualificationsAsync(accountId, null, 30, 0, 50, CancellationToken.None);
+        var expiring = (await reader.GetDriverQualificationsAsync(accountId, null, 30, 0, 50, CancellationToken.None)).Items;
 
         Assert.Multiple(() =>
         {
@@ -185,7 +185,7 @@ public class DriverWorkforceReaderTests
             Assert.That(expiring.First().DriverName, Is.EqualTo("Ana"));
         });
 
-        var all = await reader.GetDriverQualificationsAsync(accountId, null, null, 0, 50, CancellationToken.None);
+        var all = (await reader.GetDriverQualificationsAsync(accountId, null, null, 0, 50, CancellationToken.None)).Items;
         // Unfiltered: soonest expiry first, undated last.
         Assert.That(all.Select(x => x.Number), Is.EqualTo(new[] { "pastdue", "soon", "far", "undated" }));
     }
@@ -217,11 +217,11 @@ public class DriverWorkforceReaderTests
 
         var reader = new DriverAssignmentReader(context, Principal(accountId));
 
-        var recent = await reader.GetDriverAssignmentHistoryAsync(accountId, null, null, DateTimeOffset.UtcNow.AddDays(-10), null, 0, 50, CancellationToken.None);
+        var recent = (await reader.GetDriverAssignmentHistoryAsync(accountId, null, null, DateTimeOffset.UtcNow.AddDays(-10), null, 0, 50, CancellationToken.None)).Items;
         // The 30→20-days-ago assignment closed before the window opened, so it is out.
         Assert.That(recent.Select(x => x.TransporterName), Is.EqualTo(new[] { "B" }));
 
-        var byTransporter = await reader.GetDriverAssignmentHistoryAsync(accountId, null, truckA.TransporterId, null, null, 0, 50, CancellationToken.None);
+        var byTransporter = (await reader.GetDriverAssignmentHistoryAsync(accountId, null, truckA.TransporterId, null, null, 0, 50, CancellationToken.None)).Items;
         Assert.That(byTransporter.Select(x => x.TransporterName), Is.EqualTo(new[] { "A" }));
     }
 

@@ -251,7 +251,7 @@ public class PagedReaderOrderingTests
         var reader = new PointOfInterestReader(context, Principal(accountId));
         var seen = await DrainAsync<Guid>(async (skip, take) =>
         {
-            var page = await reader.GetPointsOfInterestByAccountAsync(accountId, null, skip, take, null, CancellationToken.None);
+            var page = await reader.GetPointsOfInterestByAccountAsync(accountId, null, skip, take, null, null, CancellationToken.None);
             return ([.. page.Items.Select(p => p.PointOfInterestId)], page.TotalCount);
         });
 

@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Infrastructure;
 using Common.Application.Interfaces;
 using TrackHub.Manager.Infrastructure.Interfaces;
 
@@ -40,11 +41,11 @@ public sealed class GroupReader(IApplicationDbContext context, ICurrentPrincipal
                 d.Name,
                 d.Description,
                 d.Active,
-                d.AccountId))
+                d.AccountId, d.Version))
             .FirstOrDefaultAsync(cancellationToken);
         ReaderResults.EnsureFound(group, nameof(Entities.Group), id.ToString());
 
-        RequireAccountAccess(group.AccountId);
+        RequireRowAccess(group.AccountId, nameof(Entities.Group), id.ToString(), forWrite: false);
         return group;
     }
 
@@ -76,7 +77,7 @@ public sealed class GroupReader(IApplicationDbContext context, ICurrentPrincipal
                 d.Name,
                 d.Description,
                 d.Active,
-                d.AccountId))
+                d.AccountId, d.Version))
             .ToListAsync(cancellationToken);
 
         return new GroupsPageVm(items, totalCount);

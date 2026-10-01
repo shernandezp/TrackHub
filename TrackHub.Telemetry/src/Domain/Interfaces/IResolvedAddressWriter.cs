@@ -20,6 +20,8 @@ public interface IResolvedAddressWriter
     Task<bool> PersistResolvedAddressAsync(
         Guid? transporterPositionHistoryId,
         Guid? transporterId,
+        double latitude,
+        double longitude,
         string? address,
         string? city,
         string? state,

@@ -12,6 +12,8 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
+using TrackHub.Reporting.Domain.Paging;
+
 namespace TrackHub.Reporting.Infrastructure.GraphQLApi;
 
 /// <summary>
@@ -34,37 +36,13 @@ internal sealed class ManagerPage<T>
 /// </summary>
 internal static class ManagerPageDrain
 {
-    // Manager clamps take to 500 (Common.Application.Paging.PageRequest.MaxPageSize).
-    internal const int PageSize = 500;
-    internal const int MaxRows = 100_000;
-
-    public static async Task<IReadOnlyCollection<T>> FetchAllAsync<T>(
+    public static Task<IReadOnlyCollection<T>> FetchAllAsync<T>(
         Func<int, int, GraphQLRequest> buildRequest,
         Func<GraphQLRequest, CancellationToken, Task<ManagerPage<T>>> send,
-        string readName,
         CancellationToken cancellationToken)
-    {
-        var all = new List<T>();
-        var skip = 0;
-
-        while (true)
+        => FeedDrain.DrainAsync<T>(async (skip, take) =>
         {
-            var page = await send(buildRequest(skip, PageSize), cancellationToken);
-            all.AddRange(page.Items);
-
-            if (all.Count > MaxRows)
-            {
-                throw new InvalidOperationException(
-                    $"The '{readName}' read exceeded the {MaxRows:N0}-row report limit ({page.TotalCount:N0} available). " +
-                    "Narrow the report rather than exporting a truncated result.");
-            }
-
-            if (page.Items.Count < PageSize || all.Count >= page.TotalCount)
-            {
-                return all;
-            }
-
-            skip += PageSize;
-        }
-    }
+            var page = await send(buildRequest(skip, take), cancellationToken);
+            return (page.Items, page.TotalCount);
+        });
 }

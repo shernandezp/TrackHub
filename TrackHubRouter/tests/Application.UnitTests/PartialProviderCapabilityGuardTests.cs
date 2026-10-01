@@ -64,8 +64,7 @@ public class PartialProviderCapabilityGuardTests : TestsContext
             .ReturnsAsync(Mock.Of<IDisposable>());
         var handler = new SyncOperatorDevicesCommandHandler(
             configuration.Object, deviceRegistry.Object, Mock.Of<IDeviceSyncWriter>(),
-            syncRunWriter.Object, healthWriter.Object, alertWriter.Object, syncLock.Object,
-            Mock.Of<IDeviceCatalogCache>(), EmptyCatalog,
+            syncRunWriter.Object, healthWriter.Object, alertWriter.Object, syncLock.Object, EmptyCatalog,
             Mock.Of<ILogger<SyncOperatorDevicesCommandHandler>>());
 
         var result = await handler.Handle(
@@ -89,8 +88,7 @@ public class PartialProviderCapabilityGuardTests : TestsContext
         var handler = new SyncOperatorDevicesCommandHandler(
             configuration.Object, Mock.Of<IDeviceRegistry>(), Mock.Of<IDeviceSyncWriter>(),
             Mock.Of<IOperatorSyncRunWriter>(), Mock.Of<IOperatorHealthCheckSystemWriter>(),
-            Mock.Of<IAlertEventWriter>(), Mock.Of<IOperatorSyncLock>(),
-            Mock.Of<IDeviceCatalogCache>(), EmptyCatalog,
+            Mock.Of<IAlertEventWriter>(), Mock.Of<IOperatorSyncLock>(), EmptyCatalog,
             Mock.Of<ILogger<SyncOperatorDevicesCommandHandler>>());
 
         var ex = Assert.ThrowsAsync<ProviderCapabilityNotSupportedException>(

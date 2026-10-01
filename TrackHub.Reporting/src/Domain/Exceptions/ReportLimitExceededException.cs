@@ -10,7 +10,7 @@ public sealed class ReportLimitExceededException : Exception
         : base(message)
         => MaxRows = maxRows;
 
-    public string Code => "REPORT_ROW_LIMIT_EXCEEDED";
+    public string Code => ReportErrorCodes.RowLimitExceeded;
     public int MaxRows { get; }
 
     // PDF is capped separately: oversized datasets return 400 advising Excel, never a

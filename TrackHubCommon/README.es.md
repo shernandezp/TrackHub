@@ -20,7 +20,7 @@ Detalle completo: **[Common Library](https://github.com/shernandezp/TrackHub/wik
 ## Qué proporciona
 
 - **El mediador CQRS personalizado** (`Common.Mediator`) — `IRequest<TResult>`, `IRequestHandler<,>`, `MediatorDispatcher : ISender, IPublisher`. **MediatR no se usa y está prohibido.**
-- **El pipeline de comportamientos** — registro, validación, autorización, ámbito de tenant fail-closed, caché, limitación de tasa, manejo de excepciones no controladas
+- **El pipeline de comportamientos** — registro, validación, autorización, ámbito de tenant fail-closed, limitación de tasa, manejo de excepciones no controladas
 - **Los catálogos de constantes entre servicios** — `Resources`, `Actions`, `Roles`, `Policies`, `Clients`, `FeatureKeys`, `BackgroundJobKeys`, `Reports`, y los metadatos de esquema/tabla/columna/vista
 - **Criptografía** — BCrypt para contraseñas de usuario, encriptación por certificado de servidor para secretos de terceros como las credenciales de proveedores GPS
 - **Localización** — `ResourceLocalizer`, la única primitiva para texto renderizado en el servidor a partir de `.resx`
@@ -57,7 +57,6 @@ Registrar los servicios en el `DependencyInjection.cs` de cada capa:
 ```csharp
 // Application layer
 services.AddApplicationServices(typeof(SomeHandler).Assembly);
-services.AddDistributedMemoryCache();   // required — CachingBehavior resolves IDistributedCache
 
 // Web layer
 builder.Services
@@ -93,7 +92,6 @@ Cambiar Common y sus consumidores en **un solo commit**.
   ninguno puede quedar rezagado en un Common anterior, y un cambio incompatible aparece al compilar
   en lugar de después de publicar.
 - **`AccountScopeBehavior` es fail-closed; el `IFeatureFlagService` por defecto es fail-open.** Eso es deliberado: un ámbito de tenant faltante es una falla de seguridad, mientras que un registro de feature faltante es una falla de configuración del servicio que las propias pruebas del servicio deberían detectar. Un servicio que use `[RequireFeature]` **debe** registrar su propio `IFeatureFlagService`.
-- **`AddDistributedMemoryCache()` no es opcional.** `CachingBehavior` resuelve `IDistributedCache` para cada tipo de solicitud; un registro faltante hace fallar **toda** solicitud con un error de DI enmascarado.
 - **Agregar un recurso de autorización no es suficiente.** También debe agregarse a `DefaultResources` del `ApplicationDbContextInitializer` de `TrackHubSecurity`, y otorgarse en la matriz de cada rol — [dos pasos separados](https://github.com/shernandezp/TrackHub/wiki/Security-and-Identity#seeding-rules-that-bite).
 - **Los catálogos de constantes son el contrato.** Los nombres de recurso, acción, clave de feature, esquema y tabla nunca son literales de cadena en el sitio de llamada — un error de tipeo se convierte en una falla silenciosa de autorización o de mapeo.
 - Verificar que una constante llegó a un DLL compilado se hace mejor con `grep -a`; los literales de metadatos UTF-16 derrotan a un `strings` simple.

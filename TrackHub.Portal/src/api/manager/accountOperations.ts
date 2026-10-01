@@ -40,6 +40,7 @@ export const AccountItemFragment = graphql(`
     active
     timeZoneId
     lastModified
+    version
   }
 `);
 

@@ -26,7 +26,6 @@ public static class DependencyInjection
     {
         var assembly = Assembly.GetExecutingAssembly();
         services.AddApplicationServices(assembly);
-        services.AddDistributedMemoryCache();
         services.AddValidatorsFromAssemblyContaining<CreateUserCommandValidator>();
         services.AddScoped<OutboxDispatcher>();
         return services;

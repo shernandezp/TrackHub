@@ -20,3 +20,12 @@ public readonly record struct OutboxMessageVm(
     string MessageType,
     string PayloadJson,
     int AttemptCount);
+
+public readonly record struct FailedOutboxMessageVm(
+    Guid OutboxMessageId,
+    string MessageType,
+    string? OrderingKey,
+    int AttemptCount,
+    string? LastError,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset? ProcessedAt);

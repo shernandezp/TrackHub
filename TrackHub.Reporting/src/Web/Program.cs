@@ -59,6 +59,8 @@ builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
+app.UseExceptionHandler(options => { });
+
 app.UseHeaderPropagation();
 
 // Enable CORS
@@ -79,7 +81,6 @@ app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseExceptionHandler(options => { });
 app.MapEndpoints(Assembly.GetExecutingAssembly());
 
 app.Run();

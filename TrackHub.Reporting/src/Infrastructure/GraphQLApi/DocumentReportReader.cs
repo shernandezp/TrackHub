@@ -17,22 +17,18 @@ using HotChocolate;
 using TrackHub.Reporting.Domain.Interfaces;
 using TrackHub.Reporting.Domain.Interfaces.Manager;
 using TrackHub.Reporting.Domain.Models;
+using TrackHub.Reporting.Domain.Paging;
 
 namespace TrackHub.Reporting.Infrastructure.GraphQLApi;
 
 public class DocumentReportReader(IGraphQLClientFactory graphQLClient, IUser user, IAccountFeatureReader featureReader)
     : GraphQLService(graphQLClient.CreateClient(Clients.Manager)), IDocumentReportReader
 {
-    // Manager clamps take to 500, so reports page through until exhausted or the report row limit.
-    private const int PageSize = 500;
-    private const int MaxRows = 100_000;
-
-    private const string DocumentFields = "category ownerEntityType ownerEntityId fileName classification status expiresAt";
-
     internal const string ExpiringDocumentsQuery = @"
                 query($withinDays: Int!, $skip: Int!, $take: Int!) {
                     expiringDocuments(query: { withinDays: $withinDays, skip: $skip, take: $take }) {
-                        category ownerEntityType ownerEntityId fileName classification status expiresAt
+                        items { category ownerEntityType ownerEntityId fileName classification status expiresAt }
+                        totalCount
                     }
                 }";
 
@@ -55,14 +51,16 @@ public class DocumentReportReader(IGraphQLClientFactory graphQLClient, IUser use
     internal const string SharesByAccountQuery = @"
                 query($accountId: UUID!, $skip: Int!, $take: Int!) {
                     publicLinkGrantsByAccount(query: { accountId: $accountId, skip: $skip, take: $take }) {
-                        resourceType resourceId scopes purpose expiresAt revokedAt accessCount lastAccessedAt
+                        items { resourceType resourceId scopes purpose expiresAt revokedAt accessCount lastAccessedAt }
+                        totalCount
                     }
                 }";
 
     internal const string SearchDocumentsQuery = @"
                 query($from: DateTime, $to: DateTime, $skip: Int!, $take: Int!) {
                     searchDocuments(query: { filter: { from: $from, to: $to }, skip: $skip, take: $take }) {
-                        category ownerEntityType ownerEntityId fileName classification status expiresAt
+                        items { category ownerEntityType ownerEntityId fileName classification status expiresAt }
+                        totalCount
                     }
                 }";
 
@@ -72,11 +70,7 @@ public class DocumentReportReader(IGraphQLClientFactory graphQLClient, IUser use
         => featureReader.EnsureFeatureEnabledAsync(AccountId, FeatureKeys.Documents, cancellationToken);
 
     public Task<IReadOnlyCollection<ReportDocumentVm>> GetExpiringDocumentsAsync(int withinDays, CancellationToken cancellationToken)
-        => FetchAllAsync<ReportDocumentVm>((skip, take) => new GraphQLRequest
-        {
-            Query = ExpiringDocumentsQuery,
-            Variables = new { withinDays, skip, take }
-        }, cancellationToken);
+        => DrainAsync<ReportDocumentVm>(ExpiringDocumentsQuery, (skip, take) => new { withinDays, skip, take }, cancellationToken);
 
     public async Task<IReadOnlyCollection<ReportDocumentTypeVm>> GetDocumentTypesAsync(CancellationToken cancellationToken)
     {
@@ -91,42 +85,17 @@ public class DocumentReportReader(IGraphQLClientFactory graphQLClient, IUser use
     }
 
     public Task<IReadOnlyCollection<ReportShareVm>> GetDocumentSharesByAccountAsync(CancellationToken cancellationToken)
-        => FetchAllAsync<ReportShareVm>((skip, take) => new GraphQLRequest
-        {
-            Query = SharesByAccountQuery,
-            Variables = new { accountId = AccountId, skip, take }
-        }, cancellationToken);
+        => DrainAsync<ReportShareVm>(SharesByAccountQuery, (skip, take) => new { accountId = AccountId, skip, take }, cancellationToken);
 
     public Task<IReadOnlyCollection<ReportDocumentVm>> SearchDocumentsAsync(DateTimeOffset? from, DateTimeOffset? to, CancellationToken cancellationToken)
-        => FetchAllAsync<ReportDocumentVm>((skip, take) => new GraphQLRequest
+        => DrainAsync<ReportDocumentVm>(SearchDocumentsQuery, (skip, take) => new { from, to, skip, take }, cancellationToken);
+
+    private Task<IReadOnlyCollection<T>> DrainAsync<T>(string query, Func<int, int, object> variables, CancellationToken cancellationToken)
+        => FeedDrain.DrainAsync<T>(async (skip, take) =>
         {
-            Query = SearchDocumentsQuery,
-            Variables = new { from, to, skip, take }
-        }, cancellationToken);
+            var page = await QueryAsync<Page<T>>(new GraphQLRequest { Query = query, Variables = variables(skip, take) }, cancellationToken);
+            return (page.Items, page.TotalCount);
+        });
 
-    private async Task<IReadOnlyCollection<T>> FetchAllAsync<T>(Func<int, int, GraphQLRequest> buildRequest, CancellationToken cancellationToken)
-    {
-        var all = new List<T>();
-        var skip = 0;
-        // Fetch one page BEYOND the report limit so an over-limit result set reaches ExcelHelper, which
-        // then fails clearly (ReportLimitExceededException → 400) rather than silently truncating (AC12).
-        while (all.Count <= MaxRows)
-        {
-            var page = await QueryAsync<List<T>>(buildRequest(skip, PageSize), cancellationToken);
-            if (page.Count == 0)
-            {
-                break;
-            }
-
-            all.AddRange(page);
-            if (page.Count < PageSize)
-            {
-                break;
-            }
-
-            skip += PageSize;
-        }
-
-        return all;
-    }
+    private sealed record Page<T>(IReadOnlyCollection<T>? Items, int TotalCount);
 }

@@ -30,7 +30,7 @@ public class GetGeofenceQueryHandler(IGeofenceReader reader, IUserReader userRea
         var result = await reader.GetGeofenceAsync(request.Id, cancellationToken);
         var currentUser = await userReader.GetUserAsync(UserId, cancellationToken);
         if (result.AccountId != currentUser.AccountId)
-            throw new ForbiddenAccessException();
+            throw new Ardalis.GuardClauses.NotFoundException("Geofence", request.Id.ToString());
         await accountFeatureReader.EnsureFeatureEnabledAsync(currentUser.AccountId, FeatureKeys.Geofencing, cancellationToken);
         return result;
     }

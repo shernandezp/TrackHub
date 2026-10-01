@@ -53,11 +53,8 @@ public sealed class DeviceReader(
         foreach (var chunk in devicesDictionary.Keys.Chunk(ProviderBatching.MaxIdsPerRequest))
         {
             var url = $"fleet/vehicles/stats?vehicleIds={string.Join(",", chunk)}";
-            var result = await HttpClientService.GetAsync<VehicleStatsResponse>(url, cancellationToken: cancellationToken);
-            if (result?.Data is not null)
-            {
-                results.AddRange(result.Data.MapToDeviceVm(devicesDictionary));
-            }
+            var vehicles = await GetAllPagesAsync<VehicleStatsResponse, VehicleStats>(url, cancellationToken);
+            results.AddRange(vehicles.MapToDeviceVm(devicesDictionary));
         }
         return results;
     }
@@ -67,9 +64,7 @@ public sealed class DeviceReader(
     /// </summary>
     public async Task<IEnumerable<DeviceVm>> GetDevicesAsync(CancellationToken cancellationToken)
     {
-        var url = "fleet/vehicles/stats";
-        var result = await HttpClientService.GetAsync<VehicleStatsResponse>(url, cancellationToken: cancellationToken);
-
-        return result?.Data is null ? [] : result.Data.MapToDeviceVm().Distinct();
+        var vehicles = await GetAllPagesAsync<VehicleStatsResponse, VehicleStats>("fleet/vehicles/stats", cancellationToken);
+        return vehicles.MapToDeviceVm().Distinct();
     }
 }

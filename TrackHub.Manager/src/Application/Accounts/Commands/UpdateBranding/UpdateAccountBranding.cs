@@ -21,6 +21,8 @@ namespace TrackHub.Manager.Application.Accounts.Commands.UpdateBranding;
 
 // Account-Administrator own-account branding upsert.
 [Authorize(Resource = Resources.Accounts, Action = Actions.Edit)]
+// Enforcement: the writer or reader checks every referenced id against the request's account.
+[AccountScopeEnforcedInHandler]
 public readonly record struct UpdateAccountBrandingCommand(AccountBrandingDto Branding)
     : IRequest<AccountBrandingVm>;
 

@@ -20,6 +20,7 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { RequestOptions } from 'api/core/errors';
 import type {
   ClientItemFragment as ClientItemType,
   ClientDtoInput,
@@ -37,8 +38,8 @@ export type Client = ClientItemType;
 export type CreatedClient = CreateClientMutation['createClient'];
 export type { ClientDtoInput, ClientUserDtoInput };
 
-export async function getClients(skip = 0, take = 500): Promise<Client[]> {
-  const data = await executeGraphQL('security', GetClientsDocument, { skip, take });
+export async function getClients(skip = 0, take = 500, options?: RequestOptions): Promise<Client[]> {
+  const data = await executeGraphQL('security', GetClientsDocument, { skip, take }, options);
   return data.clients;
 }
 

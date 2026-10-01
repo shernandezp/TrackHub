@@ -22,12 +22,12 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { RequestOptions } from 'api/core/errors';
 import type { ListParams, Page } from 'api/core/paging';
 import type {
   UserDetailFragment as UserDetailType,
   GetCurrentUserQuery,
   GetUsersByAccountQuery,
-  GetUserLookupByAccountQuery,
   GetIntegrationUsersQuery,
   CreateUserDtoInput,
   UpdateUserDtoInput,
@@ -37,7 +37,6 @@ import {
   GetCurrentUserDocument,
   GetIntegrationUsersDocument,
   GetUsersByAccountDocument,
-  GetUserLookupByAccountDocument,
   CreateUserDocument,
   CreateManagerDocument,
   UpdateUserDocument,
@@ -53,34 +52,27 @@ export type User = UserDetailType;
 export type CurrentUser = GetCurrentUserQuery['currentUser'];
 export type AccountUser = GetUsersByAccountQuery['usersByAccount']['items'][number];
 export type AccountUsersPage = Page<AccountUser>;
-export type UserLookup = GetUserLookupByAccountQuery['userLookupByAccount'][number];
 export type IntegrationUser = GetIntegrationUsersQuery['users'][number];
 export type { CreateUserDtoInput, UpdateUserDtoInput, UpdateCurrentUserDtoInput };
 
-export async function getCurrentUser(): Promise<CurrentUser> {
-  const data = await executeGraphQL('security', GetCurrentUserDocument);
+export async function getCurrentUser(options?: RequestOptions): Promise<CurrentUser> {
+  const data = await executeGraphQL('security', GetCurrentUserDocument, undefined, options);
   return data.currentUser;
 }
 
 /** Integration users only — used to populate the client-owner picker. */
-export async function getUsers(): Promise<IntegrationUser[]> {
-  const data = await executeGraphQL('security', GetIntegrationUsersDocument);
+export async function getUsers(options?: RequestOptions): Promise<IntegrationUser[]> {
+  const data = await executeGraphQL('security', GetIntegrationUsersDocument, undefined, options);
   return data.users;
 }
 
-export async function getUsersByAccount(params: ListParams = {}): Promise<AccountUsersPage> {
+export async function getUsersByAccount(params: ListParams = {}, options?: RequestOptions): Promise<AccountUsersPage> {
   const data = await executeGraphQL('security', GetUsersByAccountDocument, {
     skip: params.skip ?? null,
     take: params.take ?? null,
     search: params.search ?? null,
-  });
+  }, options);
   return data.usersByAccount;
-}
-
-/** The account's users as id + username, for the allocator dialogs' pickers. */
-export async function getUserLookupByAccount(): Promise<UserLookup[]> {
-  const data = await executeGraphQL('security', GetUserLookupByAccountDocument);
-  return data.userLookupByAccount;
 }
 
 export async function createUser(user: CreateUserDtoInput): Promise<User> {
@@ -177,13 +169,13 @@ export async function unlockUser(userId: string): Promise<boolean> {
 }
 
 /** Silent op: the caller defaults to `false` on failure (no toast). */
-export async function isAdmin(): Promise<boolean> {
-  const data = await executeGraphQL('security', UserIsAdminDocument);
+export async function isAdmin(options?: RequestOptions): Promise<boolean> {
+  const data = await executeGraphQL('security', UserIsAdminDocument, undefined, options);
   return data.userIsAdmin;
 }
 
 /** Silent op: the caller defaults to `false` on failure (no toast). */
-export async function isManager(): Promise<boolean> {
-  const data = await executeGraphQL('security', UserIsManagerDocument);
+export async function isManager(options?: RequestOptions): Promise<boolean> {
+  const data = await executeGraphQL('security', UserIsManagerDocument, undefined, options);
   return data.userIsManager;
 }

@@ -14,7 +14,7 @@
 *  limitations under the License.
 */
 
-import { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useContext, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from '@mui/material/Icon';
@@ -24,12 +24,11 @@ import ArgonBadge from "components/ArgonBadge";
 import ArgonBox from "components/ArgonBox";
 import ArgonButton from "components/ArgonButton";
 import ArgonTypography from "components/ArgonTypography";
-import CustomSelect from "controls/Dialogs/CustomSelect";
 import useForm from "controls/Dialogs/useForm";
-import type { FormChangeHandler } from "controls/Dialogs/useForm";
+import SearchSelect from "edition/SearchSelect";
+import type { SearchOption } from "edition/SearchSelect";
+import { useAccountOptions } from "edition/pickerOptions";
 import AccountFeatureDialog from "layouts/systemadmin/components/accountFeatures/AccountFeatureDialog";
-import { getAllAccounts } from "api/manager/accounts";
-import type { Account } from "api/manager/accounts";
 import { getAccountFeaturesMaster, setAccountFeatureMaster } from "api/manager/accountFeatures";
 import type { AccountFeature, AccountFeatureDtoInput } from "api/manager/accountFeatures";
 import { notifyApiError } from "api/core/errors";
@@ -125,27 +124,11 @@ function SystemAccountFeatures() {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
   const [expanded, setExpanded] = useState(false);
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [accountId, setAccountId] = useState('');
+  const [selectedAccount, setSelectedAccount] = useState<SearchOption | null>(null);
   const [features, setFeatures] = useState<AccountFeature[]>([]);
   const [open, setOpen] = useState(false);
   const [isAdd, setIsAdd] = useState(false);
-  const loaded = useRef(false);
   const [values, handleChange, setValues, setErrors, , errors] = useForm<FeatureFormValues>({});
-
-  const selectedAccount = accounts.find(account => account.accountId === accountId);
-
-  const loadAccounts = async () => {
-    setLoading(true);
-    try {
-      // Only the account picker needs the full list; features are read one account at a time.
-      setAccounts(await getAllAccounts() || []);
-    } catch (error) {
-      notifyApiError(error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const loadFeatures = async (targetAccountId: string) => {
     if (!targetAccountId) {
@@ -162,26 +145,27 @@ function SystemAccountFeatures() {
     }
   };
 
-  useEffect(() => {
-    if (expanded && !loaded.current) {
-      loaded.current = true;
-      loadAccounts();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [expanded]);
-
-  const handleAccountFilterChange: FormChangeHandler = (event) => {
-    const nextAccountId = String(event.target.value ?? '');
-    setAccountId(nextAccountId);
-    loadFeatures(nextAccountId);
+  const handleAccountFilterChange = (account: SearchOption | null) => {
+    setSelectedAccount(account);
+    loadFeatures(account?.value ?? '');
   };
 
   const handleAddClick = () => {
     setIsAdd(true);
     setErrors({});
     // Adding from a filtered view targets the account on screen by default.
-    setValues({ accountId, featureKey: '', enabled: true, tier: 'default', source: 'superadmin' });
+    setValues({
+      accountId: selectedAccount?.value ?? '',
+      accountName: selectedAccount?.label,
+      featureKey: '',
+      enabled: true,
+      tier: 'default',
+      source: 'superadmin',
+    });
   };
+
+  const handleDialogAccountChange = (account: SearchOption | null) =>
+    setValues(current => ({ ...current, accountId: account?.value ?? '', accountName: account?.label }));
 
   /** Seeds one form key per configured field, falling back to the documented default. */
   const seedConfigValues = (featureKey: string, configurationJson?: string | null): Record<string, number | boolean> => {
@@ -194,12 +178,12 @@ function SystemAccountFeatures() {
     );
   };
 
-  const handleEditClick = (account: Account, feature: AccountFeature) => {
+  const handleEditClick = (account: SearchOption, feature: AccountFeature) => {
     setIsAdd(false);
     setErrors({});
     setValues({
-      accountId: account.accountId,
-      accountName: account.name,
+      accountId: account.value,
+      accountName: account.label,
       featureKey: feature.featureKey,
       enabled: !!feature.enabled,
       tier: feature.tier || 'default',
@@ -246,7 +230,7 @@ function SystemAccountFeatures() {
       setOpen(false);
       // Follow the edit onto the account it targeted, which may differ from the filtered one.
       const savedAccountId = values.accountId ?? '';
-      setAccountId(savedAccountId);
+      setSelectedAccount({ value: savedAccountId, label: values.accountName ?? savedAccountId });
       await loadFeatures(savedAccountId);
     } catch (error) {
       notifyApiError(error);
@@ -254,8 +238,6 @@ function SystemAccountFeatures() {
       setLoading(false);
     }
   };
-
-  const accountOptions: FeatureSelectOption[] = accounts.map(account => ({ value: account.accountId, label: account.name }));
 
   const featureOptions: FeatureSelectOption[] = useMemo(
     () => knownFeatures.map(key => ({ value: key, label: featureLabel(t, key) })),
@@ -273,7 +255,7 @@ function SystemAccountFeatures() {
           <Icon>edit</Icon>&nbsp;{t('generic.edit')}
         </ArgonButton>
       ),
-      id: `${selectedAccount.accountId}-${feature.featureKey}`
+      id: `${selectedAccount.value}-${feature.featureKey}`
     }))
     : [];
 
@@ -287,14 +269,13 @@ function SystemAccountFeatures() {
         setOpen={setOpen}
         handleAddClick={handleAddClick}>
         <ArgonBox maxWidth="320px">
-          <CustomSelect
-            name="accountFilter"
+          <SearchSelect
             id="accountFilter"
             label={t('account.title')}
-            list={accountOptions}
-            value={accountId}
-            handleChange={handleAccountFilterChange}
-            numericValue={false}
+            value={selectedAccount?.value ?? null}
+            valueLabel={selectedAccount?.label}
+            onChange={handleAccountFilterChange}
+            useOptions={useAccountOptions}
             placeholder={t('accountFeatures.selectAccount')}
           />
         </ArgonBox>
@@ -328,7 +309,7 @@ function SystemAccountFeatures() {
         handleChange={handleChange}
         errors={errors}
         isAdd={isAdd}
-        accountOptions={accountOptions}
+        onAccountChange={handleDialogAccountChange}
         featureOptions={featureOptions}
         configFields={configFields}
       />

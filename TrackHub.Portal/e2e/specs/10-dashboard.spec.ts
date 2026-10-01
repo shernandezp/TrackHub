@@ -8,7 +8,7 @@
  * live data (`E2E_HAS_POSITIONS=1`).
  */
 
-import { test, expect, flag } from '../fixtures';
+import { test, expect, flag, optional } from '../fixtures';
 import {
   accountSettingsLoaded,
   focusedUnit,
@@ -216,18 +216,14 @@ test.describe('dashboard', () => {
       await expect(stored).toHaveAttribute('aria-pressed', 'true');
     }
 
-    const from = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16);
-    const to = new Date().toISOString().slice(0, 16);
+    const until = new Date(optional('E2E_POSITIONS_UNTIL') ?? Date.now());
+    const from = new Date(until.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16);
+    const to = until.toISOString().slice(0, 16);
     await page.locator('#startDate').fill(from);
     await page.locator('#endDate').fill(to);
     await page.locator('#selectedItem').click();
-    // The first option is the disabled "select an item" placeholder; take the
-    // first real unit the deployment offers rather than naming one.
-    await page
-      .getByRole('option')
-      .and(page.locator(':not([aria-disabled="true"])'))
-      .first()
-      .click();
+    // Take the first unit the deployment offers rather than naming one.
+    await page.getByRole('option').first().click();
     await page.getByRole('button', { name: t('filters.search') }).click();
 
     await expect(page.getByRole('button', { name: t('replay.export') })).toBeEnabled({

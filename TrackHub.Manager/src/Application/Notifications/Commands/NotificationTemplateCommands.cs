@@ -2,6 +2,8 @@ namespace TrackHub.Manager.Application.Notifications.Commands;
 
 [Authorize(Resource = Resources.Notifications, Action = Actions.Write)]
 [RequireFeature(FeatureKeys.Notifications)]
+// Enforcement: the writer or reader checks every referenced id against the request's account.
+[AccountScopeEnforcedInHandler]
 public readonly record struct CreateNotificationTemplateCommand(NotificationTemplateDto Template) : IRequest<NotificationTemplateVm>;
 public class CreateNotificationTemplateCommandHandler(INotificationTemplateWriter writer) : IRequestHandler<CreateNotificationTemplateCommand, NotificationTemplateVm>
 {
@@ -17,6 +19,8 @@ public class CreateNotificationTemplateCommandValidator : AbstractValidator<Crea
 
 [Authorize(Resource = Resources.Notifications, Action = Actions.Edit)]
 [RequireFeature(FeatureKeys.Notifications)]
+// Enforcement: the writer or reader checks every referenced id against the request's account.
+[AccountScopeEnforcedInHandler]
 public readonly record struct UpdateNotificationTemplateCommand(Guid NotificationTemplateId, NotificationTemplateDto Template) : IRequest;
 public class UpdateNotificationTemplateCommandHandler(INotificationTemplateWriter writer) : IRequestHandler<UpdateNotificationTemplateCommand>
 {

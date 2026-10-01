@@ -79,7 +79,7 @@ export async function sweep(
 
   const geofences = await api.tryGql<{ geofencesByAccount: { items: Named[] } }>(
     'geofencing',
-    'query($take: Int) { geofencesByAccount(query: { enableCaching: false, take: $take }) { items { geofenceId name } } }',
+    'query($take: Int) { geofencesByAccount(query: { take: $take }) { items { geofenceId name } } }',
     { take: 500 }
   );
   for (const row of geofences?.geofencesByAccount.items ?? []) {
@@ -126,12 +126,12 @@ export async function sweep(
   }
 
   if (accountId) {
-    const drivers = await api.tryGql<{ driversByAccount: Named[] }>(
+    const drivers = await api.tryGql<{ driversByAccount: { items: Named[] } }>(
       'manager',
-      'query($accountId: UUID!, $skip: Int!, $take: Int!) { driversByAccount(query: { accountId: $accountId, skip: $skip, take: $take }) { driverId name active } }',
+      'query($accountId: UUID!, $skip: Int!, $take: Int!) { driversByAccount(query: { accountId: $accountId, skip: $skip, take: $take }) { items { driverId name active } } }',
       { accountId, skip: 0, take: 500 }
     );
-    for (const row of drivers?.driversByAccount ?? []) {
+    for (const row of drivers?.driversByAccount.items ?? []) {
       if (!stale(nameOf(row, 'name')) || row.active === false) continue;
       await drop(
         `driver ${row.name}`,
@@ -141,12 +141,12 @@ export async function sweep(
       );
     }
 
-    const rules = await api.tryGql<{ notificationRules: Named[] }>(
+    const rules = await api.tryGql<{ notificationRules: { items: Named[] } }>(
       'manager',
-      'query($accountId: UUID!, $skip: Int!, $take: Int!) { notificationRules(query: { accountId: $accountId, skip: $skip, take: $take }) { notificationRuleId ruleKey enabled } }',
+      'query($accountId: UUID!, $skip: Int!, $take: Int!) { notificationRules(query: { accountId: $accountId, skip: $skip, take: $take }) { items { notificationRuleId ruleKey enabled } } }',
       { accountId, skip: 0, take: 500 }
     );
-    for (const row of rules?.notificationRules ?? []) {
+    for (const row of rules?.notificationRules.items ?? []) {
       if (!stale(nameOf(row, 'ruleKey')) || row.enabled === false) continue;
       await drop(
         `notification rule ${row.ruleKey}`,
@@ -204,19 +204,19 @@ export async function sweep(
 
   // Public link grants carry no name, but the suite always stamps its purpose.
   if (accountId) {
-    const links = await api.tryGql<{ publicLinkGrantsByAccount: Named[] }>(
+    const links = await api.tryGql<{ publicLinkGrantsByAccount: { items: Named[] } }>(
       'manager',
-      'query($accountId: UUID!, $skip: Int!, $take: Int!) { publicLinkGrantsByAccount(query: { accountId: $accountId, skip: $skip, take: $take }) { publicLinkGrantId purpose revokedAt } }',
+      'query($accountId: UUID!, $skip: Int!, $take: Int!) { publicLinkGrantsByAccount(query: { accountId: $accountId, skip: $skip, take: $take }) { items { publicLinkGrantId purpose revokedAt } } }',
       { accountId, skip: 0, take: 500 }
     );
-    for (const row of links?.publicLinkGrantsByAccount ?? []) {
+    for (const row of links?.publicLinkGrantsByAccount.items ?? []) {
       if (row.revokedAt) continue;
       if (!String(row.purpose ?? '').toLowerCase().includes('e2e')) continue;
       await drop(
         `public link ${row.publicLinkGrantId}`,
         'manager',
-        'mutation($publicLinkGrantId: UUID!, $revokedBy: String!) { revokePublicLinkGrant(command: { publicLinkGrantId: $publicLinkGrantId, revokedBy: $revokedBy }) }',
-        { publicLinkGrantId: row.publicLinkGrantId, revokedBy: 'e2e sweep' }
+        'mutation($publicLinkGrantId: UUID!) { revokePublicLinkGrant(command: { publicLinkGrantId: $publicLinkGrantId }) }',
+        { publicLinkGrantId: row.publicLinkGrantId }
       );
     }
   }

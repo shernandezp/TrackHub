@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Infrastructure;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.Geometries.Prepared;
 
@@ -51,12 +52,7 @@ public sealed class GeofenceReader(IApplicationDbContext context) : IGeofenceRea
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            // Escape LIKE metacharacters so a literal '%'/'_' in the search text matches itself.
-            var escaped = search.Trim()
-                .Replace(@"\", @"\\")
-                .Replace("%", @"\%")
-                .Replace("_", @"\_");
-            query = query.Where(g => EF.Functions.ILike(g.Name, $"%{escaped}%", @"\"));
+            query = query.Where(g => EF.Functions.ILike(g.Name, SearchPattern.Contains(search), SearchPattern.Escape));
         }
 
         var totalCount = await query.CountAsync(cancellationToken);
@@ -162,7 +158,8 @@ public sealed class GeofenceReader(IApplicationDbContext context) : IGeofenceRea
             geofence.CircleRadiusMeters,
             geofence.AlertOnEntry,
             geofence.AlertOnExit,
-            geofence.DwellThresholdMinutes);
+            geofence.DwellThresholdMinutes,
+            geofence.Version);
 
     private static MultiPolygonVm CastGeofence(Polygon polygon)
     {

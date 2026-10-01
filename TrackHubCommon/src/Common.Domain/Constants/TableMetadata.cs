@@ -36,11 +36,13 @@ public static partial class TableMetadata
     public const string DriverQualification = "driver_qualifications";
     public const string DriverTransporterAssignment = "driver_transporter_assignments";
     public const string TransporterGroup = "transporter_group";
+    public const string TransporterDetectionCursor = "transporter_detection_cursors";
     public const string GeocodingProvider = "geocoding_providers";
     public const string Geofence = "geofences";
     public const string GeofenceEvent = "geofenceevents";
     public const string Group = "groups";
     public const string Operator = "operators";
+    public const string OperatorSyncBackoff = "operator_sync_backoffs";
     public const string PointOfInterest = "points_of_interest";
     public const string PlatformAnnouncement = "platform_announcements";
     public const string Policy = "policies";

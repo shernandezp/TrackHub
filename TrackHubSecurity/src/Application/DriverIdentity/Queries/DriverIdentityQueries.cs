@@ -16,6 +16,8 @@
 namespace TrackHub.Security.Application.DriverIdentity.Queries;
 
 [Authorize(Resource = Resources.Drivers, Action = Actions.Read)]
+// Enforcement: the reader filters on AccountId; DriverId only narrows within it.
+[AccountScopeEnforcedInHandler]
 public readonly record struct GetDriverCredentialsQuery(Guid AccountId, Guid? DriverId = null, int Skip = 0, int Take = 50) : IRequest<IReadOnlyCollection<DriverCredentialVm>>;
 public class GetDriverCredentialsQueryHandler(IDriverIdentityReader reader) : IRequestHandler<GetDriverCredentialsQuery, IReadOnlyCollection<DriverCredentialVm>>
 {
@@ -23,7 +25,9 @@ public class GetDriverCredentialsQueryHandler(IDriverIdentityReader reader) : IR
         => await reader.GetDriverCredentialsAsync(request.AccountId, request.DriverId, request.Skip, request.Take, cancellationToken);
 }
 
-[Authorize(Resource = Resources.Drivers, Action = Actions.Read)]
+[Authorize(Resource = Resources.DriverOperations, Action = Actions.Read)]
+// Enforcement: the reader filters on AccountId; DriverId only narrows within it.
+[AccountScopeEnforcedInHandler]
 public readonly record struct GetDriverDevicesQuery(Guid AccountId, Guid? DriverId = null, int Skip = 0, int Take = 50) : IRequest<IReadOnlyCollection<DriverDeviceRegistrationVm>>;
 public class GetDriverDevicesQueryHandler(IDriverIdentityReader reader) : IRequestHandler<GetDriverDevicesQuery, IReadOnlyCollection<DriverDeviceRegistrationVm>>
 {

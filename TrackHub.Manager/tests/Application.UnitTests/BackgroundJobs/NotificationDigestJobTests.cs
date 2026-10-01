@@ -19,6 +19,7 @@ using TrackHub.Manager.Domain.Constants;
 using TrackHub.Manager.Domain.Interfaces;
 using TrackHub.Manager.Domain.Records;
 using Common.Domain.Constants;
+using Common.Domain.Time;
 
 namespace Application.UnitTests.BackgroundJobs;
 
@@ -41,7 +42,8 @@ public class NotificationDigestJobTests
         _features = new Mock<IAccountFeatureGate>();
         _renderer = new Mock<INotificationRenderer>();
 
-        _store.Setup(s => s.GetDeferredAsync(It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        _store.Setup(s => s.GetAccountsWithDeferredAsync(It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        _store.Setup(s => s.GetDeferredAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
         _store.Setup(s => s.GetEventTypesAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
         _features.Setup(f => f.EnabledAmongAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<string>(),
             It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>())).ReturnsAsync([AccountId]);
@@ -52,18 +54,19 @@ public class NotificationDigestJobTests
     }
 
     private NotificationDigestJob CreateJob() => new(
-        _store.Object, _features.Object, _renderer.Object, JobTestHelpers.Configuration(), Mock.Of<ILogger<NotificationDigestJob>>());
+        _store.Object, _features.Object, _renderer.Object, UtcAccountTimeZoneResolver.Instance, JobTestHelpers.Configuration(), Mock.Of<ILogger<NotificationDigestJob>>());
 
     private static DeferredDeliveryVm Deferred(string recipient = "user-a", string channel = NotificationChannels.Email)
         => new(Guid.NewGuid(), AccountId, RuleId, Guid.NewGuid(), channel, RecipientPrincipalTypes.User, recipient);
 
     private static NotificationRuleVm Rule(string? throttlingJson)
         => new(RuleId, AccountId, "rule", "Alert", true, AlertEventTypes.CommunicationLoss,
-            "role:Administrator", "[]", throttlingJson, null, Now);
+            "role:Administrator", "[]", throttlingJson, null, Now, 0);
 
     private void Deferrals(params DeferredDeliveryVm[] deliveries)
     {
-        _store.Setup(s => s.GetDeferredAsync(It.IsAny<CancellationToken>())).ReturnsAsync(deliveries);
+        _store.Setup(s => s.GetAccountsWithDeferredAsync(It.IsAny<CancellationToken>())).ReturnsAsync([AccountId]);
+        _store.Setup(s => s.GetDeferredAsync(AccountId, It.IsAny<CancellationToken>())).ReturnsAsync(deliveries);
         _store.Setup(s => s.GetRulesAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([Rule(null)]);
     }
@@ -108,12 +111,10 @@ public class NotificationDigestJobTests
     }
 
     [Test]
-    public async Task DailyCadence_FoldsAtMostOncePerDayPerGroup()
+    public async Task DailyCadence_FoldsAtMostOncePerAccountDay()
     {
-        _store.Setup(s => s.GetDeferredAsync(It.IsAny<CancellationToken>())).ReturnsAsync([Deferred()]);
-        _store.Setup(s => s.GetRulesAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([Rule($$"""{"digest":"{{DigestCadences.Daily}}"}""")]);
-        _store.Setup(s => s.SummaryExistsSinceAsync(It.IsAny<DigestGroupKey>(), Now.AddHours(-24), It.IsAny<CancellationToken>()))
+        DailyDeferral();
+        _store.Setup(s => s.SummaryExistsSinceAsync(It.IsAny<DigestGroupKey>(), new DateTimeOffset(2026, 9, 14, 7, 0, 0, TimeSpan.Zero), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         await CreateJob().RunOnceAsync(Now, CancellationToken.None);
@@ -134,12 +135,74 @@ public class NotificationDigestJobTests
     [Test]
     public async Task ARuleThatVanished_IsSkippedWithoutFailingTheCycle()
     {
-        _store.Setup(s => s.GetDeferredAsync(It.IsAny<CancellationToken>())).ReturnsAsync([Deferred()]);
+        Deferrals(Deferred());
         _store.Setup(s => s.GetRulesAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
 
         await CreateJob().RunOnceAsync(Now, CancellationToken.None);
 
         _store.Verify(s => s.FoldAsync(It.IsAny<Guid>(), It.IsAny<DigestGroupKey>(), It.IsAny<string>(),
             It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    private void DailyDeferral()
+    {
+        Deferrals(Deferred());
+        _store.Setup(s => s.GetRulesAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([Rule($$"""{"digest":"{{DigestCadences.Daily}}"}""")]);
+    }
+
+    [Test]
+    public async Task DailyCadence_WaitsForTheAccountDigestHour()
+    {
+        DailyDeferral();
+
+        await CreateJob().RunOnceAsync(new DateTimeOffset(2026, 9, 14, 6, 30, 0, TimeSpan.Zero), CancellationToken.None);
+
+        _store.Verify(s => s.FoldAsync(It.IsAny<Guid>(), It.IsAny<DigestGroupKey>(), It.IsAny<string>(),
+            It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Test]
+    public void DailyWindow_OpensAtTheDigestHourOnTheAccountCalendar()
+    {
+        var bogota = AccountTimeZone.For("America/Bogota");
+
+        Assert.That(NotificationDigestJob.DailyWindowStart(bogota, new DateTimeOffset(2026, 9, 14, 11, 0, 0, TimeSpan.Zero)), Is.Null,
+            "06:00 in Bogota is before the digest hour");
+        Assert.That(NotificationDigestJob.DailyWindowStart(bogota, new DateTimeOffset(2026, 9, 14, 13, 0, 0, TimeSpan.Zero)),
+            Is.EqualTo(new DateTimeOffset(2026, 9, 14, 12, 0, 0, TimeSpan.Zero)));
+    }
+
+    [Test]
+    public async Task OrphanedDeferrals_AreExpiredEveryCycle()
+    {
+        _store.Setup(s => s.GetAccountsWithDeferredAsync(It.IsAny<CancellationToken>())).ReturnsAsync([AccountId]);
+
+        await CreateJob().RunOnceAsync(Now, CancellationToken.None);
+
+        _store.Verify(s => s.ExpireOrphansAsync(AccountId, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Test]
+    public void DailyWindow_OnASpringForwardDay_OpensAtSevenLocal()
+    {
+        var newYork = AccountTimeZone.For("America/New_York");
+
+        Assert.That(NotificationDigestJob.DailyWindowStart(newYork, new DateTimeOffset(2026, 3, 8, 11, 30, 0, TimeSpan.Zero)),
+            Is.EqualTo(new DateTimeOffset(2026, 3, 8, 11, 0, 0, TimeSpan.Zero)));
+        Assert.That(NotificationDigestJob.DailyWindowStart(newYork, new DateTimeOffset(2026, 3, 8, 10, 30, 0, TimeSpan.Zero)), Is.Null);
+    }
+
+    [Test]
+    public async Task OneFailingGroup_DoesNotHoldTheAccountsOtherGroups()
+    {
+        Deferrals(Deferred("user-a"), Deferred("user-b"));
+        _renderer.Setup(r => r.ResolveLocaleAsync(It.IsAny<string>(), "user-a", It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("template broken"));
+
+        await CreateJob().RunOnceAsync(Now, CancellationToken.None);
+
+        _store.Verify(s => s.FoldAsync(AccountId, It.Is<DigestGroupKey>(k => k.Recipient == "user-b"), It.IsAny<string>(),
+            It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

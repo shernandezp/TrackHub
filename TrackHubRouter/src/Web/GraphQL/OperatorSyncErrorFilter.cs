@@ -15,6 +15,7 @@
 
 using HotChocolate;
 using HotChocolate.Execution;
+using TrackHub.Router.Domain.Constants;
 using TrackHub.Router.Domain.Exceptions;
 
 namespace TrackHub.Router.Web.GraphQL;
@@ -28,11 +29,11 @@ public sealed class OperatorSyncErrorFilter : IErrorFilter
         {
             OperatorNotFoundException notFound => ErrorBuilder.FromError(error)
                 .SetMessage(notFound.Message)
-                .SetCode("OPERATOR_NOT_FOUND")
+                .SetCode(RouterErrorCodes.OperatorNotFound)
                 .Build(),
             OperatorDisabledException disabled => ErrorBuilder.FromError(error)
                 .SetMessage(disabled.Message)
-                .SetCode("OPERATOR_DISABLED")
+                .SetCode(RouterErrorCodes.OperatorDisabled)
                 .Build(),
             _ => error
         };

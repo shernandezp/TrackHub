@@ -48,7 +48,7 @@ public sealed class GroupWriter(IApplicationDbContext context, ICurrentPrincipal
             group.Name,
             group.Description,
             group.Active,
-            group.AccountId);
+            group.AccountId, group.Version);
     }
 
     /// <summary>
@@ -61,8 +61,9 @@ public sealed class GroupWriter(IApplicationDbContext context, ICurrentPrincipal
         var group = await Context.Groups.FindAsync([groupDto.GroupId], cancellationToken)
             ?? throw new NotFoundException(nameof(Group), $"{groupDto.GroupId}");
 
-        RequireAccountWriteAccess(group.AccountId);
+        RequireRowAccess(group.AccountId, nameof(Group), $"{groupDto.GroupId}", forWrite: true);
         Context.Groups.Attach(group);
+        RowVersion.Expect(Context.Groups, group, groupDto.ExpectedVersion);
 
         var oldValues = GroupAuditValues(group);
         group.Name = groupDto.Name;
@@ -83,7 +84,7 @@ public sealed class GroupWriter(IApplicationDbContext context, ICurrentPrincipal
         var group = await Context.Groups.FindAsync([groupId], cancellationToken)
             ?? throw new NotFoundException(nameof(Group), $"{groupId}");
 
-        RequireAccountWriteAccess(group.AccountId);
+        RequireRowAccess(group.AccountId, nameof(Group), $"{groupId}", forWrite: true);
         Context.Groups.Attach(group);
 
         AddAuditEvent(group.AccountId, "DeleteGroup", "Group", group.GroupId.ToString(), GroupAuditValues(group), null);

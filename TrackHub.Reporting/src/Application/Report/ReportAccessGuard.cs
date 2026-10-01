@@ -29,6 +29,7 @@ internal static class ReportAccessGuard
     public static async Task<ReportMetadataVm> EnsureAccessAsync(
         IReportCatalogReader catalogReader,
         IAccountFeatureReader featureReader,
+        IIdentityService identityService,
         IUser user,
         Guid accountId,
         string reportCode,
@@ -49,6 +50,18 @@ internal static class ReportAccessGuard
         if (meta.ManagerOnly && !IsManager(user.Role))
         {
             throw new ReportAccessDeniedException(reportCode);
+        }
+
+        // The feeds would refuse the caller anyway; refusing here names the report instead of failing mid-export.
+        if (user.UserId is { } userId)
+        {
+            foreach (var (resource, action) in ReportGrants.Parse(meta.RequiredGrants))
+            {
+                if (!await identityService.AuthorizeUserAsync(userId, resource, action, cancellationToken))
+                {
+                    throw new ReportAccessDeniedException(reportCode);
+                }
+            }
         }
 
         return meta;

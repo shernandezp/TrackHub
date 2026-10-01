@@ -34,7 +34,7 @@ public class GetAccountSettingsByUserQueryTests
         var userVm = new UserVm(userId, "user", true, Guid.NewGuid());
         _userReaderMock.Setup(r => r.GetUserAsync(userId, CancellationToken.None)).ReturnsAsync(userVm);
 
-        var settingsVm = new AccountSettingsVm(userVm.AccountId, "", "", 0, false, 0);
+        var settingsVm = new AccountSettingsVm(userVm.AccountId, "", "", 0, false, 0, 0);
         _settingsReaderMock.Setup(r => r.GetAccountSettingsAsync(userVm.AccountId, CancellationToken.None)).ReturnsAsync(settingsVm);
 
         var result = await _handler.Handle(new GetAccountSettingsByUserQuery(), CancellationToken.None);

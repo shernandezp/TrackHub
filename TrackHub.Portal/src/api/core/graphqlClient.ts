@@ -14,11 +14,17 @@
 *  limitations under the License.
 */
 
-import axios, { AxiosError } from 'axios';
+import axios, { AxiosError, type AxiosResponse } from 'axios';
 import { print } from 'graphql';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { GRAPHQL_ENDPOINTS, type GraphQLBackend } from './endpoints';
-import { UNEXPECTED_ERROR_I18N_KEY, ApiError, type GraphQLErrorEntry } from './errors';
+import {
+  UNEXPECTED_ERROR_I18N_KEY,
+  ApiError,
+  isCancellation,
+  type GraphQLErrorEntry,
+  type RequestOptions,
+} from './errors';
 import { tokenStore } from './tokenStore';
 
 export const REQUEST_TIMEOUT_MS = 30000;
@@ -48,19 +54,22 @@ function hasUsableData(payload: GraphQLResponsePayload): boolean {
 export async function executeGraphQL<TData, TVariables>(
   backend: GraphQLBackend,
   document: TypedDocumentNode<TData, TVariables> | string,
-  ...[variables]: TVariables extends Record<string, never> ? [] : [TVariables]
+  ...[variables, options]: TVariables extends Record<string, never>
+    ? [variables?: undefined, options?: RequestOptions]
+    : [variables: TVariables, options?: RequestOptions]
 ): Promise<TData> {
   const query = typeof document === 'string' ? document : print(document);
+  const signal = options?.signal;
 
   try {
-    return await postGraphQL<TData>(backend, query, variables, await tokenStore.acquireValidAccessToken());
+    return await postGraphQL<TData>(backend, query, variables, await tokenStore.acquireValidAccessToken(), signal);
   } catch (error) {
     // The server rejected a token this client still considered valid (revoked grant, authority
     // restart, clock skew). Refresh once and replay; a second 401 is a real authentication failure.
     if (!isUnauthorized(error)) {
       throw error;
     }
-    return await postGraphQL<TData>(backend, query, variables, await tokenStore.forceRefreshAccessToken());
+    return await postGraphQL<TData>(backend, query, variables, await tokenStore.forceRefreshAccessToken(), signal);
   }
 }
 
@@ -72,20 +81,31 @@ async function postGraphQL<TData>(
   backend: GraphQLBackend,
   query: string,
   variables: unknown,
-  token: string
+  token: string,
+  signal: AbortSignal | undefined
 ): Promise<TData> {
   let payload: GraphQLResponsePayload;
   try {
-    const response = await axios.post<GraphQLResponsePayload>(
-      GRAPHQL_ENDPOINTS[backend],
+    // Both generic arguments are supplied explicitly: with only the first, axios infers the
+    // RESPONSE type as that same generic and `response.data` comes back as the bare `T` rather
+    // than `AxiosResponse<T>['data']`, which does not assign to GraphQLResponsePayload.
+    // The `?? ''` mirrors endpoints.ts: every GRAPHQL_ENDPOINTS value is a lazy `process.env`
+    // read and therefore `string | undefined`. An unset endpoint fails on the request, which is
+    // the honest failure, rather than at compile time in every consumer.
+    const response = await axios.post<GraphQLResponsePayload, AxiosResponse<GraphQLResponsePayload>>(
+      GRAPHQL_ENDPOINTS[backend] ?? '',
       { query, variables },
       {
         headers: { Authorization: `Bearer ${token}` },
         timeout: REQUEST_TIMEOUT_MS,
+        signal,
       }
     );
     payload = response.data;
   } catch (error) {
+    if (isCancellation(error, signal)) {
+      throw ApiError.cancelled(error);
+    }
     // HotChocolate returns GraphQL error payloads with non-2xx statuses too.
     const axiosError = error as AxiosError<GraphQLResponsePayload>;
     const errors = axiosError.response?.data?.errors;

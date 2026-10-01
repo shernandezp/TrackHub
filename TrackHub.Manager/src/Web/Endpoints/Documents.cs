@@ -72,7 +72,7 @@ public sealed class Documents : Common.Web.Infrastructure.EndpointGroupBase
         var visibilityScope = string.IsNullOrWhiteSpace(form["visibilityScope"]) ? "Owner" : form["visibilityScope"].ToString();
 
         var documentId = Guid.NewGuid();
-        var storageKey = DocumentStorageKey.For(accountId.Value, ownerEntityType, documentId, 1);
+        var storageKey = DocumentStorageKey.For(accountId.Value, ownerEntityType, documentId, Guid.NewGuid());
 
         StoredObject stored;
         await using (var stream = file.OpenReadStream())
@@ -112,7 +112,7 @@ public sealed class Documents : Common.Web.Infrastructure.EndpointGroupBase
             return Results.BadRequest("Expected multipart/form-data.");
         }
 
-        // Authorizes the caller and yields the current version to compute the next one.
+        // Authorizes the caller; the version number itself is allocated inside the write.
         var current = await sender.Send(new GetDocumentQuery(documentId), cancellationToken);
 
         var form = await request.ReadFormAsync(cancellationToken);
@@ -126,10 +126,9 @@ public sealed class Documents : Common.Web.Infrastructure.EndpointGroupBase
             return Results.BadRequest($"File exceeds the {DocumentLimits.DefaultMaxBytes / (1024 * 1024)} MB limit.");
         }
 
-        var nextVersion = current.CurrentVersion + 1;
         var fileName = string.IsNullOrWhiteSpace(form["fileName"]) ? file.FileName : form["fileName"].ToString();
         var contentType = string.IsNullOrWhiteSpace(file.ContentType) ? "application/octet-stream" : file.ContentType;
-        var storageKey = DocumentStorageKey.For(current.AccountId, current.OwnerEntityType, documentId, nextVersion);
+        var storageKey = DocumentStorageKey.For(current.AccountId, current.OwnerEntityType, documentId, Guid.NewGuid());
 
         StoredObject stored;
         await using (var stream = file.OpenReadStream())
@@ -150,19 +149,19 @@ public sealed class Documents : Common.Web.Infrastructure.EndpointGroupBase
         }
     }
 
-    // GET ~/documents/{id}/download — User/Driver/ServiceClient. Authorization + Clean gate enforced by
+    // GET ~/documents/{id}/download — User/Driver/ServiceClient. Authorization + scan gate enforced by
     // the query + reader. S3 → 302 presigned; local FS → stream with Content-Disposition.
     public static async Task<IResult> Download(Guid documentId, ISender sender, IDocumentStorage storage, ApplicationDbContext context, IUser user, CancellationToken cancellationToken)
     {
         var vm = await sender.Send(new GetDocumentQuery(documentId), cancellationToken);
-        if (!DocumentStatuses.IsServable(vm.Status))
+        if (!DocumentStatuses.IsServable(vm.Status) && vm.Status != DocumentStatuses.Uploaded)
         {
             return Results.NotFound();
         }
 
-        if (!string.Equals(vm.ScanStatus, DocumentScanStatuses.Clean, StringComparison.OrdinalIgnoreCase))
+        if (vm.Status == DocumentStatuses.Uploaded || !DocumentScanStatuses.IsServable(vm.ScanStatus))
         {
-            // Non-Clean files are undownloadable. Admin quarantine access is out of slice.
+            // Quarantined, infected or failed bytes are undownloadable.
             return Results.StatusCode(StatusCodes.Status403Forbidden);
         }
 
@@ -187,7 +186,7 @@ public sealed class Documents : Common.Web.Infrastructure.EndpointGroupBase
             return Results.NotFound();
         }
 
-        if (!string.Equals(target.VersionScanStatus, DocumentScanStatuses.Clean, StringComparison.OrdinalIgnoreCase))
+        if (!DocumentScanStatuses.IsServable(target.VersionScanStatus))
         {
             return Results.StatusCode(StatusCodes.Status403Forbidden);
         }
@@ -240,7 +239,7 @@ public sealed class Documents : Common.Web.Infrastructure.EndpointGroupBase
         }
 
         var document = await context.Documents.FirstOrDefaultAsync(x => x.DocumentId == documentId && x.AccountId == accountId, cancellationToken);
-        if (document is null || !DocumentStatuses.IsServable(document.Status) || !string.Equals(document.ScanStatus, DocumentScanStatuses.Clean, StringComparison.OrdinalIgnoreCase))
+        if (document is null || !DocumentStatuses.IsServable(document.Status) || !DocumentScanStatuses.IsServable(document.ScanStatus))
         {
             return Results.NotFound();
         }
@@ -252,7 +251,7 @@ public sealed class Documents : Common.Web.Infrastructure.EndpointGroupBase
             .Where(v => v.DocumentId == document.DocumentId && v.VersionNumber == document.CurrentVersion)
             .Select(v => v.ScanStatus)
             .FirstOrDefaultAsync(cancellationToken);
-        if (!string.Equals(publicVersionScanStatus, DocumentScanStatuses.Clean, StringComparison.OrdinalIgnoreCase))
+        if (!DocumentScanStatuses.IsServable(publicVersionScanStatus))
         {
             return Results.NotFound();
         }

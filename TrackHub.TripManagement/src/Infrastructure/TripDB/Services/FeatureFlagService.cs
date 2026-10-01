@@ -22,12 +22,8 @@ namespace TrackHub.TripManagement.Infrastructure.TripDB.Services;
 /// TripManagement's own <see cref="IFeatureFlagService"/>, backed by the Manager-owned
 /// app.account_features table.
 /// <para>
-/// <b>This registration is load-bearing, not an optimisation</b> (spec 11 section 15, the row
-/// marked critical; acceptance 10). Common registers a FAIL-OPEN AlwaysEnabledFeatureFlagService
-/// via TryAddScoped, so a service that does not override it has every [RequireFeature] silently
-/// pass. Without this class, every trip surface would be reachable by an account that never
-/// bought trip-management. Do not remove it, and do not let the DI registration regress to
-/// TryAddScoped - the override must win.
+/// <b>This registration is load-bearing</b> (spec 11 section 15, acceptance 10): without it the
+/// host refuses to start (PipelineDependencyCheck).
 /// </para>
 /// <para>
 /// Decisions are cached for 30 seconds per (accountId, featureKey) because every command and query

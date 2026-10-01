@@ -1,3 +1,4 @@
+using Common.Infrastructure;
 using Common.Application.Interfaces;
 using Common.Domain.Constants;
 using Common.Domain.Helpers;
@@ -24,7 +25,9 @@ public sealed class OperatorReader(
         string? FailureMessage,
         DateTimeOffset? LastFailedSyncAt,
         DateTimeOffset? LastPositionSyncAt,
-        DateTimeOffset? LastHealthCheckAt);
+        DateTimeOffset? LastHealthCheckAt,
+        int SyncFailureCount,
+        DateTimeOffset? SyncRetryAt);
 
     private static OperatorVm Map(Entities.Operator o, bool includeCredential, DerivedSummary summary)
         => new(
@@ -62,7 +65,10 @@ public sealed class OperatorReader(
             summary.FailureCode,
             summary.FailureMessage,
             summary.LatencyMs,
-            summary.LastHealthCheckAt);
+            summary.LastHealthCheckAt,
+            summary.SyncFailureCount,
+            summary.SyncRetryAt,
+            o.Version);
 
     private async Task<DerivedSummary> DeriveSummaryAsync(Guid operatorId, CancellationToken cancellationToken)
         => (await DeriveSummariesAsync([operatorId], cancellationToken)).GetValueOrDefault(operatorId);
@@ -116,6 +122,10 @@ public sealed class OperatorReader(
             .Select(g => new { OperatorId = g.Key, At = g.Max(x => x.StartedAt) })
             .ToDictionaryAsync(x => x.OperatorId, x => (DateTimeOffset?)x.At, cancellationToken);
 
+        var backoffs = await Context.OperatorSyncBackoffs
+            .Where(b => operatorIds.Contains(b.OperatorId))
+            .ToDictionaryAsync(b => b.OperatorId, cancellationToken);
+
         foreach (var operatorId in operatorIds.Distinct())
         {
             var latestTs = latestCheckTimes.FirstOrDefault(x => x.OperatorId == operatorId)?.Ts;
@@ -136,7 +146,9 @@ public sealed class OperatorReader(
                 latestFail?.ErrorMessage,
                 lastFailedSync,
                 lastPositionSync.GetValueOrDefault(operatorId),
-                latestTs);
+                latestTs,
+                backoffs.GetValueOrDefault(operatorId)?.ConsecutiveFailures ?? 0,
+                backoffs.GetValueOrDefault(operatorId)?.RetryAt);
         }
 
         return result;
@@ -170,7 +182,7 @@ public sealed class OperatorReader(
         // This read can carry decrypted credential material (see CanIncludeCredentialsAsync) and the
         // query carries no top-level AccountId, so it is bound to the caller's tenant here. A global
         // service client — the Router's sync, replay and provider flows — still satisfies this.
-        RequireAccountAccess(op.AccountId);
+        RequireRowAccess(op.AccountId, nameof(Entities.Operator), id, forWrite: false);
 
         var summary = await DeriveSummaryAsync(id, cancellationToken);
         var includeCredentials = await CanIncludeCredentialsAsync(cancellationToken);

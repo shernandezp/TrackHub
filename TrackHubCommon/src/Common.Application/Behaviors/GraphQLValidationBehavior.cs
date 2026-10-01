@@ -15,19 +15,18 @@
 
 using Common.Application.Exceptions;
 using Common.Mediator;
-using HotChocolate;
 
 namespace Common.Application.Behaviors;
 
 // The GraphQLValidationBehavior class is a pipeline behavior that performs validation on GraphQL requests.
 // It checks if there are any validators registered and if so, it executes them to validate the request.
-// If any validation failures occur, it throws a GraphQLException.
+// If any validation failures occur, it throws a ValidationException (VALIDATION_ERROR with per-field messages).
 public class GraphQLValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TRequest>> validators) : IPipelineBehavior<TRequest, TResponse>
     where TRequest : notnull
 {
     // This method handles the request by executing the validation logic.
     // It checks if there are any validators registered and if so, it executes them to validate the request.
-    // If any validation failures occur, it throws a GraphQLException.
+    // If any validation failures occur, it throws a ValidationException (VALIDATION_ERROR with per-field messages).
     // Otherwise, it passes the request to the next handler in the pipeline.
     public async Task<TResponse> HandleAsync(TRequest request, Func<Task<TResponse>> next, CancellationToken cancellationToken)
     {
@@ -45,7 +44,7 @@ public class GraphQLValidationBehavior<TRequest, TResponse>(IEnumerable<IValidat
                 .ToList();
 
             if (failures.Count != 0)
-                throw new GraphQLException(failures.ConvertToIError());
+                throw new Exceptions.ValidationException(failures);
         }
         return await next();
     }

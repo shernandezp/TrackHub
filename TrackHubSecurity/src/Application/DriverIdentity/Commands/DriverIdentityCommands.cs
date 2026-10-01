@@ -19,6 +19,8 @@ using TrackHub.Security.Application.Audit.Events;
 namespace TrackHub.Security.Application.DriverIdentity.Commands;
 
 [Authorize(Resource = Resources.Drivers, Action = Actions.Write)]
+// Enforcement: DriverIdentityWriter requires account access and that the driver belongs to it.
+[AccountScopeEnforcedInHandler]
 public readonly record struct CreateDriverCredentialCommand(DriverCredentialDto Credential) : IRequest<DriverCredentialVm>;
 public class CreateDriverCredentialCommandHandler(IDriverIdentityWriter writer, IPublisher publisher, ICurrentPrincipal principal) : IRequestHandler<CreateDriverCredentialCommand, DriverCredentialVm>
 {
@@ -83,6 +85,8 @@ public class RevokeDriverCredentialCommandHandler(IDriverIdentityWriter writer, 
 }
 
 [Authorize(Resource = Resources.Drivers, Action = Actions.Write)]
+// Enforcement: DriverIdentityWriter requires account access and that the driver belongs to it.
+[AccountScopeEnforcedInHandler]
 public readonly record struct RegisterDriverDeviceCommand(DriverDeviceRegistrationDto Device) : IRequest<DriverDeviceRegistrationVm>;
 public class RegisterDriverDeviceCommandHandler(IDriverIdentityWriter writer, IPublisher publisher, ICurrentPrincipal principal) : IRequestHandler<RegisterDriverDeviceCommand, DriverDeviceRegistrationVm>
 {

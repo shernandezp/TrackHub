@@ -4,6 +4,8 @@ namespace TrackHub.Manager.Application.Drivers.Commands;
 
 [Authorize(Resource = Resources.Drivers, Action = Actions.Write)]
 [RequireFeature(FeatureKeys.Workforce)]
+// Enforcement: the writer or reader checks every referenced id against the request's account.
+[AccountScopeEnforcedInHandler]
 public readonly record struct CreateDriverQualificationCommand(DriverQualificationDto Qualification) : IRequest<DriverQualificationVm>;
 public class CreateDriverQualificationCommandHandler(IDriverQualificationWriter writer) : IRequestHandler<CreateDriverQualificationCommand, DriverQualificationVm>
 {
@@ -30,6 +32,8 @@ public class CreateDriverQualificationCommandValidator : AbstractValidator<Creat
 
 [Authorize(Resource = Resources.Drivers, Action = Actions.Edit)]
 [RequireFeature(FeatureKeys.Workforce)]
+// Enforcement: the writer or reader checks every referenced id against the request's account.
+[AccountScopeEnforcedInHandler]
 public readonly record struct UpdateDriverQualificationCommand(Guid DriverQualificationId, DriverQualificationDto Qualification) : IRequest;
 public class UpdateDriverQualificationCommandHandler(IDriverQualificationWriter writer) : IRequestHandler<UpdateDriverQualificationCommand>
 {

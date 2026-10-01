@@ -8,7 +8,6 @@ namespace TrackHub.Telemetry.Application.GpsIntegration.Queries;
 // carries ONLY timestamps and counts — never an account id, name, or operator — so a Manager
 // learns that the worker is alive, not who it synced for. The jobs table and announcement
 // management stay Administrative/Read (Administrator-only).
-// No [Caching]: freshness is the point.
 [Authorize(Resource = Resources.OperatorSyncRuns, Action = Actions.Read)]
 [PlatformScoped("SVD-10 platform status: SyncWorker liveness timestamps and counts only — no account, operator, or per-tenant data in the response.")]
 public readonly record struct GetPlatformSyncActivityQuery(int LookbackMinutes = 60) : IRequest<PlatformSyncActivityVm>;

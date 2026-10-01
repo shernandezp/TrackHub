@@ -120,10 +120,10 @@ function ManageAccountSupportGrants() {
   };
 
   const handleApprove = async (grant: AccountSupportGrant) => {
-    if (!grant?.accountSupportGrantId || !principalId) return;
+    if (!grant?.accountSupportGrantId) return;
     setLoading(true);
     try {
-      await approveAccountSupportGrant(grant.accountSupportGrantId, principalId);
+      await approveAccountSupportGrant(grant.accountSupportGrantId);
       await loadGrants();
     } catch (error) {
       notifyApiError(error);
@@ -133,10 +133,10 @@ function ManageAccountSupportGrants() {
   };
 
   const handleRevoke = async (grant: AccountSupportGrant) => {
-    if (!grant?.accountSupportGrantId || !principalId) return;
+    if (!grant?.accountSupportGrantId) return;
     setLoading(true);
     try {
-      await revokeAccountSupportGrant(grant.accountSupportGrantId, principalId);
+      await revokeAccountSupportGrant(grant.accountSupportGrantId);
       await loadGrants();
     } catch (error) {
       notifyApiError(error);

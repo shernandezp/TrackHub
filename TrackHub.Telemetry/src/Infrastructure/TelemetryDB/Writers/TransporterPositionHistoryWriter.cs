@@ -1,3 +1,4 @@
+using Common.Infrastructure;
 using Common.Application.Interfaces;
 using TrackHub.Telemetry.Infrastructure.TelemetryDB.Entities;
 using TrackHub.Telemetry.Infrastructure.TelemetryDB.Interfaces;
@@ -19,6 +20,9 @@ public sealed class TransporterPositionHistoryWriter(IApplicationDbContext conte
     /// </summary>
     public static readonly TimeSpan DeduplicationWindow = TimeSpan.FromDays(2);
 
+    // Each partition names its copy of the (idempotencykey, sourcetimestamp) index; this part is common to all.
+    private const string IdempotencyIndex = "idempotencykey_sourcetimest";
+
     public async Task<bool> AppendAsync(TransporterPositionHistoryDto dto, CancellationToken cancellationToken)
     {
         var scoped = RequireAccountAccess(dto.AccountId);
@@ -34,9 +38,7 @@ public sealed class TransporterPositionHistoryWriter(IApplicationDbContext conte
             dto.SourceTimestamp, DateTimeOffset.UtcNow,
             dto.Latitude, dto.Longitude, dto.Altitude, dto.Speed, dto.Course,
             dto.EventId, dto.Address, dto.City, dto.State, dto.Country, dto.Attributes, dto.IdempotencyKey);
-        await Context.TransporterPositionHistory.AddAsync(entity, cancellationToken);
-        await Context.SaveChangesAsync(cancellationToken);
-        return true;
+        return await TryInsertAsync(entity, cancellationToken);
     }
 
     // Batched append for the Router storing pipeline. Idempotent per row; rows whose
@@ -77,7 +79,7 @@ public sealed class TransporterPositionHistoryWriter(IApplicationDbContext conte
                 .ToDictionary(g => g.Key, g => g.OrderByDescending(a => a.IsPrimary).ThenBy(a => a.Priority).First().DeviceId);
         }
 
-        var appended = 0;
+        var pending = new List<TransporterPositionHistory>();
         foreach (var dto in rows)
         {
             if (existing.Contains(dto.IdempotencyKey))
@@ -94,16 +96,50 @@ public sealed class TransporterPositionHistoryWriter(IApplicationDbContext conte
                 dto.SourceTimestamp, DateTimeOffset.UtcNow,
                 dto.Latitude, dto.Longitude, dto.Altitude, dto.Speed, dto.Course,
                 dto.EventId, dto.Address, dto.City, dto.State, dto.Country, dto.Attributes, dto.IdempotencyKey);
-            await Context.TransporterPositionHistory.AddAsync(entity, cancellationToken);
+            pending.Add(entity);
             existing.Add(dto.IdempotencyKey);
-            appended++;
         }
 
-        if (appended > 0)
+        if (pending.Count == 0)
+        {
+            return 0;
+        }
+
+        await Context.TransporterPositionHistory.AddRangeAsync(pending, cancellationToken);
+        try
         {
             await Context.SaveChangesAsync(cancellationToken);
+            return pending.Count;
         }
+        catch (DbUpdateException exception) when (UniqueViolation.Matches(exception, IdempotencyIndex))
+        {
+            // A concurrent writer stored some of these first; keep every row it did not.
+            UniqueViolation.Detach(Context.ChangeTracker);
+            var appended = 0;
+            foreach (var entity in pending)
+            {
+                if (await TryInsertAsync(entity, cancellationToken))
+                {
+                    appended++;
+                }
+            }
 
-        return appended;
+            return appended;
+        }
+    }
+
+    private async Task<bool> TryInsertAsync(TransporterPositionHistory entity, CancellationToken cancellationToken)
+    {
+        await Context.TransporterPositionHistory.AddAsync(entity, cancellationToken);
+        try
+        {
+            await Context.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+        catch (DbUpdateException exception) when (UniqueViolation.Matches(exception, IdempotencyIndex))
+        {
+            UniqueViolation.Detach(Context.ChangeTracker);
+            return false;
+        }
     }
 }

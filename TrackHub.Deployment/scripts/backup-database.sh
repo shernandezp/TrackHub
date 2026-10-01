@@ -12,7 +12,10 @@
 #   ./backup-database.sh cleanup [days]      # Remove old backups (default: 30 days)
 # =============================================================================
 
-set -e
+set -eo pipefail
+
+# Dumps hold every tenant's data.
+umask 077
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
@@ -63,17 +66,20 @@ backup_database() {
     
     print_info "Backing up $db_name ($db)..."
     
-    PGPASSWORD="$pass" pg_dump -h "$host" -p "$port" -U "$user" -d "$db" \
+    # A failed dump must fail the backup: a partial file next to a success message is how a
+    # restore discovers, too late, that there was never a backup.
+    if ! PGPASSWORD="$pass" pg_dump -h "$host" -p "$port" -U "$user" -d "$db" \
         --format=custom --compress=9 --verbose \
-        -f "$output_file" 2>&1 | tail -5
-    
-    if [ -f "$output_file" ]; then
-        local size=$(du -h "$output_file" | cut -f1)
-        print_success "Backup created: $output_file ($size)"
-    else
+        -f "$output_file" > "$output_file.log" 2>&1; then
+        tail -20 "$output_file.log"
+        rm -f "$output_file" "$output_file.log"
         print_error "Backup failed for $db_name"
         return 1
     fi
+    rm -f "$output_file.log"
+
+    local size=$(du -h "$output_file" | cut -f1)
+    print_success "Backup created: $output_file ($size)"
 }
 
 restore_database() {
@@ -99,10 +105,16 @@ restore_database() {
     
     print_info "Restoring $db_name from $input_file..."
     
-    PGPASSWORD="$pass" pg_restore -h "$host" -p "$port" -U "$user" -d "$db" \
-        --clean --if-exists --verbose \
-        "$input_file" 2>&1 | tail -10
-    
+    # One transaction that stops at the first error: a restore either lands whole or leaves the
+    # database as it was.
+    if ! PGPASSWORD="$pass" pg_restore -h "$host" -p "$port" -U "$user" -d "$db" \
+        --clean --if-exists --single-transaction --exit-on-error --verbose \
+        "$input_file" > "$input_file.log" 2>&1; then
+        tail -20 "$input_file.log"
+        print_error "Restore failed for $db_name; the database was left unchanged."
+        return 1
+    fi
+
     print_success "Restore completed for $db_name"
 }
 

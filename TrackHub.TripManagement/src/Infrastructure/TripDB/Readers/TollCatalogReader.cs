@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Infrastructure;
 using NetTopologySuite.Geometries;
 
 namespace TrackHub.TripManagement.Infrastructure.TripDB.Readers;
@@ -36,9 +37,9 @@ public sealed class TollCatalogReader(IApplicationDbContext context) : ITollCata
         if (!string.IsNullOrWhiteSpace(search))
         {
             query = query.Where(s =>
-                EF.Functions.ILike(s.Name, $"%{search}%")
-                || (s.Code != null && EF.Functions.ILike(s.Code, $"%{search}%"))
-                || (s.RoadName != null && EF.Functions.ILike(s.RoadName, $"%{search}%")));
+                EF.Functions.ILike(s.Name, SearchPattern.Contains(search), SearchPattern.Escape)
+                || (s.Code != null && EF.Functions.ILike(s.Code, SearchPattern.Contains(search), SearchPattern.Escape))
+                || (s.RoadName != null && EF.Functions.ILike(s.RoadName, SearchPattern.Contains(search), SearchPattern.Escape)));
         }
 
         if (!string.IsNullOrWhiteSpace(country))

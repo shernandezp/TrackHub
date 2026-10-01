@@ -14,12 +14,14 @@
 *  limitations under the License.
 */
 
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from '@mui/material/Icon';
 import Grid from '@mui/material/Grid';
 import Table from "controls/Tables/Table";
+import ServerPagination from "controls/Tables/ServerPagination";
+import { useClampPage, useServerList } from "controls/Tables/useServerList";
 import TableAccordion from "controls/Accordions/TableAccordion";
 import ArgonBox from "components/ArgonBox";
 import ArgonButton from "components/ArgonButton";
@@ -63,6 +65,8 @@ function TextCell({ children }: { children?: ReactNode }) {
   );
 }
 
+const PAGE_SIZE = 25;
+
 function ManageNotificationDeliveries() {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
@@ -71,7 +75,10 @@ function ManageNotificationDeliveries() {
   const [deliveries, setDeliveries] = useState<NotificationDelivery[]>([]);
   const [health, setHealth] = useState<DeliveryHealth[]>([]);
   const [filters, handleFilterChange] = useForm<FilterValues>({ status: ALL, channel: ALL });
-  const loaded = useRef(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [pageLength, setPageLength] = useState(0);
+  const { page, setPage, params } = useServerList(PAGE_SIZE);
+  useClampPage(page, PAGE_SIZE, totalCount, setPage);
 
   const loadDeliveries = async (currentFilters: FilterValues = filters) => {
     setLoading(true);
@@ -85,12 +92,14 @@ function ManageNotificationDeliveries() {
         getNotificationDeliveries(currentAccount.accountId, {
           status: currentFilters.status && currentFilters.status !== ALL ? currentFilters.status : null,
           channel: currentFilters.channel && currentFilters.channel !== ALL ? currentFilters.channel : null,
-        }),
+        }, params.skip, params.take),
         // A failed health read keeps the tiles at zero instead of failing the panel.
         getDeliveryHealth(currentAccount.accountId, from.toISOString(), to.toISOString())
           .catch((): DeliveryHealth[] => []),
       ]);
-      setDeliveries(items || []);
+      setDeliveries(items.items);
+      setTotalCount(items.totalCount);
+      setPageLength(items.items.length);
       setHealth(healthItems || []);
     } catch (error) {
       notifyApiError(error);
@@ -100,11 +109,10 @@ function ManageNotificationDeliveries() {
   };
 
   useEffect(() => {
-    if (expanded && !loaded.current) {
-      loaded.current = true;
+    if (expanded) {
       loadDeliveries();
     }
-  }, [expanded]);
+  }, [expanded, params]);
 
   const handleRetry = async (delivery: NotificationDelivery) => {
     if (!delivery?.notificationDeliveryId) return;
@@ -200,7 +208,7 @@ function ManageNotificationDeliveries() {
             fullWidth={false}
           />
         </ArgonBox>
-        <ArgonButton color="primary" size="small" onClick={() => loadDeliveries()}>
+        <ArgonButton color="primary" size="small" onClick={() => (page === 0 ? loadDeliveries() : setPage(0))}>
           <Icon>search</Icon>
         </ArgonButton>
       </ArgonBox>
@@ -248,7 +256,9 @@ function ManageNotificationDeliveries() {
           id: delivery.notificationDeliveryId
         }))}
         selectedField="recipient"
+        serverPaged
       />
+      <ServerPagination page={page} pageSize={PAGE_SIZE} totalCount={totalCount} pageLength={pageLength} onPageChange={setPage} />
     </TableAccordion>
   );
 }

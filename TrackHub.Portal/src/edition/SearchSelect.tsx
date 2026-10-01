@@ -28,7 +28,7 @@ export interface SearchOption {
   label: string;
 }
 
-export type SearchOptionsHook = (search: string) => { options: SearchOption[]; loading: boolean };
+export type SearchOptionsHook = (search: string, take?: number) => { options: SearchOption[]; loading: boolean };
 
 interface SearchSelectProps {
   id: string;

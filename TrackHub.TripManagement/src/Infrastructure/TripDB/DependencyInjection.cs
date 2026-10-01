@@ -52,6 +52,7 @@ public static class DependencyInjection
         // Trip aggregate.
         services.AddScoped<ITripReader, TripReader>();
         services.AddScoped<ITripWriter, TripWriter>();
+        services.AddScoped<ITripTransaction, TripTransaction>();
         services.AddScoped<ITripStopWriter, TripStopWriter>();
         services.AddScoped<ITripEventWriter, TripEventWriter>();
         services.AddScoped<IDeliveryWriter, DeliveryWriter>();
@@ -91,10 +92,8 @@ public static class DependencyInjection
         services.AddScoped<Common.Application.Interfaces.IAccountOperationalStatusReader, AccountOperationalStatusReader>();
         services.AddScoped<Common.Application.Interfaces.IAccountOperationalStatusService, Common.Application.Services.CachedAccountOperationalStatusService>();
 
-        // CRITICAL (spec 11 section 15, acceptance 10): Common registers a FAIL-OPEN
-        // AlwaysEnabledFeatureFlagService with TryAddScoped. This is a plain AddScoped so the
-        // DB-backed implementation is the one resolved - without it every [RequireFeature] in this
-        // module silently passes for accounts that do not have trip-management.
+        // Fail-closed feature gate (spec 11 section 15, acceptance 10); without it the host refuses to
+        // start (PipelineDependencyCheck).
         services.AddScoped<Common.Application.Interfaces.IFeatureFlagService, FeatureFlagService>();
 
         // Module discovery seam: registers any IServiceModule implementations shipped in

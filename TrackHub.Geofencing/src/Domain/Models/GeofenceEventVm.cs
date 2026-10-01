@@ -25,4 +25,7 @@ public readonly record struct GeofenceEventVm(
     DateTimeOffset Timestamp,
     DateTimeOffset? DepartureTimestamp,
     double Latitude,
-    double Longitude);
+    double Longitude,
+    // First instant the visit was seen OUTSIDE, which is what the exit debounce
+    // measures against.
+    DateTimeOffset? OutsideSinceAt = null);

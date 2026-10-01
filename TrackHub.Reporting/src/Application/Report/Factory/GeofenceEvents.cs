@@ -24,6 +24,8 @@ namespace TrackHub.Reporting.Application.Report.Factory;
 public class GeofenceEvents(IGeofenceReader reader) : IReport
 {
     public string ReportCode => Reports.GeofenceEvents;
+
+    public bool StreamsInProducerOrder => true;
     public async Task<ReportDataset> GetDatasetAsync(FilterDto filters, CancellationToken cancellationToken)
     {
         var data = await reader.GetGeofenceEventsAsync(filters, cancellationToken);

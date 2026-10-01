@@ -28,6 +28,7 @@ public readonly record struct GeofenceVm(
     double? CircleRadiusMeters,
     bool AlertOnEntry,
     bool AlertOnExit,
-    int? DwellThresholdMinutes
+    int? DwellThresholdMinutes,
+    uint Version = 0
     );
 

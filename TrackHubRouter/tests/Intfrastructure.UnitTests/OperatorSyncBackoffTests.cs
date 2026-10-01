@@ -13,83 +13,41 @@
 //  limitations under the License.
 //
 
-using TrackHub.Router.Infrastructure.Common;
+using TrackHub.Router.Domain.Helpers;
+using TrackHub.Router.Domain.Models;
 
 namespace TrackHub.Router.Infrastructure.Tests;
 
-// Guards the per-operator failure backoff (router-audit A-15).
 [TestFixture]
 public class OperatorSyncBackoffTests
 {
     private static readonly DateTimeOffset Now = new(2026, 7, 17, 12, 0, 0, TimeSpan.Zero);
 
-    [Test]
-    public void NoFailures_IsNotInBackoff()
-    {
-        var sut = new OperatorSyncBackoff();
-        Assert.That(sut.IsInBackoff(Guid.NewGuid(), Now), Is.False);
-    }
+    private static OperatorVm Operator(int failures, DateTimeOffset? retryAt)
+        => new(Guid.NewGuid(), 1, Guid.NewGuid(), null, SyncFailureCount: failures, SyncRetryAt: retryAt);
 
     [Test]
-    public void AfterFailure_IsInBackoffUntilWindowElapses()
-    {
-        var sut = new OperatorSyncBackoff();
-        var id = Guid.NewGuid();
+    public void NoPersistedWindow_IsNotInBackoff()
+        => Assert.That(OperatorSyncBackoffPolicy.IsInBackoff(Operator(0, null), Now), Is.False);
 
-        sut.RecordFailure(id, Now);
+    [Test]
+    public void PersistedWindow_HoldsTheOperatorUntilItElapses()
+    {
+        var op = Operator(1, OperatorSyncBackoffPolicy.NextRetryAt(1, Now));
 
         Assert.Multiple(() =>
         {
-            // First failure → 1 minute window.
-            Assert.That(sut.IsInBackoff(id, Now.AddSeconds(30)), Is.True);
-            Assert.That(sut.IsInBackoff(id, Now.AddMinutes(1).AddSeconds(1)), Is.False);
+            Assert.That(OperatorSyncBackoffPolicy.IsInBackoff(op, Now.AddSeconds(30)), Is.True);
+            Assert.That(OperatorSyncBackoffPolicy.IsInBackoff(op, Now.AddMinutes(1).AddSeconds(1)), Is.False);
         });
     }
 
-    [Test]
-    public void ConsecutiveFailures_GrowWindowExponentially()
-    {
-        var sut = new OperatorSyncBackoff();
-        var id = Guid.NewGuid();
-
-        sut.RecordFailure(id, Now); // 1 min
-        sut.RecordFailure(id, Now); // 2 min
-        sut.RecordFailure(id, Now); // 4 min
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(sut.IsInBackoff(id, Now.AddMinutes(3)), Is.True, "still within the 4-minute window");
-            Assert.That(sut.IsInBackoff(id, Now.AddMinutes(4).AddSeconds(1)), Is.False);
-        });
-    }
-
-    [Test]
-    public void Success_ClearsBackoff()
-    {
-        var sut = new OperatorSyncBackoff();
-        var id = Guid.NewGuid();
-
-        sut.RecordFailure(id, Now);
-        sut.RecordSuccess(id);
-
-        Assert.That(sut.IsInBackoff(id, Now.AddSeconds(1)), Is.False);
-    }
-
-    [Test]
-    public void BackoffWindow_IsCappedAtThirtyMinutes()
-    {
-        var sut = new OperatorSyncBackoff();
-        var id = Guid.NewGuid();
-
-        for (var i = 0; i < 20; i++)
-        {
-            sut.RecordFailure(id, Now);
-        }
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(sut.IsInBackoff(id, Now.AddMinutes(29)), Is.True);
-            Assert.That(sut.IsInBackoff(id, Now.AddMinutes(30).AddSeconds(1)), Is.False, "window is capped at 30 minutes");
-        });
-    }
+    [TestCase(1, 1)]
+    [TestCase(2, 2)]
+    [TestCase(3, 4)]
+    [TestCase(5, 16)]
+    [TestCase(6, 30)]
+    [TestCase(40, 30)]
+    public void Window_GrowsExponentially_AndIsCappedAtThirtyMinutes(int failures, int minutes)
+        => Assert.That(OperatorSyncBackoffPolicy.NextRetryAt(failures, Now), Is.EqualTo(Now.AddMinutes(minutes)));
 }

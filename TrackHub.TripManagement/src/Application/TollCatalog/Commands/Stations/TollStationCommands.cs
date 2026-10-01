@@ -78,6 +78,27 @@ public sealed class DeactivateTollStationValidator : AbstractValidator<Deactivat
         => RuleFor(v => v.TollStationId).NotEmpty();
 }
 
+[Authorize(Resource = Resources.TollCatalog, Action = Actions.Delete)]
+[PlatformScoped("SVD-12 toll catalog: stations, tariffs and vehicle classes are platform-owned reference data administered by the platform operator; no tenant owns a row.")]
+public readonly record struct ReactivateTollStationCommand(Guid TollStationId) : IRequest<Guid>;
+
+public sealed class ReactivateTollStationCommandHandler(ITollCatalogWriter writer)
+    : IRequestHandler<ReactivateTollStationCommand, Guid>
+{
+    public async Task<Guid> Handle(ReactivateTollStationCommand request, CancellationToken cancellationToken)
+    {
+        await writer.ReactivateStationAsync(request.TollStationId, cancellationToken);
+        return request.TollStationId;
+    }
+}
+
+public sealed class ReactivateTollStationValidator : AbstractValidator<ReactivateTollStationCommand>
+{
+    public ReactivateTollStationValidator()
+        => RuleFor(v => v.TollStationId).NotEmpty();
+}
+
+
 public sealed class TollStationDtoValidator : AbstractValidator<TollStationDto>
 {
     public TollStationDtoValidator()

@@ -8,6 +8,7 @@ public class AccountFeatureConfiguration : IEntityTypeConfiguration<AccountFeatu
 {
     public void Configure(EntityTypeBuilder<AccountFeature> builder)
     {
+        builder.Property(x => x.Version).HasColumnName("editversion").HasConversion<long>().IsConcurrencyToken();
         builder.ToTable(name: TableMetadata.AccountFeature, schema: SchemaMetadata.Application);
         builder.Property(x => x.AccountFeatureId).HasColumnName("id");
         builder.Property(x => x.AccountId).HasColumnName("accountid");

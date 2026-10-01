@@ -20,7 +20,7 @@ Full detail: **[Common Library](https://github.com/shernandezp/TrackHub/wiki/Com
 ## What it provides
 
 - **The custom CQRS mediator** (`Common.Mediator`) — `IRequest<TResult>`, `IRequestHandler<,>`, `MediatorDispatcher : ISender, IPublisher`. **MediatR is not used and is forbidden.**
-- **The behavior pipeline** — logging, validation, authorization, fail-closed tenant scoping, caching, rate limiting, unhandled-exception handling
+- **The behavior pipeline** — logging, validation, authorization, fail-closed tenant scoping, rate limiting, unhandled-exception handling
 - **The cross-service constant catalogs** — `Resources`, `Actions`, `Roles`, `Policies`, `Clients`, `FeatureKeys`, `BackgroundJobKeys`, `Reports`, and the schema/table/column/view metadata
 - **Cryptography** — BCrypt for user passwords, server-certificate encryption for third-party secrets such as GPS provider credentials
 - **Localization** — `ResourceLocalizer`, the single primitive for server-rendered text from `.resx`
@@ -57,7 +57,6 @@ Register the services in each layer's `DependencyInjection.cs`:
 ```csharp
 // Application layer
 services.AddApplicationServices(typeof(SomeHandler).Assembly);
-services.AddDistributedMemoryCache();   // required — CachingBehavior resolves IDistributedCache
 
 // Web layer
 builder.Services
@@ -92,7 +91,6 @@ Change Common and its consumers in **one commit**.
   reference the projects, so they always compile against the current source — nothing can be pinned
   back to an older Common, and a breaking change surfaces at build time rather than after a publish.
 - **`AccountScopeBehavior` is fail-closed; the default `IFeatureFlagService` is fail-open.** That is deliberate: a missing tenant scope is a security failure, while a missing feature registration is a service-configuration failure the service's own tests should catch. A service that uses `[RequireFeature]` **must** register its own `IFeatureFlagService`.
-- **`AddDistributedMemoryCache()` is not optional.** `CachingBehavior` resolves `IDistributedCache` for every request type; a missing registration fails **every** request with a masked DI error.
 - **Adding an authorization resource is not enough.** It must also be added to `TrackHubSecurity`'s `ApplicationDbContextInitializer` `DefaultResources`, and granted in each role's matrix — [two separate steps](https://github.com/shernandezp/TrackHub/wiki/Security-and-Identity#seeding-rules-that-bite).
 - **The constant catalogs are the contract.** Resource, action, feature-key, schema and table names are never string literals at a call site — a typo becomes a silent authorization or mapping failure.
 - Verifying that a constant landed in a built DLL is best done with `grep -a`; UTF-16 metadata literals defeat plain `strings`.

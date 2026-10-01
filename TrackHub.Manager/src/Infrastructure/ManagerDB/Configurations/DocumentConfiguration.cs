@@ -8,7 +8,10 @@ public class DocumentConfiguration : IEntityTypeConfiguration<Document>
 {
     public void Configure(EntityTypeBuilder<Document> builder)
     {
-        builder.ToTable(name: TableMetadata.Document, schema: SchemaMetadata.Application);
+        builder.ToTable(
+            name: TableMetadata.Document,
+            schema: SchemaMetadata.Application,
+            t => t.HasCheckConstraint("ck_documents_classification", "classification IN ('Public', 'Internal', 'Confidential', 'Legal')"));
         builder.Property(x => x.DocumentId).HasColumnName("id");
         builder.Property(x => x.AccountId).HasColumnName("accountid");
         builder.Property(x => x.OwnerEntityType).HasColumnName("ownerentitytype").HasMaxLength(ColumnMetadata.DefaultNameLength).IsRequired();

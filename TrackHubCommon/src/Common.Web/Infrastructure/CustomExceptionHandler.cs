@@ -14,8 +14,10 @@
 //
 
 using Common.Application.Exceptions;
+using Common.Infrastructure;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Common.Web.Infrastructure;
 
@@ -23,6 +25,9 @@ namespace Common.Web.Infrastructure;
 // to handle exceptions and return appropriate HTTP responses.
 public class CustomExceptionHandler : IExceptionHandler
 {
+    internal const string DuplicateMessage = "A record with the same values already exists.";
+    internal const string ConcurrentUpdateMessage = "Someone else changed this record since it was loaded. Reload it and try again.";
+
     private readonly Dictionary<Type, Func<HttpContext, Exception, Task>> _exceptionHandlers;
 
     public CustomExceptionHandler()
@@ -54,6 +59,18 @@ public class CustomExceptionHandler : IExceptionHandler
                 await value.Invoke(httpContext, exception);
                 return true;
             }
+        }
+
+        if (exception is DbUpdateException update && UniqueViolation.Matches(update))
+        {
+            await HandleConflictException(httpContext, new ConflictException(DuplicateMessage));
+            return true;
+        }
+
+        if (exception is DbUpdateConcurrencyException)
+        {
+            await HandleConflictException(httpContext, new ConflictException(ConflictException.ConcurrentUpdateCode, ConcurrentUpdateMessage));
+            return true;
         }
 
         // Fallback: return 500 for any unhandled exception type
@@ -111,7 +128,7 @@ public class CustomExceptionHandler : IExceptionHandler
             Detail = exception.Message,
             Type = "https://tools.ietf.org/html/rfc7231#section-6.5.3"
         };
-        problem.Extensions["code"] = "FEATURE_DISABLED";
+        problem.Extensions["code"] = PlatformErrorCodes.FeatureDisabled;
         problem.Extensions["featureKey"] = exception.FeatureKey;
 
         await httpContext.Response.WriteAsJsonAsync(problem);

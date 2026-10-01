@@ -10,7 +10,7 @@ public sealed class DriverQualificationReader(IApplicationDbContext context, ICu
     private static int PageSize(int take) => Math.Clamp(take <= 0 ? 50 : take, 1, 500);
     private static int Offset(int skip) => Math.Max(0, skip);
 
-    public async Task<IReadOnlyCollection<DriverQualificationVm>> GetDriverQualificationsAsync(Guid accountId, Guid? driverId, int? expiringWithinDays, int skip, int take, CancellationToken cancellationToken)
+    public async Task<DriverQualificationsPageVm> GetDriverQualificationsAsync(Guid accountId, Guid? driverId, int? expiringWithinDays, int skip, int take, CancellationToken cancellationToken)
     {
         var scopedAccountId = RequireAccountAccess(accountId);
         var query = Context.DriverQualifications.Where(x => x.AccountId == scopedAccountId);
@@ -27,9 +27,11 @@ public sealed class DriverQualificationReader(IApplicationDbContext context, ICu
             query = query.Where(x => x.ExpiresAt != null && x.ExpiresAt <= cutoff);
         }
 
-        return await Project(query)
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await Project(query)
             .Skip(Offset(skip)).Take(PageSize(take))
             .ToListAsync(cancellationToken);
+        return new DriverQualificationsPageVm(items, totalCount);
     }
 
     /// <summary>

@@ -18,6 +18,7 @@ public class GetReportPreviewQueryHandlerTests
     private Mock<IUser> _user = null!;
     private Mock<IReportCatalogReader> _catalog = null!;
     private Mock<IAccountFeatureReader> _features = null!;
+    private Mock<IIdentityService> _identity = null!;
     private Mock<IReport> _report = null!;
     private ReportingLimitsOptions _limits = null!;
     private Guid _accountId;
@@ -30,6 +31,7 @@ public class GetReportPreviewQueryHandlerTests
         _user = new Mock<IUser>();
         _catalog = new Mock<IReportCatalogReader>();
         _features = new Mock<IAccountFeatureReader>();
+        _identity = new Mock<IIdentityService>();
         _report = new Mock<IReport>();
         _limits = new ReportingLimitsOptions { PreviewRows = 5 };
         _accountId = Guid.NewGuid();
@@ -42,7 +44,7 @@ public class GetReportPreviewQueryHandlerTests
     }
 
     private GetReportPreviewQueryHandler Handler()
-        => new(_factory.Object, _user.Object, _catalog.Object, _features.Object, _limits);
+        => new(_factory.Object, _user.Object, _catalog.Object, _features.Object, _identity.Object, _limits);
 
     private void SetupDataset(int rows)
         => _report.Setup(r => r.GetDatasetAsync(It.IsAny<FilterDto>(), It.IsAny<CancellationToken>()))
@@ -54,6 +56,16 @@ public class GetReportPreviewQueryHandlerTests
             });
 
     private static FilterDto Filters() => new() { Name = "T", Language = "en" };
+
+    [Test]
+    public void Preview_IsDenied_WhenTheCallerLacksAFeedGrant()
+    {
+        _user.Setup(u => u.UserId).Returns(Guid.NewGuid());
+        _catalog.Setup(c => c.GetReportByCodeAsync(Code, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ReportMetadataVm(Code, null, "Gps", null, false, false, 1, true, "SynchronizedDevices/Read"));
+
+        Assert.ThrowsAsync<ReportAccessDeniedException>(() => Handler().Handle(new GetReportPreviewQuery(Code, Filters()), CancellationToken.None));
+    }
 
     [Test]
     public async Task Preview_CapsRows_AndReportsTotalsAndTruncation()

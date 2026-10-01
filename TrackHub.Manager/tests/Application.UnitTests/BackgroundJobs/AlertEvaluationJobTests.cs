@@ -69,7 +69,7 @@ public class AlertEvaluationJobTests
         dto.ResourceType, dto.ResourceId, dto.Status, Now, Now, dto.PayloadJson, dto.DeduplicationKey, Now);
 
     private static NotificationRuleVm Rule(string triggerEvent, string? configurationJson)
-        => new(Guid.NewGuid(), AccountId, "rule", "Alert", true, triggerEvent, "role:Administrator", "[]", null, configurationJson, Now);
+        => new(Guid.NewGuid(), AccountId, "rule", "Alert", true, triggerEvent, "role:Administrator", "[]", null, configurationJson, Now, 0);
 
     private void NotificationsEnabledFor(params Guid[] accountIds)
         => _features.Setup(f => f.EnabledActiveAccountsAsync(FeatureKeys.Notifications, It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))

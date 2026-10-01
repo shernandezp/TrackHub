@@ -38,21 +38,9 @@ public sealed class PositionReader(
     }
 
     public async Task<IEnumerable<PositionVm>> GetDevicePositionAsync(IEnumerable<DeviceTransporterVm> devices, CancellationToken cancellationToken)
-    {
         // GpsGate provides no bulk last-position API, so the batch is a bounded fan-out rather than
         // a sequential walk: one call per vehicle in series did not fit the 10-second cycle.
-        var results = new System.Collections.Concurrent.ConcurrentBag<PositionVm>();
-        await Parallel.ForEachAsync(
-            devices,
-            new ParallelOptions
-            {
-                MaxDegreeOfParallelism = ProviderConcurrency.MaxConcurrentDeviceReads,
-                CancellationToken = cancellationToken
-            },
-            async (device, token) => results.Add(await GetDevicePositionAsync(device, token)));
-
-        return results.Distinct();
-    }
+        => await ProviderConcurrency.ReadEachDeviceAsync(devices, GetDevicePositionAsync, cancellationToken);
 
     public Task<IEnumerable<PositionVm>> GetPositionAsync(DateTimeOffset from, DateTimeOffset to, DeviceTransporterVm deviceDto, CancellationToken cancellationToken)
         // GpsGate exposes no usable track-history endpoint. Callers are expected to check

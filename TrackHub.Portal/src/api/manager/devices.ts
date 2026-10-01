@@ -21,17 +21,16 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
-import { fetchAllPages } from 'api/core/paging';
+import type { RequestOptions } from 'api/core/errors';
 import type { ListParams, Page } from 'api/core/paging';
 import type {
   DeviceItemFragment as DeviceItemType,
   SynchronizedDeviceFragment as SynchronizedDeviceType,
-  GetDeviceLookupQuery,
   DetectedStatus,
 } from './generated/graphql';
 import {
   GetDevicesByAccountDocument,
-  GetDeviceLookupDocument,
+  GetDeviceNameDocument,
   DeleteDeviceDocument,
   GetSynchronizedDevicesDocument,
   GetUnassignedSynchronizedDevicesDocument,
@@ -41,7 +40,6 @@ import {
 
 export type Device = DeviceItemType;
 export type DevicesPage = Page<Device>;
-export type DeviceLookup = GetDeviceLookupQuery['deviceLookup'][number];
 export type SynchronizedDevice = SynchronizedDeviceType;
 export type SynchronizedDevicesPage = Page<SynchronizedDevice>;
 
@@ -55,24 +53,18 @@ export interface SynchronizedDeviceFilters extends ListParams {
   recentOnly?: boolean | null;
 }
 
-export async function getDevicesByAccount(params: ListParams = {}): Promise<DevicesPage> {
+export async function getDevicesByAccount(params: ListParams = {}, options?: RequestOptions): Promise<DevicesPage> {
   const data = await executeGraphQL('manager', GetDevicesByAccountDocument, {
     skip: params.skip ?? null,
     take: params.take ?? null,
     search: params.search ?? null,
-  });
+  }, options);
   return data.devicesByAccount;
 }
 
-/**
- * The account's devices as id + display name + owning operator. Unpaged by
- * design (the server raises past its own ceiling rather than truncating), so
- * callers binding a picker, building a deviceId→name map, or joining
- * operator→device→transporter get the whole set or a loud failure.
- */
-export async function getDeviceLookup(): Promise<DeviceLookup[]> {
-  const data = await executeGraphQL('manager', GetDeviceLookupDocument);
-  return data.deviceLookup;
+export async function getDeviceName(deviceId: string, options?: RequestOptions): Promise<{ deviceId: string; name: string }> {
+  const data = await executeGraphQL('manager', GetDeviceNameDocument, { id: deviceId }, options);
+  return data.device;
 }
 
 /** Returns the id of the deleted device (schema: `deleteDevice: UUID!`). */
@@ -100,28 +92,16 @@ export async function getSynchronizedDevices(
 
 export async function getUnassignedSynchronizedDevices(
   accountId: string,
-  params: ListParams = {}
+  params: ListParams = {},
+  options?: RequestOptions
 ): Promise<SynchronizedDevicesPage> {
   const data = await executeGraphQL('manager', GetUnassignedSynchronizedDevicesDocument, {
     accountId,
     skip: params.skip ?? null,
     take: params.take ?? null,
     search: params.search ?? null,
-  });
+  }, options);
   return data.unassignedSynchronizedDevices;
-}
-
-/**
- * Every unassigned provider device, all server pages drained. There is no
- * lookup for the unassigned subset and the assign form's device picker must
- * offer all of them — a truncated picker hides assignable devices.
- */
-export async function getAllUnassignedSynchronizedDevices(
-  accountId: string
-): Promise<SynchronizedDevice[]> {
-  return fetchAllPages(
-    async (skip, take) => (await getUnassignedSynchronizedDevices(accountId, { skip, take })).items
-  );
 }
 
 export async function setSynchronizedDeviceIgnored(

@@ -15,7 +15,7 @@
 
 using System.Globalization;
 using ClosedXML.Excel;
-using Common.Domain.Extensions;
+using Common.Domain.Time;
 using TrackHub.Reporting.Domain.Exceptions;
 using TrackHub.Reporting.Domain.Interfaces.Helpers;
 using TrackHub.Reporting.Domain.Models;
@@ -40,7 +40,7 @@ public sealed class ExcelHelper(ReportingLimitsOptions limits) : IExcelHelper
         using var workbook = new XLWorkbook();
         var worksheet = workbook.Worksheets.Add("Report");
 
-        worksheet.Cell("A1").Value = GetDateLabel(dataset.FromDate, dataset.ToDate, dataset.Title);
+        worksheet.Cell("A1").Value = GetDateLabel(dataset, culture);
         worksheet.Cell("A1").Style.Font.SetBold(true);
         worksheet.Cell("A1").Style.Font.FontSize = 16;
 
@@ -65,7 +65,7 @@ public sealed class ExcelHelper(ReportingLimitsOptions limits) : IExcelHelper
             var values = dataset.Rows[row];
             for (var col = 0; col < columnCount; col++)
             {
-                SetCell(worksheet.Cell(3 + row, col + 1), values[col]);
+                SetCell(worksheet.Cell(3 + row, col + 1), values[col], dataset.TimeZone);
             }
         }
 
@@ -89,8 +89,9 @@ public sealed class ExcelHelper(ReportingLimitsOptions limits) : IExcelHelper
     }
 
     // Writes an arbitrary boxed cell value using ClosedXML's typed conversions so the per-column number
-    // and date formats apply (DateTimeOffset is normalized to its UTC DateTime, per the UTC-everywhere rule).
-    private static void SetCell(IXLCell cell, object? value)
+    // and date formats apply. Instants are written as wall-clock time in the account zone, which the
+    // title names; dates are dates, never shifted.
+    private static void SetCell(IXLCell cell, object? value, AccountTimeZone timeZone)
     {
         switch (value)
         {
@@ -103,7 +104,10 @@ public sealed class ExcelHelper(ReportingLimitsOptions limits) : IExcelHelper
                 cell.Value = b;
                 break;
             case DateTimeOffset dto:
-                cell.Value = dto.UtcDateTime;
+                cell.Value = TimeZoneInfo.ConvertTime(dto, timeZone.Zone).DateTime;
+                break;
+            case DateOnly date:
+                cell.Value = date.ToDateTime(TimeOnly.MinValue);
                 break;
             case DateTime dt:
                 cell.Value = dt;
@@ -145,6 +149,9 @@ public sealed class ExcelHelper(ReportingLimitsOptions limits) : IExcelHelper
             case Type t when t == typeof(DateTimeOffset) || t == typeof(DateTimeOffset?):
                 worksheet.Column(colNumber).Style.DateFormat.Format = "yyyy-MM-dd HH:mm";
                 break;
+            case Type t when t == typeof(DateOnly) || t == typeof(DateOnly?):
+                worksheet.Column(colNumber).Style.DateFormat.Format = "yyyy-MM-dd";
+                break;
             case Type t when t == typeof(double) || t == typeof(decimal):
                 worksheet.Column(colNumber).Style.NumberFormat.Format
                     = CoordinatesFields.Contains(propertyName) ? "0.00000" : "0.00";
@@ -164,11 +171,15 @@ public sealed class ExcelHelper(ReportingLimitsOptions limits) : IExcelHelper
         }
     }
 
-    /// <summary>
-    /// Generates a label for the date range of the report (unchanged from the pre-refactor helper).
-    /// </summary>
-    private static string GetDateLabel(DateTimeOffset? fromDate, DateTimeOffset? toDate, string title)
-        => toDate != null
-            ? $"{title} - ({fromDate.FormatDateTime()} - {toDate.FormatDateTime()})"
-            : fromDate != null ? $"{title} - ({fromDate.FormatDate()})" : title;
+    // Title, date range in the account zone, and the zone itself, since the cells carry no offset.
+    private static string GetDateLabel(ReportDataset dataset, CultureInfo culture)
+    {
+        string Local(DateTimeOffset value, string format)
+            => TimeZoneInfo.ConvertTime(value, dataset.TimeZone.Zone).ToString(format, CultureInfo.InvariantCulture);
+
+        var range = dataset.ToDate is { } to
+            ? $" - ({(dataset.FromDate is { } from ? Local(from, "yyyy-MM-dd HH:mm") : string.Empty)} - {Local(to, "yyyy-MM-dd HH:mm")})"
+            : dataset.FromDate is { } start ? $" - ({Local(start, "yyyy-MM-dd")})" : string.Empty;
+        return $"{dataset.Title}{range} · {ReportHeaderResolver.Resolve("TimeZone", culture)}: {dataset.TimeZone.Id}";
+    }
 }

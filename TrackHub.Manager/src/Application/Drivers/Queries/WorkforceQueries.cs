@@ -4,10 +4,12 @@ namespace TrackHub.Manager.Application.Drivers.Queries;
 
 [Authorize(Resource = Resources.Drivers, Action = Actions.Read)]
 [RequireFeature(FeatureKeys.Workforce)]
-public readonly record struct GetDriverQualificationsQuery(Guid AccountId, Guid? DriverId = null, int? ExpiringWithinDays = null, int Skip = 0, int Take = 50) : IRequest<IReadOnlyCollection<DriverQualificationVm>>;
-public class GetDriverQualificationsQueryHandler(IDriverQualificationReader reader) : IRequestHandler<GetDriverQualificationsQuery, IReadOnlyCollection<DriverQualificationVm>>
+// Enforcement: the writer or reader checks every referenced id against the request's account.
+[AccountScopeEnforcedInHandler]
+public readonly record struct GetDriverQualificationsQuery(Guid AccountId, Guid? DriverId = null, int? ExpiringWithinDays = null, int Skip = 0, int Take = 50) : IRequest<DriverQualificationsPageVm>;
+public class GetDriverQualificationsQueryHandler(IDriverQualificationReader reader) : IRequestHandler<GetDriverQualificationsQuery, DriverQualificationsPageVm>
 {
-    public async Task<IReadOnlyCollection<DriverQualificationVm>> Handle(GetDriverQualificationsQuery request, CancellationToken cancellationToken)
+    public async Task<DriverQualificationsPageVm> Handle(GetDriverQualificationsQuery request, CancellationToken cancellationToken)
         => await reader.GetDriverQualificationsAsync(request.AccountId, request.DriverId, request.ExpiringWithinDays, request.Skip, request.Take, cancellationToken);
 }
 public class GetDriverQualificationsQueryValidator : AbstractValidator<GetDriverQualificationsQuery>
@@ -19,12 +21,14 @@ public class GetDriverQualificationsQueryValidator : AbstractValidator<GetDriver
     }
 }
 
-[Authorize(Resource = Resources.Drivers, Action = Actions.Read)]
+[Authorize(Resource = Resources.DriverOperations, Action = Actions.Read)]
 [RequireFeature(FeatureKeys.Workforce)]
-public readonly record struct GetDriverAssignmentHistoryQuery(Guid AccountId, Guid? DriverId = null, Guid? TransporterId = null, DateTimeOffset? From = null, DateTimeOffset? To = null, int Skip = 0, int Take = 50) : IRequest<IReadOnlyCollection<DriverTransporterAssignmentVm>>;
-public class GetDriverAssignmentHistoryQueryHandler(IDriverAssignmentReader reader) : IRequestHandler<GetDriverAssignmentHistoryQuery, IReadOnlyCollection<DriverTransporterAssignmentVm>>
+// Enforcement: the writer or reader checks every referenced id against the request's account.
+[AccountScopeEnforcedInHandler]
+public readonly record struct GetDriverAssignmentHistoryQuery(Guid AccountId, Guid? DriverId = null, Guid? TransporterId = null, DateTimeOffset? From = null, DateTimeOffset? To = null, int Skip = 0, int Take = 50) : IRequest<DriverAssignmentHistoryPageVm>;
+public class GetDriverAssignmentHistoryQueryHandler(IDriverAssignmentReader reader) : IRequestHandler<GetDriverAssignmentHistoryQuery, DriverAssignmentHistoryPageVm>
 {
-    public async Task<IReadOnlyCollection<DriverTransporterAssignmentVm>> Handle(GetDriverAssignmentHistoryQuery request, CancellationToken cancellationToken)
+    public async Task<DriverAssignmentHistoryPageVm> Handle(GetDriverAssignmentHistoryQuery request, CancellationToken cancellationToken)
         => await reader.GetDriverAssignmentHistoryAsync(request.AccountId, request.DriverId, request.TransporterId, request.From, request.To, request.Skip, request.Take, cancellationToken);
 }
 public class GetDriverAssignmentHistoryQueryValidator : AbstractValidator<GetDriverAssignmentHistoryQuery>

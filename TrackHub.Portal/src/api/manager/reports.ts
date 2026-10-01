@@ -20,6 +20,7 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { RequestOptions } from 'api/core/errors';
 import type {
   ReportFieldsFragment as ReportFieldsType,
   UpdateReportDtoInput,
@@ -29,8 +30,8 @@ import { GetReportsDocument, UpdateReportDocument } from './reportsOperations';
 export type Report = ReportFieldsType;
 export type { UpdateReportDtoInput };
 
-export async function getReports(): Promise<Report[]> {
-  const data = await executeGraphQL('manager', GetReportsDocument);
+export async function getReports(options?: RequestOptions): Promise<Report[]> {
+  const data = await executeGraphQL('manager', GetReportsDocument, undefined, options);
   return data.reports;
 }
 

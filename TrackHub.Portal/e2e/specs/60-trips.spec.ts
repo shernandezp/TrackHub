@@ -14,7 +14,7 @@
  */
 
 import { test, expect, unique, uniqueName, optional } from '../fixtures';
-import { FormDialog, ConfirmDialog } from '../pages/dialogs';
+import { FormDialog, ConfirmDialog, pickOption } from '../pages/dialogs';
 import { boardRow, planTrip, plannerStop, plannerStopNamed, releaseAfterwards } from '../pages/trips';
 
 test.describe('trips', () => {
@@ -35,7 +35,6 @@ test.describe('trips', () => {
     }
     await expect(page.getByRole('button', { name: t('trips.newTrip') })).toBeVisible();
     await expect(page.getByRole('button', { name: t('trips.import.action') })).toBeVisible();
-    await expect(page.getByRole('button', { name: t('tolls.transporterClass.action') })).toBeVisible();
     await expect(page.getByText(t('trips.board'))).toBeVisible();
     await expect(
       page.getByText(/\d+\s*[–-]\s*\d+/).or(page.getByText(t('trips.noTrips'))).first()
@@ -211,7 +210,7 @@ test.describe('trips', () => {
     await expect(plannerStop(page, 1)).toContainText(planned.split('\n')[1].trim());
   });
 
-  test('a dispatcher registers a delivery, records its outcome and deletes it', async ({
+  test('a dispatcher registers a delivery and records its outcome, after which only a pending one can be deleted', async ({
     shell,
     page,
     t,
@@ -262,11 +261,25 @@ test.describe('trips', () => {
       timeout: 45_000,
     });
 
-    await deliveryRow().getByRole('button', { name: t('generic.delete') }).click();
+    // A recorded outcome is final: only the outcome verb stays.
+    await expect(deliveryRow().getByRole('button', { name: t('generic.delete') })).toHaveCount(0);
+    await expect(deliveryRow().getByRole('button', { name: t('generic.edit') })).toHaveCount(0);
+
+    const pending = `e2e-client-${unique()}`;
+    const addDelivery = page.getByRole('button', { name: t('trips.deliveries.add'), exact: true });
+    await page.locator('[data-testid^="row-"]').filter({ has: addDelivery }).last().getByRole('button', { name: t('trips.deliveries.add'), exact: true }).click();
+    const second = new FormDialog(page, t);
+    await second.waitOpen();
+    await second.field('clientName').fill(pending);
+    await second.saveAndClose();
+    const pendingRow = () => page.locator('[data-testid^="row-"]').filter({ hasText: pending }).first();
+    await expect(pendingRow()).toBeVisible({ timeout: 45_000 });
+
+    await pendingRow().getByRole('button', { name: t('generic.delete') }).click();
     const confirm = new ConfirmDialog(page, t);
     await expect(confirm.root.getByText(t('trips.deliveries.deleteMessage'))).toBeVisible();
     await confirm.confirm();
-    await expect(page.locator('[data-testid^="row-"]').filter({ hasText: client })).toHaveCount(0, {
+    await expect(page.locator('[data-testid^="row-"]').filter({ hasText: pending })).toHaveCount(0, {
       timeout: 45_000,
     });
   });
@@ -339,8 +352,7 @@ test.describe('trips', () => {
     const panel = page.getByTestId('panel-assignment');
     await expect(panel.getByText(t('trips.assignment.none'))).toBeVisible({ timeout: 45_000 });
 
-    await panel.locator('#assignDriverId').click();
-    await page.getByRole('option', { name: driverName, exact: true }).click();
+    await pickOption(page, panel.locator('#assignDriverId'), driverName, true);
     await panel.getByRole('button', { name: t('trips.assignment.assign') }).click();
 
     // Asserted INSIDE the panel: the picker keeps showing the chosen name
@@ -465,16 +477,6 @@ test.describe('trips', () => {
         .or(dialog.root.getByText(t('trips.import.rowsRead')))
         .first()
     ).toBeVisible({ timeout: 60_000 });
-    await dialog.cancel();
-  });
-
-  test('the toll-class dialog explains that a class is required', async ({ shell, page, t }) => {
-    await shell.open('tripManager');
-    await page.getByRole('button', { name: t('tolls.transporterClass.action') }).click();
-
-    const dialog = new FormDialog(page, t);
-    await dialog.waitOpen();
-    await expect(dialog.root.getByText(t('tolls.transporterClass.description'))).toBeVisible();
     await dialog.cancel();
   });
 

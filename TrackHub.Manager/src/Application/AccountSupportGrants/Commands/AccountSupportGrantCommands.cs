@@ -11,21 +11,17 @@ public class CreateAccountSupportGrantCommandHandler(IAccountSupportGrantWriter 
 }
 
 [Authorize(Resource = Resources.SupportGrants, Action = Actions.Edit)]
-// Enforcement: the reader/writer this handler delegates to extends AccountScopedDataAccess and
-// checks the loaded row's owning account (RequireAccountAccess) or filters on the caller's scope.
-[AccountScopeEnforcedInHandler]
-public readonly record struct ApproveAccountSupportGrantCommand(Guid AccountSupportGrantId, string ApprovedBy) : IRequest;
+[AllowCrossAccount("Platform support console: the approver is a platform administrator, never a member of the customer account the grant opens. Gated by the SupportGrants/Edit platform permission.")]
+public readonly record struct ApproveAccountSupportGrantCommand(Guid AccountSupportGrantId) : IRequest;
 public class ApproveAccountSupportGrantCommandHandler(IAccountSupportGrantWriter writer) : IRequestHandler<ApproveAccountSupportGrantCommand>
 {
-    public async Task Handle(ApproveAccountSupportGrantCommand request, CancellationToken cancellationToken) => await writer.ApproveAccountSupportGrantAsync(request.AccountSupportGrantId, request.ApprovedBy, cancellationToken);
+    public async Task Handle(ApproveAccountSupportGrantCommand request, CancellationToken cancellationToken) => await writer.ApproveAccountSupportGrantAsync(request.AccountSupportGrantId, cancellationToken);
 }
 
 [Authorize(Resource = Resources.SupportGrants, Action = Actions.Delete)]
-// Enforcement: the reader/writer this handler delegates to extends AccountScopedDataAccess and
-// checks the loaded row's owning account (RequireAccountAccess) or filters on the caller's scope.
-[AccountScopeEnforcedInHandler]
-public readonly record struct RevokeAccountSupportGrantCommand(Guid AccountSupportGrantId, string RevokedBy) : IRequest;
+[AllowCrossAccount("Platform support console: any platform administrator may close a support grant into a customer account. Gated by the SupportGrants/Delete platform permission.")]
+public readonly record struct RevokeAccountSupportGrantCommand(Guid AccountSupportGrantId) : IRequest;
 public class RevokeAccountSupportGrantCommandHandler(IAccountSupportGrantWriter writer) : IRequestHandler<RevokeAccountSupportGrantCommand>
 {
-    public async Task Handle(RevokeAccountSupportGrantCommand request, CancellationToken cancellationToken) => await writer.RevokeAccountSupportGrantAsync(request.AccountSupportGrantId, request.RevokedBy, cancellationToken);
+    public async Task Handle(RevokeAccountSupportGrantCommand request, CancellationToken cancellationToken) => await writer.RevokeAccountSupportGrantAsync(request.AccountSupportGrantId, cancellationToken);
 }

@@ -23,7 +23,7 @@ namespace TrackHub.Manager.Application.Accounts.Queries.GetTimeZone;
 /// </summary>
 [Authorize(Resource = Resources.AccountFeatures, Action = Actions.Read)]
 // Enforcement: the reader checks the requested account against the caller's scope (RequireAccountAccess).
-[AccountScopeEnforcedInHandler]
+[AllowCrossAccount("Cross-service calendar lookup: Reporting and TripManagement resolve the zone of the account they are serving under their own service identity, whose token carries no account claim. The reader still holds users to their own account; the answer is one IANA zone id.")]
 public readonly record struct GetAccountTimeZoneQuery(Guid AccountId) : IRequest<string>;
 
 public class GetAccountTimeZoneQueryHandler(IAccountReader reader) : IRequestHandler<GetAccountTimeZoneQuery, string>

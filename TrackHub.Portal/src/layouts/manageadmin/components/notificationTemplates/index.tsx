@@ -29,7 +29,7 @@ import NotificationTemplateDialog from "layouts/manageadmin/components/notificat
 import type { NotificationTemplateFormValues } from "layouts/manageadmin/components/notificationTemplates/NotificationTemplateDialog";
 import { getAccountByUser } from "api/manager/accounts";
 import type { Account } from "api/manager/accounts";
-import { getAccountFeatures } from "api/manager/accountFeatures";
+import { useFeatures } from "context/features";
 import {
   getNotificationTemplates,
   createNotificationTemplate,
@@ -58,7 +58,8 @@ function ManageNotificationTemplates() {
   const [expanded, setExpanded] = useState(false);
   const [account, setAccount] = useState<Account | null>(null);
   const [templates, setTemplates] = useState<NotificationTemplate[]>([]);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const { isFeatureEnabled } = useFeatures();
+  const notificationsEnabled = isFeatureEnabled(NOTIFICATIONS_FEATURE_KEY);
   const [open, setOpen] = useState(false);
   const [confirm, setConfirm] = useState<ConfirmState>({ open: false, id: null });
   const [values, handleChange, setValues, setErrors, validate, errors] = useForm<NotificationTemplateFormValues>({ active: true });
@@ -70,15 +71,8 @@ function ManageNotificationTemplates() {
       const currentAccount = await getAccountByUser();
       if (!currentAccount?.accountId) return;
       setAccount(currentAccount);
-      const [items, features] = await Promise.all([
-        getNotificationTemplates(currentAccount.accountId),
-        // The feature only gates UI affordances — the backend is authoritative.
-        getAccountFeatures(currentAccount.accountId).catch(() => []),
-      ]);
+      const items = await getNotificationTemplates(currentAccount.accountId);
       setTemplates(items || []);
-      setNotificationsEnabled(
-        !!(features || []).find(f => f.featureKey === NOTIFICATIONS_FEATURE_KEY)?.enabled
-      );
     } catch (error) {
       notifyApiError(error);
     } finally {

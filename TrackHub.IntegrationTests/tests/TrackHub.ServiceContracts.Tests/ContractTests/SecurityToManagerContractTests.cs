@@ -40,6 +40,7 @@ public class SecurityToManagerContractTests
         yield return new TestCaseData("ManagerWriter.UpdateUser", ManagerWriter.UpdateUserMutation);
         yield return new TestCaseData("ManagerWriter.DeleteUser", ManagerWriter.DeleteUserMutation);
         yield return new TestCaseData("ManagerAuditWriter.CreateAuditEvent", ManagerAuditWriter.CreateAuditEventMutation);
+        yield return new TestCaseData("ManagerDriverReader.ValidateDriverAccount", ManagerDriverReader.ValidateDriverAccountQuery);
     }
 
     [TestCaseSource(nameof(Calls))]

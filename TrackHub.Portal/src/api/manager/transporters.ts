@@ -21,6 +21,7 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { RequestOptions } from 'api/core/errors';
 import { fetchAllPages } from 'api/core/paging';
 import type { ListParams, Page } from 'api/core/paging';
 import type {
@@ -30,13 +31,16 @@ import type {
   UpdateTransporterDtoInput,
   TransporterDeviceAssignmentDtoInput,
   GetTransporterDeviceAssignmentsByAccountQuery,
-  GetTransporterLookupByAccountQuery,
+  GetTransporterLookupByUserQuery,
 } from './generated/graphql';
 import {
   GetTransportersByAccountDocument,
   GetTransportersByGroupDocument,
-  GetTransporterLookupByAccountDocument,
+  GetTransportersByUserDocument,
+  GetTransporterDocument,
   GetTransporterLookupByUserDocument,
+  GetRetiredTransportersDocument,
+  RestoreTransporterDocument,
   CreateTransporterDocument,
   UpdateTransporterDocument,
   DeleteTransporterDocument,
@@ -48,7 +52,7 @@ import {
 export type Transporter = TransporterItemType;
 export type TransportersPage = Page<Transporter>;
 export type TransporterLookup =
-  GetTransporterLookupByAccountQuery['transporterLookupByAccount'][number];
+  GetTransporterLookupByUserQuery['transporterLookupByUser'][number];
 export type TransporterAssignment = AssignmentFieldsType;
 export type TransporterAssignmentWithAudit =
   GetTransporterDeviceAssignmentsByAccountQuery['transporterDeviceAssignmentsByAccount']['items'][number];
@@ -61,53 +65,68 @@ export interface TransporterAssignmentFilters extends Omit<ListParams, 'search'>
 }
 
 export async function getTransportersByAccount(
-  params: ListParams = {}
+  params: ListParams = {},
+  options?: RequestOptions
 ): Promise<TransportersPage> {
   const data = await executeGraphQL('manager', GetTransportersByAccountDocument, {
     skip: params.skip ?? null,
     take: params.take ?? null,
     search: params.search ?? null,
-  });
+  }, options);
   return data.transportersByAccount;
+}
+
+/** One server page of the transporters the signed-in user may track. */
+export async function getTransportersByUser(params: ListParams = {}, options?: RequestOptions): Promise<TransportersPage> {
+  const data = await executeGraphQL('manager', GetTransportersByUserDocument, {
+    skip: params.skip ?? null,
+    take: params.take ?? null,
+    search: params.search ?? null,
+  }, options);
+  return data.transportersByUser;
+}
+
+export async function getTransporter(transporterId: string, options?: RequestOptions): Promise<Transporter> {
+  const data = await executeGraphQL('manager', GetTransporterDocument, { id: transporterId }, options);
+  return data.transporter;
+}
+
+export async function getRetiredTransporters(params: ListParams = {}, options?: RequestOptions): Promise<TransportersPage> {
+  const data = await executeGraphQL('manager', GetRetiredTransportersDocument, {
+    skip: params.skip ?? null,
+    take: params.take ?? null,
+    search: params.search ?? null,
+  }, options);
+  return data.retiredTransporters;
 }
 
 export async function getTransportersByGroup(
   groupId: number,
-  params: ListParams = {}
+  params: ListParams = {},
+  options?: RequestOptions
 ): Promise<TransportersPage> {
   const data = await executeGraphQL('manager', GetTransportersByGroupDocument, {
     groupId,
     skip: params.skip ?? null,
     take: params.take ?? null,
     search: params.search ?? null,
-  });
+  }, options);
   return data.transportersByGroup;
 }
 
-/**
- * Every transporter on the account as id + name. The admin-side picker source:
- * unpaged by design, so an allocator dialog's "available" operand is never a
- * truncated list. Distinct from {@link getTransporterLookupByUser} on purpose.
- */
-export async function getTransporterLookupByAccount(): Promise<TransporterLookup[]> {
-  const data = await executeGraphQL('manager', GetTransporterLookupByAccountDocument);
-  return data.transporterLookupByAccount;
-}
-
 /** The transporters the signed-in user may track, as id + name. Unpaged by design. */
-export async function getTransporterLookupByUser(): Promise<TransporterLookup[]> {
-  const data = await executeGraphQL('manager', GetTransporterLookupByUserDocument);
+export async function getTransporterLookupByUser(options?: RequestOptions): Promise<TransporterLookup[]> {
+  const data = await executeGraphQL('manager', GetTransporterLookupByUserDocument, undefined, options);
   return data.transporterLookupByUser;
 }
 
 /**
- * Every transporter in a group, all server pages drained. There is no per-group
- * transporter lookup, and both the allocator dialog's set difference and the
- * dashboard's group filter need the complete membership.
+ * Every transporter in a group, all server pages drained: the allocator dialog lists the whole
+ * membership and excludes it from its server-searched picker.
  */
-export async function getAllTransportersByGroup(groupId: number): Promise<Transporter[]> {
+export async function getAllTransportersByGroup(groupId: number, options?: RequestOptions): Promise<Transporter[]> {
   return fetchAllPages(
-    async (skip, take) => (await getTransportersByGroup(groupId, { skip, take })).items
+    async (skip, take) => (await getTransportersByGroup(groupId, { skip, take }, options)).items
   );
 }
 
@@ -132,32 +151,23 @@ export async function deleteTransporter(transporterId: string): Promise<string> 
   return data.deleteTransporter;
 }
 
+export async function restoreTransporter(transporterId: string): Promise<string> {
+  const data = await executeGraphQL('manager', RestoreTransporterDocument, { id: transporterId });
+  return data.restoreTransporter;
+}
+
 export async function getTransporterDeviceAssignmentsByAccount(
   accountId: string,
-  filters: TransporterAssignmentFilters = {}
+  filters: TransporterAssignmentFilters = {},
+  options?: RequestOptions
 ): Promise<TransporterAssignmentsPage> {
   const data = await executeGraphQL('manager', GetTransporterDeviceAssignmentsByAccountDocument, {
     accountId,
     activeOnly: filters.activeOnly ?? false,
     skip: filters.skip ?? null,
     take: filters.take ?? null,
-  });
+  }, options);
   return data.transporterDeviceAssignmentsByAccount;
-}
-
-/**
- * Every assignment on the account, all server pages drained. The dashboard's
- * operator filter joins device→transporter across the whole active set, so a
- * single page would drop units out of the filtered map.
- */
-export async function getAllTransporterDeviceAssignmentsByAccount(
-  accountId: string,
-  activeOnly = false
-): Promise<TransporterAssignmentWithAudit[]> {
-  return fetchAllPages(
-    async (skip, take) =>
-      (await getTransporterDeviceAssignmentsByAccount(accountId, { activeOnly, skip, take })).items
-  );
 }
 
 export async function assignDeviceToTransporter(

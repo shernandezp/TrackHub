@@ -35,23 +35,48 @@ public class GeofenceDetectionService(
         Guid accountId,
         CancellationToken cancellationToken)
     {
-        var positionsList = positions
+        var ordered = positions
             .OrderBy(p => p.TransporterId)
             .ThenBy(p => p.DeviceDateTime)
             .ToList();
 
+        if (ordered.Count == 0)
+            return new GeofenceProcessingResultVm(0, 0, 0);
+
+        // A fix at or before the transporter's last processed one arrived out of order; applying it
+        // would close a visit before it opened or reopen one already left.
+        var cursors = await geofenceEventReader.GetDetectionCursorsAsync(
+            [.. ordered.Select(p => p.TransporterId).Distinct()], accountId, cancellationToken);
+        var positionsList = ordered
+            .Where(p => !cursors.TryGetValue(p.TransporterId, out var lastFixAt) || p.DeviceDateTime > lastFixAt)
+            .ToList();
+
+        if (positionsList.Count < ordered.Count)
+            logger.LogDebug("Skipped {Count} out-of-order position(s) for account {AccountId}.", ordered.Count - positionsList.Count, accountId);
+
         if (positionsList.Count == 0)
             return new GeofenceProcessingResultVm(0, 0, 0);
 
-        // Pre-load open events for all transporters
-        var transporterIds = positionsList.Select(p => p.TransporterId).Distinct();
-        var openEventsByTransporter = new Dictionary<Guid, Dictionary<Guid, GeofenceEventVm>>();
 
-        foreach (var transporterId in transporterIds)
-        {
-            var openEvents = await geofenceEventReader.GetOpenEventsForTransporterAsync(transporterId, accountId, cancellationToken);
-            openEventsByTransporter[transporterId] = openEvents.ToDictionary(e => e.GeofenceId);
-        }
+        // Pre-load open events for all transporters, and resolve containment for the WHOLE batch.
+        // Both used to run per transporter and per position, so one sync cycle became thousands of
+        // round trips with a ST_Contains each.
+        var transporterIds = positionsList.Select(p => p.TransporterId).Distinct().ToList();
+        var openEvents = await geofenceEventReader.GetOpenEventsForTransportersAsync(transporterIds, accountId, cancellationToken);
+        var openEventsByTransporter = transporterIds.ToDictionary(
+            id => id,
+            id => openEvents.Where(e => e.TransporterId == id).ToDictionary(e => e.GeofenceId));
+
+        var containmentByIndex = await geofenceReader.GetGeofenceIdsContainingPointsAsync(
+            accountId,
+            [.. positionsList.Select(p => (p.Latitude, p.Longitude))],
+            cancellationToken);
+
+        var resolved = positionsList
+            .Select((position, index) => (
+                Position: position,
+                Containing: containmentByIndex.TryGetValue(index, out var hits) ? hits.ToHashSet() : []))
+            .ToList();
 
         // Process positions and accumulate results
         var eventsCreated = 0;
@@ -59,20 +84,24 @@ public class GeofenceDetectionService(
         var entries = new List<GeofenceEventVm>();
         var exits = new List<GeofenceEventVm>();
 
-        foreach (var transporterPositions in positionsList.GroupBy(p => p.TransporterId))
+        foreach (var transporterPositions in resolved.GroupBy(p => p.Position.TransporterId))
         {
-            var transporterId = transporterPositions.Key;
-            var openEvents = openEventsByTransporter[transporterId];
+            var transporterOpenEvents = openEventsByTransporter[transporterPositions.Key];
 
-            foreach (var position in transporterPositions)
+            foreach (var (position, containing) in transporterPositions)
             {
                 var (created, updated) = await ProcessPositionAsync(
-                    position, accountId, openEvents, entries, exits, cancellationToken);
+                    position, containing, accountId, transporterOpenEvents, entries, exits, cancellationToken);
 
                 eventsCreated += created;
                 eventsUpdated += updated;
             }
         }
+
+        await geofenceEventWriter.AdvanceDetectionCursorsAsync(
+            accountId,
+            positionsList.GroupBy(p => p.TransporterId).ToDictionary(g => g.Key, g => g.Max(p => p.DeviceDateTime)),
+            cancellationToken);
 
         // Post-commit, best-effort alert emission: a failure is logged, the visit stays unstamped
         // and the retry loop (VisitAlertRetryService) picks it up.
@@ -87,6 +116,7 @@ public class GeofenceDetectionService(
 
     private async Task<(int Created, int Updated)> ProcessPositionAsync(
         TransporterPositionDto position,
+        HashSet<Guid> containingGeofences,
         Guid accountId,
         Dictionary<Guid, GeofenceEventVm> openEvents,
         List<GeofenceEventVm> entries,
@@ -96,19 +126,24 @@ public class GeofenceDetectionService(
         var created = 0;
         var updated = 0;
 
-        // Use spatial query to find geofences containing this point (uses PostGIS ST_Contains)
-        var containingGeofenceIds = await geofenceReader.GetGeofenceIdsContainingPointAsync(
-            accountId, position.Latitude, position.Longitude, cancellationToken);
-        var containingGeofences = containingGeofenceIds.ToHashSet();
-
         // Process entries (in geofence but no open event)
         foreach (var geofenceId in containingGeofences)
         {
-            if (openEvents.ContainsKey(geofenceId))
-                continue;
+            if (openEvents.TryGetValue(geofenceId, out var stillInside))
+            {
+                // Back inside: the outside-since clock restarts on the next departure, otherwise a
+                // stale one would let the following exit skip the debounce entirely.
+                if (stillInside.OutsideSinceAt is not null)
+                {
+                    await geofenceEventWriter.SetOutsideSinceAsync(stillInside.GeofenceEventId, null, cancellationToken);
+                    openEvents[geofenceId] = stillInside with { OutsideSinceAt = null };
+                }
 
-            // Create entry event; null = the visit already exists (redelivered batch) and
-            // must not be counted, tracked, or re-alerted.
+                continue;
+            }
+
+            // Create entry event; null = the visit already exists (a redelivered batch, or a concurrent
+            // pass opened it) and must not be counted or re-alerted, only tracked.
             var newEvent = await geofenceEventWriter.CreateEntryEventAsync(
                 new GeofenceEventDto(
                     position.TransporterId,
@@ -119,7 +154,16 @@ public class GeofenceDetectionService(
                     position.Longitude),
                 cancellationToken);
             if (newEvent is not { } createdEvent)
+            {
+                var winner = (await geofenceEventReader.GetOpenEventsForTransporterAsync(position.TransporterId, accountId, cancellationToken))
+                    .FirstOrDefault(e => e.GeofenceId == geofenceId);
+                if (winner.GeofenceEventId != Guid.Empty)
+                {
+                    openEvents[geofenceId] = winner;
+                }
+
                 continue;
+            }
 
             created++;
             entries.Add(createdEvent);
@@ -135,13 +179,26 @@ public class GeofenceDetectionService(
         {
             var openEvent = openEvents[geofenceId];
 
-            // Debounce check
-            if ((position.DeviceDateTime - openEvent.Timestamp) < MinEventInterval)
+            // Debounced against the first fix seen OUTSIDE, not against the entry instant. Measured
+            // from entry, a short visit had its exit skipped and was closed by a much later fix, so
+            // the departure time became the sampling interval; and a long stay whose first outside
+            // fix arrived late was closed with no debounce at all.
+            if (openEvent.OutsideSinceAt is not { } outsideSince)
+            {
+                await geofenceEventWriter.SetOutsideSinceAsync(
+                    openEvent.GeofenceEventId, position.DeviceDateTime, cancellationToken);
+                openEvents[geofenceId] = openEvent with { OutsideSinceAt = position.DeviceDateTime };
+                continue;
+            }
+
+            if ((position.DeviceDateTime - outsideSince) < MinEventInterval)
                 continue;
 
+            // Stamped at the FIRST outside fix, not the one that confirms it: charging the debounce
+            // window to the visit would overstate dwell by exactly what the debounce removes.
             var closedEvent = await geofenceEventWriter.UpdateExitEventAsync(
                 openEvent.GeofenceEventId,
-                position.DeviceDateTime,
+                outsideSince,
                 cancellationToken);
 
             updated++;

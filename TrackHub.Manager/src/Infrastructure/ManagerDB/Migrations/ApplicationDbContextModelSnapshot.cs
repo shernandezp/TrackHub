@@ -82,6 +82,11 @@ namespace TrackHub.Manager.Infrastructure.Migrations
                         .HasColumnName("type")
                         .HasComment("Commercial classification of the tenant. Values: 1=Personal, 2=Business, 3=Associate.");
 
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("editversion");
+
                     b.HasKey("AccountId");
 
                     b.HasIndex("Name");
@@ -133,6 +138,11 @@ namespace TrackHub.Manager.Infrastructure.Migrations
                     b.Property<string>("ReportHeader")
                         .HasColumnType("text")
                         .HasColumnName("reportheader");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("editversion");
 
                     b.HasKey("AccountId");
 
@@ -196,6 +206,11 @@ namespace TrackHub.Manager.Infrastructure.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("tier");
 
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("editversion");
+
                     b.HasKey("AccountFeatureId");
 
                     b.HasIndex("AccountId", "FeatureKey")
@@ -242,6 +257,11 @@ namespace TrackHub.Manager.Infrastructure.Migrations
                     b.Property<int>("RefreshMapInterval")
                         .HasColumnType("integer")
                         .HasColumnName("refreshmapinterval");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("editversion");
 
                     b.HasKey("AccountId");
 
@@ -1002,7 +1022,10 @@ namespace TrackHub.Manager.Infrastructure.Migrations
 
                     b.HasIndex("AccountId", "OwnerEntityType", "OwnerEntityId", "Category", "Status");
 
-                    b.ToTable("documents", "app");
+                    b.ToTable("documents", "app", t =>
+                        {
+                            t.HasCheckConstraint("ck_documents_classification", "classification IN ('Public', 'Internal', 'Confidential', 'Legal')");
+                        });
                 });
 
             modelBuilder.Entity("TrackHub.Manager.Infrastructure.Entities.DocumentSignature", b =>
@@ -1207,6 +1230,10 @@ namespace TrackHub.Manager.Infrastructure.Migrations
 
                     b.HasIndex("AccountId");
 
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("ix_document_versions_quarantined")
+                        .HasFilter("scanstatus = 'Quarantined'");
+
                     b.HasIndex("DocumentId", "VersionNumber")
                         .IsUnique();
 
@@ -1279,9 +1306,17 @@ namespace TrackHub.Manager.Infrastructure.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("phone");
 
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("editversion");
+
                     b.HasKey("DriverId");
 
-                    b.HasIndex("AccountId", "DocumentNumber");
+                    b.HasIndex("AccountId", "DocumentNumber")
+                        .IsUnique()
+                        .HasDatabaseName("ux_drivers_accountid_documentnumber")
+                        .HasFilter("documentnumber IS NOT NULL");
 
                     b.ToTable("drivers", "app");
                 });
@@ -1548,6 +1583,11 @@ namespace TrackHub.Manager.Infrastructure.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("name");
 
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("editversion");
+
                     b.HasKey("GroupId");
 
                     b.HasIndex("AccountId");
@@ -1711,6 +1751,11 @@ namespace TrackHub.Manager.Infrastructure.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("triggerevent");
 
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("editversion");
+
                     b.HasKey("NotificationRuleId");
 
                     b.HasIndex("AccountId", "RuleKey")
@@ -1773,6 +1818,11 @@ namespace TrackHub.Manager.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
                         .HasColumnName("templatekey");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("editversion");
 
                     b.HasKey("NotificationTemplateId");
 
@@ -1865,6 +1915,11 @@ namespace TrackHub.Manager.Infrastructure.Migrations
                         .HasDefaultValue(60)
                         .HasColumnName("syncintervalminutes");
 
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("editversion");
+
                     b.HasKey("OperatorId");
 
                     b.HasIndex("AccountId", "Enabled", "ProtocolType");
@@ -1932,9 +1987,33 @@ namespace TrackHub.Manager.Infrastructure.Migrations
 
                     b.HasKey("OperatorHealthCheckId");
 
+                    b.HasIndex("OperatorId", "StartedAt");
+
                     b.HasIndex("AccountId", "OperatorId", "StartedAt");
 
                     b.ToTable("operator_health_checks", "telemetry");
+                });
+
+            modelBuilder.Entity("TrackHub.Manager.Infrastructure.Entities.OperatorSyncBackoff", b =>
+                {
+                    b.Property<Guid>("OperatorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("operatorid");
+
+                    b.Property<int>("ConsecutiveFailures")
+                        .HasColumnType("integer")
+                        .HasColumnName("consecutivefailures");
+
+                    b.Property<DateTimeOffset>("RetryAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("retryat");
+
+                    b.HasKey("OperatorId");
+
+                    b.ToTable("operator_sync_backoffs", "app", t =>
+                        {
+                            t.HasCheckConstraint("ck_operator_sync_backoffs_consecutivefailures", "consecutivefailures > 0");
+                        });
                 });
 
             modelBuilder.Entity("TrackHub.Manager.Infrastructure.Entities.OperatorSyncRun", b =>
@@ -2018,6 +2097,8 @@ namespace TrackHub.Manager.Infrastructure.Migrations
 
                     b.HasIndex("AccountId", "StartedAt");
 
+                    b.HasIndex("OperatorId", "StartedAt");
+
                     b.HasIndex("AccountId", "OperatorId", "StartedAt");
 
                     b.ToTable("operator_sync_runs", "telemetry");
@@ -2069,6 +2150,11 @@ namespace TrackHub.Manager.Infrastructure.Migrations
                     b.Property<DateTimeOffset?>("StartsAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("startsat");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("editversion");
 
                     b.HasKey("PlatformAnnouncementId");
 
@@ -2301,6 +2387,11 @@ namespace TrackHub.Manager.Infrastructure.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("requiredfeaturekey");
 
+                    b.Property<string>("RequiredGrants")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("requiredgrants");
+
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer")
                         .HasColumnName("sortorder");
@@ -2351,9 +2442,18 @@ namespace TrackHub.Manager.Infrastructure.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("name");
 
+                    b.Property<DateTimeOffset?>("RetiredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("retiredat");
+
                     b.Property<short>("TransporterTypeId")
                         .HasColumnType("smallint")
                         .HasColumnName("transportertypeid");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("editversion");
 
                     b.HasKey("TransporterId");
 
@@ -2854,6 +2954,15 @@ namespace TrackHub.Manager.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Account");
+                });
+
+            modelBuilder.Entity("TrackHub.Manager.Infrastructure.Entities.OperatorSyncBackoff", b =>
+                {
+                    b.HasOne("TrackHub.Manager.Infrastructure.Entities.Operator", null)
+                        .WithOne()
+                        .HasForeignKey("TrackHub.Manager.Infrastructure.Entities.OperatorSyncBackoff", "OperatorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("TrackHub.Manager.Infrastructure.Entities.PointOfInterest", b =>

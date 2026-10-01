@@ -151,22 +151,22 @@ public class TripReportReader(IGraphQLClientFactory graphQLClient, IUser user, I
         => featureReader.EnsureFeatureEnabledAsync(AccountId, FeatureKeys.TripManagement, cancellationToken);
 
     public Task<IReadOnlyCollection<ReportTripVm>> GetTripsAsync(
-        DateTimeOffset? from, DateTimeOffset? to, Guid? transporterId, Guid? driverId, CancellationToken cancellationToken)
+        DateTimeOffset from, DateTimeOffset to, Guid? transporterId, Guid? driverId, CancellationToken cancellationToken)
         => DrainAsync<ReportTripVm, TripReportDataPageVm>(
             TripReportDataQuery, p => p.Items, p => p.NextSkip, p => p.HasMore, from, to, transporterId, driverId, cancellationToken);
 
     public Task<IReadOnlyCollection<ReportTripStopVm>> GetTripStopsAsync(
-        DateTimeOffset? from, DateTimeOffset? to, Guid? transporterId, Guid? driverId, CancellationToken cancellationToken)
+        DateTimeOffset from, DateTimeOffset to, Guid? transporterId, Guid? driverId, CancellationToken cancellationToken)
         => DrainAsync<ReportTripStopVm, TripStopReportDataPageVm>(
             TripStopReportDataQuery, p => p.Items, p => p.NextSkip, p => p.HasMore, from, to, transporterId, driverId, cancellationToken);
 
     public Task<IReadOnlyCollection<ReportTripTollVm>> GetTripTollsAsync(
-        DateTimeOffset? from, DateTimeOffset? to, Guid? transporterId, Guid? driverId, CancellationToken cancellationToken)
+        DateTimeOffset from, DateTimeOffset to, Guid? transporterId, Guid? driverId, CancellationToken cancellationToken)
         => DrainAsync<ReportTripTollVm, TripTollReportDataPageVm>(
             TripTollReportDataQuery, p => p.Items, p => p.NextSkip, p => p.HasMore, from, to, transporterId, driverId, cancellationToken);
 
     public Task<IReadOnlyCollection<ReportTripPodVm>> GetTripProofsOfDeliveryAsync(
-        DateTimeOffset? from, DateTimeOffset? to, Guid? transporterId, Guid? driverId, CancellationToken cancellationToken)
+        DateTimeOffset from, DateTimeOffset to, Guid? transporterId, Guid? driverId, CancellationToken cancellationToken)
         => DrainAsync<ReportTripPodVm, TripPodReportDataPageVm>(
             TripPodReportDataQuery, p => p.Items, p => p.NextSkip, p => p.HasMore, from, to, transporterId, driverId, cancellationToken);
 
@@ -183,8 +183,8 @@ public class TripReportReader(IGraphQLClientFactory graphQLClient, IUser user, I
         Func<TPage, IEnumerable<TRow>?> itemsOf,
         Func<TPage, int> nextSkipOf,
         Func<TPage, bool> hasMoreOf,
-        DateTimeOffset? from,
-        DateTimeOffset? to,
+        DateTimeOffset from,
+        DateTimeOffset to,
         Guid? transporterId,
         Guid? driverId,
         CancellationToken cancellationToken)

@@ -76,10 +76,8 @@ public class AccountStatusContractTests
 
     private static IEnumerable<TestCaseData> Calls()
     {
-        yield return new TestCaseData("Router.AccountOperationalStatusReader.AccountStatus",
-            TrackHub.Router.Infrastructure.ManagerApi.AccountOperationalStatusReader.AccountStatusQuery);
-        yield return new TestCaseData("Reporting.AccountOperationalStatusReader.AccountStatus",
-            TrackHub.Reporting.Infrastructure.GraphQLApi.AccountOperationalStatusReader.AccountStatusQuery);
+        yield return new TestCaseData("Common.ManagerAccountOperationalStatusReader.AccountStatus",
+            Common.Infrastructure.ManagerAccountOperationalStatusReader.AccountStatusQuery);
         yield return new TestCaseData("Portal.changeAccountStatus", ChangeAccountStatusMutation);
         yield return new TestCaseData("Portal.updateAccountBranding", UpdateAccountBrandingMutation);
         yield return new TestCaseData("Portal.accountBranding", GetAccountBrandingQuery);

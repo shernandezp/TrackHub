@@ -105,8 +105,43 @@ public sealed class OutboxWriter(IApplicationDbContext context) : IOutboxWriter
 
     public async Task<int> PurgeCompletedAsync(DateTimeOffset before, CancellationToken cancellationToken)
         => await context.OutboxMessages
-            .Where(x => x.Status == OutboxMessageStatuses.Completed && x.ProcessedAt != null && x.ProcessedAt < before)
+            .Where(x => (x.Status == OutboxMessageStatuses.Completed || x.Status == OutboxMessageStatuses.Discarded)
+                && x.ProcessedAt != null && x.ProcessedAt < before)
             .ExecuteDeleteInChunksAsync(x => x.OutboxMessageId, cancellationToken);
+
+    public async Task<int> ReplayFailedAsync(Guid? outboxMessageId, CancellationToken cancellationToken)
+    {
+        // A later message about the same entity already reached Manager; resending this one would
+        // overwrite it with older state.
+        await context.OutboxMessages
+            .Where(x => x.Status == OutboxMessageStatuses.Failed
+                && (outboxMessageId == null || x.OutboxMessageId == outboxMessageId)
+                && x.OrderingKey != null
+                && context.OutboxMessages.Any(later => later.OrderingKey == x.OrderingKey
+                    && later.Sequence > x.Sequence
+                    && later.Status == OutboxMessageStatuses.Completed))
+            .ExecuteUpdateAsync(set => set
+                .SetProperty(x => x.Status, OutboxMessageStatuses.Discarded)
+                .SetProperty(x => x.ProcessedAt, DateTimeOffset.UtcNow),
+                cancellationToken);
+
+        return await context.OutboxMessages
+            .Where(x => x.Status == OutboxMessageStatuses.Failed && (outboxMessageId == null || x.OutboxMessageId == outboxMessageId))
+            .ExecuteUpdateAsync(set => set
+                .SetProperty(x => x.Status, OutboxMessageStatuses.Pending)
+                .SetProperty(x => x.AttemptCount, 0)
+                .SetProperty(x => x.NextAttemptAt, DateTimeOffset.UtcNow)
+                .SetProperty(x => x.ProcessedAt, (DateTimeOffset?)null),
+                cancellationToken);
+    }
+
+    public async Task<int> DiscardFailedAsync(Guid? outboxMessageId, CancellationToken cancellationToken)
+        => await context.OutboxMessages
+            .Where(x => x.Status == OutboxMessageStatuses.Failed && (outboxMessageId == null || x.OutboxMessageId == outboxMessageId))
+            .ExecuteUpdateAsync(set => set
+                .SetProperty(x => x.Status, OutboxMessageStatuses.Discarded)
+                .SetProperty(x => x.ProcessedAt, DateTimeOffset.UtcNow),
+                cancellationToken);
 
     // AsTracking: the Security context is globally NoTracking, so a plain read would mutate a
     // detached instance and save nothing.

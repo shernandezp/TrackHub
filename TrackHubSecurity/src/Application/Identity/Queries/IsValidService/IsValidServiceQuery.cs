@@ -21,6 +21,7 @@ namespace TrackHub.Security.Application.Identity.Queries.IsValidService;
 // query under the token being validated — including account-less global service identities, which
 // is why the tenant guard must not require an account here.
 [PlatformScoped("Authorization pipeline: a service client validating its own registration; IdentityCallerGuard.EnsureCallerIsSubjectService binds the subject to the calling client. The client registry is platform-owned.")]
+[AllowSuspendedAccount]
 public readonly record struct IsValidServiceQuery(string? Client) : IRequest<bool>;
 
 public class GetUsersQueryHandler(IIdentityService service, IUser user) : IRequestHandler<IsValidServiceQuery, bool>

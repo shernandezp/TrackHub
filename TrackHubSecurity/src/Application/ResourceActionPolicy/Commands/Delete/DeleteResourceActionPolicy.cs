@@ -20,6 +20,7 @@ using TrackHub.Security.Application.Audit.Events;
 namespace TrackHub.Security.Application.ResourceActionPolicy.Commands.Delete;
 
 [Authorize(Resource = Resources.Permissions, Action = Actions.Delete)]
+[PlatformScoped("Seeded RBAC catalog: roles, policies and their resource/action grants are platform definitions, Administrator-only to change.")]
 public readonly record struct DeleteResourceActionPolicyCommand(int ResourceId, int ActionId, int PolicyId) : IRequest;
 
 public class DeleteResourceActionPolicyCommandHandler(IResourceActionPolicyWriter writer, IUserReader userReader, IUser user, IPublisher publisher) : IRequestHandler<DeleteResourceActionPolicyCommand>

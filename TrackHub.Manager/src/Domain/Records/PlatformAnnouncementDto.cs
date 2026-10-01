@@ -6,4 +6,5 @@ public readonly record struct PlatformAnnouncementDto(
     AnnouncementSeverity Severity,
     DateTimeOffset? StartsAt,
     DateTimeOffset? EndsAt,
-    bool Active);
+    bool Active,
+    uint? ExpectedVersion = null);

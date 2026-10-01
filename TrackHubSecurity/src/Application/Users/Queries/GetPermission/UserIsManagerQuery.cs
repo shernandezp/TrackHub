@@ -19,6 +19,7 @@ namespace TrackHub.Security.Application.Users.Queries.GetPermission;
 
 // Profile, not Users — see the note on UserIsAdminQuery.
 [Authorize(Resource = Resources.Profile, Action = Actions.Read)]
+[AllowSuspendedAccount]
 public readonly record struct UserIsManagerQuery() : IRequest<bool>;
 
 public class UserIsManagerQueryHandler(IUserReader reader, IUser user) : IRequestHandler<UserIsManagerQuery, bool>

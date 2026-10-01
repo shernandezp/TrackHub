@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Infrastructure;
 using Common.Application.Exceptions;
 using Common.Application.Interfaces;
 using TrackHub.Manager.Infrastructure.Interfaces;
@@ -44,35 +45,19 @@ public sealed class TransporterReader(IApplicationDbContext context, ICurrentPri
                     d.TransporterId,
                     d.Name,
                     (TransporterType)d.TransporterTypeId,
-                    d.TransporterTypeId)
+                    d.TransporterTypeId, d.Version)
             })
             .FirstOrDefaultAsync(cancellationToken);
         ReaderResults.EnsureFound(row, nameof(Entities.Transporter), id.ToString());
 
-        RequireAccountAccess(row.AccountId);
-        if (!IsPrivileged && !await Scope(row.AccountId).AnyAsync(t => t.TransporterId == id, cancellationToken))
+        if (!HasAccountAccess(row.AccountId, forWrite: false)
+            || (!IsPrivileged && !await Visible(row.AccountId).AnyAsync(t => t.TransporterId == id, cancellationToken)))
         {
             throw new NotFoundException(nameof(Entities.Transporter), id.ToString());
         }
 
         return row.Vm;
     }
-
-    /// <summary>
-    /// GetTransporterAsync method retrieves a transporter by its name
-    /// </summary>
-    /// <param name="name">The name of the transporter</param>
-    /// <param name="cancellationToken">A cancellation token to cancel the operation</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains the TransporterVm object.</returns>
-    public async Task<TransporterVm> GetTransporterAsync(string name, CancellationToken cancellationToken)
-        => await Context.Transporters
-            .Where(d => d.Name.Equals(name))
-            .Select(d => new TransporterVm(
-                d.TransporterId,
-                d.Name,
-                (TransporterType)d.TransporterTypeId,
-                d.TransporterTypeId))
-            .FirstOrDefaultAsync(cancellationToken);
 
     /// <summary>
     /// GetTransportersByGroupAsync method retrieves a page of transporters by group ID
@@ -85,32 +70,13 @@ public sealed class TransporterReader(IApplicationDbContext context, ICurrentPri
     /// <returns>A task that represents the asynchronous operation. The task result contains a page of TransporterVm objects.</returns>
     public async Task<TransportersPageVm> GetTransportersByGroupAsync(long groupId, int skip, int take, string? search, CancellationToken cancellationToken)
     {
-        // Sequential bigint key — see UserReader.GetUsersByGroupAsync.
-        var groupAccountId = await Context.Groups
-            .Where(g => g.GroupId == groupId)
-            .Select(g => (Guid?)g.AccountId)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (!groupAccountId.HasValue)
+        var members = await GroupMembersAsync(groupId, invisibleAsEmpty: false, cancellationToken);
+        if (members is null)
         {
             return new TransportersPageVm([], 0);
         }
 
-        RequireAccountAccess(groupAccountId.Value);
-
-        // A group the caller does not belong to does not exist for them (an invisible id is NotFound).
-        if (!IsPrivileged && !await Context.UsersGroup
-                .AnyAsync(ug => ug.GroupId == groupId && ug.UserId == Principal.UserId && ug.Group.Active, cancellationToken))
-        {
-            throw new NotFoundException(nameof(Entities.Group), groupId.ToString());
-        }
-
-        var query = ApplySearch(
-            Context.Groups
-                .Where(g => g.GroupId == groupId)
-                .SelectMany(g => g.Transporters)
-                .Distinct(),
-            search);
+        var query = ApplySearch(members, search);
 
         var totalCount = await query.CountAsync(cancellationToken);
         var items = await query
@@ -122,10 +88,47 @@ public sealed class TransporterReader(IApplicationDbContext context, ICurrentPri
                 d.TransporterId,
                 d.Name,
                 (TransporterType)d.TransporterTypeId,
-                d.TransporterTypeId))
+                d.TransporterTypeId, d.Version))
             .ToListAsync(cancellationToken);
 
         return new TransportersPageVm(items, totalCount);
+    }
+
+    public async Task<IReadOnlyCollection<Guid>> GetTransporterIdsByGroupAsync(long groupId, int fetchSize, CancellationToken cancellationToken)
+    {
+        var members = await GroupMembersAsync(groupId, invisibleAsEmpty: true, cancellationToken);
+        return members is null
+            ? []
+            : await members.OrderBy(t => t.TransporterId).Select(t => t.TransporterId).Take(fetchSize).ToListAsync(cancellationToken);
+    }
+
+    // Null when the group is missing or foreign. A group the caller does not belong to is NotFound
+    // for the listing, and simply empty for the map filter that narrows by it.
+    private async Task<IQueryable<Entities.Transporter>?> GroupMembersAsync(long groupId, bool invisibleAsEmpty, CancellationToken cancellationToken)
+    {
+        // Sequential bigint key — see UserReader.GetUsersByGroupAsync.
+        var groupAccountId = await Context.Groups
+            .Where(g => g.GroupId == groupId)
+            .Select(g => (Guid?)g.AccountId)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        // A foreign group reads like a missing one, so the id cannot be probed.
+        if (!groupAccountId.HasValue || !HasAccountAccess(groupAccountId.Value, forWrite: false))
+        {
+            return null;
+        }
+
+        if (!IsPrivileged && !await Context.UsersGroup
+                .AnyAsync(ug => ug.GroupId == groupId && ug.UserId == Principal.UserId && ug.Group.Active, cancellationToken))
+        {
+            return invisibleAsEmpty ? null : throw new NotFoundException(nameof(Entities.Group), groupId.ToString());
+        }
+
+        return Context.Groups
+            .Where(g => g.GroupId == groupId)
+            .SelectMany(g => g.Transporters)
+            .Where(t => t.RetiredAt == null)
+            .Distinct();
     }
 
     /// <summary>
@@ -144,12 +147,11 @@ public sealed class TransporterReader(IApplicationDbContext context, ICurrentPri
             .Select(u => (Guid?)u.AccountId)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (!subjectAccountId.HasValue)
+        // A foreign user reads like a missing one, so the id cannot be probed.
+        if (!subjectAccountId.HasValue || !HasAccountAccess(subjectAccountId.Value, forWrite: false))
         {
             return new TransportersPageVm([], 0);
         }
-
-        RequireAccountAccess(subjectAccountId.Value);
 
         var query = ApplySearch(await VisibleToUserAsync(userId, subjectAccountId.Value, cancellationToken), search);
 
@@ -163,7 +165,7 @@ public sealed class TransporterReader(IApplicationDbContext context, ICurrentPri
                 d.TransporterId,
                 d.Name,
                 (TransporterType)d.TransporterTypeId,
-                d.TransporterTypeId))
+                d.TransporterTypeId, d.Version))
             .ToListAsync(cancellationToken);
 
         return new TransportersPageVm(items, totalCount);
@@ -192,11 +194,33 @@ public sealed class TransporterReader(IApplicationDbContext context, ICurrentPri
                 t.TransporterId,
                 t.Name,
                 (TransporterType)t.TransporterTypeId,
-                t.TransporterTypeId))
+                t.TransporterTypeId, t.Version))
             .ToListAsync(cancellationToken);
 
         return new TransportersPageVm(items, totalCount);
     }
+
+    public async Task<TransportersPageVm> GetRetiredTransportersAsync(Guid accountId, int skip, int take, string? search, CancellationToken cancellationToken)
+    {
+        var scoped = RequireAccountAccess(accountId);
+        var query = ApplySearch(Context.Transporters.Where(t => t.AccountId == scoped && t.RetiredAt != null), search);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .OrderBy(t => t.Name)
+            .ThenBy(t => t.TransporterId)
+            .Skip(skip)
+            .Take(take)
+            .Select(t => new TransporterVm(
+                t.TransporterId,
+                t.Name,
+                (TransporterType)t.TransporterTypeId,
+                t.TransporterTypeId, t.Version))
+            .ToListAsync(cancellationToken);
+
+        return new TransportersPageVm(items, totalCount);
+    }
+
 
     /// <summary>
     /// Minimal account-wide transporter projection for select controls. Returns up to
@@ -226,12 +250,11 @@ public sealed class TransporterReader(IApplicationDbContext context, ICurrentPri
             .Select(u => (Guid?)u.AccountId)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (!subjectAccountId.HasValue)
+        // A foreign user reads like a missing one, so the id cannot be probed.
+        if (!subjectAccountId.HasValue || !HasAccountAccess(subjectAccountId.Value, forWrite: false))
         {
             return [];
         }
-
-        RequireAccountAccess(subjectAccountId.Value);
 
         return await (await VisibleToUserAsync(userId, subjectAccountId.Value, cancellationToken))
             .OrderBy(t => t.Name)
@@ -261,13 +284,16 @@ public sealed class TransporterReader(IApplicationDbContext context, ICurrentPri
 
     private IQueryable<Entities.Transporter> ByAccount(Guid accountId)
         => Context.Transporters
-            .Where(t => t.AccountId == accountId);
+            .Where(t => t.AccountId == accountId && t.RetiredAt == null);
 
     // The account-wide reads narrow to the caller's own visibility unless the token is privileged.
-    private IQueryable<Entities.Transporter> Scope(Guid accountId)
+    private IQueryable<Entities.Transporter> Visible(Guid accountId)
         => IsPrivileged
-            ? ByAccount(accountId)
+            ? Context.Transporters.Where(t => t.AccountId == accountId)
             : TransporterVisibility.Query(Context, Principal.UserId ?? Guid.Empty, accountId, privileged: false);
+
+    private IQueryable<Entities.Transporter> Scope(Guid accountId)
+        => Visible(accountId).Where(t => t.RetiredAt == null);
 
     // The named user's visibility: their token decides when they are the caller, the replicated
     // role otherwise.
@@ -276,7 +302,7 @@ public sealed class TransporterReader(IApplicationDbContext context, ICurrentPri
         var privileged = Principal.UserId == userId
             ? IsPrivileged
             : await TransporterVisibility.IsPrivilegedAsync(Context, userId, cancellationToken);
-        return TransporterVisibility.Query(Context, userId, accountId, privileged);
+        return TransporterVisibility.Query(Context, userId, accountId, privileged).Where(t => t.RetiredAt == null);
     }
 
     private static IQueryable<Entities.Transporter> ApplySearch(IQueryable<Entities.Transporter> query, string? search)

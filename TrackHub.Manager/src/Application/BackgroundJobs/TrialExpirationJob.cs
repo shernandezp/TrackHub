@@ -13,7 +13,6 @@
 //  limitations under the License.
 //
 
-using System.Text.Json;
 using Common.Domain.Enums;
 using Microsoft.Extensions.Logging;
 using TrackHub.Manager.Application.Accounts.Events;
@@ -22,8 +21,7 @@ namespace TrackHub.Manager.Application.BackgroundJobs;
 
 /// <summary>
 /// Transitions Trial accounts past their trial-end to Suspended and raises AccountStatusChanged.
-/// Trial-end is read from AccountFeature configuration (`trialEndsAt`) or a trial-tier feature's
-/// EffectiveTo; a no-op when no trial-end data exists.
+/// Trial-end is a trial-tier feature's EffectiveTo; a no-op when no trial-tier feature has one.
 /// </summary>
 public sealed class TrialExpirationJob(
     ITrialExpirationStore store,
@@ -81,14 +79,13 @@ public sealed class TrialExpirationJob(
             trialAccounts.Count, suspended);
     }
 
-    /// <summary>The earliest trial end across the account's features; an explicit `trialEndsAt` wins over the tier window.</summary>
+    /// <summary>The earliest trial-tier window end across the account's features.</summary>
     public static DateTimeOffset? ResolveTrialEnd(IReadOnlyCollection<TrialFeatureVm> features)
     {
         DateTimeOffset? trialEnd = null;
         foreach (var feature in features)
         {
-            var candidate = ParseTrialEnd(feature.ConfigurationJson)
-                ?? (string.Equals(feature.Tier, TrialTier, StringComparison.OrdinalIgnoreCase) ? feature.EffectiveTo : null);
+            var candidate = string.Equals(feature.Tier, TrialTier, StringComparison.OrdinalIgnoreCase) ? feature.EffectiveTo : null;
 
             if (candidate.HasValue && (trialEnd is null || candidate.Value < trialEnd.Value))
             {
@@ -97,26 +94,6 @@ public sealed class TrialExpirationJob(
         }
 
         return trialEnd;
-    }
-
-    private static DateTimeOffset? ParseTrialEnd(string? configurationJson)
-    {
-        if (string.IsNullOrWhiteSpace(configurationJson))
-        {
-            return null;
-        }
-
-        try
-        {
-            using var document = JsonDocument.Parse(configurationJson);
-            return document.RootElement.TryGetProperty("trialEndsAt", out var value) && value.TryGetDateTimeOffset(out var trialEnd)
-                ? trialEnd
-                : null;
-        }
-        catch (JsonException)
-        {
-            return null;
-        }
     }
 
     private async Task RecordFailureAsync(

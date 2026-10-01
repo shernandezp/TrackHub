@@ -24,7 +24,9 @@ public sealed class PlatformAnnouncementWriter(IApplicationDbContext context, IC
     public async Task UpdatePlatformAnnouncementAsync(Guid platformAnnouncementId, PlatformAnnouncementDto announcement, CancellationToken cancellationToken)
     {
         var entity = await context.PlatformAnnouncements
-            .AsTracking().FirstAsync(x => x.PlatformAnnouncementId == platformAnnouncementId, cancellationToken);
+            .AsTracking().FirstOrDefaultAsync(x => x.PlatformAnnouncementId == platformAnnouncementId, cancellationToken)
+            ?? throw new NotFoundException(nameof(PlatformAnnouncement), $"{platformAnnouncementId}");
+        RowVersion.Expect(context.PlatformAnnouncements, entity, announcement.ExpectedVersion);
 
         var previous = Describe(entity);
         entity.MessageEn = announcement.MessageEn;
@@ -40,7 +42,8 @@ public sealed class PlatformAnnouncementWriter(IApplicationDbContext context, IC
     public async Task DeletePlatformAnnouncementAsync(Guid platformAnnouncementId, CancellationToken cancellationToken)
     {
         var entity = await context.PlatformAnnouncements
-            .AsTracking().FirstAsync(x => x.PlatformAnnouncementId == platformAnnouncementId, cancellationToken);
+            .AsTracking().FirstOrDefaultAsync(x => x.PlatformAnnouncementId == platformAnnouncementId, cancellationToken)
+            ?? throw new NotFoundException(nameof(PlatformAnnouncement), $"{platformAnnouncementId}");
         AddAuditEvent("DeletePlatformAnnouncement", entity, Describe(entity), null);
         context.PlatformAnnouncements.Remove(entity);
         await context.SaveChangesAsync(cancellationToken);
@@ -55,5 +58,5 @@ public sealed class PlatformAnnouncementWriter(IApplicationDbContext context, IC
         => $$"""{"severity":{{announcement.Severity}},"startsAt":{{AuditJson.Quote(announcement.StartsAt)}},"endsAt":{{AuditJson.Quote(announcement.EndsAt)}},"active":{{announcement.Active.ToString().ToLowerInvariant()}}}""";
 
     private static PlatformAnnouncementVm ToVm(PlatformAnnouncement x)
-        => new(x.PlatformAnnouncementId, x.MessageEn, x.MessageEs, (AnnouncementSeverity)x.Severity, x.StartsAt, x.EndsAt, x.Active, x.LastModified);
+        => new(x.PlatformAnnouncementId, x.MessageEn, x.MessageEs, (AnnouncementSeverity)x.Severity, x.StartsAt, x.EndsAt, x.Active, x.LastModified, x.Version);
 }

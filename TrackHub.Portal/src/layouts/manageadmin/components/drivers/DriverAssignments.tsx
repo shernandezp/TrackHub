@@ -54,20 +54,30 @@ import {
   assignmentTypeLabel,
   assignmentStatusLabel,
 } from 'layouts/manageadmin/components/drivers/qualificationConstants';
-import { useAccountByUser } from 'queries/accounts';
-import { useTransporterLookupByAccount } from 'queries/transporters';
 import {
-  useDriversByAccount,
+  assignmentHistoryWindowInvalid,
+  defaultAssignmentHistoryWindow,
+  MAX_ASSIGNMENT_HISTORY_DAYS,
+  toAssignmentHistoryFilters,
+} from 'layouts/manageadmin/components/drivers/assignmentHistory';
+import SearchSelect from 'edition/SearchSelect';
+import type { SearchOption } from 'edition/SearchSelect';
+import { useAccountTransporterOptions } from 'edition/pickerOptions';
+import { useAccountCalendar } from 'context/account';
+import { useAccountByUser } from 'queries/accounts';
+import { useTransporterNames } from 'queries/transporters';
+import {
   useDriverAssignmentHistory,
+  useDriverAssignmentHistoryPage,
   useDriverActiveAssignments,
   useAssignDriverToTransporter,
   useEndDriverAssignment,
 } from 'queries/drivers';
-import type {
-  DriverAssignmentHistoryFilters,
-  DriverTransporterAssignment,
-} from 'api/manager/drivers';
-import { MAX_FETCH_ALL_ITEMS } from 'api/core/paging';
+import type { DriverTransporterAssignment } from 'api/manager/drivers';
+import ServerPagination from 'controls/Tables/ServerPagination';
+import { useClampPage, useServerList } from 'controls/Tables/useServerList';
+import { usePermissions } from 'context/permissions';
+import { PermissionActions, PermissionResources } from 'constants/permissions';
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from 'utils/dateUtils';
 
@@ -78,42 +88,38 @@ interface ConfirmState {
 
 /** Pending filter form state (applied to the history query on "search"). */
 interface FilterState {
-  driverId: string;
-  transporterId: string;
+  driver: SearchOption | null;
+  transporter: SearchOption | null;
   from: string;
   to: string;
 }
 
-const EMPTY_FILTERS: FilterState = { driverId: '', transporterId: '', from: '', to: '' };
-
-function toFilters(state: FilterState): DriverAssignmentHistoryFilters {
-  return {
-    driverId: state.driverId || null,
-    transporterId: state.transporterId || null,
-    // The pickers give calendar days in the viewer's zone; parsing the bare `yyyy-MM-dd` would
-    // read them as UTC midnight, and an instant "to" bound excluded the whole last day.
-    from: state.from ? new Date(`${state.from}T00:00`).toISOString() : null,
-    to: state.to ? new Date(`${state.to}T23:59:59.999`).toISOString() : null,
-  };
-}
+const HISTORY_PAGE_SIZE = 25;
 
 function ManageDriverAssignments() {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
+  const calendar = useAccountCalendar();
   const [expanded, setExpanded] = useState(false);
-  const [pending, setPending] = useState<FilterState>(EMPTY_FILTERS);
-  const [applied, setApplied] = useState<FilterState>(EMPTY_FILTERS);
-  const [assignDriverId, setAssignDriverId] = useState('');
-  const [assignTransporterId, setAssignTransporterId] = useState('');
+  const [pending, setPending] = useState<FilterState>(() => ({
+    driver: null,
+    transporter: null,
+    ...defaultAssignmentHistoryWindow(calendar),
+  }));
+  const [applied, setApplied] = useState<FilterState>(pending);
+  const [assignDriver, setAssignDriver] = useState<SearchOption | null>(null);
+  const assignDriverId = assignDriver?.value ?? '';
+  const [assignTransporter, setAssignTransporter] = useState<SearchOption | null>(null);
   const [assignType, setAssignType] = useState<string>(ASSIGNMENT_TYPES[0]);
   const [confirm, setConfirm] = useState<ConfirmState>({ open: false, id: null });
+  const { can } = usePermissions();
+  const canAssign = can(PermissionResources.DriverOperations, PermissionActions.Write);
+  const canEnd = can(PermissionResources.DriverOperations, PermissionActions.Edit);
+  const pendingWindowInvalid = assignmentHistoryWindowInvalid(pending);
+  const appliedWindowInvalid = assignmentHistoryWindowInvalid(applied);
 
   const accountQuery = useAccountByUser({ enabled: expanded });
   const accountId = accountQuery.data?.accountId;
-  const driversQuery = useDriversByAccount(accountId, { enabled: expanded && !!accountId });
-  const drivers = driversQuery.data ?? [];
-  const transportersQuery = useTransporterLookupByAccount({ enabled: expanded });
-  const transporters = transportersQuery.data ?? [];
 
   // Active list: the server-side, unpaged, time-aware projection for the driver
   // currently selected in the assign form.
@@ -128,52 +134,58 @@ function ManageDriverAssignments() {
     { driverId: assignDriverId || null },
     { enabled: expanded && !!accountId && !!assignDriverId }
   );
-  const historyQuery = useDriverAssignmentHistory(accountId, toFilters(applied), {
-    enabled: expanded && !!accountId,
+  const { page, setPage, params } = useServerList(HISTORY_PAGE_SIZE);
+  const historyFilters = toAssignmentHistoryFilters(
+    {
+      driverId: applied.driver?.value ?? null,
+      transporterId: applied.transporter?.value ?? null,
+      from: applied.from,
+      to: applied.to,
+    },
+    calendar
+  );
+  const historyQuery = useDriverAssignmentHistoryPage(accountId, historyFilters, params, {
+    enabled: expanded && !!accountId && !appliedWindowInvalid,
   });
-  const history = historyQuery.data ?? [];
+  const history = historyQuery.data?.items ?? [];
+  const historyTotal = historyQuery.data?.totalCount ?? 0;
+  useClampPage(page, HISTORY_PAGE_SIZE, historyTotal, setPage);
+
+  // Only the synthesized default-unit entry lacks a history row to take its name from.
+  const activeTransporterIds = useMemo(
+    () => (activeQuery.data ?? []).map((assignment) => assignment.resourceId),
+    [activeQuery.data]
+  );
+  const transporterNames = useTransporterNames(activeTransporterIds);
 
   const active = useMemo<ActiveAssignmentRow[]>(
     () =>
       buildActiveAssignmentRows(activeQuery.data ?? [], {
-        driverName: drivers.find((driver) => driver.driverId === assignDriverId)?.name ?? '',
+        driverName: assignDriver?.label ?? '',
         historyRows: driverHistoryQuery.data ?? [],
-        transporterNames: new Map(
-          transporters.map((transporter) => [transporter.transporterId, transporter.name])
-        ),
+        transporterNames,
       }),
-    [activeQuery.data, driverHistoryQuery.data, drivers, transporters, assignDriverId]
+    [activeQuery.data, driverHistoryQuery.data, assignDriver, transporterNames]
   );
 
-  const assignDriver = useAssignDriverToTransporter();
+  const assignDriverToTransporter = useAssignDriverToTransporter();
   const endAssignment = useEndDriverAssignment();
 
   useEffect(() => {
-    setLoading(
-      activeQuery.isFetching ||
-        driverHistoryQuery.isFetching ||
-        historyQuery.isFetching ||
-        driversQuery.isFetching
-    );
-  }, [
-    activeQuery.isFetching,
-    driverHistoryQuery.isFetching,
-    historyQuery.isFetching,
-    driversQuery.isFetching,
-    setLoading,
-  ]);
+    setLoading(activeQuery.isFetching || driverHistoryQuery.isFetching || historyQuery.isFetching);
+  }, [activeQuery.isFetching, driverHistoryQuery.isFetching, historyQuery.isFetching, setLoading]);
 
   const handleAssign = async () => {
-    if (!assignDriverId || !assignTransporterId) return;
+    if (!assignDriverId || !assignTransporter) return;
     setLoading(true);
     try {
-      await assignDriver.mutateAsync({
+      await assignDriverToTransporter.mutateAsync({
         driverId: assignDriverId,
-        transporterId: assignTransporterId,
+        transporterId: assignTransporter.value,
         startsAt: new Date().toISOString(),
         assignmentType: assignType,
       });
-      setAssignTransporterId('');
+      setAssignTransporter(null);
     } catch {
       // Failure (including the 409 on an overlapping same-pair assignment) is
       // surfaced by the global toast.
@@ -222,7 +234,9 @@ function ManageDriverAssignments() {
       </TextCell>
     ),
     createdBy: <TextCell>{row.createdByPrincipal}</TextCell>,
-    action: row.assignmentId ? (
+    action: !row.assignmentId ? (
+      <TextCell>{t('workforce.assignments.defaultTransporterHint')}</TextCell>
+    ) : canEnd ? (
       <ArgonButton
         variant="text"
         color="error"
@@ -231,7 +245,7 @@ function ManageDriverAssignments() {
         <Icon>stop_circle</Icon>&nbsp;{t('workforce.assignments.end')}
       </ArgonButton>
     ) : (
-      <TextCell>{t('workforce.assignments.defaultTransporterHint')}</TextCell>
+      <TextCell />
     ),
     id: row.key,
   });
@@ -282,51 +296,50 @@ function ManageDriverAssignments() {
             <Grid size={{ xs: 12, md: 4 }}>
               <DriverPicker
                 id="assignDriverId"
-                drivers={drivers}
-                value={assignDriverId}
-                onChange={setAssignDriverId}
+                value={assignDriver}
+                onChange={setAssignDriver}
                 label={t('workforce.selectDriver')}
                 placeholder={t('workforce.selectDriverPlaceholder')}
               />
             </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
-              <CustomSelect
-                list={transporters.map((transporter) => ({
-                  value: transporter.transporterId,
-                  label: transporter.name,
-                }))}
-                name="assignTransporterId"
-                id="assignTransporterId"
-                label={t('workforce.assignments.transporter')}
-                value={assignTransporterId}
-                handleChange={(event) => setAssignTransporterId(String(event.target.value ?? ''))}
-                numericValue={false}
-                placeholder={t('workforce.assignments.selectTransporter')}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 2 }}>
-              <CustomSelect
-                list={ASSIGNMENT_TYPES.map((type) => ({
-                  value: type,
-                  label: assignmentTypeLabel(t, type),
-                }))}
-                name="assignType"
-                id="assignType"
-                label={t('workforce.assignments.type')}
-                value={assignType}
-                handleChange={(event) => setAssignType(String(event.target.value ?? ''))}
-                numericValue={false}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 2 }}>
-              <ArgonButton
-                color="info"
-                onClick={handleAssign}
-                disabled={!assignDriverId || !assignTransporterId}
-              >
-                {t('workforce.assignments.assign')}
-              </ArgonButton>
-            </Grid>
+            {canAssign && (
+              <>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <SearchSelect
+                    id="assignTransporterId"
+                    label={t('workforce.assignments.transporter')}
+                    value={assignTransporter?.value ?? null}
+                    valueLabel={assignTransporter?.label}
+                    onChange={setAssignTransporter}
+                    useOptions={useAccountTransporterOptions}
+                    placeholder={t('workforce.assignments.selectTransporter')}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 2 }}>
+                  <CustomSelect
+                    list={ASSIGNMENT_TYPES.map((type) => ({
+                      value: type,
+                      label: assignmentTypeLabel(t, type),
+                    }))}
+                    name="assignType"
+                    id="assignType"
+                    label={t('workforce.assignments.type')}
+                    value={assignType}
+                    handleChange={(event) => setAssignType(String(event.target.value ?? ''))}
+                    numericValue={false}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 2 }}>
+                  <ArgonButton
+                    color="info"
+                    onClick={handleAssign}
+                    disabled={!assignDriverId || !assignTransporter}
+                  >
+                    {t('workforce.assignments.assign')}
+                  </ArgonButton>
+                </Grid>
+              </>
+            )}
           </Grid>
         </ArgonBox>
 
@@ -363,30 +376,20 @@ function ManageDriverAssignments() {
             <Grid size={{ xs: 12, md: 3 }}>
               <DriverPicker
                 id="filterDriverId"
-                drivers={drivers}
-                value={pending.driverId}
-                onChange={(value) => setPending((prev) => ({ ...prev, driverId: value }))}
+                value={pending.driver}
+                onChange={(driver) => setPending((prev) => ({ ...prev, driver }))}
                 label={t('workforce.selectDriver')}
                 placeholder={t('workforce.selectDriverPlaceholder')}
               />
             </Grid>
             <Grid size={{ xs: 12, md: 3 }}>
-              <CustomSelect
-                list={transporters.map((transporter) => ({
-                  value: transporter.transporterId,
-                  label: transporter.name,
-                }))}
-                name="filterTransporterId"
+              <SearchSelect
                 id="filterTransporterId"
                 label={t('workforce.assignments.transporter')}
-                value={pending.transporterId}
-                handleChange={(event) =>
-                  setPending((prev) => ({
-                    ...prev,
-                    transporterId: String(event.target.value ?? ''),
-                  }))
-                }
-                numericValue={false}
+                value={pending.transporter?.value ?? null}
+                valueLabel={pending.transporter?.label}
+                onChange={(transporter) => setPending((prev) => ({ ...prev, transporter }))}
+                useOptions={useAccountTransporterOptions}
                 placeholder={t('workforce.assignments.selectTransporter')}
               />
             </Grid>
@@ -415,26 +418,29 @@ function ManageDriverAssignments() {
               />
             </Grid>
             <Grid size={{ xs: 12, md: 2 }}>
-              <ArgonButton color="primary" size="small" onClick={() => setApplied(pending)}>
+              <ArgonButton
+                color="primary"
+                size="small"
+                disabled={pendingWindowInvalid}
+                onClick={() => { setPage(0); setApplied(pending); }}
+              >
                 <Icon>search</Icon>&nbsp;{t('workforce.assignments.search')}
               </ArgonButton>
             </Grid>
           </Grid>
         </ArgonBox>
-        {history.length === 0 ? (
+        {pendingWindowInvalid ? (
+          <ArgonTypography variant="caption" color="error">
+            {t('workforce.assignments.windowInvalid', { days: MAX_ASSIGNMENT_HISTORY_DAYS })}
+          </ArgonTypography>
+        ) : history.length === 0 ? (
           <ArgonTypography variant="caption" color="secondary">
             {t('workforce.assignments.empty')}
           </ArgonTypography>
         ) : (
           <>
-            {history.length >= MAX_FETCH_ALL_ITEMS && (
-              <ArgonBox mb={1}>
-                <ArgonTypography variant="caption" color="error">
-                  {t('workforce.assignments.tooManyResults', { count: MAX_FETCH_ALL_ITEMS })}
-                </ArgonTypography>
-              </ArgonBox>
-            )}
-            <Table columns={historyColumns} rows={history.map(toHistoryRow)} selectedField="driver" />
+            <Table columns={historyColumns} rows={history.map(toHistoryRow)} selectedField="driver" serverPaged />
+            <ServerPagination page={page} pageSize={HISTORY_PAGE_SIZE} totalCount={historyTotal} pageLength={history.length} onPageChange={setPage} />
           </>
         )}
       </TableAccordion>

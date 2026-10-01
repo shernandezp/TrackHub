@@ -82,5 +82,6 @@ internal static class ProducerSchema
     private static void ConfigureRouter(HotChocolate.Execution.Configuration.IRequestExecutorBuilder builder)
         => builder
             .AddErrorFilter<GeocodingErrorFilter>()
-            .AddErrorFilter<OperatorSyncErrorFilter>();
+            .AddErrorFilter<OperatorSyncErrorFilter>()
+            .AddErrorFilter<ProviderCapabilityErrorFilter>();
 }

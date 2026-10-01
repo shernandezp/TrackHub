@@ -20,12 +20,13 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { RequestOptions } from 'api/core/errors';
 import type { ResourceItemFragment as ResourceItemType } from './generated/graphql';
 import { GetResourcesDocument } from './resourcesOperations';
 
 export type Resource = ResourceItemType;
 
-export async function getResources(): Promise<Resource[]> {
-  const data = await executeGraphQL('security', GetResourcesDocument);
+export async function getResources(options?: RequestOptions): Promise<Resource[]> {
+  const data = await executeGraphQL('security', GetResourcesDocument, undefined, options);
   return data.resources;
 }

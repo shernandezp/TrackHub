@@ -35,12 +35,24 @@ public interface IOutboxWriter
     /// <summary>Records the failure and schedules the retry, or gives up at <c>MaxAttempts</c>.</summary>
     Task MarkAttemptFailedAsync(Guid outboxMessageId, string error, CancellationToken cancellationToken);
 
-    /// <summary>Drops completed messages older than <paramref name="before"/>; the table is a queue, not a log.</summary>
+    /// <summary>Drops completed and discarded messages older than <paramref name="before"/>; the table is a queue, not a log.</summary>
     Task<int> PurgeCompletedAsync(DateTimeOffset before, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Returns exhausted messages (one, or all when null) to Pending with a fresh attempt budget; one a
+    /// later completed message about the same entity has superseded is discarded instead.
+    /// </summary>
+    Task<int> ReplayFailedAsync(Guid? outboxMessageId, CancellationToken cancellationToken);
+
+    Task<int> DiscardFailedAsync(Guid? outboxMessageId, CancellationToken cancellationToken);
 }
 
 public interface IOutboxReader
 {
     /// <summary>Due messages, at most the oldest pending one per ordering key.</summary>
     Task<IReadOnlyCollection<OutboxMessageVm>> GetDispatchableAsync(int take, CancellationToken cancellationToken);
+
+    Task<int> CountFailedAsync(CancellationToken cancellationToken);
+
+    Task<IReadOnlyCollection<FailedOutboxMessageVm>> GetFailedAsync(int take, CancellationToken cancellationToken);
 }

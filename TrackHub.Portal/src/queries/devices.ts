@@ -21,21 +21,38 @@
  * reads/mutations are called imperatively from the GPS-integration screens.
  */
 
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from 'api/manager/devices';
 import type { ListParams } from 'api/core/paging';
 
 export const deviceKeys = {
   all: ['devices'] as const,
   byAccount: (params: ListParams = {}) => [...deviceKeys.all, 'byAccount', params] as const,
-  lookup: () => [...deviceKeys.all, 'lookup'] as const,
+  name: (id: string) => [...deviceKeys.all, 'name', id] as const,
+  unassignedAll: (accountId: string) => [...deviceKeys.all, 'unassigned', accountId] as const,
+  unassigned: (accountId: string, params: ListParams = {}) =>
+    [...deviceKeys.unassignedAll(accountId), params] as const,
 };
+
+/** One server page of the account's provider devices not assigned to any unit (the assign picker). */
+export function useUnassignedSynchronizedDevices(
+  accountId: string | undefined,
+  params: ListParams = {},
+  options: { enabled?: boolean } = {}
+) {
+  return useQuery({
+    queryKey: deviceKeys.unassigned(accountId ?? '', params),
+    queryFn: ({ signal }) => api.getUnassignedSynchronizedDevices(accountId as string, params, { signal }),
+    enabled: (options.enabled ?? true) && !!accountId,
+    placeholderData: keepPreviousData,
+  });
+}
 
 /** One server page of devices (`{ items, totalCount }`) for the device list. */
 export function useDevicesByAccount(params: ListParams = {}, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: deviceKeys.byAccount(params),
-    queryFn: () => api.getDevicesByAccount(params),
+    queryFn: ({ signal }) => api.getDevicesByAccount(params, { signal }),
     enabled: options.enabled ?? true,
     // A page change swaps the query key; without a placeholder the list reads as EMPTY
     // (totalCount 0) while the next page loads, and the page clamp snaps it back to page one.
@@ -43,17 +60,18 @@ export function useDevicesByAccount(params: ListParams = {}, options: { enabled?
   });
 }
 
-/**
- * The account's devices as id + name, for pickers and deviceId→name maps. Keyed
- * under {@link deviceKeys.all} so a device mutation refreshes it alongside the
- * paged list.
- */
-export function useDeviceLookup(options: { enabled?: boolean } = {}) {
-  return useQuery({
-    queryKey: deviceKeys.lookup(),
-    queryFn: api.getDeviceLookup,
-    enabled: options.enabled ?? true,
+/** Names exactly the given devices, for the rows of one table page. */
+export function useDeviceNames(deviceIds: readonly string[]) {
+  const results = useQueries({
+    queries: deviceIds.map((deviceId) => ({
+      queryKey: deviceKeys.name(deviceId),
+      queryFn: ({ signal }: { signal: AbortSignal }) => api.getDeviceName(deviceId, { signal }),
+      staleTime: 5 * 60_000,
+    })),
   });
+  return new Map(
+    results.flatMap((result) => (result.data ? [[result.data.deviceId, result.data.name] as const] : []))
+  );
 }
 
 export function useDeleteDevice() {

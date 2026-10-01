@@ -75,7 +75,6 @@ Detalle completo: **[Geofencing](https://github.com/shernandezp/TrackHub/wiki/Ge
 
 ## Notas específicas del proyecto
 
-- **Nunca agregar `[Caching]` a `geofencesByAccount`.** La clave de caché se construye únicamente a partir de propiedades de la solicitud y no puede delimitarse a la cuenta del llamador, por lo que una respuesta en caché filtra geocercas entre tenants. El input `enableCaching` de la consulta está deliberadamente inerte. Este es el caso que estableció la regla a nivel de toda la plataforma.
 - **Una geocerca con visitas registradas no puede eliminarse** — el intento devuelve `ConflictException` → `CONFLICT`. El historial de visitas es permanente; la desactivación es la forma soportada de retirar una zona, y una geocerca desactivada conserva su historial legible.
 - **La emisión de alertas usa la identidad propia de este servicio, `geofence_client`** (`CreateClient(Clients.Manager, asService: true)`), nunca el token propagado del llamador. Esa identidad necesita `Alerts/Write` y `BackgroundJobs/Write` sembrados en `security.service_client_permissions`, o cada emisión devolverá `FORBIDDEN`.
 - **La emisión es best-effort.** Un fallo se registra en el log y nunca detiene el procesamiento de posiciones: una interrupción de Manager no debe detener la detección ni perder posiciones.

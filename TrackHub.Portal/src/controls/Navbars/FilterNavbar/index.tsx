@@ -18,20 +18,19 @@ import { Grid } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import ArgonBox from "components/ArgonBox";
 import ArgonButton from "components/ArgonButton";
+import type { ReactNode } from "react";
 import CustomTextField from "controls/Dialogs/CustomTextField";
-import CustomSelect from "controls/Dialogs/CustomSelect";
-import type { SelectListItem } from "controls/Dialogs/CustomSelect";
 import type { FormChangeHandler } from "controls/Dialogs/useForm";
 
 export interface FilterNavbarProps {
-  list?: SelectListItem[];
+  picker: ReactNode;
   values: Record<string, string | number | undefined>;
   handleChange: FormChangeHandler;
   errors: Record<string, string | undefined>;
   handleSearch: () => void;
 }
 
-function FilterNavbar({ list = [], values, handleChange, errors, handleSearch }: FilterNavbarProps) {
+function FilterNavbar({ picker, values, handleChange, errors, handleSearch }: FilterNavbarProps) {
   const { t } = useTranslation();
 
   return (
@@ -64,16 +63,7 @@ function FilterNavbar({ list = [], values, handleChange, errors, handleSearch }:
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 3 }}>
-          <CustomSelect
-            list={list}
-            handleChange={handleChange}
-            name="selectedItem"
-            id="selectedItem"
-            label={t("filters.transporter")}
-            value={values.selectedItem || ""}
-            required
-            errorMsg={errors.selectedItem}
-          />
+          {picker}
         </Grid>
         <Grid size={{ xs: 12, sm: 3 }}>
           <ArgonButton variant="contained" color="primary" onClick={handleSearch} fullWidth>

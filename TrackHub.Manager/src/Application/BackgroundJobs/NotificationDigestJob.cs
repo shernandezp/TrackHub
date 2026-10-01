@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Domain.Time;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -22,56 +23,93 @@ namespace TrackHub.Manager.Application.BackgroundJobs;
 
 /// <summary>
 /// Folds Deferred deliveries into one pre-rendered summary per (rule, recipient, channel) and marks
-/// the originals Digested. Rules with a Daily cadence fold at most once per 24 h, tracked by the
-/// previous summary for the same group.
+/// the originals Digested, one account at a time. Daily rules fold once per account-local day, from
+/// the digest hour on; deferrals whose account is gone or whose rule is gone or disabled are expired.
 /// </summary>
 public sealed class NotificationDigestJob(
     INotificationDigestStore store,
     IAccountFeatureGate features,
     INotificationRenderer renderer,
+    IAccountTimeZoneResolver zones,
     IConfiguration configuration,
     ILogger<NotificationDigestJob> logger) : IScheduledJob
 {
+    public const int DailyDigestLocalHour = 7;
+
     public static TimeSpan Interval => TimeSpan.FromHours(1);
     public static TimeSpan StartupDelay => TimeSpan.FromMinutes(5);
 
-
-
     public async Task RunOnceAsync(DateTimeOffset now, CancellationToken cancellationToken)
     {
-        var deferred = await store.GetDeferredAsync(cancellationToken);
-        if (deferred.Count == 0)
+        var accounts = await store.GetAccountsWithDeferredAsync(cancellationToken);
+        if (accounts.Count == 0)
         {
             return;
         }
 
-        var rules = (await store.GetRulesAsync([.. deferred.Select(d => d.NotificationRuleId).Distinct()], cancellationToken))
-            .ToDictionary(r => r.NotificationRuleId);
-
         // Disabling `notifications` stops dispatch for the account — folding a digest is dispatch
         // preparation, so those groups are held until the feature is re-enabled.
-        var enabledAccounts = await features.EnabledAmongAsync(
-            [.. deferred.Select(d => d.AccountId).Distinct()], FeatureKeys.Notifications, now, cancellationToken);
-
+        var enabledAccounts = await features.EnabledAmongAsync(accounts, FeatureKeys.Notifications, now, cancellationToken);
         var portalBaseUrl = configuration.GetValue<string>("AppSettings:PortalBaseUrl") ?? "https://localhost:3000";
+        var summaries = 0;
+
+        foreach (var accountId in accounts)
+        {
+            try
+            {
+                var expired = await store.ExpireOrphansAsync(accountId, cancellationToken);
+                if (expired > 0)
+                {
+                    logger.LogWarning("Expired {Count} deferred deliveries of account {AccountId} whose rule is gone or disabled.", expired, accountId);
+                }
+
+                if (enabledAccounts.Contains(accountId))
+                {
+                    summaries += await FoldAccountAsync(accountId, now, portalBaseUrl, cancellationToken);
+                }
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Digest cycle failed for account {AccountId}.", accountId);
+            }
+        }
+
+        if (summaries > 0)
+        {
+            await store.RecordJobRunAsync(summaries.ToString(), $"digest:{now:yyyyMMddHHmmssfff}", now, cancellationToken);
+            logger.LogInformation("Digest cycle folded deferred deliveries into {Count} summary delivery(ies).", summaries);
+        }
+    }
+
+    private async Task<int> FoldAccountAsync(Guid accountId, DateTimeOffset now, string portalBaseUrl, CancellationToken cancellationToken)
+    {
+        var deferred = await store.GetDeferredAsync(accountId, cancellationToken);
+        if (deferred.Count == 0)
+        {
+            return 0;
+        }
+
+        var rules = (await store.GetRulesAsync([.. deferred.Select(d => d.NotificationRuleId).Distinct()], cancellationToken))
+            .ToDictionary(r => r.NotificationRuleId);
+        var dailyWindowStart = DailyWindowStart(await zones.ResolveAsync(accountId, cancellationToken), now);
         var summaries = 0;
 
         foreach (var group in deferred.GroupBy(d => new DigestGroupKey(d.NotificationRuleId, d.RecipientPrincipalType, d.Recipient, d.Channel)))
         {
+            if (!rules.TryGetValue(group.Key.NotificationRuleId, out var rule))
+            {
+                continue;
+            }
+
+            if (NotificationRuleContracts.ParseThrottling(rule.ThrottlingJson).Digest == DigestCadences.Daily
+                && (dailyWindowStart is not { } since || await store.SummaryExistsSinceAsync(group.Key, since, cancellationToken)))
+            {
+                continue;
+            }
+
             try
             {
-                if (!rules.TryGetValue(group.Key.NotificationRuleId, out var rule) || !enabledAccounts.Contains(rule.AccountId))
-                {
-                    continue;
-                }
-
-                var throttling = NotificationRuleContracts.ParseThrottling(rule.ThrottlingJson);
-                if (throttling.Digest == DigestCadences.Daily
-                    && await store.SummaryExistsSinceAsync(group.Key, now.AddHours(-24), cancellationToken))
-                {
-                    continue;
-                }
-
                 await FoldAsync(rule, group.Key, [.. group], portalBaseUrl, cancellationToken);
                 summaries++;
             }
@@ -82,11 +120,20 @@ public sealed class NotificationDigestJob(
             }
         }
 
-        if (summaries > 0)
+        return summaries;
+    }
+
+    // Null before the digest hour: a Daily group then waits for the account's morning.
+    public static DateTimeOffset? DailyWindowStart(AccountTimeZone zone, DateTimeOffset now)
+    {
+        var local = zone.DateOf(now).ToDateTime(new TimeOnly(DailyDigestLocalHour, 0));
+        if (zone.Zone.IsInvalidTime(local))
         {
-            await store.RecordJobRunAsync(summaries.ToString(), $"digest:{now:yyyyMMddHHmmssfff}", now, cancellationToken);
-            logger.LogInformation("Digest cycle folded deferred deliveries into {Count} summary delivery(ies).", summaries);
+            local = local.AddHours(1);
         }
+
+        var start = new DateTimeOffset(TimeZoneInfo.ConvertTimeToUtc(local, zone.Zone), TimeSpan.Zero);
+        return now < start ? null : start;
     }
 
     private async Task FoldAsync(

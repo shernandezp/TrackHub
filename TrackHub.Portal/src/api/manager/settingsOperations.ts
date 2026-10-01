@@ -30,6 +30,7 @@ export const AccountSettingsItemFragment = graphql(`
     onlineInterval
     refreshMap
     refreshMapInterval
+    version
   }
 `);
 

@@ -10,12 +10,17 @@ services:
     image: nginx:alpine
     container_name: trackhub-nginx
     restart: unless-stopped
+    environment:
+      # security-headers.conf is rendered from a template at start: the login page posts back to
+      # itself and is then redirected to the portal, which form-action has to allow.
+      - NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx
+      - CSP_FORM_ACTION_ORIGINS=${PORTAL_BASE_URL:-}
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/security-headers.conf:/etc/nginx/security-headers.conf:ro
+      - ./nginx/security-headers.conf:/etc/nginx/templates/security-headers.conf.template:ro
       - ./certificates:/etc/nginx/ssl:ro
       - ./certbot/webroot:/var/www/certbot:ro
       - trackhub-frontend:/usr/share/nginx/html:ro
@@ -110,9 +115,9 @@ services:
       resources:
         limits:
           cpus: '1.0'
-          memory: 512M
+          memory: ${AUTHORITY_MEMORY_LIMIT:-384M}
         reservations:
-          memory: 256M
+          memory: ${AUTHORITY_MEMORY_RESERVATION:-192M}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
@@ -162,9 +167,9 @@ services:
       resources:
         limits:
           cpus: '1.0'
-          memory: 512M
+          memory: ${SECURITY_MEMORY_LIMIT:-384M}
         reservations:
-          memory: 256M
+          memory: ${SECURITY_MEMORY_RESERVATION:-192M}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
@@ -253,9 +258,9 @@ services:
       resources:
         limits:
           cpus: '1.0'
-          memory: 512M
+          memory: ${MANAGER_MEMORY_LIMIT:-512M}
         reservations:
-          memory: 256M
+          memory: ${MANAGER_MEMORY_RESERVATION:-256M}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
@@ -315,9 +320,9 @@ services:
       resources:
         limits:
           cpus: '1.0'
-          memory: 512M
+          memory: ${ROUTER_MEMORY_LIMIT:-384M}
         reservations:
-          memory: 256M
+          memory: ${ROUTER_MEMORY_RESERVATION:-192M}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
@@ -363,9 +368,9 @@ services:
       resources:
         limits:
           cpus: '0.5'
-          memory: 384M
+          memory: ${GEOFENCING_MEMORY_LIMIT:-256M}
         reservations:
-          memory: 192M
+          memory: ${GEOFENCING_MEMORY_RESERVATION:-128M}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
@@ -432,9 +437,9 @@ services:
       resources:
         limits:
           cpus: '0.5'
-          memory: 384M
+          memory: ${TRIPMANAGEMENT_MEMORY_LIMIT:-384M}
         reservations:
-          memory: 192M
+          memory: ${TRIPMANAGEMENT_MEMORY_RESERVATION:-192M}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
@@ -476,9 +481,9 @@ services:
       resources:
         limits:
           cpus: '0.5'
-          memory: 384M
+          memory: ${TELEMETRY_MEMORY_LIMIT:-384M}
         reservations:
-          memory: 192M
+          memory: ${TELEMETRY_MEMORY_RESERVATION:-192M}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
@@ -530,9 +535,9 @@ services:
       resources:
         limits:
           cpus: '0.5'
-          memory: 384M
+          memory: ${REPORTING_MEMORY_LIMIT:-768M}
         reservations:
-          memory: 192M
+          memory: ${REPORTING_MEMORY_RESERVATION:-256M}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
@@ -555,6 +560,17 @@ services:
     environment:
       - DB_CONNECTION_SECURITY=${DB_CONNECTION_SECURITY}
       - DB_CONNECTION_MANAGER=${DB_CONNECTION_MANAGER}
+      - DB_CONNECTION_TELEMETRY=${DB_CONNECTION_TELEMETRY}
+      - DB_CONNECTION_LOGGING=${DB_CONNECTION_LOGGING}
+      # Service-client secrets: the seeder reads {CLIENTID}_SECRET from here so .env is the single
+      # source of truth and clients.json needs no real secrets.
+      - SYNCWORKER_CLIENT_SECRET=${SYNCWORKER_CLIENT_SECRET}
+      - ROUTER_CLIENT_SECRET=${ROUTER_CLIENT_SECRET}
+      - SECURITY_CLIENT_SECRET=${SECURITY_CLIENT_SECRET}
+      - GEOFENCE_CLIENT_SECRET=${GEOFENCE_CLIENT_SECRET}
+      - TRIP_CLIENT_SECRET=${TRIP_CLIENT_SECRET}
+      - MANAGER_CLIENT_SECRET=${MANAGER_CLIENT_SECRET}
+      - REPORTING_CLIENT_SECRET=${REPORTING_CLIENT_SECRET}
     volumes:
       - ./config/clients.json:/app/clients.json:ro
     networks:
@@ -609,9 +625,9 @@ services:
       resources:
         limits:
           cpus: '0.5'
-          memory: 256M
+          memory: ${SYNCWORKER_MEMORY_LIMIT:-256M}
         reservations:
-          memory: 128M
+          memory: ${SYNCWORKER_MEMORY_RESERVATION:-128M}
     depends_on:
       authority:
         condition: service_healthy

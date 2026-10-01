@@ -14,7 +14,7 @@ namespace Infrastructure.UnitTests;
 /// <para>
 /// The scan itself lives in a <c>BackgroundService</c> whose cycle body is private, so these tests
 /// drive the same logic against the same tables and assert on what the cycle would have written.
-/// Kept in lockstep with <c>WorkforceExpirationService.RunOnceAsync</c>.
+/// Kept in lockstep with <c>WorkforceExpirationJob.RunOnceAsync</c>.
 /// </para>
 /// </summary>
 [TestFixture]
@@ -42,7 +42,7 @@ public class WorkforceExpirationScanTests
         return qualification;
     }
 
-    // Mirrors the band selection in WorkforceExpirationService: nearest crossed band only.
+    // Mirrors the band selection in WorkforceExpirationJob: nearest crossed band only.
     private static int? NearestCrossedBand(int daysLeft)
     {
         var crossed = WorkforceLimits.ExpirationThresholdsDays.Where(t => daysLeft <= t).ToList();

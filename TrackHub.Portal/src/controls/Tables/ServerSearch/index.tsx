@@ -26,9 +26,10 @@ import ArgonBox from 'components/ArgonBox';
 export interface ServerSearchProps {
   value: string;
   onChange: (value: string) => void;
+  placeholder?: string;
 }
 
-function ServerSearch({ value, onChange }: ServerSearchProps) {
+function ServerSearch({ value, onChange, placeholder }: ServerSearchProps) {
   const { t } = useTranslation();
 
   return (
@@ -37,6 +38,7 @@ function ServerSearch({ value, onChange }: ServerSearchProps) {
         fullWidth
         size="small"
         label={t('filters.search')}
+        placeholder={placeholder}
         value={value}
         onChange={(event) => onChange(event.target.value)}
       />

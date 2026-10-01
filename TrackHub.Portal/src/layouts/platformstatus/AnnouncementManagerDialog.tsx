@@ -53,6 +53,7 @@ export interface AnnouncementManagerDialogProps {
 
 interface DraftState {
   platformAnnouncementId: string | null;
+  version: number | null;
   messageEn: string;
   messageEs: string;
   severity: AnnouncementSeverity;
@@ -63,6 +64,7 @@ interface DraftState {
 
 const emptyDraft = (): DraftState => ({
   platformAnnouncementId: null,
+  version: null,
   messageEn: '',
   messageEs: '',
   severity: 'INFO',
@@ -102,6 +104,7 @@ const AnnouncementManagerDialog = ({ open, setOpen, announcements }: Announcemen
     setError(null);
     setDraft({
       platformAnnouncementId: announcement.platformAnnouncementId,
+      version: announcement.version,
       messageEn: announcement.messageEn,
       messageEs: announcement.messageEs ?? '',
       severity: announcement.severity,
@@ -137,6 +140,7 @@ const AnnouncementManagerDialog = ({ open, setOpen, announcements }: Announcemen
       startsAt: toIsoOrNull(draft.startsAt),
       endsAt: toIsoOrNull(draft.endsAt),
       active: draft.active,
+      expectedVersion: draft.platformAnnouncementId ? draft.version : null,
     };
 
     if (draft.platformAnnouncementId) {

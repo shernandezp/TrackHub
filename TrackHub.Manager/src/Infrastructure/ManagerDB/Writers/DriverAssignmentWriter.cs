@@ -32,7 +32,7 @@ public sealed class DriverAssignmentWriter(IApplicationDbContext context, ICurre
         // A transporter outside the caller's account is reported as not-found — never as a hint that
         // some other account owns it.
         var transporterName = await Context.Transporters
-            .Where(x => x.TransporterId == transporterId && x.AccountId == accountId)
+            .Where(x => x.TransporterId == transporterId && x.AccountId == accountId && x.RetiredAt == null)
             .Select(x => x.Name)
             .FirstOrDefaultAsync(cancellationToken)
             ?? throw new NotFoundException(nameof(Transporter), transporterId.ToString());
@@ -58,12 +58,12 @@ public sealed class DriverAssignmentWriter(IApplicationDbContext context, ICurre
             .FirstOrDefaultAsync(x => x.DriverTransporterAssignmentId == driverTransporterAssignmentId, cancellationToken)
             ?? throw new NotFoundException(nameof(DriverTransporterAssignment), driverTransporterAssignmentId.ToString());
 
-        RequireAccountWriteAccess(entity.AccountId);
+        RequireRowAccess(entity.AccountId, nameof(DriverTransporterAssignment), driverTransporterAssignmentId.ToString(), forWrite: true);
 
         // Ended assignments are immutable (spec 09 §7.1) — a correction is a new assignment, not an edit.
-        if (entity.Status != DriverAssignmentStatuses.Active)
+        if (entity.Status != DriverAssignmentStatuses.Active || entity.EndsAt <= DateTimeOffset.UtcNow)
         {
-            throw new ConflictException($"Assignment {driverTransporterAssignmentId} is already {entity.Status.ToLowerInvariant()} and cannot be modified.");
+            throw new ConflictException($"Assignment {driverTransporterAssignmentId} has already ended and cannot be modified.");
         }
 
         var effectiveEnd = endsAt ?? DateTimeOffset.UtcNow;

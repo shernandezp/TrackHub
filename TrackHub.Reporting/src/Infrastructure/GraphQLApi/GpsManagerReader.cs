@@ -103,7 +103,6 @@ public class GpsManagerReader(IGraphQLClientFactory graphQLClient)
         => ManagerPageDrain.FetchAllAsync<ManagerOperatorVm>(
             (skip, take) => new GraphQLRequest { Query = OperatorsByCurrentAccountQuery, Variables = new { skip, take } },
             (request, token) => QueryAsync<ManagerPage<ManagerOperatorVm>>(request, token),
-            "operatorsByCurrentAccount",
             cancellationToken);
 
     public Task<IReadOnlyCollection<ManagerDeviceVm>> GetSynchronizedDevicesAsync(Guid accountId, string? detectedStatus, Guid? operatorId, CancellationToken cancellationToken)
@@ -114,7 +113,6 @@ public class GpsManagerReader(IGraphQLClientFactory graphQLClient)
                 Variables = new { accountId, detectedStatus, operatorId, skip, take }
             },
             (request, token) => QueryAsync<ManagerPage<ManagerDeviceVm>>(request, token),
-            "synchronizedDevices",
             cancellationToken);
 
     public Task<IReadOnlyCollection<ManagerDeviceVm>> GetUnassignedDevicesAsync(Guid accountId, CancellationToken cancellationToken)
@@ -125,7 +123,6 @@ public class GpsManagerReader(IGraphQLClientFactory graphQLClient)
                 Variables = new { accountId, skip, take }
             },
             (request, token) => QueryAsync<ManagerPage<ManagerDeviceVm>>(request, token),
-            "unassignedSynchronizedDevices",
             cancellationToken);
 
     public Task<IReadOnlyCollection<ManagerTransporterDeviceAssignmentVm>> GetAssignmentsByAccountAsync(Guid accountId, bool activeOnly, CancellationToken cancellationToken)
@@ -136,6 +133,5 @@ public class GpsManagerReader(IGraphQLClientFactory graphQLClient)
                 Variables = new { accountId, activeOnly, skip, take }
             },
             (request, token) => QueryAsync<ManagerPage<ManagerTransporterDeviceAssignmentVm>>(request, token),
-            "transporterDeviceAssignmentsByAccount",
             cancellationToken);
 }

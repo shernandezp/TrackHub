@@ -33,6 +33,47 @@ internal class Seeder(IServiceProvider serviceProvider)
 
         await PopulateScopes(scope, clients.Scopes, cancellationToken);
         await PopulateInternalApps(scope, clients.PKCEClients, clients.ServiceClients, cancellationToken);
+        await RemoveDevelopmentClientsAsync(scope, clients, cancellationToken);
+        await EnsureEnvironmentServiceClients(scope, cancellationToken);
+    }
+
+    // Every {CLIENTID}_SECRET in the environment seeds its service client even when clients.json
+    // omits it, so the deployment's .env stays the single source of truth for service secrets.
+    private static async ValueTask EnsureEnvironmentServiceClients(IServiceScope scope, CancellationToken cancellationToken)
+    {
+        const string secretSuffix = "_SECRET";
+        const string clientMarker = "_CLIENT_SECRET";
+        foreach (System.Collections.DictionaryEntry entry in Environment.GetEnvironmentVariables())
+        {
+            if (entry.Key is not string name || !name.EndsWith(clientMarker, StringComparison.Ordinal))
+            {
+                continue;
+            }
+            if (entry.Value is not string secret || string.IsNullOrWhiteSpace(secret))
+            {
+                continue;
+            }
+            var clientId = name[..^secretSuffix.Length].ToLowerInvariant();
+            await PopulateInternalApp(scope, clientId, secret, "service_scope", cancellationToken);
+        }
+    }
+
+    // Earlier images seeded these into every installation; only a local overlay may list them now.
+    internal static readonly string[] DevelopmentOnlyClientIds = ["postman_client"];
+
+    private static async ValueTask RemoveDevelopmentClientsAsync(IServiceScope scope, Clients clients, CancellationToken cancellationToken)
+    {
+        var appManager = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
+        var listed = clients.PKCEClients.Select(c => c.ClientId).Concat(clients.ServiceClients.Select(c => c.ClientId))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var clientId in DevelopmentOnlyClientIds.Where(id => !listed.Contains(id)))
+        {
+            if (await appManager.FindByClientIdAsync(clientId, cancellationToken) is { } application)
+            {
+                await appManager.DeleteAsync(application, cancellationToken);
+            }
+        }
     }
 
     /// <summary>
@@ -171,6 +212,13 @@ internal class Seeder(IServiceProvider serviceProvider)
         CancellationToken cancellationToken)
     {
         var appManager = scopeService.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
+
+        // The service authenticating as this client reads the same {CLIENTID}_SECRET, so it wins over clients.json.
+        var envSecret = Environment.GetEnvironmentVariable($"{clientId.ToUpperInvariant()}_SECRET");
+        if (!string.IsNullOrWhiteSpace(envSecret))
+        {
+            clientSecret = envSecret;
+        }
 
         var appDescriptor = new OpenIddictApplicationDescriptor
         {

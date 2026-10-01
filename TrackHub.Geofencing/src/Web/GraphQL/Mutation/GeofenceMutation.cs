@@ -26,7 +26,12 @@ public partial class Mutation
 
     public async Task<bool> UpdateGeofence([Service] ISender sender, Guid id, UpdateGeofenceCommand command, CancellationToken cancellationToken)
     {
-        if (id != command.Geofence.GeofenceId) return false;
+        if (id != command.Geofence.GeofenceId)
+        {
+            throw new Common.Application.Exceptions.ValidationException("GEOFENCE_ID_MISMATCH",
+                [new FluentValidation.Results.ValidationFailure(nameof(id), "The id does not match the geofence being updated.")]);
+        }
+
         await sender.Send(command, cancellationToken);
         return true;
     }

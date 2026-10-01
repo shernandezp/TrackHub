@@ -36,4 +36,15 @@ describe('router api', () => {
 
     await expect(getDevicePositions()).rejects.toBe(error);
   });
+
+  test('getDevicePositions sends the group/operator scope as variables and forwards the signal', async () => {
+    vi.mocked(executeGraphQL).mockResolvedValue({ devicePositionsByUser: [] });
+    const signal = new AbortController().signal;
+
+    await getDevicePositions({ groupId: 7 }, { signal });
+    await getDevicePositions();
+
+    expect(vi.mocked(executeGraphQL).mock.calls[0].slice(2)).toEqual([{ groupId: 7, operatorId: null }, { signal }]);
+    expect(vi.mocked(executeGraphQL).mock.calls[1][2]).toEqual({ groupId: null, operatorId: null });
+  });
 });

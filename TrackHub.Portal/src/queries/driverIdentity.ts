@@ -45,7 +45,7 @@ export function useDriverCredentials(
 ) {
   return useQuery({
     queryKey: driverCredentialKeys.list(accountId ?? '', driverId),
-    queryFn: () => api.getAllDriverCredentials(accountId as string, driverId),
+    queryFn: ({ signal }) => api.getAllDriverCredentials(accountId as string, driverId, { signal }),
     enabled: (options.enabled ?? true) && !!accountId,
   });
 }
@@ -57,7 +57,7 @@ export function useDriverDevices(
 ) {
   return useQuery({
     queryKey: driverDeviceKeys.list(accountId ?? '', driverId),
-    queryFn: () => api.getAllDriverDevices(accountId as string, driverId),
+    queryFn: ({ signal }) => api.getAllDriverDevices(accountId as string, driverId, { signal }),
     enabled: (options.enabled ?? true) && !!accountId,
   });
 }

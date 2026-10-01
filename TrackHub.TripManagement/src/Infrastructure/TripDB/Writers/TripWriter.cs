@@ -17,6 +17,7 @@ using Common.Application.Exceptions;
 using Common.Application.Interfaces;
 using TrackHub.TripManagement.Infrastructure.TripDB.Events;
 using TrackHub.TripManagement.Infrastructure.TripDB.Readers;
+using Common.Infrastructure;
 
 namespace TrackHub.TripManagement.Infrastructure.TripDB.Writers;
 
@@ -227,6 +228,21 @@ public sealed class TripWriter(IApplicationDbContext context, IUser user) : ITri
             }
         }
 
+        // Proof of delivery is part of closing a stop that requires it; only a dispatcher's explicit
+        // force-complete overrides that.
+        if (string.Equals(toStatus, TripStatuses.Completed, StringComparison.Ordinal)
+            && !(force && string.Equals(source, TripEventSources.Portal, StringComparison.Ordinal))
+            && await context.TripStops.AnyAsync(
+                s => s.TripId == tripId
+                    && s.RequiresPod
+                    && s.Status != TripStopStatuses.Skipped
+                    && !context.ProofsOfDelivery.Any(p => p.TripStopId == s.TripStopId),
+                cancellationToken))
+        {
+            throw ConflictException.WithCode(TripErrorCodes.PodRequired);
+        }
+
+
         // Snapshotted BEFORE the transition is applied, and restored field-by-field if the save is
         // refused. Which stops it filled has to be remembered too — see RevertAsync.
         var filledStops = startingNow
@@ -331,9 +347,16 @@ public sealed class TripWriter(IApplicationDbContext context, IUser user) : ITri
             throw ConflictException.WithCode(TripErrorCodes.TripAlreadyTerminal);
         }
 
-        if (transporterId is { } newTransporterId)
+        var repointed = transporterId is { } newTransporterId && newTransporterId != entity.TransporterId;
+        if (repointed && TripStatuses.HasStarted(entity.Status))
         {
-            entity.TransporterId = newTransporterId;
+            throw ConflictException.WithCode(TripErrorCodes.TripArmed);
+        }
+
+        if (repointed)
+        {
+            entity.TransporterId = transporterId!.Value;
+            await DisarmAsync(entity, cancellationToken);
         }
 
         var assignment = await SyncAssignmentAsync(entity, driverId, DateTimeOffset.UtcNow, cancellationToken, force: true)
@@ -349,6 +372,13 @@ public sealed class TripWriter(IApplicationDbContext context, IUser user) : ITri
             // ux_trip_assignments_active_per_trip: a concurrent assign already won.
             throw ConflictException.WithCode(TripErrorCodes.DriverNotAssignable);
         }
+        catch (DbUpdateConcurrencyException) when (repointed)
+        {
+            // Detection started the trip between the read and this re-point: the same refusal a
+            // started trip gets outright.
+            throw ConflictException.WithCode(TripErrorCodes.TripArmed);
+        }
+
 
         return TripMapper.ToVm(assignment);
     }

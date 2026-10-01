@@ -20,6 +20,7 @@ using TrackHub.Security.Application.Audit.Events;
 namespace TrackHub.Security.Application.ResourceActionRole.Commands.Create;
 
 [Authorize(Resource = Resources.Permissions, Action = Actions.Write)]
+[PlatformScoped("Seeded RBAC catalog: roles, policies and their resource/action grants are platform definitions, Administrator-only to change.")]
 public readonly record struct CreateResourceActionRoleCommand(ResourceActionRoleDto ResourceActionRole) : IRequest<ResourceActionRoleVm>;
 
 public class CreateResourceActionRoleCommandHandler(IResourceActionRoleWriter writer, IUserReader userReader, IUser user, IPublisher publisher) : IRequestHandler<CreateResourceActionRoleCommand, ResourceActionRoleVm>

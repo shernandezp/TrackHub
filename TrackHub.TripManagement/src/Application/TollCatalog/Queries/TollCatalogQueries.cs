@@ -18,9 +18,7 @@ using Ardalis.GuardClauses;
 namespace TrackHub.TripManagement.Application.TollCatalog.Queries;
 
 // Readable by ANY authenticated account user (spec 11 §5): it describes public road
-// infrastructure, not tenant business data. Not feature-flagged, and carrying no accountId —
-// there is nothing account-scoped to leak, which is also why [Caching] would be harmless here
-// but is still omitted for consistency with the rest of the module.
+// infrastructure, not tenant business data. Not feature-flagged, and carrying no accountId.
 
 /// <summary>Paged toll-station browser for the admin panel and the planner.</summary>
 [Authorize(Resource = Resources.TollCatalog, Action = Actions.Read)]

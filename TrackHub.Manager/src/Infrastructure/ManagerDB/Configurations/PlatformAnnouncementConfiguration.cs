@@ -12,6 +12,7 @@ public class PlatformAnnouncementConfiguration : IEntityTypeConfiguration<Platfo
 
     public void Configure(EntityTypeBuilder<PlatformAnnouncement> builder)
     {
+        builder.Property(x => x.Version).HasColumnName("editversion").HasConversion<long>().IsConcurrencyToken();
         builder.ToTable(
             name: TableMetadata.PlatformAnnouncement,
             schema: SchemaMetadata.Application,

@@ -8,4 +8,5 @@ public readonly record struct PlatformAnnouncementVm(
     DateTimeOffset? StartsAt,
     DateTimeOffset? EndsAt,
     bool Active,
-    DateTimeOffset LastModified);
+    DateTimeOffset LastModified,
+    uint Version);

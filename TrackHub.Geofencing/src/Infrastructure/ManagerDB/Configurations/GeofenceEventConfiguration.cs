@@ -20,6 +20,8 @@ namespace TrackHub.Geofencing.Infrastructure.Configurations;
 
 public class GeofenceEventConfiguration : IEntityTypeConfiguration<GeofenceEvent>
 {
+    public const string OpenVisitIndex = "ux_geofenceevent_open_visit";
+
     public void Configure(EntityTypeBuilder<GeofenceEvent> builder)
     {
         // Table name - using geofencing schema
@@ -38,6 +40,8 @@ public class GeofenceEventConfiguration : IEntityTypeConfiguration<GeofenceEvent
         builder.Property(x => x.Latitude).HasColumnName("latitude");
         builder.Property(x => x.Longitude).HasColumnName("longitude");
         builder.Property(x => x.DwellAlertedAt).HasColumnName("dwellalertedat");
+        // Exit-debounce outside-since clock.
+        builder.Property(x => x.OutsideSinceAt).HasColumnName("outsidesinceat");
         builder.Property(x => x.EntryAlertedAt).HasColumnName("entryalertedat");
         builder.Property(x => x.ExitAlertedAt).HasColumnName("exitalertedat");
         // Indexes
@@ -45,8 +49,11 @@ public class GeofenceEventConfiguration : IEntityTypeConfiguration<GeofenceEvent
         builder.HasIndex(x => x.GeofenceId).HasDatabaseName("ix_geofenceevent_geofenceid");
         builder.HasIndex(x => new { x.AccountId, x.EventDateTime })
             .HasDatabaseName("ix_geofenceevent_accountid_datetime");
-        builder.HasIndex(x => new { x.TransporterId, x.GeofenceId, x.DepartureTimestamp })
-            .HasDatabaseName("ix_geofenceevent_open_events")
+        // At most one open visit per unit and zone; NULLs are distinct in a unique index, so the
+        // departure column cannot be part of the key.
+        builder.HasIndex(x => new { x.TransporterId, x.GeofenceId })
+            .HasDatabaseName(OpenVisitIndex)
+            .IsUnique()
             .HasFilter("departuretimestamp IS NULL");
 
         // Relationships

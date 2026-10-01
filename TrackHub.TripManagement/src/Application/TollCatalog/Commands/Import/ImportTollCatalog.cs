@@ -36,7 +36,7 @@ public sealed class ImportTollCatalogCommandHandler(ITollCatalogWriter writer)
     : IRequestHandler<ImportTollCatalogCommand, TollCatalogImportResultVm>
 {
     private const int ExpectedColumns = 12;
-    private const string InvalidRowCode = "TOLL_IMPORT_INVALID_ROW";
+    private const string InvalidRowCode = TripErrorCodes.TollImportInvalidRow;
 
     public async Task<TollCatalogImportResultVm> Handle(ImportTollCatalogCommand request, CancellationToken cancellationToken)
     {

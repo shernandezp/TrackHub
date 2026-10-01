@@ -23,6 +23,7 @@ namespace TrackHub.Security.Application.Identity.Queries.AuthorizeUser;
 /// the underlying primitives.
 /// </summary>
 [PlatformScoped("Authorization pipeline: every service's AuthorizationBehavior evaluates user permission through this query under the user's own forwarded token; IdentityCallerGuard.EnsureCallerIsSubjectUserOrService binds user callers to themselves. Trusted internal services may evaluate any user.")]
+[AllowSuspendedAccount]
 public readonly record struct AuthorizeUserQuery(Guid UserId, string Resource, string Action) : IRequest<bool>;
 
 public class AuthorizeUserQueryHandler(IIdentityService service, IUser user) : IRequestHandler<AuthorizeUserQuery, bool>

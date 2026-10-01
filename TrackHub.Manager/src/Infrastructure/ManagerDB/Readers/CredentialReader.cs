@@ -47,7 +47,7 @@ public sealed class CredentialReader(IApplicationDbContext context, ICurrentPrin
             })
             .FirstOrDefaultAsync(cancellationToken);
         ReaderResults.EnsureFound(credential, nameof(Entities.Credential), id.ToString());
-        RequireAccountAccess(credential.AccountId);
+        RequireRowAccess(credential.AccountId, nameof(Entities.Credential), id.ToString(), forWrite: false);
         var salt = Convert.FromBase64String(credential.Salt);
         return new CredentialVm(
             credential.CredentialId,
@@ -76,7 +76,7 @@ public sealed class CredentialReader(IApplicationDbContext context, ICurrentPrin
             })
             .FirstOrDefaultAsync(cancellationToken);
         ReaderResults.EnsureFound(credential, nameof(Entities.Credential), operatorId.ToString());
-        RequireAccountAccess(credential.AccountId);
+        RequireRowAccess(credential.AccountId, nameof(Entities.Credential), operatorId.ToString(), forWrite: false);
         var salt = Convert.FromBase64String(credential.Salt);
         return new CredentialVm(
             credential.CredentialId,
@@ -111,7 +111,7 @@ public sealed class CredentialReader(IApplicationDbContext context, ICurrentPrin
             })
             .FirstOrDefaultAsync(cancellationToken);
         ReaderResults.EnsureFound(token, nameof(Entities.Credential), id.ToString());
-        RequireAccountAccess(token.AccountId);
+        RequireRowAccess(token.AccountId, nameof(Entities.Credential), id.ToString(), forWrite: false);
         var salt = Convert.FromBase64String(token.Salt);
         return new TokenVm(
             token.Token != null ? token.Token.DecryptData(key, salt) : null,
@@ -145,11 +145,10 @@ public sealed class CredentialReader(IApplicationDbContext context, ICurrentPrin
                 c.Operator.AccountId
             })
             .FirstOrDefaultAsync(cancellationToken);
-        if (c is null)
+        if (c is null || !HasAccountAccess(c.AccountId, forWrite: false))
         {
             return null;
         }
-        RequireAccountAccess(c.AccountId);
         return new CredentialMetadataVm(
             c.CredentialId,
             c.OperatorId,

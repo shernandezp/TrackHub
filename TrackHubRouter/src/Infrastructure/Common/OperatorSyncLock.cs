@@ -18,8 +18,9 @@ using TrackHub.Router.Domain.Interfaces;
 
 namespace TrackHub.Router.Infrastructure.Common;
 
-// In-process per-operator mutex (one SemaphoreSlim per operator id). Registered as a singleton so
-// the manual-sync and background-sync paths share the same gates (router-audit A-25).
+// In-process per-operator mutex (one SemaphoreSlim per operator id) so one process never reads a
+// provider catalog twice at once (router-audit A-25). Reconciles from different processes are
+// ordered by Manager's operator row lock.
 public sealed class OperatorSyncLock : IOperatorSyncLock
 {
     private readonly ConcurrentDictionary<Guid, SemaphoreSlim> _gates = new();

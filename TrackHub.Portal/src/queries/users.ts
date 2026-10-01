@@ -33,14 +33,13 @@ export const userKeys = {
   all: ['users'] as const,
   current: () => [...userKeys.all, 'current'] as const,
   byAccount: (params: ListParams = {}) => [...userKeys.all, 'byAccount', params] as const,
-  lookupByAccount: () => [...userKeys.all, 'lookupByAccount'] as const,
   integration: () => [...userKeys.all, 'integration'] as const,
 };
 
 export function useCurrentUser(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: userKeys.current(),
-    queryFn: api.getCurrentUser,
+    queryFn: ({ signal }) => api.getCurrentUser({ signal }),
     enabled: options.enabled ?? true,
   });
 }
@@ -53,7 +52,7 @@ export function useCurrentUser(options: { enabled?: boolean } = {}) {
 export function useUsersByAccount(params: ListParams = {}, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: userKeys.byAccount(params),
-    queryFn: () => api.getUsersByAccount(params),
+    queryFn: ({ signal }) => api.getUsersByAccount(params, { signal }),
     enabled: options.enabled ?? true,
     // A page change swaps the query key; without a placeholder the list reads as EMPTY
     // (totalCount 0) while the next page loads, and the page clamp snaps it back to page one.
@@ -61,23 +60,10 @@ export function useUsersByAccount(params: ListParams = {}, options: { enabled?: 
   });
 }
 
-/**
- * The account's users as id + username, for the allocator dialogs' pickers.
- * Unpaged by design — a truncated "available" operand makes already-assigned
- * users reappear and the operator creates a duplicate membership.
- */
-export function useUserLookupByAccount(options: { enabled?: boolean } = {}) {
-  return useQuery({
-    queryKey: userKeys.lookupByAccount(),
-    queryFn: api.getUserLookupByAccount,
-    enabled: options.enabled ?? true,
-  });
-}
-
 export function useIntegrationUsers(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: userKeys.integration(),
-    queryFn: api.getUsers,
+    queryFn: ({ signal }) => api.getUsers({ signal }),
     enabled: options.enabled ?? true,
   });
 }

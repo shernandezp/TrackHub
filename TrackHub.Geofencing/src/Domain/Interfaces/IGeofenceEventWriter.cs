@@ -34,6 +34,11 @@ public interface IGeofenceEventWriter
     /// <summary>
     /// Updates an event with departure information when a transporter exits a geofence.
     /// </summary>
+    /// <summary>Records the first instant this visit was observed outside the geofence.</summary>
+    Task SetOutsideSinceAsync(Guid geofenceEventId, DateTimeOffset? outsideSinceAt, CancellationToken cancellationToken);
+
+    Task AdvanceDetectionCursorsAsync(Guid accountId, IReadOnlyDictionary<Guid, DateTimeOffset> lastFixByTransporter, CancellationToken cancellationToken);
+
     Task<GeofenceEventVm> UpdateExitEventAsync(
         Guid geofenceEventId,
         DateTimeOffset departureTimestamp,

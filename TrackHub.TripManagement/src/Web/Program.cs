@@ -48,8 +48,8 @@ builder.Services.AddWebServices();
 
 // The module's two hosted jobs. Both are on-work-only recorders (SVD-11): an old BackgroundJobRun
 // row for their keys is the healthy steady state, not a stuck job.
-builder.Services.AddHostedService<TripEtaRefreshService>();
-builder.Services.AddHostedService<TripScheduleReminderService>();
+builder.Services.AddScheduledJob<TripEtaRefreshJob>();
+builder.Services.AddScheduledJob<TripScheduleReminderJob>();
 
 // Add HealthChecks
 builder.Services.AddHealthChecks()
@@ -92,6 +92,7 @@ var app = builder.Build();
 // collapse the per-IP rate-limit partition above into a single shared bucket.
 var forwardedHeadersOptions = TrustedProxies.Create(builder.Configuration);
 app.UseForwardedHeaders(forwardedHeadersOptions);
+app.UseExceptionHandler(options => { });
 
 app.UseHeaderPropagation();
 
@@ -115,8 +116,6 @@ app.UseStaticFiles();
 // pipeline inference.
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.UseExceptionHandler(options => { });
 
 app.UseRateLimiter();
 

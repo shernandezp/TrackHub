@@ -46,6 +46,7 @@ public class ReportCatalogReader(IGraphQLClientFactory graphQLClient, IMemoryCac
                         supportsPdf
                         sortOrder
                         active
+                        requiredGrants
                     }
                 }";
 

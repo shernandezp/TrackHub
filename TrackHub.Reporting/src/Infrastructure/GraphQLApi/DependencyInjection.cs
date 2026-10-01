@@ -14,9 +14,10 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddReportsContext(this IServiceCollection services, IConfiguration configuration)
     {
-        // Router/Geofence/Telemetry/TripManagement carry queries only — full resilience incl. retry.
-        // Manager also carries the report-audit mutation — retries stay off there.
-        services.AddGraphQLClient(Clients.Router, resilience: GraphQLClientResilience.WithRetry);
+        // Geofence/Telemetry/TripManagement carry queries only — full resilience incl. retry. No retry
+        // for Manager (the report-audit mutation) or Router (provider reads are rate-limited per user,
+        // and each retry would spend that budget).
+        services.AddGraphQLClient(Clients.Router);
         services.AddGraphQLClient(Clients.Geofence, resilience: GraphQLClientResilience.WithRetry);
         services.AddGraphQLClient(Clients.Manager);
         services.AddGraphQLClient(Clients.Telemetry, resilience: GraphQLClientResilience.WithRetry);
@@ -38,7 +39,7 @@ public static class DependencyInjection
 
         // Cross-service account-status enforcement.
         services.AddMemoryCache();
-        services.AddScoped<Common.Application.Interfaces.IAccountOperationalStatusReader, AccountOperationalStatusReader>();
+        services.AddScoped<Common.Application.Interfaces.IAccountOperationalStatusReader, Common.Infrastructure.ManagerAccountOperationalStatusReader>();
         services.AddScoped<Common.Application.Interfaces.IAccountOperationalStatusService, Common.Application.Services.CachedAccountOperationalStatusService>();
 
         // Module discovery seam: registers any IServiceModule implementations shipped in

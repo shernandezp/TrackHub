@@ -66,7 +66,7 @@ const PlatformStatus = () => {
   // must degrade this page to its public tier, not raise a toast on top of the outage it reports.
   const adminCheck = useQuery({
     queryKey: ['platformStatus', 'isAdmin'],
-    queryFn: () => isAdmin(),
+    queryFn: ({ signal }) => isAdmin({ signal }),
     enabled: isAuthenticated,
     retry: false,
     meta: { silent: true },
@@ -74,7 +74,7 @@ const PlatformStatus = () => {
 
   const managerCheck = useQuery({
     queryKey: ['platformStatus', 'isManager'],
-    queryFn: () => isManager(),
+    queryFn: ({ signal }) => isManager({ signal }),
     enabled: isAuthenticated,
     retry: false,
     meta: { silent: true },

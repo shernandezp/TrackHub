@@ -26,6 +26,7 @@
  */
 
 import { toDateTimeLocalInput, fromDateTimeLocalInput } from 'utils/dateUtils';
+import { isServableScan } from 'utils/documentScan';
 import type {
   DeliveryDtoInput,
   ProofOfDeliveryDtoInput,
@@ -272,53 +273,6 @@ export function destinationsFromStops(
  */
 export const TRIP_EXCEPTIONS = ['overdue', 'delayed', 'offCorridor', 'stalledFinalStop'] as const;
 
-export type TripException = (typeof TRIP_EXCEPTIONS)[number];
-
-/** The trip fields an exception is judged from — structural, so tests and Vm rows both fit. */
-export interface ExceptionCandidateTrip {
-  phase: string;
-  status: string;
-  deviationOpenedAt?: string | null;
-  pendingStopCount?: number | null;
-  phaseDelayed?: boolean | null;
-}
-
-/**
- * Whether a trip is currently showing the named exception.
- *
- * Each answer comes from a recorded fact rather than a stored flag: `Overdue` is
- * the derived phase, off-corridor is an open deviation episode, "delayed" is an
- * ETA already past the planned end, and a stalled final stop is a running trip
- * the board can see has nowhere left to go.
- */
-export function hasException(trip: ExceptionCandidateTrip, exception: TripException): boolean {
-  switch (exception) {
-    case 'overdue':
-      return trip.phase === 'Overdue';
-    case 'offCorridor':
-      return !!trip.deviationOpenedAt;
-    case 'delayed':
-      // The backend's answer, not a second opinion. This used to compare the next stop's
-      // ETA against the TRIP's planned end — a looser rule than the one that raises
-      // TripDelayed (that stop's own window plus `delayThresholdMinutes`), so the board
-      // and the alert disagreed about which trips were late, on the same screen.
-      return !!trip.phaseDelayed;
-    case 'stalledFinalStop':
-      // Running, standing at a stop, and nothing left on the route: the truck arrived
-      // at its last destination and never measurably departed, so auto-completion has
-      // nothing to close on.
-      //
-      // The discriminator is `pendingStopCount`, not `!phaseEtaAt`. The resolver never
-      // sets an ETA on the AtStop branch — an ETA to a stop you are already parked at is
-      // meaningless — so that test was always true and the filter matched every truck
-      // unloading anywhere. An exception list that returns the whole board is noise, and
-      // noise is what the dispatcher was promised relief from.
-      return trip.status === 'InProgress' && trip.phase === 'AtStop' && trip.pendingStopCount === 0;
-    default:
-      return false;
-  }
-}
-
 /* ------------------------------------------------------------- deliveries */
 
 /** Outcomes accepted by `updateDeliveryOutcome` (TripManagement `DeliveryStatuses`). */
@@ -358,13 +312,10 @@ export function buildDeliveryPayload(values: DeliveryFormValues): DeliveryDtoInp
 
 /* ---------------------------------------------------- proof of delivery   */
 
-/** Scan verdict the backend requires before a document may back a POD. */
-export const CLEAN_SCAN_STATUS = 'Clean';
-
 /**
  * One uploaded document queued for a POD. `scanStatus` is carried because the
  * backend rejects the whole capture with `POD_DOCUMENT_NOT_CLEAN` if any
- * attachment has not finished scanning clean — the screen must be able to say
+ * attachment has not finished scanning — the screen must be able to say
  * which one before the user submits (spec 11 §9).
  */
 export interface PodAttachment {
@@ -373,8 +324,7 @@ export interface PodAttachment {
   scanStatus: string;
 }
 
-export const isCleanAttachment = (attachment: PodAttachment): boolean =>
-  attachment.scanStatus?.toLowerCase() === CLEAN_SCAN_STATUS.toLowerCase();
+export const isCleanAttachment = (attachment: PodAttachment): boolean => isServableScan(attachment.scanStatus);
 
 /** Dialog/form state for a proof-of-delivery capture. */
 export interface PodFormValues {
@@ -440,44 +390,4 @@ export function podDocumentFields(
     classification: 'Internal',
     title: fileName,
   };
-}
-
-/* -------------------------------------------- transporter → toll class    */
-
-/** A mapping keys on a transporter TYPE, or on one transporter as an override. */
-export const TOLL_CLASS_TARGETS = ['transporterType', 'transporter'] as const;
-
-export type TollClassTarget = (typeof TOLL_CLASS_TARGETS)[number];
-
-export interface TollClassFormValues {
-  target?: TollClassTarget;
-  transporterTypeId?: number | string | null;
-  transporterId?: string | null;
-  tollVehicleClassCode?: string;
-}
-
-export interface TollClassVariables {
-  transporterTypeId: number | null;
-  transporterId: string | null;
-  tollVehicleClassCode: string;
-}
-
-/**
- * Exactly one of the two keys travels. Sending both would make the row's unique
- * `(AccountId, TransporterTypeId, TransporterId)` key ambiguous, and sending
- * neither is rejected by the command's validator.
- */
-export function buildTollClassVariables(values: TollClassFormValues): TollClassVariables | null {
-  const code = (values.tollVehicleClassCode ?? '').trim();
-  if (code === '') return null;
-  if (values.target === 'transporter') {
-    const transporterId = trimmedOrNull(values.transporterId);
-    return transporterId === null
-      ? null
-      : { transporterTypeId: null, transporterId, tollVehicleClassCode: code };
-  }
-  const transporterTypeId = toOptionalNumber(values.transporterTypeId);
-  return transporterTypeId === null
-    ? null
-    : { transporterTypeId, transporterId: null, tollVehicleClassCode: code };
 }

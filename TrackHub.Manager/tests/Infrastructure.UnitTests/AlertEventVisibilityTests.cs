@@ -51,10 +51,12 @@ public class AlertEventVisibilityTests
             .ReturnsAsync(new HashSet<Guid> { visibleTransporterId });
 
         var reader = new AlertEventReader(context as IApplicationDbContext, Principal(accountId, userId: userId, role: "Operator"), visibleTransporters.Object);
-        var result = await reader.GetAlertEventsAsync(accountId, null, null, 0, 50, CancellationToken.None);
+        var result = await reader.GetAlertEventsAsync(accountId, default, 0, 50, CancellationToken.None);
 
-        Assert.That(result, Has.Count.EqualTo(1));
-        Assert.That(result.Single().ResourceId, Is.EqualTo(visibleTransporterId.ToString()));
+        Assert.That(result.TotalCount, Is.EqualTo(1));
+        Assert.That(result.Items.Single().ResourceId, Is.EqualTo(visibleTransporterId.ToString()));
+        Assert.That(await reader.CountOpenBySeverityAsync(accountId, CancellationToken.None),
+            Is.EqualTo(new[] { new TrackHub.Manager.Domain.Models.AlertSeverityCountVm("Warning", 1) }), "the dashboard count follows the same visibility");
     }
 
     [Test]
@@ -67,9 +69,10 @@ public class AlertEventVisibilityTests
         await context.SaveChangesAsync(CancellationToken.None);
 
         var reader = new AlertEventReader(context as IApplicationDbContext, Principal(accountId, userId: Guid.NewGuid(), role: "Administrator"), Mock.Of<IVisibleTransporterReader>());
-        var result = await reader.GetAlertEventsAsync(accountId, null, null, 0, 50, CancellationToken.None);
+        var result = await reader.GetAlertEventsAsync(accountId, default, 0, 50, CancellationToken.None);
 
-        Assert.That(result, Has.Count.EqualTo(2));
+        Assert.That(result.Items, Has.Count.EqualTo(2));
+        Assert.That(result.TotalCount, Is.EqualTo(2));
     }
 
     [Test]

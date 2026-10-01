@@ -103,7 +103,7 @@ public class TripReportsTests
     [Test]
     public async Task Summary_OrdersMostRecentFirst_AndConvertsDistanceToKilometers()
     {
-        _reader.Setup(r => r.GetTripsAsync(It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+        _reader.Setup(r => r.GetTripsAsync(It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(List(
                 Trip("T-100", Base.AddDays(-3)),
                 Trip("T-200", Base)));
@@ -124,7 +124,7 @@ public class TripReportsTests
     [Test]
     public async Task Summary_OnTimeIsNullWhenEitherEndIsUnknown()
     {
-        _reader.Setup(r => r.GetTripsAsync(It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+        _reader.Setup(r => r.GetTripsAsync(It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(List(
                 Trip("A", Base.AddDays(3), plannedEnd: Base.AddDays(3).AddHours(4), actualEnd: Base.AddDays(3).AddHours(3)),
                 Trip("B", Base.AddDays(2), plannedEnd: Base.AddDays(2).AddHours(4), actualEnd: Base.AddDays(2).AddHours(6)),
@@ -145,7 +145,7 @@ public class TripReportsTests
     [Test]
     public async Task Summary_NullsProjectToEmptyStringsNeverNullCells()
     {
-        _reader.Setup(r => r.GetTripsAsync(It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+        _reader.Setup(r => r.GetTripsAsync(It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(List(Trip("T-1", Base, driverName: null, plannedDistanceMeters: null, toll: null, currency: null)));
 
         var result = await new TripSummaryReport(_reader.Object).GetDatasetAsync(_filters, CancellationToken.None);
@@ -166,7 +166,7 @@ public class TripReportsTests
     public async Task Summary_ReadsTransporterIdFilterAndIgnoresGarbage()
     {
         var transporterId = Guid.NewGuid();
-        _reader.Setup(r => r.GetTripsAsync(It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+        _reader.Setup(r => r.GetTripsAsync(It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(List<ReportTripVm>());
 
         await new TripSummaryReport(_reader.Object).GetDatasetAsync(
@@ -193,13 +193,13 @@ public class TripReportsTests
         await new TripSummaryReport(_reader.Object).GetDatasetAsync(
             _filters with { Values = FilterValues.Of((FilterNames.Transporter, Guid.Empty.ToString())) }, CancellationToken.None);
 
-        _reader.Verify(r => r.GetTripsAsync(null, null, null, null, It.IsAny<CancellationToken>()), Times.Exactly(2));
+        _reader.Verify(r => r.GetTripsAsync(It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), null, null, It.IsAny<CancellationToken>()), Times.Exactly(2));
     }
 
     [Test]
     public async Task Summary_ColumnOrderMatchesRowVmDeclaration()
     {
-        _reader.Setup(r => r.GetTripsAsync(It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+        _reader.Setup(r => r.GetTripsAsync(It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(List<ReportTripVm>());
 
         var result = await new TripSummaryReport(_reader.Object).GetDatasetAsync(_filters, CancellationToken.None);
@@ -220,7 +220,7 @@ public class TripReportsTests
     [Test]
     public async Task Detail_OrdersByTripThenSequence_AndComputesDwell()
     {
-        _reader.Setup(r => r.GetTripStopsAsync(It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+        _reader.Setup(r => r.GetTripStopsAsync(It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(List(
                 Stop("T-2", 1, "Warehouse", Base, Base, Base.AddMinutes(45)),
                 Stop("T-1", 2, "Store B", Base, Base, Base.AddMinutes(15)),
@@ -242,7 +242,7 @@ public class TripReportsTests
     [Test]
     public async Task Detail_CarriesDeliveryOutcomeCounts()
     {
-        _reader.Setup(r => r.GetTripStopsAsync(It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+        _reader.Setup(r => r.GetTripStopsAsync(It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(List(Stop("T-1", 1, "Store A", Base, Base, Base.AddMinutes(10), deliveries: 5, delivered: 3, failed: 1, partial: 1)));
 
         var result = await new TripDetailReport(_reader.Object).GetDatasetAsync(_filters, CancellationToken.None);
@@ -260,7 +260,7 @@ public class TripReportsTests
     [Test]
     public async Task Detail_ColumnOrderMatchesRowVmDeclaration()
     {
-        _reader.Setup(r => r.GetTripStopsAsync(It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+        _reader.Setup(r => r.GetTripStopsAsync(It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(List<ReportTripStopVm>());
 
         var result = await new TripDetailReport(_reader.Object).GetDatasetAsync(_filters, CancellationToken.None);
@@ -279,7 +279,7 @@ public class TripReportsTests
     [Test]
     public async Task OnTime_AggregatesPerTransporterDriverCustomer()
     {
-        _reader.Setup(r => r.GetTripStopsAsync(It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+        _reader.Setup(r => r.GetTripStopsAsync(It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(List(
                 Stop("T-1", 1, "A", Base, Base.AddMinutes(10)),                       // 10 late
                 Stop("T-1", 2, "B", Base, Base.AddMinutes(-5)),                       // early → on time
@@ -308,7 +308,7 @@ public class TripReportsTests
     [Test]
     public async Task OnTime_ExcludesStopsWithNoPlannedWindowOrNoArrival()
     {
-        _reader.Setup(r => r.GetTripStopsAsync(It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+        _reader.Setup(r => r.GetTripStopsAsync(It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(List(
                 Stop("T-1", 1, "A", Base, Base),                    // evaluable
                 Stop("T-1", 2, "B", null, Base.AddMinutes(90)),     // no planned window
@@ -327,7 +327,7 @@ public class TripReportsTests
     [Test]
     public async Task OnTime_MissingDriverOrCustomerGroupsUnderOneExplicitBucket()
     {
-        _reader.Setup(r => r.GetTripStopsAsync(It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+        _reader.Setup(r => r.GetTripStopsAsync(It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(List(
                 Stop("T-1", 1, "A", Base, Base, driverName: null, customerName: null),
                 Stop("T-2", 1, "B", Base, Base, driverName: "", customerName: "   ")));
@@ -346,7 +346,7 @@ public class TripReportsTests
     [Test]
     public async Task OnTime_ColumnOrderMatchesRowVmDeclaration()
     {
-        _reader.Setup(r => r.GetTripStopsAsync(It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+        _reader.Setup(r => r.GetTripStopsAsync(It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(List<ReportTripStopVm>());
 
         var result = await new TripOnTimePerformanceReport(_reader.Object).GetDatasetAsync(_filters, CancellationToken.None);
@@ -364,7 +364,7 @@ public class TripReportsTests
     [Test]
     public async Task Dwell_AggregatesPerStopAndCustomer_LongestAverageFirst()
     {
-        _reader.Setup(r => r.GetTripStopsAsync(It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+        _reader.Setup(r => r.GetTripStopsAsync(It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(List(
                 Stop("T-1", 1, "Store A", Base, Base, Base.AddMinutes(10)),
                 Stop("T-2", 1, "Store A", Base, Base, Base.AddMinutes(30)),
@@ -388,7 +388,7 @@ public class TripReportsTests
     [Test]
     public async Task Dwell_IgnoresOpenVisits()
     {
-        _reader.Setup(r => r.GetTripStopsAsync(It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+        _reader.Setup(r => r.GetTripStopsAsync(It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(List(
                 Stop("T-1", 1, "Store A", Base, Base, Base.AddMinutes(20)),
                 Stop("T-2", 1, "Store A", Base, Base, departedAt: null),
@@ -407,7 +407,7 @@ public class TripReportsTests
     [Test]
     public async Task Dwell_ColumnOrderMatchesRowVmDeclaration()
     {
-        _reader.Setup(r => r.GetTripStopsAsync(It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+        _reader.Setup(r => r.GetTripStopsAsync(It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(List<ReportTripStopVm>());
 
         var result = await new TripStopDwellReport(_reader.Object).GetDatasetAsync(_filters, CancellationToken.None);
@@ -426,7 +426,7 @@ public class TripReportsTests
     [Test]
     public async Task Toll_FlagsPartialNoTariffAndKeepsTheAmountNull()
     {
-        _reader.Setup(r => r.GetTripTollsAsync(It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+        _reader.Setup(r => r.GetTripTollsAsync(It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(List(
                 new ReportTripTollVm(Guid.NewGuid(), "T-1", Guid.NewGuid(), Base, "C3",
                     Guid.NewGuid(), "Peaje Norte", "PN", "Ruta 45", "N", 12_000m, "COP", true),
@@ -454,7 +454,7 @@ public class TripReportsTests
     [Test]
     public async Task Toll_ColumnOrderMatchesRowVmDeclaration()
     {
-        _reader.Setup(r => r.GetTripTollsAsync(It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+        _reader.Setup(r => r.GetTripTollsAsync(It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(List<ReportTripTollVm>());
 
         var result = await new TripTollCostReport(_reader.Object).GetDatasetAsync(_filters, CancellationToken.None);
@@ -471,7 +471,7 @@ public class TripReportsTests
     [Test]
     public async Task Pod_OrdersMostRecentCaptureFirst_AndKeepsCoordinatesNullable()
     {
-        _reader.Setup(r => r.GetTripProofsOfDeliveryAsync(It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+        _reader.Setup(r => r.GetTripProofsOfDeliveryAsync(It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(List(
                 new ReportTripPodVm(Guid.NewGuid(), Guid.NewGuid(), "T-1", Guid.NewGuid(), 1, "Store A",
                     "Ana Ruiz", "CC 123", Base, 4.65d, -74.05d, 2),
@@ -496,7 +496,7 @@ public class TripReportsTests
     [Test]
     public async Task Pod_ColumnOrderMatchesRowVmDeclaration()
     {
-        _reader.Setup(r => r.GetTripProofsOfDeliveryAsync(It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+        _reader.Setup(r => r.GetTripProofsOfDeliveryAsync(It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(List<ReportTripPodVm>());
 
         var result = await new TripPodExportReport(_reader.Object).GetDatasetAsync(_filters, CancellationToken.None);
@@ -533,9 +533,9 @@ public class TripReportsTests
         }
 
         _reader.Verify(r => r.GetTripsAsync(
-            It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()), Times.Never);
+            It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()), Times.Never);
         _reader.Verify(r => r.GetTripProofsOfDeliveryAsync(
-            It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()), Times.Never);
+            It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     // ---- resx column headers (all three Resources*.resx) ----
@@ -658,5 +658,33 @@ public class TripReportsTests
                     $"{rowVm.Name}: '{language}' header \"{header}\" for column '{key}' is indistinguishable from {string.Join(", ", swallowedBy)}.");
             }
         }
+    }
+
+    [Test]
+    public async Task Summary_WithoutDates_ReadsTheLastMonthInsteadOfFailing()
+    {
+        _reader.Setup(r => r.GetTripsAsync(It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(List<ReportTripVm>());
+
+        await new TripSummaryReport(_reader.Object).GetDatasetAsync(_filters with { Values = FilterValues.Of() }, CancellationToken.None);
+
+        _reader.Verify(r => r.GetTripsAsync(
+            It.Is<DateTimeOffset>(from => from < DateTimeOffset.UtcNow.AddDays(-27)),
+            It.Is<DateTimeOffset>(to => to > DateTimeOffset.UtcNow.AddMinutes(-1)),
+            null, null, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Test]
+    public void Summary_WindowLongerThan400Days_IsRefused()
+    {
+        var filters = _filters with
+        {
+            Values = FilterValues.Of(
+                (FilterNames.From, DateTimeOffset.UtcNow.AddDays(-401).ToString("O")),
+                (FilterNames.To, DateTimeOffset.UtcNow.ToString("O")))
+        };
+
+        Assert.ThrowsAsync<TrackHub.Reporting.Domain.Exceptions.ReportWindowInvalidException>(
+            () => new TripSummaryReport(_reader.Object).GetDatasetAsync(filters, CancellationToken.None));
     }
 }

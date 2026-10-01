@@ -60,9 +60,9 @@ public class CredentialReaderTests
     }
 
     [Test]
-    public async Task GetCredentialAsync_PrincipalFromDifferentAccount_ThrowsForbidden()
+    public async Task GetCredentialAsync_PrincipalFromDifferentAccount_ThrowsNotFound()
     {
-        await using var context = NewContext(nameof(GetCredentialAsync_PrincipalFromDifferentAccount_ThrowsForbidden));
+        await using var context = NewContext(nameof(GetCredentialAsync_PrincipalFromDifferentAccount_ThrowsNotFound));
         var @operator = new Operator("Provider", null, null, null, null, null, 1, Guid.NewGuid());
         var credential = CredentialFor(@operator);
         await context.Operators.AddAsync(@operator);
@@ -71,14 +71,14 @@ public class CredentialReaderTests
 
         var reader = new CredentialReader(context as IApplicationDbContext, Principal(Guid.NewGuid()));
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(async () =>
+        Assert.ThrowsAsync<NotFoundException>(async () =>
             await reader.GetCredentialAsync(credential.CredentialId, EncryptionKey, CancellationToken.None));
     }
 
     [Test]
-    public async Task GetMetadataByOperatorAsync_PrincipalFromDifferentAccount_ThrowsForbidden()
+    public async Task GetMetadataByOperatorAsync_PrincipalFromDifferentAccount_ReturnsNull()
     {
-        await using var context = NewContext(nameof(GetMetadataByOperatorAsync_PrincipalFromDifferentAccount_ThrowsForbidden));
+        await using var context = NewContext(nameof(GetMetadataByOperatorAsync_PrincipalFromDifferentAccount_ReturnsNull));
         var @operator = new Operator("Provider", null, null, null, null, null, 1, Guid.NewGuid());
         var credential = CredentialFor(@operator);
         await context.Operators.AddAsync(@operator);
@@ -87,8 +87,7 @@ public class CredentialReaderTests
 
         var reader = new CredentialReader(context as IApplicationDbContext, Principal(Guid.NewGuid()));
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(async () =>
-            await reader.GetMetadataByOperatorAsync(@operator.OperatorId, "key", CancellationToken.None));
+        Assert.That(await reader.GetMetadataByOperatorAsync(@operator.OperatorId, "key", CancellationToken.None), Is.Null);
     }
 
     [Test]

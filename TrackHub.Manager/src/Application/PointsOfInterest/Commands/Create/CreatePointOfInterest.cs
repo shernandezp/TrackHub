@@ -18,6 +18,8 @@ using Common.Application.Interfaces;
 namespace TrackHub.Manager.Application.PointsOfInterest.Commands.Create;
 
 [Authorize(Resource = Resources.PointsOfInterest, Action = Actions.Write)]
+// Enforcement: the writer or reader checks every referenced id against the request's account.
+[AccountScopeEnforcedInHandler]
 public readonly record struct CreatePointOfInterestCommand(PointOfInterestDto PointOfInterest) : IRequest<PointOfInterestVm>;
 
 public class CreatePointOfInterestCommandHandler(IPointOfInterestWriter writer, IUserReader userReader, IUser user) : IRequestHandler<CreatePointOfInterestCommand, PointOfInterestVm>

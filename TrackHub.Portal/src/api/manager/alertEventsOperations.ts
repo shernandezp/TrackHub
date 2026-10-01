@@ -35,13 +35,36 @@ export const AlertEventItemFragment = graphql(`
     firstSeenAt
     lastSeenAt
     deduplicationKey
+    resourceName
   }
 `);
 
 export const GetAlertEventsDocument = graphql(`
-  query GetAlertEvents($accountId: UUID!, $skip: Int!, $take: Int!) {
-    alertEvents(query: { accountId: $accountId, skip: $skip, take: $take }) {
-      ...AlertEventItem
+  query GetAlertEvents(
+    $accountId: UUID!
+    $status: String
+    $severity: String
+    $sourceModule: String
+    $eventTypes: [String!]
+    $skip: Int!
+    $take: Int!
+  ) {
+    alertEvents(
+      query: { accountId: $accountId, status: $status, severity: $severity, sourceModule: $sourceModule, eventTypes: $eventTypes, skip: $skip, take: $take }
+    ) {
+      items {
+        ...AlertEventItem
+      }
+      totalCount
+    }
+  }
+`);
+
+export const GetOpenAlertCountsDocument = graphql(`
+  query GetOpenAlertCounts($accountId: UUID!) {
+    openAlertCounts(query: { accountId: $accountId }) {
+      severity
+      count
     }
   }
 `);

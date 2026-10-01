@@ -19,8 +19,10 @@ using Common.Infrastructure;
 
 namespace TrackHub.Manager.Infrastructure.Entities;
 
-public class Account(string name, string? description, short type, bool active) : BaseAuditableEntity
+public class Account(string name, string? description, short type, bool active) : BaseAuditableEntity, IEditVersioned
 {
+    public uint Version { get; set; }
+
     public Guid AccountId { get; private set; } = Guid.NewGuid();
 
     public string Name { get; set; } = name;

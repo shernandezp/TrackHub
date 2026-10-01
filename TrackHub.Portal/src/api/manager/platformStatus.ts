@@ -21,6 +21,7 @@
 
 import axios from 'axios';
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { RequestOptions } from 'api/core/errors';
 import { REST_ENDPOINTS } from 'api/core/endpoints';
 import type {
   PlatformAnnouncementItemFragment,
@@ -59,11 +60,11 @@ export interface VisibleAnnouncement {
  * sign-in service is down. Returns [] rather than throwing when Manager is
  * unreachable: per ST-09 a Manager outage removes the banner, never the page.
  */
-export async function getVisibleAnnouncements(): Promise<VisibleAnnouncement[]> {
+export async function getVisibleAnnouncements(options?: RequestOptions): Promise<VisibleAnnouncement[]> {
   try {
     const response = await axios.get<VisibleAnnouncement[]>(
       REST_ENDPOINTS.managerPlatformAnnouncements,
-      { timeout: 6000, withCredentials: false }
+      { timeout: 6000, withCredentials: false, signal: options?.signal }
     );
     return Array.isArray(response.data) ? response.data : [];
   } catch {
@@ -72,14 +73,14 @@ export async function getVisibleAnnouncements(): Promise<VisibleAnnouncement[]> 
 }
 
 /** All announcements including drafts and expired rows — Administrator only. */
-export async function getPlatformAnnouncements(skip = 0, take = 50): Promise<PlatformAnnouncement[]> {
-  const data = await executeGraphQL('manager', GetPlatformAnnouncementsDocument, { skip, take });
+export async function getPlatformAnnouncements(skip = 0, take = 50, options?: RequestOptions): Promise<PlatformAnnouncement[]> {
+  const data = await executeGraphQL('manager', GetPlatformAnnouncementsDocument, { skip, take }, options);
   return data.platformAnnouncements;
 }
 
 /** Latest run per background JobKey, platform-wide — Administrator only. */
-export async function getBackgroundJobStatus() {
-  const data = await executeGraphQL('manager', GetBackgroundJobStatusDocument);
+export async function getBackgroundJobStatus(options?: RequestOptions) {
+  const data = await executeGraphQL('manager', GetBackgroundJobStatusDocument, undefined, options);
   return data.backgroundJobStatus;
 }
 

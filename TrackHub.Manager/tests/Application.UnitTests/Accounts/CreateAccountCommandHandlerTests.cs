@@ -52,7 +52,7 @@ public class CreateAccountCommandHandlerTests
             2,
             accountDto.Active,
             "UTC",
-            DateTimeOffset.UtcNow);
+            DateTimeOffset.UtcNow, 0);
 
         _accountWriterMock.Setup(w => w.CreateAccountAsync(It.IsAny<AccountDto>(), CancellationToken.None))
             .ReturnsAsync(accountVm);

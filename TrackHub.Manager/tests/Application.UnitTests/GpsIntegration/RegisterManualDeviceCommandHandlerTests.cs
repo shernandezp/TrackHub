@@ -42,7 +42,7 @@ public class RegisterManualDeviceCommandHandlerTests
                 It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new GroupsPageVm([], 0));
         _groupWriter.Setup(x => x.CreateGroupAsync(It.IsAny<GroupDto>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((GroupDto dto, Guid accountId, CancellationToken _) => new GroupVm(DefaultGroupId, dto.Name, dto.Description, dto.Active, accountId));
+            .ReturnsAsync((GroupDto dto, Guid accountId, CancellationToken _) => new GroupVm(DefaultGroupId, dto.Name, dto.Description, dto.Active, accountId, 0));
         _transporterGroupWriter.Setup(x => x.CreateTransporterGroupAsync(It.IsAny<TransporterGroupDto>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((TransporterGroupDto dto, CancellationToken _) => new TransporterGroupVm(dto.TransporterId, dto.GroupId));
     }
@@ -102,7 +102,7 @@ public class RegisterManualDeviceCommandHandlerTests
                     && t.Name == "ABC123"
                     && t.TransporterTypeId == (short)TransporterType.Asset),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new TransporterVm(transporterId, "ABC123", TransporterType.Asset, (short)TransporterType.Asset));
+            .ReturnsAsync(new TransporterVm(transporterId, "ABC123", TransporterType.Asset, (short)TransporterType.Asset, 0));
 
         // Act
         var result = await CreateHandler().Handle(new RegisterManualDeviceCommand(dto), CancellationToken.None);
@@ -172,7 +172,7 @@ public class RegisterManualDeviceCommandHandlerTests
         _deviceWriter.Setup(x => x.CreateManualDeviceAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(vm);
         _transporterWriter.Setup(x => x.CreateTransporterAsync(It.IsAny<TransporterDto>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new TransporterVm(Guid.NewGuid(), "IMEI-9", TransporterType.Person, (short)TransporterType.Person));
+            .ReturnsAsync(new TransporterVm(Guid.NewGuid(), "IMEI-9", TransporterType.Person, (short)TransporterType.Person, 0));
 
         // Act
         await CreateHandler().Handle(new RegisterManualDeviceCommand(dto), CancellationToken.None);
@@ -192,9 +192,9 @@ public class RegisterManualDeviceCommandHandlerTests
             .ReturnsAsync(vm);
         _groupReader.Setup(x => x.GetGroupsByAccountAsync(
                 _accountId, It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new GroupsPageVm([new GroupVm(DefaultGroupId, GroupMetadata.DefaultGroupName, GroupMetadata.DefaultGroupDescription, true, _accountId)], 1));
+            .ReturnsAsync(new GroupsPageVm([new GroupVm(DefaultGroupId, GroupMetadata.DefaultGroupName, GroupMetadata.DefaultGroupDescription, true, _accountId, 0)], 1));
         _transporterWriter.Setup(x => x.CreateTransporterAsync(It.IsAny<TransporterDto>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new TransporterVm(Guid.NewGuid(), "ABC123", TransporterType.Person, (short)TransporterType.Person));
+            .ReturnsAsync(new TransporterVm(Guid.NewGuid(), "ABC123", TransporterType.Person, (short)TransporterType.Person, 0));
 
         // Act
         await CreateHandler().Handle(new RegisterManualDeviceCommand(dto), CancellationToken.None);

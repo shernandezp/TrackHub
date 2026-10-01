@@ -77,8 +77,29 @@ export function useDriversByAccount(
 ) {
   return useQuery({
     queryKey: driverKeys.byAccount(accountId ?? ''),
-    queryFn: () => api.getAllDriversByAccount(accountId as string),
+    queryFn: ({ signal }) => api.getAllDriversByAccount(accountId as string, { signal }),
     enabled: (options.enabled ?? true) && !!accountId,
+  });
+}
+
+/** One server page of the account's drivers, searched by name, document or employee code. */
+export function useDriversPage(
+  accountId: string | undefined,
+  params: { skip: number; take: number; search: string | null },
+  options: { enabled?: boolean } = {}
+) {
+  return useQuery({
+    queryKey: [...driverKeys.all, 'page', accountId ?? '', params] as const,
+    queryFn: ({ signal }) => api.getDriversByAccount(accountId as string, params.skip, params.take, params.search, { signal }),
+    enabled: (options.enabled ?? true) && !!accountId,
+  });
+}
+
+/** One page of driver ids and names for the driver-operations pickers; needs DriverOperations/Read only. */
+export function useDriverOptions(params: { skip: number; take: number; search: string | null }) {
+  return useQuery({
+    queryKey: [...driverKeys.all, 'options', params] as const,
+    queryFn: ({ signal }) => api.getDriverOptions(params, { signal }),
   });
 }
 
@@ -119,8 +140,8 @@ export function useDriverQualifications(
 ) {
   return useQuery({
     queryKey: driverQualificationKeys.list(accountId ?? '', driverId, expiringWithinDays),
-    queryFn: () =>
-      api.getAllDriverQualifications(accountId as string, driverId, expiringWithinDays),
+    queryFn: ({ signal }) =>
+      api.getAllDriverQualifications(accountId as string, driverId, expiringWithinDays, { signal }),
     enabled: (options.enabled ?? true) && !!accountId,
   });
 }
@@ -167,7 +188,21 @@ export function useDriverAssignmentHistory(
 ) {
   return useQuery({
     queryKey: driverAssignmentKeys.history(accountId ?? '', filters),
-    queryFn: () => api.getAllDriverAssignmentHistory(accountId as string, filters),
+    queryFn: ({ signal }) => api.getAllDriverAssignmentHistory(accountId as string, filters, { signal }),
+    enabled: (options.enabled ?? true) && !!accountId,
+  });
+}
+
+/** One server page of the account's assignment history for the filters. */
+export function useDriverAssignmentHistoryPage(
+  accountId: string | undefined,
+  filters: DriverAssignmentHistoryFilters,
+  page: { skip: number; take: number },
+  options: { enabled?: boolean } = {}
+) {
+  return useQuery({
+    queryKey: [...driverAssignmentKeys.history(accountId ?? '', filters), page.skip, page.take],
+    queryFn: ({ signal }) => api.getDriverAssignmentHistory(accountId as string, filters, page.skip, page.take, { signal }),
     enabled: (options.enabled ?? true) && !!accountId,
   });
 }
@@ -183,7 +218,7 @@ export function useDriverActiveAssignments(
 ) {
   return useQuery({
     queryKey: driverAssignmentKeys.active(driverId ?? ''),
-    queryFn: () => api.getDriverAssignments(driverId as string),
+    queryFn: ({ signal }) => api.getDriverAssignments(driverId as string, { signal }),
     enabled: (options.enabled ?? true) && !!driverId,
   });
 }
@@ -220,11 +255,12 @@ export function useEndDriverAssignment() {
   });
 }
 
+
 /** Active drivers as picker rows (names and ids only); the server caps the set. */
 export function useDriverLookup(search = '') {
   return useQuery({
     queryKey: driverKeys.lookup(search),
-    queryFn: () => api.getDriverLookup(search, null),
+    queryFn: ({ signal }) => api.getDriverLookup(search, null, { signal }),
   });
 }
 
@@ -232,7 +268,7 @@ export function useDriverLookup(search = '') {
 export function useDriverNames(driverIds: string[]) {
   return useQuery({
     queryKey: driverKeys.names(driverIds),
-    queryFn: () => api.getDriverLookup(null, driverIds),
+    queryFn: ({ signal }) => api.getDriverLookup(null, driverIds, { signal }),
     enabled: driverIds.length > 0,
   });
 }

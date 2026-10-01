@@ -64,24 +64,12 @@ export async function createAccountSupportGrant(
   return data.createAccountSupportGrant;
 }
 
-export async function approveAccountSupportGrant(
-  accountSupportGrantId: string,
-  approvedBy: string
-): Promise<boolean> {
-  const data = await executeGraphQL('manager', ApproveAccountSupportGrantDocument, {
-    accountSupportGrantId,
-    approvedBy,
-  });
+export async function approveAccountSupportGrant(accountSupportGrantId: string): Promise<boolean> {
+  const data = await executeGraphQL('manager', ApproveAccountSupportGrantDocument, { accountSupportGrantId });
   return data.approveAccountSupportGrant;
 }
 
-export async function revokeAccountSupportGrant(
-  accountSupportGrantId: string,
-  revokedBy: string
-): Promise<boolean> {
-  const data = await executeGraphQL('manager', RevokeAccountSupportGrantDocument, {
-    accountSupportGrantId,
-    revokedBy,
-  });
+export async function revokeAccountSupportGrant(accountSupportGrantId: string): Promise<boolean> {
+  const data = await executeGraphQL('manager', RevokeAccountSupportGrantDocument, { accountSupportGrantId });
   return data.revokeAccountSupportGrant;
 }

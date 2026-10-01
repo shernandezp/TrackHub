@@ -36,6 +36,7 @@ public interface ITripReader
         Guid? driverId,
         string? customer,
         string? search,
+        string? exception,
         int skip,
         int take,
         CancellationToken cancellationToken);

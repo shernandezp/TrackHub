@@ -30,7 +30,7 @@ export const resourceKeys = {
 export function useResources(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: resourceKeys.all,
-    queryFn: api.getResources,
+    queryFn: ({ signal }) => api.getResources({ signal }),
     enabled: options.enabled ?? true,
   });
 }

@@ -14,11 +14,13 @@
 *  limitations under the License.
 */
 
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from '@mui/material/Icon';
 import Table from "controls/Tables/Table";
+import ServerPagination from "controls/Tables/ServerPagination";
+import { useClampPage, useServerList } from "controls/Tables/useServerList";
 import TableAccordion from "controls/Accordions/TableAccordion";
 import ArgonBadge from "components/ArgonBadge";
 import ArgonButton from "components/ArgonButton";
@@ -29,7 +31,7 @@ import AlertSubscriptionDialog, { ALL_EVENTS } from "layouts/manageadmin/compone
 import type { AlertSubscriptionFormValues } from "layouts/manageadmin/components/alertSubscriptions/AlertSubscriptionDialog";
 import { getAccountByUser } from "api/manager/accounts";
 import type { Account } from "api/manager/accounts";
-import { getAccountFeatures } from "api/manager/accountFeatures";
+import { useFeatures } from "context/features";
 import {
   getAlertSubscriptions,
   createAlertSubscription,
@@ -61,19 +63,25 @@ function TextCell({ children }: { children?: ReactNode }) {
   );
 }
 
+const PAGE_SIZE = 25;
+
 function ManageAlertSubscriptions() {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
   const [expanded, setExpanded] = useState(false);
   const [account, setAccount] = useState<Account | null>(null);
   const [subscriptions, setSubscriptions] = useState<AlertSubscription[]>([]);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-  const [emailEnabled, setEmailEnabled] = useState(false);
-  const [whatsAppEnabled, setWhatsAppEnabled] = useState(false);
+  const { isFeatureEnabled } = useFeatures();
+  const notificationsEnabled = isFeatureEnabled(NOTIFICATIONS_FEATURE_KEY);
+  const emailEnabled = isFeatureEnabled(NOTIFICATIONS_EMAIL_FEATURE_KEY);
+  const whatsAppEnabled = isFeatureEnabled(NOTIFICATIONS_WHATSAPP_FEATURE_KEY);
   const [open, setOpen] = useState(false);
   const [confirm, setConfirm] = useState<ConfirmState>({ open: false, id: null });
   const [values, handleChange, setValues, setErrors, validate, errors] = useForm<AlertSubscriptionFormValues>({ enabled: true });
-  const loaded = useRef(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [pageLength, setPageLength] = useState(0);
+  const { page, setPage, params } = useServerList(PAGE_SIZE);
+  useClampPage(page, PAGE_SIZE, totalCount, setPage);
 
   const loadSubscriptions = async () => {
     setLoading(true);
@@ -81,16 +89,10 @@ function ManageAlertSubscriptions() {
       const currentAccount = await getAccountByUser();
       if (!currentAccount?.accountId) return;
       setAccount(currentAccount);
-      const [items, features] = await Promise.all([
-        getAlertSubscriptions(currentAccount.accountId),
-        // Channel entitlements only gate UI affordances — the backend is authoritative.
-        getAccountFeatures(currentAccount.accountId).catch(() => []),
-      ]);
-      setSubscriptions(items || []);
-      const enabled = (key: string) => !!(features || []).find(f => f.featureKey === key)?.enabled;
-      setNotificationsEnabled(enabled(NOTIFICATIONS_FEATURE_KEY));
-      setEmailEnabled(enabled(NOTIFICATIONS_EMAIL_FEATURE_KEY));
-      setWhatsAppEnabled(enabled(NOTIFICATIONS_WHATSAPP_FEATURE_KEY));
+      const items = await getAlertSubscriptions(currentAccount.accountId, null, params.skip, params.take);
+      setSubscriptions(items.items);
+      setTotalCount(items.totalCount);
+      setPageLength(items.items.length);
     } catch (error) {
       notifyApiError(error);
     } finally {
@@ -99,11 +101,10 @@ function ManageAlertSubscriptions() {
   };
 
   useEffect(() => {
-    if (expanded && !loaded.current) {
-      loaded.current = true;
+    if (expanded) {
       loadSubscriptions();
     }
-  }, [expanded]);
+  }, [expanded, params]);
 
   const handleAddClick = () => {
     setValues({ enabled: true, eventTypeFilter: ALL_EVENTS });
@@ -261,7 +262,9 @@ function ManageAlertSubscriptions() {
             id: subscription.alertSubscriptionId
           }))}
           selectedField="principalId"
+          serverPaged
         />
+        <ServerPagination page={page} pageSize={PAGE_SIZE} totalCount={totalCount} pageLength={pageLength} onPageChange={setPage} />
       </TableAccordion>
       <AlertSubscriptionDialog
         open={open}

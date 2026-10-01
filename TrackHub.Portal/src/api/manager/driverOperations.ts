@@ -36,13 +36,17 @@ export const DriverItemFragment = graphql(`
     licenseExpiresAt
     defaultTransporterId
     lastModified
+    version
   }
 `);
 
 export const GetDriversByAccountDocument = graphql(`
-  query GetDriversByAccount($accountId: UUID!, $skip: Int!, $take: Int!) {
-    driversByAccount(query: { accountId: $accountId, skip: $skip, take: $take }) {
-      ...DriverItem
+  query GetDriversByAccount($accountId: UUID!, $search: String, $skip: Int!, $take: Int!) {
+    driversByAccount(query: { accountId: $accountId, search: $search, skip: $skip, take: $take }) {
+      items {
+        ...DriverItem
+      }
+      totalCount
     }
   }
 `);
@@ -147,7 +151,10 @@ export const GetDriverQualificationsDocument = graphql(`
         take: $take
       }
     ) {
-      ...DriverQualificationItem
+      items {
+        ...DriverQualificationItem
+      }
+      totalCount
     }
   }
 `);
@@ -173,7 +180,10 @@ export const GetDriverAssignmentHistoryDocument = graphql(`
         take: $take
       }
     ) {
-      ...DriverTransporterAssignmentItem
+      items {
+        ...DriverTransporterAssignmentItem
+      }
+      totalCount
     }
   }
 `);
@@ -228,6 +238,19 @@ export const EndDriverAssignmentDocument = graphql(`
     endDriverAssignment(
       command: { driverTransporterAssignmentId: $driverTransporterAssignmentId, endsAt: $endsAt }
     )
+  }
+`);
+
+export const GetDriverOptionsDocument = graphql(`
+  query GetDriverOptions($search: String, $skip: Int, $take: Int) {
+    driverOptions(query: { search: $search, skip: $skip, take: $take }) {
+      items {
+        driverId
+        name
+        active
+      }
+      totalCount
+    }
   }
 `);
 

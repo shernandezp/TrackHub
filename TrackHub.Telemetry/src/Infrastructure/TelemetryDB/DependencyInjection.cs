@@ -69,6 +69,8 @@ public static class DependencyInjection
         services.AddMemoryCache();
         services.AddScoped<Common.Application.Interfaces.IAccountOperationalStatusReader, AccountOperationalStatusReader>();
         services.AddScoped<Common.Application.Interfaces.IAccountOperationalStatusService, Common.Application.Services.CachedAccountOperationalStatusService>();
+        services.AddScoped<Common.Application.Interfaces.IFeatureFlagService>(
+            sp => new Common.Infrastructure.DbFeatureFlagService(sp.GetRequiredService<ApplicationDbContext>(), sp.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>()));
 
         // Module discovery seam: registers any IServiceModule implementations shipped in
         // this assembly (none in this repository).

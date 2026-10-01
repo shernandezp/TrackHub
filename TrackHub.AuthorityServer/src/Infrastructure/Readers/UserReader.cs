@@ -22,9 +22,10 @@ public sealed class UserReader(SecurityDbContext context) : IUserReader
 {
     public async Task<UserVm> GetUserAsync(UserLoginDto userLogin, CancellationToken cancellationToken)
     {
+        var emailAddress = Common.Domain.Helpers.EmailAddresses.Normalize(userLogin.EmailAddress);
         return await context.Users
             .AsNoTracking()
-            .Where(u => u.EmailAddress.Equals(userLogin.EmailAddress))
+            .Where(u => u.EmailAddress == emailAddress)
             .Select(u => new UserVm(
                 u.UserId,
                 u.Username,

@@ -18,6 +18,7 @@ using Common.Application.Interfaces;
 namespace TrackHub.Security.Application.Users.Queries.Get;
 
 [Authorize(Resource = Resources.Profile, Action = Actions.Read)]
+[AllowSuspendedAccount]
 public readonly record struct GetCurrentUserQuery() : IRequest<UserVm>;
 
 // The GetCurrentUserQueryHandler class is responsible for handling the GetCurrentUserQuery and returning the corresponding UserVm.

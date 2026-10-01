@@ -18,9 +18,10 @@ namespace TrackHub.Manager.Domain.Interfaces;
 public interface ITransporterReader
 {
     Task<TransporterVm> GetTransporterAsync(Guid id, CancellationToken cancellationToken);
-    Task<TransporterVm> GetTransporterAsync(string name, CancellationToken cancellationToken);
     Task<TransportersPageVm> GetTransportersByAccountAsync(Guid accountId, int skip, int take, string? search, CancellationToken cancellationToken);
+    Task<TransportersPageVm> GetRetiredTransportersAsync(Guid accountId, int skip, int take, string? search, CancellationToken cancellationToken);
     Task<TransportersPageVm> GetTransportersByGroupAsync(long groupId, int skip, int take, string? search, CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<Guid>> GetTransporterIdsByGroupAsync(long groupId, int fetchSize, CancellationToken cancellationToken);
     Task<TransportersPageVm> GetTransportersByUserAsync(Guid userId, int skip, int take, string? search, CancellationToken cancellationToken);
     Task<IReadOnlyCollection<TransporterLookupVm>> GetTransporterLookupByAccountAsync(Guid accountId, int fetchSize, CancellationToken cancellationToken);
     Task<IReadOnlyCollection<TransporterLookupVm>> GetTransporterLookupByUserAsync(Guid userId, int fetchSize, CancellationToken cancellationToken);

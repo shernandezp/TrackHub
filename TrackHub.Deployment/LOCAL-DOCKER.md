@@ -143,8 +143,7 @@ Regenerate:
 Security and Manager DBInitializers. All three are **additive** - create-or-update for the
 clients listed in `clients.json`, add-if-missing for resources, roles and service-client
 grants, upsert for the report catalog. None of them enumerate or delete, so seed rows this
-repo does not know about (the `manager_client` / `telemetry_client` family) are left
-alone. Change a seed - a client, an RBAC grant, a catalog row - and it reaches the local
+repo does not know about are left alone. Change a seed - a client, an RBAC grant, a catalog row - and it reaches the local
 databases by re-running the seeder, with no hand-written SQL.
 
 Two things make that safe, and both matter:

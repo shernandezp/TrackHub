@@ -233,7 +233,29 @@ tag_version() {
     
     print_info "Tagging $image:latest as $image:$tag..."
     docker tag "$image:latest" "$image:$tag"
+    snapshot_config "$service" "$tag"
     print_success "Tagged $image:$tag"
+}
+
+# A service is released as an image AND the appsettings.json generated for it: an older image
+# brought back against newer config can refuse to start, so each tag keeps the config it ran with.
+snapshot_config() {
+    local service="$1" tag="$2"
+    local current="$PROJECT_DIR/generated/appsettings.$service.json"
+    [ -f "$current" ] || return 0
+    mkdir -p "$PROJECT_DIR/generated/releases/$service"
+    (umask 077 && cp "$current" "$PROJECT_DIR/generated/releases/$service/$tag.json")
+}
+
+restore_config() {
+    local service="$1" tag="$2"
+    local saved="$PROJECT_DIR/generated/releases/$service/$tag.json"
+    if [ -f "$saved" ]; then
+        cp "$saved" "$PROJECT_DIR/generated/appsettings.$service.json"
+        print_info "Restored the configuration $service ran with at $tag."
+    elif [ -f "$PROJECT_DIR/generated/appsettings.$service.json" ]; then
+        print_warning "No configuration was saved with $tag; $service keeps the current one."
+    fi
 }
 
 rollback_service() {
@@ -272,8 +294,10 @@ rollback_service() {
     docker tag "$image:latest" "$image:pre-rollback-$timestamp" 2>/dev/null || true
     
     # Tag the rollback version as latest
+    snapshot_config "$service" "pre-rollback-$timestamp"
     print_info "Setting $image:$tag as latest..."
     docker tag "$image:$tag" "$image:latest"
+    restore_config "$service" "$tag"
     
     print_info "Recreating $container..."
     cd "$PROJECT_DIR"

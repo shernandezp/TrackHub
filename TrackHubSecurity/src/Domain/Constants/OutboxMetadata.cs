@@ -33,6 +33,9 @@ public static class OutboxMessageStatuses
     public const string Completed = nameof(Completed);
     public const string Failed = nameof(Failed);
 
+    /// <summary>An exhausted message an administrator decided never to send; it no longer blocks its entity.</summary>
+    public const string Discarded = nameof(Discarded);
+
     /// <summary>Claimed by one dispatcher instance and in flight. Reclaimed if the claim goes stale.</summary>
     public const string Dispatching = nameof(Dispatching);
 }

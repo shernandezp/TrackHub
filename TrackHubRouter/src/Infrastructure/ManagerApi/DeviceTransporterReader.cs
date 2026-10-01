@@ -49,6 +49,11 @@ public class DeviceTransporterReader(IGraphQLClientFactory graphQLClient)
                     }
             }";
 
+    internal const string TransporterIdsByGroupQuery = @"
+                query($groupId: Long!) {
+                    transporterIdsByGroup(groupId: $groupId)
+                }";
+
     internal const string DeviceTransporterByIdQuery = @"
                 query($transporterId: UUID!) {
                     deviceTransporterById(query: { transporterId: $transporterId })
@@ -62,6 +67,10 @@ public class DeviceTransporterReader(IGraphQLClientFactory graphQLClient)
                         transporterTypeId
                     }
                 }";
+
+    public async Task<IReadOnlyCollection<Guid>> GetTransporterIdsByGroupAsync(long groupId, CancellationToken cancellationToken)
+        => await QueryAsync<IReadOnlyCollection<Guid>>(
+            new GraphQLRequest { Query = TransporterIdsByGroupQuery, Variables = new { groupId } }, cancellationToken);
 
     /// <summary>
     /// Retrieves devices by operator asynchronously.

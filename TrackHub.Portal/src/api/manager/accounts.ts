@@ -22,7 +22,7 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
-import { fetchAllPages } from 'api/core/paging';
+import type { RequestOptions } from 'api/core/errors';
 import type { ListParams, Page } from 'api/core/paging';
 import type {
   AccountItemFragment as AccountItemType,
@@ -46,28 +46,18 @@ export type AccountsPage = Page<Account>;
 export type AccountContext = GetAccountContextQuery['accountContext'];
 export type { AccountDtoInput, UpdateAccountDtoInput, AccountStatus };
 
-export async function getAccountByUser(): Promise<Account> {
-  const data = await executeGraphQL('manager', GetAccountByUserDocument);
+export async function getAccountByUser(options?: RequestOptions): Promise<Account> {
+  const data = await executeGraphQL('manager', GetAccountByUserDocument, undefined, options);
   return data.accountByUser;
 }
 
-export async function getAccounts(params: ListParams = {}): Promise<AccountsPage> {
+export async function getAccounts(params: ListParams = {}, options?: RequestOptions): Promise<AccountsPage> {
   const data = await executeGraphQL('manager', GetAccountsDocument, {
     skip: params.skip ?? null,
     take: params.take ?? null,
     search: params.search ?? null,
-  });
+  }, options);
   return data.accounts;
-}
-
-/**
- * Every account on the platform, all server pages drained. There is no account
- * lookup endpoint, and the systemadmin account pickers (feature editor, …) must
- * offer the whole platform, so this is the one place an exhaustive account read
- * is genuinely required.
- */
-export async function getAllAccounts(): Promise<Account[]> {
-  return fetchAllPages(async (skip, take) => (await getAccounts({ skip, take })).items);
 }
 
 export async function createAccount(account: AccountDtoInput): Promise<Account> {
@@ -100,6 +90,7 @@ export async function updateAccount(
       typeId: account.typeId,
       active: account.active,
       timeZoneId: account.timeZoneId ?? null,
+      expectedVersion: account.expectedVersion ?? null,
     },
   });
   return data.updateAccount;
@@ -122,6 +113,7 @@ export async function updateAccountMaster(
       typeId: account.typeId,
       active: account.active,
       timeZoneId: account.timeZoneId ?? null,
+      expectedVersion: account.expectedVersion ?? null,
     },
   });
   return data.updateAccountMaster;

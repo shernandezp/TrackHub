@@ -1,9 +1,7 @@
 namespace TrackHub.Manager.Application.AccountSupportGrants.Queries;
 
 [Authorize(Resource = Resources.SupportGrants, Action = Actions.Read)]
-// Enforcement: the reader/writer this handler delegates to extends AccountScopedDataAccess and
-// checks the loaded row's owning account (RequireAccountAccess) or filters on the caller's scope.
-[AccountScopeEnforcedInHandler]
+[AllowCrossAccount("Platform support console: a grant opens a customer account to a platform administrator, so its status is read across accounts. Gated by the SupportGrants/Read platform permission.")]
 public readonly record struct GetSupportGrantStatusQuery(Guid AccountSupportGrantId) : IRequest<AccountSupportGrantVm>;
 public class GetSupportGrantStatusQueryHandler(IAccountSupportGrantReader reader) : IRequestHandler<GetSupportGrantStatusQuery, AccountSupportGrantVm>
 {

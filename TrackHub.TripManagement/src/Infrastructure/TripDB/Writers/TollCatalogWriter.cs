@@ -17,6 +17,7 @@ using Common.Application.Exceptions;
 using Common.Application.Interfaces;
 using TrackHub.TripManagement.Infrastructure.TripDB.Events;
 using TrackHub.TripManagement.Infrastructure.TripDB.Readers;
+using Common.Infrastructure;
 
 namespace TrackHub.TripManagement.Infrastructure.TripDB.Writers;
 
@@ -28,6 +29,22 @@ public sealed class TollCatalogWriter(IApplicationDbContext context, ITollCatalo
 {
     public async Task<TollVehicleClassVm> CreateVehicleClassAsync(TollVehicleClassDto vehicleClass, CancellationToken cancellationToken)
     {
+        // A code once retired is the same class coming back: estimates already cite it by code.
+        var retired = await context.TollVehicleClasses
+            .AsTracking()
+            .FirstOrDefaultAsync(c => c.Code == vehicleClass.Code && !c.Active, cancellationToken);
+        if (retired is not null)
+        {
+            retired.Name = vehicleClass.Name;
+            retired.Description = vehicleClass.Description;
+            retired.SortOrder = vehicleClass.SortOrder;
+            retired.Active = true;
+            retired.AddDomainEvent(new TollCatalogDomainEvent(TripEventTypes.TollStationChanged, retired.TollVehicleClassId, retired.Code));
+            AddAuditEvent("ReactivateTollVehicleClass", retired.TollVehicleClassId);
+            await context.SaveChangesAsync(cancellationToken);
+            return TripMapper.ToVm(retired);
+        }
+
         var entity = new TollVehicleClass
         {
             Code = vehicleClass.Code,
@@ -75,8 +92,33 @@ public sealed class TollCatalogWriter(IApplicationDbContext context, ITollCatalo
         await context.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task ReactivateVehicleClassAsync(Guid tollVehicleClassId, CancellationToken cancellationToken)
+    {
+        var entity = await context.TollVehicleClasses
+            .AsTracking()
+            .FirstOrDefaultAsync(c => c.TollVehicleClassId == tollVehicleClassId, cancellationToken)
+            ?? throw new NotFoundException($"{tollVehicleClassId}", nameof(TollVehicleClass));
+
+        entity.Active = true;
+        entity.AddDomainEvent(new TollCatalogDomainEvent(TripEventTypes.TollStationChanged, entity.TollVehicleClassId, entity.Code));
+        AddAuditEvent("ReactivateTollVehicleClass", entity.TollVehicleClassId);
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task<TollStationVm> CreateStationAsync(TollStationDto station, CancellationToken cancellationToken)
     {
+        // The same station entered again after it was deactivated is that station, not a second one.
+        var retired = await context.TollStations
+            .AsTracking()
+            .FirstOrDefaultAsync(s => s.Name == station.Name && s.Code == station.Code && !s.Active, cancellationToken);
+        if (retired is not null)
+        {
+            retired.Active = true;
+            AddAuditEvent("ReactivateTollStation", retired.TollStationId);
+            await UpdateStationAsync(retired.TollStationId, station, cancellationToken);
+            return TripMapper.ToVm(retired);
+        }
+
         var entity = new TollStation
         {
             Name = station.Name,
@@ -125,6 +167,16 @@ public sealed class TollCatalogWriter(IApplicationDbContext context, ITollCatalo
         entity.Active = false;
         entity.AddDomainEvent(new TollCatalogDomainEvent(TripEventTypes.TollStationChanged, entity.TollStationId, entity.Code));
         AddAuditEvent("DeactivateTollStation", entity.TollStationId);
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task ReactivateStationAsync(Guid tollStationId, CancellationToken cancellationToken)
+    {
+        var entity = await FindStationAsync(tollStationId, cancellationToken);
+
+        entity.Active = true;
+        entity.AddDomainEvent(new TollCatalogDomainEvent(TripEventTypes.TollStationChanged, entity.TollStationId, entity.Code));
+        AddAuditEvent("ReactivateTollStation", entity.TollStationId);
         await context.SaveChangesAsync(cancellationToken);
     }
 
@@ -314,6 +366,7 @@ public sealed class TollCatalogWriter(IApplicationDbContext context, ITollCatalo
         if (existing is not null)
         {
             existing.Name = row.StationName!;
+            existing.Active = true;
             existing.Point = TripGeometryFactory.Point(row.Latitude!.Value, row.Longitude!.Value);
             existing.Country = row.Country ?? existing.Country;
             existing.Region = row.Region ?? existing.Region;

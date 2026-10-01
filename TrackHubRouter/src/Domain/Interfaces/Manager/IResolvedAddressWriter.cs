@@ -17,7 +17,7 @@ namespace TrackHub.Router.Domain.Interfaces.Manager;
 
 public interface IResolvedAddressWriter
 {
-    Task<bool> PersistResolvedAddressAsync(Guid? transporterPositionHistoryId, Guid? transporterId, AddressVm address, CancellationToken cancellationToken);
+    Task<bool> PersistResolvedAddressAsync(Guid? transporterPositionHistoryId, Guid? transporterId, double latitude, double longitude, AddressVm address, CancellationToken cancellationToken);
 }
 
 // Same write with the Router's own service identity (never the user token), mirroring

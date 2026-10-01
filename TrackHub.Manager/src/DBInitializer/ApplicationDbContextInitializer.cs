@@ -30,12 +30,18 @@ internal class ApplicationDbContextInitializer(ILogger<ApplicationDbContextIniti
     // The canonical governed catalog is the aggregate of every IReportCatalogContribution in
     // this assembly (one file per module, discovered here; core rows live in
     // CoreReportCatalogContribution).
-    private static readonly (string Code, string Description, string Category, string? RequiredFeatureKey, bool ManagerOnly, bool SupportsPdf, int SortOrder, IReadOnlyList<ReportFilterDefinition> Filters)[] ReportCatalog =
+    private static readonly IReportCatalogContribution[] ReportContributions =
         [.. typeof(ApplicationDbContextInitializer).Assembly.GetTypes()
             .Where(t => t is { IsAbstract: false, IsInterface: false } && typeof(IReportCatalogContribution).IsAssignableFrom(t))
             .OrderBy(t => t.FullName, StringComparer.Ordinal)
-            .Select(t => (IReportCatalogContribution)Activator.CreateInstance(t)!)
-            .SelectMany(c => c.Reports)];
+            .Select(t => (IReportCatalogContribution)Activator.CreateInstance(t)!)];
+
+    private static readonly (string Code, string Description, string Category, string? RequiredFeatureKey, bool ManagerOnly, bool SupportsPdf, int SortOrder, IReadOnlyList<ReportFilterDefinition> Filters)[] ReportCatalog =
+        [.. ReportContributions.SelectMany(c => c.Reports)];
+
+    private static readonly Dictionary<string, string> ReportGrants = ReportContributions
+        .SelectMany(c => c.RequiredGrants)
+        .ToDictionary(g => g.Key, g => string.Join(',', g.Value), StringComparer.Ordinal);
 
     // camelCase + omitted nulls: the portal parses this column as-is.
     private static readonly JsonSerializerOptions FilterJsonOptions = new(JsonSerializerDefaults.Web)
@@ -87,10 +93,14 @@ internal class ApplicationDbContextInitializer(ILogger<ApplicationDbContextIniti
                 report.SupportsPdf = supportsPdf;
                 report.SortOrder = sortOrder;
                 report.Filters = filtersJson;
+                report.RequiredGrants = ReportGrants.GetValueOrDefault(code);
             }
             else
             {
-                context.Reports.Add(new Report(code, description, reportType, true, category, requiredFeatureKey, managerOnly, supportsPdf, sortOrder, filtersJson));
+                context.Reports.Add(new Report(code, description, reportType, true, category, requiredFeatureKey, managerOnly, supportsPdf, sortOrder, filtersJson)
+                {
+                    RequiredGrants = ReportGrants.GetValueOrDefault(code)
+                });
             }
         }
         await context.SaveChangesAsync();

@@ -1,11 +1,12 @@
 using Common.Application.Exceptions;
 using Common.Application.Interfaces;
+using Common.Infrastructure;
 using Common.Domain.Enums;
 using TrackHub.Manager.Infrastructure.Interfaces;
 
 namespace TrackHub.Manager.Infrastructure.ManagerDB.Writers;
 
-public sealed class DeviceWriter(IApplicationDbContext context, ICurrentPrincipal principal)
+public sealed class DeviceWriter(IApplicationDbContext context, ICurrentPrincipal principal, IOperatorCatalogGate catalogGate)
     : AccountScopedDataAccess(context, principal), IDeviceWriter
 {
     /// <summary>
@@ -17,7 +18,11 @@ public sealed class DeviceWriter(IApplicationDbContext context, ICurrentPrincipa
     /// </summary>
     // One save for the whole catalog: upserts, revivals, and retirements of devices the provider no
     // longer lists (their active assignments end here, so the transporter keeps its id and history).
-    public async Task<DeviceReconciliationVm> ReconcileSynchronizedDevicesAsync(
+    public Task<DeviceReconciliationVm> ReconcileSynchronizedDevicesAsync(
+        Guid operatorId, IReadOnlyCollection<DeviceDto> devices, bool resetDeviceCatalog, CancellationToken cancellationToken)
+        => catalogGate.RunAsync(operatorId, () => ReconcileAsync(operatorId, devices, resetDeviceCatalog, cancellationToken), cancellationToken);
+
+    private async Task<DeviceReconciliationVm> ReconcileAsync(
         Guid operatorId, IReadOnlyCollection<DeviceDto> devices, bool resetDeviceCatalog, CancellationToken cancellationToken)
     {
         var accountId = await Context.Operators
@@ -97,7 +102,7 @@ public sealed class DeviceWriter(IApplicationDbContext context, ICurrentPrincipa
         }
 
         AddAuditEvent(accountId, "SynchronizedDevice.Synced", "SynchronizedDevice", operatorId.ToString(), null,
-            $"{{\"devices\":{devices.Count},\"added\":{added.Count},\"retired\":{retired.Count},\"reset\":{resetDeviceCatalog.ToString().ToLowerInvariant()}}}");
+            AuditJson.Of(new { devices = devices.Count, added = added.Count, retired = retired.Count, reset = resetDeviceCatalog }));
 
         await Context.SaveChangesAsync(cancellationToken);
 
@@ -163,6 +168,7 @@ public sealed class DeviceWriter(IApplicationDbContext context, ICurrentPrincipa
             device.IgnoredAt);
 
     private const int MaxIdentifierAllocationRetries = 3;
+    private const string IdentifierIndex = "IX_devices_accountid_operatorid_identifier";
 
     private async Task<int> NextIdentifierAsync(Guid accountId, Guid operatorId, CancellationToken cancellationToken)
         => (await Context.Devices
@@ -174,14 +180,9 @@ public sealed class DeviceWriter(IApplicationDbContext context, ICurrentPrincipa
     public async Task<DeviceVm> CreateManualDeviceAsync(DeviceDto deviceDto, CancellationToken cancellationToken)
     {
         var accountId = RequireAccountWriteAccess(deviceDto.AccountId);
-        var operatorAccountId = await Context.Operators
-            .Where(o => o.OperatorId == deviceDto.OperatorId)
-            .Select(o => (Guid?)o.AccountId)
-            .FirstOrDefaultAsync(cancellationToken)
-            ?? throw new NotFoundException(nameof(Entities.Operator), deviceDto.OperatorId.ToString());
-        if (operatorAccountId != accountId)
+        if (!await Context.Operators.AnyAsync(o => o.OperatorId == deviceDto.OperatorId && o.AccountId == accountId, cancellationToken))
         {
-            throw new ForbiddenAccessException();
+            throw new NotFoundException(nameof(Entities.Operator), deviceDto.OperatorId.ToString());
         }
 
         var allocated = deviceDto.Identifier <= 0;
@@ -239,12 +240,12 @@ public sealed class DeviceWriter(IApplicationDbContext context, ICurrentPrincipa
                 await Context.SaveChangesAsync(cancellationToken);
                 break;
             }
-            catch (DbUpdateException) when (allocated && attempt < MaxIdentifierAllocationRetries)
+            catch (DbUpdateException exception) when (allocated && attempt < MaxIdentifierAllocationRetries && UniqueViolation.Matches(exception, IdentifierIndex))
             {
                 identifier = await NextIdentifierAsync(accountId, deviceDto.OperatorId, cancellationToken);
                 device.Identifier = identifier;
             }
-            catch (DbUpdateException)
+            catch (DbUpdateException exception) when (UniqueViolation.Matches(exception, IdentifierIndex))
             {
                 Context.Devices.Entry(device).State = EntityState.Detached;
                 throw new ConflictException(
@@ -278,7 +279,7 @@ public sealed class DeviceWriter(IApplicationDbContext context, ICurrentPrincipa
         var device = await Context.Devices.FindAsync([deviceId], cancellationToken)
             ?? throw new NotFoundException(nameof(Entities.Device), deviceId.ToString());
 
-        RequireAccountWriteAccess(device.AccountId);
+        RequireRowAccess(device.AccountId, nameof(Entities.Device), deviceId.ToString(), forWrite: true);
 
         Context.Devices.Attach(device);
         device.DetectedStatus = (int)status;
@@ -291,7 +292,7 @@ public sealed class DeviceWriter(IApplicationDbContext context, ICurrentPrincipa
             device.IgnoredAt = null;
         }
         AddAuditEvent(device.AccountId, "SynchronizedDevice.StatusChanged",
-            "SynchronizedDevice", deviceId.ToString(), null, $"{{\"status\":\"{status}\"}}");
+            "SynchronizedDevice", deviceId.ToString(), null, AuditJson.Of(new { status = status.ToString() }));
         await Context.SaveChangesAsync(cancellationToken);
     }
 
@@ -300,7 +301,7 @@ public sealed class DeviceWriter(IApplicationDbContext context, ICurrentPrincipa
         var device = await Context.Devices.FindAsync([deviceId], cancellationToken)
             ?? throw new NotFoundException(nameof(Entities.Device), deviceId.ToString());
 
-        RequireAccountWriteAccess(device.AccountId);
+        RequireRowAccess(device.AccountId, nameof(Entities.Device), deviceId.ToString(), forWrite: true);
         Context.Devices.Remove(device);
         AddAuditEvent(device.AccountId, "SynchronizedDevice.Deleted",
             "SynchronizedDevice", deviceId.ToString(), null, null);

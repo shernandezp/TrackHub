@@ -36,7 +36,7 @@ public class GetGeofencesByAccountQueryHandlerTests
             .ReturnsAsync(page);
 
         var handler = new GetGeofencesByAccountQueryHandler(_readerMock.Object, _userReaderMock.Object, _userMock.Object, _featureReaderMock.Object);
-        var query = new GetGeofencesByAccountQuery(true, null, null, null, null, null);
+        var query = new GetGeofencesByAccountQuery(null, null, null, null, null);
 
         // Act
         var result = await handler.Handle(query, CancellationToken.None);
@@ -64,7 +64,7 @@ public class GetGeofencesByAccountQueryHandlerTests
 
         var handler = new GetGeofencesByAccountQueryHandler(_readerMock.Object, _userReaderMock.Object, _userMock.Object, _featureReaderMock.Object);
         // Skip below 0 clamps to 0; Take above 500 clamps to 500.
-        var query = new GetGeofencesByAccountQuery(true, -5, 1000, (short)2, true, "warehouse");
+        var query = new GetGeofencesByAccountQuery(-5, 1000, (short)2, true, "warehouse");
 
         // Act
         await handler.Handle(query, CancellationToken.None);

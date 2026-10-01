@@ -15,7 +15,6 @@
 
 using Common.Application.Interfaces;
 using Common.Application.Paging;
-using TrackHub.Manager.Application.Lookups;
 
 namespace TrackHub.Manager.Application.Device.Queries.GetByAccount;
 

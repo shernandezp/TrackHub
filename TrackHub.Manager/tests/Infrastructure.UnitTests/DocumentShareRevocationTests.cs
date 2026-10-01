@@ -31,6 +31,13 @@ public class DocumentShareRevocationTests
     private static ApplicationDbContext NewContext(string name)
         => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking).Options);
 
+    // The account's own document type the fixtures upload under; uploads outside the account's types are refused.
+    private static void SeedDocumentType(ApplicationDbContext context, Guid accountId)
+    {
+        context.DocumentTypes.Add(new TrackHub.Manager.Infrastructure.Entities.DocumentType(accountId, "SOAT", "SOAT", true, true, 365, true, DateTimeOffset.UtcNow));
+        context.SaveChanges();
+    }
+
     private static DocumentWriter Writer(ApplicationDbContext context, Guid accountId)
     {
         var principal = new Mock<ICurrentPrincipal>();
@@ -61,6 +68,7 @@ public class DocumentShareRevocationTests
     {
         await using var context = NewContext($"{nameof(DeleteOrVoid_RevokesTheDocumentsOpenLinks_AndOnlyThose)}-{action}");
         var accountId = Guid.NewGuid();
+        SeedDocumentType(context, accountId);
         var (documentId, open, other) = await SeedAsync(context, accountId);
         var writer = Writer(context, accountId);
 

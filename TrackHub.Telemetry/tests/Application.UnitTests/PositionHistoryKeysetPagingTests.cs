@@ -120,7 +120,7 @@ public class PositionHistoryKeysetPagingTests
     }
 
     [Test]
-    public async Task AGarbledCursorReadsAsTheStartOfTheFeed()
+    public async Task AGarbledCursorIsRefused()
     {
         var accountId = Guid.NewGuid();
         await using var context = TestDb.NewContext();
@@ -128,9 +128,10 @@ public class PositionHistoryKeysetPagingTests
         context.SaveChanges();
 
         var reader = new TransporterPositionHistoryReader(context, TestDb.PrincipalFor(accountId));
-        var page = await reader.GetAsync(ForAccount(accountId), 50, null, null, "not-a-cursor", null, CancellationToken.None);
+        var ex = Assert.ThrowsAsync<Common.Application.Exceptions.ValidationException>(
+            () => reader.GetAsync(ForAccount(accountId), 50, null, null, "not-a-cursor", null, CancellationToken.None));
 
-        Assert.That(page.Items, Has.Count.EqualTo(1));
+        Assert.That(ex!.Code, Is.EqualTo(FeedCursor.InvalidCursorCode));
     }
 
     [Test]

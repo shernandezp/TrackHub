@@ -63,10 +63,9 @@ public class UpdatePasswordTests
     }
 
     [Test]
-    public async Task Handle_ManagerResettingSubject_PropagatesActivationToManagerReplica()
+    public async Task Handle_ManagerResettingSubject_LeavesActivationAlone()
     {
-        // A manager (holds Users/Edit) resetting a subject's password also activates them;
-        // propagate the activation so the vw_users views stop hiding the user.
+        // Activation is the user edit's decision; a reset must not revive a deactivated user.
         var managerId = Guid.NewGuid();
         var subjectId = Guid.NewGuid();
         _userMock.Setup(x => x.Id).Returns(managerId.ToString());
@@ -78,8 +77,8 @@ public class UpdatePasswordTests
 
         _writerMock.Verify(x => x.UpdatePasswordAsync(It.IsAny<UserPasswordDto>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Once);
         _publisherMock.Verify(x => x.Publish(
-            It.Is<UserUpdated.Notification>(n => n.Id == subjectId && n.User.UserId == subjectId && n.User.Active),
-            It.IsAny<CancellationToken>()), Times.Once);
+            It.Is<UserUpdated.Notification>(n => true),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Test]

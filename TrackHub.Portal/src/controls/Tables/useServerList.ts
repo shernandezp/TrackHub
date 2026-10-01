@@ -15,7 +15,6 @@
 */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { ListParams } from 'api/core/paging';
 import { SEARCH_DEBOUNCE_MS } from 'utils/useDebouncedValue';
 
 
@@ -28,7 +27,7 @@ export interface UseServerListResult {
   searchDraft: string;
   setSearchDraft: (value: string) => void;
   /** `{ skip, take, search }` for the paged query — stable between keystrokes. */
-  params: Required<ListParams>;
+  params: { skip: number; take: number; search: string | null };
 }
 
 /**

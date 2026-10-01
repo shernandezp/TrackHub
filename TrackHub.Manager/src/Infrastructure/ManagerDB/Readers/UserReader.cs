@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Infrastructure;
 using Common.Application.Interfaces;
 using TrackHub.Manager.Infrastructure.Interfaces;
 
@@ -46,7 +47,7 @@ public sealed class UserReader(IApplicationDbContext context, ICurrentPrincipal 
             .FirstOrDefaultAsync(cancellationToken);
         ReaderResults.EnsureFound(user, nameof(Entities.User), id.ToString());
 
-        RequireAccountAccess(user.AccountId);
+        RequireRowAccess(user.AccountId, nameof(Entities.User), id.ToString(), forWrite: false);
         return user;
     }
 
@@ -70,12 +71,11 @@ public sealed class UserReader(IApplicationDbContext context, ICurrentPrincipal 
             .Select(g => (Guid?)g.AccountId)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (!groupAccountId.HasValue)
+        // A foreign group reads like a missing one, so the id cannot be probed.
+        if (!groupAccountId.HasValue || !HasAccountAccess(groupAccountId.Value, forWrite: false))
         {
             return new UsersPageVm([], 0);
         }
-
-        RequireAccountAccess(groupAccountId.Value);
 
         var query = ApplySearch(
             Context.Groups

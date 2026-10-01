@@ -79,8 +79,8 @@ function looksLikeHtml(contentType: string | null, body: string): boolean {
 }
 
 /** Fetch a static file; null when missing (404 or the SPA index.html fallback). */
-async function fetchStatic(url: string): Promise<string | null> {
-  const response = await fetch(url);
+async function fetchStatic(url: string, signal?: AbortSignal): Promise<string | null> {
+  const response = await fetch(url, { signal });
   if (!response.ok) return null;
   const body = await response.text();
   return looksLikeHtml(response.headers.get('content-type'), body) ? null : body;
@@ -92,8 +92,8 @@ export function stripFrontmatter(markdown: string): string {
   return match ? markdown.slice(match[0].length) : markdown;
 }
 
-export async function fetchHelpManifest(): Promise<HelpManifest> {
-  const body = await fetchStatic('/help/manifest.json');
+export async function fetchHelpManifest(signal?: AbortSignal): Promise<HelpManifest> {
+  const body = await fetchStatic('/help/manifest.json', signal);
   if (body === null) {
     throw new Error('Help manifest is not available');
   }
@@ -102,11 +102,12 @@ export async function fetchHelpManifest(): Promise<HelpManifest> {
 
 export async function fetchHelpTopic(
   lang: string,
-  topic: Pick<HelpTopicMeta, 'id' | 'hash'>
+  topic: Pick<HelpTopicMeta, 'id' | 'hash'>,
+  signal?: AbortSignal
 ): Promise<HelpTopicContent> {
   const candidates = lang === 'en' ? ['en'] : [lang, 'en'];
   for (const candidate of candidates) {
-    const body = await fetchStatic(`/help/${candidate}/${topic.id}.md?v=${topic.hash}`);
+    const body = await fetchStatic(`/help/${candidate}/${topic.id}.md?v=${topic.hash}`, signal);
     if (body !== null) {
       return { markdown: stripFrontmatter(body), resolvedLang: candidate };
     }
@@ -117,7 +118,7 @@ export async function fetchHelpTopic(
 export function useHelpManifest(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: helpKeys.manifest(),
-    queryFn: fetchHelpManifest,
+    queryFn: ({ signal }) => fetchHelpManifest(signal),
     staleTime: Infinity,
     enabled: options.enabled ?? true,
   });
@@ -126,7 +127,7 @@ export function useHelpManifest(options: { enabled?: boolean } = {}) {
 export function useHelpTopic(lang: string, topic: HelpTopicMeta | undefined) {
   return useQuery({
     queryKey: helpKeys.topic(lang, topic?.id ?? ''),
-    queryFn: () => fetchHelpTopic(lang, topic as HelpTopicMeta),
+    queryFn: ({ signal }) => fetchHelpTopic(lang, topic as HelpTopicMeta, signal),
     staleTime: Infinity,
     enabled: !!topic,
   });

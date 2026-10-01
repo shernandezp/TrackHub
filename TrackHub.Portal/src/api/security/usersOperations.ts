@@ -86,20 +86,6 @@ export const GetUsersByAccountDocument = graphql(`
   }
 `);
 
-/**
- * Id + username only, unpaged by design: the allocator dialogs subtract the
- * assigned list from this one, and a truncated operand makes already-assigned
- * users reappear as available. The server raises past its own ceiling.
- */
-export const GetUserLookupByAccountDocument = graphql(`
-  query GetUserLookupByAccount {
-    userLookupByAccount {
-      userId
-      username
-    }
-  }
-`);
-
 export const CreateUserDocument = graphql(`
   mutation CreateUser($user: CreateUserDtoInput!) {
     createUser(command: { user: $user }) {

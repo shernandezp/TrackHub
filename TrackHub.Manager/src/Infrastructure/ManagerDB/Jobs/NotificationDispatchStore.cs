@@ -91,7 +91,7 @@ public sealed class NotificationDispatchStore(IApplicationDbContext context) : I
             .Where(r => r.NotificationRuleId == notificationRuleId)
             .Select(r => (NotificationRuleVm?)new NotificationRuleVm(
                 r.NotificationRuleId, r.AccountId, r.RuleKey, r.RuleType, r.Enabled, r.TriggerEvent,
-                r.RecipientSelector, r.ChannelsJson, r.ThrottlingJson, r.ConfigurationJson, r.LastModified))
+                r.RecipientSelector, r.ChannelsJson, r.ThrottlingJson, r.ConfigurationJson, r.LastModified, r.Version))
             .FirstOrDefaultAsync(cancellationToken);
 
     public async Task<AlertEventVm?> GetAlertEventAsync(Guid alertEventId, CancellationToken cancellationToken)
@@ -99,7 +99,7 @@ public sealed class NotificationDispatchStore(IApplicationDbContext context) : I
             .Where(e => e.AlertEventId == alertEventId)
             .Select(e => (AlertEventVm?)new AlertEventVm(
                 e.AlertEventId, e.AccountId, e.EventType, e.Severity, e.SourceModule, e.ResourceType,
-                e.ResourceId, e.Status, e.FirstSeenAt, e.LastSeenAt, e.PayloadJson, e.DeduplicationKey, e.LastModified))
+                e.ResourceId, e.Status, e.FirstSeenAt, e.LastSeenAt, e.PayloadJson, e.DeduplicationKey, e.LastModified, null))
             .FirstOrDefaultAsync(cancellationToken);
 
     public async Task ApplyOutcomeAsync(DeliveryOutcome outcome, CancellationToken cancellationToken)

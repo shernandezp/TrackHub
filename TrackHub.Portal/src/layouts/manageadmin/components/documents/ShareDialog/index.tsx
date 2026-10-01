@@ -24,7 +24,6 @@ import ArgonBox from "components/ArgonBox";
 import ArgonTypography from "components/ArgonTypography";
 import { createPublicLinkGrant } from "api/manager/publicLinks";
 import type { PublicLinkGrantDtoInput } from "api/manager/publicLinks";
-import { getCurrentPrincipal } from "api/manager/principals";
 import { notifyApiError } from "api/core/errors";
 import { publicDownloadUrl } from "api/manager/documents";
 import type { DocumentVm } from "api/manager/documents";
@@ -52,8 +51,6 @@ function ShareDialog({ open, setOpen, accountId = null, document = null }: Share
   const handleSave = async () => {
     if (share) { reset(); setOpen(false); return; }
     if (!validate(['expiresAt']) || !document?.documentId || !accountId) return;
-    const principal = await getCurrentPrincipal().catch(() => null);
-    const createdBy = principal?.userId || principal?.driverId || principal?.clientId || principal?.subjectId || '';
     try {
       // expiresAt is gated by validate(['expiresAt']); assert the mutation input at the boundary.
       const grant = await createPublicLinkGrant({
@@ -62,9 +59,7 @@ function ShareDialog({ open, setOpen, accountId = null, document = null }: Share
         resourceId: document.documentId,
         scopes: 'document.read',
         purpose: values.purpose || 'Document share',
-        subjectTokenIdHash: null,
         expiresAt: values.expiresAt ? new Date(values.expiresAt).toISOString() : null,
-        createdByPrincipalId: createdBy,
       } as PublicLinkGrantDtoInput);
       if (grant?.token) {
         setShare({

@@ -113,7 +113,7 @@ public class SupportGrantAccessTests
 
         var reader = new DriverReader(context as IApplicationDbContext, SupportPrincipal(supportUserId));
 
-        var drivers = await reader.GetDriversByAccountAsync(targetAccountId, 0, 50, CancellationToken.None);
+        var drivers = (await reader.GetDriversByAccountAsync(targetAccountId, null, 0, 50, CancellationToken.None)).Items;
 
         Assert.That(drivers, Has.Count.EqualTo(1), "a read-only grant must still permit cross-account reads");
     }

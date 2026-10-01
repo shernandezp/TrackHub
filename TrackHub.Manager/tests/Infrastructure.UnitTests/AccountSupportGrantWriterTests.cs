@@ -68,7 +68,7 @@ public class AccountSupportGrantWriterTests
         var writer = new AccountSupportGrantWriter(context as IApplicationDbContext, AdminPrincipal(accountId, creatorId));
 
         Assert.ThrowsAsync<ForbiddenAccessException>(async () =>
-            await writer.ApproveAccountSupportGrantAsync(grant.AccountSupportGrantId, "approver", CancellationToken.None));
+            await writer.ApproveAccountSupportGrantAsync(grant.AccountSupportGrantId, CancellationToken.None));
         Assert.That(context.AccountSupportGrants.Single().ApprovedAt, Is.Null, "self-approval must not approve the grant");
     }
 
@@ -85,8 +85,39 @@ public class AccountSupportGrantWriterTests
 
         var writer = new AccountSupportGrantWriter(context as IApplicationDbContext, AdminPrincipal(accountId, approverId));
 
-        await writer.ApproveAccountSupportGrantAsync(grant.AccountSupportGrantId, "approver", CancellationToken.None);
+        await writer.ApproveAccountSupportGrantAsync(grant.AccountSupportGrantId, CancellationToken.None);
 
         Assert.That(context.AccountSupportGrants.Single().ApprovedAt, Is.Not.Null);
+    }
+
+    [Test]
+    public async Task Approve_RecordsTheApproverFromThePrincipal_EvenOutsideTheGrantAccount()
+    {
+        var customerAccountId = Guid.NewGuid();
+        var approverId = Guid.NewGuid();
+        await using var context = NewContext(nameof(Approve_RecordsTheApproverFromThePrincipal_EvenOutsideTheGrantAccount));
+        var grant = PendingGrant(customerAccountId, Guid.NewGuid().ToString());
+        await context.AccountSupportGrants.AddAsync(grant);
+        await context.SaveChangesAsync(CancellationToken.None);
+
+        var writer = new AccountSupportGrantWriter(context as IApplicationDbContext, AdminPrincipal(Guid.NewGuid(), approverId));
+        await writer.ApproveAccountSupportGrantAsync(grant.AccountSupportGrantId, CancellationToken.None);
+
+        Assert.That(context.AccountSupportGrants.Single().ApprovedBy, Is.EqualTo(approverId.ToString()));
+    }
+
+    [Test]
+    public async Task Approve_ByTheSupportUser_ThrowsForbidden()
+    {
+        var accountId = Guid.NewGuid();
+        await using var context = NewContext(nameof(Approve_ByTheSupportUser_ThrowsForbidden));
+        var grant = PendingGrant(accountId, Guid.NewGuid().ToString());
+        await context.AccountSupportGrants.AddAsync(grant);
+        await context.SaveChangesAsync(CancellationToken.None);
+
+        var writer = new AccountSupportGrantWriter(context as IApplicationDbContext, AdminPrincipal(Guid.NewGuid(), grant.SupportUserId));
+
+        Assert.ThrowsAsync<ForbiddenAccessException>(async () =>
+            await writer.ApproveAccountSupportGrantAsync(grant.AccountSupportGrantId, CancellationToken.None));
     }
 }

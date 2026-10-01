@@ -2,8 +2,10 @@ using Common.Infrastructure;
 
 namespace TrackHub.Manager.Infrastructure.Entities;
 
-public sealed class AccountFeature(Guid accountId, string featureKey, bool enabled, string tier, string source, DateTimeOffset? effectiveFrom, DateTimeOffset? effectiveTo, string? configurationJson) : BaseAuditableEntity
+public sealed class AccountFeature(Guid accountId, string featureKey, bool enabled, string tier, string source, DateTimeOffset? effectiveFrom, DateTimeOffset? effectiveTo, string? configurationJson) : BaseAuditableEntity, IEditVersioned
 {
+    public uint Version { get; set; }
+
     public Guid AccountFeatureId { get; private set; } = Guid.NewGuid();
     public Guid AccountId { get; set; } = accountId;
     public string FeatureKey { get; set; } = featureKey;

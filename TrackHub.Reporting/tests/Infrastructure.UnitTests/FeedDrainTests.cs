@@ -82,4 +82,40 @@ public class FeedDrainTests
 
         Assert.That(rows, Has.Count.EqualTo(FeedDrain.MaxRows));
     }
+
+    [Test]
+    public async Task Preview_ReadsOnePageOfThePreviewableFeed_AndKeepsTheProducerTotal()
+    {
+        var (rows, requests, window) = await Task.Run(async () =>
+        {
+            var window = FeedDrain.BeginPreview(100);
+            var requests = new List<(int Skip, int Take)>();
+            var rows = await FeedDrain.DrainAsync<int>((skip, take) =>
+            {
+                requests.Add((skip, take));
+                return Task.FromResult<(IReadOnlyCollection<int>?, int)>((Page(skip, take), 5000));
+            }, previewable: true);
+            return (rows, requests, window);
+        });
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(rows, Has.Count.EqualTo(100));
+            Assert.That(requests, Is.EqualTo(new[] { (0, 100) }));
+            Assert.That(window.TotalCount, Is.EqualTo(5000));
+        });
+    }
+
+    [Test]
+    public async Task Preview_LeavesLookupDrainsWhole()
+    {
+        var rows = await Task.Run(async () =>
+        {
+            FeedDrain.BeginPreview(100);
+            return await FeedDrain.DrainAsync<int>((skip, take) =>
+                Task.FromResult<(IReadOnlyCollection<int>?, int)>((Page(skip, Math.Min(take, 700 - skip)), 700)));
+        });
+
+        Assert.That(rows, Has.Count.EqualTo(700));
+    }
 }

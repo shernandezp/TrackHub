@@ -31,6 +31,8 @@ internal static class DriverRules
 }
 
 [Authorize(Resource = Resources.Drivers, Action = Actions.Write)]
+// Enforcement: the writer or reader checks every referenced id against the request's account.
+[AccountScopeEnforcedInHandler]
 public readonly record struct CreateDriverCommand(DriverDto Driver) : IRequest<DriverVm>;
 public class CreateDriverCommandHandler(IDriverWriter writer) : IRequestHandler<CreateDriverCommand, DriverVm>
 {
@@ -38,17 +40,17 @@ public class CreateDriverCommandHandler(IDriverWriter writer) : IRequestHandler<
 }
 public class CreateDriverCommandValidator : AbstractValidator<CreateDriverCommand>
 {
-    public CreateDriverCommandValidator(ICurrentPrincipal? principal = null, IAccountTimeZoneResolver? zones = null)
+    public CreateDriverCommandValidator(IAccountTimeZoneResolver? zones = null)
     {
         DriverRules.ApplyTo(this, x => x.Driver);
         // Create-only: onboarding a driver on an already-expired license is a data-entry error. Update
         // must stay permissive so an existing record can be corrected or left alone while it lapses.
         RuleFor(x => x.Driver.LicenseExpiresAt)
-            .MustAsync(async (expiresAt, cancellationToken) =>
+            .MustAsync(async (command, expiresAt, cancellationToken) =>
             {
-                // "Already past" is judged on the account's calendar, not the server's UTC day.
-                var calendar = principal?.AccountId is { } accountId && zones is not null
-                    ? await zones.ResolveAsync(accountId, cancellationToken)
+                // "Already past" is judged on the driver account's calendar, not the server's UTC day.
+                var calendar = zones is not null
+                    ? await zones.ResolveAsync(command.Driver.AccountId, cancellationToken)
                     : AccountTimeZone.Utc;
                 return expiresAt!.Value >= calendar.Today();
             })
@@ -58,6 +60,8 @@ public class CreateDriverCommandValidator : AbstractValidator<CreateDriverComman
 }
 
 [Authorize(Resource = Resources.Drivers, Action = Actions.Edit)]
+// Enforcement: the writer or reader checks every referenced id against the request's account.
+[AccountScopeEnforcedInHandler]
 public readonly record struct UpdateDriverCommand(Guid DriverId, DriverDto Driver) : IRequest;
 public class UpdateDriverCommandHandler(IDriverReader reader, IDriverCredentialRevoker revoker, IDriverWriter writer) : IRequestHandler<UpdateDriverCommand>
 {

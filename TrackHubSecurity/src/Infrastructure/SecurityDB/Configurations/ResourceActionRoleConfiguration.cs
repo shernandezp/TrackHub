@@ -31,6 +31,8 @@ public class ResourceActionRoleConfiguration : IEntityTypeConfiguration<Resource
         builder.Property(x => x.ActionId).HasColumnName("actionid");
         builder.Property(x => x.RoleId).HasColumnName("roleid");
 
+        builder.HasIndex(x => new { x.ResourceId, x.ActionId, x.RoleId }).IsUnique().HasDatabaseName("ux_resource_action_role_grant");
+
         builder
             .HasOne(rar => rar.Resource)
             .WithMany()

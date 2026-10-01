@@ -11,8 +11,8 @@ public class GetPublicLinkGrantQueryHandler(IPublicLinkGrantReader reader) : IRe
 }
 
 [Authorize(Resource = Resources.PublicLinks, Action = Actions.Read)]
-public readonly record struct GetPublicLinkGrantsByAccountQuery(Guid AccountId, int Skip = 0, int Take = 50) : IRequest<IReadOnlyCollection<PublicLinkGrantVm>>;
-public class GetPublicLinkGrantsByAccountQueryHandler(IPublicLinkGrantReader reader) : IRequestHandler<GetPublicLinkGrantsByAccountQuery, IReadOnlyCollection<PublicLinkGrantVm>>
+public readonly record struct GetPublicLinkGrantsByAccountQuery(Guid AccountId, int Skip = 0, int Take = 50) : IRequest<PublicLinkGrantsPageVm>;
+public class GetPublicLinkGrantsByAccountQueryHandler(IPublicLinkGrantReader reader) : IRequestHandler<GetPublicLinkGrantsByAccountQuery, PublicLinkGrantsPageVm>
 {
-    public async Task<IReadOnlyCollection<PublicLinkGrantVm>> Handle(GetPublicLinkGrantsByAccountQuery request, CancellationToken cancellationToken) => await reader.GetPublicLinkGrantsByAccountAsync(request.AccountId, request.Skip, request.Take, cancellationToken);
+    public async Task<PublicLinkGrantsPageVm> Handle(GetPublicLinkGrantsByAccountQuery request, CancellationToken cancellationToken) => await reader.GetPublicLinkGrantsByAccountAsync(request.AccountId, request.Skip, request.Take, cancellationToken);
 }

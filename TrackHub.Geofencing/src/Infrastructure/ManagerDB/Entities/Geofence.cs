@@ -40,5 +40,7 @@ public class Geofence(Guid geofenceId, Polygon geom, Guid accountId, string name
     /// Dwell alert threshold in minutes; null = no dwell alert for this geofence.
     /// </summary>
     public int? DwellThresholdMinutes { get; set; }
+
+    public uint Version { get; set; }
 }
 

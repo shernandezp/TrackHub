@@ -8,7 +8,7 @@ public sealed class AlertSubscriptionReader(IApplicationDbContext context, ICurr
     private static int PageSize(int take) => Math.Clamp(take <= 0 ? 50 : take, 1, 500);
     private static int Offset(int skip) => Math.Max(0, skip);
 
-    public async Task<IReadOnlyCollection<AlertSubscriptionVm>> GetAlertSubscriptionsAsync(Guid accountId, Guid? principalId, int skip, int take, CancellationToken cancellationToken)
+    public async Task<AlertSubscriptionsPageVm> GetAlertSubscriptionsAsync(Guid accountId, Guid? principalId, int skip, int take, CancellationToken cancellationToken)
     {
         var scopedAccountId = RequireAccountAccess(accountId);
 
@@ -25,10 +25,12 @@ public sealed class AlertSubscriptionReader(IApplicationDbContext context, ICurr
             query = query.Where(x => x.PrincipalId == principalId.Value);
         }
 
-        return await query
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
             .OrderBy(x => x.PrincipalType).ThenBy(x => x.PrincipalId).ThenBy(x => x.AlertSubscriptionId)
             .Skip(Offset(skip)).Take(PageSize(take))
             .Select(x => new AlertSubscriptionVm(x.AlertSubscriptionId, x.AccountId, x.PrincipalType, x.PrincipalId, x.EventTypeFilter, x.Channel, x.Contact, x.Enabled, x.LastModified))
             .ToListAsync(cancellationToken);
+        return new AlertSubscriptionsPageVm(items, totalCount);
     }
 }

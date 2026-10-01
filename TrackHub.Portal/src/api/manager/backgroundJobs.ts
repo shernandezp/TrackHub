@@ -20,6 +20,7 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { Page } from 'api/core/paging';
 import type { BackgroundJobRunItemFragment as BackgroundJobRunItemType } from './generated/graphql';
 import { GetBackgroundJobRunsDocument } from './backgroundJobsOperations';
 
@@ -29,7 +30,7 @@ export async function getBackgroundJobRuns(
   accountId: string,
   skip = 0,
   take = 50
-): Promise<BackgroundJobRun[]> {
+): Promise<Page<BackgroundJobRun>> {
   const data = await executeGraphQL('manager', GetBackgroundJobRunsDocument, {
     accountId,
     skip,

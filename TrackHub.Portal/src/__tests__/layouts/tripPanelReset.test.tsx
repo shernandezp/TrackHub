@@ -32,10 +32,14 @@ import { TestWrapper } from '../components/testHelpers';
 import AssignmentPanel from 'layouts/tripmanager/components/AssignmentPanel';
 import type { TripDetail } from 'api/tripManagement/trips';
 import type { Driver } from 'api/manager/drivers';
-import type { Transporter } from 'api/manager/transporters';
+import type { TransporterLookup } from 'api/manager/transporters';
 
 vi.mock('api/manager/drivers', () => ({
   getDriverLookup: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock('api/manager/transporters', () => ({
+  getTransportersByUser: vi.fn().mockResolvedValue({ items: [], totalCount: 0 }),
 }));
 
 vi.mock('react-i18next', () => ({
@@ -62,11 +66,12 @@ const driver = (driverId: string, name: string): Driver => ({
   licenseExpiresAt: null,
   defaultTransporterId: null,
   lastModified: '2026-07-21T08:00:00Z',
+  version: 1,
 });
 
 const drivers: Driver[] = [driver(DRIVER_A, 'Driver A'), driver(DRIVER_B, 'Driver B')];
 
-const transporters: Transporter[] = [
+const transporters: TransporterLookup[] = [
   { transporterId: TRANSPORTER, name: 'Fleet', transporterType: 'TRUCK', transporterTypeId: 1 },
 ];
 

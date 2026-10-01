@@ -29,8 +29,14 @@ public partial class Query
     public async Task<TransportersPageVm> GetTransportersByAccount([Service] ISender sender, [AsParameters] GetTransportersByAccountQuery query, CancellationToken cancellationToken)
         => await sender.Send(query, cancellationToken);
 
+    public async Task<TransportersPageVm> GetRetiredTransporters([Service] ISender sender, [AsParameters] TrackHub.Manager.Application.Transporters.Queries.GetRetired.GetRetiredTransportersQuery query, CancellationToken cancellationToken)
+        => await sender.Send(query, cancellationToken);
+
     public async Task<TransportersPageVm> GetTransportersByGroup([Service] ISender sender, [AsParameters] GetTransporterByGroupQuery query, CancellationToken cancellationToken)
         => await sender.Send(query, cancellationToken);
+
+    public async Task<IReadOnlyCollection<Guid>> GetTransporterIdsByGroup([Service] ISender sender, long groupId, CancellationToken cancellationToken)
+        => await sender.Send(new GetTransporterIdsByGroupQuery(groupId), cancellationToken);
 
     public async Task<TransportersPageVm> GetTransportersByUser([Service] ISender sender, [AsParameters] GetTransporterByUserQuery query, CancellationToken cancellationToken)
         => await sender.Send(query, cancellationToken);

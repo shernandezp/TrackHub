@@ -76,4 +76,20 @@ internal sealed class CoreReportCatalogContribution : IReportCatalogContribution
         ("feature-enablement-matrix", "Feature enablement matrix across accounts", "Administration", null, true, true, 20, []),
         ("group-membership-export", "Group membership export", "Administration", null, true, false, 30, []),
     ];
+
+    public IReadOnlyDictionary<string, string[]> RequiredGrants { get; } = new Dictionary<string, string[]>
+    {
+        [Common.Domain.Constants.Reports.GpsSynchronizedDeviceInventory] = [Grant(Resources.SynchronizedDevices, Actions.Read)],
+        [Common.Domain.Constants.Reports.GpsRecentlyAddedDevices] = [Grant(Resources.SynchronizedDevices, Actions.Read)],
+        [Common.Domain.Constants.Reports.GpsUnassignedDevices] = [Grant(Resources.SynchronizedDevices, Actions.Read)],
+        [Common.Domain.Constants.Reports.GpsIgnoredDevices] = [Grant(Resources.SynchronizedDevices, Actions.Read)],
+        [Common.Domain.Constants.Reports.GpsAssignmentHistory] = [Grant(Resources.SynchronizedDevices, Actions.Read)],
+        [Common.Domain.Constants.Reports.GpsProviderSyncHistory] = [Grant(Resources.OperatorSyncRuns, Actions.Read)],
+        [Common.Domain.Constants.Reports.GpsSyncStatistics] = [Grant(Resources.OperatorSyncRuns, Actions.Read)],
+        ["documents-share-activity"] = [Grant(Resources.PublicLinks, Actions.Read)],
+        ["accounts-by-status"] = [Grant(Resources.Administrative, Actions.Read)],
+        ["feature-enablement-matrix"] = [Grant(Resources.AccountFeaturesMaster, Actions.Read)],
+    };
+
+    private static string Grant(string resource, string action) => ReportGrants.Format(resource, action);
 }

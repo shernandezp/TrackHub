@@ -41,7 +41,7 @@ public class PdfReportBuilderTests
             GeneratedAt = DateTimeOffset.UnixEpoch,
             Columns = cols,
             Rows = [.. Enumerable.Range(0, rows).Select(BuildRow)],
-            AppliedFilters = [new KeyValuePair<string, string>("FilterFrom", "2026-01-01 00:00")],
+            AppliedFilters = [new KeyValuePair<string, object>("FilterFrom", DateTimeOffset.UnixEpoch)],
             AccountName = logo is null ? null : "Acme Corp",
             LogoImage = logo
         };

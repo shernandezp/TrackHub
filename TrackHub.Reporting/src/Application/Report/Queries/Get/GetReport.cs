@@ -17,6 +17,8 @@ using System.Text.Json;
 using Common.Application.Attributes;
 using Common.Application.Interfaces;
 using Common.Domain.Constants;
+using Common.Domain.Time;
+using TrackHub.Reporting.Application.Report.Factory;
 using TrackHub.Reporting.Domain.Exceptions;
 using TrackHub.Reporting.Domain.Helpers;
 using TrackHub.Reporting.Domain.Interfaces;
@@ -46,6 +48,8 @@ public class GetReportQueryHandler(
     IReportAuditWriter reportAuditWriter,
     IReportCatalogReader catalogReader,
     IAccountFeatureReader featureReader,
+    IIdentityService identityService,
+    IAccountTimeZoneResolver zones,
     IReportBrandingReader brandingReader,
     IExcelHelper excelHelper,
     IPdfReportBuilder pdfReportBuilder,
@@ -72,14 +76,15 @@ public class GetReportQueryHandler(
         }
 
         var metadata = await ReportAccessGuard.EnsureAccessAsync(
-            catalogReader, featureReader, user, accountId, request.ReportCode, cancellationToken);
+            catalogReader, featureReader, identityService, user, accountId, request.ReportCode, cancellationToken);
 
         if (format == GetReportQuery.FormatPdf && !metadata.SupportsPdf)
         {
             throw UnsupportedReportFormatException.ExcelOnly(format);
         }
 
-        var dataset = await factory.GetReport(request.ReportCode).GetDatasetAsync(request.Filters, cancellationToken);
+        var dataset = (await factory.GetReport(request.ReportCode).GetDatasetAsync(request.Filters, cancellationToken))
+            .InZone(await ReportCalendar.ForCallerAsync(user, zones, cancellationToken));
         var culture = ReportCulture.Resolve(request.Filters.Language);
 
         byte[] content;

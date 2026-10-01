@@ -27,9 +27,11 @@ import FormDialog from 'controls/Dialogs/FormDialog';
 import CustomTextField from 'controls/Dialogs/CustomTextField';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
 import SearchSelect from 'edition/SearchSelect';
+import type { SearchOption } from 'edition/SearchSelect';
+import { usePointOfInterestOptions, useUserTransporterOptions } from 'edition/pickerOptions';
 import { useDriverSearchOptions } from 'queries/drivers';
 import type { FormChangeHandler } from 'controls/Dialogs/useForm';
-import type { Transporter } from 'api/manager/transporters';
+import type { TransporterLookup } from 'api/manager/transporters';
 import type { DriverLookup } from 'api/manager/drivers';
 import type { PointOfInterestLookup } from 'api/manager/pointsOfInterest';
 import type { Geofence } from 'api/geofencing/geofencing';
@@ -81,7 +83,7 @@ interface TripDialogProps {
   values: TripFormValues;
   handleChange: FormChangeHandler;
   errors: Record<string, string>;
-  transporters: Transporter[];
+  transporters: TransporterLookup[];
   drivers: DriverLookup[];
   vehicleClasses: TollVehicleClass[];
   pois: PointOfInterestLookup[];
@@ -163,10 +165,9 @@ function TripDialog({
     Number.isFinite(originLongitude) &&
     (originLatitude !== 0 || originLongitude !== 0);
 
-  const transporterOptions = transporters.map((transporter) => ({
-    value: transporter.transporterId,
-    label: transporter.name,
-  }));
+  const transporterLabel =
+    transporters.find((transporter) => transporter.transporterId === values.transporterId)?.name ?? null;
+  const originPoiLabel = pois.find((poi) => poi.pointOfInterestId === values.originPoiId)?.name ?? null;
   const driverLabel = drivers.find((driver) => driver.driverId === values.driverId)?.name ?? null;
   // Only active classes are offerable; an inactive class stays on historical
   // trips but must not be picked for a new one.
@@ -176,9 +177,6 @@ function TripDialog({
       value: vehicleClass.code,
       label: `${vehicleClass.code} — ${vehicleClass.name}`,
     }));
-  const poiOptions = pois
-    .filter((poi) => poi.active !== false)
-    .map((poi) => ({ value: poi.pointOfInterestId, label: poi.name }));
   const geofenceOptions = geofences
     .filter((geofence) => geofence.active)
     .map((geofence) => ({ value: geofence.geofenceId, label: geofence.name }));
@@ -221,8 +219,8 @@ function TripDialog({
     handleChange({ target: { name: 'originName', value: name } });
   };
 
-  const handleOriginPoiPick: FormChangeHandler = (event) => {
-    const poi = pois.find((candidate) => candidate.pointOfInterestId === event.target.value);
+  const handleOriginPoiPick = (option: SearchOption | null) => {
+    const poi = pois.find((candidate) => candidate.pointOfInterestId === option?.value);
     if (poi) applyOrigin(poi.latitude, poi.longitude, poi.name, null, poi.pointOfInterestId);
   };
 
@@ -239,8 +237,8 @@ function TripDialog({
     setDestinations((previous) => [...previous, destination]);
   };
 
-  const handleDestinationPoiPick: FormChangeHandler = (event) => {
-    const poi = pois.find((candidate) => candidate.pointOfInterestId === event.target.value);
+  const handleDestinationPoiPick = (option: SearchOption | null) => {
+    const poi = pois.find((candidate) => candidate.pointOfInterestId === option?.value);
     if (!poi) return;
     addDestination({
       name: poi.name,
@@ -308,15 +306,13 @@ function TripDialog({
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
-            <CustomSelect
-              list={transporterOptions}
-              handleChange={handleChange}
-              name="transporterId"
+            <SearchSelect
               id="transporterId"
               label={t('trips.transporter')}
-              value={values.transporterId}
-              numericValue={false}
-              required
+              value={values.transporterId || null}
+              valueLabel={transporterLabel}
+              onChange={(option) => handleChange({ target: { name: 'transporterId', value: option?.value ?? '' } })}
+              useOptions={useUserTransporterOptions}
               errorMsg={errors.transporterId}
             />
           </Grid>
@@ -403,14 +399,13 @@ function TripDialog({
             />
           </Grid>
           <Grid size={{ xs: 12, sm: creating ? 4 : 6 }}>
-            <CustomSelect
-              list={poiOptions}
-              handleChange={handleOriginPoiPick}
-              name="originPoiPick"
+            <SearchSelect
               id="originPoiPick"
               label={t('trips.origin.byPoi')}
-              value={values.originPoiId ?? ''}
-              numericValue={false}
+              value={values.originPoiId || null}
+              valueLabel={originPoiLabel}
+              onChange={handleOriginPoiPick}
+              useOptions={usePointOfInterestOptions}
               placeholder={t('tripStops.placement.selectPoi')}
             />
           </Grid>
@@ -473,14 +468,13 @@ function TripDialog({
                 />
               </Grid>
               <Grid size={{ xs: 12, sm: 4 }}>
-                <CustomSelect
-                  list={destinationsFull ? [] : poiOptions}
-                  handleChange={handleDestinationPoiPick}
-                  name="destinationPoiPick"
+                <SearchSelect
                   id="destinationPoiPick"
                   label={t('trips.destinations.byPoi')}
-                  value=""
-                  numericValue={false}
+                  value={null}
+                  onChange={handleDestinationPoiPick}
+                  useOptions={usePointOfInterestOptions}
+                  disabled={destinationsFull}
                   placeholder={t('tripStops.placement.selectPoi')}
                 />
               </Grid>

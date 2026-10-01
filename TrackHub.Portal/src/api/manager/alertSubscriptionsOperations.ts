@@ -40,7 +40,10 @@ export const GetAlertSubscriptionsDocument = graphql(`
     alertSubscriptions(
       query: { accountId: $accountId, principalId: $principalId, skip: $skip, take: $take }
     ) {
-      ...AlertSubscriptionItem
+      items {
+        ...AlertSubscriptionItem
+      }
+      totalCount
     }
   }
 `);

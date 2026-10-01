@@ -22,6 +22,7 @@ using Microsoft.Extensions.Logging;
 using TrackHub.Router.Domain.Models;
 using TrackHub.Router.Domain.Extensions;
 using TrackHub.Router.Domain.Helpers;
+using TrackHub.Router.Domain.Exceptions;
 
 namespace TrackHub.Router.Application.DevicePositions.Queries.Get;
 
@@ -31,7 +32,10 @@ namespace TrackHub.Router.Application.DevicePositions.Queries.Get;
 // projection and the per-operator fallback, not this limiter.
 [Authorize(Resource = Resources.Positions, Action = Actions.Read)]
 [RateLimiting(PermitLimit = 12, WindowSeconds = 60)]
-public readonly record struct GetPositionsByUserQuery() : IRequest<IEnumerable<PositionVm>>;
+// The filters only narrow what the caller already sees: an operator or group outside their scope
+// yields an empty map, never another tenant's positions.
+[AccountScopeEnforcedInHandler]
+public readonly record struct GetPositionsByUserQuery(long? GroupId = null, Guid? OperatorId = null) : IRequest<IEnumerable<PositionVm>>;
 
 public class GetPositionsByUserQueryHandler(
         IConfiguration configuration,
@@ -59,7 +63,9 @@ public class GetPositionsByUserQueryHandler(
         // scope). Those rows carry no credential, so the operators the caller may see are then matched
         // against a service-identity read of the same accounts, which does carry credentials — needed
         // whenever an account falls on the on-demand branch below and the provider must be contacted.
-        var visibleOperators = (await operatorReader.GetOperatorsAsync(cancellationToken)).ToList();
+        var visibleOperators = (await operatorReader.GetOperatorsAsync(cancellationToken))
+            .Where(o => request.OperatorId is not { } operatorId || o.OperatorId == operatorId)
+            .ToList();
         if (visibleOperators.Count == 0)
         {
             return [];
@@ -122,8 +128,13 @@ public class GetPositionsByUserQueryHandler(
             }
         }
 
+        var groupMembers = request.GroupId is { } groupId
+            ? (await deviceReader.GetTransporterIdsByGroupAsync(groupId, cancellationToken)).ToHashSet()
+            : null;
+
         //Most recent position for each transporter if multiple positions are available
         var result = allPositions
+            .Where(p => groupMembers is null || groupMembers.Contains(p.TransporterId))
             .GroupBy(p => p.TransporterId)
             .Select(g => g.OrderByDescending(p => p.DeviceDateTime).First())
             .ToList();
@@ -131,7 +142,7 @@ public class GetPositionsByUserQueryHandler(
         // Diagnosability: an empty map for an account that actually has active
         // assignments is the known defect signature. Name the branch that produced nothing so it is
         // never silent. No contract change — empty remains a valid response.
-        if (result.Count == 0 && operators.Any(o => o.Enabled))
+        if (result.Count == 0 && groupMembers is null && operators.Any(o => o.Enabled))
         {
             await LogEmptyMapDiagnosticsAsync(operators, onDemandOperators, cancellationToken);
         }
@@ -252,14 +263,20 @@ public class GetPositionsByUserQueryHandler(
             var devices = await deviceReader.GetVisibleDeviceTransportersByOperatorAsync(@operator.OperatorId, cancellationToken);
             var credential = @operator.Credential.Value.Decrypt(EncryptionKey);
             await reader.Init(credential, cancellationToken);
-            var positions = await reader.GetDevicePositionAsync(devices, cancellationToken);
-            var positionsList = positions.ToList();
-            if (positionsList.Count > 0)
+            var read = await ReadProviderPositionsAsync(reader, @operator, devices, cancellationToken);
+            if (read.Positions.Count > 0)
             {
                 // On-demand mode: the account has no background sync, so the Router API keeps
                 // the latest-position projection current with what it just read from the provider.
-                await PersistLatestPositionsAsync(positionsList, cancellationToken);
-                return positionsList;
+                await PersistLatestPositionsAsync(read.Positions, cancellationToken);
+                if (!read.Partial)
+                {
+                    return read.Positions;
+                }
+
+                var fresh = read.Positions.Select(p => p.TransporterId).ToHashSet();
+                var stored = await GetStoredPositionsAsync(@operator.OperatorId, cancellationToken);
+                return [.. read.Positions, .. stored.Where(p => !fresh.Contains(p.TransporterId))];
             }
             return await GetStoredPositionsAsync(@operator.OperatorId, cancellationToken);
         }
@@ -269,6 +286,24 @@ public class GetPositionsByUserQueryHandler(
             return await GetStoredPositionsAsync(@operator.OperatorId, cancellationToken);
         }
     }
+
+    private async Task<(IReadOnlyCollection<PositionVm> Positions, bool Partial)> ReadProviderPositionsAsync(
+        IPositionReader reader,
+        OperatorVm @operator,
+        IEnumerable<DeviceTransporterVm> devices,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return ([.. await reader.GetDevicePositionAsync(devices, cancellationToken)], false);
+        }
+        catch (PartialPositionReadException ex)
+        {
+            logger.LogWarning(ex, "Partial provider read for operator {OperatorId}; unread units fall back to stored positions.", @operator.OperatorId);
+            return (ex.Positions, true);
+        }
+    }
+
 
     // Reads the stored latest-position projection (user-group-scoped in Manager). This is
     // the PRIMARY read for integration-enabled accounts and the FALLBACK when an on-demand

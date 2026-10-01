@@ -166,7 +166,7 @@ describe('HelpDialog', () => {
 
     fireEvent.click(screen.getByText('open-help'));
     expect(await screen.findByText('Observa unidades.', { exact: false })).toBeInTheDocument();
-    expect(fetchSpy).toHaveBeenCalledWith('/help/es/dashboard-live-map.md?v=aaa');
+    expect(fetchSpy).toHaveBeenCalledWith('/help/es/dashboard-live-map.md?v=aaa', expect.anything());
   });
 
   it('opens with F1', async () => {

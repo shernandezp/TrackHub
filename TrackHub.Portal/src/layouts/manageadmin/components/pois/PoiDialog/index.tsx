@@ -24,7 +24,9 @@ import type { FormChangeHandler } from 'controls/Dialogs/useForm';
 import { poiTypes } from 'data/poiTypes';
 import { colors } from 'data/colors';
 import { toCamelCase } from 'utils/stringUtils';
-import type { PoiFormValues, PoiGroupOption } from 'layouts/manageadmin/data/poisTableData';
+import SearchSelect from 'edition/SearchSelect';
+import { useGroupOptions } from 'edition/pickerOptions';
+import type { PoiFormValues } from 'layouts/manageadmin/data/poisTableData';
 
 interface PoiFormDialogProps {
   open: boolean;
@@ -33,11 +35,12 @@ interface PoiFormDialogProps {
   values: PoiFormValues;
   handleChange: FormChangeHandler;
   errors: Record<string, string>;
-  groupOptions: PoiGroupOption[];
+  groupNames: ReadonlyMap<number, string>;
 }
 
-function PoiFormDialog({ open, setOpen, handleSubmit, values, handleChange, errors, groupOptions }: PoiFormDialogProps) {
+function PoiFormDialog({ open, setOpen, handleSubmit, values, handleChange, errors, groupNames }: PoiFormDialogProps) {
   const { t } = useTranslation();
+  const groupId = values.groupId ? Number(values.groupId) : null;
   const translatedTypes = poiTypes.map(type => ({
     ...type,
     label: t(`poi.types.${toCamelCase(type.label)}` as 'poi.types.clientSite')
@@ -139,13 +142,13 @@ function PoiFormDialog({ open, setOpen, handleSubmit, values, handleChange, erro
             value={values.color ?? undefined}
           />
 
-          <CustomSelect
-            list={groupOptions}
-            handleChange={handleChange}
-            name="groupId"
+          <SearchSelect
             id="groupId"
             label={t('poi.group')}
-            value={values.groupId ?? undefined}
+            value={groupId === null ? null : String(groupId)}
+            valueLabel={groupId === null ? null : groupNames.get(groupId)}
+            onChange={(option) => handleChange({ target: { name: 'groupId', value: option ? Number(option.value) : '' } })}
+            useOptions={useGroupOptions}
           />
 
           <CustomCheckbox

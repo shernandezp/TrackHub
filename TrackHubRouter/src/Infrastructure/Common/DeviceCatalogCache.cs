@@ -20,10 +20,9 @@ using TrackHub.Router.Domain.Models;
 
 namespace TrackHub.Router.Infrastructure.Common;
 
-// In-process TTL cache of operator device catalogs (router-audit A-12). Consistent with the
-// single-instance SyncWorker deployment; TTL bounds staleness for changes made outside the Router
-// (e.g. transporter re-assignment in Manager) while device-sync invalidation covers changes the
-// Router itself makes.
+// In-process TTL cache of operator device catalogs (router-audit A-12). The catalog stamp covers
+// device syncs from any process; the TTL bounds staleness for changes made outside a sync (e.g.
+// transporter re-assignment in Manager).
 public sealed class DeviceCatalogCache : IDeviceCatalogCache
 {
     private readonly TimeSpan _ttl;
@@ -39,6 +38,7 @@ public sealed class DeviceCatalogCache : IDeviceCatalogCache
     public async Task<IEnumerable<DeviceTransporterVm>> GetOrLoadAsync(
         Guid accountId,
         Guid operatorId,
+        DateTimeOffset? catalogStamp,
         Func<CancellationToken, Task<IEnumerable<DeviceTransporterVm>>> loader,
         CancellationToken cancellationToken)
     {
@@ -47,6 +47,7 @@ public sealed class DeviceCatalogCache : IDeviceCatalogCache
         if (_ttl > TimeSpan.Zero
             && _entries.TryGetValue(operatorId, out var entry)
             && entry.AccountId == accountId
+            && entry.CatalogStamp == catalogStamp
             && now < entry.ExpiresAt)
         {
             return entry.Devices;
@@ -58,14 +59,11 @@ public sealed class DeviceCatalogCache : IDeviceCatalogCache
 
         if (_ttl > TimeSpan.Zero)
         {
-            _entries[operatorId] = new Entry(accountId, devices, now + _ttl);
+            _entries[operatorId] = new Entry(accountId, catalogStamp, devices, now + _ttl);
         }
 
         return devices;
     }
 
-    public void Invalidate(Guid operatorId)
-        => _entries.TryRemove(operatorId, out _);
-
-    private readonly record struct Entry(Guid AccountId, IReadOnlyList<DeviceTransporterVm> Devices, DateTimeOffset ExpiresAt);
+    private readonly record struct Entry(Guid AccountId, DateTimeOffset? CatalogStamp, IReadOnlyList<DeviceTransporterVm> Devices, DateTimeOffset ExpiresAt);
 }

@@ -49,7 +49,7 @@ public sealed class AccountStatusWriter(IApplicationDbContext context, ICurrentP
         var vm = new AccountVm(
             account.AccountId, account.Name, account.Description,
             (AccountType)account.Type, account.Type,
-            targetStatus, (short)targetStatus, account.Active, account.TimeZoneId, account.LastModified);
+            targetStatus, (short)targetStatus, account.Active, account.TimeZoneId, account.LastModified, account.Version);
 
         return (vm, previous);
     }

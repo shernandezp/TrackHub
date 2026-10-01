@@ -35,7 +35,7 @@ public static class DependencyInjection
         services.AddScoped<IAccountReader, AccountReader>();
 
         services.AddMemoryCache();
-        services.AddScoped<Common.Application.Interfaces.IAccountOperationalStatusReader, AccountOperationalStatusReader>();
+        services.AddScoped<Common.Application.Interfaces.IAccountOperationalStatusReader, Common.Infrastructure.ManagerAccountOperationalStatusReader>();
         services.AddScoped<Common.Application.Interfaces.IAccountOperationalStatusService, Common.Application.Services.CachedAccountOperationalStatusService>();
 
         services.AddScoped<ICredentialWriter, CredentialWriter>();
@@ -46,6 +46,7 @@ public static class DependencyInjection
         services.AddScoped<IOperatorSystemReader, OperatorSystemReader>();
         services.AddScoped<ITransporterTypeReader, TransporterTypeReader>();
         services.AddScoped<IDeviceSyncWriter, DeviceSyncWriter>();
+        services.AddScoped<TrackHub.Router.Domain.Interfaces.IOperatorSyncBackoff, OperatorSyncBackoff>();
         services.AddScoped<IAlertEventWriter, AlertEventWriter>();
         services.AddScoped<IBackgroundJobRunRecorder, BackgroundJobRunRecorder>();
 

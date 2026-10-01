@@ -24,7 +24,12 @@ public readonly record struct DeferredDeliveryVm(
 
 public interface INotificationDigestStore
 {
-    Task<IReadOnlyCollection<DeferredDeliveryVm>> GetDeferredAsync(CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<Guid>> GetAccountsWithDeferredAsync(CancellationToken cancellationToken);
+
+    /// <summary>Marks Expired the account's deferred deliveries whose account is gone or whose rule is gone or disabled.</summary>
+    Task<int> ExpireOrphansAsync(Guid accountId, CancellationToken cancellationToken);
+
+    Task<IReadOnlyCollection<DeferredDeliveryVm>> GetDeferredAsync(Guid accountId, CancellationToken cancellationToken);
 
     Task<IReadOnlyCollection<NotificationRuleVm>> GetRulesAsync(
         IReadOnlyCollection<Guid> ruleIds, CancellationToken cancellationToken);

@@ -24,6 +24,7 @@ public sealed class OperatorConfiguration : IEntityTypeConfiguration<Operator>
 {
     public void Configure(EntityTypeBuilder<Operator> builder)
     {
+        builder.Property(x => x.Version).HasColumnName("editversion").HasConversion<long>().IsConcurrencyToken();
         //Table name
         builder.ToTable(
             name: TableMetadata.Operator,

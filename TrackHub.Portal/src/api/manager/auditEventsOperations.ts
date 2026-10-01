@@ -34,6 +34,8 @@ export const AuditEventItemFragment = graphql(`
     reason
     correlationId
     occurredAt
+    actorName
+    resourceName
   }
 `);
 export const GetAuditTrailDocument = graphql(`

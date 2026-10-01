@@ -53,7 +53,7 @@ public sealed class AccountWriter(IApplicationDbContext context, ICurrentPrincip
             account.Status,
             account.Active,
             account.TimeZoneId,
-            account.LastModified);
+            account.LastModified, account.Version);
     }
 
     // Updates an existing account asynchronously
@@ -66,6 +66,7 @@ public sealed class AccountWriter(IApplicationDbContext context, ICurrentPrincip
             ?? throw new NotFoundException(nameof(Account), $"{accountDto.AccountId}");
 
         context.Accounts.Attach(account);
+        RowVersion.Expect(context.Accounts, account, accountDto.ExpectedVersion);
 
         var previous = Describe(account);
         account.Name = accountDto.Name;

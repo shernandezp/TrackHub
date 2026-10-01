@@ -50,7 +50,7 @@ public class CreateTransporterCommandHandlerTests
     {
         // Arrange
         var dto = new TransporterDto("Truck-001", 1, Guid.Empty);
-        var expectedVm = new TransporterVm(Guid.NewGuid(), "Truck-001", TransporterType.Truck, 1);
+        var expectedVm = new TransporterVm(Guid.NewGuid(), "Truck-001", TransporterType.Truck, 1, 0);
         _writerMock.Setup(w => w.CreateTransporterAsync(
                 It.Is<TransporterDto>(d => d.AccountId == _accountId && d.Name == "Truck-001"),
                 It.IsAny<CancellationToken>()))
@@ -73,7 +73,7 @@ public class CreateTransporterCommandHandlerTests
     {
         // Arrange — DTO has Guid.Empty for AccountId (from GraphQL input)
         var dto = new TransporterDto("Asset-X", 3, Guid.Empty);
-        var expectedVm = new TransporterVm(Guid.NewGuid(), "Asset-X", TransporterType.Bicycle, 3);
+        var expectedVm = new TransporterVm(Guid.NewGuid(), "Asset-X", TransporterType.Bicycle, 3, 0);
         _writerMock.Setup(w => w.CreateTransporterAsync(It.IsAny<TransporterDto>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedVm);
 

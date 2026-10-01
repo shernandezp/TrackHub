@@ -22,10 +22,19 @@ interface RefreshCounterProps {
   settings: AccountSettings;
   fetchPositions: () => void;
   calculateReference: () => void;
+  refreshing?: boolean;
 }
 
-function RefreshCounter({ settings, fetchPositions, calculateReference }: RefreshCounterProps): ReactNode {
+function RefreshCounter({ settings, fetchPositions, calculateReference, refreshing = false }: RefreshCounterProps): ReactNode {
     const [counter, setCounter] = useState(settings.refreshMapInterval || 60);
+    // A hidden tab neither counts down nor refreshes; the countdown resumes where it stopped.
+    const [visible, setVisible] = useState(() => !document.hidden);
+
+    useEffect(() => {
+      const onVisibilityChange = () => setVisible(!document.hidden);
+      document.addEventListener('visibilitychange', onVisibilityChange);
+      return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+    }, []);
 
     // The callbacks are new identities on every parent render, so the tick reads them from refs
     // instead of closing over the ones from the render that last changed the counter — which is how
@@ -38,7 +47,7 @@ function RefreshCounter({ settings, fetchPositions, calculateReference }: Refres
     const { refreshMap, refreshMapInterval } = settings;
 
     useEffect(() => {
-      if (!refreshMap) {
+      if (!refreshMap || !visible) {
         return;
       }
 
@@ -51,9 +60,9 @@ function RefreshCounter({ settings, fetchPositions, calculateReference }: Refres
 
       const timer = setTimeout(() => setCounter((current) => current - 1), 1000);
       return () => clearTimeout(timer);
-    }, [counter, refreshMap, refreshMapInterval]);
+    }, [counter, refreshMap, refreshMapInterval, visible]);
 
-    return refreshMap && <div className="mapcontrol">{counter} s.</div>;
+    return refreshMap && <div className="mapcontrol">{refreshing ? '…' : `${counter} s.`}</div>;
   }
 
   export default RefreshCounter;

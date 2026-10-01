@@ -15,6 +15,7 @@
 
 using Ardalis.GuardClauses;
 using Common.Application;
+using Common.Web.BackgroundJobs;
 using TrackHub.Geofencing.Infrastructure;
 using TrackHub.Geofencing.Web.BackgroundServices;
 using TrackHub.Geofencing.Web.GraphQL.Mutation;
@@ -35,7 +36,7 @@ builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddWebServices();
 
 // Dwell-threshold evaluation: the module's only hosted job.
-builder.Services.AddHostedService<GeofenceDwellEvaluationService>();
+builder.Services.AddScheduledJob<GeofenceDwellEvaluationJob>();
 
 // Add HealthChecks
 builder.Services.AddHealthChecks()
@@ -52,6 +53,8 @@ builder.Services.AddCors(options => options
                     .AllowCredentials()));
 
 var app = builder.Build();
+
+app.UseExceptionHandler(options => { });
 
 app.UseHeaderPropagation();
 
@@ -73,8 +76,6 @@ app.UseStaticFiles();
 // pipeline inference.
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.UseExceptionHandler(options => { });
 
 app.MapGraphQL().RequireAuthorization();
 

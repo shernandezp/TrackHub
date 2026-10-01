@@ -8,6 +8,7 @@ public class DriverConfiguration : IEntityTypeConfiguration<Driver>
 {
     public void Configure(EntityTypeBuilder<Driver> builder)
     {
+        builder.Property(x => x.Version).HasColumnName("editversion").HasConversion<long>().IsConcurrencyToken();
         builder.ToTable(name: TableMetadata.Driver, schema: SchemaMetadata.Application);
         builder.Property(x => x.DriverId).HasColumnName("id");
         builder.Property(x => x.AccountId).HasColumnName("accountid");
@@ -20,6 +21,9 @@ public class DriverConfiguration : IEntityTypeConfiguration<Driver>
         builder.Property(x => x.LicenseNumber).HasColumnName("licensenumber").HasMaxLength(ColumnMetadata.DefaultNameLength);
         builder.Property(x => x.LicenseExpiresAt).HasColumnName("licenseexpiresat");
         builder.Property(x => x.DefaultTransporterId).HasColumnName("defaulttransporterid");
-        builder.HasIndex(x => new { x.AccountId, x.DocumentNumber });
+        builder.HasIndex(x => new { x.AccountId, x.DocumentNumber })
+            .IsUnique()
+            .HasFilter("documentnumber IS NOT NULL")
+            .HasDatabaseName("ux_drivers_accountid_documentnumber");
     }
 }

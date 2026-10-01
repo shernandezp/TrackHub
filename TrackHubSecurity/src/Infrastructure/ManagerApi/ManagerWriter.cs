@@ -23,9 +23,9 @@ public class ManagerWriter(IGraphQLClientFactory graphQLClient)
                     }";
 
     internal const string UpdateUserMutation = @"
-                    mutation($id:UUID!, $active: Boolean!, $userId: UUID!, $username: String!, $role: String) {
+                    mutation($id:UUID!, $active: Boolean!, $userId: UUID!, $username: String!, $role: String, $accountId: UUID) {
                       updateUser(id: $id,
-                            command: { user: { active: $active, userId: $userId, username: $username, role: $role } })
+                            command: { user: { active: $active, userId: $userId, username: $username, role: $role, accountId: $accountId } })
                     }";
 
     internal const string DeleteUserMutation = @"
@@ -66,7 +66,8 @@ public class ManagerWriter(IGraphQLClientFactory graphQLClient)
                 user.Active,
                 user.UserId,
                 user.Username,
-                user.Role
+                user.Role,
+                user.AccountId
             }
         };
         var result = await MutationAsync<bool>(request, token);

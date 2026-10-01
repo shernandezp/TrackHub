@@ -135,13 +135,32 @@ public class PositionWriterTests
         context.SaveChanges();
         var writer = new ResolvedAddressWriter(context, ServicePrincipal());
 
-        var updated = await writer.PersistResolvedAddressAsync(historyId, transporterId, "New Address", "City", "State", "Country", CancellationToken.None);
+        var updated = await writer.PersistResolvedAddressAsync(historyId, transporterId, 1, 1, "New Address", "City", "State", "Country", CancellationToken.None);
 
         using (Assert.EnterMultipleScope())
         {
             Assert.That(updated, Is.True, "the blank latest-position address was written");
             Assert.That((await context.TransporterPositions.SingleAsync()).Address, Is.EqualTo("New Address"));
             Assert.That((await context.TransporterPositionHistory.SingleAsync()).Address, Is.EqualTo("Existing St"), "already-addressed history row is not overwritten");
+        }
+        await context.DisposeAsync();
+    }
+
+    [Test]
+    public async Task ResolvedAddress_ForACoordinateTheRowWasNotFixedAt_WritesNothing()
+    {
+        var transporterId = Guid.NewGuid();
+        var context = TestDb.NewContext();
+        context.TransporterPositions.Add(new TrackHub.Telemetry.Infrastructure.TelemetryDB.Entities.TransporterPosition(transporterId, null, 1, 1, null, DateTimeOffset.UtcNow, 0, null, null, null, null, null, null, null));
+        context.SaveChanges();
+        var writer = new ResolvedAddressWriter(context, ServicePrincipal());
+
+        var updated = await writer.PersistResolvedAddressAsync(null, transporterId, 40.7, -74.0, "Elsewhere", null, null, null, CancellationToken.None);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(updated, Is.False);
+            Assert.That((await context.TransporterPositions.SingleAsync()).Address, Is.Null);
         }
         await context.DisposeAsync();
     }

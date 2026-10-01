@@ -18,7 +18,6 @@ using TrackHub.TripManagement.Application.Common;
 
 namespace TrackHub.TripManagement.Application.Trips.Queries.GetTripRouteReplay;
 
-// No [Caching] — scope comes from the caller identity (SVD-09). See GetTripsQuery.
 /// <summary>
 /// Replays the trip's real track from Telemetry. Telemetry owns the 31-day window and the
 /// 10 000-point cap; this clamps to them and reports truncation EXPLICITLY — a silently shortened

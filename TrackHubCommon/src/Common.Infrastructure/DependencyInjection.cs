@@ -35,6 +35,7 @@ public static class DependencyInjection
     {
         services.AddScoped<ISaveChangesInterceptor, AuditableEntityInterceptor>();
         services.AddScoped<ISaveChangesInterceptor, DispatchDomainEventsInterceptor>();
+        services.AddSingleton<IExpectedOutcomeClassifier, DatabaseRefusalClassifier>();
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
@@ -96,7 +97,9 @@ public static class DependencyInjection
             // The calendar of the account a request serves, read from Manager and cached (Manager
             // itself overrides this with a database-backed resolver).
             services.AddScoped<IAccountTimeZoneResolver, ManagerAccountTimeZoneResolver>();
-            services.TryAddSingleton<IClientCredentialsTokenProvider, ClientCredentialsTokenProvider>();
+            services.AddSingleton<AccountTimeZoneResolverHealth>();
+            services.AddHealthChecks().AddCheck<AccountTimeZoneResolverHealthCheck>("account-time-zone");
+            services.AddClientCredentialsTokenProvider();
             services.AddSingleton<IGraphQLClientFactory, GraphQLClientFactory>();
             services.AddScoped<IIdentityService, IdentityService>();
         }

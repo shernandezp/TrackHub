@@ -15,6 +15,7 @@
 
 using TrackHub.Manager.Application.Transporters.Commands.Create;
 using TrackHub.Manager.Application.Transporters.Commands.Delete;
+using TrackHub.Manager.Application.Transporters.Commands.Restore;
 using TrackHub.Manager.Application.Transporters.Commands.Update;
 
 namespace TrackHub.Manager.Web.GraphQL.Mutation;
@@ -34,6 +35,12 @@ public partial class Mutation
     public async Task<Guid> DeleteTransporter([Service] ISender sender, Guid id, CancellationToken cancellationToken)
     {
         await sender.Send(new DeleteTransporterCommand(id), cancellationToken);
+        return id;
+    }
+
+    public async Task<Guid> RestoreTransporter([Service] ISender sender, Guid id, CancellationToken cancellationToken)
+    {
+        await sender.Send(new RestoreTransporterCommand(id), cancellationToken);
         return id;
     }
 }

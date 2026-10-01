@@ -83,8 +83,20 @@ public sealed class UserWriter(IApplicationDbContext context, ICurrentPrincipal 
     /// <exception cref="NotFoundException"></exception>
     public async Task UpdateUserAsync(UpdateUserDto userDto, CancellationToken cancellationToken)
     {
-        var user = await context.Users.FindAsync([userDto.UserId], cancellationToken)
-            ?? throw new NotFoundException(nameof(User), $"{userDto.UserId}");
+        var user = await context.Users.FindAsync([userDto.UserId], cancellationToken);
+        if (user is null)
+        {
+            // Users created before the replica outbox existed have no row yet; an update that names
+            // the account carries everything the replica needs.
+            if (userDto.AccountId is not { } accountId)
+            {
+                throw new NotFoundException(nameof(User), $"{userDto.UserId}");
+            }
+
+            await CreateUserAsync(new UserDto(userDto.UserId, userDto.Username, userDto.Active, accountId, userDto.Role), cancellationToken);
+            return;
+        }
+
         RequireReplicaAccess(user.AccountId);
 
         context.Users.Attach(user);

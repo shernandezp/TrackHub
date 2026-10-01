@@ -11,7 +11,7 @@ public sealed class UnsupportedReportFormatException : Exception
         : base(message)
         => Format = format;
 
-    public string Code => "UNSUPPORTED_REPORT_FORMAT";
+    public string Code => ReportErrorCodes.UnsupportedFormat;
     public string Format { get; }
 
     // Factory for the "this report is Excel-only" case (SupportsPdf = false).

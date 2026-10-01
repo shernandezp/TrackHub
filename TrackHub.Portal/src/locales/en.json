@@ -134,6 +134,7 @@
     "inGeofence": "In Geofence",
     "transportersTitle": "Units",
     "positionsTitle": "Positions",
+    "driversTitle": "Drivers",
     "filterType": "Unit Type",
     "filterGroup": "Group",
     "filterOperator": "Operator",
@@ -255,6 +256,20 @@
     "title": "Alert Events",
     "type": "Type",
     "status": "Status",
+    "severity": "Severity",
+    "unit": "Unit",
+    "firstSeen": "First seen",
+    "lastSeen": "Last seen",
+    "filterStatus": "Status",
+    "filterSeverity": "Severity",
+    "allStatuses": "All statuses",
+    "allSeverities": "All severities",
+    "severities": {
+      "Info": "Info",
+      "Warning": "Warning",
+      "High": "High",
+      "Critical": "Critical"
+    },
     "acknowledge": "Acknowledge Alert",
     "resolve": "Resolve Alert",
     "statuses": {
@@ -268,14 +283,30 @@
     "actor": "Actor",
     "resource": "Resource",
     "result": "Result",
-    "occurredAt": "Occurred At"
+    "occurredAt": "Occurred At",
+    "loadMore": "Load more",
+    "results": {
+      "Success": "Success",
+      "Failure": "Failure",
+      "Denied": "Denied"
+    },
+    "actorTypes": {
+      "User": "User",
+      "Driver": "Driver",
+      "ServiceClient": "Service"
+    }
   },
   "backgroundJobs": {
     "title": "Background Jobs",
     "job": "Job",
     "status": "Status",
     "attempts": "Attempts",
-    "startedAt": "Started At"
+    "startedAt": "Started At",
+    "statuses": {
+      "Running": "Running",
+      "Succeeded": "Succeeded",
+      "Failed": "Failed"
+    }
   },
   "notificationRules": {
     "title": "Notification Rules",
@@ -377,7 +408,8 @@
       "sent": "Sent",
       "failed": "Failed",
       "deferred": "Deferred",
-      "digested": "Digested"
+      "digested": "Digested",
+      "expired": "Expired"
     }
   },
   "notificationTemplates": {
@@ -482,11 +514,13 @@
       "scan": {
         "pending": "Pending",
         "clean": "Clean",
+        "notscanned": "Not scanned",
         "failed": "Failed",
         "quarantined": "Quarantined",
         "infected": "Infected"
       }
     },
+    "noDocumentTypes": "This account has no document types yet. Add one in the Document Types section first.",
     "expiresAtKeepsCurrent": "Leave blank to keep the current expiry"
   },
   "supportGrants": {
@@ -537,7 +571,30 @@
     "unknownVehicleClass": "That vehicle class is not defined in this account.",
     "tripShareRevoked": "This tracking link has been revoked.",
     "lookupLimitExceeded": "This list is too large to load in full. Narrow it with a filter or search before selecting.",
-    "seededCatalogLimitExceeded": "This catalog has grown beyond the supported size. Contact your administrator."
+    "seededCatalogLimitExceeded": "This catalog has grown beyond the supported size. Contact your administrator.",
+    "forbidden": "You do not have permission to perform this action.",
+    "unauthorized": "Your session has expired. Sign in again.",
+    "tooManyRequests": "Too many requests. Wait a moment and try again.",
+    "upstreamError": "A service this screen depends on is not responding. Try again in a few minutes.",
+    "concurrentUpdate": "Someone else changed this record while you were editing it. Reload it and apply your changes again.",
+    "invalidCursor": "The list position is no longer valid. Reload the list from the start.",
+    "publicLinkExpiryTooLong": "The link expires too far in the future. Choose an earlier expiration date.",
+    "geofenceIdMismatch": "The geofence being saved does not match the one opened. Reload it and try again.",
+    "operatorNotFound": "The GPS operator could not be found.",
+    "operatorDisabled": "The GPS operator is disabled. Enable it before synchronizing.",
+    "providerCapabilityNotSupported": "The GPS provider for this unit does not support this operation.",
+    "geocoderUnavailable": "Address lookup is temporarily unavailable; coordinates are shown instead.",
+    "positionHistoryLimitExceeded": "This history is too large to load at once. Choose a shorter period.",
+    "unpagedReadLimitExceeded": "This list is too large to load in full. Narrow it with a filter or search.",
+    "reportWindowInvalid": "The report period is invalid or longer than allowed. Choose a shorter range.",
+    "tripNotFound": "The trip could not be found.",
+    "tripForbidden": "You do not have access to this trip.",
+    "deliveryOutcomeRecorded": "This delivery already has a recorded outcome and can no longer be changed.",
+    "tripEventTimeOutOfRange": "The event time is outside the allowed range. Check the date and time.",
+    "podRequired": "This stop requires a proof of delivery before it can be departed or the trip completed.",
+    "podDocumentInvalid": "The proof-of-delivery attachment is not a valid document for this stop.",
+    "tripImportInvalidRow": "Invalid row",
+    "tollImportInvalidRow": "Invalid row"
   },
   "driver": {
     "name": "Name",
@@ -656,6 +713,7 @@
       "emptyActive": "This driver has no active assignments.",
       "defaultTransporter": "Default unit",
       "defaultTransporterHint": "Set on the driver record",
+      "windowInvalid": "Choose a period that ends on or after its start and spans fewer than {{days}} days.",
       "tooManyResults": "Showing the first {{count}} rows. Narrow the filters to see the rest.",
       "types": {
         "regular": "Regular",
@@ -1049,8 +1107,11 @@
     "details": "Unit Details",
     "name": "Name",
     "type": "Type",
-    "deleteTitle": "Delete Unit",
-    "deleteMessage": "Are you sure you want to delete this unit?"
+    "deleteTitle": "Retire Unit",
+    "deleteMessage": "Retire this unit? It stops tracking and leaves every list, but its history is kept and it can be restored.",
+    "retire": "Retire",
+    "restore": "Restore",
+    "showRetired": "Show retired units"
   },
   "transporterMap": {
     "name": "Name",
@@ -1341,7 +1402,6 @@
       "operatorsLoad": "Failed to load operators",
       "devicesLoad": "Failed to load synchronized devices",
       "assignmentsLoad": "Failed to load device assignments",
-      "retentionLoad": "Failed to load retention policy",
       "syncRunsLoad": "Failed to load sync runs",
       "alertsLoad": "Failed to load alerts"
     },
@@ -1466,7 +1526,12 @@
         "document-expiration": "Document expiry reminders",
         "document-retention-cleanup": "Document retention clean-up",
         "trial-expiration": "Trial expiry",
-        "geofence-dwell-evaluation": "Geofence stop detection"
+        "geofence-dwell-evaluation": "Geofence stop detection",
+        "workforce-expiration-scan": "Workforce expiry reminders",
+        "trip-eta-refresh": "Trip ETA refresh",
+        "trip-schedule-reminder": "Trip start reminders",
+        "router-sync-worker": "GPS sync worker",
+        "platform-retention": "Platform retention clean-up"
       }
     },
     "manage": {
@@ -1887,6 +1952,7 @@
     "scanStatuses": {
       "Pending": "Scan pending",
       "Clean": "Clean",
+      "NotScanned": "Not scanned",
       "Infected": "Infected",
       "Failed": "Scan failed",
       "Quarantined": "Quarantined"
@@ -1924,7 +1990,6 @@
     "notComputedHint": "Tolls have not been calculated for this route plan.",
     "mixedCurrencyHint": "This route crosses stations priced in different currencies, so no single total is meaningful. Each station's own amount and currency are listed below.",
     "transporterClass": {
-      "action": "Toll classes",
       "title": "Transporter toll classes",
       "description": "Map your vehicle types — or one specific vehicle — to a toll vehicle class. New trips take their toll class from this mapping, so without it a route plan is priced with no class and the toll estimate never engages.",
       "target": "Apply to",
@@ -1972,6 +2037,7 @@
       "addTariff": "Tariff",
       "tariffDetails": "Tariff details",
       "deactivate": "Deactivate",
+      "reactivate": "Reactivate",
       "deactivateClassTitle": "Deactivate vehicle class",
       "deactivateClassMessage": "Deactivate this vehicle class? Existing tariffs and past estimates are kept.",
       "deactivateStationTitle": "Deactivate toll station",
