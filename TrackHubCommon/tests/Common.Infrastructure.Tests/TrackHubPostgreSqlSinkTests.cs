@@ -15,7 +15,7 @@ public class TrackHubPostgreSqlSinkTests
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["ConnectionStrings:Logging"] = "Host=localhost;Database=TrackHubLogs;Username=postgres;Password=x",
+                ["ConnectionStrings:Logging"] = "Host=localhost;Database=TrackHub;Username=postgres;Password=x",
                 ["Serilog:Using:0"] = "Common.Infrastructure",
                 ["Serilog:WriteTo:0:Name"] = "TrackHubPostgreSQL",
                 ["Serilog:WriteTo:0:Args:connectionString"] = "Logging",

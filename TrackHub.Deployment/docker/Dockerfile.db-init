@@ -30,7 +30,7 @@ COPY --from=build /app/manager-init ./manager-init/
 
 # Copy initialization scripts
 COPY TrackHub.Deployment/scripts/init-databases.sh ./init-databases.sh
-COPY TrackHub.Deployment/scripts/sql/purge-functions.sql TrackHub.Deployment/scripts/sql/purge-functions-logs.sql ./sql/
+COPY TrackHub.Deployment/scripts/sql/purge-functions.sql ./sql/
 RUN chmod +x ./init-databases.sh
 
 ENTRYPOINT ["./init-databases.sh"]

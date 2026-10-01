@@ -248,18 +248,12 @@ loaded at zero.
 
 ### Database Server Requirements
 
-The deployment assumes an existing PostgreSQL server. Three databases are required:
+The deployment assumes an existing PostgreSQL server. Two databases are required:
 
 | Database | Purpose |
 |----------|---------|
 | `TrackHubSecurity` | Identity, users, roles, policies |
-| `TrackHub` | Assets, transporters, devices, geofences, trips, positions |
-| `TrackHubLogs` | The Serilog sink table, written by every service |
-
-`TrackHubLogs` is created by `init-databases.sh` on every deploy, and the sink creates its own
-table. Ageing it out is `ops.purge_logs()`, run against that database (see Retention below). It is
-separate so that a burst of warnings during an incident competes for nothing the fleet queries
-need; pointing `DB_CONNECTION_LOGGING` back at `TrackHub` still works.
+| `TrackHub` | Assets, transporters, devices, geofences, trips, positions, and the `public.logs` Serilog table |
 
 The PostgreSQL server must be accessible from the application server(s) over the network.
 
@@ -818,7 +812,7 @@ The master template at `config/appsettings.template.json` shows all configurable
 | `${DB_CONNECTION_SECURITY}` | Authority, Security | Security database (`TrackHubSecurity`) |
 | `${DB_CONNECTION_MANAGER}` | Manager, Geofencing, TripManagement | Manager database (`TrackHub`) |
 | `${DB_CONNECTION_TELEMETRY}` | Telemetry | Telemetry DB — **must be the same `TrackHub` database** (schema `telemetry`) |
-| `${DB_CONNECTION_LOGGING}` | All backend services | Centralized logging database |
+| `${DB_CONNECTION_LOGGING}` | All backend services | Serilog sink (`public.logs` in the `TrackHub` database) |
 | `${CERTIFICATE_PATH}` | All services | Path to OpenIddict certificate |
 | `${CERTIFICATE_PASSWORD}` | All services | Certificate password |
 | `${ENCRYPTION_KEY}` | Security, Manager, Router, SyncWorker | Database encryption key |
@@ -1062,8 +1056,7 @@ nano .env
 ### PostgreSQL Requirements
 
 - PostgreSQL 14+
-- Three databases: `TrackHubSecurity`, `TrackHub` and `TrackHubLogs`
-  (`init-databases.sh` creates the logs one on every deploy)
+- Two databases: `TrackHubSecurity` and `TrackHub`
 - The **`postgis`** extension in the `TrackHub` database (required by Geofencing and by
   TripManagement — their migrations declare `HasPostgresExtension("postgis")`). One
   `CREATE EXTENSION` covers both; they share the database.
@@ -1853,18 +1846,17 @@ Purging lives in the database. Nothing inside the services deletes aged rows, so
 scheduled — pgAgent, cron, Windows Task Scheduler or your own runner — or the tables grow forever.
 
 ```bash
-psql -d TrackHub     -c "CALL ops.run_purge();"
-psql -d TrackHubLogs -c "SELECT ops.purge_logs();"
+psql -d TrackHub -c "CALL ops.run_purge();"
 ```
 
-db-init installs both files on every deploy (`scripts/sql/purge-functions.sql` and
-`scripts/sql/purge-functions-logs.sql`, both idempotent); scheduling them is yours.
+db-init installs `scripts/sql/purge-functions.sql` (idempotent) on every deploy; scheduling it is
+yours.
 
 `ops.run_purge()` runs every task in its own transaction and reports each one: a task that fails
 is logged as a warning and the rest still run. `ops.purge_all()` does the same work in one
 transaction and returns a row per task, for an ad-hoc run. Together they cover position
 history, monthly partition maintenance, background job runs, resolved alert events, audit events,
-notification deliveries, API usage hours, trip events, operator sync runs and operator health
+notification deliveries, API usage hours, logs, trip events, operator sync runs and operator health
 checks. Daily is enough.
 
 Each task is also callable on its own, with the retention window as an argument:

@@ -201,6 +201,23 @@ RETURNS bigint LANGUAGE sql AS $$
         p_now - make_interval(days => GREATEST(1, p_days))));
 $$;
 
+-- The sink creates public.logs on its first write, so the table may not exist yet and never comes
+-- with the raise_date index this purge needs.
+CREATE OR REPLACE FUNCTION ops.purge_logs(p_now timestamptz DEFAULT now(), p_days int DEFAULT 30)
+RETURNS bigint LANGUAGE plpgsql AS $$
+BEGIN
+    IF to_regclass('public.logs') IS NULL THEN
+        RETURN 0;
+    END IF;
+    IF to_regclass('public.logs_raise_date_idx') IS NULL THEN
+        CREATE INDEX IF NOT EXISTS logs_raise_date_idx ON public.logs (raise_date);
+    END IF;
+    RETURN ops.delete_chunked(format(
+        $q$DELETE FROM public.logs
+           WHERE ctid IN (SELECT ctid FROM public.logs WHERE raise_date < %L LIMIT %%s)$q$,
+        p_now - make_interval(days => GREATEST(1, p_days))));
+END $$;
+
 CREATE OR REPLACE FUNCTION ops.purge_trip_events(p_now timestamptz DEFAULT now(), p_days int DEFAULT 730)
 RETURNS bigint LANGUAGE sql AS $$
     SELECT ops.delete_chunked(format(
@@ -256,6 +273,7 @@ BEGIN
     task := 'audit_events';            affected := ops.purge_audit_events(p_now);            RETURN NEXT;
     task := 'notification_deliveries'; affected := ops.purge_notification_deliveries(p_now); RETURN NEXT;
     task := 'api_usage_hours';         affected := ops.purge_api_usage_hours(p_now);         RETURN NEXT;
+    task := 'logs';                    affected := ops.purge_logs(p_now);                    RETURN NEXT;
     task := 'trip_events';             affected := ops.purge_trip_events(p_now);             RETURN NEXT;
     task := 'operator_sync_runs';      affected := ops.purge_operator_sync_runs(p_now);      RETURN NEXT;
     task := 'operator_health_checks';  affected := ops.purge_operator_health_checks(p_now);  RETURN NEXT;
@@ -269,12 +287,12 @@ LANGUAGE plpgsql AS $$
 DECLARE
     tasks text[] := ARRAY[
         'partitions', 'position_history', 'job_runs', 'alert_events', 'audit_events',
-        'notification_deliveries', 'api_usage_hours', 'trip_events',
+        'notification_deliveries', 'api_usage_hours', 'logs', 'trip_events',
         'operator_sync_runs', 'operator_health_checks'];
     calls text[] := ARRAY[
         'SELECT count(*) FROM ops.maintain_position_partitions($1)', 'SELECT ops.purge_position_history($1)',
         'SELECT ops.purge_job_runs($1)', 'SELECT ops.purge_alert_events($1)', 'SELECT ops.purge_audit_events($1)',
-        'SELECT ops.purge_notification_deliveries($1)', 'SELECT ops.purge_api_usage_hours($1)',
+        'SELECT ops.purge_notification_deliveries($1)', 'SELECT ops.purge_api_usage_hours($1)', 'SELECT ops.purge_logs($1)',
         'SELECT ops.purge_trip_events($1)',
         'SELECT ops.purge_operator_sync_runs($1)', 'SELECT ops.purge_operator_health_checks($1)'];
     affected bigint;
