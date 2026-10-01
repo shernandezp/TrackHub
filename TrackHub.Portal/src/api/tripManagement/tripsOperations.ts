@@ -289,6 +289,7 @@ export const GetTripsDocument = graphql(`
     $search: String
     $skip: Int
     $take: Int
+    $exception: String
   ) {
     trips(
       query: {
@@ -301,6 +302,7 @@ export const GetTripsDocument = graphql(`
         search: $search
         skip: $skip
         take: $take
+        exception: $exception
       }
     ) {
       items {
@@ -738,6 +740,12 @@ export const DeactivateTollVehicleClassDocument = graphql(`
   }
 `);
 
+export const ReactivateTollVehicleClassDocument = graphql(`
+  mutation ReactivateTollVehicleClass($id: UUID!) {
+    reactivateTollVehicleClass(id: $id)
+  }
+`);
+
 export const CreateTollStationDocument = graphql(`
   mutation CreateTollStation($station: TollStationDtoInput!) {
     createTollStation(command: { station: $station }) {
@@ -755,6 +763,12 @@ export const UpdateTollStationDocument = graphql(`
 export const DeactivateTollStationDocument = graphql(`
   mutation DeactivateTollStation($id: UUID!) {
     deactivateTollStation(id: $id)
+  }
+`);
+
+export const ReactivateTollStationDocument = graphql(`
+  mutation ReactivateTollStation($id: UUID!) {
+    reactivateTollStation(id: $id)
   }
 `);
 

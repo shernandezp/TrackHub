@@ -30,7 +30,9 @@ type Query {
     @cost(weight: "10")
   accountSupportGrants(query: GetAccountSupportGrantsQueryInput!): [AccountSupportGrantVm!]!
     @cost(weight: "10")
-  alertEvents(query: GetAlertEventsQueryInput!): [AlertEventVm!]!
+  alertEvents(query: GetAlertEventsQueryInput!): AlertEventsPageVm!
+    @cost(weight: "10")
+  openAlertCounts(query: GetOpenAlertCountsQueryInput!): [AlertSeverityCountVm!]!
     @cost(weight: "10")
   auditTrail(query: GetAuditTrailQueryInput!): [AuditEventVm!]!
     @cost(weight: "10")
@@ -39,7 +41,7 @@ type Query {
     )
   auditTrailFeed(query: GetAuditTrailFeedQueryInput!): AuditEventPageVm!
     @cost(weight: "10")
-  backgroundJobRuns(query: GetBackgroundJobRunsQueryInput!): [BackgroundJobRunVm!]!
+  backgroundJobRuns(query: GetBackgroundJobRunsQueryInput!): BackgroundJobRunsPageVm!
     @cost(weight: "10")
   credential(query: GetCredentialQueryInput!): CredentialVm! @cost(weight: "10")
   credentialByOperator(query: GetCredentialByOperatorQueryInput!): CredentialVm!
@@ -56,7 +58,7 @@ type Query {
     @cost(weight: "10")
   deviceTransporterById(query: GetDeviceTransporterByIdQueryInput!): DeviceTransporterVm!
     @cost(weight: "10")
-  documentsForOwner(query: GetDocumentsForOwnerQueryInput!): [DocumentVm!]!
+  documentsForOwner(query: GetDocumentsForOwnerQueryInput!): DocumentsPageVm!
     @cost(weight: "10")
   document(query: GetDocumentQueryInput!): DocumentVm! @cost(weight: "10")
   documentVersions(query: GetDocumentVersionsQueryInput!): [DocumentVersionVm!]!
@@ -65,9 +67,9 @@ type Query {
     @cost(weight: "10")
   documentSignatures(query: GetDocumentSignaturesQueryInput!): [DocumentSignatureVm!]!
     @cost(weight: "10")
-  searchDocuments(query: SearchDocumentsQueryInput!): [DocumentVm!]!
+  searchDocuments(query: SearchDocumentsQueryInput!): DocumentsPageVm!
     @cost(weight: "10")
-  expiringDocuments(query: GetExpiringDocumentsQueryInput!): [DocumentVm!]!
+  expiringDocuments(query: GetExpiringDocumentsQueryInput!): DocumentsPageVm!
     @cost(weight: "10")
   documentShares(query: GetDocumentSharesQueryInput!): [PublicLinkGrantVm!]!
     @cost(weight: "10")
@@ -77,17 +79,21 @@ type Query {
     query: GetTransporterDocumentComplianceQueryInput!
   ): [TransporterDocumentComplianceVm!]! @cost(weight: "10")
   driver(query: GetDriverQueryInput!): DriverVm! @cost(weight: "10")
-  driversByAccount(query: GetDriversByAccountQueryInput!): [DriverVm!]!
+  driversByAccount(query: GetDriversByAccountQueryInput!): DriversPageVm!
     @cost(weight: "10")
   driverAssignments(query: GetDriverAssignmentsQueryInput!): [DriverAssignmentVm!]!
     @cost(weight: "10")
   validateDriverAssignment(query: ValidateDriverAssignmentQueryInput!): Boolean!
     @cost(weight: "10")
-  driverQualifications(query: GetDriverQualificationsQueryInput!): [DriverQualificationVm!]!
+  validateDriverAccount(query: ValidateDriverAccountQueryInput!): Boolean!
     @cost(weight: "10")
-  driverAssignmentHistory(query: GetDriverAssignmentHistoryQueryInput!): [DriverTransporterAssignmentVm!]!
+  driverQualifications(query: GetDriverQualificationsQueryInput!): DriverQualificationsPageVm!
+    @cost(weight: "10")
+  driverAssignmentHistory(query: GetDriverAssignmentHistoryQueryInput!): DriverAssignmentHistoryPageVm!
     @cost(weight: "10")
   myDriverProfile: MyDriverProfileVm! @cost(weight: "10")
+  driverOptions(query: GetDriverOptionsQueryInput!): DriverOptionsPageVm!
+    @cost(weight: "10")
   driverLookup(query: GetDriverLookupQueryInput!): [DriverLookupVm!]!
     @cost(weight: "10")
   geocodingProviders: [GeocodingProviderVm!]! @cost(weight: "10")
@@ -100,11 +106,11 @@ type Query {
   groupLookup: [GroupLookupVm!]! @cost(weight: "10")
   validateGroupVisibility(query: ValidateGroupVisibilityQueryInput!): Boolean!
     @cost(weight: "10")
-  notificationRules(query: GetNotificationRulesQueryInput!): [NotificationRuleVm!]!
+  notificationRules(query: GetNotificationRulesQueryInput!): NotificationRulesPageVm!
     @cost(weight: "10")
-  notificationDeliveries(query: GetNotificationDeliveriesQueryInput!): [NotificationDeliveryVm!]!
+  notificationDeliveries(query: GetNotificationDeliveriesQueryInput!): NotificationDeliveriesPageVm!
     @cost(weight: "10")
-  alertSubscriptions(query: GetAlertSubscriptionsQueryInput!): [AlertSubscriptionVm!]!
+  alertSubscriptions(query: GetAlertSubscriptionsQueryInput!): AlertSubscriptionsPageVm!
     @cost(weight: "10")
   notificationTemplates(query: GetNotificationTemplatesQueryInput!): [NotificationTemplateVm!]!
     @cost(weight: "10")
@@ -132,7 +138,7 @@ type Query {
   currentPrincipal: CurrentPrincipalVm! @cost(weight: "10")
   publicLinkGrant(query: GetPublicLinkGrantQueryInput!): PublicLinkGrantVm!
     @cost(weight: "10")
-  publicLinkGrantsByAccount(query: GetPublicLinkGrantsByAccountQueryInput!): [PublicLinkGrantVm!]!
+  publicLinkGrantsByAccount(query: GetPublicLinkGrantsByAccountQueryInput!): PublicLinkGrantsPageVm!
     @cost(weight: "10")
   reports: [ReportVm!]! @cost(weight: "10")
   reportByCode(code: String!): ReportVm @cost(weight: "10")
@@ -154,8 +160,11 @@ type Query {
     @cost(weight: "10")
   transportersByAccount(query: GetTransportersByAccountQueryInput!): TransportersPageVm!
     @cost(weight: "10")
+  retiredTransporters(query: GetRetiredTransportersQueryInput!): TransportersPageVm!
+    @cost(weight: "10")
   transportersByGroup(query: GetTransporterByGroupQueryInput!): TransportersPageVm!
     @cost(weight: "10")
+  transporterIdsByGroup(groupId: Long!): [UUID!]! @cost(weight: "10")
   transportersByUser(query: GetTransporterByUserQueryInput!): TransportersPageVm!
     @cost(weight: "10")
   transporterLookupByAccount: [TransporterLookupVm!]! @cost(weight: "10")
@@ -329,6 +338,10 @@ type Mutation {
   setSynchronizedDeviceIgnored(
     command: SetSynchronizedDeviceIgnoredCommandInput!
   ): Boolean! @cost(weight: "10")
+  setOperatorSyncBackoff(command: SetOperatorSyncBackoffCommandInput!): Boolean!
+    @cost(weight: "10")
+  clearOperatorSyncBackoff(command: ClearOperatorSyncBackoffCommandInput!): Boolean!
+    @cost(weight: "10")
   registerManualDevice(command: RegisterManualDeviceCommandInput!): DeviceVm!
     @cost(weight: "10")
   assignDeviceToTransporter(command: AssignDeviceToTransporterCommandInput!): TransporterDeviceAssignmentVm!
@@ -345,6 +358,7 @@ type Mutation {
   updateTransporter(id: UUID!, command: UpdateTransporterCommandInput!): Boolean!
     @cost(weight: "10")
   deleteTransporter(id: UUID!): UUID! @cost(weight: "10")
+  restoreTransporter(id: UUID!): UUID! @cost(weight: "10")
   updateTransporterType(id: Short!, command: UpdateTransporterTypeCommandInput!): Boolean!
     @cost(weight: "10")
   createUserGroup(command: CreateUserGroupCommandInput!): UserGroupVm!
@@ -395,6 +409,7 @@ type AccountSettingsVm {
   onlineInterval: Int!
   refreshMap: Boolean!
   refreshMapInterval: Int!
+  version: UnsignedInt!
 }
 
 type AccountsPageVm {
@@ -429,6 +444,12 @@ type AccountVm {
   active: Boolean!
   timeZoneId: String!
   lastModified: DateTime!
+  version: UnsignedInt!
+}
+
+type AlertEventsPageVm {
+  items: [AlertEventVm!]!
+  totalCount: Int!
 }
 
 type AlertEventVm {
@@ -445,6 +466,17 @@ type AlertEventVm {
   payloadJson: String
   deduplicationKey: String!
   lastModified: DateTime!
+  resourceName: String
+}
+
+type AlertSeverityCountVm {
+  severity: String!
+  count: Int!
+}
+
+type AlertSubscriptionsPageVm {
+  items: [AlertSubscriptionVm!]!
+  totalCount: Int!
 }
 
 type AlertSubscriptionVm {
@@ -479,6 +511,13 @@ type AuditEventVm {
   userAgent: String
   correlationId: String
   occurredAt: DateTime!
+  actorName: String
+  resourceName: String
+}
+
+type BackgroundJobRunsPageVm {
+  items: [BackgroundJobRunVm!]!
+  totalCount: Int!
 }
 
 type BackgroundJobRunVm {
@@ -631,6 +670,11 @@ type DocumentSignatureVm {
   createdAt: DateTime!
 }
 
+type DocumentsPageVm {
+  items: [DocumentVm!]!
+  totalCount: Int!
+}
+
 type DocumentTypeVm {
   documentTypeId: UUID!
   accountId: UUID!
@@ -683,6 +727,11 @@ type DocumentVm {
   lastModified: DateTime!
 }
 
+type DriverAssignmentHistoryPageVm {
+  items: [DriverTransporterAssignmentVm!]!
+  totalCount: Int!
+}
+
 type DriverAssignmentVm {
   driverId: UUID!
   accountId: UUID!
@@ -700,6 +749,16 @@ type DriverLookupVm {
   active: Boolean!
 }
 
+type DriverOptionsPageVm {
+  items: [DriverLookupVm!]!
+  totalCount: Int!
+}
+
+type DriverQualificationsPageVm {
+  items: [DriverQualificationVm!]!
+  totalCount: Int!
+}
+
 type DriverQualificationVm {
   driverQualificationId: UUID!
   accountId: UUID!
@@ -715,6 +774,11 @@ type DriverQualificationVm {
   documentId: UUID
   notes: String
   lastModified: DateTime!
+}
+
+type DriversPageVm {
+  items: [DriverVm!]!
+  totalCount: Int!
 }
 
 type DriverTransporterAssignmentVm {
@@ -745,6 +809,7 @@ type DriverVm {
   licenseExpiresAt: LocalDate
   defaultTransporterId: UUID
   lastModified: DateTime!
+  version: UnsignedInt!
 }
 
 type GeocodingProviderTokenVm {
@@ -809,6 +874,7 @@ type GroupVm {
   description: String!
   active: Boolean!
   accountId: UUID!
+  version: UnsignedInt!
 }
 
 type MyDriverProfileVm {
@@ -830,6 +896,11 @@ type MyNotificationVm {
   readAt: DateTime
 }
 
+type NotificationDeliveriesPageVm {
+  items: [NotificationDeliveryVm!]!
+  totalCount: Int!
+}
+
 type NotificationDeliveryVm {
   notificationDeliveryId: UUID!
   accountId: UUID!
@@ -847,6 +918,11 @@ type NotificationDeliveryVm {
   lastModified: DateTime!
 }
 
+type NotificationRulesPageVm {
+  items: [NotificationRuleVm!]!
+  totalCount: Int!
+}
+
 type NotificationRuleVm {
   notificationRuleId: UUID!
   accountId: UUID!
@@ -859,6 +935,7 @@ type NotificationRuleVm {
   throttlingJson: String
   configurationJson: String
   lastModified: DateTime!
+  version: UnsignedInt!
 }
 
 type NotificationTemplateVm {
@@ -929,6 +1006,9 @@ type OperatorVm {
   lastFailureMessage: String
   lastLatencyMs: Int
   lastHealthCheckAt: DateTime
+  syncFailureCount: Int!
+  syncRetryAt: DateTime
+  version: UnsignedInt!
 }
 
 type PlatformAnnouncementVm {
@@ -940,6 +1020,7 @@ type PlatformAnnouncementVm {
   endsAt: DateTime
   active: Boolean!
   lastModified: DateTime!
+  version: UnsignedInt!
 }
 
 type PointOfInterestLookupVm {
@@ -970,6 +1051,11 @@ type PointOfInterestVm {
 
 type PointsOfInterestPageVm {
   items: [PointOfInterestVm!]!
+  totalCount: Int!
+}
+
+type PublicLinkGrantsPageVm {
+  items: [PublicLinkGrantVm!]!
   totalCount: Int!
 }
 
@@ -1009,6 +1095,7 @@ type ReportVm {
   supportsPdf: Boolean!
   sortOrder: Int!
   filters: String
+  requiredGrants: String
 }
 
 type TokenVm {
@@ -1075,6 +1162,7 @@ type TransporterVm {
   name: String!
   transporterType: TransporterType!
   transporterTypeId: Short!
+  version: UnsignedInt!
 }
 
 type UserGroupVm {
@@ -1144,6 +1232,7 @@ input AccountSettingsDtoInput {
   onlineInterval: Int!
   refreshMap: Boolean!
   refreshMapInterval: Int!
+  expectedVersion: UnsignedInt
 }
 
 input AccountSupportGrantDtoInput {
@@ -1184,7 +1273,6 @@ input AlertSubscriptionDtoInput {
 
 input ApproveAccountSupportGrantCommandInput {
   accountSupportGrantId: UUID!
-  approvedBy: String!
 }
 
 input AssignDeviceToTransporterCommandInput {
@@ -1231,6 +1319,10 @@ input ChangeAccountStatusCommandInput {
   accountId: UUID!
   targetStatus: AccountStatus!
   reason: String
+}
+
+input ClearOperatorSyncBackoffCommandInput {
+  operatorId: UUID!
 }
 
 input ConfigureDocumentTypeCommandInput {
@@ -1434,6 +1526,7 @@ input DriverDtoInput {
   licenseNumber: String
   licenseExpiresAt: LocalDate
   defaultTransporterId: UUID
+  expectedVersion: UnsignedInt
 }
 
 input DriverQualificationDtoInput {
@@ -1545,6 +1638,10 @@ input GetAlertEventsQueryInput {
   accountId: UUID!
   from: DateTime
   to: DateTime
+  status: String
+  severity: String
+  sourceModule: String
+  eventTypes: [String!]
   skip: Int! = 0
   take: Int! = 50
 }
@@ -1678,6 +1775,12 @@ input GetDriverLookupQueryInput {
   driverIds: [UUID!]
 }
 
+input GetDriverOptionsQueryInput {
+  search: String
+  skip: Int
+  take: Int
+}
+
 input GetDriverQualificationsQueryInput {
   accountId: UUID!
   driverId: UUID
@@ -1692,6 +1795,7 @@ input GetDriverQueryInput {
 
 input GetDriversByAccountQueryInput {
   accountId: UUID!
+  search: String
   skip: Int! = 0
   take: Int! = 50
 }
@@ -1742,6 +1846,10 @@ input GetNotificationTemplatesQueryInput {
   accountId: UUID!
 }
 
+input GetOpenAlertCountsQueryInput {
+  accountId: UUID!
+}
+
 input GetOperatorByCurrentAccountQueryInput {
   skip: Int
   take: Int
@@ -1773,6 +1881,7 @@ input GetPointsOfInterestByAccountQueryInput {
   skip: Int
   take: Int
   search: String
+  active: Boolean
 }
 
 input GetPublicLinkGrantQueryInput {
@@ -1783,6 +1892,12 @@ input GetPublicLinkGrantsByAccountQueryInput {
   accountId: UUID!
   skip: Int! = 0
   take: Int! = 50
+}
+
+input GetRetiredTransportersQueryInput {
+  skip: Int
+  take: Int
+  search: String
 }
 
 input GetSupportGrantStatusQueryInput {
@@ -1907,6 +2022,7 @@ input NotificationRuleDtoInput {
   channelsJson: String!
   throttlingJson: String
   configurationJson: String
+  expectedVersion: UnsignedInt
 }
 
 input NotificationTemplateDtoInput {
@@ -1937,6 +2053,7 @@ input PlatformAnnouncementDtoInput {
   startsAt: DateTime
   endsAt: DateTime
   active: Boolean!
+  expectedVersion: UnsignedInt
 }
 
 input PointOfInterestDtoInput {
@@ -1958,9 +2075,8 @@ input PublicLinkGrantDtoInput {
   resourceId: String!
   scopes: String!
   purpose: String!
-  subjectTokenIdHash: String
   expiresAt: DateTime!
-  createdByPrincipalId: String!
+  createdByPrincipalId: String
 }
 
 input RecordAlertEventCommandInput {
@@ -2003,12 +2119,11 @@ input RetryNotificationDeliveryCommandInput {
 
 input RevokeAccountSupportGrantCommandInput {
   accountSupportGrantId: UUID!
-  revokedBy: String!
 }
 
 input RevokePublicLinkGrantCommandInput {
   publicLinkGrantId: UUID!
-  revokedBy: String!
+  revokedBy: String
 }
 
 input SearchDocumentsQueryInput {
@@ -2034,6 +2149,12 @@ input SetAccountFeatureMasterCommandInput {
 input SetOperatorEnabledCommandInput {
   operatorId: UUID!
   enabled: Boolean!
+}
+
+input SetOperatorSyncBackoffCommandInput {
+  operatorId: UUID!
+  consecutiveFailures: Int!
+  retryAt: DateTime!
 }
 
 input SetSynchronizedDeviceIgnoredCommandInput {
@@ -2104,6 +2225,7 @@ input UpdateAccountDtoInput {
   typeId: Short!
   active: Boolean!
   timeZoneId: String
+  expectedVersion: UnsignedInt
 }
 
 input UpdateAccountFeatureConfigurationCommandInput {
@@ -2171,6 +2293,7 @@ input UpdateGroupDtoInput {
   name: String!
   description: String!
   active: Boolean!
+  expectedVersion: UnsignedInt
 }
 
 input UpdateNotificationRuleCommandInput {
@@ -2210,6 +2333,7 @@ input UpdateOperatorDtoInput {
   contactName: String
   protocolTypeId: Short!
   syncIntervalMinutes: Int!
+  expectedVersion: UnsignedInt
 }
 
 input UpdatePlatformAnnouncementCommandInput {
@@ -2270,6 +2394,7 @@ input UpdateTransporterDtoInput {
   transporterId: UUID!
   name: String!
   transporterTypeId: Short!
+  expectedVersion: UnsignedInt
 }
 
 input UpdateTransporterTypeCommandInput {
@@ -2285,6 +2410,7 @@ input UpdateUserDtoInput {
   username: String!
   active: Boolean!
   role: String
+  accountId: UUID
 }
 
 input UpdateUserSettingsCommandInput {
@@ -2309,6 +2435,11 @@ input UserSettingsDtoInput {
   style: String!
   navbar: String!
   userId: UUID!
+}
+
+input ValidateDriverAccountQueryInput {
+  driverId: UUID!
+  accountId: UUID!
 }
 
 input ValidateDriverAssignmentQueryInput {
@@ -2494,6 +2625,10 @@ scalar Long
 "The `Short` scalar type represents a signed 16-bit integer."
 scalar Short
   @specifiedBy(url: "https://scalars.graphql.org/chillicream/short.html")
+
+"The `UnsignedInt` scalar type represents an unsigned 32-bit integer."
+scalar UnsignedInt
+  @specifiedBy(url: "https://scalars.graphql.org/chillicream/unsigned-int.html")
 
 "The `UUID` scalar type represents a Universally Unique Identifier (UUID) as defined by RFC 9562."
 scalar UUID

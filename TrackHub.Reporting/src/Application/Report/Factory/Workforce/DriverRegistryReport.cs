@@ -42,7 +42,7 @@ public sealed class DriverRegistryReport(IWorkforceReportReader reader) : IRepor
                 d.DocumentNumber.OrEmpty(),
                 d.Phone.OrEmpty(),
                 d.LicenseNumber.OrEmpty(),
-                d.LicenseExpiresAt.ToUtcInstant(),
+                d.LicenseExpiresAt,
                 d.DefaultTransporterId?.ToString() ?? string.Empty,
                 d.Active))
             .ToList();

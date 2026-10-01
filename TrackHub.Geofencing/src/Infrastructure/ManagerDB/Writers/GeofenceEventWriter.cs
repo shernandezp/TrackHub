@@ -13,6 +13,8 @@
 //  limitations under the License.
 //
 
+using Common.Infrastructure;
+
 namespace TrackHub.Geofencing.Infrastructure.Writers;
 
 public sealed class GeofenceEventWriter(IApplicationDbContext context) : IGeofenceEventWriter
@@ -48,10 +50,61 @@ public sealed class GeofenceEventWriter(IApplicationDbContext context) : IGeofen
         };
 
         await context.GeofenceEvents.AddAsync(evt, cancellationToken);
-        await context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception) when (UniqueViolation.Matches(exception, Configurations.GeofenceEventConfiguration.OpenVisitIndex))
+        {
+            // A concurrent detection pass opened this visit first.
+            context.GeofenceEvents.Entry(evt).State = EntityState.Detached;
+            return null;
+        }
 
         return CastVm(evt);
     }
+
+    public async Task SetOutsideSinceAsync(
+        Guid geofenceEventId,
+        DateTimeOffset? outsideSinceAt,
+        CancellationToken cancellationToken)
+    {
+        var evt = await context.GeofenceEvents.FindAsync([geofenceEventId], cancellationToken)
+            ?? throw new KeyNotFoundException($"GeofenceEvent with ID {geofenceEventId} not found.");
+
+        context.GeofenceEvents.Attach(evt);
+
+        evt.OutsideSinceAt = outsideSinceAt;
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task AdvanceDetectionCursorsAsync(
+        Guid accountId,
+        IReadOnlyDictionary<Guid, DateTimeOffset> lastFixByTransporter,
+        CancellationToken cancellationToken)
+    {
+        var transporterIds = lastFixByTransporter.Keys.ToList();
+        var cursors = await context.TransporterDetectionCursors
+            .AsTracking()
+            .Where(c => transporterIds.Contains(c.TransporterId))
+            .ToDictionaryAsync(c => c.TransporterId, cancellationToken);
+
+        foreach (var (transporterId, lastFixAt) in lastFixByTransporter)
+        {
+            if (!cursors.TryGetValue(transporterId, out var cursor))
+            {
+                await context.TransporterDetectionCursors.AddAsync(new TransporterDetectionCursor(transporterId, accountId, lastFixAt), cancellationToken);
+            }
+            else if (lastFixAt > cursor.LastFixAt)
+            {
+                cursor.AccountId = accountId;
+                cursor.LastFixAt = lastFixAt;
+            }
+        }
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
 
     public async Task<GeofenceEventVm> UpdateExitEventAsync(
         Guid geofenceEventId,
@@ -111,5 +164,6 @@ public sealed class GeofenceEventWriter(IApplicationDbContext context) : IGeofen
             evt.EventDateTime,
             evt.DepartureTimestamp,
             evt.Latitude,
-            evt.Longitude);
+            evt.Longitude,
+            evt.OutsideSinceAt);
 }

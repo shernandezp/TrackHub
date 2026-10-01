@@ -17,15 +17,28 @@ public sealed class NotificationTemplateWriter(IApplicationDbContext context, IC
         }
 
         var accountId = RequireAccountWriteAccess(template.AccountId.Value);
-        var duplicate = await Context.NotificationTemplates.AnyAsync(x =>
+        var twin = await Context.NotificationTemplates.AsTracking().FirstOrDefaultAsync(x =>
             x.AccountId == accountId
             && x.TemplateKey == template.TemplateKey
             && x.Channel == template.Channel
             && x.Locale == template.Locale, cancellationToken);
-        if (duplicate)
+        if (twin is { Active: true })
         {
             throw new ConflictException("A template with the same key, channel, and locale already exists.");
         }
+
+        // A deactivated override for the same key, channel and locale is brought back with the new text.
+        if (twin is not null)
+        {
+            var previous = Describe(twin);
+            twin.Subject = template.Subject;
+            twin.Body = template.Body;
+            twin.Active = template.Active;
+            AddAuditEvent(accountId, "ReactivateNotificationTemplate", "NotificationTemplate", $"{twin.NotificationTemplateId}", previous, Describe(twin));
+            await Context.SaveChangesAsync(cancellationToken);
+            return ToVm(twin);
+        }
+
 
         var entity = new NotificationTemplate(accountId, template.TemplateKey, template.Channel, template.Locale, template.Subject, template.Body, template.Active);
         await Context.NotificationTemplates.AddAsync(entity, cancellationToken);
@@ -36,9 +49,7 @@ public sealed class NotificationTemplateWriter(IApplicationDbContext context, IC
 
     public async Task UpdateNotificationTemplateAsync(Guid notificationTemplateId, NotificationTemplateDto template, CancellationToken cancellationToken)
     {
-        var entity = await Context.NotificationTemplates
-            .AsTracking().FirstAsync(x => x.NotificationTemplateId == notificationTemplateId, cancellationToken);
-        RequireAccountOverride(entity);
+        var entity = await LoadAccountOverrideAsync(notificationTemplateId, cancellationToken);
         if (template.AccountId != entity.AccountId)
         {
             throw new ForbiddenAccessException();
@@ -68,23 +79,31 @@ public sealed class NotificationTemplateWriter(IApplicationDbContext context, IC
 
     public async Task DeleteNotificationTemplateAsync(Guid notificationTemplateId, CancellationToken cancellationToken)
     {
-        var entity = await Context.NotificationTemplates
-            .AsTracking().FirstAsync(x => x.NotificationTemplateId == notificationTemplateId, cancellationToken);
-        RequireAccountOverride(entity);
+        var entity = await LoadAccountOverrideAsync(notificationTemplateId, cancellationToken);
         AddAuditEvent(entity.AccountId ?? Guid.Empty, "DeleteNotificationTemplate", "NotificationTemplate", $"{entity.NotificationTemplateId}", Describe(entity), null);
         Context.NotificationTemplates.Remove(entity);
         await Context.SaveChangesAsync(cancellationToken);
     }
 
-    private void RequireAccountOverride(NotificationTemplate entity)
+    // Platform defaults are visible to every account, so refusing them discloses nothing; another
+    // account's override is answered NotFound.
+    private async Task<NotificationTemplate> LoadAccountOverrideAsync(Guid notificationTemplateId, CancellationToken cancellationToken)
     {
         RequirePrivileged();
+        var entity = await Context.NotificationTemplates
+            .AsTracking().FirstOrDefaultAsync(x => x.NotificationTemplateId == notificationTemplateId, cancellationToken)
+            ?? throw new NotFoundException(nameof(NotificationTemplate), notificationTemplateId.ToString());
         if (!entity.AccountId.HasValue)
         {
             throw new ForbiddenAccessException("Platform default templates are read-only to accounts.");
         }
 
-        RequireAccountWriteAccess(entity.AccountId.Value);
+        if (!HasAccountAccess(entity.AccountId.Value, forWrite: true))
+        {
+            throw new NotFoundException(nameof(NotificationTemplate), notificationTemplateId.ToString());
+        }
+
+        return entity;
     }
 
 

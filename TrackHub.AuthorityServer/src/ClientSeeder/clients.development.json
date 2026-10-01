@@ -1,0 +1,10 @@
+{
+  "PKCEClients": [
+    {
+      "clientId": "postman_client",
+      "uri": "https://oauth.pstmn.io/v1/callback",
+      "postLogoutUri": "https://oauth.pstmn.io/v1/callback",
+      "scope": "web_scope"
+    }
+  ]
+}

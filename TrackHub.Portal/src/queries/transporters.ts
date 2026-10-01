@@ -20,7 +20,7 @@
  * surface in the global toast via the query client's error handlers.
  */
 
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from 'api/manager/transporters';
 import type {
   TransporterDtoInput,
@@ -34,15 +34,13 @@ export const transporterKeys = {
   byAccount: (params: ListParams = {}) =>
     [...transporterKeys.all, 'byAccount', params] as const,
   byUser: (params: ListParams = {}) => [...transporterKeys.all, 'byUser', params] as const,
+  retired: (params: ListParams = {}) => [...transporterKeys.all, 'retired', params] as const,
   byGroup: (groupId: number) => [...transporterKeys.all, 'byGroup', groupId] as const,
-  lookupByAccount: () => [...transporterKeys.all, 'lookupByAccount'] as const,
   lookupByUser: () => [...transporterKeys.all, 'lookupByUser'] as const,
   detail: (id: string) => [...transporterKeys.all, 'detail', id] as const,
   assignments: ['transporterDeviceAssignments'] as const,
   assignmentsByAccount: (accountId: string, activeOnly: boolean, params: ListParams = {}) =>
     [...transporterKeys.assignments, 'byAccount', accountId, activeOnly, params] as const,
-  allAssignmentsByAccount: (accountId: string, activeOnly: boolean) =>
-    [...transporterKeys.assignments, 'allByAccount', accountId, activeOnly] as const,
   assignmentsByTransporter: (transporterId: string, activeOnly: boolean) =>
     [...transporterKeys.assignments, 'byTransporter', transporterId, activeOnly] as const,
 };
@@ -54,7 +52,7 @@ export function useTransportersByAccount(
 ) {
   return useQuery({
     queryKey: transporterKeys.byAccount(params),
-    queryFn: () => api.getTransportersByAccount(params),
+    queryFn: ({ signal }) => api.getTransportersByAccount(params, { signal }),
     enabled: options.enabled ?? true,
     // A page change swaps the query key; without a placeholder the list reads as EMPTY
     // (totalCount 0) while the next page loads, and the page clamp snaps it back to page one.
@@ -62,37 +60,48 @@ export function useTransportersByAccount(
   });
 }
 
-/**
- * The account's transporters as id + name — the admin-side picker source. Kept
- * separate from {@link useTransporterLookupByUser}: admin screens see the whole
- * account, the dashboard/reports/tripmanager see only the user's own units.
- */
-export function useTransporterLookupByAccount(options: { enabled?: boolean } = {}) {
-  return useQuery({
-    queryKey: transporterKeys.lookupByAccount(),
-    queryFn: api.getTransporterLookupByAccount,
-    enabled: options.enabled ?? true,
-  });
-}
-
 /** The transporters the signed-in user may track, as id + name. */
 export function useTransporterLookupByUser(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: transporterKeys.lookupByUser(),
-    queryFn: api.getTransporterLookupByUser,
+    queryFn: ({ signal }) => api.getTransporterLookupByUser({ signal }),
     enabled: options.enabled ?? true,
   });
 }
 
+/** One server page of the transporters the signed-in user may track (the user-scoped picker source). */
+export function useTransportersByUser(params: ListParams = {}, options: { enabled?: boolean } = {}) {
+  return useQuery({
+    queryKey: transporterKeys.byUser(params),
+    queryFn: ({ signal }) => api.getTransportersByUser(params, { signal }),
+    enabled: options.enabled ?? true,
+    placeholderData: keepPreviousData,
+  });
+}
+
+/** Names exactly the given transporters, for a picker's current value or a short list of ids. */
+export function useTransporterNames(transporterIds: readonly string[]) {
+  const results = useQueries({
+    queries: transporterIds.map((transporterId) => ({
+      queryKey: transporterKeys.detail(transporterId),
+      queryFn: ({ signal }: { signal: AbortSignal }) => api.getTransporter(transporterId, { signal }),
+      staleTime: 5 * 60_000,
+    })),
+  });
+  return new Map(
+    results.flatMap((result) => (result.data ? [[result.data.transporterId, result.data.name] as const] : []))
+  );
+}
+
 /**
  * A group's complete transporter membership (all server pages drained): the
- * allocator dialog subtracts it from the account lookup, and a partial list
- * would offer already-assigned units again.
+ * allocator dialog excludes it from its picker, and a partial list would offer
+ * already-assigned units again.
  */
 export function useTransportersByGroup(groupId: number | undefined) {
   return useQuery({
     queryKey: transporterKeys.byGroup(groupId ?? -1),
-    queryFn: () => api.getAllTransportersByGroup(groupId as number),
+    queryFn: ({ signal }) => api.getAllTransportersByGroup(groupId as number, { signal }),
     enabled: groupId !== undefined,
   });
 }
@@ -117,6 +126,23 @@ export function useUpdateTransporter() {
   });
 }
 
+export function useRetiredTransporters(params: ListParams = {}, options: { enabled?: boolean } = {}) {
+  return useQuery({
+    queryKey: transporterKeys.retired(params),
+    queryFn: ({ signal }) => api.getRetiredTransporters(params, { signal }),
+    enabled: options.enabled ?? true,
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useRestoreTransporter() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (transporterId: string) => api.restoreTransporter(transporterId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: transporterKeys.all }),
+  });
+}
+
 export function useDeleteTransporter() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -133,8 +159,8 @@ export function useTransporterDeviceAssignmentsByAccount(
 ) {
   return useQuery({
     queryKey: transporterKeys.assignmentsByAccount(accountId ?? '', activeOnly, params),
-    queryFn: () =>
-      api.getTransporterDeviceAssignmentsByAccount(accountId as string, { activeOnly, ...params }),
+    queryFn: ({ signal }) =>
+      api.getTransporterDeviceAssignmentsByAccount(accountId as string, { activeOnly, ...params }, { signal }),
     enabled: !!accountId,
     // A page change swaps the query key; without a placeholder the list reads as EMPTY
     // (totalCount 0) while the next page loads, and the page clamp snaps it back to page one.

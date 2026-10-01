@@ -60,6 +60,8 @@ public class ReverseGeocodeQueryHandler(
                 await addressWriter.PersistResolvedAddressAsync(
                     request.TransporterPositionHistoryId,
                     request.TransporterId,
+                    request.Latitude,
+                    request.Longitude,
                     address.Value,
                     cancellationToken);
             }

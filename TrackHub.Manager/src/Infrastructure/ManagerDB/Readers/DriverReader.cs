@@ -1,3 +1,4 @@
+using Common.Infrastructure;
 using Common.Application.Interfaces;
 using TrackHub.Manager.Domain.Constants;
 using TrackHub.Manager.Infrastructure.Interfaces;
@@ -14,21 +15,31 @@ public sealed class DriverReader(IApplicationDbContext context, ICurrentPrincipa
         var accountId = ResolveAccountScope(null);
         var found = await Context.Drivers
             .Where(x => x.DriverId == driverId && (!accountId.HasValue || x.AccountId == accountId.Value))
-            .Select(x => new DriverVm(x.DriverId, x.AccountId, x.Name, x.Phone, x.DocumentType, x.DocumentNumber, x.Active, x.EmployeeCode, x.LicenseNumber, x.LicenseExpiresAt, x.DefaultTransporterId, x.LastModified))
+            .Select(x => new DriverVm(x.DriverId, x.AccountId, x.Name, x.Phone, x.DocumentType, x.DocumentNumber, x.Active, x.EmployeeCode, x.LicenseNumber, x.LicenseExpiresAt, x.DefaultTransporterId, x.LastModified, x.Version))
             .FirstOrDefaultAsync(cancellationToken);
         ReaderResults.EnsureFound(found, nameof(Entities.Driver), driverId.ToString());
         return found;
     }
 
-    public async Task<IReadOnlyCollection<DriverVm>> GetDriversByAccountAsync(Guid accountId, int skip, int take, CancellationToken cancellationToken)
+    public async Task<DriversPageVm> GetDriversByAccountAsync(Guid accountId, string? search, int skip, int take, CancellationToken cancellationToken)
     {
         var scopedAccountId = RequireAccountAccess(accountId);
-        return await Context.Drivers
-            .Where(x => x.AccountId == scopedAccountId)
+        var query = Context.Drivers.Where(x => x.AccountId == scopedAccountId);
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var pattern = SearchPattern.Contains(search);
+            query = query.Where(x => EF.Functions.ILike(x.Name, pattern, SearchPattern.Escape)
+                || (x.DocumentNumber != null && EF.Functions.ILike(x.DocumentNumber, pattern, SearchPattern.Escape))
+                || (x.EmployeeCode != null && EF.Functions.ILike(x.EmployeeCode, pattern, SearchPattern.Escape)));
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
             .OrderBy(x => x.Name).ThenBy(x => x.DriverId)
             .Skip(Offset(skip)).Take(PageSize(take))
-            .Select(x => new DriverVm(x.DriverId, x.AccountId, x.Name, x.Phone, x.DocumentType, x.DocumentNumber, x.Active, x.EmployeeCode, x.LicenseNumber, x.LicenseExpiresAt, x.DefaultTransporterId, x.LastModified))
+            .Select(x => new DriverVm(x.DriverId, x.AccountId, x.Name, x.Phone, x.DocumentType, x.DocumentNumber, x.Active, x.EmployeeCode, x.LicenseNumber, x.LicenseExpiresAt, x.DefaultTransporterId, x.LastModified, x.Version))
             .ToListAsync(cancellationToken);
+        return new DriversPageVm(items, totalCount);
     }
 
     /// <summary>
@@ -124,6 +135,9 @@ public sealed class DriverReader(IApplicationDbContext context, ICurrentPrincipa
             cancellationToken);
     }
 
+    public async Task<bool> DriverBelongsToAccountAsync(Guid driverId, Guid accountId, CancellationToken cancellationToken)
+        => await Context.Drivers.AnyAsync(x => x.DriverId == driverId && x.AccountId == accountId, cancellationToken);
+
     /// <summary>
     /// Driver self-view. The driver id is supplied by the handler from the authenticated principal, so
     /// this can only ever return the caller's own record set (spec 09 AC2).
@@ -134,7 +148,7 @@ public sealed class DriverReader(IApplicationDbContext context, ICurrentPrincipa
         // raw InvalidOperationException.
         var driver = await Context.Drivers
             .Where(x => x.DriverId == driverId)
-            .Select(x => (DriverVm?)new DriverVm(x.DriverId, x.AccountId, x.Name, x.Phone, x.DocumentType, x.DocumentNumber, x.Active, x.EmployeeCode, x.LicenseNumber, x.LicenseExpiresAt, x.DefaultTransporterId, x.LastModified))
+            .Select(x => (DriverVm?)new DriverVm(x.DriverId, x.AccountId, x.Name, x.Phone, x.DocumentType, x.DocumentNumber, x.Active, x.EmployeeCode, x.LicenseNumber, x.LicenseExpiresAt, x.DefaultTransporterId, x.LastModified, x.Version))
             .FirstOrDefaultAsync(cancellationToken)
             is { } found
             ? found

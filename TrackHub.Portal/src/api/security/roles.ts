@@ -22,6 +22,7 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { RequestOptions } from 'api/core/errors';
 import type {
   RoleItemFragment as RoleItemType,
   GetResourcesByRoleQuery,
@@ -41,18 +42,18 @@ export type Role = RoleItemType;
 export type RoleResources = GetResourcesByRoleQuery['resourcesByRole'];
 export type RoleUser = GetUserLookupByRoleQuery['userLookupByRole'][number];
 
-export async function getRoles(): Promise<Role[]> {
-  const data = await executeGraphQL('security', GetRolesDocument);
+export async function getRoles(options?: RequestOptions): Promise<Role[]> {
+  const data = await executeGraphQL('security', GetRolesDocument, undefined, options);
   return data.roles;
 }
 
-export async function getResourcesByRole(roleId: number): Promise<RoleResources> {
-  const data = await executeGraphQL('security', GetResourcesByRoleDocument, { roleId });
+export async function getResourcesByRole(roleId: number, options?: RequestOptions): Promise<RoleResources> {
+  const data = await executeGraphQL('security', GetResourcesByRoleDocument, { roleId }, options);
   return data.resourcesByRole;
 }
 
-export async function getUserLookupByRole(roleId: number): Promise<RoleUser[]> {
-  const data = await executeGraphQL('security', GetUserLookupByRoleDocument, { roleId });
+export async function getUserLookupByRole(roleId: number, options?: RequestOptions): Promise<RoleUser[]> {
+  const data = await executeGraphQL('security', GetUserLookupByRoleDocument, { roleId }, options);
   return data.userLookupByRole;
 }
 

@@ -25,6 +25,8 @@ public class CreateNotificationRuleCommandValidator : AbstractValidator<CreateNo
 
 [Authorize(Resource = Resources.Notifications, Action = Actions.Edit)]
 [RequireFeature(FeatureKeys.Notifications)]
+// Enforcement: the writer or reader checks every referenced id against the request's account.
+[AccountScopeEnforcedInHandler]
 public readonly record struct UpdateNotificationRuleCommand(Guid NotificationRuleId, NotificationRuleDto NotificationRule) : IRequest;
 public class UpdateNotificationRuleCommandHandler(INotificationWriter writer, IFeatureFlagService featureFlags) : IRequestHandler<UpdateNotificationRuleCommand>
 {
@@ -56,6 +58,8 @@ public class DisableNotificationRuleCommandHandler(INotificationWriter writer) :
 
 [Authorize(Resource = Resources.Notifications, Action = Actions.Write)]
 [RequireFeature(FeatureKeys.Notifications)]
+// Enforcement: the writer or reader checks every referenced id against the request's account.
+[AccountScopeEnforcedInHandler]
 public readonly record struct CreateNotificationDeliveryCommand(NotificationDeliveryDto NotificationDelivery) : IRequest<NotificationDeliveryVm>;
 public class CreateNotificationDeliveryCommandHandler(INotificationWriter writer) : IRequestHandler<CreateNotificationDeliveryCommand, NotificationDeliveryVm>
 {

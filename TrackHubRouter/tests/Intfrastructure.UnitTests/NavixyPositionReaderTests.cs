@@ -13,6 +13,8 @@
 //  limitations under the License.
 //
 
+using System.Text.Json;
+using TrackHub.Router.Domain.Records;
 using TrackHub.Router.Infrastructure.Navixy.Models;
 using TrackHub.Router.Infrastructure.Tests;
 
@@ -75,5 +77,39 @@ public class PositionReaderTests : PositionReaderTestsBase<PositionReader>
 
         // Assert
         AssertIsEmpty(result);
+    }
+
+    [Test]
+    public async Task GetPositionAsync_ReadsAndWritesDatesInTheNavixyUserTimeZone()
+    {
+        var credential = new CredentialTokenDto(Guid.NewGuid(), "https://navixy.test", "user", "secret", null, null, null, null, null, null);
+        var deviceDto = CreateDeviceTransporterVm(1, "TestDevice");
+        object? sentParameters = null;
+
+        HttpClientFactoryMock.Setup(x => x.CreateClientAsync(credential, TestCancellationToken)).Returns(new HttpClient());
+        HttpClientServiceMock.Setup(x => x.PostAsync<AuthResponse>(It.IsAny<string>(), It.IsAny<object>(), TestCancellationToken))
+            .ReturnsAsync(new AuthResponse(true, "hash-1"));
+        HttpClientServiceMock.Setup(x => x.PostAsync<UserSettingsResponse>(It.IsAny<string>(), It.IsAny<object>(), TestCancellationToken))
+            .ReturnsAsync(new UserSettingsResponse(true, new NavixyUserSettings("America/Bogota")));
+        HttpClientServiceMock.Setup(x => x.PostAsync<TrackReadResponse>(It.IsAny<string>(), It.IsAny<object>(), TestCancellationToken))
+            .Callback<string, object, CancellationToken>((_, parameters, _) => sentParameters = parameters)
+            .ReturnsAsync(new TrackReadResponse(true, false,
+                [new TrackPoint(4.71, -74.07, 2640, "2026-07-17 04:20:00", 63, 210, null, null, null, null)]));
+
+        await PositionReader.Init(credential, TestCancellationToken);
+        var result = (await PositionReader.GetPositionAsync(
+            new DateTimeOffset(2026, 7, 17, 5, 0, 0, TimeSpan.Zero),
+            new DateTimeOffset(2026, 7, 17, 11, 0, 0, TimeSpan.Zero),
+            deviceDto,
+            TestCancellationToken)).Single();
+
+        var sent = JsonSerializer.Serialize(sentParameters);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(sent, Does.Contain("\"from\":\"2026-07-17 00:00:00\""));
+            Assert.That(sent, Does.Contain("\"to\":\"2026-07-17 06:00:00\""));
+            Assert.That(result.DeviceDateTime, Is.EqualTo(new DateTimeOffset(2026, 7, 17, 9, 20, 0, TimeSpan.Zero)));
+        }
+        SessionStoreMock.Verify(x => x.Set(credential, It.Is<string>(s => s.Contains("America/Bogota")), It.IsAny<TimeSpan>(), true), Times.Once);
     }
 }

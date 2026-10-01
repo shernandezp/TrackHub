@@ -138,6 +138,8 @@ public class OperatorReader : GraphQLService, IOperatorReader
                         lastPositionSyncAt
                         healthStatus
                         lastHealthCheckAt
+                        syncFailureCount
+                        syncRetryAt
                         credential {
                             credentialId
                             uri

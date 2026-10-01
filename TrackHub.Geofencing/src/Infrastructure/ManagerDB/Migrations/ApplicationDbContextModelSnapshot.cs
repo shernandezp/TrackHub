@@ -244,6 +244,11 @@ namespace TrackHub.Geofencing.Infrastructure.Migrations
                         .HasColumnName("type")
                         .HasComment("Category of the geofence. Values: 1=ClientLocation, 2=ConstructionSite, 3=DangerZone, 4=FuelStation, 5=Garage, 6=Hospital, 7=Hotel, 8=Office, 9=Park, 10=ParkingLot, 11=RestrictedArea, 12=RetailStore, 13=School, 14=Warehouse.");
 
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("editversion");
+
                     b.HasKey("GeofenceId");
 
                     b.HasIndex("AccountId")
@@ -303,6 +308,10 @@ namespace TrackHub.Geofencing.Infrastructure.Migrations
                         .HasColumnType("double precision")
                         .HasColumnName("longitude");
 
+                    b.Property<DateTimeOffset?>("OutsideSinceAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("outsidesinceat");
+
                     b.Property<Guid>("TransporterId")
                         .HasColumnType("uuid")
                         .HasColumnName("transporterid");
@@ -318,11 +327,32 @@ namespace TrackHub.Geofencing.Infrastructure.Migrations
                     b.HasIndex("AccountId", "EventDateTime")
                         .HasDatabaseName("ix_geofenceevent_accountid_datetime");
 
-                    b.HasIndex("TransporterId", "GeofenceId", "DepartureTimestamp")
-                        .HasDatabaseName("ix_geofenceevent_open_events")
+                    b.HasIndex("TransporterId", "GeofenceId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_geofenceevent_open_visit")
                         .HasFilter("departuretimestamp IS NULL");
 
                     b.ToTable("geofenceevents", "geofencing");
+                });
+
+            modelBuilder.Entity("TrackHub.Geofencing.Infrastructure.Entities.TransporterDetectionCursor", b =>
+                {
+                    b.Property<Guid>("TransporterId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("transporterid");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("accountid");
+
+                    b.Property<DateTimeOffset>("LastFixAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastfixat");
+
+                    b.HasKey("TransporterId");
+
+                    b.ToTable("transporter_detection_cursors", "geofencing");
                 });
 
             modelBuilder.Entity("TrackHub.Geofencing.Infrastructure.Entities.VwTransporterPosition", b =>

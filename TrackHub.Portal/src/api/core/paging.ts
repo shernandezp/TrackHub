@@ -14,6 +14,8 @@
 *  limitations under the License.
 */
 
+import { ApiError, ERROR_CODE_I18N } from './errors';
+
 /**
  * Skip/take exhaustion helper for the api layer.
  *
@@ -69,7 +71,8 @@ export interface FetchAllOptions {
 
 /**
  * Pages through `fetchPage` until it returns a short page (or nothing), and
- * returns the concatenated result.
+ * returns the concatenated result. A set larger than `maxItems` is refused with
+ * LOOKUP_LIMIT_EXCEEDED rather than returned short: a truncated list reads as complete.
  */
 export async function fetchAllPages<T>(
   fetchPage: (skip: number, take: number) => Promise<T[]>,
@@ -78,7 +81,7 @@ export async function fetchAllPages<T>(
   const take = Math.min(Math.max(1, pageSize), MAX_PAGE_SIZE);
   const items: T[] = [];
 
-  for (let skip = 0; items.length < maxItems; skip += take) {
+  for (let skip = 0; items.length <= maxItems; skip += take) {
     const page = await fetchPage(skip, take);
     if (!page || page.length === 0) break;
     items.push(...page);
@@ -86,5 +89,12 @@ export async function fetchAllPages<T>(
     if (page.length < take) break;
   }
 
-  return items.length > maxItems ? items.slice(0, maxItems) : items;
+  if (items.length > maxItems) {
+    throw new ApiError(`More than ${maxItems} rows match; narrow the filters.`, {
+      code: 'LOOKUP_LIMIT_EXCEEDED',
+      i18nKey: ERROR_CODE_I18N.LOOKUP_LIMIT_EXCEEDED,
+    });
+  }
+
+  return items;
 }

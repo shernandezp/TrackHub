@@ -27,12 +27,15 @@ namespace Common.Web.BackgroundJobs;
 /// </summary>
 public sealed class ScheduledJobHost<TJob>(
     IServiceScopeFactory scopeFactory,
-    ILogger<ScheduledJobHost<TJob>> logger) : BackgroundService
+    ILogger<ScheduledJobHost<TJob>> logger,
+    ScheduledJobSchedule<TJob>? schedule = null) : BackgroundService
     where TJob : class, IScheduledJob
 {
     private static readonly TimeSpan MaxFailureBackoff = TimeSpan.FromMinutes(15);
     private const int FailuresLoggedAtError = 3;
     private static readonly string JobName = typeof(TJob).Name;
+
+    private TimeSpan Interval => schedule?.Interval ?? TJob.Interval;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -58,7 +61,7 @@ public sealed class ScheduledJobHost<TJob>(
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
-                return;
+                break;
             }
             catch (Exception ex)
             {
@@ -75,10 +78,29 @@ public sealed class ScheduledJobHost<TJob>(
                 }
             }
 
-            if (!await DelayAsync(NextDelay(consecutiveFailures), stoppingToken))
+            if (!await DelayAsync(NextDelay(consecutiveFailures, Interval), stoppingToken))
             {
-                return;
+                break;
             }
+        }
+
+        if (schedule?.RunOnStop == true)
+        {
+            await RunFinalCycleAsync();
+        }
+    }
+
+    // Bounded by the host's shutdown timeout; the stopping token has already fired.
+    private async Task RunFinalCycleAsync()
+    {
+        try
+        {
+            using var scope = scopeFactory.CreateScope();
+            await scope.ServiceProvider.GetRequiredService<TJob>().RunOnceAsync(DateTimeOffset.UtcNow, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "{Job} final cycle at shutdown failed.", JobName);
         }
     }
 
@@ -86,15 +108,15 @@ public sealed class ScheduledJobHost<TJob>(
     /// Doubles the interval per consecutive failure, capped at 15 minutes OR the job's own interval,
     /// whichever is longer: a daily job that fails must wait until tomorrow, not retry every quarter hour.
     /// </summary>
-    internal static TimeSpan NextDelay(int consecutiveFailures)
+    internal static TimeSpan NextDelay(int consecutiveFailures, TimeSpan interval)
     {
         if (consecutiveFailures == 0)
         {
-            return TJob.Interval;
+            return interval;
         }
 
-        var cap = TJob.Interval > MaxFailureBackoff ? TJob.Interval : MaxFailureBackoff;
-        var backoff = TimeSpan.FromSeconds(TJob.Interval.TotalSeconds * Math.Pow(2, Math.Min(consecutiveFailures, 5)));
+        var cap = interval > MaxFailureBackoff ? interval : MaxFailureBackoff;
+        var backoff = TimeSpan.FromSeconds(interval.TotalSeconds * Math.Pow(2, Math.Min(consecutiveFailures, 5)));
         return backoff < cap ? backoff : cap;
     }
 

@@ -14,11 +14,13 @@
 *  limitations under the License.
 */
 
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from '@mui/material/Icon';
 import Table from "controls/Tables/Table";
+import ServerPagination from "controls/Tables/ServerPagination";
+import { useClampPage, useServerList } from "controls/Tables/useServerList";
 import TableAccordion from "controls/Accordions/TableAccordion";
 import ArgonButton from "components/ArgonButton";
 import ArgonTypography from "components/ArgonTypography";
@@ -30,7 +32,7 @@ import NotificationRuleDialog, {
 import type { NotificationRuleFormValues } from "layouts/manageadmin/components/notificationRules/NotificationRuleDialog";
 import { getAccountByUser } from "api/manager/accounts";
 import type { Account } from "api/manager/accounts";
-import { getAccountFeatures } from "api/manager/accountFeatures";
+import { useFeatures } from "context/features";
 import {
   getNotificationRules,
   createNotificationRule,
@@ -55,18 +57,24 @@ function TextCell({ children }: { children?: ReactNode }) {
   );
 }
 
+const PAGE_SIZE = 25;
+
 function ManageNotificationRules() {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
   const [expanded, setExpanded] = useState(false);
   const [account, setAccount] = useState<Account | null>(null);
   const [rules, setRules] = useState<NotificationRule[]>([]);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-  const [emailEnabled, setEmailEnabled] = useState(false);
-  const [whatsAppEnabled, setWhatsAppEnabled] = useState(false);
+  const { isFeatureEnabled } = useFeatures();
+  const notificationsEnabled = isFeatureEnabled(NOTIFICATIONS_FEATURE_KEY);
+  const emailEnabled = isFeatureEnabled(NOTIFICATIONS_EMAIL_FEATURE_KEY);
+  const whatsAppEnabled = isFeatureEnabled(NOTIFICATIONS_WHATSAPP_FEATURE_KEY);
   const [open, setOpen] = useState(false);
   const [values, handleChange, setValues, setErrors, validate, errors] = useForm<NotificationRuleFormValues>({ enabled: true });
-  const loaded = useRef(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [pageLength, setPageLength] = useState(0);
+  const { page, setPage, params } = useServerList(PAGE_SIZE);
+  useClampPage(page, PAGE_SIZE, totalCount, setPage);
 
   const loadRules = async () => {
     setLoading(true);
@@ -74,16 +82,10 @@ function ManageNotificationRules() {
       const currentAccount = await getAccountByUser();
       if (!currentAccount?.accountId) return;
       setAccount(currentAccount);
-      const [items, features] = await Promise.all([
-        getNotificationRules(currentAccount.accountId),
-        // Channel entitlements only gate UI affordances — the backend is authoritative.
-        getAccountFeatures(currentAccount.accountId).catch(() => []),
-      ]);
-      setRules(items || []);
-      const enabled = (key: string) => !!(features || []).find(f => f.featureKey === key)?.enabled;
-      setNotificationsEnabled(enabled(NOTIFICATIONS_FEATURE_KEY));
-      setEmailEnabled(enabled(NOTIFICATIONS_EMAIL_FEATURE_KEY));
-      setWhatsAppEnabled(enabled(NOTIFICATIONS_WHATSAPP_FEATURE_KEY));
+      const items = await getNotificationRules(currentAccount.accountId, params.skip, params.take);
+      setRules(items.items);
+      setTotalCount(items.totalCount);
+      setPageLength(items.items.length);
     } catch (error) {
       notifyApiError(error);
     } finally {
@@ -92,11 +94,10 @@ function ManageNotificationRules() {
   };
 
   useEffect(() => {
-    if (expanded && !loaded.current) {
-      loaded.current = true;
+    if (expanded) {
       loadRules();
     }
-  }, [expanded]);
+  }, [expanded, params]);
 
   const handleAddClick = () => {
     setValues({
@@ -188,7 +189,9 @@ function ManageNotificationRules() {
             id: rule.notificationRuleId
           }))}
           selectedField="key"
+          serverPaged
         />
+        <ServerPagination page={page} pageSize={PAGE_SIZE} totalCount={totalCount} pageLength={pageLength} onPageChange={setPage} />
       </TableAccordion>
       <NotificationRuleDialog
         open={open}

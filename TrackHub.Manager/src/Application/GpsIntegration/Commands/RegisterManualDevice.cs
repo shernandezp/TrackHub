@@ -22,6 +22,8 @@ namespace TrackHub.Manager.Application.GpsIntegration.Commands;
 // position loop picks them up once assigned. Identifier <= 0 lets the writer allocate the
 // next free one — catalog-less providers have no numeric id of their own.
 [Authorize(Resource = Resources.SynchronizedDevices, Action = Actions.Write)]
+// Enforcement: the writer or reader checks every referenced id against the request's account.
+[AccountScopeEnforcedInHandler]
 public readonly record struct RegisterManualDeviceCommand(DeviceDto Device, bool AutoAssign = true) : IRequest<DeviceVm>;
 
 public class RegisterManualDeviceCommandHandler(

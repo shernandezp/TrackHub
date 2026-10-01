@@ -1,3 +1,4 @@
+using Common.Infrastructure;
 using Common.Application.Exceptions;
 using Common.Application.Interfaces;
 using Common.Domain.Enums;
@@ -45,7 +46,7 @@ public sealed class DeviceReader(IApplicationDbContext context, ICurrentPrincipa
             .FirstOrDefaultAsync(cancellationToken)
             ?? throw new NotFoundException(nameof(Entities.Device), id.ToString());
 
-        RequireAccountAccess(device.AccountId);
+        RequireRowAccess(device.AccountId, nameof(Entities.Device), id.ToString(), forWrite: false);
         return device;
     }
 

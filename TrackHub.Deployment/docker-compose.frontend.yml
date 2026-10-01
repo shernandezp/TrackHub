@@ -9,12 +9,17 @@ services:
     image: nginx:alpine
     container_name: trackhub-nginx
     restart: unless-stopped
+    environment:
+      # security-headers.conf is rendered from a template at start: the login page posts back to
+      # itself and is then redirected to the portal, which form-action has to allow.
+      - NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx
+      - CSP_FORM_ACTION_ORIGINS=${PORTAL_BASE_URL:-}
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - ./nginx/nginx.frontend.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/security-headers.conf:/etc/nginx/security-headers.conf:ro
+      - ./nginx/security-headers.conf:/etc/nginx/templates/security-headers.conf.template:ro
       - ./certificates:/etc/nginx/ssl:ro
       - ./certbot/webroot:/var/www/certbot:ro
       - trackhub-frontend:/usr/share/nginx/html:ro

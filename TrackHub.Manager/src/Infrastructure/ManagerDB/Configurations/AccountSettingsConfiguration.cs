@@ -23,6 +23,7 @@ public class AccountSettingsConfiguration : IEntityTypeConfiguration<AccountSett
 {
     public void Configure(EntityTypeBuilder<AccountSettings> builder)
     {
+        builder.Property(x => x.Version).HasColumnName("editversion").HasConversion<long>().IsConcurrencyToken();
         //Table name
         builder.ToTable(name: TableMetadata.AccountSettings, schema: SchemaMetadata.Application);
         builder.HasKey(x => x.AccountId);

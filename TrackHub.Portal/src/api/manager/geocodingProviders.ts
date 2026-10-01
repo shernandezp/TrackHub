@@ -20,6 +20,7 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { RequestOptions } from 'api/core/errors';
 import type {
   GeocodingProviderItemFragment as GeocodingProviderItemType,
   GeocodingProviderDtoInput,
@@ -49,8 +50,8 @@ function toProviderFields(provider: UpdateGeocodingProviderDtoInput) {
   };
 }
 
-export async function getGeocodingProviders(): Promise<GeocodingProvider[]> {
-  const data = await executeGraphQL('manager', GetGeocodingProvidersDocument);
+export async function getGeocodingProviders(options?: RequestOptions): Promise<GeocodingProvider[]> {
+  const data = await executeGraphQL('manager', GetGeocodingProvidersDocument, undefined, options);
   return data.geocodingProviders;
 }
 

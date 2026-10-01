@@ -13,6 +13,9 @@
 //  limitations under the License.
 //
 
+using System.Globalization;
+using Common.Domain.Helpers;
+
 namespace TrackHub.Router.Infrastructure.Navixy.Mappers;
 
 internal static class PositionMapper
@@ -20,20 +23,18 @@ internal static class PositionMapper
     // Navixy date format: yyyy-MM-dd HH:mm:ss
     private const string NavixyDateFormat = "yyyy-MM-dd HH:mm:ss";
 
-    /// <summary>
-    /// Parses a Navixy date string to DateTimeOffset.
-    /// </summary>
-    private static DateTimeOffset ParseNavixyDate(string? dateStr)
-        // Navixy timestamps are naive (no zone); assume UTC and normalize to UTC.
-        => !string.IsNullOrEmpty(dateStr) && DateTimeOffset.TryParseExact(dateStr, NavixyDateFormat, null,
-            System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal, out var result)
-            ? result
+    public static DateTimeOffset ParseNavixyDate(string? dateStr, TimeZoneInfo zone)
+        => !string.IsNullOrEmpty(dateStr) && DateTime.TryParseExact(dateStr, NavixyDateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var wallClock)
+            ? FixedOffsetTime.FromWallClock(wallClock, zone.GetUtcOffset(wallClock))
             : DateTimeOffset.MinValue;
+
+    public static string FormatNavixyDate(DateTimeOffset instant, TimeZoneInfo zone)
+        => TimeZoneInfo.ConvertTime(instant, zone).ToString(NavixyDateFormat, CultureInfo.InvariantCulture);
 
     /// <summary>
     /// Maps a Tracker with last_update to a PositionVm object.
     /// </summary>
-    public static PositionVm MapToPositionVm(this Tracker tracker, DeviceTransporterVm deviceDto)
+    public static PositionVm MapToPositionVm(this Tracker tracker, DeviceTransporterVm deviceDto, TimeZoneInfo zone)
     {
         var lastUpdate = tracker.Last_update;
         return new PositionVm(
@@ -43,7 +44,7 @@ internal static class PositionMapper
             lastUpdate?.Lat ?? 0,
             lastUpdate?.Lng ?? 0,
             null,  // last_update doesn't include altitude
-            ParseNavixyDate(lastUpdate?.Time),
+            ParseNavixyDate(lastUpdate?.Time, zone),
             null,
             lastUpdate?.Speed ?? 0,
             lastUpdate?.Heading,
@@ -59,7 +60,7 @@ internal static class PositionMapper
     /// <summary>
     /// Maps a TrackPoint to a PositionVm object.
     /// </summary>
-    public static PositionVm MapToPositionVm(this TrackPoint point, DeviceTransporterVm deviceDto)
+    public static PositionVm MapToPositionVm(this TrackPoint point, DeviceTransporterVm deviceDto, TimeZoneInfo zone)
         => new(
             deviceDto.TransporterId,
             deviceDto.Name,
@@ -67,7 +68,7 @@ internal static class PositionMapper
             point.Lat,
             point.Lng,
             point.Alt,
-            ParseNavixyDate(point.Get_time),
+            ParseNavixyDate(point.Get_time, zone),
             null,
             point.Speed,
             point.Heading,
@@ -82,13 +83,13 @@ internal static class PositionMapper
     /// <summary>
     /// Maps a collection of Tracker objects to PositionVm objects using a dictionary of DeviceTransporterVm.
     /// </summary>
-    public static IEnumerable<PositionVm> MapToPositionVm(this IEnumerable<Tracker> trackers, IDictionary<int, DeviceTransporterVm> devicesDictionary)
+    public static IEnumerable<PositionVm> MapToPositionVm(this IEnumerable<Tracker> trackers, IDictionary<int, DeviceTransporterVm> devicesDictionary, TimeZoneInfo zone)
     {
         foreach (var tracker in trackers)
         {
             if (tracker.Last_update.HasValue && devicesDictionary.TryGetValue((int)tracker.Tracker_id, out var device))
             {
-                yield return tracker.MapToPositionVm(device);
+                yield return tracker.MapToPositionVm(device, zone);
             }
         }
     }
@@ -96,11 +97,11 @@ internal static class PositionMapper
     /// <summary>
     /// Maps a collection of TrackPoint objects to PositionVm objects.
     /// </summary>
-    public static IEnumerable<PositionVm> MapToPositionVm(this IEnumerable<TrackPoint> points, DeviceTransporterVm deviceDto)
+    public static IEnumerable<PositionVm> MapToPositionVm(this IEnumerable<TrackPoint> points, DeviceTransporterVm deviceDto, TimeZoneInfo zone)
     {
         foreach (var point in points)
         {
-            yield return point.MapToPositionVm(deviceDto);
+            yield return point.MapToPositionVm(deviceDto, zone);
         }
     }
 }

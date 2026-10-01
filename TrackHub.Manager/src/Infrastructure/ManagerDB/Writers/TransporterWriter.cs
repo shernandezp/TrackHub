@@ -17,6 +17,8 @@ using Common.Application.Interfaces;
 using Common.Domain.Enums;
 using TrackHub.Manager.Infrastructure.Entities;
 using TrackHub.Manager.Infrastructure.Interfaces;
+using TrackHub.Manager.Domain.Constants;
+using TrackHub.Manager.Infrastructure.Events;
 using TransporterType = Common.Domain.Enums.TransporterType;
 
 namespace TrackHub.Manager.Infrastructure.ManagerDB.Writers;
@@ -45,7 +47,7 @@ public sealed class TransporterWriter(IApplicationDbContext context, ICurrentPri
             transporter.TransporterId,
             transporter.Name,
             (TransporterType)transporter.TransporterTypeId,
-            transporter.TransporterTypeId);
+            transporter.TransporterTypeId, transporter.Version);
     }
 
     // Updates an existing transporter asynchronously
@@ -54,11 +56,10 @@ public sealed class TransporterWriter(IApplicationDbContext context, ICurrentPri
     // - cancellationToken: The cancellation token
     public async Task UpdateTransporterAsync(UpdateTransporterDto transporterDto, CancellationToken cancellationToken)
     {
-        var transporter = await Context.Transporters.FindAsync(transporterDto.TransporterId, cancellationToken)
+        var transporter = await Context.Transporters.AsTracking().FirstOrDefaultAsync(t => t.TransporterId == transporterDto.TransporterId && t.RetiredAt == null, cancellationToken)
             ?? throw new NotFoundException(nameof(Transporter), $"{transporterDto.TransporterId}");
-        RequireAccountWriteAccess(transporter.AccountId);
-
-        Context.Transporters.Attach(transporter);
+        RequireRowAccess(transporter.AccountId, nameof(Transporter), $"{transporterDto.TransporterId}", forWrite: true);
+        RowVersion.Expect(Context.Transporters, transporter, transporterDto.ExpectedVersion);
 
         var previous = Describe(transporter);
         transporter.Name = transporterDto.Name;
@@ -68,20 +69,78 @@ public sealed class TransporterWriter(IApplicationDbContext context, ICurrentPri
         await Context.SaveChangesAsync(cancellationToken);
     }
 
-    // Deletes a transporter asynchronously
-    // Parameters:
-    // - transporterId: The ID of the transporter to delete
-    // - cancellationToken: The cancellation token
-    public async Task DeleteTransporterAsync(Guid transporterId, CancellationToken cancellationToken)
+    // Retires the unit in one save: its devices are released, its live position dropped, and every
+    // record that names it is kept.
+    public async Task RetireTransporterAsync(Guid transporterId, CancellationToken cancellationToken)
     {
-        var transporter = await Context.Transporters.FindAsync(transporterId, cancellationToken)
+        var transporter = await Context.Transporters.AsTracking()
+            .FirstOrDefaultAsync(t => t.TransporterId == transporterId && t.RetiredAt == null, cancellationToken)
             ?? throw new NotFoundException(nameof(Transporter), $"{transporterId}");
-        RequireAccountWriteAccess(transporter.AccountId);
+        RequireRowAccess(transporter.AccountId, nameof(Transporter), $"{transporterId}", forWrite: true);
 
-        Context.Transporters.Attach(transporter);
+        var now = DateTimeOffset.UtcNow;
+        var assignments = await Context.TransporterDeviceAssignments.AsTracking()
+            .Include(a => a.Device)
+            .Where(a => a.TransporterId == transporterId && a.Status == (int)AssignmentStatus.Active)
+            .ToListAsync(cancellationToken);
+        foreach (var assignment in assignments)
+        {
+            assignment.Status = (int)AssignmentStatus.Ended;
+            assignment.EffectiveTo = now;
+            assignment.AssignmentReason = "Transporter retired";
+            assignment.Device.DetectedStatus = (int)DetectedStatus.Available;
+        }
 
-        AddAuditEvent(transporter.AccountId, "DeleteTransporter", "Transporter", $"{transporter.TransporterId}", Describe(transporter), null);
-        Context.Transporters.Remove(transporter);
+        var position = await Context.TransporterPositions.AsTracking()
+            .FirstOrDefaultAsync(p => p.TransporterId == transporterId, cancellationToken);
+        if (position is not null)
+        {
+            Context.TransporterPositions.Remove(position);
+        }
+
+        await ReleaseDriversAsync(transporterId, now, cancellationToken);
+
+        transporter.RetiredAt = now;
+        AddAuditEvent(transporter.AccountId, "RetireTransporter", "Transporter", $"{transporter.TransporterId}", Describe(transporter), null);
+        await Context.SaveChangesAsync(cancellationToken);
+    }
+
+    // No driver keeps a retired unit: running assignments end now, scheduled ones are cancelled, and it
+    // leaves every default.
+    private async Task ReleaseDriversAsync(Guid transporterId, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        var assignments = await Context.DriverTransporterAssignments.AsTracking()
+            .Where(a => a.TransporterId == transporterId
+                && a.Status == DriverAssignmentStatuses.Active
+                && (a.EndsAt == null || a.EndsAt > now))
+            .ToListAsync(cancellationToken);
+        foreach (var assignment in assignments)
+        {
+            assignment.EndsAt = assignment.StartsAt > now ? assignment.StartsAt : now;
+            assignment.Status = DriverAssignmentStatuses.Ended;
+            assignment.AddDomainEvent(new DriverAssignmentEndedEvent(assignment.AccountId, assignment.DriverTransporterAssignmentId, assignment.DriverId, transporterId, assignment.EndsAt.Value));
+            AddAuditEvent(assignment.AccountId, "EndDriverAssignment", "DriverTransporterAssignment", $"{assignment.DriverTransporterAssignmentId}", null,
+                $$"""{"reason":"Transporter retired","endsAt":{{Quote(assignment.EndsAt.Value.ToString("O"))}}}""");
+        }
+
+        var defaults = await Context.Drivers.AsTracking()
+            .Where(d => d.DefaultTransporterId == transporterId)
+            .ToListAsync(cancellationToken);
+        foreach (var driver in defaults)
+        {
+            driver.DefaultTransporterId = null;
+        }
+    }
+
+    public async Task RestoreTransporterAsync(Guid transporterId, CancellationToken cancellationToken)
+    {
+        var transporter = await Context.Transporters.AsTracking()
+            .FirstOrDefaultAsync(t => t.TransporterId == transporterId && t.RetiredAt != null, cancellationToken)
+            ?? throw new NotFoundException(nameof(Transporter), $"{transporterId}");
+        RequireRowAccess(transporter.AccountId, nameof(Transporter), $"{transporterId}", forWrite: true);
+
+        transporter.RetiredAt = null;
+        AddAuditEvent(transporter.AccountId, "RestoreTransporter", "Transporter", $"{transporter.TransporterId}", null, Describe(transporter));
         await Context.SaveChangesAsync(cancellationToken);
     }
 

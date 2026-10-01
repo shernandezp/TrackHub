@@ -408,6 +408,9 @@
   <data name="GeneratedAt" xml:space="preserve">
     <value>Generated</value>
   </data>
+  <data name="TimeZone" xml:space="preserve">
+    <value>Time zone</value>
+  </data>
   <data name="FilterFrom" xml:space="preserve">
     <value>From</value>
   </data>

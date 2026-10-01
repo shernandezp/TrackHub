@@ -39,8 +39,8 @@ public class UpdateUserCommandHandler(IUserWriter writer, IUserReader reader, IP
         await writer.UpdateUserAsync(request.User, cancellationToken);
 
         // Create a shrank version of the updated user
-        var role = UserUpdated.EffectiveRole((await reader.GetUserAsync(request.User.UserId, cancellationToken)).Roles);
-        var user = new UpdateUserShrankDto(request.User.UserId, request.User.Username, request.User.Active, role);
+        var stored = await reader.GetUserAsync(request.User.UserId, cancellationToken);
+        var user = new UpdateUserShrankDto(request.User.UserId, request.User.Username, request.User.Active, UserUpdated.EffectiveRole(stored.Roles), stored.AccountId);
 
         // Publish a notification for the user update
         await publisher.Publish(new UserUpdated.Notification(request.User.UserId, user), cancellationToken);

@@ -24,4 +24,7 @@ public readonly record struct OperatorVm(
     string? LastFailureCode,
     string? LastFailureMessage,
     int? LastLatencyMs,
-    DateTimeOffset? LastHealthCheckAt = null);
+    DateTimeOffset? LastHealthCheckAt = null,
+    int SyncFailureCount = 0,
+    DateTimeOffset? SyncRetryAt = null,
+    uint Version = 0);

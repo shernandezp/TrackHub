@@ -21,19 +21,19 @@ import ArgonBox from 'components/ArgonBox';
 import ArgonBadge from 'components/ArgonBadge';
 import ArgonButton from 'components/ArgonButton';
 import ArgonTypography from 'components/ArgonTypography';
-import CustomSelect from 'controls/Dialogs/CustomSelect';
 import SearchSelect from 'edition/SearchSelect';
+import { useUserTransporterOptions } from 'edition/pickerOptions';
 import { useDriverSearchOptions } from 'queries/drivers';
 import { formatDateTime } from 'utils/dateUtils';
 import type { DriverLookup } from 'api/manager/drivers';
-import type { Transporter } from 'api/manager/transporters';
+import type { TransporterLookup } from 'api/manager/transporters';
 import type { TripDetail } from 'api/tripManagement/trips';
 
 interface AssignmentPanelProps {
   detail: TripDetail;
   /** Names for the drivers this trip references; the picker searches the server itself. */
   drivers: DriverLookup[];
-  transporters: Transporter[];
+  transporters: TransporterLookup[];
   onAssign: (driverId: string, transporterId: string | null) => void;
   assigning: boolean;
   editable: boolean;
@@ -55,6 +55,7 @@ function AssignmentPanel({
   const [transporterId, setTransporterId] = useState<string>(
     assignment?.transporterId ?? detail.trip.transporterId
   );
+  const [pickedTransporterName, setPickedTransporterName] = useState<string | null>(null);
 
   const driverName = (id?: string | null) =>
     drivers.find((driver) => driver.driverId === id)?.name ?? t('trips.unassigned');
@@ -124,17 +125,16 @@ function AssignmentPanel({
             />
           </ArgonBox>
           <ArgonBox width="240px">
-            <CustomSelect
-              list={transporters.map((transporter) => ({
-                value: transporter.transporterId,
-                label: transporter.name,
-              }))}
-              handleChange={(event) => setTransporterId(String(event.target.value ?? ''))}
-              name="assignTransporterId"
+            <SearchSelect
               id="assignTransporterId"
               label={t('trips.assignment.transporter')}
-              value={transporterId}
-              numericValue={false}
+              value={transporterId || null}
+              valueLabel={pickedTransporterName ?? (transporterId ? transporterName(transporterId) : null)}
+              onChange={(option) => {
+                setTransporterId(option?.value ?? '');
+                setPickedTransporterName(option?.label ?? null);
+              }}
+              useOptions={useUserTransporterOptions}
             />
           </ArgonBox>
           <ArgonButton

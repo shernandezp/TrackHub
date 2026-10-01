@@ -13,6 +13,11 @@
 //  limitations under the License.
 //
 
+using ExceptionConverter = Common.Application.Exceptions.ExceptionConverter;
+using PlatformErrorCodes = Common.Application.Exceptions.PlatformErrorCodes;
+using ValidationException = Common.Application.Exceptions.ValidationException;
+using ConflictException = Common.Application.Exceptions.ConflictException;
+using HotChocolate;
 using TrackHub.Reporting.Application.Report.Queries.Get;
 using TrackHub.Reporting.Domain.Exceptions;
 
@@ -74,10 +79,27 @@ public class BasicReports : EndpointGroupBase
                 StatusCodes.Status400BadRequest, e.Message, e.Code, new { format = e.Format }),
             ReportLimitExceededException e => ErrorResult(
                 StatusCodes.Status400BadRequest, e.Message, e.Code, new { maxRows = e.MaxRows }),
+            ReportWindowInvalidException e => ErrorResult(
+                StatusCodes.Status400BadRequest, e.Message, e.Code, new { maxDays = e.MaxDays }),
+            GraphQLException e when e.Errors.Count > 0 => ErrorResult(
+                UpstreamStatus(e.Errors[0].Code), e.Errors[0].Message, e.Errors[0].Code ?? ExceptionConverter.UpstreamErrorCode, new { }),
             _ => null!
         };
         return result is not null;
     }
+
+    // A feed a producer refused keeps the producer's meaning: only an outage is a 5xx, a coded refusal is the caller's to fix.
+    private static int UpstreamStatus(string? code) => code switch
+    {
+        PlatformErrorCodes.Forbidden or PlatformErrorCodes.FeatureDisabled or PlatformErrorCodes.AccountSuspended => StatusCodes.Status403Forbidden,
+        PlatformErrorCodes.NotFound => StatusCodes.Status404NotFound,
+        ValidationException.DefaultCode => StatusCodes.Status400BadRequest,
+        PlatformErrorCodes.TooManyRequests => StatusCodes.Status429TooManyRequests,
+        PlatformErrorCodes.Unauthorized => StatusCodes.Status401Unauthorized,
+        null or ExceptionConverter.UpstreamErrorCode => StatusCodes.Status502BadGateway,
+        ConflictException.DefaultCode or ConflictException.ConcurrentUpdateCode => StatusCodes.Status409Conflict,
+        _ => StatusCodes.Status422UnprocessableEntity,
+    };
 
     private static IResult ErrorResult(int statusCode, string message, string code, object extraExtensions)
         => Results.Json(

@@ -30,7 +30,7 @@ public class UpdateGeofenceCommandHandler(IGeofenceWriter writer, IGeofenceReade
         var currentGeofence = await reader.GetGeofenceAsync(request.Geofence.GeofenceId, cancellationToken);
         var currentUser = await userReader.GetUserAsync(UserId, cancellationToken);
         if (currentGeofence.AccountId != currentUser.AccountId)
-            throw new ForbiddenAccessException();
+            throw new Ardalis.GuardClauses.NotFoundException("Geofence", request.Geofence.GeofenceId.ToString());
 
         await accountFeatureReader.EnsureFeatureEnabledAsync(currentUser.AccountId, FeatureKeys.Geofencing, cancellationToken);
         await writer.UpdateGeofenceAsync(request.Geofence, cancellationToken);

@@ -23,6 +23,7 @@ public sealed class GroupConfiguration : IEntityTypeConfiguration<Group>
 {
     public void Configure(EntityTypeBuilder<Group> builder)
     {
+        builder.Property(x => x.Version).HasColumnName("editversion").HasConversion<long>().IsConcurrencyToken();
         //Table name
         builder.ToTable(name: TableMetadata.Group, schema: SchemaMetadata.Application);
 

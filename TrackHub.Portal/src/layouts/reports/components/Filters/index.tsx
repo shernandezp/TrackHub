@@ -14,14 +14,16 @@
 *  limitations under the License.
 */
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Card from "@mui/material/Card";
 import Icon from "@mui/material/Icon";
 import ArgonButton from "components/ArgonButton";
 import ArgonBox from "components/ArgonBox";
 import CustomSelect from 'controls/Dialogs/CustomSelect';
 import CustomTextField from 'controls/Dialogs/CustomTextField';
-import useFiltersData from "layouts/reports/data/filtersData";
+import SearchSelect from 'edition/SearchSelect';
+import type { SearchOption } from 'edition/SearchSelect';
+import useFiltersData, { SEARCH_PICKER_SOURCES, isSearchPickerSource } from "layouts/reports/data/filtersData";
 import type { ReportFilterDefinition } from "layouts/reports/data/filtersData";
 import useForm from 'controls/Dialogs/useForm';
 import type { ReportFilterValues } from "api/reporting/reports";
@@ -61,11 +63,13 @@ function ReportFilters({ selectedReport, filtersJson, supportsPdf = false, runni
 
   const { t } = useTranslation();
   const { definitions, optionsBySource } = useFiltersData(filtersJson);
+  const [searchLabels, setSearchLabels] = useState<Record<string, string>>({});
 
   // Reset the form whenever the selected report (and therefore its filters) changes.
   useEffect(() => {
     setValues({});
     setErrors({});
+    setSearchLabels({});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedReport]);
 
@@ -82,12 +86,29 @@ function ReportFilters({ selectedReport, filtersJson, supportsPdf = false, runni
   const label = (definition: ReportFilterDefinition) =>
     t(definition.labelKey as 'reports.from', { defaultValue: definition.name });
 
+  const selectSearchOption = (name: string, option: SearchOption | null) => {
+    setValues((current) => ({ ...current, [name]: option?.value ?? '' }));
+    setSearchLabels((current) => ({ ...current, [name]: option?.label ?? '' }));
+  };
+
   return (
     <Card data-testid="card-report-filters">
       <ArgonBox pt={1.5} pb={2} px={2} lineHeight={1.25}>
         {definitions.map((definition) => (
           <ArgonBox display="flex" py={1} mb={0.25} key={definition.name}>
-            {definition.source ? (
+            {definition.source && isSearchPickerSource(definition.source) ? (
+              <ArgonBox width="100%">
+                <SearchSelect
+                  id={definition.name}
+                  label={label(definition)}
+                  value={values[definition.name] || null}
+                  valueLabel={searchLabels[definition.name]}
+                  onChange={(option) => selectSearchOption(definition.name, option)}
+                  useOptions={SEARCH_PICKER_SOURCES[definition.source]}
+                  placeholder={t('reports.all')}
+                />
+              </ArgonBox>
+            ) : definition.source ? (
               <CustomSelect
                 list={optionsBySource[definition.source]}
                 handleChange={handleChange}

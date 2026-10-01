@@ -18,7 +18,6 @@ using TrackHub.TripManagement.Application.Common;
 
 namespace TrackHub.TripManagement.Application.Trips.Queries.GetTripPodReportData;
 
-// No [Caching] — scope comes from the caller identity (SVD-09). See GetTripsQuery.
 /// <summary>
 /// POD register export feed behind <c>trip-pod-export</c>. Rows carry a document COUNT, never the
 /// documents: this is a register, and the bytes stay behind Manager's access policy. Rows carry
@@ -27,6 +26,8 @@ namespace TrackHub.TripManagement.Application.Trips.Queries.GetTripPodReportData
 /// </summary>
 [Authorize(Resource = Resources.Trips, Action = Actions.Export, PrincipalTypes = "User,ServiceClient")]
 [RequireFeature(FeatureKeys.TripManagement)]
+// Enforcement: the feed filters on AccountId and the report scope; the other keys only narrow.
+[AccountScopeEnforcedInHandler]
 public readonly record struct GetTripPodReportDataQuery(
     Guid AccountId,
     DateTimeOffset From,

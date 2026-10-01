@@ -48,7 +48,9 @@ export async function planTrip(
   // A named unit matters when the trip has to carry a driver: a driver is only
   // assignable to a trip whose unit it is actually linked to.
   if (transporterName) {
-    await form.select('transporterId', transporterName);
+    // The unit picker searches the server, so the name is typed rather than scrolled to.
+    await form.field('transporterId').fill(transporterName);
+    await page.getByRole('option', { name: transporterName, exact: true }).click();
   } else {
     await form.selectFirst('transporterId');
   }

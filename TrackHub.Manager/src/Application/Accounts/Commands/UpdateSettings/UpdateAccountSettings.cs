@@ -16,6 +16,8 @@
 namespace TrackHub.Manager.Application.Accounts.Commands.UpdateSettings;
 
 [Authorize(Resource = Resources.Accounts, Action = Actions.Edit)]
+// Enforcement: the writer or reader checks every referenced id against the request's account.
+[AccountScopeEnforcedInHandler]
 public readonly record struct UpdateAccountSettingsCommand(AccountSettingsDto AccountSettings) : IRequest;
 
 public class UpdateAccountSettingsCommandHandler(IAccountSettingsWriter writer) : IRequestHandler<UpdateAccountSettingsCommand>

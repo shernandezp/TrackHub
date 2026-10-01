@@ -11,23 +11,24 @@ public sealed class NotificationReader(IApplicationDbContext context, ICurrentPr
     private static int PageSize(int take) => Math.Clamp(take <= 0 ? 50 : take, 1, 500);
     private static int Offset(int skip) => Math.Max(0, skip);
 
-    public async Task<IReadOnlyCollection<NotificationRuleVm>> GetNotificationRulesAsync(Guid accountId, int skip, int take, CancellationToken cancellationToken)
+    public async Task<NotificationRulesPageVm> GetNotificationRulesAsync(Guid accountId, int skip, int take, CancellationToken cancellationToken)
     {
         var scopedAccountId = RequireAccountAccess(accountId);
         RequirePrivileged();
-        var rows = await Context.NotificationRules
-            .Where(x => x.AccountId == scopedAccountId)
+        var query = Context.NotificationRules.Where(x => x.AccountId == scopedAccountId);
+        var totalCount = await query.CountAsync(cancellationToken);
+        var rows = await query
             .OrderBy(x => x.RuleKey).ThenBy(x => x.NotificationRuleId)
             .Skip(Offset(skip)).Take(PageSize(take))
             .ToListAsync(cancellationToken);
 
-        return rows
+        return new NotificationRulesPageVm(rows
             .Select(x => new NotificationRuleVm(x.NotificationRuleId, x.AccountId, x.RuleKey, x.RuleType, x.Enabled, x.TriggerEvent, x.RecipientSelector, x.ChannelsJson, x.ThrottlingJson,
-                Services.NotificationRuleConfigurationJson.Redact(x.ConfigurationJson), x.LastModified))
-            .ToList();
+                Services.NotificationRuleConfigurationJson.Redact(x.ConfigurationJson), x.LastModified, x.Version))
+            .ToList(), totalCount);
     }
 
-    public async Task<IReadOnlyCollection<NotificationDeliveryVm>> GetNotificationDeliveriesAsync(Guid accountId, string? status, string? channel, DateTimeOffset? from, DateTimeOffset? to, int skip, int take, CancellationToken cancellationToken)
+    public async Task<NotificationDeliveriesPageVm> GetNotificationDeliveriesAsync(Guid accountId, string? status, string? channel, DateTimeOffset? from, DateTimeOffset? to, int skip, int take, CancellationToken cancellationToken)
     {
         var scopedAccountId = RequireAccountAccess(accountId);
         RequirePrivileged();
@@ -49,15 +50,16 @@ public sealed class NotificationReader(IApplicationDbContext context, ICurrentPr
             query = query.Where(x => x.Created <= to.Value);
         }
 
+        var totalCount = await query.CountAsync(cancellationToken);
         var rows = await query
             .OrderByDescending(x => x.Created).ThenBy(x => x.NotificationDeliveryId)
             .Skip(Offset(skip)).Take(PageSize(take))
             .ToListAsync(cancellationToken);
 
         // Contact endpoints are personal data: list VMs mask them.
-        return rows
+        return new NotificationDeliveriesPageVm(rows
             .Select(x => new NotificationDeliveryVm(x.NotificationDeliveryId, x.AccountId, x.NotificationRuleId, x.AlertEventId, x.Channel, x.RecipientPrincipalType, MaskRecipient(x.Channel, x.Recipient), x.Status, x.Attempts, x.ProviderMessageId, x.Error, x.SentAt, x.ReadAt, x.LastModified))
-            .ToList();
+            .ToList(), totalCount);
     }
 
     public async Task<IReadOnlyCollection<MyNotificationVm>> GetMyNotificationsAsync(bool unreadOnly, int skip, int take, CancellationToken cancellationToken)

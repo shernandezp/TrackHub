@@ -81,5 +81,6 @@ public sealed class AccountSettingsReader(IApplicationDbContext context, ICurren
             accountSettings.MapsKey,
             accountSettings.OnlineInterval,
             accountSettings.RefreshMap,
-            accountSettings.RefreshMapInterval);
+            accountSettings.RefreshMapInterval,
+            accountSettings.Version);
 }

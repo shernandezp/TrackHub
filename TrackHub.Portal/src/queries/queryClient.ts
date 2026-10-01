@@ -15,7 +15,7 @@
 */
 
 import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query';
-import { notifyApiError } from 'api/core/errors';
+import { isTransportFailure, notifyApiError } from 'api/core/errors';
 
 /**
  * Shared query client. Errors thrown by the api layer surface here and are
@@ -38,7 +38,7 @@ export const queryClient = new QueryClient({
   }),
   defaultOptions: {
     queries: {
-      retry: 1,
+      retry: (failureCount, error) => failureCount < 1 && isTransportFailure(error),
       staleTime: 30_000,
       refetchOnWindowFocus: false,
     },

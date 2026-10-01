@@ -8,6 +8,7 @@ public class NotificationRuleConfiguration : IEntityTypeConfiguration<Notificati
 {
     public void Configure(EntityTypeBuilder<NotificationRule> builder)
     {
+        builder.Property(x => x.Version).HasColumnName("editversion").HasConversion<long>().IsConcurrencyToken();
         builder.ToTable(name: TableMetadata.NotificationRule, schema: SchemaMetadata.Application);
         builder.Property(x => x.NotificationRuleId).HasColumnName("id");
         builder.Property(x => x.AccountId).HasColumnName("accountid");

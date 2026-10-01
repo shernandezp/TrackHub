@@ -23,6 +23,7 @@ const scalars = {
   TimeSpan: 'string',
   Long: 'number',
   Short: 'number',
+  UnsignedInt: 'number',
   Byte: 'number',
   Decimal: 'number',
   URL: 'string',

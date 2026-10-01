@@ -14,10 +14,12 @@
 *  limitations under the License.
 */
 
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import Table from "controls/Tables/Table";
+import ServerPagination from "controls/Tables/ServerPagination";
+import { useClampPage, useServerList } from "controls/Tables/useServerList";
 import TableAccordion from "controls/Accordions/TableAccordion";
 import ArgonTypography from "components/ArgonTypography";
 import { getAccountByUser } from "api/manager/accounts";
@@ -35,24 +37,28 @@ function TextCell({ children }: { children?: ReactNode }) {
   );
 }
 
+const PAGE_SIZE = 25;
+
 function ManageBackgroundJobs() {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
   const [expanded, setExpanded] = useState(false);
   const [jobs, setJobs] = useState<BackgroundJobRun[]>([]);
-  const loaded = useRef(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const { page, setPage, params } = useServerList(PAGE_SIZE);
+  useClampPage(page, PAGE_SIZE, totalCount, setPage);
 
   useEffect(() => {
-    if (!expanded || loaded.current) return;
-    loaded.current = true;
+    if (!expanded) return;
 
     async function loadJobs() {
       setLoading(true);
       try {
         const account = await getAccountByUser();
         if (!account?.accountId) return;
-        const items = await getBackgroundJobRuns(account.accountId);
-        setJobs(items || []);
+        const result = await getBackgroundJobRuns(account.accountId, params.skip, params.take);
+        setJobs(result.items);
+        setTotalCount(result.totalCount);
       } catch (error) {
         notifyApiError(error);
       } finally {
@@ -61,7 +67,7 @@ function ManageBackgroundJobs() {
     }
 
     loadJobs();
-  }, [expanded]);
+  }, [expanded, params]);
 
   return (
     <TableAccordion sectionKey="background-jobs" title={t('backgroundJobs.title')} expanded={expanded} setExpanded={setExpanded}>
@@ -74,14 +80,16 @@ function ManageBackgroundJobs() {
           { name: 'id' }
         ]}
         rows={jobs.map(item => ({
-          job: <TextCell>{item.jobKey}</TextCell>,
-          status: <TextCell>{item.status}</TextCell>,
+          job: <TextCell>{t(`platformStatus.jobs.names.${item.jobKey}` as never, { defaultValue: item.jobKey })}</TextCell>,
+          status: <TextCell>{t(`backgroundJobs.statuses.${item.status}` as never, { defaultValue: item.status })}</TextCell>,
           attempts: <TextCell>{item.attempts}</TextCell>,
           started: <TextCell>{formatDateTime(item.startedAt)}</TextCell>,
           id: item.backgroundJobRunId
         }))}
         selectedField="job"
+        serverPaged
       />
+      <ServerPagination page={page} pageSize={PAGE_SIZE} totalCount={totalCount} pageLength={jobs.length} onPageChange={setPage} />
     </TableAccordion>
   );
 }

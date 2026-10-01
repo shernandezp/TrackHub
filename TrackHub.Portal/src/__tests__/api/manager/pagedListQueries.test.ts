@@ -27,21 +27,18 @@ import { executeGraphQL } from 'api/core/graphqlClient';
 import { MAX_PAGE_SIZE } from 'api/core/paging';
 import {
   getTransportersByAccount,
-  getTransporterLookupByAccount,
   getTransporterLookupByUser,
   getAllTransportersByGroup,
-  getAllTransporterDeviceAssignmentsByAccount,
 } from 'api/manager/transporters';
 import { getGroups, getGroupLookup, getAllUsersByGroup } from 'api/manager/groups';
 import {
   getDevicesByAccount,
-  getDeviceLookup,
+  getDeviceName,
   getSynchronizedDevices,
-  getAllUnassignedSynchronizedDevices,
 } from 'api/manager/devices';
-import { getAccounts, getAllAccounts } from 'api/manager/accounts';
+import { getAccounts } from 'api/manager/accounts';
 import { getPointOfInterestLookup } from 'api/manager/pointsOfInterest';
-import { getUsersByAccount, getUserLookupByAccount } from 'api/security/users';
+import { getUsersByAccount } from 'api/security/users';
 
 vi.mock('api/core/graphqlClient', () => ({ executeGraphQL: vi.fn() }));
 
@@ -122,31 +119,11 @@ describe('paged list readers', () => {
 });
 
 describe('picker lookups', () => {
-  test('the two transporter lookups address DIFFERENT fields', async () => {
-    mockExecute.mockResolvedValueOnce({ transporterLookupByAccount: [{ transporterId: 't1' }] } as never);
-    mockExecute.mockResolvedValueOnce({ transporterLookupByUser: [{ transporterId: 't2' }] } as never);
-
-    // Collapsing these would let an admin picker show units the user may not
-    // track, or hide account units from an admin screen.
-    expect(await getTransporterLookupByAccount()).toEqual([{ transporterId: 't1' }]);
-    expect(await getTransporterLookupByUser()).toEqual([{ transporterId: 't2' }]);
-    expect(mockExecute.mock.calls[0][1]).not.toBe(mockExecute.mock.calls[1][1]);
-  });
-
   test('lookups take no paging arguments at all', async () => {
     mockExecute.mockResolvedValue({ groupLookup: [] } as never);
 
     await getGroupLookup();
 
-    expect(mockExecute.mock.calls[0][2]).toBeUndefined();
-  });
-
-  test('the security user lookup is unpaged', async () => {
-    mockExecute.mockResolvedValue({ userLookupByAccount: [{ userId: 'u1' }] } as never);
-
-    await getUserLookupByAccount();
-
-    expect(mockExecute.mock.calls[0][0]).toBe('security');
     expect(mockExecute.mock.calls[0][2]).toBeUndefined();
   });
 
@@ -179,18 +156,14 @@ describe('picker lookups', () => {
     expect(rows[0]).toMatchObject({ color: 3, type: 1, description: 'd', address: 'a', active: true });
   });
 
-  test('the device lookup carries operatorId for the operator join', async () => {
-    mockExecute.mockResolvedValue({
-      deviceLookup: [{ deviceId: 'd1', name: 'Unit', operatorId: 'op1' }],
-    } as never);
+  test('a device is named by id, not by draining the account lookup', async () => {
+    mockExecute.mockResolvedValue({ device: { deviceId: 'd1', name: 'Unit' } } as never);
 
-    const rows = await getDeviceLookup();
-
-    expect(mockExecute.mock.calls[0][2]).toBeUndefined();
-    expect(rows[0].operatorId).toBe('op1');
+    expect(await getDeviceName('d1')).toEqual({ deviceId: 'd1', name: 'Unit' });
+    expect(varsOf()).toEqual({ id: 'd1' });
   });
 
-  test('the transporter lookups carry the type the toll-class dialog derives', async () => {
+  test('the transporter lookups carry the transporter type', async () => {
     mockExecute.mockResolvedValue({
       transporterLookupByUser: [
         { transporterId: 't1', name: 'Rig', transporterType: 'TRUCK', transporterTypeId: 2 },
@@ -231,25 +204,6 @@ describe('exhaustive drains', () => {
   test('the group transporter drain exhausts every page', async () => {
     pagedServer('transportersByGroup', 501);
     expect(await getAllTransportersByGroup(9)).toHaveLength(501);
-  });
-
-  test('the unassigned-device drain exhausts every page', async () => {
-    pagedServer('unassignedSynchronizedDevices', 501);
-    expect(await getAllUnassignedSynchronizedDevices(ACCOUNT_ID)).toHaveLength(501);
-  });
-
-  test('the assignment drain keeps activeOnly on every round trip', async () => {
-    pagedServer('transporterDeviceAssignmentsByAccount', 700);
-
-    const assignments = await getAllTransporterDeviceAssignmentsByAccount(ACCOUNT_ID, true);
-
-    expect(assignments).toHaveLength(700);
-    expect(mockExecute.mock.calls.every((call) => (call[2] as { activeOnly: boolean }).activeOnly)).toBe(true);
-  });
-
-  test('the account drain exhausts every page', async () => {
-    pagedServer('accounts', 501);
-    expect(await getAllAccounts()).toHaveLength(501);
   });
 
   test('a drain of a single short page costs exactly one round trip', async () => {

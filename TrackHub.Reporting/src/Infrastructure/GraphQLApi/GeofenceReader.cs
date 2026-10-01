@@ -74,6 +74,6 @@ public class GeofenceReader(IGraphQLClientFactory graphQLClient)
             var page = await QueryAsync<GeofenceEventsPageVm>(request, cancellationToken);
             var items = page.Items as IReadOnlyCollection<GeofenceEventReportVm> ?? [.. page.Items ?? []];
             return (items, page.TotalCount);
-        });
+        }, previewable: true);
 }
 

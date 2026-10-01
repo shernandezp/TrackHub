@@ -38,7 +38,7 @@ export const groupKeys = {
 export function useGroups(params: ListParams = {}, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: groupKeys.byAccount(params),
-    queryFn: () => api.getGroups(params),
+    queryFn: ({ signal }) => api.getGroups(params, { signal }),
     enabled: options.enabled ?? true,
     // A page change swaps the query key; without a placeholder the list reads as EMPTY
     // (totalCount 0) while the next page loads, and the page clamp snaps it back to page one.
@@ -54,7 +54,7 @@ export function useGroups(params: ListParams = {}, options: { enabled?: boolean 
 export function useGroupLookup(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: groupKeys.lookup(),
-    queryFn: api.getGroupLookup,
+    queryFn: ({ signal }) => api.getGroupLookup({ signal }),
     enabled: options.enabled ?? true,
   });
 }
@@ -67,7 +67,7 @@ export function useGroupLookup(options: { enabled?: boolean } = {}) {
 export function useUsersByGroup(groupId: number | undefined) {
   return useQuery({
     queryKey: groupKeys.usersByGroup(groupId ?? -1),
-    queryFn: () => api.getAllUsersByGroup(groupId as number),
+    queryFn: ({ signal }) => api.getAllUsersByGroup(groupId as number, { signal }),
     enabled: groupId !== undefined,
   });
 }

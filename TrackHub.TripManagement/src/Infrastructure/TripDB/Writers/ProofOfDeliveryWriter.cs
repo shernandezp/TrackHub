@@ -15,6 +15,7 @@
 
 using TrackHub.TripManagement.Infrastructure.TripDB.Events;
 using TrackHub.TripManagement.Infrastructure.TripDB.Readers;
+using Common.Infrastructure;
 
 namespace TrackHub.TripManagement.Infrastructure.TripDB.Writers;
 
@@ -40,6 +41,13 @@ public sealed class ProofOfDeliveryWriter(IApplicationDbContext context) : IProo
                 s => s.TripStopId == proofOfDelivery.TripStopId && s.AccountId == accountId && s.TripId == tripId,
                 cancellationToken)
             ?? throw new NotFoundException($"{proofOfDelivery.TripStopId}", nameof(TripStop));
+
+        if (proofOfDelivery.DeliveryId is { } deliveryId
+            && !await context.Deliveries.AnyAsync(
+                d => d.DeliveryId == deliveryId && d.TripStopId == stop.TripStopId && d.AccountId == accountId, cancellationToken))
+        {
+            throw new NotFoundException($"{deliveryId}", nameof(Delivery));
+        }
 
         var entity = new ProofOfDelivery
         {

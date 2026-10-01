@@ -55,7 +55,7 @@ public class UpdateGeofenceCommandHandlerTests
     }
 
     [Test]
-    public void Handle_ShouldThrowForbiddenAccessException_WhenAccountDoesNotMatch()
+    public void Handle_ForeignGeofence_AnswersNotFound()
     {
         var dto = new GeofenceDto(Guid.NewGuid(), null, "name", null, 1, 1, true, null, null, false, false, null);
         _readerMock.Setup(r => r.GetGeofenceAsync(dto.GeofenceId, It.IsAny<CancellationToken>()))
@@ -63,7 +63,7 @@ public class UpdateGeofenceCommandHandlerTests
 
         var handler = new UpdateGeofenceCommandHandler(_writerMock.Object, _readerMock.Object, _userReaderMock.Object, _userMock.Object, _featureReaderMock.Object);
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(() => handler.Handle(new UpdateGeofenceCommand(dto), CancellationToken.None));
+        Assert.ThrowsAsync<Ardalis.GuardClauses.NotFoundException>(() => handler.Handle(new UpdateGeofenceCommand(dto), CancellationToken.None));
         _writerMock.Verify(w => w.UpdateGeofenceAsync(It.IsAny<GeofenceDto>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

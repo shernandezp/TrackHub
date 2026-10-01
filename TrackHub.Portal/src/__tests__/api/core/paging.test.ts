@@ -71,16 +71,19 @@ describe('fetchAllPages', () => {
     expect(calls[0].take).toBe(MAX_PAGE_SIZE);
   });
 
-  test('caps at maxItems so an unbounded dataset cannot spin forever', async () => {
+  test('refuses a set larger than maxItems instead of returning it short', async () => {
     const { fetchPage } = server(10_000);
-    const items = await fetchAllPages(fetchPage, { maxItems: 1000 });
-    expect(items).toHaveLength(1000);
+    await expect(fetchAllPages(fetchPage, { maxItems: 1000 })).rejects.toMatchObject({ code: 'LOOKUP_LIMIT_EXCEEDED' });
+  });
+
+  test('returns a set of exactly maxItems', async () => {
+    const { fetchPage } = server(1000);
+    expect(await fetchAllPages(fetchPage, { maxItems: 1000 })).toHaveLength(1000);
   });
 
   test('default cap is the shared MAX_FETCH_ALL_ITEMS constant', async () => {
     const { fetchPage } = server(MAX_FETCH_ALL_ITEMS + 600);
-    const items = await fetchAllPages(fetchPage);
-    expect(items).toHaveLength(MAX_FETCH_ALL_ITEMS);
+    await expect(fetchAllPages(fetchPage)).rejects.toMatchObject({ code: 'LOOKUP_LIMIT_EXCEEDED' });
   });
 
   test('propagates a failing page instead of returning a partial list', async () => {

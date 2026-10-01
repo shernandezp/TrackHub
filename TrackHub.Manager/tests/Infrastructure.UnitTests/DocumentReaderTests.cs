@@ -59,7 +59,7 @@ public class DocumentReaderTests
         await context.SaveChangesAsync(CancellationToken.None);
 
         var reader = new DocumentReader(context, Principal(accountId), Policy(clearedForSensitive: false).Object);
-        var docs = await reader.GetDocumentsForOwnerAsync(accountId, DocumentOwnerTypes.Transporter, ownerId, null, null, 0, 50, CancellationToken.None);
+        var docs = (await reader.GetDocumentsForOwnerAsync(accountId, DocumentOwnerTypes.Transporter, ownerId, null, null, 0, 50, CancellationToken.None)).Items;
 
         Assert.That(docs.Count, Is.EqualTo(1));
         Assert.That(docs.Single().Classification, Is.EqualTo(DocumentClassifications.Public));
@@ -77,7 +77,7 @@ public class DocumentReaderTests
         await context.SaveChangesAsync(CancellationToken.None);
 
         var reader = new DocumentReader(context, Principal(accountId), Policy(clearedForSensitive: true, privileged: true).Object);
-        var docs = await reader.GetDocumentsForOwnerAsync(accountId, DocumentOwnerTypes.Transporter, ownerId, null, null, 0, 50, CancellationToken.None);
+        var docs = (await reader.GetDocumentsForOwnerAsync(accountId, DocumentOwnerTypes.Transporter, ownerId, null, null, 0, 50, CancellationToken.None)).Items;
 
         Assert.That(docs.Count, Is.EqualTo(2));
     }

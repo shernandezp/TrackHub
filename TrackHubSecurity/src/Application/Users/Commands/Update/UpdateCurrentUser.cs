@@ -18,6 +18,7 @@ using Common.Application.Interfaces;
 namespace TrackHub.Security.Application.Users.Commands.Update;
 
 [Authorize(Resource = Resources.Profile, Action = Actions.Edit)]
+[AllowSuspendedAccount]
 public readonly record struct UpdateCurrentUserCommand(UpdateCurrentUserDto User) : IRequest;
 public class UpdateCurrentUserCommandHandler(IUserWriter writer, IUser user) : IRequestHandler<UpdateCurrentUserCommand>
 {

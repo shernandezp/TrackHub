@@ -28,6 +28,11 @@ namespace Common.Infrastructure;
 public sealed class ClientCredentialsTokenProvider(IHttpClientFactory httpClientFactory, IConfiguration configuration)
     : IClientCredentialsTokenProvider
 {
+    // A token request that hangs must fail in seconds, not at HttpClient's 100 s default, or every
+    // caller waiting on the refresh lock stalls with it.
+    public const string HttpClientName = "AuthorityServerToken";
+    public static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(10);
+
     // Refresh this long before actual expiry so a token handed to an in-flight request cannot
     // expire between the handler attaching it and the receiver validating it.
     private static readonly TimeSpan TokenExpiryMargin = TimeSpan.FromSeconds(60);
@@ -69,7 +74,7 @@ public sealed class ClientCredentialsTokenProvider(IHttpClientFactory httpClient
                 formData.Add("scope", scope);
             }
 
-            using var httpClient = httpClientFactory.CreateClient();
+            using var httpClient = httpClientFactory.CreateClient(HttpClientName);
             using var request = new HttpRequestMessage(HttpMethod.Post, $"{tokenUrl}/token")
             {
                 Content = new FormUrlEncodedContent(formData),

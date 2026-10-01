@@ -2,8 +2,10 @@ using Common.Infrastructure;
 
 namespace TrackHub.Manager.Infrastructure.Entities;
 
-public sealed class NotificationRule(Guid accountId, string ruleKey, string ruleType, bool enabled, string triggerEvent, string recipientSelector, string channelsJson, string? throttlingJson, string? configurationJson) : BaseAuditableEntity
+public sealed class NotificationRule(Guid accountId, string ruleKey, string ruleType, bool enabled, string triggerEvent, string recipientSelector, string channelsJson, string? throttlingJson, string? configurationJson) : BaseAuditableEntity, IEditVersioned
 {
+    public uint Version { get; set; }
+
     public Guid NotificationRuleId { get; private set; } = Guid.NewGuid();
     public Guid AccountId { get; set; } = accountId;
     public string RuleKey { get; set; } = ruleKey;

@@ -19,8 +19,10 @@ namespace TrackHub.Manager.Infrastructure.Entities;
 
 // 1:1 branding for an Account. AccountId is both PK and FK to accounts. No secrets.
 public class AccountBranding(Guid accountId, string displayName, Guid? logoDocumentId, string primaryColor, string? reportHeader)
-    : BaseAuditableEntity
+    : BaseAuditableEntity, IEditVersioned
 {
+    public uint Version { get; set; }
+
     public Guid AccountId { get; set; } = accountId;
     public string DisplayName { get; set; } = displayName;
     public Guid? LogoDocumentId { get; set; } = logoDocumentId;

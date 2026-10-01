@@ -20,13 +20,10 @@
  */
 
 import type { ReactNode } from 'react';
-import Autocomplete from '@mui/material/Autocomplete';
-import TextField from '@mui/material/TextField';
-import ArgonBox from 'components/ArgonBox';
 import ArgonTypography from 'components/ArgonTypography';
-import FieldLabel from 'controls/Dialogs/FieldLabel';
-import { textFieldSx } from 'controls/Dialogs/fieldStyles';
-import type { Driver } from 'api/manager/drivers';
+import SearchSelect from 'edition/SearchSelect';
+import type { SearchOption, SearchOptionsHook } from 'edition/SearchSelect';
+import { useDriverOperationsOptions } from 'edition/pickerOptions';
 import { daysUntilDateOnly } from 'utils/dateUtils';
 
 export type BadgeColor =
@@ -48,21 +45,19 @@ export function TextCell({ children }: { children?: ReactNode }) {
 }
 
 /**
- * Whole calendar days from today until a DateOnly expiry (negative once it has
- * passed, 0 on the day itself). Delegates to the DateOnly-aware helper: mixing a
- * UTC-midnight parse with a local `Date.now()` put the count — and therefore the
- * severity colour — off by one for every viewer at a negative UTC offset.
+ * Whole calendar days from `today` (the account calendar's, see useAccountCalendar) until a
+ * DateOnly expiry; negative once it has passed, 0 on the day itself.
  */
-export function daysUntil(value: string | null | undefined): number | null {
-  return daysUntilDateOnly(value);
+export function daysUntil(value: string | null | undefined, today: string): number | null {
+  return daysUntilDateOnly(value, today);
 }
 
 /**
  * Severity color for an expiration date, mirroring the alert thresholds the
  * backend scan uses (30/15/7/0 days). No date at all is neutral.
  */
-export function expiryColor(expiresAt: string | null | undefined): BadgeColor {
-  const days = daysUntil(expiresAt);
+export function expiryColor(expiresAt: string | null | undefined, today: string): BadgeColor {
+  const days = daysUntil(expiresAt, today);
   if (days === null) return 'secondary';
   if (days < 0) return 'dark';
   if (days <= 7) return 'error';
@@ -89,30 +84,25 @@ export function statusColor(status: string | null | undefined): BadgeColor {
 }
 
 interface DriverPickerProps {
-  drivers: Driver[];
-  value: string;
-  onChange: (driverId: string) => void;
+  value: SearchOption | null;
+  onChange: (driver: SearchOption | null) => void;
   label: string;
   placeholder: string;
   id: string;
+  useOptions?: SearchOptionsHook;
 }
 
-/** Shared "which driver" picker: type any part of the name, pick from the matches. */
-export function DriverPicker({ drivers, value, onChange, label, placeholder, id }: DriverPickerProps) {
-  const selected = drivers.find((driver) => driver.driverId === value) ?? null;
+/** Shared "which driver" picker over the account's drivers, active or not, searched server-side. */
+export function DriverPicker({ value, onChange, label, placeholder, id, useOptions = useDriverOperationsOptions }: DriverPickerProps) {
   return (
-    <ArgonBox>
-      <FieldLabel htmlFor={id}>{label}</FieldLabel>
-      <Autocomplete
-        id={id}
-        options={drivers}
-        value={selected}
-        onChange={(_, driver) => onChange(driver?.driverId ?? '')}
-        getOptionLabel={(driver) => driver.name ?? ''}
-        isOptionEqualToValue={(option, current) => option.driverId === current.driverId}
-        autoHighlight
-        renderInput={(params) => <TextField {...params} placeholder={placeholder} sx={textFieldSx} />}
-      />
-    </ArgonBox>
+    <SearchSelect
+      id={id}
+      label={label}
+      value={value?.value ?? null}
+      valueLabel={value?.label}
+      onChange={onChange}
+      useOptions={useOptions}
+      placeholder={placeholder}
+    />
   );
 }

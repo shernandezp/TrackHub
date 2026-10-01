@@ -15,6 +15,7 @@
 
 using TrackHub.Router.Infrastructure.Flespi.Mappers;
 using TrackHub.Router.Domain.Interfaces;
+using TrackHub.Router.Domain.Helpers;
 
 namespace TrackHub.Router.Infrastructure.Flespi;
 
@@ -28,41 +29,31 @@ public sealed class PositionReader(
 {
     /// <summary>
     /// Retrieves the last position of a single device asynchronously.
-    /// Uses /gw/devices/{id}/messages with limit=1 and reverse=true to get latest message.
+    /// Uses /gw/devices/{id}/messages with reverse=true and count=1 to get the latest message.
     /// </summary>
     public async Task<PositionVm> GetDevicePositionAsync(DeviceTransporterVm deviceDto, CancellationToken cancellationToken)
     {
-        var url = $"gw/devices/{deviceDto.Identifier}/messages?data=%7B%22reverse%22%3Atrue%7D";
-        var result = await HttpClientService.GetAsync<MessageListResponse>(url, cancellationToken: cancellationToken);
-        
-        var message = result?.Result?.FirstOrDefault();
-        return message is null
+        var position = await ReadLatestAsync(deviceDto, cancellationToken);
+        return position.TransporterId == Guid.Empty
             ? throw new InvalidOperationException($"No position data found for device: {deviceDto.Identifier}")
-            : message.Value.MapToPositionVm(deviceDto);
+            : position;
     }
 
     /// <summary>
     /// Retrieves the last positions of multiple devices asynchronously.
     /// </summary>
     public async Task<IEnumerable<PositionVm>> GetDevicePositionAsync(IEnumerable<DeviceTransporterVm> devices, CancellationToken cancellationToken)
+        => await ProviderConcurrency.ReadEachDeviceAsync(devices, ReadLatestAsync, cancellationToken);
+
+    private async Task<PositionVm> ReadLatestAsync(DeviceTransporterVm deviceDto, CancellationToken cancellationToken)
     {
-        var positions = new List<PositionVm>();
-        
-        foreach (var device in devices)
-        {
-            try
-            {
-                var position = await GetDevicePositionAsync(device, cancellationToken);
-                positions.Add(position);
-            }
-            catch
-            {
-                // Skip devices without position data
-            }
-        }
-        
-        return positions.Distinct();
+        var url = $"gw/devices/{deviceDto.Identifier}/messages?data=%7B%22reverse%22%3Atrue%2C%22count%22%3A1%7D";
+        var result = await HttpClientService.GetAsync<MessageListResponse>(url, cancellationToken: cancellationToken);
+
+        var message = result?.Result?.FirstOrDefault();
+        return message is null ? default : message.Value.MapToPositionVm(deviceDto);
     }
+
 
     /// <summary>
     /// Retrieves the positions of a device within a specified time range asynchronously.

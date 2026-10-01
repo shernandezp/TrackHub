@@ -18,6 +18,7 @@ using Common.Application.Interfaces;
 namespace TrackHub.Security.Application.Identity.Queries.IsInRole;
 
 [PlatformScoped("Authorization pipeline: role-authorization primitive underlying authorizeUser; IdentityCallerGuard.EnsureCallerIsSubjectUserOrService binds user callers to themselves. Trusted internal services may evaluate any user.")]
+[AllowSuspendedAccount]
 public readonly record struct IsInRoleQuery(Guid UserId, string Resource, string Action) : IRequest<bool>;
 
 public class GetUsersQueryHandler(IIdentityService service, IUser user) : IRequestHandler<IsInRoleQuery, bool>

@@ -53,11 +53,8 @@ public sealed class PositionReader(
         foreach (var chunk in devicesDictionary.Keys.Chunk(ProviderBatching.MaxIdsPerRequest))
         {
             var url = $"fleet/vehicles/stats?vehicleIds={string.Join(",", chunk)}&types=gps";
-            var result = await HttpClientService.GetAsync<VehicleStatsResponse>(url, cancellationToken: cancellationToken);
-            if (result?.Data is not null)
-            {
-                results.AddRange(result.Data.MapToPositionVm(devicesDictionary));
-            }
+            var vehicles = await GetAllPagesAsync<VehicleStatsResponse, VehicleStats>(url, cancellationToken);
+            results.AddRange(vehicles.MapToPositionVm(devicesDictionary));
         }
         return results.Distinct();
     }
@@ -72,7 +69,7 @@ public sealed class PositionReader(
         var endTime = to.ToIso8601String();
         var url = $"fleet/vehicles/stats/history?vehicleIds={deviceDto.Serial}&types=gps&startTime={startTime}&endTime={endTime}";
         
-        var result = await HttpClientService.GetAsync<VehicleHistoryResponse>(url, cancellationToken: cancellationToken);
-        return result?.Data is null ? [] : result.Data.SelectMany(v => v.MapToPositionVm(deviceDto));
+        var history = await GetAllPagesAsync<VehicleHistoryResponse, VehicleHistory>(url, cancellationToken);
+        return history.SelectMany(v => v.MapToPositionVm(deviceDto));
     }
 }

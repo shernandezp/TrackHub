@@ -40,7 +40,7 @@ builder.Services.AddApplicationDbContext(builder.Configuration);
 builder.Services.AddInfrastructureServices(builder.Configuration);
 // Manager owns the accounts table: its calendar lookups read it directly instead of calling itself
 // over GraphQL. Registered after the shared infrastructure so this one wins.
-builder.Services.AddScoped<IAccountTimeZoneResolver, AccountTimeZoneResolver>();
+Common.Infrastructure.Time.DbAccountTimeZoneResolverExtensions.AddDatabaseAccountTimeZones<ApplicationDbContext>(builder.Services);
 builder.Services.AddAppSecurityContext();
 builder.Services.AddAppRouterContext(builder.Configuration);
 builder.Services.AddWebServices();
@@ -98,6 +98,7 @@ var app = builder.Build();
 // AuthorityServer configuration.
 var forwardedHeadersOptions = TrustedProxies.Create(builder.Configuration);
 app.UseForwardedHeaders(forwardedHeadersOptions);
+app.UseExceptionHandler(options => { });
 
 app.UseHeaderPropagation();
 
@@ -118,8 +119,6 @@ app.UseStaticFiles();
 // pipeline inference.
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.UseExceptionHandler(options => { });
 
 app.UseRateLimiter();
 app.UseOutputCache();

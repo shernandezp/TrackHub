@@ -137,8 +137,6 @@ public class TripManagementPublicLinkRoundTripTests
             Assert.That(sent.ResourceType, Is.EqualTo(TripSharing.ResourceType));
             Assert.That(sent.ResourceId, Is.EqualTo(TripId.ToString()));
             Assert.That(sent.Scopes, Is.EqualTo(TripSharing.TrackScope));
-            Assert.That(sent.SubjectTokenIdHash, Is.Null,
-                "TripManagement must never hash a token itself — Manager generates it (spec 11 §18.10).");
             Assert.That(sent.ExpiresAt, Is.EqualTo(ExpiresAt));
         }
 

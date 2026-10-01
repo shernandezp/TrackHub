@@ -38,25 +38,18 @@ describe('filterPositions defaults (live map regression)', () => {
     expect(filterPositions(positions, {})).toHaveLength(positions.length);
   });
 
-  test('null membership sets and empty search do not narrow', () => {
+  test('"all" selections and empty search do not narrow', () => {
     const result = filterPositions(positions, {
       transporterType: 'all',
       status: 'all',
       searchText: '',
-      groupTransporterIds: null,
-      operatorTransporterIds: null,
     });
     expect(result).toHaveLength(positions.length);
   });
 
   test('narrowing still works when explicitly requested', () => {
     expect(filterPositions(positions, { transporterType: 'Truck' })).toHaveLength(2);
-    expect(filterPositions(positions, { groupTransporterIds: new Set(['t-2']) })).toHaveLength(1);
     expect(filterPositions(positions, { searchText: 'abc' })).toHaveLength(1);
     expect(filterPositions(positions, { status: 'offline', onlineInterval: 60 })).toHaveLength(1);
-  });
-
-  test('an explicitly empty membership set narrows to nothing', () => {
-    expect(filterPositions(positions, { groupTransporterIds: new Set() })).toHaveLength(0);
   });
 });

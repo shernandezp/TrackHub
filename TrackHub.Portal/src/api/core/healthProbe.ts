@@ -88,13 +88,16 @@ export function healthUrlFor(service: ProbedService): string | undefined {
  */
 export async function probeService(
   service: ProbedService,
-  timeoutMs: number = HEALTH_TIMEOUT_MS
+  timeoutMs: number = HEALTH_TIMEOUT_MS,
+  signal?: AbortSignal
 ): Promise<HealthProbeResult> {
   const url = healthUrlFor(service);
   if (!url) return { state: 'unknown' };
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const cancel = () => controller.abort();
+  signal?.addEventListener('abort', cancel, { once: true });
   try {
     const response = await fetch(url, {
       method: 'GET',
@@ -124,15 +127,17 @@ export async function probeService(
     return { state: 'down', reason: aborted ? 'timeout' : 'unreachable' };
   } finally {
     clearTimeout(timer);
+    signal?.removeEventListener('abort', cancel);
   }
 }
 
 /** Probes every configured service concurrently. Always resolves. */
 export async function probeAllServices(
-  timeoutMs: number = HEALTH_TIMEOUT_MS
+  timeoutMs: number = HEALTH_TIMEOUT_MS,
+  signal?: AbortSignal
 ): Promise<Record<ProbedService, HealthProbeResult>> {
   const results = await Promise.all(
-    PROBED_SERVICES.map(async (service) => [service, await probeService(service, timeoutMs)] as const)
+    PROBED_SERVICES.map(async (service) => [service, await probeService(service, timeoutMs, signal)] as const)
   );
   return Object.fromEntries(results) as Record<ProbedService, HealthProbeResult>;
 }

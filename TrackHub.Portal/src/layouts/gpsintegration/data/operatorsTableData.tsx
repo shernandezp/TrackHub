@@ -56,6 +56,7 @@ const SYNC_RUN_POLL_INTERVAL_MS = 2000;
  */
 export interface OperatorFormValues {
   operatorId?: string;
+  version?: number;
   name?: string;
   description?: string | null;
   phoneNumber?: string | null;
@@ -156,7 +157,7 @@ function useOperatorTableData(
       // create/update input fields are present — assert them at the boundary.
       if (operator.operatorId) {
         await updateOperator.mutateAsync(
-          { operatorId: operator.operatorId, ...operator } as { operatorId: string } & Omit<UpdateOperatorDtoInput, 'operatorId'>
+          { operatorId: operator.operatorId, ...operator, expectedVersion: operator.version ?? null } as { operatorId: string } & Omit<UpdateOperatorDtoInput, 'operatorId'>
         );
       } else {
         await createOperator.mutateAsync(operator as OperatorDtoInput);

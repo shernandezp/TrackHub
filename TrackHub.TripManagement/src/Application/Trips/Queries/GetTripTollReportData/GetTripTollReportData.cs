@@ -18,7 +18,6 @@ using TrackHub.TripManagement.Application.Common;
 
 namespace TrackHub.TripManagement.Application.Trips.Queries.GetTripTollReportData;
 
-// No [Caching] — scope comes from the caller identity (SVD-09). See GetTripsQuery.
 /// <summary>
 /// Station-level export feed behind <c>trip-toll-cost</c>: one row per route-plan/station match.
 /// <para>
@@ -30,6 +29,8 @@ namespace TrackHub.TripManagement.Application.Trips.Queries.GetTripTollReportDat
 /// </summary>
 [Authorize(Resource = Resources.Trips, Action = Actions.Export, PrincipalTypes = "User,ServiceClient")]
 [RequireFeature(FeatureKeys.TripManagement)]
+// Enforcement: the feed filters on AccountId and the report scope; the other keys only narrow.
+[AccountScopeEnforcedInHandler]
 public readonly record struct GetTripTollReportDataQuery(
     Guid AccountId,
     DateTimeOffset From,

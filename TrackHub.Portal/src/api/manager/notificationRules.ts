@@ -20,6 +20,7 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { Page } from 'api/core/paging';
 import type {
   NotificationRuleItemFragment as NotificationRuleItemType,
   NotificationRuleDtoInput,
@@ -38,7 +39,7 @@ export async function getNotificationRules(
   accountId: string,
   skip = 0,
   take = 50
-): Promise<NotificationRule[]> {
+): Promise<Page<NotificationRule>> {
   const data = await executeGraphQL('manager', GetNotificationRulesDocument, {
     accountId,
     skip,

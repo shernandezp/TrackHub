@@ -21,10 +21,15 @@ namespace Common.Web.BackgroundJobs;
 public static class ScheduledJobServiceCollectionExtensions
 {
     /// <summary>Registers the job as scoped and starts the host that runs it on its own cadence.</summary>
-    public static IServiceCollection AddScheduledJob<TJob>(this IServiceCollection services)
+    public static IServiceCollection AddScheduledJob<TJob>(this IServiceCollection services, ScheduledJobSchedule<TJob>? schedule = null)
         where TJob : class, IScheduledJob
     {
         services.AddScoped<TJob>();
+        if (schedule is not null)
+        {
+            services.AddSingleton(schedule);
+        }
+
         services.AddHostedService<ScheduledJobHost<TJob>>();
         return services;
     }

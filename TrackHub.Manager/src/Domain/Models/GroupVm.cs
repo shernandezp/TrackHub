@@ -19,5 +19,5 @@ public readonly record struct GroupVm(
     string Name,
     string Description,
     bool Active,
-    Guid AccountId
-    );
+    Guid AccountId,
+    uint Version);

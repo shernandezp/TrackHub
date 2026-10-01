@@ -15,5 +15,5 @@ public sealed class NoOpDocumentScanner : IDocumentScanner
     public string Provider => ProviderName;
 
     public Task<string> ScanAsync(string storageKey, CancellationToken cancellationToken)
-        => Task.FromResult(DocumentScanStatuses.Clean);
+        => Task.FromResult(DocumentScanStatuses.NotScanned);
 }

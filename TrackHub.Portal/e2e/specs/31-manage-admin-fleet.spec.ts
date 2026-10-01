@@ -6,6 +6,7 @@
 import { test, expect, unique, uniqueName } from '../fixtures';
 import { CrudFlow } from '../pages/crud';
 import { ConfirmDialog, FormDialog } from '../pages/dialogs';
+import { openTab } from '../pages/dashboard';
 import type { ApiClient } from '../fixtures/api';
 import type { CleanupRegistry } from '../fixtures/data';
 import type { Translator } from '../fixtures/i18n';
@@ -32,7 +33,7 @@ async function selectFirstMatching(
   id: string,
   optionLabel: string
 ): Promise<void> {
-  await scope.locator(`#${id}`).click();
+  await scope.locator(`#${id}`).fill(optionLabel);
   await page.getByRole('option', { name: optionLabel, exact: true }).click();
 }
 
@@ -240,13 +241,13 @@ test.describe('account management — fleet & tracking', () => {
     // A driver is deactivated, never deleted, so cleanup goes through the API.
     cleanup.add(`driver ${name}`, async () => {
       const found = await api.tryGql<{
-        driversByAccount: { driverId: string; name: string; active: boolean }[];
+        driversByAccount: { items: { driverId: string; name: string; active: boolean }[] };
       }>(
         'manager',
-        'query($accountId: UUID!, $skip: Int!, $take: Int!) { driversByAccount(query: { accountId: $accountId, skip: $skip, take: $take }) { driverId name active } }',
+        'query($accountId: UUID!, $skip: Int!, $take: Int!) { driversByAccount(query: { accountId: $accountId, skip: $skip, take: $take }) { items { driverId name active } } }',
         { accountId: await api.accountId(), skip: 0, take: 500 }
       );
-      const driver = found?.driversByAccount.find((row) => row.name === name && row.active);
+      const driver = found?.driversByAccount.items.find((row) => row.name === name && row.active);
       if (driver) {
         await api.tryGql(
           'manager',
@@ -257,7 +258,7 @@ test.describe('account management — fleet & tracking', () => {
     });
 
     await drivers.create(
-      { fields: { name, phone: '3001234567', documentNumber: '99999999' } },
+      { fields: { name, phone: '3001234567', documentNumber: String(Date.now()) } },
       name,
       'name'
     );
@@ -284,11 +285,11 @@ test.describe('account management — fleet & tracking', () => {
     const driver = await seedDriver(api, cleanup);
     await shell.open('manageAdmin');
 
-    for (const key of ['driver-qualifications', 'driver-assignments', 'qualification-expirations']) {
+    for (const key of ['driver-qualifications', 'qualification-expirations']) {
       const section = new CrudFlow(page, key, t).section;
       await section.expand();
       await expect(section.root).toBeVisible();
-      // The two driver-scoped sections ask for a driver first, and say so
+      // The driver-scoped section asks for a driver first, and says so
       // rather than rendering an empty table that means nothing.
       if (key !== 'qualification-expirations') {
         await expect(section.root.getByText(t('workforce.selectDriverHint'))).toBeVisible();
@@ -433,9 +434,12 @@ test.describe('account management — fleet & tracking', () => {
     const transporterId = await api.createTransporter(unitName);
     cleanup.add(`unit ${unitName}`, () => api.deleteTransporter(transporterId));
 
-    await shell.open('manageAdmin');
+    // Assignments are day-to-day dispatch: they live on the dashboard's driver operations tab.
+    await shell.open('dashboard');
+    await openTab(page, t, 'drivers');
     const section = new CrudFlow(page, 'driver-assignments', t).section;
     await section.expand();
+    await expect(section.root.getByText(t('workforce.selectDriverHint'))).toBeVisible();
     await selectFirstMatching(page, section.root, 'assignDriverId', driver);
     await expect(section.root.getByText(t('workforce.assignments.emptyActive'))).toBeVisible({
       timeout: 45_000,
@@ -457,5 +461,21 @@ test.describe('account management — fleet & tracking', () => {
     await expect(section.root.getByText(t('workforce.assignments.emptyActive'))).toBeVisible({
       timeout: 45_000,
     });
+  });
+
+  test('the toll-class mapping is fleet configuration and explains that a class is required', async ({
+    page,
+    shell,
+    t,
+  }) => {
+    await shell.open('manageAdmin');
+    const section = new CrudFlow(page, 'toll-classes', t).section;
+    await section.expand();
+    await section.clickAdd();
+
+    const dialog = new FormDialog(page, t);
+    await dialog.waitOpen();
+    await expect(dialog.root.getByText(t('tolls.transporterClass.description'))).toBeVisible();
+    await dialog.cancel();
   });
 });

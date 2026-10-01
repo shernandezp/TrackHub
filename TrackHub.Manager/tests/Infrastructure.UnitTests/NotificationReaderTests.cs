@@ -43,7 +43,7 @@ public class NotificationReaderTests
         await context.SaveChangesAsync(CancellationToken.None);
 
         var reader = NewReader(context, Principal(accountId, role: "Manager"));
-        var result = await reader.GetNotificationDeliveriesAsync(accountId, null, null, null, null, 0, 50, CancellationToken.None);
+        var result = (await reader.GetNotificationDeliveriesAsync(accountId, null, null, null, null, 0, 50, CancellationToken.None)).Items;
 
         Assert.That(result.Single().Recipient, Is.EqualTo("***.com"));
     }
@@ -58,7 +58,7 @@ public class NotificationReaderTests
         await context.SaveChangesAsync(CancellationToken.None);
 
         var reader = NewReader(context, Principal(accountId, role: "Manager"));
-        var result = await reader.GetNotificationDeliveriesAsync(accountId, DeliveryStatuses.Failed, null, null, null, 0, 50, CancellationToken.None);
+        var result = (await reader.GetNotificationDeliveriesAsync(accountId, DeliveryStatuses.Failed, null, null, null, 0, 50, CancellationToken.None)).Items;
 
         Assert.That(result, Has.Count.EqualTo(1));
         Assert.That(result.Single().Status, Is.EqualTo(DeliveryStatuses.Failed));

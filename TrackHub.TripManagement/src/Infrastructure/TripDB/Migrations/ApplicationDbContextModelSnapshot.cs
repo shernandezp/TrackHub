@@ -18,7 +18,7 @@ namespace TrackHub.TripManagement.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.10")
+                .HasAnnotation("ProductVersion", "10.0.12")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "postgis");
@@ -1458,6 +1458,12 @@ namespace TrackHub.TripManagement.Infrastructure.Migrations
                     b.Property<Guid>("TripId")
                         .HasColumnType("uuid")
                         .HasColumnName("tripid");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.HasKey("TripStopId");
 

@@ -2,27 +2,29 @@ namespace TrackHub.Manager.Application.Notifications.Queries;
 
 [Authorize(Resource = Resources.Notifications, Action = Actions.Read)]
 [RequireFeature(FeatureKeys.Notifications)]
-public readonly record struct GetNotificationRulesQuery(Guid AccountId, int Skip = 0, int Take = 50) : IRequest<IReadOnlyCollection<NotificationRuleVm>>;
-public class GetNotificationRulesQueryHandler(INotificationReader reader) : IRequestHandler<GetNotificationRulesQuery, IReadOnlyCollection<NotificationRuleVm>>
+public readonly record struct GetNotificationRulesQuery(Guid AccountId, int Skip = 0, int Take = 50) : IRequest<NotificationRulesPageVm>;
+public class GetNotificationRulesQueryHandler(INotificationReader reader) : IRequestHandler<GetNotificationRulesQuery, NotificationRulesPageVm>
 {
-    public async Task<IReadOnlyCollection<NotificationRuleVm>> Handle(GetNotificationRulesQuery request, CancellationToken cancellationToken) => await reader.GetNotificationRulesAsync(request.AccountId, request.Skip, request.Take, cancellationToken);
+    public async Task<NotificationRulesPageVm> Handle(GetNotificationRulesQuery request, CancellationToken cancellationToken) => await reader.GetNotificationRulesAsync(request.AccountId, request.Skip, request.Take, cancellationToken);
 }
 
 [Authorize(Resource = Resources.Notifications, Action = Actions.Read)]
 [RequireFeature(FeatureKeys.Notifications)]
-public readonly record struct GetNotificationDeliveriesQuery(Guid AccountId, string? Status = null, string? Channel = null, DateTimeOffset? From = null, DateTimeOffset? To = null, int Skip = 0, int Take = 50) : IRequest<IReadOnlyCollection<NotificationDeliveryVm>>;
-public class GetNotificationDeliveriesQueryHandler(INotificationReader reader) : IRequestHandler<GetNotificationDeliveriesQuery, IReadOnlyCollection<NotificationDeliveryVm>>
+public readonly record struct GetNotificationDeliveriesQuery(Guid AccountId, string? Status = null, string? Channel = null, DateTimeOffset? From = null, DateTimeOffset? To = null, int Skip = 0, int Take = 50) : IRequest<NotificationDeliveriesPageVm>;
+public class GetNotificationDeliveriesQueryHandler(INotificationReader reader) : IRequestHandler<GetNotificationDeliveriesQuery, NotificationDeliveriesPageVm>
 {
-    public async Task<IReadOnlyCollection<NotificationDeliveryVm>> Handle(GetNotificationDeliveriesQuery request, CancellationToken cancellationToken)
+    public async Task<NotificationDeliveriesPageVm> Handle(GetNotificationDeliveriesQuery request, CancellationToken cancellationToken)
         => await reader.GetNotificationDeliveriesAsync(request.AccountId, request.Status, request.Channel, request.From, request.To, request.Skip, request.Take, cancellationToken);
 }
 
 [Authorize(Resource = Resources.Notifications, Action = Actions.Read)]
 [RequireFeature(FeatureKeys.Notifications)]
-public readonly record struct GetAlertSubscriptionsQuery(Guid AccountId, Guid? PrincipalId = null, int Skip = 0, int Take = 50) : IRequest<IReadOnlyCollection<AlertSubscriptionVm>>;
-public class GetAlertSubscriptionsQueryHandler(IAlertSubscriptionReader reader) : IRequestHandler<GetAlertSubscriptionsQuery, IReadOnlyCollection<AlertSubscriptionVm>>
+// Enforcement: the writer or reader checks every referenced id against the request's account.
+[AccountScopeEnforcedInHandler]
+public readonly record struct GetAlertSubscriptionsQuery(Guid AccountId, Guid? PrincipalId = null, int Skip = 0, int Take = 50) : IRequest<AlertSubscriptionsPageVm>;
+public class GetAlertSubscriptionsQueryHandler(IAlertSubscriptionReader reader) : IRequestHandler<GetAlertSubscriptionsQuery, AlertSubscriptionsPageVm>
 {
-    public async Task<IReadOnlyCollection<AlertSubscriptionVm>> Handle(GetAlertSubscriptionsQuery request, CancellationToken cancellationToken)
+    public async Task<AlertSubscriptionsPageVm> Handle(GetAlertSubscriptionsQuery request, CancellationToken cancellationToken)
         => await reader.GetAlertSubscriptionsAsync(request.AccountId, request.PrincipalId, request.Skip, request.Take, cancellationToken);
 }
 

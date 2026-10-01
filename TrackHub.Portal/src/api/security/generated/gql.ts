@@ -61,7 +61,6 @@ type Documents = {
     "\n  query GetCurrentUser {\n    currentUser {\n      userId\n      username\n      emailAddress\n      firstName\n      secondName\n      lastName\n      secondSurname\n      dob\n      loginAttempts\n      accountId\n      active\n      roles {\n        roleId\n        name\n      }\n      profiles {\n        policyId\n        name\n      }\n    }\n  }\n": typeof types.GetCurrentUserDocument,
     "\n  query GetIntegrationUsers {\n    users(query: { filter: { filters: [{ key: \"IntegrationUser\", value: true }] } }) {\n      userId\n      username\n      emailAddress\n    }\n  }\n": typeof types.GetIntegrationUsersDocument,
     "\n  query GetUsersByAccount($skip: Int, $take: Int, $search: String) {\n    usersByAccount(query: { skip: $skip, take: $take, search: $search }) {\n      items {\n        ...UserDetail\n        lockedUntil\n      }\n      totalCount\n    }\n  }\n": typeof types.GetUsersByAccountDocument,
-    "\n  query GetUserLookupByAccount {\n    userLookupByAccount {\n      userId\n      username\n    }\n  }\n": typeof types.GetUserLookupByAccountDocument,
     "\n  mutation CreateUser($user: CreateUserDtoInput!) {\n    createUser(command: { user: $user }) {\n      ...UserDetail\n    }\n  }\n": typeof types.CreateUserDocument,
     "\n  mutation CreateManager($user: CreateUserDtoInput!, $accountId: UUID!) {\n    createManager(command: { user: $user, accountId: $accountId }) {\n      userId\n    }\n  }\n": typeof types.CreateManagerDocument,
     "\n  mutation UpdateUser($id: UUID!, $user: UpdateUserDtoInput!) {\n    updateUser(id: $id, command: { user: $user })\n  }\n": typeof types.UpdateUserDocument,
@@ -120,7 +119,6 @@ const documents: Documents = {
     "\n  query GetCurrentUser {\n    currentUser {\n      userId\n      username\n      emailAddress\n      firstName\n      secondName\n      lastName\n      secondSurname\n      dob\n      loginAttempts\n      accountId\n      active\n      roles {\n        roleId\n        name\n      }\n      profiles {\n        policyId\n        name\n      }\n    }\n  }\n": types.GetCurrentUserDocument,
     "\n  query GetIntegrationUsers {\n    users(query: { filter: { filters: [{ key: \"IntegrationUser\", value: true }] } }) {\n      userId\n      username\n      emailAddress\n    }\n  }\n": types.GetIntegrationUsersDocument,
     "\n  query GetUsersByAccount($skip: Int, $take: Int, $search: String) {\n    usersByAccount(query: { skip: $skip, take: $take, search: $search }) {\n      items {\n        ...UserDetail\n        lockedUntil\n      }\n      totalCount\n    }\n  }\n": types.GetUsersByAccountDocument,
-    "\n  query GetUserLookupByAccount {\n    userLookupByAccount {\n      userId\n      username\n    }\n  }\n": types.GetUserLookupByAccountDocument,
     "\n  mutation CreateUser($user: CreateUserDtoInput!) {\n    createUser(command: { user: $user }) {\n      ...UserDetail\n    }\n  }\n": types.CreateUserDocument,
     "\n  mutation CreateManager($user: CreateUserDtoInput!, $accountId: UUID!) {\n    createManager(command: { user: $user, accountId: $accountId }) {\n      userId\n    }\n  }\n": types.CreateManagerDocument,
     "\n  mutation UpdateUser($id: UUID!, $user: UpdateUserDtoInput!) {\n    updateUser(id: $id, command: { user: $user })\n  }\n": types.UpdateUserDocument,
@@ -334,10 +332,6 @@ export function graphql(source: "\n  query GetIntegrationUsers {\n    users(quer
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query GetUsersByAccount($skip: Int, $take: Int, $search: String) {\n    usersByAccount(query: { skip: $skip, take: $take, search: $search }) {\n      items {\n        ...UserDetail\n        lockedUntil\n      }\n      totalCount\n    }\n  }\n"): (typeof documents)["\n  query GetUsersByAccount($skip: Int, $take: Int, $search: String) {\n    usersByAccount(query: { skip: $skip, take: $take, search: $search }) {\n      items {\n        ...UserDetail\n        lockedUntil\n      }\n      totalCount\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  query GetUserLookupByAccount {\n    userLookupByAccount {\n      userId\n      username\n    }\n  }\n"): (typeof documents)["\n  query GetUserLookupByAccount {\n    userLookupByAccount {\n      userId\n      username\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

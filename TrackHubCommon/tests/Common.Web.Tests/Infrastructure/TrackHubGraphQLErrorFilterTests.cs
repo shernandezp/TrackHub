@@ -55,8 +55,8 @@ public class TrackHubGraphQLErrorFilterTests
         var result = _filter.OnError(ErrorFor(exception));
 
         result.Extensions.Should().ContainKey("errors");
-        result.Extensions!["errors"].Should().BeAssignableTo<IDictionary<string, string[]>>()
-            .Which.Should().ContainKey("Code");
+        result.Extensions!["errors"].Should().BeAssignableTo<IDictionary<string, object?>>()
+            .Which["Code"].Should().BeEquivalentTo(new[] { "Required" });
     }
 
     [Fact]

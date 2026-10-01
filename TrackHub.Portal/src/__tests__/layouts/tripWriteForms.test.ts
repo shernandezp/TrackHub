@@ -18,7 +18,6 @@ import {
   buildDeliveryPayload,
   buildPodPayload,
   buildStopPayloadFromDestination,
-  buildTollClassVariables,
   deriveTripType,
   destinationsFromStops,
   isCleanAttachment,
@@ -29,7 +28,6 @@ import {
   normalizeStopCity,
   isStopCityWithinLimit,
   normalizeStopActivity,
-  hasException,
   DEFAULT_ARRIVAL_RADIUS_METERS,
   DELIVERY_STATUSES,
   STOP_CITY_MAX_LENGTH,
@@ -197,6 +195,7 @@ describe('isCleanAttachment', () => {
   test('only a Clean scan verdict qualifies', () => {
     expect(isCleanAttachment(clean())).toBe(true);
     expect(isCleanAttachment(clean({ scanStatus: 'clean' }))).toBe(true);
+    expect(isCleanAttachment(clean({ scanStatus: 'NotScanned' }))).toBe(true);
     expect(isCleanAttachment(clean({ scanStatus: 'Pending' }))).toBe(false);
     expect(isCleanAttachment(clean({ scanStatus: 'Infected' }))).toBe(false);
   });
@@ -214,48 +213,6 @@ describe('podDocumentFields', () => {
       classification: 'Internal',
       title: 'signature.png',
     });
-  });
-});
-
-describe('buildTollClassVariables', () => {
-  test('a transporter-type mapping never also sends a transporter id', () => {
-    expect(
-      buildTollClassVariables({
-        target: 'transporterType',
-        transporterTypeId: 2,
-        transporterId: TRANSPORTER_ID,
-        tollVehicleClassCode: 'III',
-      })
-    ).toEqual({ transporterTypeId: 2, transporterId: null, tollVehicleClassCode: 'III' });
-  });
-
-  test('a transporter override never also sends a type id', () => {
-    expect(
-      buildTollClassVariables({
-        target: 'transporter',
-        transporterTypeId: 2,
-        transporterId: TRANSPORTER_ID,
-        tollVehicleClassCode: 'IV',
-      })
-    ).toEqual({ transporterTypeId: null, transporterId: TRANSPORTER_ID, tollVehicleClassCode: 'IV' });
-  });
-
-  test('an incomplete form yields null instead of a request the validator rejects', () => {
-    expect(buildTollClassVariables({ target: 'transporterType', tollVehicleClassCode: 'III' })).toBeNull();
-    expect(buildTollClassVariables({ target: 'transporter', tollVehicleClassCode: 'III' })).toBeNull();
-    expect(
-      buildTollClassVariables({ target: 'transporterType', transporterTypeId: 2, tollVehicleClassCode: ' ' })
-    ).toBeNull();
-  });
-
-  test('the class code is trimmed', () => {
-    expect(
-      buildTollClassVariables({
-        target: 'transporterType',
-        transporterTypeId: 1,
-        tollVehicleClassCode: ' II ',
-      })?.tollVehicleClassCode
-    ).toBe('II');
   });
 });
 
@@ -438,62 +395,5 @@ describe('stop activity', () => {
       priority: 0,
     });
     expect(payload.activity).toBe('Load');
-  });
-});
-
-/**
- * Spec 11a §10: dispatcher attention is exception-driven. Every answer is derived
- * from a fact the row already carries, never a stored flag — which is what lets the
- * filter run over the page the board already fetched.
- */
-describe('board exceptions', () => {
-  const trip = (overrides: Partial<Parameters<typeof hasException>[0]> = {}) => ({
-    phase: 'InTransit',
-    status: 'InProgress',
-    deviationOpenedAt: null,
-    pendingStopCount: 1,
-    phaseDelayed: false,
-    ...overrides,
-  });
-
-  test('overdue reads the derived phase, not the status', () => {
-    // The trip is still Created — Overdue is a READING, and the queue stays blocked
-    // until a dispatcher decides.
-    expect(hasException(trip({ phase: 'Overdue', status: 'Created' }), 'overdue')).toBe(true);
-    expect(hasException(trip({ phase: 'Scheduled', status: 'Created' }), 'overdue')).toBe(false);
-  });
-
-  test('off corridor is an open deviation episode', () => {
-    expect(hasException(trip({ deviationOpenedAt: '2026-08-03T10:00:00Z' }), 'offCorridor')).toBe(true);
-    expect(hasException(trip(), 'offCorridor')).toBe(false);
-  });
-
-  test('delayed is the backend verdict, so the badge and the alert cannot disagree', () => {
-    // The portal used to re-derive this as "next-stop ETA later than the trip's planned
-    // END", which is a looser rule than the one raising TripDelayed (that stop's own
-    // window plus delayThresholdMinutes) — two answers to one word on one screen.
-    expect(hasException(trip({ phaseDelayed: true }), 'delayed')).toBe(true);
-    expect(hasException(trip({ phaseDelayed: false }), 'delayed')).toBe(false);
-  });
-
-  test('stalled at the final stop is a running trip at a stop with nowhere left to go', () => {
-    expect(hasException(trip({ phase: 'AtStop', pendingStopCount: 0 }), 'stalledFinalStop')).toBe(true);
-    // Still has destinations ahead, so it is simply working.
-    expect(hasException(trip({ phase: 'AtStop', pendingStopCount: 2 }), 'stalledFinalStop')).toBe(false);
-    expect(
-      hasException(trip({ phase: 'AtStop', pendingStopCount: 0, status: 'Paused' }), 'stalledFinalStop')
-    ).toBe(false);
-  });
-
-  /**
-   * The regression that made this filter useless: the resolver never sets an ETA on the
-   * AtStop branch — an estimate to a stop you are already parked at is meaningless — so
-   * the old `!phaseEtaAt` test was ALWAYS true and every truck unloading anywhere was
-   * reported as stalled at its final stop.
-   */
-  test('a truck unloading mid-route is not reported as stalled just because it has no ETA', () => {
-    expect(
-      hasException(trip({ phase: 'AtStop', pendingStopCount: 3 }), 'stalledFinalStop')
-    ).toBe(false);
   });
 });

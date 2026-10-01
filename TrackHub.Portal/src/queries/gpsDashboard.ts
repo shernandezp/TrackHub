@@ -31,7 +31,7 @@ export const gpsDashboardKeys = {
 export function useGpsDashboard(accountId: string | undefined) {
   return useQuery({
     queryKey: gpsDashboardKeys.byAccount(accountId ?? ''),
-    queryFn: () => getGpsIntegrationDashboard(accountId as string),
+    queryFn: ({ signal }) => getGpsIntegrationDashboard(accountId as string, { signal }),
     enabled: !!accountId,
   });
 }

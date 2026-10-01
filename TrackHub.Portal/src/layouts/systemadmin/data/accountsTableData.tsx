@@ -62,6 +62,7 @@ export interface AccountFormValues {
   emailAddress?: string;
   lastModified?: string;
   timeZoneId?: string | null;
+  version?: number;
 }
 
 /** Dialog/form state for the "add manager" flow (loose until the validate() gate). */
@@ -131,6 +132,7 @@ function useAccountsTableData(
           typeId: account.typeId,
           active: account.active,
           timeZoneId: account.timeZoneId,
+          expectedVersion: account.version ?? null,
         } as { accountId: string } & Omit<UpdateAccountDtoInput, 'accountId'>);
       } else {
         await createAccount.mutateAsync({

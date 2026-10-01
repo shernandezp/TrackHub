@@ -18,20 +18,9 @@ namespace TrackHub.Reporting.Application.Report.Factory.Workforce;
 // Shared projection helpers for the workforce reports.
 internal static class WorkforceReportSupport
 {
-    // Manager exposes issue/expiry dates as the GraphQL `Date` scalar (DateOnly). Report columns are
-    // typed DateTimeOffset so Excel/PDF apply the shared date format — widen at UTC midnight.
-    public static DateTimeOffset? ToUtcInstant(this DateOnly? date)
-        => date is { } value ? new DateTimeOffset(value.Year, value.Month, value.Day, 0, 0, 0, TimeSpan.Zero) : null;
-
-    // Whole days between today (UTC) and the expiry date; negative once expired.
-    public static int? DaysUntil(this DateOnly? date)
-        => date is { } value ? value.DayNumber - UtcToday().DayNumber : null;
-
-    private static DateOnly UtcToday()
-    {
-        var now = DateTimeOffset.UtcNow;
-        return new DateOnly(now.Year, now.Month, now.Day);
-    }
+    // Whole days between the account's today and the expiry date; negative once expired.
+    public static int? DaysUntil(this DateOnly? date, DateOnly today)
+        => date is { } value ? value.DayNumber - today.DayNumber : null;
 
     public static string OrEmpty(this string? value) => value ?? string.Empty;
 }

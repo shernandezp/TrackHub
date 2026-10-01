@@ -33,7 +33,7 @@ public class GraphQLValidationBehaviorTests
     }
 
     [Fact]
-    public async Task Handle_ValidationFails_ThrowsGraphQLException()
+    public async Task Handle_ValidationFails_ThrowsTheCodedValidationException()
     {
         var validator = new Mock<IValidator<TestGraphQLRequest>>();
         validator.Setup(v => v.ValidateAsync(It.IsAny<ValidationContext<TestGraphQLRequest>>(), It.IsAny<CancellationToken>()))
@@ -41,6 +41,8 @@ public class GraphQLValidationBehaviorTests
 
         var behavior = new GraphQLValidationBehavior<TestGraphQLRequest, string>([validator.Object]);
         var act = () => behavior.HandleAsync(new TestGraphQLRequest(), () => Task.FromResult("OK"), CancellationToken.None);
-        await act.Should().ThrowAsync<GraphQLException>();
+        var thrown = await act.Should().ThrowAsync<Common.Application.Exceptions.ValidationException>();
+        thrown.Which.Code.Should().Be("VALIDATION_ERROR");
+        thrown.Which.Errors.Should().ContainKey("Field");
     }
 }

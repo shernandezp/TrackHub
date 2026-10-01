@@ -14,6 +14,7 @@
 //
 
 using System.Net.Http.Headers;
+using System.Text.Json;
 using Common.Domain.Enums;
 using TrackHub.Router.Domain.Interfaces;
 
@@ -22,7 +23,7 @@ namespace TrackHub.Router.Infrastructure.Navixy;
 /// <summary>
 /// Base class for Navixy readers providing common functionality for API communication.
 /// Navixy uses session hash authentication obtained via the user/auth endpoint; the hash is
-/// reused across sync/ping cycles through <see cref="IProviderSessionStore"/> A dropped
+/// reused, with the user's time zone (Navixy v2 reads and writes every date in it), across sync/ping cycles through <see cref="IProviderSessionStore"/> A dropped
 /// session surfaces as <c>success: false</c> with status code 3/4 and triggers one re-auth + retry.
 /// </summary>
 public class NavixyReaderBase
@@ -42,9 +43,6 @@ public class NavixyReaderBase
 
     public ProtocolType Protocol => ProtocolType.Navixy;
 
-    // Navixy date format: yyyy-MM-dd HH:mm:ss
-    protected const string NavixyDateFormat = "yyyy-MM-dd HH:mm:ss";
-
     /// <summary>
     /// Gets the current session hash.
     /// </summary>
@@ -55,11 +53,7 @@ public class NavixyReaderBase
     /// </summary>
     protected string BaseUrl { get; private set; } = string.Empty;
 
-    /// <summary>
-    /// Formats a DateTimeOffset to Navixy date format.
-    /// </summary>
-    protected static string FormatNavixyDate(DateTimeOffset date)
-        => date.UtcDateTime.ToString(NavixyDateFormat, System.Globalization.CultureInfo.InvariantCulture);
+    protected TimeZoneInfo UserTimeZone { get; private set; } = TimeZoneInfo.Utc;
 
     protected NavixyReaderBase(
         ICredentialHttpClientFactory httpClientFactory,
@@ -84,9 +78,8 @@ public class NavixyReaderBase
 
         HttpClientService.Init(httpClient, $"{ProtocolType.Navixy}");
 
-        if (_sessionStore.TryGet(credential, out var cachedHash))
+        if (_sessionStore.TryGet(credential, out var cached) && TryRestoreSession(cached))
         {
-            Hash = cachedHash;
             return;
         }
 
@@ -112,8 +105,48 @@ public class NavixyReaderBase
             ? throw new InvalidOperationException("Failed to obtain session hash from Navixy")
             : authResponse.Hash;
 
-        _sessionStore.Set(_credential, Hash, SessionTtl);
+        UserTimeZone = await ReadUserTimeZoneAsync(cancellationToken);
+        _sessionStore.Set(_credential, JsonSerializer.Serialize(new NavixySession(Hash, UserTimeZone.Id)), SessionTtl);
     }
+
+    private async Task<TimeZoneInfo> ReadUserTimeZoneAsync(CancellationToken cancellationToken)
+    {
+        var response = await HttpClientService.PostAsync<UserSettingsResponse>(
+            $"{BaseUrl}/v2/user/settings/get", new { hash = Hash }, cancellationToken);
+        var zoneId = response is { Success: true, Settings.Time_zone: { Length: > 0 } id }
+            ? id
+            : throw new InvalidOperationException(
+                $"Navixy user settings carry no time zone (status {response?.Status?.Code}: {response?.Status?.Description})");
+
+        return TimeZoneInfo.TryFindSystemTimeZoneById(zoneId, out var zone)
+            ? zone
+            : throw new InvalidOperationException($"Navixy user time zone '{zoneId}' is not a known zone.");
+    }
+
+    private bool TryRestoreSession(string cached)
+    {
+        NavixySession? session;
+        try
+        {
+            session = JsonSerializer.Deserialize<NavixySession>(cached);
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+
+        if (session is not { Hash.Length: > 0 } || !TimeZoneInfo.TryFindSystemTimeZoneById(session.TimeZone, out var zone))
+        {
+            return false;
+        }
+
+        Hash = session.Hash;
+        UserTimeZone = zone;
+        return true;
+    }
+
+    private sealed record NavixySession(string Hash, string TimeZone);
+
 
     /// <summary>
     /// Makes a POST request to the Navixy API. <paramref name="parameterFactory"/> receives the
@@ -150,14 +183,4 @@ public class NavixyReaderBase
                 $"Navixy API error {result.Status?.Code} calling '{path}' after re-auth: {result.Status?.Description}")
             : result;
     }
-
-    /// <summary>
-    /// Parses a Navixy date string to DateTimeOffset.
-    /// </summary>
-    protected static DateTimeOffset ParseNavixyDate(string dateStr)
-        // Navixy timestamps are naive (no zone); assume UTC and normalize to UTC.
-        => DateTimeOffset.TryParseExact(dateStr, NavixyDateFormat, null,
-            System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal, out var result)
-            ? result
-            : DateTimeOffset.MinValue;
 }

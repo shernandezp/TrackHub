@@ -21,7 +21,6 @@ using TrackHub.TripManagement.Application.Tolls.Services.Interfaces;
 
 namespace TrackHub.TripManagement.Application.Tolls.Queries.EstimateTolls;
 
-// No [Caching] — scope comes from the caller identity (SVD-09). See GetTripsQuery.
 /// <summary>
 /// The planner's "what-if": re-runs toll matching over a stored plan for a different vehicle class
 /// WITHOUT persisting anything, so an operator can compare classes before committing.

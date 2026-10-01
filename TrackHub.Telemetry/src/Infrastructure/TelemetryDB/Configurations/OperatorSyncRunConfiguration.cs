@@ -29,6 +29,7 @@ public class OperatorSyncRunConfiguration : IEntityTypeConfiguration<OperatorSyn
         builder.Property(x => x.CorrelationId).HasColumnName("correlationid").HasMaxLength(ColumnMetadata.DefaultNameLength);
 
         builder.HasIndex(e => new { e.AccountId, e.OperatorId, e.StartedAt });
+        builder.HasIndex(e => new { e.OperatorId, e.StartedAt });
         builder.HasIndex(e => new { e.AccountId, e.StartedAt });
     }
 }

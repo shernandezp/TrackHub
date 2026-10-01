@@ -18,10 +18,16 @@ namespace TrackHub.Router.Infrastructure.Samsara.Models;
 /// <summary>
 /// Response from Samsara /fleet/vehicles/stats API
 /// </summary>
+internal interface ISamsaraPage<T>
+{
+    IEnumerable<T>? Data { get; }
+    Pagination? Pagination { get; }
+}
+
 internal sealed record VehicleStatsResponse(
     IEnumerable<VehicleStats>? Data,
     Pagination? Pagination
-);
+) : ISamsaraPage<VehicleStats>;
 
 /// <summary>
 /// Response from Samsara /fleet/vehicles/stats/history API
@@ -29,4 +35,4 @@ internal sealed record VehicleStatsResponse(
 internal sealed record VehicleHistoryResponse(
     IEnumerable<VehicleHistory>? Data,
     Pagination? Pagination
-);
+) : ISamsaraPage<VehicleHistory>;

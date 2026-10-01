@@ -35,4 +35,6 @@ public interface IApplicationDbContext
     DbSet<Account> Accounts { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
+
+    Microsoft.EntityFrameworkCore.ChangeTracking.ChangeTracker ChangeTracker { get; }
 }

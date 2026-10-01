@@ -14,8 +14,10 @@
 //
 
 using Common.Application.Exceptions;
+using Common.Infrastructure;
 using HotChocolate;
 using HotChocolate.Execution;
+using Microsoft.EntityFrameworkCore;
 
 namespace Common.Web.Infrastructure;
 
@@ -27,7 +29,7 @@ public sealed class TrackHubGraphQLErrorFilter : IErrorFilter
         {
             var builder = ErrorBuilder.FromError(error)
                 .SetMessage(forbidden.Message)
-                .SetCode("FORBIDDEN");
+                .SetCode(PlatformErrorCodes.Forbidden);
 
             if (!string.IsNullOrWhiteSpace(forbidden.Resource))
             {
@@ -46,7 +48,7 @@ public sealed class TrackHubGraphQLErrorFilter : IErrorFilter
         {
             return ErrorBuilder.FromError(error)
                 .SetMessage(featureDisabled.Message)
-                .SetCode("FEATURE_DISABLED")
+                .SetCode(PlatformErrorCodes.FeatureDisabled)
                 .SetExtension("featureKey", featureDisabled.FeatureKey)
                 .Build();
         }
@@ -55,7 +57,7 @@ public sealed class TrackHubGraphQLErrorFilter : IErrorFilter
         {
             return ErrorBuilder.FromError(error)
                 .SetMessage(accountSuspended.Message)
-                .SetCode("ACCOUNT_SUSPENDED")
+                .SetCode(PlatformErrorCodes.AccountSuspended)
                 .SetExtension("accountStatus", accountSuspended.Status.ToString())
                 .Build();
         }
@@ -64,7 +66,7 @@ public sealed class TrackHubGraphQLErrorFilter : IErrorFilter
         {
             var builder = ErrorBuilder.FromError(error)
                 .SetMessage(tooManyRequests.Message)
-                .SetCode("TOO_MANY_REQUESTS");
+                .SetCode(PlatformErrorCodes.TooManyRequests);
 
             if (tooManyRequests.RetryAfterSeconds is { } retryAfter)
             {
@@ -78,7 +80,7 @@ public sealed class TrackHubGraphQLErrorFilter : IErrorFilter
         {
             return ErrorBuilder.FromError(error)
                 .SetMessage("Authentication is required.")
-                .SetCode("UNAUTHORIZED")
+                .SetCode(PlatformErrorCodes.Unauthorized)
                 .Build();
         }
 
@@ -92,7 +94,7 @@ public sealed class TrackHubGraphQLErrorFilter : IErrorFilter
         {
             return ErrorBuilder.FromError(error)
                 .SetMessage(notFound.Message)
-                .SetCode("NOT_FOUND")
+                .SetCode(PlatformErrorCodes.NotFound)
                 .Build();
         }
 
@@ -118,7 +120,23 @@ public sealed class TrackHubGraphQLErrorFilter : IErrorFilter
             return ErrorBuilder.FromError(error)
                 .SetMessage(validation.Message)
                 .SetCode(validation.Code)
-                .SetExtension("errors", validation.Errors)
+                .SetExtension("errors", validation.Errors.ToDictionary(e => e.Key, e => (object?)e.Value))
+                .Build();
+        }
+
+        if (error.Exception is DbUpdateException update && UniqueViolation.Matches(update))
+        {
+            return ErrorBuilder.FromError(error)
+                .SetMessage(CustomExceptionHandler.DuplicateMessage)
+                .SetCode(ConflictException.DefaultCode)
+                .Build();
+        }
+
+        if (error.Exception is DbUpdateConcurrencyException)
+        {
+            return ErrorBuilder.FromError(error)
+                .SetMessage(CustomExceptionHandler.ConcurrentUpdateMessage)
+                .SetCode(ConflictException.ConcurrentUpdateCode)
                 .Build();
         }
 

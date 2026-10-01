@@ -19,17 +19,16 @@ namespace TrackHub.Router.Domain.Interfaces;
 
 // Short-TTL cache of an operator's device→transporter catalog, keyed by (account, operator). The
 // 10-second position loop was re-fetching this rarely-changing catalog from Manager on every cycle
-// per operator (router-audit A-12); the cache collapses that to one load per TTL, and the
-// device-sync loop invalidates the entry whenever it changes the catalog. Keyed by the explicit
-// account+operator scope (never a caller identity), so it is safe to cache.
+// per operator (router-audit A-12); the cache collapses that to one load per TTL. An entry is also
+// keyed by the operator's persisted LastDeviceSyncAt, so a device sync run by any process (API or
+// worker) invalidates it. Keyed by the explicit account+operator scope (never a caller identity), so
+// it is safe to cache.
 public interface IDeviceCatalogCache
 {
     Task<IEnumerable<DeviceTransporterVm>> GetOrLoadAsync(
         Guid accountId,
         Guid operatorId,
+        DateTimeOffset? catalogStamp,
         Func<CancellationToken, Task<IEnumerable<DeviceTransporterVm>>> loader,
         CancellationToken cancellationToken);
-
-    // Drops the cached catalog for an operator (called after a device sync mutates it).
-    void Invalidate(Guid operatorId);
 }

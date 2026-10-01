@@ -14,6 +14,13 @@ public class DocumentWriterTests
     private static ApplicationDbContext NewContext(string name)
         => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking).Options);
 
+    // The account's own document type the fixtures upload under; uploads outside the account's types are refused.
+    private static void SeedDocumentType(ApplicationDbContext context, Guid accountId)
+    {
+        context.DocumentTypes.Add(new TrackHub.Manager.Infrastructure.Entities.DocumentType(accountId, "SOAT", "SOAT", true, true, 365, true, DateTimeOffset.UtcNow));
+        context.SaveChanges();
+    }
+
     private static ICurrentPrincipal Principal(Guid accountId, PrincipalType type = PrincipalType.User)
     {
         var p = new Mock<ICurrentPrincipal>();
@@ -41,6 +48,7 @@ public class DocumentWriterTests
     {
         await using var context = NewContext(nameof(RegisterUploadedDocumentAsync_CreatesDocumentVersionAndAudit));
         var accountId = Guid.NewGuid();
+        SeedDocumentType(context, accountId);
         var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy(), Mock.Of<IAlertRecorder>());
 
         var vm = await writer.RegisterUploadedDocumentAsync(Guid.NewGuid(), Dto(accountId), CancellationToken.None);
@@ -56,6 +64,7 @@ public class DocumentWriterTests
     {
         await using var context = NewContext(nameof(RegisterUploadedDocumentAsync_IsQuarantined_NoDownloadUrl));
         var accountId = Guid.NewGuid();
+        SeedDocumentType(context, accountId);
         var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy(), Mock.Of<IAlertRecorder>());
         var documentId = Guid.NewGuid();
 
@@ -72,6 +81,7 @@ public class DocumentWriterTests
     {
         using var context = NewContext(nameof(RegisterUploadedDocumentAsync_NonPrivilegedOwnerDenied_Throws));
         var accountId = Guid.NewGuid();
+        SeedDocumentType(context, accountId);
         var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy(privileged: false, ownerAllowed: false), Mock.Of<IAlertRecorder>());
 
         Assert.ThrowsAsync<ForbiddenAccessException>(() =>
@@ -85,6 +95,7 @@ public class DocumentWriterTests
         // (e.g. a transporter in another account) — the owner check runs for everyone.
         using var context = NewContext(nameof(RegisterUploadedDocumentAsync_PrivilegedButCrossAccountOwner_Throws));
         var accountId = Guid.NewGuid();
+        SeedDocumentType(context, accountId);
         var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy(privileged: true, ownerAllowed: false), Mock.Of<IAlertRecorder>());
 
         Assert.ThrowsAsync<ForbiddenAccessException>(() =>
@@ -96,6 +107,7 @@ public class DocumentWriterTests
     {
         await using var context = NewContext(nameof(MarkDocumentScanResultAsync_Clean_ActivatesUploadedDocument));
         var accountId = Guid.NewGuid();
+        SeedDocumentType(context, accountId);
         var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy(), Mock.Of<IAlertRecorder>());
         var id = Guid.NewGuid();
         await writer.RegisterUploadedDocumentAsync(id, Dto(accountId, "Uploaded", "Quarantined"), CancellationToken.None);
@@ -112,6 +124,7 @@ public class DocumentWriterTests
     {
         await using var context = NewContext(nameof(ReplaceDocumentVersionAsync_IncrementsVersion_AndReQuarantines));
         var accountId = Guid.NewGuid();
+        SeedDocumentType(context, accountId);
         var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy(), Mock.Of<IAlertRecorder>());
         var created = await writer.RegisterUploadedDocumentAsync(Guid.NewGuid(), Dto(accountId), CancellationToken.None);
 
@@ -129,6 +142,7 @@ public class DocumentWriterTests
     {
         await using var context = NewContext(nameof(SignDocumentAsync_RecordsSignatureAndAudit));
         var accountId = Guid.NewGuid();
+        SeedDocumentType(context, accountId);
         var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy(), Mock.Of<IAlertRecorder>());
         var doc = await writer.RegisterUploadedDocumentAsync(Guid.NewGuid(), Dto(accountId), CancellationToken.None);
 
@@ -147,6 +161,7 @@ public class DocumentWriterTests
     {
         await using var context = NewContext(nameof(VoidDocumentAsync_SetsVoided));
         var accountId = Guid.NewGuid();
+        SeedDocumentType(context, accountId);
         var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy(), Mock.Of<IAlertRecorder>());
         var doc = await writer.RegisterUploadedDocumentAsync(Guid.NewGuid(), Dto(accountId), CancellationToken.None);
 
@@ -160,6 +175,7 @@ public class DocumentWriterTests
     {
         await using var context = NewContext(nameof(ConfigureDocumentTypeAsync_UpsertsSingleRow));
         var accountId = Guid.NewGuid();
+        SeedDocumentType(context, accountId);
         var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy(), Mock.Of<IAlertRecorder>());
 
         await writer.ConfigureDocumentTypeAsync(new DocumentTypeDto(accountId, "SOAT", "SOAT policy", true, true, 365), CancellationToken.None);
@@ -177,6 +193,7 @@ public class DocumentWriterTests
     {
         await using var context = NewContext(nameof(ReplaceDocumentVersionAsync_ExpiredDocumentWithoutANewExpiry_StaysExpired));
         var accountId = Guid.NewGuid();
+        SeedDocumentType(context, accountId);
         var alerts = new Mock<IAlertRecorder>();
         var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy(), alerts.Object);
         var documentId = Guid.NewGuid();
@@ -194,6 +211,7 @@ public class DocumentWriterTests
     {
         await using var context = NewContext(nameof(ReplaceDocumentVersionAsync_WithAFutureExpiry_ReactivatesAndResolvesTheExpiryAlerts));
         var accountId = Guid.NewGuid();
+        SeedDocumentType(context, accountId);
         var alerts = new Mock<IAlertRecorder>();
         var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy(), alerts.Object);
         var documentId = Guid.NewGuid();
@@ -210,5 +228,50 @@ public class DocumentWriterTests
         });
         alerts.Verify(a => a.ResolveOpenAsync(accountId, "Document", documentId.ToString(),
             It.Is<IReadOnlyCollection<string>>(t => t.Contains(AlertEventTypes.DocumentExpiring) && t.Contains(AlertEventTypes.DocumentExpired)), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Test]
+    public async Task RegisterUploadedDocumentAsync_NormalisesTheClassification()
+    {
+        await using var context = NewContext(nameof(RegisterUploadedDocumentAsync_NormalisesTheClassification));
+        var accountId = Guid.NewGuid();
+        SeedDocumentType(context, accountId);
+        var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy(), Mock.Of<IAlertRecorder>());
+
+        var vm = await writer.RegisterUploadedDocumentAsync(Guid.NewGuid(), Dto(accountId) with { Classification = " confidential " }, CancellationToken.None);
+
+        Assert.That(vm.Classification, Is.EqualTo(DocumentClassifications.Confidential));
+    }
+
+    [Test]
+    public async Task RegisterUploadedDocumentAsync_RefusesACategoryOutsideTheAccountsTypes()
+    {
+        await using var context = NewContext(nameof(RegisterUploadedDocumentAsync_RefusesACategoryOutsideTheAccountsTypes));
+        var accountId = Guid.NewGuid();
+        var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy(), Mock.Of<IAlertRecorder>());
+
+        Assert.ThrowsAsync<Common.Application.Exceptions.ValidationException>(() =>
+            writer.RegisterUploadedDocumentAsync(Guid.NewGuid(), Dto(accountId), CancellationToken.None));
+    }
+
+    [Test]
+    public async Task RegisterUploadedDocumentAsync_ADriverFilesOnlyInternalPlatformEvidence()
+    {
+        await using var context = NewContext(nameof(RegisterUploadedDocumentAsync_ADriverFilesOnlyInternalPlatformEvidence));
+        var accountId = Guid.NewGuid();
+        SeedDocumentType(context, accountId);
+        var writer = new DocumentWriter(context, Principal(accountId, PrincipalType.Driver), PrivilegedPolicy(), Mock.Of<IAlertRecorder>());
+        var evidence = Dto(accountId) with { Category = Common.Domain.Evidence.PlatformDocumentCategories.Pod };
+
+        var accepted = await writer.RegisterUploadedDocumentAsync(Guid.NewGuid(), evidence, CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(accepted.Category, Is.EqualTo(Common.Domain.Evidence.PlatformDocumentCategories.Pod));
+            Assert.ThrowsAsync<Common.Application.Exceptions.ValidationException>(() =>
+                writer.RegisterUploadedDocumentAsync(Guid.NewGuid(), Dto(accountId), CancellationToken.None), "a compliance category");
+            Assert.ThrowsAsync<Common.Application.Exceptions.ValidationException>(() =>
+                writer.RegisterUploadedDocumentAsync(Guid.NewGuid(), evidence with { Classification = DocumentClassifications.Public }, CancellationToken.None), "a public document");
+        });
     }
 }

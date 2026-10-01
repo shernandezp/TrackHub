@@ -31,6 +31,8 @@ public class ResourceActionPolicyConfiguration : IEntityTypeConfiguration<Resour
         builder.Property(x => x.ActionId).HasColumnName("actionid");
         builder.Property(x => x.PolicyId).HasColumnName("policyid");
 
+        builder.HasIndex(x => new { x.ResourceId, x.ActionId, x.PolicyId }).IsUnique().HasDatabaseName("ux_resource_action_policy_grant");
+
         builder
             .HasOne(rap => rap.Resource)
             .WithMany()

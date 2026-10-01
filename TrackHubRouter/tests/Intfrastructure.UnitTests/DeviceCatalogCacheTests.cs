@@ -27,6 +27,8 @@ public class DeviceCatalogCacheTests
     private static readonly Guid AccountId = Guid.NewGuid();
     private static readonly Guid OperatorId = Guid.NewGuid();
 
+    private static readonly DateTimeOffset Stamp = new(2026, 9, 1, 12, 0, 0, TimeSpan.Zero);
+
     private static DeviceCatalogCache CacheWithTtl(string? seconds)
     {
         var config = new Mock<IConfiguration>();
@@ -45,23 +47,22 @@ public class DeviceCatalogCacheTests
 
         for (var i = 0; i < 3; i++)
         {
-            await cache.GetOrLoadAsync(AccountId, OperatorId, _ => { loads++; return LoadOne(); }, CancellationToken.None);
+            await cache.GetOrLoadAsync(AccountId, OperatorId, Stamp, _ => { loads++; return LoadOne(); }, CancellationToken.None);
         }
 
         Assert.That(loads, Is.EqualTo(1), "subsequent reads within the TTL must be served from cache");
     }
 
     [Test]
-    public async Task Invalidate_ForcesReload()
+    public async Task ANewCatalogStamp_ForcesReload()
     {
         var cache = CacheWithTtl("60");
         var loads = 0;
 
-        await cache.GetOrLoadAsync(AccountId, OperatorId, _ => { loads++; return LoadOne(); }, CancellationToken.None);
-        cache.Invalidate(OperatorId);
-        await cache.GetOrLoadAsync(AccountId, OperatorId, _ => { loads++; return LoadOne(); }, CancellationToken.None);
+        await cache.GetOrLoadAsync(AccountId, OperatorId, Stamp, _ => { loads++; return LoadOne(); }, CancellationToken.None);
+        await cache.GetOrLoadAsync(AccountId, OperatorId, Stamp.AddMinutes(1), _ => { loads++; return LoadOne(); }, CancellationToken.None);
 
-        Assert.That(loads, Is.EqualTo(2), "invalidation must force a fresh load");
+        Assert.That(loads, Is.EqualTo(2), "a device sync from any process moves the stamp and must force a fresh load");
     }
 
     [Test]
@@ -70,8 +71,8 @@ public class DeviceCatalogCacheTests
         var cache = CacheWithTtl("0");
         var loads = 0;
 
-        await cache.GetOrLoadAsync(AccountId, OperatorId, _ => { loads++; return LoadOne(); }, CancellationToken.None);
-        await cache.GetOrLoadAsync(AccountId, OperatorId, _ => { loads++; return LoadOne(); }, CancellationToken.None);
+        await cache.GetOrLoadAsync(AccountId, OperatorId, Stamp, _ => { loads++; return LoadOne(); }, CancellationToken.None);
+        await cache.GetOrLoadAsync(AccountId, OperatorId, Stamp, _ => { loads++; return LoadOne(); }, CancellationToken.None);
 
         Assert.That(loads, Is.EqualTo(2), "a zero TTL disables caching (always loads)");
     }

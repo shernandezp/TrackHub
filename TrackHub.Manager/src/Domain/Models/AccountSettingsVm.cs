@@ -21,5 +21,5 @@ public readonly record struct AccountSettingsVm(
     string? MapsKey,
     int OnlineInterval,
     bool RefreshMap,
-    int RefreshMapInterval
-    );
+    int RefreshMapInterval,
+    uint Version);

@@ -19,7 +19,7 @@ namespace TrackHub.Security.Infrastructure.Migrations
                        'UserUpdated',
                        jsonb_build_object(
                            'UserId', u.id,
-                           'User', jsonb_build_object('UserId', u.id, 'Username', u.username, 'Active', u.active, 'Role', r.name))::text,
+                           'User', jsonb_build_object('UserId', u.id, 'Username', u.username, 'Active', u.active, 'Role', r.name, 'AccountId', u.accountid))::text,
                        'Pending',
                        0,
                        now(),

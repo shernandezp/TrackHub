@@ -22,6 +22,7 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { RequestOptions } from 'api/core/errors';
 import { formatDateTimeOffSet } from 'utils/dataUtils';
 import type {
   PositionFieldsFragment as PositionFieldsType,
@@ -49,8 +50,8 @@ export type { PositionSourceType };
  * provider assemblies. Doubles as the provider list for operator screens — the portal
  * carries no local protocol table.
  */
-export async function getProviderCapabilities(): Promise<ProviderCapabilities[]> {
-  const data = await executeGraphQL('router', GetProviderCapabilitiesDocument);
+export async function getProviderCapabilities(options?: RequestOptions): Promise<ProviderCapabilities[]> {
+  const data = await executeGraphQL('router', GetProviderCapabilitiesDocument, undefined, options);
   return data.providerCapabilities;
 }
 
@@ -60,8 +61,17 @@ export async function pingOperator(operatorId: string): Promise<boolean> {
   return data.pingOperator;
 }
 
-export async function getDevicePositions(): Promise<Position[]> {
-  const data = await executeGraphQL('router', GetDevicePositionsByUserDocument);
+/** Server-side narrowing of the live positions; an absent member means no narrowing. */
+export interface DevicePositionScope {
+  groupId?: number | null;
+  operatorId?: string | null;
+}
+
+export async function getDevicePositions(
+  { groupId = null, operatorId = null }: DevicePositionScope = {},
+  options?: RequestOptions
+): Promise<Position[]> {
+  const data = await executeGraphQL('router', GetDevicePositionsByUserDocument, { groupId, operatorId }, options);
   return data.devicePositionsByUser;
 }
 
@@ -69,14 +79,15 @@ export async function getTripsByTransporter(
   transporterId: string,
   from: string | Date,
   to: string | Date,
-  source: PositionSourceType = 'PROVIDER'
+  source: PositionSourceType = 'PROVIDER',
+  options?: RequestOptions
 ): Promise<Trip[]> {
   const data = await executeGraphQL('router', GetTripsByTransporterDocument, {
     transporterId,
     from: formatDateTimeOffSet(from) as string,
     to: formatDateTimeOffSet(to) as string,
     source,
-  });
+  }, options);
   return data.tripsByTransporter;
 }
 

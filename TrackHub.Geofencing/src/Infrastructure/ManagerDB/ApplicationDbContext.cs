@@ -28,6 +28,7 @@ public partial class ApplicationDbContext(DbContextOptions<ApplicationDbContext>
     public DbSet<AccountFeature> AccountFeatures { get; set; }
     public DbSet<Account> Accounts { get; set; }
     public DbSet<AuditEvent> AuditEvents { get; set; }
+    public DbSet<TransporterDetectionCursor> TransporterDetectionCursors { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

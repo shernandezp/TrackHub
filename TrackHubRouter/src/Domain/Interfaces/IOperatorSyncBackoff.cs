@@ -13,21 +13,18 @@
 //  limitations under the License.
 //
 
+using TrackHub.Router.Domain.Models;
+
 namespace TrackHub.Router.Domain.Interfaces;
 
 // Per-operator exponential backoff for the background sync/health loops. A persistently failing
 // operator (e.g. wrong credentials, a decommissioned provider) must not be re-attempted at full
 // cadence forever — that hammers the provider, spams logs, and wastes cycles (router-audit A-15).
-// After consecutive failures the operator is held out for an exponentially growing window; the
-// first success clears it. In-process, consistent with the single-instance SyncWorker deployment.
+// The window is persisted in Manager and read back on the operator projection, so it survives a
+// worker restart.
 public interface IOperatorSyncBackoff
 {
-    // True when the operator is still within its backoff window and should be skipped this tick.
-    bool IsInBackoff(Guid operatorId, DateTimeOffset now);
+    Task RecordSuccessAsync(OperatorVm @operator, CancellationToken cancellationToken);
 
-    // Clears any backoff for the operator (a successful attempt).
-    void RecordSuccess(Guid operatorId);
-
-    // Records a failed attempt and extends the backoff window.
-    void RecordFailure(Guid operatorId, DateTimeOffset now);
+    Task RecordFailureAsync(OperatorVm @operator, DateTimeOffset now, CancellationToken cancellationToken);
 }

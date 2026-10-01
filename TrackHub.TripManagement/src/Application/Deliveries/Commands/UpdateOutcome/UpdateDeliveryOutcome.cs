@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Ardalis.GuardClauses;
 using Common.Application.Interfaces;
 using Microsoft.Extensions.Logging;
 using TrackHub.TripManagement.Application.Common;
@@ -59,8 +60,14 @@ public sealed class UpdateDeliveryOutcomeCommandHandler(
 
         // The delivery is addressed independently of the trip, so it is resolved under the same
         // scope: passing a visible TripId alongside another group's DeliveryId must not work.
-        await TripVisibility.ResolveVisibleTripByDeliveryAsync(
+        var owningTripId = await TripVisibility.ResolveVisibleTripByDeliveryAsync(
             reader, request.DeliveryId, caller.AccountId, scopeUserId, cancellationToken);
+
+        // Otherwise the outcome lands on another trip's delivery while the timeline entry goes to this one.
+        if (owningTripId != request.TripId)
+        {
+            throw new NotFoundException($"{request.DeliveryId}", "Delivery");
+        }
 
         var idempotencyKey = $"trip-delivery-outcome:{request.DeliveryId:N}:{request.ClientEventId:N}";
 
@@ -75,24 +82,13 @@ public sealed class UpdateDeliveryOutcomeCommandHandler(
         }
 
         var recorded = await writer.UpdateDeliveryOutcomeAsync(
-            request.DeliveryId, caller.AccountId, request.Status, request.Observations, idempotencyKey, cancellationToken);
+            request.DeliveryId, caller.AccountId, request.Status, request.Observations, idempotencyKey, TripEventSources.Portal, cancellationToken);
 
         if (!recorded)
         {
             logger.LogDebug("Delivery outcome {IdempotencyKey} was a duplicate; no second row written", idempotencyKey);
             return false;
         }
-
-        await tripEventWriter.AppendAsync(
-            caller.AccountId,
-            request.TripId,
-            null,
-            TripEventTypes.TripDeliveryOutcomeRecorded,
-            DateTimeOffset.UtcNow,
-            TripEventSources.Portal,
-            null,
-            idempotencyKey,
-            cancellationToken);
 
         return true;
     }

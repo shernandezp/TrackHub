@@ -4,6 +4,6 @@ namespace TrackHub.Reporting.Domain.Exceptions;
 public sealed class ReportNotFoundException(string reportCode)
     : Exception($"Report '{reportCode}' was not found.")
 {
-    public string Code => "REPORT_NOT_FOUND";
+    public string Code => ReportErrorCodes.NotFound;
     public string ReportCode { get; } = reportCode;
 }

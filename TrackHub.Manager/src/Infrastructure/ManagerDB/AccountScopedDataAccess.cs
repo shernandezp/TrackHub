@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using System.Text.Json;
 using Common.Application.Exceptions;
 using Common.Application.Interfaces;
@@ -57,16 +58,44 @@ public abstract class AccountScopedDataAccess(IApplicationDbContext context, ICu
             throw new ForbiddenAccessException("Insufficient permissions. Required account access: a non-empty account id.");
         }
 
-        if (CanAccessAllAccounts
-            || Principal.AccountId == accountId
-            || UserBelongsToAccount(accountId)
-            || HasActiveSupportGrant(accountId, forWrite))
+        if (HasAccountAccess(accountId, forWrite))
         {
             return accountId;
         }
 
         throw new ForbiddenAccessException($"Insufficient permissions. Required account access: {accountId}.");
     }
+
+    // Loads a row by key and answers NotFound for a missing row and for a row of an account the
+    // caller cannot reach alike, so a by-id request cannot probe which ids exist elsewhere.
+    protected async Task<T> RequireScopedAsync<T>(
+        IQueryable<T> rows, Expression<Func<T, bool>> byKey, Func<T, Guid> accountOf, object key, bool forWrite, CancellationToken cancellationToken)
+        where T : class
+    {
+        var row = await rows.FirstOrDefaultAsync(byKey, cancellationToken);
+        if (row is null || !HasAccountAccess(accountOf(row), forWrite))
+        {
+            throw new NotFoundException(typeof(T).Name, key.ToString()!);
+        }
+
+        return row;
+    }
+
+    // For a row already loaded by key.
+    protected void RequireRowAccess(Guid rowAccountId, string name, object key, bool forWrite)
+    {
+        if (!HasAccountAccess(rowAccountId, forWrite))
+        {
+            throw new NotFoundException(name, key.ToString()!);
+        }
+    }
+
+    protected bool HasAccountAccess(Guid accountId, bool forWrite)
+        => accountId != Guid.Empty
+            && (CanAccessAllAccounts
+                || Principal.AccountId == accountId
+                || UserBelongsToAccount(accountId)
+                || HasActiveSupportGrant(accountId, forWrite));
 
     protected Guid? ResolveAccountScope(Guid? requestedAccountId)
     {
@@ -106,29 +135,17 @@ public abstract class AccountScopedDataAccess(IApplicationDbContext context, ICu
         return Principal.AccountId.Value;
     }
 
-    protected void AddAuditEvent(Guid accountId, string action, string resourceType, string resourceId, string? oldValuesJson, string? newValuesJson)
-    {
-        var actorId = Principal.UserId?.ToString()
-            ?? Principal.DriverId?.ToString()
-            ?? Principal.ClientId
-            ?? Principal.SubjectId
-            ?? "unknown";
+    // A user acts as itself; a service identity relays the actor of the user it acts for.
+    protected string ActorOf(string? relayedActor)
+        => Principal.PrincipalType switch
+        {
+            PrincipalType.User => Principal.UserId?.ToString() ?? throw new UnauthorizedAccessException(),
+            PrincipalType.ServiceClient when !string.IsNullOrWhiteSpace(relayedActor) => relayedActor,
+            _ => throw new ValidationException([new FluentValidation.Results.ValidationFailure("actor", "A service identity must name the user it acts for.")]),
+        };
 
-        Context.AuditEvents.Add(new AuditEvent(
-            accountId,
-            Principal.PrincipalType.ToString(),
-            actorId,
-            action,
-            resourceType,
-            resourceId,
-            "Succeeded",
-            oldValuesJson,
-            newValuesJson,
-            null,
-            null,
-            null,
-            Principal.CorrelationId));
-    }
+    protected void AddAuditEvent(Guid accountId, string action, string resourceType, string resourceId, string? oldValuesJson, string? newValuesJson)
+        => Context.AuditEvents.Add(AuditTrail.Create(Principal, accountId, action, resourceType, resourceId, oldValuesJson, newValuesJson));
 
     private bool HasActiveSupportGrant(Guid accountId, bool forWrite)
     {
@@ -154,7 +171,7 @@ public abstract class AccountScopedDataAccess(IApplicationDbContext context, ICu
            && Principal.UserId.HasValue
            && Context.Users.Any(x => x.UserId == Principal.UserId.Value && x.AccountId == accountId);
 
-    protected static string Quote(DateTimeOffset? value) => value.HasValue ? Quote(value.Value.ToString("O")) : "null";
+    protected static string Quote(DateTimeOffset? value) => AuditJson.Quote(value);
 
     /// <summary>
     /// Serializes a value as a JSON string literal for the hand-built audit payloads.
@@ -166,5 +183,22 @@ public abstract class AccountScopedDataAccess(IApplicationDbContext context, ICu
     /// through here, so fixing it once fixes them all.
     /// </para>
     /// </summary>
-    protected static string Quote(string? value) => value == null ? "null" : JsonSerializer.Serialize(value);
+    protected static string Quote(string? value) => AuditJson.Quote(value);
+
+    // A settings patch touches only its own keys, so after a concurrent write it is re-applied to
+    // the row as it now is rather than refused.
+    protected async Task<T> RetryMergeAsync<T>(Func<Task<T>> attempt)
+    {
+        for (var tries = 1; ; tries++)
+        {
+            try
+            {
+                return await attempt();
+            }
+            catch (DbUpdateConcurrencyException) when (tries < 3)
+            {
+                Context.ChangeTracker.Clear();
+            }
+        }
+    }
 }

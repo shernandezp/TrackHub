@@ -14,18 +14,16 @@
 *  limitations under the License.
 */
 
-import { useEffect, useState, useContext } from 'react';
+import { useEffect, useMemo, useState, useContext } from 'react';
 import { useTranslation } from 'react-i18next';
 import DynamicTableDialog from 'controls/Dialogs/TableDialogs/DynamicTableDialog';
-import CustomSelect from 'controls/Dialogs/CustomSelect';
-import type { FormChangeHandler } from 'controls/Dialogs/useForm';
-import { useTransporterLookupByAccount, useTransportersByGroup } from 'queries/transporters';
+import SearchSelect from 'edition/SearchSelect';
+import type { SearchOption } from 'edition/SearchSelect';
+import { excludingOptions, useAccountTransporterOptions } from 'edition/pickerOptions';
+import { useTransportersByGroup } from 'queries/transporters';
 import { createTransporterGroup, deleteTransporterGroup } from 'api/manager/groups';
 import { notifyApiError } from 'api/core/errors';
 import { LoadingContext } from 'LoadingContext';
-import { useAuth } from "AuthContext";
-
-interface SelectOption { value: string; label: string; }
 
 interface TransporterAllocatorDialogProps {
   open: boolean;
@@ -36,18 +34,20 @@ interface TransporterAllocatorDialogProps {
 function TransporterAllocatorDialog({ open, setOpen, groupId }: TransporterAllocatorDialogProps) {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
-  const { isAuthenticated } = useAuth();
-  const [transporterId, setTransporterId] = useState('');
+  const [transporter, setTransporter] = useState<SearchOption | null>(null);
 
-  // This dialog is a SET DIFFERENCE: available = account minus assigned. Both
-  // operands must be complete — a truncated one makes an already-assigned unit
-  // reappear as available and the operator creates a duplicate membership. So
-  // the account side reads the unpaged lookup and the assigned side is drained.
-  const accountTransportersQuery = useTransporterLookupByAccount({ enabled: isAuthenticated });
-  const accountTransporters = accountTransportersQuery.data ?? [];
-  // Assigned transporters only matter while the dialog is open.
+  // The assigned side is drained so an already-assigned unit never reappears as available in
+  // the server-searched picker (it would create a duplicate membership).
   const assignedQuery = useTransportersByGroup(open ? groupId : undefined);
   const assignedTransporters = assignedQuery.data ?? [];
+  const useAvailableTransporterOptions = useMemo(
+    () =>
+      excludingOptions(
+        useAccountTransporterOptions,
+        new Set(assignedTransporters.map((assigned) => assigned.transporterId))
+      ),
+    [assignedTransporters]
+  );
 
   const columns = [
     { field: 'name', headerName: t('transporter.name') }
@@ -58,28 +58,16 @@ function TransporterAllocatorDialog({ open, setOpen, groupId }: TransporterAlloc
     setLoading(assignedQuery.isFetching);
   }, [assignedQuery.isFetching, setLoading]);
 
-  const unassignedTransporters: SelectOption[] = accountTransporters
-    .filter(transporter => !assignedTransporters.some(assigned => assigned.transporterId === transporter.transporterId))
-    .map(transporter => ({
-      value: transporter.transporterId,
-      label: transporter.name
-    }));
-
-  const handleChange: FormChangeHandler = (event) => {
-    setLoading(true);
-    setTransporterId(String(event.target.value ?? ''));
-    setLoading(false);
-  };
-
   const handleAdd = async () => {
+    if (!transporter) return;
     setLoading(true);
     try {
       // createTransporterGroup surfaces failures via the global toast (legacy handleError).
-      await createTransporterGroup(transporterId, groupId);
+      await createTransporterGroup(transporter.value, groupId);
     } catch (e) {
       notifyApiError(e);
     }
-    setTransporterId('');
+    setTransporter(null);
     // Group membership is read via the transporters query; refetch it manually.
     await assignedQuery.refetch();
     setLoading(false);
@@ -96,7 +84,7 @@ function TransporterAllocatorDialog({ open, setOpen, groupId }: TransporterAlloc
   };
 
   const handleClose = async () => {
-    setTransporterId('');
+    setTransporter(null);
     setOpen(false);
   };
 
@@ -109,15 +97,13 @@ function TransporterAllocatorDialog({ open, setOpen, groupId }: TransporterAlloc
       open={open}
       data={assignedTransporters}
       columns={columns}>
-      <CustomSelect
-        list={unassignedTransporters}
-        name="transporterId"
+      <SearchSelect
         id="transporterId"
         label={t('transporter.singleTitle')}
-        value={transporterId}
-        handleChange={handleChange}
-        numericValue={false}
-        required
+        value={transporter?.value ?? null}
+        valueLabel={transporter?.label}
+        onChange={setTransporter}
+        useOptions={useAvailableTransporterOptions}
       />
     </DynamicTableDialog>
   );

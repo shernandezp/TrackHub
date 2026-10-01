@@ -35,7 +35,7 @@ export const policyKeys = {
 export function usePolicies(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: policyKeys.list(),
-    queryFn: api.getPolicies,
+    queryFn: ({ signal }) => api.getPolicies({ signal }),
     enabled: options.enabled ?? true,
   });
 }
@@ -43,7 +43,7 @@ export function usePolicies(options: { enabled?: boolean } = {}) {
 export function usePolicyResources(policyId: number | undefined) {
   return useQuery({
     queryKey: policyKeys.resources(policyId ?? -1),
-    queryFn: () => api.getResourcesByPolicy(policyId as number),
+    queryFn: ({ signal }) => api.getResourcesByPolicy(policyId as number, { signal }),
     enabled: policyId !== undefined && policyId > 0,
   });
 }
@@ -51,7 +51,7 @@ export function usePolicyResources(policyId: number | undefined) {
 export function useUsersByPolicy(policyId: number | undefined) {
   return useQuery({
     queryKey: policyKeys.users(policyId ?? -1),
-    queryFn: () => api.getUserLookupByPolicy(policyId as number),
+    queryFn: ({ signal }) => api.getUserLookupByPolicy(policyId as number, { signal }),
     enabled: policyId !== undefined && policyId > 0,
   });
 }

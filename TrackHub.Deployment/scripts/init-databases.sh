@@ -102,13 +102,16 @@ ensure_database() {
         || { print_error "Could not create database $db"; return 1; }
 }
 
-if [ -n "${DB_CONNECTION_LOGGING:-}" ]; then
-    echo ""
-    echo "=========================================="
-    echo "Step 0: Ensuring the logging database"
-    echo "=========================================="
-    ensure_database "$DB_CONNECTION_LOGGING"
-fi
+# The logging database is part of the platform, not an option: without it every service's log sink
+# fails and the purge functions for it are never installed.
+: "${DB_CONNECTION_LOGGING:?DB_CONNECTION_LOGGING must be set for db-init}"
+
+echo ""
+echo "=========================================="
+echo "Step 0: Ensuring the logging database"
+echo "=========================================="
+ensure_database "$DB_CONNECTION_LOGGING"
+
 
 # -----------------------------------------------------------------------------
 # Step 1: ClientSeeder (idempotent - runs every deploy)
@@ -128,13 +131,14 @@ cat > appsettings.json << EOF
 }
 EOF
 
-# Copy clients.json if provided
-if [ -f "/app/clients.json" ]; then
-    cp /app/clients.json ./clients.json
-    echo "Using provided clients.json"
-else
-    echo "WARNING: No clients.json provided. Using default configuration."
+# The image's own clients.json is the development set (localhost redirects): seeding
+# it into a real installation would silently repoint web_client, so a mounted file is required.
+if [ ! -f "/app/clients.json" ]; then
+    print_error "No clients.json mounted at /app/clients.json; refusing to seed the development clients."
+    exit 1
 fi
+cp /app/clients.json ./clients.json
+echo "Using provided clients.json"
 
 dotnet TrackHub.AuthorityServer.ClientSeeder.dll || { print_error "ClientSeeder failed"; exit 1; }
 print_success "ClientSeeder completed successfully!"
@@ -213,9 +217,43 @@ echo ""
 echo "=========================================="
 echo "Step 3b: Pinning database time zones to UTC"
 echo "=========================================="
-for conn in "$DB_CONNECTION_SECURITY" "$DB_CONNECTION_MANAGER" "${DB_CONNECTION_LOGGING:-}"; do
+for conn in "$DB_CONNECTION_SECURITY" "$DB_CONNECTION_MANAGER" "${DB_CONNECTION_TELEMETRY:-}" "$DB_CONNECTION_LOGGING"; do
     [ -n "$conn" ] && pin_utc_timezone "$conn"
 done
+
+# -----------------------------------------------------------------------------
+# Step 4: retention functions (idempotent - runs every deploy)
+# -----------------------------------------------------------------------------
+# Installed here so a fresh install has them; scheduling `CALL ops.run_purge()` stays the
+# operator's job. Function bodies are checked when they first run, not now: on a fresh install the
+# module tables they reference are created later, when each service applies its migrations.
+install_sql() {
+    local connection_string=$1
+    local file=$2
+    local host port user pass db
+
+    host=$(echo "$connection_string" | grep -oP 'server=\K[^;]+')
+    port=$(echo "$connection_string" | grep -oP 'port=\K[^;]+'); port=${port:-5432}
+    user=$(echo "$connection_string" | grep -oP 'user id=\K[^;]+')
+    pass=$(echo "$connection_string" | grep -oP 'password=\K[^;]+')
+    db=$(echo "$connection_string" | grep -oP 'database=\K[^;]+')
+
+    if PGPASSWORD="$pass" PGOPTIONS='-c check_function_bodies=off' \
+        psql -h "$host" -p "$port" -U "$user" -d "$db" -q -v ON_ERROR_STOP=1 -f "$file"; then
+        print_success "Installed $(basename "$file") into $db."
+    else
+        print_error "Could not install $(basename "$file") into $db."
+        exit 1
+    fi
+}
+
+echo ""
+echo "=========================================="
+echo "Step 4: Installing the retention functions"
+echo "=========================================="
+install_sql "$DB_CONNECTION_MANAGER" /app/sql/purge-functions.sql
+install_sql "$DB_CONNECTION_LOGGING" /app/sql/purge-functions-logs.sql
+
 
 echo ""
 print_success "Initialization complete."

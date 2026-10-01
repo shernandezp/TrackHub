@@ -17,8 +17,10 @@ using Common.Infrastructure;
 
 namespace TrackHub.Manager.Infrastructure.Entities;
 
-public sealed class Group(string name, string description, bool active, Guid accountId) : BaseAuditableEntity
+public sealed class Group(string name, string description, bool active, Guid accountId) : BaseAuditableEntity, IEditVersioned
 {
+    public uint Version { get; set; }
+
     private Account? _account;
 
     public long GroupId { get; set; }

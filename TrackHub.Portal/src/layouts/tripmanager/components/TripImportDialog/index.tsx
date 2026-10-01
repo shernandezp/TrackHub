@@ -22,6 +22,7 @@ import FormDialog from 'controls/Dialogs/FormDialog';
 import CustomTextField from 'controls/Dialogs/CustomTextField';
 import Table from 'controls/Tables/Table';
 import { Name, Description } from 'controls/Tables/components/tableComponents';
+import { ERROR_CODE_I18N } from 'api/core/errors';
 import ArgonBox from 'components/ArgonBox';
 import ArgonButton from 'components/ArgonButton';
 import ArgonTypography from 'components/ArgonTypography';
@@ -87,6 +88,8 @@ const TEMPLATE_EXAMPLE = [
  */
 function TripImportDialog({ open, setOpen }: TripImportDialogProps) {
   const { t } = useTranslation();
+  const translate = t as unknown as (key: string) => string;
+  const codeLabel = (code: string) => (ERROR_CODE_I18N[code] ? translate(ERROR_CODE_I18N[code]) : code);
   const [csv, setCsv] = useState('');
   const [result, setResult] = useState<TripCsvImportResult | null>(null);
   const importTrips = useImportTripsCsv();
@@ -128,7 +131,7 @@ function TripImportDialog({ open, setOpen }: TripImportDialogProps) {
 
   const errorRows = (result?.errors ?? []).map((error) => ({
     row: <Name name={error.rowNumber} />,
-    code: <Description description={error.errorCode} />,
+    code: <Description description={codeLabel(error.errorCode)} />,
     message: <Description description={error.message} />,
     id: `${error.rowNumber}-${error.errorCode}`,
   }));

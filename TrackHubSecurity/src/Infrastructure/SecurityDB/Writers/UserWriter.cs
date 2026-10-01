@@ -90,9 +90,7 @@ public sealed class UserWriter(IApplicationDbContext context, ICurrentPrincipal 
     /// <exception cref="NotFoundException">If the user does not exist</exception>
     public async Task UpdateUserAsync(UpdateUserDto userDto, CancellationToken cancellationToken)
     {
-        var user = await Context.Users.FindAsync([userDto.UserId], cancellationToken)
-            ?? throw new NotFoundException(nameof(User), $"{userDto.UserId}");
-        await RequireAccountAccessAsync(user.AccountId, cancellationToken);
+        var user = await RequireUserForChangeAsync(userDto.UserId, cancellationToken);
 
         Context.Users.Attach(user);
 
@@ -124,9 +122,7 @@ public sealed class UserWriter(IApplicationDbContext context, ICurrentPrincipal 
     /// <exception cref="NotFoundException">If the user does not exist</exception>
     public async Task UpdateUserAsync(UpdateCurrentUserDto userDto, Guid userId, CancellationToken cancellationToken)
     {
-        var user = await Context.Users.FindAsync([userId], cancellationToken)
-            ?? throw new NotFoundException(nameof(User), $"{userId}");
-        await RequireAccountAccessAsync(user.AccountId, cancellationToken);
+        var user = await RequireUserForChangeAsync(userId, cancellationToken);
 
         Context.Users.Attach(user);
 
@@ -148,9 +144,7 @@ public sealed class UserWriter(IApplicationDbContext context, ICurrentPrincipal 
     /// <exception cref="NotFoundException">If the user does not exist</exception>
     public async Task UpdatePasswordAsync(UserPasswordDto userPasswordDto, bool verifyCurrentPassword, CancellationToken cancellationToken)
     {
-        var user = await Context.Users.FindAsync([userPasswordDto.UserId], cancellationToken)
-            ?? throw new NotFoundException(nameof(User), $"{userPasswordDto.UserId}");
-        await RequireAccountAccessAsync(user.AccountId, cancellationToken);
+        var user = await RequireUserForChangeAsync(userPasswordDto.UserId, cancellationToken);
 
         // A self-service change proves knowledge of the existing password, so a live access token
         // or an unattended session cannot take the account over permanently.
@@ -166,7 +160,6 @@ public sealed class UserWriter(IApplicationDbContext context, ICurrentPrincipal 
         var password = userPasswordDto.Password.HashPassword();
 
         user.Password = password;
-        user.Active = true;
         user.SecurityStamp = Guid.NewGuid();
 
         await Context.SaveChangesAsync(cancellationToken);
@@ -178,9 +171,7 @@ public sealed class UserWriter(IApplicationDbContext context, ICurrentPrincipal 
     /// </summary>
     public async Task UnlockUserAsync(Guid userId, CancellationToken cancellationToken)
     {
-        var user = await Context.Users.FindAsync([userId], cancellationToken)
-            ?? throw new NotFoundException(nameof(User), $"{userId}");
-        await RequireAccountAccessAsync(user.AccountId, cancellationToken);
+        var user = await RequireUserForChangeAsync(userId, cancellationToken);
 
         Context.Users.Attach(user);
         user.LoginAttempts = 0;
@@ -198,9 +189,7 @@ public sealed class UserWriter(IApplicationDbContext context, ICurrentPrincipal 
     /// <exception cref="NotFoundException">If the user does not exist</exception>
     public async Task DeleteUserAsync(Guid userId, CancellationToken cancellationToken)
     {
-        var user = await Context.Users.FindAsync([userId], cancellationToken)
-            ?? throw new NotFoundException(nameof(User), $"{userId}");
-        await RequireAccountAccessAsync(user.AccountId, cancellationToken);
+        var user = await RequireUserForChangeAsync(userId, cancellationToken);
 
         Context.Users.Attach(user);
         Context.Users.Remove(user);

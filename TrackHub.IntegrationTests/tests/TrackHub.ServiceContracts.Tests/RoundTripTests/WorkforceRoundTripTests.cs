@@ -80,8 +80,8 @@ public class WorkforceRoundTripTests
         var received = new StrongBox<GetDriverQualificationsQuery?>(null);
         _sender
             .Setup(s => s.Send(It.IsAny<GetDriverQualificationsQuery>(), It.IsAny<CancellationToken>()))
-            .Callback<IRequest<IReadOnlyCollection<DriverQualificationVm>>, CancellationToken>((q, _) => received.Value = (GetDriverQualificationsQuery)q)
-            .ReturnsAsync((IReadOnlyCollection<DriverQualificationVm>)[]);
+            .Callback<IRequest<DriverQualificationsPageVm>, CancellationToken>((q, _) => received.Value = (GetDriverQualificationsQuery)q)
+            .ReturnsAsync(new DriverQualificationsPageVm([], 0));
         return received;
     }
 
@@ -90,8 +90,8 @@ public class WorkforceRoundTripTests
         var received = new StrongBox<GetDriverAssignmentHistoryQuery?>(null);
         _sender
             .Setup(s => s.Send(It.IsAny<GetDriverAssignmentHistoryQuery>(), It.IsAny<CancellationToken>()))
-            .Callback<IRequest<IReadOnlyCollection<DriverTransporterAssignmentVm>>, CancellationToken>((q, _) => received.Value = (GetDriverAssignmentHistoryQuery)q)
-            .ReturnsAsync((IReadOnlyCollection<DriverTransporterAssignmentVm>)[]);
+            .Callback<IRequest<DriverAssignmentHistoryPageVm>, CancellationToken>((q, _) => received.Value = (GetDriverAssignmentHistoryQuery)q)
+            .ReturnsAsync(new DriverAssignmentHistoryPageVm([], 0));
         return received;
     }
 

@@ -18,4 +18,5 @@ public record struct UpdateUserDto(
     Guid UserId,
     string Username,
     bool Active,
-    string? Role = null);
+    string? Role = null,
+    Guid? AccountId = null);

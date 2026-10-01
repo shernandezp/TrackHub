@@ -30,7 +30,7 @@
  */
 
 import axios, { AxiosError } from 'axios';
-import { ApiError } from 'api/core/errors';
+import { ApiError, isCancellation, type RequestOptions } from 'api/core/errors';
 import { REST_ENDPOINTS } from 'api/core/endpoints';
 
 /** A stop as an end customer sees it — no ids, no POD content, existence flag only. */
@@ -122,7 +122,7 @@ export function publicTripUrl(origin: string, params: PublicTripLinkParams): str
  * whose `code` is one of {@link PublicTripErrorCode} so the page can render a
  * clean localized 404/410 rather than a transport message.
  */
-export async function getPublicTrip(params: PublicTripLinkParams): Promise<PublicTrip> {
+export async function getPublicTrip(params: PublicTripLinkParams, options?: RequestOptions): Promise<PublicTrip> {
   const url = `${REST_ENDPOINTS.tripManagementPublicTrips}/${encodeURIComponent(params.publicLinkGrantId)}`;
   try {
     const response = await axios.get<PublicTrip>(url, {
@@ -133,9 +133,13 @@ export async function getPublicTrip(params: PublicTripLinkParams): Promise<Publi
       },
       timeout: 10000,
       withCredentials: false,
+      signal: options?.signal,
     });
     return response.data;
   } catch (error) {
+    if (isCancellation(error, options?.signal)) {
+      throw ApiError.cancelled(error);
+    }
     const status = (error as AxiosError).response?.status;
     const code: PublicTripErrorCode =
       status === 410

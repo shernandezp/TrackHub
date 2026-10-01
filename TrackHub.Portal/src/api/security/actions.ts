@@ -20,12 +20,13 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { RequestOptions } from 'api/core/errors';
 import type { ActionItemFragment as ActionItemType } from './generated/graphql';
 import { GetActionsDocument } from './actionsOperations';
 
 export type Action = ActionItemType;
 
-export async function getActions(): Promise<Action[]> {
-  const data = await executeGraphQL('security', GetActionsDocument);
+export async function getActions(options?: RequestOptions): Promise<Action[]> {
+  const data = await executeGraphQL('security', GetActionsDocument, undefined, options);
   return data.actions;
 }

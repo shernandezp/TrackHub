@@ -18,6 +18,6 @@ namespace TrackHub.Manager.Domain.Interfaces;
 public interface IPointOfInterestReader
 {
     Task<PointOfInterestVm> GetPointOfInterestAsync(Guid id, CancellationToken cancellationToken);
-    Task<PointsOfInterestPageVm> GetPointsOfInterestByAccountAsync(Guid accountId, Guid? visibleToUserId, int skip, int take, string? search, CancellationToken cancellationToken);
+    Task<PointsOfInterestPageVm> GetPointsOfInterestByAccountAsync(Guid accountId, Guid? visibleToUserId, int skip, int take, string? search, bool? active, CancellationToken cancellationToken);
     Task<IReadOnlyCollection<PointOfInterestLookupVm>> GetPointOfInterestLookupAsync(Guid accountId, Guid? visibleToUserId, int fetchSize, CancellationToken cancellationToken);
 }

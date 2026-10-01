@@ -78,7 +78,7 @@ public sealed class DriverQualificationWriter(IApplicationDbContext context, ICu
             .AsTracking()
             .FirstOrDefaultAsync(x => x.DriverQualificationId == driverQualificationId, cancellationToken)
             ?? throw new NotFoundException(nameof(DriverQualification), driverQualificationId.ToString());
-        RequireAccountWriteAccess(entity.AccountId);
+        RequireRowAccess(entity.AccountId, nameof(DriverQualification), driverQualificationId.ToString(), forWrite: true);
         return entity;
     }
 

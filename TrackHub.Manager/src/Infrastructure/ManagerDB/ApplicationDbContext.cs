@@ -57,6 +57,7 @@ public partial class ApplicationDbContext(DbContextOptions<ApplicationDbContext>
     public DbSet<TransporterDeviceAssignment> TransporterDeviceAssignments { get; set; }
     public DbSet<OperatorHealthCheck> OperatorHealthChecks { get; set; }
     public DbSet<OperatorSyncRun> OperatorSyncRuns { get; set; }
+    public DbSet<OperatorSyncBackoff> OperatorSyncBackoffs { get; set; }
     public DbSet<TransporterType> TransporterTypes { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<UserGroup> UsersGroup { get; set; }

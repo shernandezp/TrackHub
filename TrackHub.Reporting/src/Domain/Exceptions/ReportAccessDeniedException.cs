@@ -4,6 +4,6 @@ namespace TrackHub.Reporting.Domain.Exceptions;
 public sealed class ReportAccessDeniedException(string reportCode)
     : Exception($"Report '{reportCode}' requires a manager role.")
 {
-    public string Code => "REPORT_ACCESS_DENIED";
+    public string Code => ReportErrorCodes.AccessDenied;
     public string ReportCode { get; } = reportCode;
 }

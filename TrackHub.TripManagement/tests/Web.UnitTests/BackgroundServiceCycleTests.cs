@@ -51,7 +51,7 @@ public class BackgroundServiceCycleTests
         // /status entry into a heartbeat and destroy its diagnostic value.
         var harness = new CycleHarness(refreshed: 0);
 
-        await harness.EtaService().RunOnceAsync(CancellationToken.None);
+        await harness.EtaService().RunOnceAsync(DateTimeOffset.UtcNow, CancellationToken.None);
 
         harness.Recorder.Verify(r => r.RecordAsync(
             It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<string>(),
@@ -64,7 +64,7 @@ public class BackgroundServiceCycleTests
     {
         var harness = new CycleHarness(refreshed: 7);
 
-        await harness.EtaService().RunOnceAsync(CancellationToken.None);
+        await harness.EtaService().RunOnceAsync(DateTimeOffset.UtcNow, CancellationToken.None);
 
         // The payload counts both kinds of work the cycle does — ETAs refreshed and trips closed by
         // the auto-completion sweep, which shares this job key rather than adding one (spec 11a §5.2).
@@ -84,7 +84,7 @@ public class BackgroundServiceCycleTests
     {
         var harness = new CycleHarness(refreshed: 0, completed: 2);
 
-        await harness.EtaService().RunOnceAsync(CancellationToken.None);
+        await harness.EtaService().RunOnceAsync(DateTimeOffset.UtcNow, CancellationToken.None);
 
         harness.Recorder.Verify(r => r.RecordAsync(
             BackgroundJobKeys.TripEtaRefresh, null, "0/2", It.IsAny<string>(), "Succeeded",
@@ -104,7 +104,7 @@ public class BackgroundServiceCycleTests
                 It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("Manager is unreachable"));
 
-        Assert.DoesNotThrowAsync(() => harness.EtaService().RunOnceAsync(CancellationToken.None));
+        Assert.DoesNotThrowAsync(() => harness.EtaService().RunOnceAsync(DateTimeOffset.UtcNow, CancellationToken.None));
         await Task.CompletedTask;
     }
 
@@ -119,7 +119,7 @@ public class BackgroundServiceCycleTests
             .ThrowsAsync(new InvalidOperationException("the database is gone"));
 
         Assert.ThrowsAsync<InvalidOperationException>(
-            () => harness.EtaService().RunOnceAsync(CancellationToken.None));
+            () => harness.EtaService().RunOnceAsync(DateTimeOffset.UtcNow, CancellationToken.None));
     }
 
     [Test]
@@ -129,7 +129,7 @@ public class BackgroundServiceCycleTests
         // authenticated Manager client. A no-work cycle should cost nothing at all.
         var harness = new CycleHarness(refreshed: 0);
 
-        await harness.EtaService().RunOnceAsync(CancellationToken.None);
+        await harness.EtaService().RunOnceAsync(DateTimeOffset.UtcNow, CancellationToken.None);
 
         Assert.That(harness.RecorderResolutions, Is.Zero);
     }
@@ -141,7 +141,7 @@ public class BackgroundServiceCycleTests
     {
         var harness = new CycleHarness(raised: 0);
 
-        await harness.ReminderService().RunOnceAsync(CancellationToken.None);
+        await harness.ReminderService().RunOnceAsync(DateTimeOffset.UtcNow, CancellationToken.None);
 
         harness.Recorder.Verify(r => r.RecordAsync(
             It.IsAny<string>(), It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<string>(),
@@ -156,7 +156,7 @@ public class BackgroundServiceCycleTests
         // other's silence on /status.
         var harness = new CycleHarness(raised: 2);
 
-        await harness.ReminderService().RunOnceAsync(CancellationToken.None);
+        await harness.ReminderService().RunOnceAsync(DateTimeOffset.UtcNow, CancellationToken.None);
 
         harness.Recorder.Verify(r => r.RecordAsync(
             BackgroundJobKeys.TripScheduleReminder, null, "2", It.IsAny<string>(), "Succeeded",
@@ -175,7 +175,7 @@ public class BackgroundServiceCycleTests
                 It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("Manager is unreachable"));
 
-        Assert.DoesNotThrowAsync(() => harness.ReminderService().RunOnceAsync(CancellationToken.None));
+        Assert.DoesNotThrowAsync(() => harness.ReminderService().RunOnceAsync(DateTimeOffset.UtcNow, CancellationToken.None));
     }
 
     [Test]
@@ -185,7 +185,7 @@ public class BackgroundServiceCycleTests
         // job silently drive the 5-minute ETA path as well.
         var harness = new CycleHarness(raised: 1);
 
-        await harness.ReminderService().RunOnceAsync(CancellationToken.None);
+        await harness.ReminderService().RunOnceAsync(DateTimeOffset.UtcNow, CancellationToken.None);
 
         harness.EtaServiceMock.Verify(s => s.RefreshEtasAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -224,10 +224,10 @@ public class BackgroundServiceCycleTests
 
         public int RecorderResolutions { get; private set; }
 
-        public TripEtaRefreshService EtaService()
-            => new(scopeFactory, NullLogger<TripEtaRefreshService>.Instance);
+        public TripEtaRefreshJob EtaService()
+            => new(scopeFactory.CreateScope().ServiceProvider, NullLogger<TripEtaRefreshJob>.Instance);
 
-        public TripScheduleReminderService ReminderService()
-            => new(scopeFactory, NullLogger<TripScheduleReminderService>.Instance);
+        public TripScheduleReminderJob ReminderService()
+            => new(scopeFactory.CreateScope().ServiceProvider, NullLogger<TripScheduleReminderJob>.Instance);
     }
 }

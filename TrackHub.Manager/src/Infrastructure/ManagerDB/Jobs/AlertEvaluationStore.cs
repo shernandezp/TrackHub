@@ -32,7 +32,7 @@ public sealed class AlertEvaluationStore(IApplicationDbContext context) : IAlert
             .Where(r => accountIds.Contains(r.AccountId) && r.Enabled && triggerEvents.Contains(r.TriggerEvent))
             .Select(r => new NotificationRuleVm(
                 r.NotificationRuleId, r.AccountId, r.RuleKey, r.RuleType, r.Enabled, r.TriggerEvent,
-                r.RecipientSelector, r.ChannelsJson, r.ThrottlingJson, r.ConfigurationJson, r.LastModified))
+                r.RecipientSelector, r.ChannelsJson, r.ThrottlingJson, r.ConfigurationJson, r.LastModified, r.Version))
             .ToListAsync(cancellationToken);
 
     public async Task<IReadOnlyCollection<StaleTransporterVm>> GetStaleTransportersAsync(
@@ -48,7 +48,7 @@ public sealed class AlertEvaluationStore(IApplicationDbContext context) : IAlert
             .Where(e => accountIds.Contains(e.AccountId) && e.Status == "Open" && e.Severity == AlertSeverities.Critical)
             .Select(e => new AlertEventVm(
                 e.AlertEventId, e.AccountId, e.EventType, e.Severity, e.SourceModule, e.ResourceType,
-                e.ResourceId, e.Status, e.FirstSeenAt, e.LastSeenAt, e.PayloadJson, e.DeduplicationKey, e.LastModified))
+                e.ResourceId, e.Status, e.FirstSeenAt, e.LastSeenAt, e.PayloadJson, e.DeduplicationKey, e.LastModified, null))
             .ToListAsync(cancellationToken);
 
     public async Task<IReadOnlyCollection<ExpiringCredentialVm>> GetExpiringCredentialsAsync(
@@ -113,6 +113,6 @@ public sealed class AlertEvaluationStore(IApplicationDbContext context) : IAlert
             .Where(e => accountIds.Contains(e.AccountId) && e.EventType == eventType && e.Status != "Resolved")
             .Select(e => new AlertEventVm(
                 e.AlertEventId, e.AccountId, e.EventType, e.Severity, e.SourceModule, e.ResourceType,
-                e.ResourceId, e.Status, e.FirstSeenAt, e.LastSeenAt, e.PayloadJson, e.DeduplicationKey, e.LastModified))
+                e.ResourceId, e.Status, e.FirstSeenAt, e.LastSeenAt, e.PayloadJson, e.DeduplicationKey, e.LastModified, null))
             .ToListAsync(cancellationToken);
 }

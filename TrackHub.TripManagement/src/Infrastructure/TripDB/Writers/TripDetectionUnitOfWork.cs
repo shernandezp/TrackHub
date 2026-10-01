@@ -297,7 +297,12 @@ public sealed class TripDetectionUnitOfWork(
 
             // Only the rows the database actually rejected. EF names them, so there is no need to
             // guess — and guessing wide would take the rest of the batch down with them.
-            foreach (var conflicted in exception.Entries.Select(e => e.Entity).OfType<Trip>().Select(t => t.TripId).Distinct().ToList())
+            var conflictedTrips = exception.Entries
+                .Select(e => e.Entity switch { Trip trip => trip.TripId, TripStop stop => stop.TripId, _ => (Guid?)null })
+                .OfType<Guid>()
+                .Distinct()
+                .ToList();
+            foreach (var conflicted in conflictedTrips)
             {
                 Discard(conflicted);
             }

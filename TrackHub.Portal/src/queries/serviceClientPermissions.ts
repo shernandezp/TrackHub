@@ -32,7 +32,7 @@ export const serviceClientPermissionKeys = {
 export function useServiceClientPermissions(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: serviceClientPermissionKeys.all,
-    queryFn: () => api.getServiceClientPermissions(),
+    queryFn: ({ signal }) => api.getServiceClientPermissions(undefined, undefined, undefined, undefined, { signal }),
     enabled: options.enabled ?? true,
   });
 }

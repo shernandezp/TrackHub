@@ -20,6 +20,7 @@ using GraphQL;
 using GraphQL.Client.Abstractions;
 using Moq;
 using Common.Application.Interfaces;
+using TrackHub.Reporting.Domain.Exceptions;
 using TrackHub.Reporting.Infrastructure.GraphQLApi;
 
 namespace TrackHub.Reporting.Infrastructure.UnitTests;
@@ -166,9 +167,7 @@ public class AdminReportReaderPagingTests
                 return Task.FromResult(new GraphQLResponse<object> { Data = GroupPage(PageSize, 500_000) });
             });
 
-        var ex = Assert.ThrowsAsync<InvalidOperationException>(
-            () => _reader.GetGroupsByAccountAsync(CancellationToken.None));
-
-        Assert.That(ex!.Message, Does.Contain("groupsByAccount"));
+        Assert.ThrowsAsync<ReportLimitExceededException>(() => _reader.GetGroupsByAccountAsync(CancellationToken.None));
+        Assert.That(requests, Is.EqualTo(201));
     }
 }

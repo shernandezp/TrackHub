@@ -12,7 +12,10 @@ namespace TrackHub.Manager.Infrastructure.ManagerDB.Writers;
 public sealed class AccountFeatureMasterWriter(IApplicationDbContext context, ICurrentPrincipal principal)
     : AccountScopedDataAccess(context, principal), IAccountFeatureMasterWriter
 {
-    public async Task<AccountFeatureVm> SetAccountFeatureAsync(AccountFeatureDto feature, CancellationToken cancellationToken)
+    public Task<AccountFeatureVm> SetAccountFeatureAsync(AccountFeatureDto feature, CancellationToken cancellationToken)
+        => RetryMergeAsync(() => SetAccountFeatureOnceAsync(feature, cancellationToken));
+
+    private async Task<AccountFeatureVm> SetAccountFeatureOnceAsync(AccountFeatureDto feature, CancellationToken cancellationToken)
     {
         var entity = await Context.AccountFeatures
             .AsTracking().FirstOrDefaultAsync(x => x.AccountId == feature.AccountId && x.FeatureKey == feature.FeatureKey, cancellationToken);
@@ -39,5 +42,5 @@ public sealed class AccountFeatureMasterWriter(IApplicationDbContext context, IC
     }
 
     private static string AuditValues(AccountFeature feature)
-        => $$"""{"featureKey":"{{feature.FeatureKey}}","enabled":{{feature.Enabled.ToString().ToLowerInvariant()}},"tier":"{{feature.Tier}}","source":"{{feature.Source}}","effectiveFrom":{{Quote(feature.EffectiveFrom)}},"effectiveTo":{{Quote(feature.EffectiveTo)}},"configurationJson":{{Quote(feature.ConfigurationJson)}}}""";
+        => AuditJson.Of(new { feature.FeatureKey, feature.Enabled, feature.Tier, feature.Source, feature.EffectiveFrom, feature.EffectiveTo, feature.ConfigurationJson });
 }

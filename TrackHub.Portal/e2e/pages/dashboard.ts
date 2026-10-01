@@ -27,7 +27,7 @@ export const toggleChip = (page: Page, t: Translator, key: 'poiLayer' | 'followM
 export async function openTab(
   page: Page,
   t: Translator,
-  key: 'transporters' | 'positions'
+  key: 'transporters' | 'positions' | 'drivers'
 ): Promise<void> {
   await page.getByRole('tab', { name: t(`dashboard.${key}Title`) }).click();
 }

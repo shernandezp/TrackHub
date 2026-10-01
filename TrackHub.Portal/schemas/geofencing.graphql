@@ -72,6 +72,7 @@ type GeofenceVm {
   alertOnEntry: Boolean!
   alertOnExit: Boolean!
   dwellThresholdMinutes: Int
+  version: UnsignedInt!
 }
 
 type MultiPolygonVm {
@@ -108,6 +109,7 @@ input GeofenceDtoInput {
   alertOnEntry: Boolean!
   alertOnExit: Boolean!
   dwellThresholdMinutes: Int
+  expectedVersion: UnsignedInt
 }
 
 input GetGeofenceEventsQueryInput {
@@ -125,7 +127,6 @@ input GetGeofenceQueryInput {
 }
 
 input GetGeofencesByAccountQueryInput {
-  enableCaching: Boolean!
   skip: Int
   take: Int
   type: Short
@@ -175,6 +176,10 @@ scalar Long
 "The `Short` scalar type represents a signed 16-bit integer."
 scalar Short
   @specifiedBy(url: "https://scalars.graphql.org/chillicream/short.html")
+
+"The `UnsignedInt` scalar type represents an unsigned 32-bit integer."
+scalar UnsignedInt
+  @specifiedBy(url: "https://scalars.graphql.org/chillicream/unsigned-int.html")
 
 "The `UUID` scalar type represents a Universally Unique Identifier (UUID) as defined by RFC 9562."
 scalar UUID

@@ -59,7 +59,7 @@ public class WriterDuplicateHandlingTests
     {
         using var context = await SeededAsync(WriterTestData.Stop(StopId, TripId, TripStopStatuses.Pending));
         var writer = new TripStopWriter(context);
-        context.FailNextSave();
+        context.FailNextSaveOn("ux_trip_events_idempotencykey");
 
         var recorded = await writer.RecordStopProgressAsync(
             TripId, StopId, WriterTestData.AccountId, TripStopStatuses.Arrived, OccurredAt,
@@ -123,7 +123,7 @@ public class WriterDuplicateHandlingTests
             WriterTestData.Stop(SecondStopId, TripId, TripStopStatuses.Pending, sequence: 2));
         var writer = new TripStopWriter(context);
 
-        context.FailNextSave();
+        context.FailNextSaveOn("ux_trip_events_idempotencykey");
         var duplicate = await writer.RecordStopProgressAsync(
             TripId, StopId, WriterTestData.AccountId, TripStopStatuses.Arrived, OccurredAt,
             4.7, -74.0, TripEventSources.Detection, "trip-arrive:dup", null, CancellationToken.None);
@@ -148,7 +148,7 @@ public class WriterDuplicateHandlingTests
     {
         using var context = await SeededAsync(WriterTestData.Stop(StopId, TripId, TripStopStatuses.Pending));
         var writer = new TripStopWriter(context);
-        context.FailNextSave();
+        context.FailNextSaveOn("ux_trip_events_idempotencykey");
 
         await writer.RecordStopProgressAsync(
             TripId, StopId, WriterTestData.AccountId, TripStopStatuses.Arrived, OccurredAt,

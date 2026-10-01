@@ -26,7 +26,6 @@ public static class DependencyInjection
     {
         var assembly = Assembly.GetExecutingAssembly();
         services.AddApplicationServices(assembly);
-        services.AddDistributedMemoryCache();
         
         // Register geofence detection service
         services.AddScoped<IGeofenceDetectionService, GeofenceDetectionService>();

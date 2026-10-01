@@ -37,8 +37,9 @@ public sealed class AssignmentHistoryReport(IWorkforceReportReader reader) : IRe
 
         var transporterId = filters.GetGuid(FilterNames.Transporter);
 
+        var window = ReportCalendar.Window(filters);
         var assignments = await reader.GetDriverAssignmentHistoryAsync(
-            driverId: null, transporterId, filters.GetDate(FilterNames.From), filters.GetDate(FilterNames.To), cancellationToken);
+            driverId: null, transporterId, window.From, window.To, cancellationToken);
 
         var now = DateTimeOffset.UtcNow;
         var rows = assignments

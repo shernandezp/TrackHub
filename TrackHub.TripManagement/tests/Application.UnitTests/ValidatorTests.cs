@@ -104,7 +104,25 @@ public class ValidatorTests
     [Test]
     public void GetTrips_RejectsATakeAboveTheClamp()
     {
-        var result = new GetTripsValidator().Validate(new GetTripsQuery(null, null, null, null, null, null, null, 0, 201));
+        var result = new GetTripsValidator().Validate(new GetTripsQuery(null, null, null, null, null, null, null, 0, global::Common.Application.Paging.PageRequest.MaxPageSize + 1));
+
+        Assert.That(result.IsValid, Is.False);
+    }
+
+    [Test]
+    public void GetTrips_RejectsAnInvertedWindow()
+    {
+        var from = new DateTimeOffset(2025, 1, 10, 0, 0, 0, TimeSpan.Zero);
+        var result = new GetTripsValidator().Validate(new GetTripsQuery(null, from, from.AddDays(-1), null, null, null, null, null, null));
+
+        Assert.That(result.IsValid, Is.False);
+    }
+
+    [Test]
+    public void GetTrips_RejectsAWindowLongerThanAYear()
+    {
+        var from = new DateTimeOffset(2025, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        var result = new GetTripsValidator().Validate(new GetTripsQuery(null, from, from.AddDays(GetTripsValidator.MaxWindowDays + 1), null, null, null, null, null, null));
 
         Assert.That(result.IsValid, Is.False);
     }

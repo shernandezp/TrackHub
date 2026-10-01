@@ -49,11 +49,13 @@ type Mutation {
   updateTollVehicleClass(command: UpdateTollVehicleClassCommandInput!): Boolean!
     @cost(weight: "10")
   deactivateTollVehicleClass(id: UUID!): UUID! @cost(weight: "10")
+  reactivateTollVehicleClass(id: UUID!): UUID! @cost(weight: "10")
   createTollStation(command: CreateTollStationCommandInput!): TollStationVm!
     @cost(weight: "10")
   updateTollStation(command: UpdateTollStationCommandInput!): Boolean!
     @cost(weight: "10")
   deactivateTollStation(id: UUID!): UUID! @cost(weight: "10")
+  reactivateTollStation(id: UUID!): UUID! @cost(weight: "10")
   createTollTariff(command: CreateTollTariffCommandInput!): TollTariffVm!
     @cost(weight: "10")
   updateTollTariff(command: UpdateTollTariffCommandInput!): Boolean!
@@ -676,6 +678,7 @@ input GetTripsQueryInput {
   search: String
   skip: Int
   take: Int
+  exception: String
 }
 
 input GetTripStopReportDataQueryInput {

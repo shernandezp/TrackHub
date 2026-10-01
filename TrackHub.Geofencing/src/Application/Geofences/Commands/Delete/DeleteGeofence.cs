@@ -30,7 +30,7 @@ public class DeleteGeofenceCommandHandler(IGeofenceWriter writer, IGeofenceReade
         var currentGeofence = await reader.GetGeofenceAsync(request.Id, cancellationToken);
         var currentUser = await userReader.GetUserAsync(UserId, cancellationToken);
         if (currentGeofence.AccountId != currentUser.AccountId)
-            throw new ForbiddenAccessException();
+            throw new Ardalis.GuardClauses.NotFoundException("Geofence", request.Id.ToString());
 
         await accountFeatureReader.EnsureFeatureEnabledAsync(currentUser.AccountId, FeatureKeys.Geofencing, cancellationToken);
         await writer.DeleteGeofenceAsync(request.Id, cancellationToken);

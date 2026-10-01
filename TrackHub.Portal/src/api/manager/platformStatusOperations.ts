@@ -32,6 +32,7 @@ export const PlatformAnnouncementItemFragment = graphql(`
     endsAt
     active
     lastModified
+    version
   }
 `);
 

@@ -16,7 +16,7 @@ namespace TrackHub.Manager.Application.UnitTests.PublicLinks;
 public class CreatePublicLinkGrantScopeTests
 {
     private static PublicLinkGrantDto GrantFor(Guid accountId)
-        => new(accountId, "Trip", Guid.NewGuid().ToString(), "trip:read", "trip-share", null,
+        => new(accountId, "Trip", Guid.NewGuid().ToString(), "trip:read", "trip-share",
             DateTimeOffset.UtcNow.AddDays(1), Guid.NewGuid().ToString());
 
     private static ICurrentPrincipal Principal(PrincipalType type, Guid? accountId)

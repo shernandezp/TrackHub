@@ -39,6 +39,9 @@ public partial class Mutation
     public async Task<Guid> DeactivateTollVehicleClass([Service] ISender sender, Guid id, CancellationToken cancellationToken)
         => await sender.Send(new DeactivateTollVehicleClassCommand(id), cancellationToken);
 
+    public async Task<Guid> ReactivateTollVehicleClass([Service] ISender sender, Guid id, CancellationToken cancellationToken)
+        => await sender.Send(new ReactivateTollVehicleClassCommand(id), cancellationToken);
+
     public async Task<TollStationVm> CreateTollStation([Service] ISender sender, CreateTollStationCommand command, CancellationToken cancellationToken)
         => await sender.Send(command, cancellationToken);
 
@@ -50,6 +53,9 @@ public partial class Mutation
 
     public async Task<Guid> DeactivateTollStation([Service] ISender sender, Guid id, CancellationToken cancellationToken)
         => await sender.Send(new DeactivateTollStationCommand(id), cancellationToken);
+
+    public async Task<Guid> ReactivateTollStation([Service] ISender sender, Guid id, CancellationToken cancellationToken)
+        => await sender.Send(new ReactivateTollStationCommand(id), cancellationToken);
 
     public async Task<TollTariffVm> CreateTollTariff([Service] ISender sender, CreateTollTariffCommand command, CancellationToken cancellationToken)
         => await sender.Send(command, cancellationToken);

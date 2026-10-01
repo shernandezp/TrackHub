@@ -41,9 +41,10 @@ public sealed class TripPodExportReport(ITripReportReader reader) : IReport
         await reader.EnsureTripManagementFeatureAsync(cancellationToken);
 
         var transporterId = filters.GetGuid(FilterNames.Transporter);
+        var window = ReportCalendar.Window(filters);
 
         var pods = await reader.GetTripProofsOfDeliveryAsync(
-            filters.GetDate(FilterNames.From), filters.GetDate(FilterNames.To), transporterId, driverId: null, cancellationToken);
+            window.From, window.To, transporterId, driverId: null, cancellationToken);
 
         var rows = pods
             .OrderByDescending(p => p.CapturedAt)

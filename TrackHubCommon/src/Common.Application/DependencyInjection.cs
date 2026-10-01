@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2026 Sergio Hernandez. All rights reserved.
+// Copyright (c) 2026 Sergio Hernandez. All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License").
 //  You may not use this file except in compliance with the License.
@@ -17,10 +17,9 @@ using System.Reflection;
 using Ardalis.GuardClauses;
 using Common.Application.Behaviors;
 using Common.Application.Interfaces;
-using Common.Application.Services;
+using Common.Application.Attributes;
 using Common.Mediator;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Common.Application;
 public static class DependencyInjection
@@ -30,8 +29,8 @@ public static class DependencyInjection
         services.AddValidatorsFromAssembly(assembly);
         Guard.Against.Null(assembly, message: $"Application assemblies not loaded.");
 
-        services.TryAddScoped<IFeatureFlagService, AlwaysEnabledFeatureFlagService>();
-        services.TryAddScoped<IAccountOperationalStatusService, AlwaysOperationalAccountStatusService>();
+        var gatesFeatures = assembly.GetTypes().Any(t => t.IsDefined(typeof(RequireFeatureAttribute), inherit: true));
+        services.AddHostedService(sp => new PipelineDependencyCheck(sp.GetRequiredService<IServiceProviderIsService>(), gatesFeatures));
 
         services.AddMediator(cfg =>
         {
@@ -44,8 +43,10 @@ public static class DependencyInjection
             // the account named by the request.
             cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(AccountScopeBehavior<,>));
             cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(AccountStatusBehavior<,>));
-            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(FeatureFlagBehavior<,>));
-            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(CachingBehavior<,>));
+            if (gatesFeatures)
+            {
+                cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(FeatureFlagBehavior<,>));
+            }
             cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(RateLimitingBehavior<,>));
             if (isGraphQL)
             {

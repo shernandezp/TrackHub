@@ -57,7 +57,10 @@ public sealed class AccountFeatureWriter(IApplicationDbContext context, ICurrent
         return seeded;
     }
 
-    public async Task<AccountFeatureVm> SetAccountFeatureAsync(AccountFeatureDto feature, CancellationToken cancellationToken)
+    public Task<AccountFeatureVm> SetAccountFeatureAsync(AccountFeatureDto feature, CancellationToken cancellationToken)
+        => RetryMergeAsync(() => SetAccountFeatureOnceAsync(feature, cancellationToken));
+
+    private async Task<AccountFeatureVm> SetAccountFeatureOnceAsync(AccountFeatureDto feature, CancellationToken cancellationToken)
     {
         var accountId = RequireAccountWriteAccess(feature.AccountId);
         var entity = await Context.AccountFeatures
@@ -86,24 +89,24 @@ public sealed class AccountFeatureWriter(IApplicationDbContext context, ICurrent
 
     public async Task DisableAccountFeatureAsync(Guid accountFeatureId, CancellationToken cancellationToken)
     {
-        var entity = await Context.AccountFeatures
-            .AsTracking().FirstAsync(x => x.AccountFeatureId == accountFeatureId, cancellationToken);
-        RequireAccountWriteAccess(entity.AccountId);
+        var entity = await RequireScopedAsync(Context.AccountFeatures.AsTracking(), x => x.AccountFeatureId == accountFeatureId, x => x.AccountId, accountFeatureId, forWrite: true, cancellationToken);
         var oldValues = AuditValues(entity);
         entity.Enabled = false;
         AddAuditEvent(entity.AccountId, "DisableAccountFeature", "AccountFeature", entity.AccountFeatureId.ToString(), oldValues, AuditValues(entity));
         await Context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task UpdateAccountFeatureConfigurationAsync(Guid accountFeatureId, string? configurationJson, CancellationToken cancellationToken)
+    public Task UpdateAccountFeatureConfigurationAsync(Guid accountFeatureId, string? configurationJson, CancellationToken cancellationToken)
+        => RetryMergeAsync(() => UpdateAccountFeatureConfigurationOnceAsync(accountFeatureId, configurationJson, cancellationToken));
+
+    private async Task<bool> UpdateAccountFeatureConfigurationOnceAsync(Guid accountFeatureId, string? configurationJson, CancellationToken cancellationToken)
     {
-        var entity = await Context.AccountFeatures
-            .AsTracking().FirstAsync(x => x.AccountFeatureId == accountFeatureId, cancellationToken);
-        RequireAccountWriteAccess(entity.AccountId);
+        var entity = await RequireScopedAsync(Context.AccountFeatures.AsTracking(), x => x.AccountFeatureId == accountFeatureId, x => x.AccountId, accountFeatureId, forWrite: true, cancellationToken);
         var oldValues = AuditValues(entity);
         entity.ConfigurationJson = configurationJson;
         AddAuditEvent(entity.AccountId, "UpdateAccountFeatureConfiguration", "AccountFeature", entity.AccountFeatureId.ToString(), oldValues, AuditValues(entity));
         await Context.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
     private static AccountFeatureVm ToVm(AccountFeature x) 

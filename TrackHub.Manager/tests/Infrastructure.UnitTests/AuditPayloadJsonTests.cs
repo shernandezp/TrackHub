@@ -5,6 +5,8 @@ using Common.Domain.Enums;
 using Moq;
 using TrackHub.Manager.Domain.Records;
 using TrackHub.Manager.Infrastructure;
+using TrackHub.Manager.Infrastructure.Entities;
+using TrackHub.Manager.Infrastructure.ManagerDB.Writers;
 
 namespace Infrastructure.UnitTests;
 
@@ -47,6 +49,23 @@ public class AuditPayloadJsonTests
                     $"{audited.Action} wrote a payload that is not JSON: {payload}");
             }
         }
+    }
+
+    [Test]
+    public async Task AccountSettings_PayloadIsJson()
+    {
+        await using var context = NewContext(nameof(AccountSettings_PayloadIsJson));
+        var account = new Account("Acme", "Description", 2, true);
+        await context.Accounts.AddAsync(account);
+        await context.SaveChangesAsync(CancellationToken.None);
+
+        var writer = new AccountSettingsWriter(context, Principal(account.AccountId));
+        await writer.CreateAccountSettingsAsync(account.AccountId, CancellationToken.None);
+        // `maps` is a string ("OSM"): unquoted it reads as a bare token and the row stops parsing.
+        await writer.UpdateAccountSettingsAsync(
+            new AccountSettingsDto(account.AccountId, "Google", "a-key", 90, true, 30), CancellationToken.None);
+
+        AssertPayloadsParse(context);
     }
 
     [Test]

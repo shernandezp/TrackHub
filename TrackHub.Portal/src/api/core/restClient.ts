@@ -15,7 +15,7 @@
 */
 
 import axios, { AxiosError, type AxiosRequestConfig } from 'axios';
-import { UNEXPECTED_ERROR_I18N_KEY, ApiError, extractRestErrorEntries } from './errors';
+import { UNEXPECTED_ERROR_I18N_KEY, ApiError, extractRestErrorEntries, isCancellation } from './errors';
 import { tokenStore } from './tokenStore';
 import { REQUEST_TIMEOUT_MS } from './graphqlClient';
 
@@ -49,6 +49,9 @@ async function sendRest<T>(config: AxiosRequestConfig, token: string): Promise<T
     });
     return response.data;
   } catch (error) {
+    if (isCancellation(error, config.signal)) {
+      throw ApiError.cancelled(error);
+    }
     const axiosError = error as AxiosError;
     // 4xx bodies carry a `{ errors: [{ message, extensions: { code } }] }`
     // envelope — as JSON for preview, or as a Blob for the download path. Parse

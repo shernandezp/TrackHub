@@ -47,6 +47,19 @@ public class DocumentJobTests
     }
 
     [Test]
+    public void Scan_NotScanned_IsServable_AndActivatesAnUploadedDocument()
+    {
+        var outcome = DocumentScanJob.Classify(Quarantined(), DocumentScanStatuses.NotScanned);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(outcome.Activate, Is.True);
+            Assert.That(outcome.RaiseInfectedAlert, Is.False);
+            Assert.That(DocumentScanStatuses.IsServable(outcome.ScanStatus), Is.True);
+        });
+    }
+
+    [Test]
     public void Scan_Clean_LeavesAnAlreadyActiveDocumentAlone()
         => Assert.That(DocumentScanJob.Classify(Quarantined(DocumentStatuses.Active), DocumentScanStatuses.Clean).Activate, Is.False);
 

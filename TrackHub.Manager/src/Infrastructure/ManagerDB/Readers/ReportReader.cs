@@ -14,6 +14,7 @@
 //
 
 using Common.Application.Interfaces;
+using Common.Domain.Constants;
 using Common.Domain.Enums;
 using TrackHub.Manager.Infrastructure.Entities;
 using TrackHub.Manager.Infrastructure.Interfaces;
@@ -24,7 +25,7 @@ namespace TrackHub.Manager.Infrastructure.ManagerDB.Readers;
 /// Provides methods to read report catalog data, applying the catalog visibility rules
 /// (feature gating + manager-only) against the caller's account and role.
 /// </summary>
-public sealed class ReportReader(IApplicationDbContext context, ICurrentPrincipal principal)
+public sealed class ReportReader(IApplicationDbContext context, ICurrentPrincipal principal, IIdentityService identityService)
     : AccountScopedDataAccess(context, principal), IReportReader
 {
     /// <summary>
@@ -64,11 +65,31 @@ public sealed class ReportReader(IApplicationDbContext context, ICurrentPrincipa
             .Select(f => f.FeatureKey)
             .ToListAsync(cancellationToken);
 
-        return await OrderedActive(Context.Reports
+        var candidates = await OrderedActive(Context.Reports
                 .Where(r => r.Active
                     && (r.RequiredFeatureKey == null || enabledFeatureKeys.Contains(r.RequiredFeatureKey))
                     && (privileged || !r.ManagerOnly)))
             .ToListAsync(cancellationToken);
+
+        return await WithGrantedFeedsAsync(candidates, cancellationToken);
+    }
+
+    // A report is listed only when the caller holds every grant its feeds need, so a listed report never
+    // fails on a refused feed. Each distinct grant is evaluated once.
+    private async Task<IReadOnlyCollection<ReportVm>> WithGrantedFeedsAsync(List<ReportVm> reports, CancellationToken cancellationToken)
+    {
+        if (Principal.UserId is not { } userId)
+        {
+            return reports;
+        }
+
+        var granted = new Dictionary<(string, string), bool>();
+        foreach (var grant in reports.SelectMany(r => ReportGrants.Parse(r.RequiredGrants)).Distinct())
+        {
+            granted[grant] = await identityService.AuthorizeUserAsync(userId, grant.Resource, grant.Action, cancellationToken);
+        }
+
+        return reports.Where(r => ReportGrants.Parse(r.RequiredGrants).All(grant => granted[grant])).ToList();
     }
 
     /// <summary>
@@ -91,7 +112,8 @@ public sealed class ReportReader(IApplicationDbContext context, ICurrentPrincipa
                 r.ManagerOnly,
                 r.SupportsPdf,
                 r.SortOrder,
-                r.Filters))
+                r.Filters,
+                r.RequiredGrants))
             .FirstOrDefaultAsync(cancellationToken);
 
     private static IQueryable<ReportVm> OrderedActive(IQueryable<Report> query)
@@ -111,5 +133,6 @@ public sealed class ReportReader(IApplicationDbContext context, ICurrentPrincipa
                 r.ManagerOnly,
                 r.SupportsPdf,
                 r.SortOrder,
-                r.Filters));
+                r.Filters,
+                r.RequiredGrants));
 }

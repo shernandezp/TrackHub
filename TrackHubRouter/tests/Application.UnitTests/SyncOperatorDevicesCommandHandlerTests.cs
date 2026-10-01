@@ -69,7 +69,6 @@ public class SyncOperatorDevicesCommandHandlerTests : TestsContext
         _healthWriterMock.Object,
         _alertWriterMock.Object,
         _syncLockMock.Object,
-        Mock.Of<TrackHub.Router.Domain.Interfaces.IDeviceCatalogCache>(),
         AllCapabilities(),
         Mock.Of<ILogger<SyncOperatorDevicesCommandHandler>>());
 

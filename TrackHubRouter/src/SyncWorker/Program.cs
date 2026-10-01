@@ -14,6 +14,7 @@
 //
 
 using Common.Application;
+using Common.Web.BackgroundJobs;
 using TrackHub.Router.SyncWorker;
 
 var builder = Host.CreateApplicationBuilder(args);
@@ -30,7 +31,11 @@ builder.Services.AddCommonContext(builder.Configuration);
 builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddWorkerServices();
 
-builder.Services.AddHostedService<Worker>();
+builder.Services.AddScoped<OperatorFanOut>();
+builder.Services.AddScheduledJob<PositionSyncJob>();
+builder.Services.AddScheduledJob<DeviceSyncJob>();
+builder.Services.AddScheduledJob<OperatorHealthJob>();
+builder.Services.AddScheduledJob<WorkerHeartbeatJob>();
 
 var host = builder.Build();
 host.Run();

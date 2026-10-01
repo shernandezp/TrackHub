@@ -81,6 +81,27 @@ public sealed class DeactivateTollVehicleClassValidator : AbstractValidator<Deac
         => RuleFor(v => v.TollVehicleClassId).NotEmpty();
 }
 
+[Authorize(Resource = Resources.TollCatalog, Action = Actions.Delete)]
+[PlatformScoped("SVD-12 toll catalog: stations, tariffs and vehicle classes are platform-owned reference data administered by the platform operator; no tenant owns a row.")]
+public readonly record struct ReactivateTollVehicleClassCommand(Guid TollVehicleClassId) : IRequest<Guid>;
+
+public sealed class ReactivateTollVehicleClassCommandHandler(ITollCatalogWriter writer)
+    : IRequestHandler<ReactivateTollVehicleClassCommand, Guid>
+{
+    public async Task<Guid> Handle(ReactivateTollVehicleClassCommand request, CancellationToken cancellationToken)
+    {
+        await writer.ReactivateVehicleClassAsync(request.TollVehicleClassId, cancellationToken);
+        return request.TollVehicleClassId;
+    }
+}
+
+public sealed class ReactivateTollVehicleClassValidator : AbstractValidator<ReactivateTollVehicleClassCommand>
+{
+    public ReactivateTollVehicleClassValidator()
+        => RuleFor(v => v.TollVehicleClassId).NotEmpty();
+}
+
+
 public sealed class TollVehicleClassDtoValidator : AbstractValidator<TollVehicleClassDto>
 {
     public TollVehicleClassDtoValidator()

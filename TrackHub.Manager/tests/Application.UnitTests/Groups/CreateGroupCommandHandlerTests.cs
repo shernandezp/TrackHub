@@ -42,7 +42,7 @@ public class CreateGroupCommandHandlerTests
         var userId = Guid.NewGuid();
         var accountId = Guid.NewGuid();
         var groupDto = new GroupDto("Fleet A", "Main fleet", true);
-        var expectedVm = new GroupVm(1L, "Fleet A", "Main fleet", true, accountId);
+        var expectedVm = new GroupVm(1L, "Fleet A", "Main fleet", true, accountId, 0);
 
         _userMock.Setup(u => u.Id).Returns(userId.ToString());
         _userReaderMock.Setup(r => r.GetUserAsync(userId, It.IsAny<CancellationToken>()))
@@ -81,7 +81,7 @@ public class CreateGroupCommandHandlerTests
         _userReaderMock.Setup(r => r.GetUserAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new UserVm(userId, "user1", true, accountId));
         _writerMock.Setup(w => w.CreateGroupAsync(groupDto, accountId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new GroupVm(2L, "Group", "Desc", true, accountId));
+            .ReturnsAsync(new GroupVm(2L, "Group", "Desc", true, accountId, 0));
 
         var handler = new CreateGroupCommandHandler(_writerMock.Object, _userReaderMock.Object, _userMock.Object);
 

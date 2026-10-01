@@ -17,6 +17,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using System.Net.Sockets;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using TrackHub.TripManagement.Domain.Constants;
 using TrackHub.TripManagement.Domain.Models;
 using TrackHub.TripManagement.Infrastructure.TripDB;
 using TrackHub.TripManagement.Infrastructure.TripDB.Readers;
@@ -118,7 +119,7 @@ public class TripQueryTranslationTests
 
         await AssertTranslatesAsync(() => reader.GetTripsPageAsync(
             AccountId, UserId, ["InProgress"], DateTimeOffset.UtcNow.AddDays(-7), DateTimeOffset.UtcNow,
-            null, null, null, "search", 0, 50, CancellationToken.None));
+            null, null, null, "search", null, 0, 50, CancellationToken.None));
     }
 
     [Test]
@@ -129,7 +130,20 @@ public class TripQueryTranslationTests
 
         await AssertTranslatesAsync(() => reader.GetTripsPageAsync(
             AccountId, null, null, DateTimeOffset.UtcNow.AddDays(-7), DateTimeOffset.UtcNow,
-            null, null, null, null, 0, 50, CancellationToken.None));
+            null, null, null, null, null, 0, 50, CancellationToken.None));
+    }
+
+    [TestCase(TripExceptions.Overdue)]
+    [TestCase(TripExceptions.Delayed)]
+    [TestCase(TripExceptions.OffCorridor)]
+    [TestCase(TripExceptions.StalledFinalStop)]
+    public async Task GetTripsPage_ExceptionFilter_TranslatesToSql(string exception)
+    {
+        using var context = NewNpgsqlContext();
+        var reader = new TripReader(context, new AccountFeatureReader(context));
+
+        await AssertTranslatesAsync(() => reader.GetTripsPageAsync(
+            AccountId, UserId, null, null, null, null, null, null, null, exception, 0, 50, CancellationToken.None));
     }
 
     [Test]

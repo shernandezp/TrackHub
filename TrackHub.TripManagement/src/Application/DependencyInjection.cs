@@ -34,11 +34,6 @@ public static class DependencyInjection
         var assembly = Assembly.GetExecutingAssembly();
         services.AddApplicationServices(assembly);
 
-        // CachingBehavior resolves IDistributedCache for EVERY request type, whether or not the
-        // request is cached. Omitting this does not disable caching — it breaks the whole pipeline
-        // at the first request with a DI resolution failure (rules.md).
-        services.AddDistributedMemoryCache();
-
         services.AddScoped<ITripDetectionService, TripDetectionService>();
         services.AddScoped<ITollEstimationService, TollEstimationService>();
         services.AddScoped<ITripEtaService, TripEtaService>();

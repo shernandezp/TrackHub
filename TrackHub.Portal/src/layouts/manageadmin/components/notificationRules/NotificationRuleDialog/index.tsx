@@ -48,6 +48,7 @@ const RECIPIENT_ROLES = ['Administrator', 'Manager'] as const;
  */
 export interface NotificationRuleFormValues {
   notificationRuleId?: string;
+  version?: number;
   accountId?: string;
   ruleKey?: string;
   ruleType?: string;
@@ -88,6 +89,7 @@ export function ruleToFormValues(rule: NotificationRule): NotificationRuleFormVa
   const { webhookUrl, webhookSecret, ...extraConfiguration } = configuration;
   return {
     notificationRuleId: rule.notificationRuleId,
+    version: rule.version,
     accountId: rule.accountId,
     ruleKey: rule.ruleKey,
     ruleType: rule.ruleType,
@@ -148,6 +150,7 @@ export function formValuesToRuleInput(
     channelsJson: JSON.stringify(channels),
     throttlingJson: Object.keys(throttling).length ? JSON.stringify(throttling) : null,
     configurationJson: Object.keys(configuration).length ? JSON.stringify(configuration) : null,
+    expectedVersion: values.version ?? null,
   } as NotificationRuleDtoInput;
 }
 

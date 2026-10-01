@@ -22,7 +22,9 @@
  * form (spec 11 §7.8).
  */
 
+import React from 'react';
 import { render, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TestWrapper } from '../components/testHelpers';
 import StopDialog from 'layouts/tripmanager/components/StopDialog';
 import { reverseGeocode } from 'api/router/router';
@@ -31,6 +33,18 @@ vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 vi.mock('api/router/router', () => ({ reverseGeocode: vi.fn() }));
+vi.mock('api/manager/pointsOfInterest', () => ({
+  getPointsOfInterestByAccount: vi.fn().mockResolvedValue({ items: [], totalCount: 0 }),
+}));
+
+function Wrapper({ children }: { children: React.ReactNode }) {
+  const [queryClient] = React.useState(() => new QueryClient({ defaultOptions: { queries: { retry: false } } }));
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TestWrapper>{children}</TestWrapper>
+    </QueryClientProvider>
+  );
+}
 
 const props = (overrides: Partial<React.ComponentProps<typeof StopDialog>> = {}) => ({
   open: true,
@@ -55,9 +69,9 @@ test('fills city from the geocoder city field, not from the address string', asy
   const dialogProps = props();
 
   render(
-    <TestWrapper>
+    <Wrapper>
       <StopDialog {...dialogProps} />
-    </TestWrapper>
+    </Wrapper>
   );
 
   await waitFor(() =>
@@ -84,9 +98,9 @@ test('re-resolves the city for a stop that already has an address but no city', 
   });
 
   render(
-    <TestWrapper>
+    <Wrapper>
       <StopDialog {...dialogProps} />
-    </TestWrapper>
+    </Wrapper>
   );
 
   await waitFor(() =>
@@ -106,9 +120,9 @@ test('does not call the geocoder when both fields are already filled', async () 
   });
 
   render(
-    <TestWrapper>
+    <Wrapper>
       <StopDialog {...dialogProps} />
-    </TestWrapper>
+    </Wrapper>
   );
 
   await waitFor(() => expect(reverseGeocode).not.toHaveBeenCalled());
@@ -119,9 +133,9 @@ test('a geocoder outage never blocks placing a stop', async () => {
   const dialogProps = props();
 
   render(
-    <TestWrapper>
+    <Wrapper>
       <StopDialog {...dialogProps} />
-    </TestWrapper>
+    </Wrapper>
   );
 
   await waitFor(() => expect(reverseGeocode).toHaveBeenCalled());

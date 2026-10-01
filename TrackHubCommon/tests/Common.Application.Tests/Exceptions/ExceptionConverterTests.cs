@@ -26,34 +26,11 @@ public class ExceptionConverterTests
     }
 
     [Fact]
-    public void ConvertToIError_ValidationFailures_ConvertsAll()
-    {
-        var failures = new List<ValidationFailure>
-        {
-            new("Prop1", "Error 1"),
-            new("Prop2", "Error 2")
-        };
-
-        var result = failures.ConvertToIError();
-        result.Should().HaveCount(2);
-        result[0].Message.Should().Be("Error 1");
-        result[1].Message.Should().Be("Error 2");
-    }
-
-    [Fact]
     public void ConvertToIError_SingleGraphQLError_Converts()
     {
         var error = CreateGraphQLError("Test error");
         var result = error.ConvertToIError();
         result.Message.Should().Be("Test error");
-    }
-
-    [Fact]
-    public void ConvertToIError_SingleValidationFailure_Converts()
-    {
-        var failure = new ValidationFailure("Property", "Must be valid");
-        var result = failure.ConvertToIError();
-        result.Message.Should().Be("Must be valid");
     }
 
     [Fact]

@@ -40,7 +40,7 @@ export const reportKeys = {
 export function useReportCatalog(options: { enabled?: boolean } = {}) {
   return useQuery<Report[]>({
     queryKey: reportKeys.catalog(),
-    queryFn: getReports,
+    queryFn: ({ signal }) => getReports({ signal }),
     enabled: options.enabled ?? true,
   });
 }

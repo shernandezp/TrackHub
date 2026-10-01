@@ -16,6 +16,8 @@
 using TrackHub.Reporting.Domain.Interfaces.Manager;
 using TrackHub.Reporting.Domain.Models;
 
+using TrackHub.Reporting.Domain.Paging;
+
 namespace TrackHub.Reporting.Infrastructure.GraphQLApi;
 
 // Every Manager read below is paged at the source. These reports must export the COMPLETE set — a
@@ -41,8 +43,6 @@ public class AdminReportReader(IGraphQLClientFactory graphQLClient)
                 }";
 
     // The master feed is paged: it spans every tenant, so an unpaged read grows without bound.
-    private const int MasterFeaturePageSize = 500;
-
     // Batched master read: every account's features (the matrix report previously fanned out one
     // accountFeaturesMaster call per account).
     internal const string AllAccountFeaturesMasterQuery = @"
@@ -94,46 +94,34 @@ public class AdminReportReader(IGraphQLClientFactory graphQLClient)
         => ManagerPageDrain.FetchAllAsync<AdminAccountVm>(
             (skip, take) => new GraphQLRequest { Query = AccountsQuery, Variables = new { skip, take } },
             (request, token) => QueryAsync<ManagerPage<AdminAccountVm>>(request, token),
-            "accounts",
             cancellationToken);
 
-    public async Task<IReadOnlyCollection<AdminAccountFeatureVm>> GetAllAccountFeaturesAsync(CancellationToken cancellationToken)
-    {
-        var features = new List<AdminAccountFeatureVm>();
-        for (var skip = 0; ; skip += MasterFeaturePageSize)
+    public Task<IReadOnlyCollection<AdminAccountFeatureVm>> GetAllAccountFeaturesAsync(CancellationToken cancellationToken)
+        => FeedDrain.DrainByNextSkipAsync<AdminAccountFeatureVm>(async (skip, take) =>
         {
-            var request = new GraphQLRequest
+            var page = await QueryAsync<List<AdminAccountFeatureVm>>(new GraphQLRequest
             {
                 Query = AllAccountFeaturesMasterQuery,
-                Variables = new { skip, take = MasterFeaturePageSize }
-            };
-            var page = await QueryAsync<List<AdminAccountFeatureVm>>(request, cancellationToken);
-            features.AddRange(page);
-            if (page.Count < MasterFeaturePageSize)
-            {
-                return features;
-            }
-        }
-    }
+                Variables = new { skip, take }
+            }, cancellationToken);
+            return (page, page.Count == take, skip + page.Count);
+        });
 
     public Task<IReadOnlyCollection<AdminGroupVm>> GetGroupsByAccountAsync(CancellationToken cancellationToken)
         => ManagerPageDrain.FetchAllAsync<AdminGroupVm>(
             (skip, take) => new GraphQLRequest { Query = GroupsByAccountQuery, Variables = new { skip, take } },
             (request, token) => QueryAsync<ManagerPage<AdminGroupVm>>(request, token),
-            "groupsByAccount",
             cancellationToken);
 
     public Task<IReadOnlyCollection<AdminUserVm>> GetUsersByGroupAsync(long groupId, CancellationToken cancellationToken)
         => ManagerPageDrain.FetchAllAsync<AdminUserVm>(
             (skip, take) => new GraphQLRequest { Query = UsersByGroupQuery, Variables = new { groupId, skip, take } },
             (request, token) => QueryAsync<ManagerPage<AdminUserVm>>(request, token),
-            "usersByGroup",
             cancellationToken);
 
     public Task<IReadOnlyCollection<AdminTransporterVm>> GetTransportersByGroupAsync(long groupId, CancellationToken cancellationToken)
         => ManagerPageDrain.FetchAllAsync<AdminTransporterVm>(
             (skip, take) => new GraphQLRequest { Query = TransportersByGroupQuery, Variables = new { groupId, skip, take } },
             (request, token) => QueryAsync<ManagerPage<AdminTransporterVm>>(request, token),
-            "transportersByGroup",
             cancellationToken);
 }

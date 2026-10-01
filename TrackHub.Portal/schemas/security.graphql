@@ -17,6 +17,7 @@ type Query {
   isValidService(query: IsValidServiceQueryInput!): Boolean! @cost(weight: "10")
   isValidServiceForResource(query: IsValidServiceForResourceQueryInput!): Boolean!
     @cost(weight: "10")
+  failedOutboxMessages: [FailedOutboxMessageVm!]! @cost(weight: "10")
   policies: [PolicyVm!]! @cost(weight: "10")
   resourcesByPolicy(query: GetResourcesByPolicyQueryInput!): PolicyResourceVm!
     @cost(weight: "10")
@@ -68,6 +69,10 @@ type Mutation {
   updateDriverDevicePushToken(command: UpdateDriverDevicePushTokenCommandInput!): Boolean!
     @cost(weight: "10")
   revokeDriverDevice(command: RevokeDriverDeviceCommandInput!): Boolean!
+    @cost(weight: "10")
+  replayFailedOutboxMessages(command: ReplayFailedOutboxMessagesCommandInput!): Int!
+    @cost(weight: "10")
+  discardFailedOutboxMessages(command: DiscardFailedOutboxMessagesCommandInput!): Int!
     @cost(weight: "10")
   createResourceActionPolicy(command: CreateResourceActionPolicyCommandInput!): ResourceActionPolicyVm!
     @cost(weight: "10")
@@ -150,6 +155,16 @@ type DriverDeviceRegistrationVm {
   revokedAt: DateTime
   revokedBy: String
   lastModified: DateTime!
+}
+
+type FailedOutboxMessageVm {
+  outboxMessageId: UUID!
+  messageType: String!
+  orderingKey: String
+  attemptCount: Int!
+  lastError: String
+  createdAt: DateTime!
+  processedAt: DateTime
 }
 
 type PolicyResourceVm {
@@ -337,6 +352,10 @@ input DeleteServiceClientPermissionCommandInput {
   serviceClientPermissionId: UUID!
 }
 
+input DiscardFailedOutboxMessagesCommandInput {
+  outboxMessageId: UUID
+}
+
 input DriverCredentialDtoInput {
   driverId: UUID!
   accountId: UUID!
@@ -466,6 +485,10 @@ input LockDriverCredentialCommandInput {
 
 input RegisterDriverDeviceCommandInput {
   device: DriverDeviceRegistrationDtoInput!
+}
+
+input ReplayFailedOutboxMessagesCommandInput {
+  outboxMessageId: UUID
 }
 
 input ResetDriverCredentialCommandInput {

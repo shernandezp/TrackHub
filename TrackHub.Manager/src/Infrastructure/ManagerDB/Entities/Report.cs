@@ -45,4 +45,7 @@ public class Report(
     // JSON array of filter definitions (name/type/labelKey/source) driving the portal's
     // filter form; seeded from the catalog contributions, null only for pre-seed rows.
     public string? Filters { get; set; } = filters;
+
+    // Comma-separated "Resource/Action" grants the report's feeds need; seeded from the contributions.
+    public string? RequiredGrants { get; set; }
 }

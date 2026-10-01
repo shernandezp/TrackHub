@@ -34,13 +34,17 @@ export const NotificationRuleItemFragment = graphql(`
     throttlingJson
     configurationJson
     lastModified
+    version
   }
 `);
 
 export const GetNotificationRulesDocument = graphql(`
   query GetNotificationRules($accountId: UUID!, $skip: Int!, $take: Int!) {
     notificationRules(query: { accountId: $accountId, skip: $skip, take: $take }) {
-      ...NotificationRuleItem
+      items {
+        ...NotificationRuleItem
+      }
+      totalCount
     }
   }
 `);

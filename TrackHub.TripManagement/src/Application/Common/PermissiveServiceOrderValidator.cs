@@ -26,8 +26,7 @@ namespace TrackHub.TripManagement.Application.Common;
 /// this port on every write, so the day spec 12 registers a real implementation the reference is
 /// enforced everywhere at once, with no handler reopened and nothing to remember. Registration is a
 /// plain <c>AddScoped</c> in the Application layer; spec 12's implementation registers in the
-/// Infrastructure layer, which runs afterwards and therefore wins — the same override shape
-/// <c>FeatureFlagService</c> uses against Common's fail-open default.
+/// Infrastructure layer, which runs afterwards and therefore wins.
 /// </para>
 /// </summary>
 public sealed class PermissiveServiceOrderValidator : IServiceOrderValidator

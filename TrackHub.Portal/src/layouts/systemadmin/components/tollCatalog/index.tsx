@@ -41,9 +41,11 @@ import {
   useCreateTollVehicleClass,
   useUpdateTollVehicleClass,
   useDeactivateTollVehicleClass,
+  useReactivateTollVehicleClass,
   useCreateTollStation,
   useUpdateTollStation,
   useDeactivateTollStation,
+  useReactivateTollStation,
   useCreateTollTariff,
   useUpdateTollTariff,
   useDeleteTollTariff,
@@ -81,9 +83,11 @@ function ManageTollCatalog() {
   const createClass = useCreateTollVehicleClass();
   const updateClass = useUpdateTollVehicleClass();
   const deactivateClass = useDeactivateTollVehicleClass();
+  const reactivateClass = useReactivateTollVehicleClass();
   const createStation = useCreateTollStation();
   const updateStation = useUpdateTollStation();
   const deactivateStation = useDeactivateTollStation();
+  const reactivateStation = useReactivateTollStation();
   const createTariff = useCreateTollTariff();
   const updateTariff = useUpdateTollTariff();
   const deleteTariff = useDeleteTollTariff();
@@ -283,13 +287,22 @@ function ManageTollCatalog() {
             <ArgonButton variant="text" color="dark" onClick={() => openClass(vehicleClass)}>
               <Icon>edit</Icon>&nbsp;{t('generic.edit')}
             </ArgonButton>
-            {vehicleClass.active && (
+            {vehicleClass.active ? (
               <ArgonButton
                 variant="text"
                 color="error"
                 onClick={() => setClassToDeactivate(vehicleClass.tollVehicleClassId)}
               >
                 <Icon>block</Icon>&nbsp;{t('tolls.catalog.deactivate')}
+              </ArgonButton>
+            ) : (
+              <ArgonButton
+                variant="text"
+                color="dark"
+                disabled={reactivateClass.isPending}
+                onClick={() => reactivateClass.mutateAsync(vehicleClass.tollVehicleClassId).catch(() => undefined)}
+              >
+                <Icon>restore</Icon>&nbsp;{t('tolls.catalog.reactivate')}
               </ArgonButton>
             )}
           </>
@@ -336,13 +349,22 @@ function ManageTollCatalog() {
             <ArgonButton variant="text" color="dark" onClick={() => openStation(station)}>
               <Icon>edit</Icon>&nbsp;{t('generic.edit')}
             </ArgonButton>
-            {station.active && (
+            {station.active ? (
               <ArgonButton
                 variant="text"
                 color="error"
                 onClick={() => setStationToDeactivate(station.tollStationId)}
               >
                 <Icon>block</Icon>&nbsp;{t('tolls.catalog.deactivate')}
+              </ArgonButton>
+            ) : (
+              <ArgonButton
+                variant="text"
+                color="dark"
+                disabled={reactivateStation.isPending}
+                onClick={() => reactivateStation.mutateAsync(station.tollStationId).catch(() => undefined)}
+              >
+                <Icon>restore</Icon>&nbsp;{t('tolls.catalog.reactivate')}
               </ArgonButton>
             )}
           </>

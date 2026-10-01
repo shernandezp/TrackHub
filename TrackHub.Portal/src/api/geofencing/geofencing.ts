@@ -21,6 +21,7 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { RequestOptions } from 'api/core/errors';
 import type {
   GeofenceFieldsFragment as GeofenceFieldsType,
   GeofenceDtoInput,
@@ -57,17 +58,16 @@ export async function getGeofence(geofenceId: string): Promise<Geofence> {
 }
 
 export async function getGeofencesByAccount(
-  enableCaching = false,
-  filters: GeofenceListFilters = {}
+  filters: GeofenceListFilters = {},
+  options?: RequestOptions
 ): Promise<GeofencesPage> {
   const data = await executeGraphQL('geofencing', GetGeofencesByAccountDocument, {
-    enableCaching,
     skip: filters.skip ?? null,
     take: filters.take ?? null,
     type: filters.type ?? null,
     active: filters.active ?? null,
     search: filters.search ?? null,
-  });
+  }, options);
   return data.geofencesByAccount;
 }
 
@@ -85,17 +85,17 @@ const GEOFENCE_DRAIN_CAP = 10_000;
  * overlay, event-history filter) use this instead of a single capped page.
  */
 export async function getAllGeofencesByAccount(
-  enableCaching = false,
-  filters: Omit<GeofenceListFilters, 'skip' | 'take'> = {}
+  filters: Omit<GeofenceListFilters, 'skip' | 'take'> = {},
+  options?: RequestOptions
 ): Promise<Geofence[]> {
   const items: Geofence[] = [];
   let skip = 0;
   for (;;) {
-    const page = await getGeofencesByAccount(enableCaching, {
+    const page = await getGeofencesByAccount({
       ...filters,
       skip,
       take: GEOFENCE_PAGE_SIZE,
-    });
+    }, options);
     items.push(...page.items);
     // Stop on an empty page (defensive), once we've reached the reported total,
     // or if we hit the safety cap.
@@ -109,12 +109,13 @@ export async function getAllGeofencesByAccount(
 
 export async function getTransportersInGeofence(
   geofenceId?: string | null,
-  type?: number | null
+  type?: number | null,
+  options?: RequestOptions
 ): Promise<TransporterInGeofence[]> {
   const data = await executeGraphQL('geofencing', GetTransportersInGeofenceDocument, {
     geofenceId: geofenceId ?? null,
     type: type ?? null,
-  });
+  }, options);
   return data.transportersInGeofence;
 }
 

@@ -20,6 +20,7 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { RequestOptions } from 'api/core/errors';
 import type {
   TransporterTypeItemFragment as TransporterTypeItemType,
   TransporterTypeDtoInput,
@@ -32,8 +33,8 @@ import {
 export type TransporterTypeItem = TransporterTypeItemType;
 export type { TransporterTypeDtoInput };
 
-export async function getTransporterTypes(): Promise<TransporterTypeItem[]> {
-  const data = await executeGraphQL('manager', GetTransporterTypesDocument);
+export async function getTransporterTypes(options?: RequestOptions): Promise<TransporterTypeItem[]> {
+  const data = await executeGraphQL('manager', GetTransporterTypesDocument, undefined, options);
   return data.transporterTypes;
 }
 

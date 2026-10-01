@@ -26,12 +26,14 @@ public interface ITollCatalogWriter
     Task UpdateVehicleClassAsync(Guid tollVehicleClassId, TollVehicleClassDto vehicleClass, CancellationToken cancellationToken);
 
     Task DeactivateVehicleClassAsync(Guid tollVehicleClassId, CancellationToken cancellationToken);
+    Task ReactivateVehicleClassAsync(Guid tollVehicleClassId, CancellationToken cancellationToken);
 
     Task<TollStationVm> CreateStationAsync(TollStationDto station, CancellationToken cancellationToken);
 
     Task UpdateStationAsync(Guid tollStationId, TollStationDto station, CancellationToken cancellationToken);
 
     Task DeactivateStationAsync(Guid tollStationId, CancellationToken cancellationToken);
+    Task ReactivateStationAsync(Guid tollStationId, CancellationToken cancellationToken);
 
     /// <summary>
     /// Inserts a tariff and CLOSES the currently open row for the same

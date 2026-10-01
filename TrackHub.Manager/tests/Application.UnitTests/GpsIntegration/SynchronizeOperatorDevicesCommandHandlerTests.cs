@@ -27,6 +27,7 @@ public class SynchronizeOperatorDevicesCommandHandlerTests
     [SetUp]
     public void SetUp()
     {
+        _atomicWrite = new PassThroughAtomicWrite();
         _deviceWriter = new Mock<IDeviceWriter>();
         _deviceReader = new Mock<IDeviceReader>();
         _transporterReader = new Mock<ITransporterReader>();
@@ -51,10 +52,12 @@ public class SynchronizeOperatorDevicesCommandHandlerTests
                 It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new GroupsPageVm([], 0));
         _groupWriter.Setup(x => x.CreateGroupAsync(It.IsAny<GroupDto>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((GroupDto dto, Guid accountId, CancellationToken _) => new GroupVm(DefaultGroupId, dto.Name, dto.Description, dto.Active, accountId));
+            .ReturnsAsync((GroupDto dto, Guid accountId, CancellationToken _) => new GroupVm(DefaultGroupId, dto.Name, dto.Description, dto.Active, accountId, 0));
         _transporterGroupWriter.Setup(x => x.CreateTransporterGroupAsync(It.IsAny<TransporterGroupDto>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((TransporterGroupDto dto, CancellationToken _) => new TransporterGroupVm(dto.TransporterId, dto.GroupId));
     }
+
+    private PassThroughAtomicWrite _atomicWrite = null!;
 
     private SynchronizeOperatorDevicesCommandHandler CreateHandler() => new(
         _deviceWriter.Object,
@@ -66,6 +69,7 @@ public class SynchronizeOperatorDevicesCommandHandlerTests
         _groupWriter.Object,
         _transporterGroupWriter.Object,
         _operatorWriter.Object,
+        _atomicWrite,
         _alertWriter.Object,
         Mock.Of<ILogger<SynchronizeOperatorDevicesCommandHandler>>());
 
@@ -113,7 +117,7 @@ public class SynchronizeOperatorDevicesCommandHandlerTests
                     && dto.Name == "Truck 101"
                     && dto.TransporterTypeId == (short)TransporterType.FleetVehicle),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new TransporterVm(transporterId, "Truck 101", TransporterType.FleetVehicle, (short)TransporterType.FleetVehicle));
+            .ReturnsAsync(new TransporterVm(transporterId, "Truck 101", TransporterType.FleetVehicle, (short)TransporterType.FleetVehicle, 0));
         _assignmentWriter.Setup(x => x.AssignAsync(It.IsAny<TransporterDeviceAssignmentDto>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((TransporterDeviceAssignmentDto dto, CancellationToken _) => new TransporterDeviceAssignmentVm(
                 Guid.NewGuid(),
@@ -234,6 +238,53 @@ public class SynchronizeOperatorDevicesCommandHandlerTests
     }
 
     [Test]
+    public async Task Handle_ADeviceAnEarlierSyncFailedToProvision_IsProvisionedNow()
+    {
+        var accountId = Guid.NewGuid();
+        var operatorId = Guid.NewGuid();
+        var deviceId = Guid.NewGuid();
+        var device = new DeviceDto(accountId, operatorId, "SER-2", "Device 2", 102, "Truck 102", (short)DeviceType.OBDScanner, null, "hash", "ACTIVE");
+        var known = new DeviceVm(deviceId, accountId, operatorId, device.Serial, device.Name, device.Identifier, device.ProviderDisplayName,
+            DeviceType.OBDScanner, device.DeviceTypeId, device.Description, device.ProviderMetadataHash, device.ProviderStatus,
+            DetectedStatus.New, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, null, null);
+        _deviceWriter.Setup(x => x.ReconcileSynchronizedDevicesAsync(It.IsAny<Guid>(), It.IsAny<IReadOnlyCollection<DeviceDto>>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DeviceReconciliationVm([known], [], []));
+        _transporterWriter.Setup(x => x.CreateTransporterAsync(It.IsAny<TransporterDto>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TransporterVm(Guid.NewGuid(), "Truck 102", TransporterType.FleetVehicle, (short)TransporterType.FleetVehicle, 0));
+
+        var result = await CreateHandler().Handle(
+            new SynchronizeOperatorDevicesCommand(accountId, operatorId, [device], "corr-2"), CancellationToken.None);
+
+        Assert.That(result.DevicesAdded, Is.Zero);
+        _assignmentWriter.Verify(x => x.AssignAsync(
+            It.Is<TransporterDeviceAssignmentDto>(dto => dto.DeviceId == deviceId), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Test]
+    public async Task Handle_OneDeviceFailingToProvision_DoesNotStopTheOthers()
+    {
+        var accountId = Guid.NewGuid();
+        var operatorId = Guid.NewGuid();
+        DeviceVm Vm(Guid id, int identifier) => new(id, accountId, operatorId, $"SER-{identifier}", $"Device {identifier}", identifier, $"Truck {identifier}",
+            DeviceType.OBDScanner, (short)DeviceType.OBDScanner, null, "hash", "ACTIVE", DetectedStatus.New, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, null, null);
+        DeviceDto Dto(int identifier) => new(accountId, operatorId, $"SER-{identifier}", $"Device {identifier}", identifier, $"Truck {identifier}", (short)DeviceType.OBDScanner, null, "hash", "ACTIVE");
+        var failing = Guid.NewGuid();
+        var healthy = Guid.NewGuid();
+        _deviceWriter.Setup(x => x.ReconcileSynchronizedDevicesAsync(It.IsAny<Guid>(), It.IsAny<IReadOnlyCollection<DeviceDto>>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AsAdded(Vm(failing, 201), Vm(healthy, 202)));
+        _transporterWriter.Setup(x => x.CreateTransporterAsync(It.IsAny<TransporterDto>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TransporterVm(Guid.NewGuid(), "Truck", TransporterType.FleetVehicle, (short)TransporterType.FleetVehicle, 0));
+        _assignmentWriter.Setup(x => x.AssignAsync(It.Is<TransporterDeviceAssignmentDto>(dto => dto.DeviceId == failing), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new InvalidOperationException("boom"));
+
+        await CreateHandler().Handle(new SynchronizeOperatorDevicesCommand(accountId, operatorId, [Dto(201), Dto(202)], "corr-3"), CancellationToken.None);
+
+        _assignmentWriter.Verify(x => x.AssignAsync(
+            It.Is<TransporterDeviceAssignmentDto>(dto => dto.DeviceId == healthy), It.IsAny<CancellationToken>()), Times.Once);
+        Assert.That(_atomicWrite.Attempts, Is.EqualTo(2), "each device provisions in its own all-or-nothing write");
+    }
+
+    [Test]
     public async Task Handle_AutoAssignDisabled_DoesNotCreateTransporterOrAssignment()
     {
         var accountId = Guid.NewGuid();
@@ -293,7 +344,7 @@ public class SynchronizeOperatorDevicesCommandHandlerTests
                 DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, null, null)));
 
         _transporterWriter.Setup(x => x.CreateTransporterAsync(It.IsAny<TransporterDto>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new TransporterVm(transporterId, "Truck 109", TransporterType.FleetVehicle, (short)TransporterType.FleetVehicle));
+            .ReturnsAsync(new TransporterVm(transporterId, "Truck 109", TransporterType.FleetVehicle, (short)TransporterType.FleetVehicle, 0));
 
         _assignmentWriter.Setup(x => x.AssignAsync(It.IsAny<TransporterDeviceAssignmentDto>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((TransporterDeviceAssignmentDto dto, CancellationToken _) => new TransporterDeviceAssignmentVm(
@@ -310,7 +361,7 @@ public class SynchronizeOperatorDevicesCommandHandlerTests
                 It.Is<string?>(s => s == Common.Domain.Constants.GroupMetadata.DefaultGroupName),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new GroupsPageVm(
-                [new GroupVm(existingGroupId, Common.Domain.Constants.GroupMetadata.DefaultGroupName, "d", true, accountId)], 1));
+                [new GroupVm(existingGroupId, Common.Domain.Constants.GroupMetadata.DefaultGroupName, "d", true, accountId, 0)], 1));
 
         await CreateHandler().Handle(
             new SynchronizeOperatorDevicesCommand(accountId, operatorId, [device], "corr-3", "MANUAL"),
@@ -403,7 +454,7 @@ public class SynchronizeOperatorDevicesCommandHandlerTests
                 device.ProviderMetadataHash, device.ProviderStatus, DetectedStatus.New,
                 DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, null, null)));
         _transporterWriter.Setup(x => x.CreateTransporterAsync(It.IsAny<TransporterDto>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new TransporterVm(transporterId, "Truck 109", TransporterType.FleetVehicle, (short)TransporterType.FleetVehicle));
+            .ReturnsAsync(new TransporterVm(transporterId, "Truck 109", TransporterType.FleetVehicle, (short)TransporterType.FleetVehicle, 0));
         _assignmentWriter.Setup(x => x.AssignAsync(It.IsAny<TransporterDeviceAssignmentDto>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((TransporterDeviceAssignmentDto dto, CancellationToken _) => new TransporterDeviceAssignmentVm(
                 Guid.NewGuid(), dto.AccountId, dto.TransporterId, dto.DeviceId, DateTimeOffset.UtcNow, null,

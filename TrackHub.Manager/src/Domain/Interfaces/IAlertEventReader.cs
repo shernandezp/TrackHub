@@ -2,5 +2,6 @@ namespace TrackHub.Manager.Domain.Interfaces;
 
 public interface IAlertEventReader
 {
-    Task<IReadOnlyCollection<AlertEventVm>> GetAlertEventsAsync(Guid accountId, DateTimeOffset? from, DateTimeOffset? to, int skip, int take, CancellationToken cancellationToken);
+    Task<AlertEventsPageVm> GetAlertEventsAsync(Guid accountId, AlertEventFilter filter, int skip, int take, CancellationToken cancellationToken);
+    Task<IReadOnlyCollection<AlertSeverityCountVm>> CountOpenBySeverityAsync(Guid accountId, CancellationToken cancellationToken);
 }

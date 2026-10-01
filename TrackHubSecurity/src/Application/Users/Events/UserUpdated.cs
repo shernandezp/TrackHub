@@ -41,5 +41,5 @@ public sealed class UserUpdated
         => roles is { Count: > 0 } ? roles.MinBy(r => r.RoleId).Name : null;
 
     public static Notification Mirror(UserVm user)
-        => new(user.UserId, new UpdateUserShrankDto(user.UserId, user.Username, user.Active, EffectiveRole(user.Roles)));
+        => new(user.UserId, new UpdateUserShrankDto(user.UserId, user.Username, user.Active, EffectiveRole(user.Roles), user.AccountId));
 }

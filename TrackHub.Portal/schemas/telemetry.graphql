@@ -295,6 +295,8 @@ input OperatorSyncRunDtoInput {
 input PersistResolvedAddressCommandInput {
   transporterPositionHistoryId: UUID
   transporterId: UUID
+  latitude: Float!
+  longitude: Float!
   address: String
   city: String
   state: String

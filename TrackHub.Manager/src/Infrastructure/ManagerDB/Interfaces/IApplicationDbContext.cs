@@ -14,6 +14,7 @@
 //
 
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using TrackHub.Manager.Infrastructure.Entities;
 
 namespace TrackHub.Manager.Infrastructure.Interfaces;
@@ -55,6 +56,7 @@ public interface IApplicationDbContext
     DbSet<TransporterDeviceAssignment> TransporterDeviceAssignments { get; set; }
     DbSet<OperatorHealthCheck> OperatorHealthChecks { get; set; }
     DbSet<OperatorSyncRun> OperatorSyncRuns { get; set; }
+    DbSet<OperatorSyncBackoff> OperatorSyncBackoffs { get; set; }
     DbSet<TransporterType> TransporterTypes { get; set; }
     DbSet<User> Users { get; set; }
     DbSet<UserGroup> UsersGroup { get; set; }
@@ -62,6 +64,7 @@ public interface IApplicationDbContext
 
     /// <summary>Lets a per-item job write start from a clean slate, so a failed item cannot be flushed under the next one.</summary>
     ChangeTracker ChangeTracker { get; }
+    DatabaseFacade Database { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

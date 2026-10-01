@@ -20,7 +20,8 @@ namespace TrackHub.Manager.Infrastructure.ManagerDB.Readers;
 
 /// <summary>
 /// The one transporter-visibility predicate: Administrator and Manager roles read the whole
-/// account, everyone else the transporters of the active groups they belong to. Privilege for the
+/// account, everyone else the transporters of the active groups they belong to. Retired units stay
+/// visible (their history is kept); current-state reads add the <c>RetiredAt</c> filter themselves. Privilege for the
 /// calling user comes from the token; for any other user it comes from the role Security replicates
 /// onto <c>app.users</c>, which is what lets background work (alert fan-out) answer for a subscriber.
 /// </summary>

@@ -7,8 +7,10 @@ namespace TrackHub.Manager.Infrastructure.Entities;
 /// per language), not a system string, so storing it here is consistent with the localization policy
 /// — the same precedent as account-authored notification template overrides.
 /// </summary>
-public sealed class PlatformAnnouncement(string messageEn, string? messageEs, int severity, DateTimeOffset? startsAt, DateTimeOffset? endsAt, bool active) : BaseAuditableEntity
+public sealed class PlatformAnnouncement(string messageEn, string? messageEs, int severity, DateTimeOffset? startsAt, DateTimeOffset? endsAt, bool active) : BaseAuditableEntity, IEditVersioned
 {
+    public uint Version { get; set; }
+
     public Guid PlatformAnnouncementId { get; private set; } = Guid.NewGuid();
     public string MessageEn { get; set; } = messageEn;
     /// <summary>Optional — Spanish viewers fall back to <see cref="MessageEn"/> when absent.</summary>

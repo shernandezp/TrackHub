@@ -28,6 +28,7 @@ export const TransporterItemFragment = graphql(`
     name
     transporterType
     transporterTypeId
+    version
   }
 `);
 
@@ -38,6 +39,25 @@ export const GetTransportersByAccountDocument = graphql(`
         ...TransporterItem
       }
       totalCount
+    }
+  }
+`);
+
+export const GetTransportersByUserDocument = graphql(`
+  query GetTransportersByUser($skip: Int, $take: Int, $search: String) {
+    transportersByUser(query: { skip: $skip, take: $take, search: $search }) {
+      items {
+        ...TransporterItem
+      }
+      totalCount
+    }
+  }
+`);
+
+export const GetTransporterDocument = graphql(`
+  query GetTransporter($id: UUID!) {
+    transporter(query: { id: $id }) {
+      ...TransporterItem
     }
   }
 `);
@@ -55,24 +75,7 @@ export const GetTransportersByGroupDocument = graphql(`
   }
 `);
 
-/**
- * Id + name + type, unpaged by design. Two separate fields on purpose: the
- * admin screens see the whole account, the dashboard/reports/tripmanager see
- * only what the signed-in user may track. Never collapse them into one. The
- * type travels with the projection because the toll-class dialog derives its
- * whole transporter-type list from the picker feed.
- */
-export const GetTransporterLookupByAccountDocument = graphql(`
-  query GetTransporterLookupByAccount {
-    transporterLookupByAccount {
-      transporterId
-      name
-      transporterType
-      transporterTypeId
-    }
-  }
-`);
-
+/** Id + name + type of the units the signed-in user may track, unpaged by design. */
 export const GetTransporterLookupByUserDocument = graphql(`
   query GetTransporterLookupByUser {
     transporterLookupByUser {
@@ -101,6 +104,23 @@ export const UpdateTransporterDocument = graphql(`
 export const DeleteTransporterDocument = graphql(`
   mutation DeleteTransporter($id: UUID!) {
     deleteTransporter(id: $id)
+  }
+`);
+
+export const RestoreTransporterDocument = graphql(`
+  mutation RestoreTransporter($id: UUID!) {
+    restoreTransporter(id: $id)
+  }
+`);
+
+export const GetRetiredTransportersDocument = graphql(`
+  query GetRetiredTransporters($skip: Int, $take: Int, $search: String) {
+    retiredTransporters(query: { skip: $skip, take: $take, search: $search }) {
+      items {
+        ...TransporterItem
+      }
+      totalCount
+    }
   }
 `);
 

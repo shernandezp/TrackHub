@@ -43,7 +43,10 @@ export const PublicLinkGrantFieldsFragment = graphql(`
 export const GetPublicLinkGrantsByAccountDocument = graphql(`
   query GetPublicLinkGrantsByAccount($accountId: UUID!, $skip: Int!, $take: Int!) {
     publicLinkGrantsByAccount(query: { accountId: $accountId, skip: $skip, take: $take }) {
-      ...PublicLinkGrantFields
+      items {
+        ...PublicLinkGrantFields
+      }
+      totalCount
     }
   }
 `);
@@ -57,7 +60,7 @@ export const CreatePublicLinkGrantDocument = graphql(`
 `);
 
 export const RevokePublicLinkGrantDocument = graphql(`
-  mutation RevokePublicLinkGrant($publicLinkGrantId: UUID!, $revokedBy: String!) {
-    revokePublicLinkGrant(command: { publicLinkGrantId: $publicLinkGrantId, revokedBy: $revokedBy })
+  mutation RevokePublicLinkGrant($publicLinkGrantId: UUID!) {
+    revokePublicLinkGrant(command: { publicLinkGrantId: $publicLinkGrantId })
   }
 `);

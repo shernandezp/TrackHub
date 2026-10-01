@@ -18,6 +18,8 @@ using Common.Application.Interfaces;
 namespace TrackHub.Security.Application.Users.Queries.GetByPolicy;
 
 [Authorize(Resource = Resources.Users, Action = Actions.Read)]
+// The policy is a platform catalog entry; the users are read from the caller's account.
+[AccountScopeEnforcedInHandler]
 public readonly record struct GetUsersByPolicyQuery(int PolicyId) : IRequest<IReadOnlyCollection<UserVm>>;
 
 // The GetUsersByPolicyQueryHandler is a class that implements the IRequestHandler interface to handle the GetUsersByPolicyQuery.

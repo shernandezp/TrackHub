@@ -13,6 +13,8 @@
 //  limitations under the License.
 //
 
+using Common.Infrastructure;
+
 namespace TrackHub.TripManagement.Infrastructure.TripDB.Writers;
 
 /// <summary>

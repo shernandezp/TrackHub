@@ -30,7 +30,7 @@ export const transporterTypeKeys = {
 export function useTransporterTypes(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: transporterTypeKeys.all,
-    queryFn: api.getTransporterTypes,
+    queryFn: ({ signal }) => api.getTransporterTypes({ signal }),
     enabled: options.enabled ?? true,
   });
 }

@@ -21,6 +21,7 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { RequestOptions } from 'api/core/errors';
 import { fetchAllPages } from 'api/core/paging';
 import type {
   DriverCredentialItemFragment as DriverCredentialItemType,
@@ -46,14 +47,15 @@ export async function getDriverCredentials(
   accountId: string,
   driverId: string | null = null,
   skip = 0,
-  take = 100
+  take = 100,
+  options?: RequestOptions
 ): Promise<DriverCredential[]> {
   const data = await executeGraphQL('security', GetDriverCredentialsDocument, {
     accountId,
     driverId,
     skip,
     take,
-  });
+  }, options);
   return data.driverCredentials;
 }
 
@@ -61,31 +63,34 @@ export async function getDriverDevices(
   accountId: string,
   driverId: string | null = null,
   skip = 0,
-  take = 100
+  take = 100,
+  options?: RequestOptions
 ): Promise<DriverDevice[]> {
   const data = await executeGraphQL('security', GetDriverDevicesDocument, {
     accountId,
     driverId,
     skip,
     take,
-  });
+  }, options);
   return data.driverDevices;
 }
 
 /** Every credential matching the filter, paged to exhaustion (server clamps take to 1..500). */
 export async function getAllDriverCredentials(
   accountId: string,
-  driverId: string | null = null
+  driverId: string | null = null,
+  options?: RequestOptions
 ): Promise<DriverCredential[]> {
-  return fetchAllPages((skip, take) => getDriverCredentials(accountId, driverId, skip, take));
+  return fetchAllPages((skip, take) => getDriverCredentials(accountId, driverId, skip, take, options));
 }
 
 /** Every device registration matching the filter, paged to exhaustion. */
 export async function getAllDriverDevices(
   accountId: string,
-  driverId: string | null = null
+  driverId: string | null = null,
+  options?: RequestOptions
 ): Promise<DriverDevice[]> {
-  return fetchAllPages((skip, take) => getDriverDevices(accountId, driverId, skip, take));
+  return fetchAllPages((skip, take) => getDriverDevices(accountId, driverId, skip, take, options));
 }
 
 export async function createDriverCredential(

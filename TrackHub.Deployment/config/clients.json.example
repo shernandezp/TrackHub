@@ -65,6 +65,11 @@
       "scope": "service_scope"
     },
     {
+      "clientId": "manager_client",
+      "clientSecret": "<<GENERATE_A_SECURE_SECRET>>",
+      "scope": "service_scope"
+    },
+    {
       "clientId": "reporting_client",
       "clientSecret": "<<GENERATE_A_SECURE_SECRET>>",
       "scope": "service_scope"

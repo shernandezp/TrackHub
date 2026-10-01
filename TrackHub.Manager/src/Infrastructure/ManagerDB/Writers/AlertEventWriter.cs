@@ -25,9 +25,18 @@ public sealed class AlertEventWriter(IApplicationDbContext context, ICurrentPrin
 
     private async Task UpdateStatusAsync(Guid alertEventId, string status, CancellationToken cancellationToken)
     {
-        var entity = await Context.AlertEvents
-            .AsTracking().FirstAsync(x => x.AlertEventId == alertEventId, cancellationToken);
-        RequireAccountWriteAccess(entity.AccountId);
+        var entity = await RequireScopedAsync(Context.AlertEvents.AsTracking(), x => x.AlertEventId == alertEventId, x => x.AccountId, alertEventId, forWrite: true, cancellationToken);
+        if (entity.Status == status)
+        {
+            return;
+        }
+
+        // A resolved alert is closed; reopening it here would also collide with the open-dedup index.
+        if (entity.Status == "Resolved")
+        {
+            throw new ConflictException("The alert is already resolved.");
+        }
+
         entity.Status = status;
         await Context.SaveChangesAsync(cancellationToken);
     }

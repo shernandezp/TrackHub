@@ -18,6 +18,8 @@ using Common.Application.Interfaces;
 namespace TrackHub.Security.Application.Users.Queries.GetByRole;
 
 [Authorize(Resource = Resources.Users, Action = Actions.Read)]
+// The role is a platform catalog entry; the users are read from the caller's account.
+[AccountScopeEnforcedInHandler]
 public readonly record struct GetUsersByRoleQuery(int RoleId) : IRequest<IReadOnlyCollection<UserVm>>;
 
 // The GetUsersByRoleQueryHandler is a class that implements the IRequestHandler interface to handle the GetUsersByRoleQuery.

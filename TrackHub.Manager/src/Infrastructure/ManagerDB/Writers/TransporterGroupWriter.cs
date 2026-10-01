@@ -23,6 +23,23 @@ namespace TrackHub.Manager.Infrastructure.Writers;
 // TransporterGroupWriter class for writing transporter group data
 public sealed class TransporterGroupWriter(IApplicationDbContext context, ICurrentPrincipal principal) : AccountScopedDataAccess(context, principal), ITransporterGroupWriter
 {
+    // Both sides of a membership must be rows of one account the caller may write; anything else is
+    // answered NotFound.
+    // A retired unit may leave a group but not join one.
+    private async Task<Guid> RequireMembershipAccountAsync(Guid transporterId, long groupId, CancellationToken cancellationToken, bool joining = false)
+    {
+        var transporterAccount = await Context.Transporters.Where(t => t.TransporterId == transporterId && (!joining || t.RetiredAt == null))
+            .Select(t => (Guid?)t.AccountId).FirstOrDefaultAsync(cancellationToken);
+        var groupAccount = await Context.Groups.Where(g => g.GroupId == groupId)
+            .Select(g => (Guid?)g.AccountId).FirstOrDefaultAsync(cancellationToken);
+        if (transporterAccount is not { } accountId || groupAccount != accountId || !HasAccountAccess(accountId, forWrite: true))
+        {
+            throw new NotFoundException(nameof(TransporterGroup), $"{transporterId}:{groupId}");
+        }
+
+        return accountId;
+    }
+
     // TransporterGroup carries no account of its own; derive it from the transporter for the audit trail.
     private async Task<Guid> ResolveTransporterAccountAsync(Guid transporterId, CancellationToken cancellationToken)
         => await Context.Transporters
@@ -44,8 +61,7 @@ public sealed class TransporterGroupWriter(IApplicationDbContext context, ICurre
             GroupId = transporterGroupDto.GroupId
         };
 
-        var accountId = await ResolveTransporterAccountAsync(transporterGroup.TransporterId, cancellationToken);
-        RequireAccountWriteAccess(accountId);
+        var accountId = await RequireMembershipAccountAsync(transporterGroup.TransporterId, transporterGroup.GroupId, cancellationToken, joining: true);
         await Context.TransportersGroup.AddAsync(transporterGroup, cancellationToken);
         AddAuditEvent(accountId, "CreateTransporterGroup", "TransporterGroup", $"{transporterGroup.TransporterId}:{transporterGroup.GroupId}", null,
             $$"""{"transporterId":"{{transporterGroup.TransporterId}}","groupId":{{transporterGroup.GroupId}}}""");
@@ -69,8 +85,7 @@ public sealed class TransporterGroupWriter(IApplicationDbContext context, ICurre
 
         if (transporterGroup != default)
         {
-            var accountId = await ResolveTransporterAccountAsync(transporterId, cancellationToken);
-            RequireAccountWriteAccess(accountId);
+            var accountId = await RequireMembershipAccountAsync(transporterId, groupId, cancellationToken);
             Context.TransportersGroup.Attach(transporterGroup);
 
             AddAuditEvent(accountId, "DeleteTransporterGroup", "TransporterGroup", $"{transporterId}:{groupId}",

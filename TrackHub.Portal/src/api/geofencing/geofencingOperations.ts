@@ -39,6 +39,7 @@ export const GeofenceFieldsFragment = graphql(`
     alertOnEntry
     alertOnExit
     dwellThresholdMinutes
+    version
     geom {
       srid
       coordinates {
@@ -59,7 +60,6 @@ export const GetGeofenceDocument = graphql(`
 
 export const GetGeofencesByAccountDocument = graphql(`
   query GetGeofencesByAccount(
-    $enableCaching: Boolean!
     $skip: Int
     $take: Int
     $type: Short
@@ -68,7 +68,6 @@ export const GetGeofencesByAccountDocument = graphql(`
   ) {
     geofencesByAccount(
       query: {
-        enableCaching: $enableCaching
         skip: $skip
         take: $take
         type: $type

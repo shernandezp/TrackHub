@@ -16,6 +16,7 @@
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using TrackHub.TripManagement.Infrastructure.TripDB;
+using Common.Infrastructure;
 
 namespace Infrastructure.UnitTests;
 
@@ -61,10 +62,10 @@ internal sealed class WriterTestContext(DbContextOptions<ApplicationDbContext> o
     /// <summary>
     /// The same, but naming the index PostgreSQL says was violated.
     /// <para>
-    /// <c>UniqueViolation.Matches</c> treats an ABSENT constraint name as "matches any index", so a
-    /// nameless violation cannot tell one writer's duplicate branch from another's. Only a named one
-    /// can prove that a duplicate station is reported as <c>TOLL_DUPLICATE_STATION</c> rather than
-    /// as an overlapping tariff — an error about a different entity entirely.
+    /// PostgreSQL always names the violated constraint, and a writer's duplicate branch matches on that
+    /// name, so only a named violation reaches it. It also proves that a duplicate station is reported
+    /// as <c>TOLL_DUPLICATE_STATION</c> rather than as an overlapping tariff — an error about a
+    /// different entity entirely.
     /// </para>
     /// </summary>
     internal void FailNextSaveOn(string constraintName, int times = 1)

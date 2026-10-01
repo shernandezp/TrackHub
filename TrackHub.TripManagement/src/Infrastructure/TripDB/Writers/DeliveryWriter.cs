@@ -16,6 +16,7 @@
 using Common.Application.Exceptions;
 using TrackHub.TripManagement.Infrastructure.TripDB.Events;
 using TrackHub.TripManagement.Infrastructure.TripDB.Readers;
+using Common.Infrastructure;
 
 namespace TrackHub.TripManagement.Infrastructure.TripDB.Writers;
 
@@ -25,6 +26,7 @@ public sealed class DeliveryWriter(IApplicationDbContext context) : IDeliveryWri
     {
         var stop = await context.TripStops.FirstOrDefaultAsync(s => s.TripStopId == tripStopId && s.AccountId == accountId, cancellationToken)
             ?? throw new NotFoundException($"{tripStopId}", nameof(TripStop));
+        await TripEditGuard.EnsureEditableAsync(context, stop.TripId, accountId, cancellationToken);
 
         var entity = new Delivery
         {
@@ -49,6 +51,7 @@ public sealed class DeliveryWriter(IApplicationDbContext context) : IDeliveryWri
     public async Task UpdateDeliveryAsync(Guid deliveryId, Guid accountId, DeliveryDto delivery, CancellationToken cancellationToken)
     {
         var entity = await FindAsync(deliveryId, accountId, cancellationToken);
+        await EnsureEditableAsync(entity, accountId, cancellationToken);
 
         // Cross-stop moves are rejected by omission: TripStopId is never assignable here, a
         // delivery belongs to the stop it was created on.
@@ -68,6 +71,7 @@ public sealed class DeliveryWriter(IApplicationDbContext context) : IDeliveryWri
         string status,
         string? observations,
         string idempotencyKey,
+        string source,
         CancellationToken cancellationToken)
     {
         var entity = await FindAsync(deliveryId, accountId, cancellationToken);
@@ -85,7 +89,7 @@ public sealed class DeliveryWriter(IApplicationDbContext context) : IDeliveryWri
             TripStopId = entity.TripStopId,
             EventType = TripEventTypes.TripDeliveryOutcomeRecorded,
             OccurredAt = DateTimeOffset.UtcNow,
-            Source = TripEventSources.Portal,
+            Source = source,
             IdempotencyKey = idempotencyKey,
         };
 
@@ -118,6 +122,7 @@ public sealed class DeliveryWriter(IApplicationDbContext context) : IDeliveryWri
     public async Task DeleteDeliveryAsync(Guid deliveryId, Guid accountId, CancellationToken cancellationToken)
     {
         var entity = await FindAsync(deliveryId, accountId, cancellationToken);
+        await EnsureEditableAsync(entity, accountId, cancellationToken);
         context.Deliveries.Remove(entity);
         await context.SaveChangesAsync(cancellationToken);
     }
@@ -142,6 +147,21 @@ public sealed class DeliveryWriter(IApplicationDbContext context) : IDeliveryWri
         }
 
         await context.SaveChangesAsync(cancellationToken);
+    }
+
+    // A delivery with an outcome is changed only through UpdateDeliveryOutcomeAsync.
+    private async Task EnsureEditableAsync(Delivery delivery, Guid accountId, CancellationToken cancellationToken)
+    {
+        if (!string.Equals(delivery.Status, DeliveryStatuses.Pending, StringComparison.Ordinal))
+        {
+            throw ConflictException.WithCode(TripErrorCodes.DeliveryOutcomeRecorded);
+        }
+
+        var tripId = await context.TripStops
+            .Where(s => s.TripStopId == delivery.TripStopId)
+            .Select(s => s.TripId)
+            .FirstAsync(cancellationToken);
+        await TripEditGuard.EnsureEditableAsync(context, tripId, accountId, cancellationToken);
     }
 
     private async Task<Delivery> FindAsync(Guid deliveryId, Guid accountId, CancellationToken cancellationToken)

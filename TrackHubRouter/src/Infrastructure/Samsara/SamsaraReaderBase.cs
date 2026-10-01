@@ -16,6 +16,7 @@
 using System.Net.Http.Headers;
 using Common.Domain.Enums;
 using TrackHub.Router.Domain.Interfaces;
+using TrackHub.Router.Infrastructure.Samsara.Models;
 
 namespace TrackHub.Router.Infrastructure.Samsara;
 
@@ -48,5 +49,23 @@ public class SamsaraReaderBase
         httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", credential.Token);
         HttpClientService.Init(httpClient, $"{ProtocolType.Samsara}");
         return Task.CompletedTask;
+    }
+
+    // Every Samsara list endpoint is cursor-paged; one call reads only the first page.
+    internal async Task<IReadOnlyList<T>> GetAllPagesAsync<TResponse, T>(string url, CancellationToken cancellationToken)
+        where TResponse : class, ISamsaraPage<T>
+    {
+        var all = new List<T>();
+        string? after = null;
+        do
+        {
+            var pageUrl = after is null ? url : $"{url}{(url.Contains('?') ? '&' : '?')}after={Uri.EscapeDataString(after)}";
+            var page = await HttpClientService.GetAsync<TResponse>(pageUrl, cancellationToken: cancellationToken);
+            all.AddRange(page?.Data ?? []);
+            after = page?.Pagination is { HasNextPage: true, EndCursor: { Length: > 0 } next } && next != after ? next : null;
+        }
+        while (after is not null);
+
+        return all;
     }
 }

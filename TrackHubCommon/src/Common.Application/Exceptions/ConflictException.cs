@@ -24,6 +24,9 @@ public class ConflictException : Exception
     /// <summary>The generic code used when a caller does not supply a specific one.</summary>
     public const string DefaultCode = "CONFLICT";
 
+    /// <summary>The row changed between the caller's read and its write (optimistic concurrency).</summary>
+    public const string ConcurrentUpdateCode = "CONCURRENT_UPDATE";
+
     public ConflictException()
         : this("The resource already exists.")
     {

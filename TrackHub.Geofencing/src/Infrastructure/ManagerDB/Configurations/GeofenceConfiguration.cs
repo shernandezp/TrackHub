@@ -22,6 +22,7 @@ public class GeofenceConfiguration : IEntityTypeConfiguration<Geofence>
 {
     public void Configure(EntityTypeBuilder<Geofence> builder)
     {
+        builder.Property(x => x.Version).HasColumnName("editversion").HasConversion<long>().IsConcurrencyToken();
         //Table name
         builder.ToTable(
             name: TableMetadata.Geofence,

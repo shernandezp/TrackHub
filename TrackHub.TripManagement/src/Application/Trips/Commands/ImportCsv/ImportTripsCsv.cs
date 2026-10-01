@@ -58,7 +58,7 @@ public sealed class ImportTripsCsvCommandHandler(
     IUser user,
     ILogger<ImportTripsCsvCommandHandler> logger) : IRequestHandler<ImportTripsCsvCommand, TripCsvImportResultVm>
 {
-    private const string InvalidRowCode = "TRIP_IMPORT_INVALID_ROW";
+    private const string InvalidRowCode = TripErrorCodes.TripImportInvalidRow;
 
     /// <summary>Columns up to and including <c>plannedStart</c> — everything after it is optional.</summary>
     private const int RequiredColumns = 9;

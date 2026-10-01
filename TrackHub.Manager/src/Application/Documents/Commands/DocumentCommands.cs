@@ -15,6 +15,8 @@ public class AuthorizeDocumentUploadCommandHandler : IRequestHandler<AuthorizeDo
 // Completes the upload endpoint: bytes already streamed to storage under a
 // server-generated key. Allowed for User and Driver principals; ungated (embedded module panels).
 [Authorize(Resource = Resources.Documents, Action = Actions.Write, PrincipalTypes = "User,Driver")]
+// Enforcement: the writer or reader checks every referenced id against the request's account.
+[AccountScopeEnforcedInHandler]
 public readonly record struct RegisterUploadedDocumentCommand(Guid DocumentId, DocumentDto Document) : IRequest<DocumentVm>;
 public class RegisterUploadedDocumentCommandHandler(IDocumentWriter writer) : IRequestHandler<RegisterUploadedDocumentCommand, DocumentVm>
 {
@@ -23,7 +25,7 @@ public class RegisterUploadedDocumentCommandHandler(IDocumentWriter writer) : IR
 
 // Upload-completion bookkeeping driven by the ingestion pipeline, not a user-editable field.
 // ServiceClient-only, so the register → scan → activate sequence that the upload endpoint and
-// DocumentScanService implement remains the only way a document's lifecycle status advances.
+// DocumentScanJob implement remains the only way a document's lifecycle status advances.
 [Authorize(Resource = Resources.Documents, Action = Actions.Edit, PrincipalTypes = "ServiceClient")]
 // Enforcement: the reader/writer this handler delegates to extends AccountScopedDataAccess and
 // checks the loaded row's owning account (RequireAccountAccess) or filters on the caller's scope.
@@ -42,7 +44,7 @@ public class MarkDocumentUploadedCommandValidator : AbstractValidator<MarkDocume
 //
 // ServiceClient-only, and this is a SECURITY boundary rather than bookkeeping: the malware verdict is
 // what stands between an infected upload and the download endpoints, which serve bytes only for a
-// Clean scan status. DocumentScanService re-scans rows still marked Quarantined, so a verdict written
+// Clean scan status. DocumentScanJob re-scans rows still marked Quarantined, so a verdict written
 // here is final until the version is replaced.
 [Authorize(Resource = Resources.Documents, Action = Actions.Edit, PrincipalTypes = "ServiceClient")]
 // Enforcement: the reader/writer this handler delegates to extends AccountScopedDataAccess and

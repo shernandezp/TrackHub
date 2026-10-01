@@ -17,8 +17,10 @@ using Common.Infrastructure;
 
 namespace TrackHub.Manager.Infrastructure.Entities;
 
-public sealed class Operator(string name, string? description, string? phoneNumber, string? emailAddress, string? address, string? contactName, int protocolType, Guid accountId) : BaseAuditableEntity
+public sealed class Operator(string name, string? description, string? phoneNumber, string? emailAddress, string? address, string? contactName, int protocolType, Guid accountId) : BaseAuditableEntity, IEditVersioned
 {
+    public uint Version { get; set; }
+
     private Account? _account;
     public Guid OperatorId { get; set; } = Guid.NewGuid();
     public string Name { get; set; } = name;
@@ -35,8 +37,11 @@ public sealed class Operator(string name, string? description, string? phoneNumb
     // Health, failure detail, latency, and failed/position sync timestamps are DERIVED from
     // telemetry (operator health checks + sync runs) at read time — the row keeps only the
     // successful-sync stamps the schedulers gate on.
+    [JobMaintained]
     public DateTimeOffset? LastSuccessfulSyncAt { get; set; }
+    [JobMaintained]
     public DateTimeOffset? LastManualSyncAt { get; set; }
+    [JobMaintained]
     public DateTimeOffset? LastDeviceSyncAt { get; set; }
 
     public Credential? Credential { get; set; }

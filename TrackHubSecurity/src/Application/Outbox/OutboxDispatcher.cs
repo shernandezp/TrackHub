@@ -78,7 +78,7 @@ public sealed class OutboxDispatcher(
             }
             catch (Exception exception)
             {
-                await writer.MarkAttemptFailedAsync(message.OutboxMessageId, exception.Message, cancellationToken);
+                await writer.MarkAttemptFailedAsync(message.OutboxMessageId, Describe(exception), cancellationToken);
 
                 if (message.AttemptCount + 1 >= OutboxPolicy.MaxAttempts)
                 {
@@ -126,6 +126,12 @@ public sealed class OutboxDispatcher(
                 throw new InvalidOperationException($"Unknown outbox message type '{message.MessageType}'.");
         }
     }
+
+    // A GraphQL refusal carries its reason in the error codes, not in the exception message.
+    private static string Describe(Exception exception)
+        => exception is HotChocolate.GraphQLException graphQL && graphQL.Errors.Count > 0
+            ? string.Join("; ", graphQL.Errors.Select(e => $"{e.Code}: {e.Message}"))
+            : exception.Message;
 
     private static T Payload<T>(OutboxMessageVm message)
         => JsonSerializer.Deserialize<T>(message.PayloadJson)

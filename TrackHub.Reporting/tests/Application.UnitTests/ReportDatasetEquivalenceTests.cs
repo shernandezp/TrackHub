@@ -84,9 +84,9 @@ public class ReportDatasetEquivalenceTests
         var dataset = ReportDataset.Create(Filters(), new[] { new AccountByStatusRowVm("A", "Active", 1, true, DateTimeOffset.UtcNow) });
         var applied = dataset.AppliedFilters.ToDictionary(f => f.Key, f => f.Value);
 
-        // Named echo: "Filter" + PascalCase(name); dates normalized, others raw.
-        Assert.That(applied["FilterFrom"], Is.EqualTo("2026-01-01 00:00"));
-        Assert.That(applied["FilterTo"], Is.EqualTo("2026-01-31 00:00"));
+        // Named echo: "Filter" + PascalCase(name); dates as instants (rendered in the account zone), others raw.
+        Assert.That(applied["FilterFrom"], Is.EqualTo(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero)));
+        Assert.That(applied["FilterTo"], Is.EqualTo(new DateTimeOffset(2026, 1, 31, 0, 0, 0, TimeSpan.Zero)));
         Assert.That(applied["FilterStatus"], Is.EqualTo("abc"));
         Assert.That(applied["FilterMaxRows"], Is.EqualTo("7"));
         // Null/empty values are not echoed.

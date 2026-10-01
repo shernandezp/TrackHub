@@ -23,6 +23,8 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { RequestOptions } from 'api/core/errors';
+import type { Page } from 'api/core/paging';
 import type {
   NotificationDeliveryItemFragment as NotificationDeliveryItemType,
   MyNotificationItemFragment as MyNotificationItemType,
@@ -53,7 +55,7 @@ export async function getNotificationDeliveries(
   filters: NotificationDeliveryFilters = {},
   skip = 0,
   take = 50
-): Promise<NotificationDelivery[]> {
+): Promise<Page<NotificationDelivery>> {
   const data = await executeGraphQL('manager', GetNotificationDeliveriesDocument, {
     accountId,
     status: filters.status ?? null,
@@ -78,13 +80,14 @@ export async function getDeliveryHealth(
 export async function getMyNotifications(
   unreadOnly = false,
   skip = 0,
-  take = 50
+  take = 50,
+  options?: RequestOptions
 ): Promise<MyNotification[]> {
   const data = await executeGraphQL('manager', GetMyNotificationsDocument, {
     unreadOnly,
     skip,
     take,
-  });
+  }, options);
   return data.myNotifications;
 }
 

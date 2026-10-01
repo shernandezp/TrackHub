@@ -14,14 +14,16 @@
 *  limitations under the License.
 */
 
+import { useEffect, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
 import FormDialog from "controls/Dialogs/FormDialog";
 import CustomCheckbox from 'controls/Dialogs/CustomCheckbox';
-import CustomSelect from 'controls/Dialogs/CustomSelect';
 import CustomTextField from 'controls/Dialogs/CustomTextField';
 import type { FormChangeHandler } from 'controls/Dialogs/useForm';
-import { useTransporterLookupByAccount } from 'queries/transporters';
+import SearchSelect from 'edition/SearchSelect';
+import { useAccountTransporterOptions } from 'edition/pickerOptions';
+import { useTransporterNames } from 'queries/transporters';
 
 /**
  * Dialog/form state for a driver. Merges an API {@link Driver} (when editing)
@@ -30,6 +32,7 @@ import { useTransporterLookupByAccount } from 'queries/transporters';
  * screen's validate() gate before save.
  */
 export interface DriverFormValues {
+  version?: number;
   driverId?: string;
   accountId?: string;
   name?: string;
@@ -54,9 +57,16 @@ interface DriverDialogProps {
 
 function DriverDialog({ open, setOpen, handleSubmit, values, handleChange, errors }: DriverDialogProps) {
   const { t } = useTranslation();
-  // The default transporter is picked from the account's units, not typed by hand.
-  const transportersQuery = useTransporterLookupByAccount({ enabled: open });
-  const transporters = transportersQuery.data ?? [];
+  const [pickedTransporterName, setPickedTransporterName] = useState<string | null>(null);
+  const storedTransporterNames = useTransporterNames(
+    open && values.defaultTransporterId && !pickedTransporterName ? [values.defaultTransporterId] : []
+  );
+  const transporterLabel =
+    pickedTransporterName ?? storedTransporterNames.get(values.defaultTransporterId ?? '') ?? null;
+
+  useEffect(() => {
+    if (!open) setPickedTransporterName(null);
+  }, [open]);
 
   return (
     <FormDialog
@@ -139,17 +149,16 @@ function DriverDialog({ open, setOpen, handleSubmit, values, handleChange, error
           value={values.licenseExpiresAt ? values.licenseExpiresAt.substring(0, 10) : ''}
           onChange={handleChange}
         />
-        <CustomSelect
-          list={transporters.map((transporter) => ({
-            value: transporter.transporterId,
-            label: transporter.name,
-          }))}
-          name="defaultTransporterId"
+        <SearchSelect
           id="defaultTransporterId"
           label={t('driver.defaultTransporter')}
-          value={values.defaultTransporterId || ''}
-          handleChange={handleChange}
-          numericValue={false}
+          value={values.defaultTransporterId || null}
+          valueLabel={transporterLabel}
+          onChange={(option) => {
+            setPickedTransporterName(option?.label ?? null);
+            handleChange({ target: { name: 'defaultTransporterId', value: option?.value ?? '' } });
+          }}
+          useOptions={useAccountTransporterOptions}
           placeholder={t('workforce.assignments.selectTransporter')}
         />
         <CustomCheckbox

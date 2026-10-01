@@ -22,21 +22,21 @@ public class ScheduledJobHostTests
 
     [Fact]
     public void ASuccessfulCycleWaitsTheJobsOwnInterval()
-        => ScheduledJobHost<FastJob>.NextDelay(0).Should().Be(TimeSpan.FromSeconds(30));
+        => ScheduledJobHost<FastJob>.NextDelay(0, FastJob.Interval).Should().Be(TimeSpan.FromSeconds(30));
 
     [Theory]
     [InlineData(1, 60)]
     [InlineData(2, 120)]
     [InlineData(3, 240)]
     public void ConsecutiveFailuresDoubleTheWait(int failures, int expectedSeconds)
-        => ScheduledJobHost<FastJob>.NextDelay(failures).Should().Be(TimeSpan.FromSeconds(expectedSeconds));
+        => ScheduledJobHost<FastJob>.NextDelay(failures, FastJob.Interval).Should().Be(TimeSpan.FromSeconds(expectedSeconds));
 
     [Fact]
     public void TheBackoffIsCappedAtAQuarterHour()
-        => ScheduledJobHost<FastJob>.NextDelay(99).Should().Be(TimeSpan.FromMinutes(15));
+        => ScheduledJobHost<FastJob>.NextDelay(99, FastJob.Interval).Should().Be(TimeSpan.FromMinutes(15));
 
     // A daily job that fails must wait until tomorrow, not retry every quarter hour.
     [Fact]
     public void ALongIntervalIsItsOwnFloor()
-        => ScheduledJobHost<DailyJob>.NextDelay(99).Should().Be(TimeSpan.FromHours(24));
+        => ScheduledJobHost<DailyJob>.NextDelay(99, DailyJob.Interval).Should().Be(TimeSpan.FromHours(24));
 }

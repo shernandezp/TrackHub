@@ -58,7 +58,7 @@ public class GetReportQueryHandlerEdgeCaseTests
 
     private GetReportQueryHandler Handler()
         => new(_factory.Object, _user.Object, _audit.Object, _catalog.Object,
-            _features.Object, _branding.Object, _excel, _pdf.Object, new ReportingLimitsOptions());
+            _features.Object, Mock.Of<IIdentityService>(), Zones(), _branding.Object, _excel, _pdf.Object, new ReportingLimitsOptions());
 
     private static ReportDataset Dataset(int rows) => new()
     {
@@ -104,5 +104,12 @@ public class GetReportQueryHandlerEdgeCaseTests
         Assert.That(result.RowCount, Is.EqualTo(42));
         _audit.Verify(a => a.RecordReportExportAsync(_accountId, It.IsAny<string>(), It.IsAny<string>(), Code,
             It.IsAny<string>(), 42, "xlsx", It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    private static Common.Domain.Time.IAccountTimeZoneResolver Zones()
+    {
+        var zones = new Mock<Common.Domain.Time.IAccountTimeZoneResolver>();
+        zones.Setup(z => z.ResolveAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(Common.Domain.Time.AccountTimeZone.Utc);
+        return zones.Object;
     }
 }

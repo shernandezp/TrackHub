@@ -35,9 +35,22 @@ public class CreatePublicLinkGrantCommandHandler(IPublicLinkGrantWriter writer, 
     }
 }
 
+public sealed class CreatePublicLinkGrantCommandValidator : AbstractValidator<CreatePublicLinkGrantCommand>
+{
+    public CreatePublicLinkGrantCommandValidator()
+    {
+        RuleFor(v => v.PublicLinkGrant.ResourceType).NotEmpty().MaximumLength(ColumnMetadata.DefaultNameLength);
+        RuleFor(v => v.PublicLinkGrant.ResourceId).NotEmpty().MaximumLength(ColumnMetadata.DefaultNameLength);
+        RuleFor(v => v.PublicLinkGrant.Scopes).NotEmpty().MaximumLength(ColumnMetadata.DefaultDescriptionLength);
+        RuleFor(v => v.PublicLinkGrant.Purpose).NotEmpty().MaximumLength(ColumnMetadata.DefaultDescriptionLength);
+        RuleFor(v => v.PublicLinkGrant.CreatedByPrincipalId).MaximumLength(ColumnMetadata.DefaultNameLength);
+        RuleFor(v => v.PublicLinkGrant.ExpiresAt).GreaterThan(_ => DateTimeOffset.UtcNow);
+    }
+}
+
 [Authorize(Resource = Resources.PublicLinks, Action = Actions.Delete)]
 [AllowCrossAccount("TripManagement relays a user's trip-share revocation here under the global trip_client identity with no account claim (same hop as CreatePublicLinkGrantCommand above). Tenant callers are NOT unguarded by this: PublicLinkGrantWriter.RevokePublicLinkGrantAsync loads the grant and RequireAccountWriteAccess checks its owning account.")]
-public readonly record struct RevokePublicLinkGrantCommand(Guid PublicLinkGrantId, string RevokedBy) : IRequest;
+public readonly record struct RevokePublicLinkGrantCommand(Guid PublicLinkGrantId, string? RevokedBy = null) : IRequest;
 public class RevokePublicLinkGrantCommandHandler(IPublicLinkGrantWriter writer) : IRequestHandler<RevokePublicLinkGrantCommand>
 {
     public async Task Handle(RevokePublicLinkGrantCommand request, CancellationToken cancellationToken) => await writer.RevokePublicLinkGrantAsync(request.PublicLinkGrantId, request.RevokedBy, cancellationToken);

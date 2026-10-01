@@ -135,6 +135,37 @@ public class PositionsRetrievedTests : TestsContext
     }
 
     [Test]
+    public async Task EventHandler_StoresWhatWasRead_AndRecordsPartialRun_WhenTheProviderReadWasPartial()
+    {
+        var positionWriterMock = new Mock<TrackHub.Router.Domain.Interfaces.Manager.IPositionWriter>();
+        var geofenceWriterMock = new Mock<TrackHub.Router.Domain.Interfaces.Geofence.IGeofenceWriter>();
+        var syncRunMock = new Mock<TrackHub.Router.Domain.Interfaces.Manager.IOperatorSyncRunWriter>();
+        var alertMock = new Mock<TrackHub.Router.Domain.Interfaces.Manager.IAlertEventWriter>();
+
+        var handler = CreateHandler(positionWriterMock, geofenceWriterMock, syncRunMock, alertMock);
+        var account = new AccountSettingsVm(Guid.NewGuid(), 10, false, false);
+        var op = new OperatorVm(Guid.NewGuid(), 1, account.AccountId, null);
+        var positions = new[] { new PositionVm { TransporterId = Guid.NewGuid(), DeviceDateTime = DateTimeOffset.UtcNow, Latitude = 4.65, Longitude = -74.05 } };
+        var notification = new PositionsRetrieved.Notification(
+            positions,
+            account,
+            op,
+            DateTimeOffset.UtcNow,
+            "AUTOMATIC",
+            Guid.NewGuid().ToString(),
+            ProviderErrorCode: "ProviderDeviceReadFailed",
+            ProviderErrorMessage: "1 of 2 device position reads failed: timeout");
+        positionWriterMock.Setup(x => x.AddOrUpdatePositionAsync(It.IsAny<IEnumerable<PositionVm>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        await handler.Handle(notification, CancellationToken.None);
+
+        positionWriterMock.Verify(x => x.AddOrUpdatePositionAsync(It.IsAny<IEnumerable<PositionVm>>(), It.IsAny<CancellationToken>()), Times.Once);
+        syncRunMock.Verify(x => x.RecordAsync(It.Is<OperatorSyncRunDto>(d =>
+            d.Result == "PARTIALLY_SUCCEEDED" && d.ErrorCode == "ProviderDeviceReadFailed" && d.PositionsAccepted == 1), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Test]
     public async Task EventHandler_GeofenceFailureDoesNotFailRun_WhenPositionsStored()
     {
         // Regression for router-audit A-09: a Geofencing outage after a successful position write

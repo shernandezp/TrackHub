@@ -20,8 +20,8 @@ namespace TrackHub.Router.Web.GraphQL.Query;
 
 public partial class Query
 {
-    public async Task<IEnumerable<PositionVm>> GetDevicePositionsByUser([Service] ISender sender, CancellationToken cancellationToken)
-        => await sender.Send(new GetPositionsByUserQuery(), cancellationToken);
+    public async Task<IEnumerable<PositionVm>> GetDevicePositionsByUser([Service] ISender sender, long? groupId, Guid? operatorId, CancellationToken cancellationToken)
+        => await sender.Send(new GetPositionsByUserQuery(groupId, operatorId), cancellationToken);
 
     public async Task<PositionVm> GetDevicePositionByTransporter([Service] ISender sender, [AsParameters] GetPositionByTransporterQuery query, CancellationToken cancellationToken)
         => await sender.Send(query, cancellationToken);

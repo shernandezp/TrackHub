@@ -49,6 +49,12 @@ public static class GraphQLClientServiceCollectionExtensions
     // Infrastructure projects register clients.
     private sealed class TrackHubHeaderPropagationConfigured { }
 
+    // One definition per client name: a second registration would stack another handler chain on the
+    // same HttpClient (retries multiplying per call), so repeats must match the first or fail.
+    private sealed record GraphQLClientDefinition(bool PropagateHeaders, GraphQLClientResilience Resilience, int TimeoutSeconds);
+
+    private sealed class GraphQLClientDefinitions : Dictionary<string, GraphQLClientDefinition>;
+
     /// <summary>
     /// Registers the named HttpClient for a user-token (header-propagating) GraphQL client.
     /// </summary>
@@ -59,6 +65,26 @@ public static class GraphQLClientServiceCollectionExtensions
         GraphQLClientResilience resilience = GraphQLClientResilience.NoRetry,
         int timeoutSeconds = 30)
     {
+        var definitions = services.FirstOrDefault(d => d.ServiceType == typeof(GraphQLClientDefinitions))?.ImplementationInstance as GraphQLClientDefinitions;
+        if (definitions is null)
+        {
+            definitions = [];
+            services.AddSingleton(definitions);
+        }
+
+        var definition = new GraphQLClientDefinition(propagateHeaders, resilience, timeoutSeconds);
+        if (definitions.TryGetValue(name, out var existing))
+        {
+            if (existing != definition)
+            {
+                throw new InvalidOperationException($"GraphQL client '{name}' is registered twice with different settings ({existing} and {definition}).");
+            }
+
+            return services.AddHttpClient(name);
+        }
+
+        definitions.Add(name, definition);
+
         if (propagateHeaders)
         {
             services.AddTrackHubHeaderPropagation();
@@ -80,7 +106,7 @@ public static class GraphQLClientServiceCollectionExtensions
         // the caller's headers is exactly the one that has no caller to speak for: the {name}AsService
         // twins and a worker host's clients (the SyncWorker registers with propagateHeaders: false).
         // On a propagating client the handler is inert — the caller's token is already on the request.
-        services.TryAddSingleton<IClientCredentialsTokenProvider, ClientCredentialsTokenProvider>();
+        services.AddClientCredentialsTokenProvider();
         builder.AddHttpMessageHandler(sp => new ClientCredentialsTokenHandler(
             sp.GetRequiredService<IClientCredentialsTokenProvider>(),
             useServiceIdentity: !propagateHeaders));
@@ -142,6 +168,18 @@ public static class GraphQLClientServiceCollectionExtensions
         GraphQLClientResilience resilience = GraphQLClientResilience.NoRetry,
         int timeoutSeconds = 30)
         => services.AddGraphQLClient($"{name}AsService", propagateHeaders: false, resilience, timeoutSeconds);
+
+    public static IServiceCollection AddClientCredentialsTokenProvider(this IServiceCollection services)
+    {
+        if (!services.Any(d => d.ServiceType == typeof(IClientCredentialsTokenProvider)))
+        {
+            services.AddSingleton<IClientCredentialsTokenProvider, ClientCredentialsTokenProvider>();
+            services.AddHttpClient(ClientCredentialsTokenProvider.HttpClientName,
+                client => client.Timeout = ClientCredentialsTokenProvider.RequestTimeout);
+        }
+
+        return services;
+    }
 
     /// <summary>
     /// Configures which inbound headers are propagated to outbound clients (Authorization and

@@ -18,6 +18,7 @@ using Ardalis.GuardClauses;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using TrackHub.Router.Domain.Enumerators;
+using TrackHub.Router.Domain.Exceptions;
 using TrackHub.Router.Domain.Models;
 using TrackHub.Router.Domain.Extensions;
 using TrackHub.Router.Application.DevicePositions.Events;
@@ -76,10 +77,11 @@ public class GetPositionsByOperatorCommandHandler(
             await reader.Init(request.Operator.Credential.Value.Decrypt(EncryptionKey), cancellationToken);
             // The device→transporter catalog changes rarely; serve it from a short-TTL cache so the
             // 10-second position loop does not re-fetch it from Manager every cycle per operator
-            // (router-audit A-12). The device-sync loop invalidates it on catalog changes.
+            // (router-audit A-12). A device sync moves LastDeviceSyncAt, which invalidates it.
             var devices = await deviceCatalogCache.GetOrLoadAsync(
                 request.Settings.AccountId,
                 request.Operator.OperatorId,
+                request.Operator.LastDeviceSyncAt,
                 ct => deviceReader.GetDeviceTransporterAsync(request.Settings.AccountId, request.Operator.OperatorId, ct),
                 cancellationToken);
             var (positions, errorCode, errorMessage) = await TryGetPositionsAsync(reader, request.Operator, devices, cancellationToken);
@@ -117,6 +119,12 @@ public class GetPositionsByOperatorCommandHandler(
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             throw;
+        }
+        catch (PartialPositionReadException ex)
+        {
+            logger.LogWarning(ex, "Provider position fetch was partial for operator {OperatorId} (account {AccountId}).",
+                @operator.OperatorId, @operator.AccountId);
+            return (ex.Positions, PartialPositionReadException.Code, ex.Message);
         }
         catch (Exception ex)
         {

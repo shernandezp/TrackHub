@@ -33,9 +33,10 @@ public sealed class TripDetailReport(ITripReportReader reader) : IReport
         await reader.EnsureTripManagementFeatureAsync(cancellationToken);
 
         var transporterId = filters.GetGuid(FilterNames.Transporter);
+        var window = ReportCalendar.Window(filters);
 
         var stops = await reader.GetTripStopsAsync(
-            filters.GetDate(FilterNames.From), filters.GetDate(FilterNames.To), transporterId, driverId: null, cancellationToken);
+            window.From, window.To, transporterId, driverId: null, cancellationToken);
 
         var rows = stops
             .OrderBy(s => s.TripCode, StringComparer.OrdinalIgnoreCase)

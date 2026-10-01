@@ -14,10 +14,11 @@
 *  limitations under the License.
 */
 
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import Table from 'controls/Tables/Table';
+import ServerPagination from 'controls/Tables/ServerPagination';
 import TableAccordion from 'controls/Accordions/TableAccordion';
 import ArgonBadge from 'components/ArgonBadge';
 import ArgonBox from 'components/ArgonBox';
@@ -25,7 +26,6 @@ import ArgonTypography from 'components/ArgonTypography';
 import { getAccountByUser } from 'api/manager/accounts';
 import { getAlertEvents } from 'api/manager/alertEvents';
 import type { AlertEvent } from 'api/manager/alertEvents';
-import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from 'utils/dateUtils';
 
 function TextCell({ children }: { children?: ReactNode }) {
@@ -47,36 +47,59 @@ function severityColor(severity: string): BadgeColor {
   }
 }
 
+const PAGE_SIZE = 20;
+
+// The GPS integration's own alert types; open ones are counted and paged by the server.
+const GPS_ALERT_EVENT_TYPES = [
+  'GpsCredentialExpiring',
+  'GpsOperatorPositionSyncFailed',
+  'GpsOperatorDeviceSyncFailed',
+  'GpsOperatorOffline',
+  'GpsDeviceDetected',
+  'GpsDeviceRemoved',
+  'GpsDuplicateDeviceIdentifier',
+  'GpsDuplicateTransporterName',
+  'GpsAutoAssignGroupAmbiguous',
+];
+
 function OpenAlerts() {
   const { t } = useTranslation();
-  const { setLoading } = useContext(LoadingContext);
   const [expanded, setExpanded] = useState(false);
   const [alerts, setAlerts] = useState<AlertEvent[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [page, setPage] = useState(0);
+  const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const loaded = useRef(false);
+
+  const load = useCallback(async (targetPage: number) => {
+    try {
+      const account = await getAccountByUser();
+      if (!account?.accountId) {
+        setError(t('gpsIntegration.errors.alertsLoad'));
+        return;
+      }
+      const result = await getAlertEvents(
+        account.accountId,
+        { status: 'Open', eventTypes: GPS_ALERT_EVENT_TYPES },
+        targetPage * PAGE_SIZE,
+        PAGE_SIZE
+      );
+      setAlerts(result.items);
+      setTotalCount(result.totalCount);
+      setPage(targetPage);
+      setError(null);
+    } catch {
+      setError(t('gpsIntegration.errors.alertsLoad'));
+    } finally {
+      setLoaded(true);
+    }
+  }, [t]);
 
   useEffect(() => {
-    if (expanded && !loaded.current) {
-      loaded.current = true;
-      (async () => {
-        setLoading(true);
-        try {
-          const account = await getAccountByUser();
-          if (!account?.accountId) {
-            setError(t('gpsIntegration.errors.alertsLoad'));
-            return;
-          }
-          const data = await getAlertEvents(account.accountId, 0, 200);
-          const gpsAlerts = (data || [])
-            .filter(a => (a.sourceModule || '').toUpperCase().startsWith('GPS'))
-            .slice(0, 20);
-          setAlerts(gpsAlerts);
-        } catch {
-          setError(t('gpsIntegration.errors.alertsLoad'));
-        } finally { setLoading(false); }
-      })();
+    if (expanded && !loaded) {
+      void load(0);
     }
-  }, [expanded]);
+  }, [expanded, loaded, load]);
 
   const rows = alerts.map(a => ({
     eventType: <TextCell>{a.eventType}</TextCell>,
@@ -93,7 +116,7 @@ function OpenAlerts() {
     <TableAccordion sectionKey="gps-open-alerts" title={t('gpsIntegration.sections.openAlerts')} expanded={expanded} setExpanded={setExpanded}>
       {error
         ? <ArgonBox><ArgonTypography variant="button" color="error">{error}</ArgonTypography></ArgonBox>
-        : alerts.length === 0 && loaded.current
+        : alerts.length === 0 && loaded
           ? <ArgonTypography variant="caption" color="secondary">{t('gpsIntegration.empty.alerts')}</ArgonTypography>
           : <Table
               columns={[
@@ -106,8 +129,12 @@ function OpenAlerts() {
               ]}
               rows={rows}
               selectedField="eventType"
+              serverPaged
             />
       }
+      {totalCount > PAGE_SIZE && (
+        <ServerPagination page={page} pageSize={PAGE_SIZE} totalCount={totalCount} pageLength={alerts.length} onPageChange={(next) => void load(next)} />
+      )}
     </TableAccordion>
   );
 }

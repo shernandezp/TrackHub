@@ -22,6 +22,7 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { RequestOptions } from 'api/core/errors';
 import { fetchAllPages } from 'api/core/paging';
 import type { ListParams, Page } from 'api/core/paging';
 import type {
@@ -59,13 +60,14 @@ function positiveIntOr(value: unknown, fallback: number): number {
 }
 
 export async function getOperatorsByCurrentAccount(
-  params: ListParams = {}
+  params: ListParams = {},
+  options?: RequestOptions
 ): Promise<OperatorsPage> {
   const data = await executeGraphQL('manager', GetOperatorsByCurrentAccountDocument, {
     skip: params.skip ?? null,
     take: params.take ?? null,
     search: params.search ?? null,
-  });
+  }, options);
   return data.operatorsByCurrentAccount;
 }
 
@@ -73,18 +75,18 @@ export async function getOperatorsByCurrentAccount(
  * Minimal id + name list for the dashboard and report operator filters. Unpaged
  * by design — the server raises past its own ceiling rather than truncating.
  */
-export async function getOperatorLookup(): Promise<OperatorLookup[]> {
-  const data = await executeGraphQL('manager', GetOperatorLookupDocument);
+export async function getOperatorLookup(options?: RequestOptions): Promise<OperatorLookup[]> {
+  const data = await executeGraphQL('manager', GetOperatorLookupDocument, undefined, options);
   return data.operatorLookup;
 }
 
 /** Operator page (name map + sync metadata) for the GPS-integration screens. */
-export async function getGpsOperators(params: ListParams = {}): Promise<GpsOperatorsPage> {
+export async function getGpsOperators(params: ListParams = {}, options?: RequestOptions): Promise<GpsOperatorsPage> {
   const data = await executeGraphQL('manager', GetGpsOperatorsDocument, {
     skip: params.skip ?? null,
     take: params.take ?? null,
     search: params.search ?? null,
-  });
+  }, options);
   return data.operatorsByCurrentAccount;
 }
 
@@ -93,8 +95,8 @@ export async function getGpsOperators(params: ListParams = {}): Promise<GpsOpera
  * screens filter and label rows by operator, and the lookup carries only
  * id + name, so the full record set is genuinely required here.
  */
-export async function getAllGpsOperators(): Promise<GpsOperator[]> {
-  return fetchAllPages(async (skip, take) => (await getGpsOperators({ skip, take })).items);
+export async function getAllGpsOperators(options?: RequestOptions): Promise<GpsOperator[]> {
+  return fetchAllPages(async (skip, take) => (await getGpsOperators({ skip, take }, options)).items);
 }
 
 export async function createOperator(operator: OperatorDtoInput): Promise<Operator> {
@@ -126,6 +128,7 @@ export async function updateOperator(
     contactName: operator.contactName ?? null,
     protocolTypeId: operator.protocolTypeId,
     syncIntervalMinutes: positiveIntOr(operator.syncIntervalMinutes, DEFAULT_SYNC_INTERVAL_MINUTES),
+    expectedVersion: operator.expectedVersion ?? null,
   };
   const data = await executeGraphQL('manager', UpdateOperatorDocument, { id: operatorId, operator: input });
   return data.updateOperator;

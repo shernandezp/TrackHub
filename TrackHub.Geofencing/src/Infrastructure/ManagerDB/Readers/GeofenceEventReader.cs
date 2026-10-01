@@ -34,10 +34,20 @@ public sealed class GeofenceEventReader(IApplicationDbContext context) : IGeofen
                         evt.EventDateTime,
                         evt.DepartureTimestamp,
                         evt.Latitude,
-                        evt.Longitude);
+                        evt.Longitude,
+                        evt.OutsideSinceAt);
 
         return await query.ToListAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyDictionary<Guid, DateTimeOffset>> GetDetectionCursorsAsync(
+        IReadOnlyCollection<Guid> transporterIds,
+        Guid accountId,
+        CancellationToken cancellationToken)
+        => await context.TransporterDetectionCursors
+            .Where(c => transporterIds.Contains(c.TransporterId) && c.AccountId == accountId)
+            .ToDictionaryAsync(c => c.TransporterId, c => c.LastFixAt, cancellationToken);
+
 
     public async Task<IReadOnlyCollection<GeofenceEventVm>> GetOpenEventsForTransporterAsync(
         Guid transporterId,
@@ -53,7 +63,8 @@ public sealed class GeofenceEventReader(IApplicationDbContext context) : IGeofen
                         evt.EventDateTime,
                         evt.DepartureTimestamp,
                         evt.Latitude,
-                        evt.Longitude);
+                        evt.Longitude,
+                        evt.OutsideSinceAt);
 
         return await query.ToListAsync(cancellationToken);
     }

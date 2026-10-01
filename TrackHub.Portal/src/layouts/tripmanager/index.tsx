@@ -14,7 +14,7 @@
 *  limitations under the License.
 */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Grid from '@mui/material/Grid';
 import Icon from '@mui/material/Icon';
@@ -41,7 +41,10 @@ import { usePermissions } from 'context/permissions';
 import { PermissionResources, PermissionActions } from 'constants/permissions';
 import { useAccountByUser } from 'queries/accounts';
 import { useTransporterLookupByUser } from 'queries/transporters';
-import { useDriverLookup, useDriverNames } from 'queries/drivers';
+import { useDriverNames, useDriverSearchOptions } from 'queries/drivers';
+import SearchSelect from 'edition/SearchSelect';
+import type { SearchOption } from 'edition/SearchSelect';
+import { useUserTransporterOptions } from 'edition/pickerOptions';
 import { usePointOfInterestLookup } from 'queries/pointsOfInterest';
 import { useAllGeofences } from 'queries/geofences';
 import {
@@ -64,12 +67,12 @@ import {
   useUpdateDeliveryOutcome,
   useDeleteDelivery,
   useRecordProofOfDelivery,
-  useSetTransporterTollClass,
   useDeclareTripInTransit,
 } from 'queries/trips';
 import { useUploadDocument, useRefreshDocument } from 'queries/documents';
 import { getAccountSettings } from 'api/manager/settings';
-import { notifyApiError } from 'api/core/errors';
+import { useFeatures } from 'context/features';
+import { isTransportFailure, notifyApiError } from 'api/core/errors';
 import { formatDateTime } from 'utils/dateUtils';
 import { MAP_PROVIDERS } from 'controls/Maps/core/MapProviderContext';
 import type { MapProvider } from 'controls/Maps/core/MapProviderContext';
@@ -80,7 +83,6 @@ import type {
   TripStopDtoInput,
   TripDtoInput,
   TripDelivery,
-  TransporterTollClass,
   Trip,
 } from 'api/tripManagement/trips';
 import {
@@ -90,7 +92,6 @@ import {
   buildDeliveryPayload,
   buildPodPayload,
   buildStopPayloadFromDestination,
-  buildTollClassVariables,
   DEFAULT_ARRIVAL_RADIUS_METERS,
   deriveTripType,
   destinationsFromStops,
@@ -98,7 +99,6 @@ import {
   normalizeStopCity,
   isStopCityWithinLimit,
   returnToOriginStop,
-  hasException,
   normalizeStopActivity,
   STOP_CITY_MAX_LENGTH,
   TRIP_EXCEPTIONS,
@@ -111,9 +111,7 @@ import type {
   DeliveryStatus,
   PodAttachment,
   PodFormValues,
-  TollClassFormValues,
   TripDestinationDraft,
-  TripException,
 } from './tripWriteForms';
 import TripDialog from './components/TripDialog';
 import type { TripFormValues } from './components/TripDialog';
@@ -127,20 +125,11 @@ import TripDetail from './components/TripDetail';
 import DeliveryDialog from './components/DeliveryDialog';
 import DeliveryOutcomeDialog from './components/DeliveryOutcomeDialog';
 import PodDialog from './components/PodDialog';
-import TollClassDialog from './components/TollClassDialog';
 import TripImportDialog from './components/TripImportDialog';
 import { useDebouncedValue } from 'utils/useDebouncedValue';
 
 const PAGE_SIZE = 10;
 const ALL = 'all';
-
-/**
- * How many trips the board scans when an exception filter is on. Exceptions are derived
- * client-side, so the wider window is what makes the answer trustworthy; it is bounded
- * because "every trip ever" is not a board, and the other filters (status, unit, dates)
- * still narrow it first.
- */
-const EXCEPTION_SCAN_SIZE = 200;
 
 /**
  * Feed for the create dialog's "reuse a previous route" picker. A stable
@@ -205,8 +194,8 @@ function TripManager() {
   const [page, setPage] = useState(0);
   const [status, setStatus] = useState<string>(ALL);
   const [exception, setException] = useState<string>(ALL);
-  const [transporterFilter, setTransporterFilter] = useState<string>(ALL);
-  const [driverFilter, setDriverFilter] = useState<string>(ALL);
+  const [transporterFilter, setTransporterFilter] = useState<SearchOption | null>(null);
+  const [driverFilter, setDriverFilter] = useState<SearchOption | null>(null);
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   // The box updates as the user types; the query waits for them to stop. Wired straight through, a
@@ -217,42 +206,33 @@ function TripManager() {
   // A narrower search can leave the current page past the end of the new result set.
   useEffect(() => { setPage(0); }, [search]);
 
-  const filteringExceptions = exception !== ALL;
-
   const calendar = useAccountCalendar();
   const filters = useMemo<TripListFilters>(
     () => ({
       statuses: status === ALL ? null : [status],
       from: calendar.dayStartIso(from),
       to: calendar.dayEndIso(to),
-      transporterId: transporterFilter === ALL ? null : transporterFilter,
-      driverId: driverFilter === ALL ? null : driverFilter,
+      transporterId: transporterFilter?.value ?? null,
+      driverId: driverFilter?.value ?? null,
       search: search.trim() || null,
-      // Exceptions are DERIVED from the phase and the measured timestamps, so the server
-      // cannot filter on them in SQL — the phase does not exist until the rows are read.
-      // Filtering ten rows at a time would therefore be a trap: a dispatcher asking "what
-      // is overdue?" would be told "nothing" while page two was full of it. So the
-      // exception view fetches one wide page and pages through it here instead.
-      skip: filteringExceptions ? 0 : page * PAGE_SIZE,
-      take: filteringExceptions ? EXCEPTION_SCAN_SIZE : PAGE_SIZE,
+      exception: exception === ALL ? null : exception,
+      skip: page * PAGE_SIZE,
+      take: PAGE_SIZE,
     }),
-    [calendar, status, from, to, transporterFilter, driverFilter, search, page, filteringExceptions]
+    [calendar, status, from, to, transporterFilter, driverFilter, search, page, exception]
   );
 
   /* --------------------------------------------------------------- data */
 
   const accountQuery = useAccountByUser();
   const accountId = accountQuery.data?.accountId;
-  // The transporter lookup carries the type columns TollClassDialog derives its
-  // transporter-TYPE list from, so the picker feed is enough — no full drain.
+  // Names the units on the board, the assignment panel and the trip dialog; the unit pickers search the server.
   const transportersQuery = useTransporterLookupByUser();
   const transporters = useMemo(() => transportersQuery.data ?? [], [transportersQuery.data]);
   // The POI lookup carries the pin colour and the popup's type/description/address
   // that RoutePlanner renders, so the picker feed is enough — no full drain.
   const poisQuery = usePointOfInterestLookup();
   const pois = useMemo(() => poisQuery.data ?? [], [poisQuery.data]);
-  const geofencesQuery = useAllGeofences(false, { active: true });
-  const geofences = useMemo(() => geofencesQuery.data ?? [], [geofencesQuery.data]);
   const vehicleClassesQuery = useTollVehicleClasses();
   const vehicleClasses = useMemo(
     () => vehicleClassesQuery.data ?? [],
@@ -263,19 +243,14 @@ function TripManager() {
   const trips = useMemo(() => tripsQuery.data?.items ?? [], [tripsQuery.data]);
   const totalCount = tripsQuery.data?.totalCount ?? 0;
 
-  // Names and ids only, under Trips/Read: the active set feeds the filter, the ids on the board
-  // resolve their names even for drivers since deactivated. The pickers search the server.
-  const activeDriversQuery = useDriverLookup();
+  // Names and ids only, under Trips/Read: the ids on the board resolve their names even for drivers
+  // since deactivated. The pickers search the server.
   const tripDriverIds = useMemo(
     () => Array.from(new Set(trips.map((trip) => trip.driverId).filter((id): id is string => !!id))),
     [trips]
   );
   const driverNamesQuery = useDriverNames(tripDriverIds);
-  const drivers = useMemo(() => {
-    const byId = new Map((activeDriversQuery.data ?? []).map((driver) => [driver.driverId, driver]));
-    for (const driver of driverNamesQuery.data ?? []) byId.set(driver.driverId, driver);
-    return Array.from(byId.values());
-  }, [activeDriversQuery.data, driverNamesQuery.data]);
+  const drivers = useMemo(() => driverNamesQuery.data ?? [], [driverNamesQuery.data]);
 
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
 
@@ -314,7 +289,6 @@ function TripManager() {
   const updateDeliveryOutcome = useUpdateDeliveryOutcome();
   const deleteDelivery = useDeleteDelivery();
   const recordPod = useRecordProofOfDelivery();
-  const setTransporterTollClass = useSetTransporterTollClass();
   const uploadDocument = useUploadDocument();
   const refreshDocument = useRefreshDocument();
 
@@ -485,6 +459,12 @@ function TripManager() {
   /* -------------------------------------------------------- stop dialog */
 
   const [stopOpen, setStopOpen] = useState(false);
+  const { isFeatureEnabled } = useFeatures();
+  const geofencesQuery = useAllGeofences(
+    { active: true },
+    { enabled: (tripOpen || stopOpen) && isFeatureEnabled('geofencing') }
+  );
+  const geofences = useMemo(() => geofencesQuery.data ?? [], [geofencesQuery.data]);
   const [placing, setPlacing] = useState(false);
   const [stopValues, stopChange, setStopValues, setStopErrors, validateStop, stopErrors] =
     useForm<StopFormValues>({});
@@ -742,53 +722,7 @@ function TripManager() {
     }
   };
 
-  /* -------------------------------------------- transporter toll classes */
-
-  const [tollClassOpen, setTollClassOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
-  const [
-    tollClassValues,
-    tollClassChange,
-    setTollClassValues,
-    setTollClassErrors,
-    ,
-    tollClassErrors,
-  ] = useForm<TollClassFormValues>({ target: 'transporterType' });
-  const [savedTollClasses, setSavedTollClasses] = useState<TransporterTollClass[]>([]);
-
-  const openTollClasses = () => {
-    setTollClassValues({ target: 'transporterType' });
-    setTollClassErrors({});
-    setTollClassOpen(true);
-  };
-
-  const saveTollClass = async () => {
-    const variables = buildTollClassVariables(tollClassValues);
-    if (!variables) {
-      setTollClassErrors({
-        transporterTypeId:
-          tollClassValues.target === 'transporterType' ? t('tolls.transporterClass.required') : undefined,
-        transporterId:
-          tollClassValues.target === 'transporter' ? t('tolls.transporterClass.required') : undefined,
-        tollVehicleClassCode: tollClassValues.tollVehicleClassCode
-          ? undefined
-          : t('tolls.transporterClass.required'),
-      });
-      return;
-    }
-    try {
-      const mapping = await setTransporterTollClass.mutateAsync(variables);
-      setSavedTollClasses((previous) => [
-        ...previous.filter(
-          (candidate) => candidate.transporterTollClassId !== mapping.transporterTollClassId
-        ),
-        mapping,
-      ]);
-      setTollClassErrors({});
-    } catch {
-      // Surfaced by the global toast.
-    }
-  };
 
   /* --------------------------------------------------- lifecycle dialogs */
 
@@ -804,10 +738,13 @@ function TripManager() {
   const declareInTransit = useDeclareTripInTransit();
   const [skipStopId, setSkipStopId] = useState<string | null>(null);
   const [skipReason, setSkipReason] = useState('');
+  const [skipEventId, setSkipEventId] = useState('');
+  // Arrive and depart reuse one clientEventId until the attempt succeeds, so a retry stays idempotent.
+  const stopAttempt = useRef<{ key: string; clientEventId: string; occurredAt: string } | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
 
   const runLifecycle = (action: 'start' | 'pause' | 'resume') => {
-    if (!selectedTripId) return;
+    if (!selectedTripId || lifecycle.isPending) return;
     lifecycle.mutate({ action, tripId: selectedTripId });
   };
 
@@ -816,15 +753,24 @@ function TripManager() {
     if (action === 'skip') {
       setSkipStopId(tripStopId);
       setSkipReason('');
+      setSkipEventId(newClientEventId());
       return;
     }
-    stopProgress.mutate({
-      action,
-      tripId: selectedTripId,
-      tripStopId,
-      occurredAt: new Date().toISOString(),
-      clientEventId: newClientEventId(),
-    });
+    if (stopProgress.isPending) return;
+    const key = `${action}:${tripStopId}`;
+    if (stopAttempt.current?.key !== key) {
+      stopAttempt.current = { key, clientEventId: newClientEventId(), occurredAt: new Date().toISOString() };
+    }
+    const { clientEventId, occurredAt } = stopAttempt.current;
+    stopProgress.mutate(
+      { action, tripId: selectedTripId, tripStopId, occurredAt, clientEventId },
+      {
+        // Only a lost request is retried with the same id and time; an answered one starts afresh.
+        onSettled: (_data, error) => {
+          if (!error || !isTransportFailure(error)) stopAttempt.current = null;
+        },
+      }
+    );
   };
 
   /* ---------------------------------------------------------------- board */
@@ -838,27 +784,6 @@ function TripManager() {
       })),
     ],
     [t]
-  );
-
-  const transporterOptions = useMemo(
-    () => [
-      { value: ALL, label: t('trips.allTransporters') },
-      ...transporters.map((transporter) => ({
-        value: transporter.transporterId,
-        label: transporter.name,
-      })),
-    ],
-    [transporters, t]
-  );
-
-  const driverOptions = useMemo(
-    () => [
-      { value: ALL, label: t('trips.allDrivers') },
-      ...drivers
-        .filter((driver) => driver.active)
-        .map((driver) => ({ value: driver.driverId, label: driver.name })),
-    ],
-    [drivers, t]
   );
 
   const exceptionOptions = useMemo(
@@ -907,20 +832,6 @@ function TripManager() {
             ? 'success'
             : 'secondary';
 
-  /**
-   * The exception filter runs here, over the wide window {@link EXCEPTION_SCAN_SIZE}
-   * fetched for it, and then this component pages the survivors ten at a time.
-   */
-  const matchingTrips = useMemo(
-    () => (filteringExceptions ? trips.filter((trip) => hasException(trip, exception as TripException)) : trips),
-    [trips, exception, filteringExceptions]
-  );
-
-  const visibleTrips = useMemo(
-    () => (filteringExceptions ? matchingTrips.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE) : matchingTrips),
-    [matchingTrips, page, filteringExceptions]
-  );
-
   // The board spans the FULL width, so it can afford the columns a dispatcher
   // actually scans by — who is carrying it and who is driving — without the
   // crowding that made a one-third-width board collide with itself.
@@ -939,7 +850,7 @@ function TripManager() {
     { name: 'id' },
   ];
 
-  const rows = visibleTrips.map((trip) => ({
+  const rows = trips.map((trip) => ({
     code: <Name name={trip.code} />,
     customer: <Description description={trip.customerName ?? '-'} />,
     transporter: (
@@ -989,9 +900,7 @@ function TripManager() {
     id: trip.tripId,
   }));
 
-  // With an exception filter on, the counter has to describe what SURVIVED the filter,
-  // not what the server returned — otherwise it reports "1–10 of 200" over four rows.
-  const rowTotal = filteringExceptions ? matchingTrips.length : totalCount;
+  const rowTotal = totalCount;
 
   // Deleting the last row of a page shrinks the total below the page start.
   useEffect(() => {
@@ -1046,26 +955,34 @@ function TripManager() {
                   setException(String(value));
                 }}
               />
-              <CompactSelect
-                name="transporter"
-                value={transporterFilter}
-                options={transporterOptions}
-                label={t('trips.filterTransporter')}
-                onChange={(_, value) => {
-                  setPage(0);
-                  setTransporterFilter(String(value));
-                }}
-              />
-              <CompactSelect
-                name="driver"
-                value={driverFilter}
-                options={driverOptions}
-                label={t('trips.filterDriver')}
-                onChange={(_, value) => {
-                  setPage(0);
-                  setDriverFilter(String(value));
-                }}
-              />
+              <ArgonBox width="220px">
+                <SearchSelect
+                  id="transporterFilter"
+                  label={t('trips.filterTransporter')}
+                  value={transporterFilter?.value ?? null}
+                  valueLabel={transporterFilter?.label}
+                  onChange={(option) => {
+                    setPage(0);
+                    setTransporterFilter(option);
+                  }}
+                  useOptions={useUserTransporterOptions}
+                  placeholder={t('trips.allTransporters')}
+                />
+              </ArgonBox>
+              <ArgonBox width="220px">
+                <SearchSelect
+                  id="driverFilter"
+                  label={t('trips.filterDriver')}
+                  value={driverFilter?.value ?? null}
+                  valueLabel={driverFilter?.label}
+                  onChange={(option) => {
+                    setPage(0);
+                    setDriverFilter(option);
+                  }}
+                  useOptions={useDriverSearchOptions}
+                  placeholder={t('trips.allDrivers')}
+                />
+              </ArgonBox>
               <ArgonBox width="190px">
                 <CustomTextField
                   margin="none"
@@ -1107,18 +1024,6 @@ function TripManager() {
                 onClick={() => setImportOpen(true)}
               >
                 <Icon>upload_file</Icon>&nbsp;{t('trips.import.action')}
-              </ArgonButton>
-              {/* Account-scoped transporter → toll-class mapping. It sits here,
-                  not in the SuperAdministrator toll catalog: it is tenant data
-                  under Resources.Trips/Edit, and this is the only route already
-                  gated by the trip-management feature key (spec 11 §4, §7.6). */}
-              <ArgonButton
-                variant="outlined"
-                color="dark"
-                size="small"
-                onClick={openTollClasses}
-              >
-                <Icon>local_shipping</Icon>&nbsp;{t('tolls.transporterClass.action')}
               </ArgonButton>
             </ArgonBox>
           </Grid>
@@ -1276,7 +1181,7 @@ function TripManager() {
                     </ArgonTypography>
                     {detail.trip.status === 'Created' && (
                       <>
-                        <ArgonButton variant="outlined" color="success" size="small" onClick={() => runLifecycle('start')}>
+                        <ArgonButton variant="outlined" color="success" size="small" disabled={lifecycle.isPending} onClick={() => runLifecycle('start')}>
                           <Icon>play_arrow</Icon>&nbsp;{t('trips.actions.start')}
                         </ArgonButton>
                         {/* The trip whose truck left before anyone wrote it down.
@@ -1296,12 +1201,12 @@ function TripManager() {
                       </>
                     )}
                     {running && (
-                      <ArgonButton variant="outlined" color="warning" size="small" onClick={() => runLifecycle('pause')}>
+                      <ArgonButton variant="outlined" color="warning" size="small" disabled={lifecycle.isPending} onClick={() => runLifecycle('pause')}>
                         <Icon>pause</Icon>&nbsp;{t('trips.actions.pause')}
                       </ArgonButton>
                     )}
                     {detail.trip.status === 'Paused' && (
-                      <ArgonButton variant="outlined" color="info" size="small" onClick={() => runLifecycle('resume')}>
+                      <ArgonButton variant="outlined" color="info" size="small" disabled={lifecycle.isPending} onClick={() => runLifecycle('resume')}>
                         <Icon>play_arrow</Icon>&nbsp;{t('trips.actions.resume')}
                       </ArgonButton>
                     )}
@@ -1441,6 +1346,7 @@ function TripManager() {
                     mapKey={mapSettings.mapsKey}
                     darkMode={darkMode}
                     onStopAction={handleStopAction}
+                    stopActionPending={stopProgress.isPending}
                     canRecordProgress={!!running}
                     onRecordPod={openPod}
                     onAddDelivery={(tripStopId) => openDelivery(tripStopId)}
@@ -1555,19 +1461,6 @@ function TripManager() {
 
       <TripImportDialog open={importOpen} setOpen={setImportOpen} />
 
-      <TollClassDialog
-        open={tollClassOpen}
-        setOpen={setTollClassOpen}
-        handleSubmit={saveTollClass}
-        values={tollClassValues}
-        handleChange={tollClassChange}
-        errors={tollClassErrors}
-        transporters={transporters}
-        vehicleClasses={vehicleClasses}
-        savedMappings={savedTollClasses}
-        saving={setTransporterTollClass.isPending}
-      />
-
       <ConfirmDialog
         title={t('trips.deleteTitle')}
         message={t('trips.deleteMessage')}
@@ -1588,10 +1481,12 @@ function TripManager() {
         setOpen={() => setReasonAction(null)}
         handleSave={async () => {
           if (!selectedTripId || !reasonAction || !reason.trim()) return;
-          await lifecycle
-            .mutateAsync({ action: reasonAction, tripId: selectedTripId, reason })
-            .catch(() => undefined);
-          setReasonAction(null);
+          try {
+            await lifecycle.mutateAsync({ action: reasonAction, tripId: selectedTripId, reason });
+            setReasonAction(null);
+          } catch {
+            // Surfaced by the global toast; the dialog keeps the reason for a retry.
+          }
         }}
       >
         <ArgonTypography variant="caption" color="secondary">
@@ -1618,10 +1513,12 @@ function TripManager() {
         setOpen={setCompleteOpen}
         handleSave={async () => {
           if (!selectedTripId) return;
-          await lifecycle
-            .mutateAsync({ action: 'complete', tripId: selectedTripId, force: forceComplete })
-            .catch(() => undefined);
-          setCompleteOpen(false);
+          try {
+            await lifecycle.mutateAsync({ action: 'complete', tripId: selectedTripId, force: forceComplete });
+            setCompleteOpen(false);
+          } catch {
+            // Surfaced by the global toast; the dialog stays open for a retry.
+          }
         }}
       >
         <ArgonTypography variant="caption" color="secondary">
@@ -1648,10 +1545,12 @@ function TripManager() {
         setOpen={setInTransitOpen}
         handleSave={async () => {
           if (!selectedTripId) return;
-          await declareInTransit
-            .mutateAsync({ tripId: selectedTripId, startedAt: toIso(inTransitStartedAt) })
-            .catch(() => undefined);
-          setInTransitOpen(false);
+          try {
+            await declareInTransit.mutateAsync({ tripId: selectedTripId, startedAt: toIso(inTransitStartedAt) });
+            setInTransitOpen(false);
+          } catch {
+            // Surfaced by the global toast; the dialog stays open for a retry.
+          }
         }}
       >
         <ArgonTypography variant="caption" color="secondary">
@@ -1675,17 +1574,19 @@ function TripManager() {
         setOpen={() => setSkipStopId(null)}
         handleSave={async () => {
           if (!selectedTripId || !skipStopId || !skipReason.trim()) return;
-          await stopProgress
-            .mutateAsync({
+          try {
+            await stopProgress.mutateAsync({
               action: 'skip',
               tripId: selectedTripId,
               tripStopId: skipStopId,
               occurredAt: new Date().toISOString(),
-              clientEventId: newClientEventId(),
+              clientEventId: skipEventId,
               reason: skipReason,
-            })
-            .catch(() => undefined);
-          setSkipStopId(null);
+            });
+            setSkipStopId(null);
+          } catch {
+            // Surfaced by the global toast; the same clientEventId is reused on retry.
+          }
         }}
       >
         <ArgonTypography variant="caption" color="secondary">

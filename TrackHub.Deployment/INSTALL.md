@@ -117,6 +117,13 @@ outside PostgreSQL: back it up separately.
 
 > **Note:** Ubuntu 24.04.4 LTS is the default and recommended operating system. Other Debian-based distributions may work but are not officially tested.
 
+Every backend service has a memory ceiling, `<SERVICE>_MEMORY_LIMIT` in `.env` (reservations:
+`<SERVICE>_MEMORY_RESERVATION`). The defaults add up to about 3.7 GB (Reporting 768 MB for
+exports), leaving room for the OS, Docker, nginx and the portal on an 8 GB host with PostgreSQL
+elsewhere. Keep the sum of the limits below the host's
+RAM minus about 1.5 GB: a .NET service caps its heap at 75% of its limit, but the kernel kills the
+largest process when the host itself runs out, and a host without swap has no slack.
+
 ### Software Requirements
 
 | Software | Minimum Version | Recommended |
@@ -575,9 +582,11 @@ REACT_APP_AUTHORIZATION_ENDPOINT=https://trackhub.example.com/Identity/authorize
 # ... etc
 ```
 
-`DB_CONNECTION_TELEMETRY` and the four `*_CLIENT_SECRET` keys have **no defaults** in
+`DB_CONNECTION_TELEMETRY` and the `*_CLIENT_SECRET` keys have **no defaults** in
 `docker-compose.yml`. Omitting them yields a Telemetry service with an empty connection
-string and four service clients that cannot authenticate.
+string and service clients that cannot authenticate. `deploy.sh` and
+`./scripts/sync-config.sh validate` check the same list (`scripts/required-config.sh`) and refuse
+to continue while any of those keys is missing or still a placeholder.
 
 ### Step 6: SSL and OpenIddict Certificates
 
@@ -647,7 +656,11 @@ rm key.pem cert.pem
 # CERTIFICATE_PASSWORD=your-secure-password
 ```
 
-**Note:** The `generate-certs.sh` script creates both SSL and OpenIddict certificates in one step.
+**Note:** `generate-certs.sh` obtains the SSL certificate and creates the OpenIddict certificate
+when none exists. It needs `CERTIFICATE_PASSWORD` in `.env` and keeps an existing
+`certificate.pfx` (checking that the password opens it), because a new signing certificate
+invalidates every token and signs every user out. Pass `--rotate-openiddict` to replace it on
+purpose.
 
 ### Step 7: Configure OAuth Clients
 
@@ -724,11 +737,10 @@ docker compose logs -f
 
 ### Step 9: Initialize Databases
 
-The database initialization container runs automatically on first deployment. Monitor its progress:
-
-```bash
-docker logs -f trackhub-db-init
-```
+`deploy.sh` runs `db-init` on every deploy, as a one-off container, while the previous release is
+still serving; only when it succeeds is the stack stopped and restarted on the new images, so a
+failed seed leaves the running deployment in place. Its output streams into the deploy log. It
+refuses to run without `config/clients.json`.
 
 ### Step 10: Sync User and Account IDs
 
@@ -1678,11 +1690,13 @@ Non-technical users can check the same signals without a shell — and without s
 ### Backup Configuration
 
 ```bash
-# Create backup
 ./scripts/backup.sh
-
-# Backups are stored in deployment/backups/
 ```
+
+Archives land in `backups/`, readable by their owner only: `.env`, `config/`, `certificates/`
+(including the OpenIddict signing certificate), `nginx/` and `generated/`, plus the
+manager's `documents` volume when documents are stored on the local file system. A missing piece
+fails the backup instead of producing a partial archive.
 
 ### Database Backup & Restore
 
@@ -1728,7 +1742,7 @@ the image tag on disk cannot tell you what a browser actually loaded:
   under the bookmark hint. This page needs **no sign-in**, which is what makes it the check
   to use during an update window.
 
-The version comes from `TrackHub/package.json` and the timestamp from the moment
+The version comes from `TrackHub.Portal/package.json` and the timestamp from the moment
 `vite build` ran, so **two builds of the same version are still distinguishable** — you do
 not have to bump `package.json` to tell one deployment apart from another.
 
@@ -1827,9 +1841,10 @@ Notes that matter when the rolled-back service is the frontend:
   schema — usually tolerable (EF ignores columns it does not know) but not guaranteed. For a
   release that added a migration, restore from `backup-database.sh` if the schema itself has
   to go back.
-- **Configuration is not rolled back.** `generated/appsettings.*.json` are produced from
-  `.env` by `sync-config.sh`; an older image starting against newer config is still reading
-  the newer config.
+- **Configuration travels with the image, `.env` does not.** Tagging a service (deploys tag
+  `:previous`) saves its `generated/appsettings.<service>.json` under `generated/releases/`, and
+  rolling back restores the one saved with that tag. `.env` itself is not rolled back: the next
+  `sync-config.sh` regenerates from it.
 - **Seed data is not rolled back.** `db-init` seeds idempotently and only ever adds.
 
 ### Retention
@@ -1838,16 +1853,19 @@ Purging lives in the database. Nothing inside the services deletes aged rows, so
 scheduled — pgAgent, cron, Windows Task Scheduler or your own runner — or the tables grow forever.
 
 ```bash
-psql -d TrackHub     -c "SELECT * FROM ops.purge_all();"
+psql -d TrackHub     -c "CALL ops.run_purge();"
 psql -d TrackHubLogs -c "SELECT ops.purge_logs();"
 ```
 
-Install or update them with `scripts/sql/purge-functions.sql` and
-`scripts/sql/purge-functions-logs.sql`; both are idempotent.
+db-init installs both files on every deploy (`scripts/sql/purge-functions.sql` and
+`scripts/sql/purge-functions-logs.sql`, both idempotent); scheduling them is yours.
 
-`ops.purge_all()` returns a row per task with the number of rows affected, and covers position
+`ops.run_purge()` runs every task in its own transaction and reports each one: a task that fails
+is logged as a warning and the rest still run. `ops.purge_all()` does the same work in one
+transaction and returns a row per task, for an ad-hoc run. Together they cover position
 history, monthly partition maintenance, background job runs, resolved alert events, audit events,
-notification deliveries, API usage hours and trip events. Daily is enough.
+notification deliveries, API usage hours, trip events, operator sync runs and operator health
+checks. Daily is enough.
 
 Each task is also callable on its own, with the retention window as an argument:
 
@@ -1856,13 +1874,15 @@ SELECT ops.purge_audit_events(now(), 365);
 SELECT ops.maintain_position_partitions();
 ```
 
-Defaults are 30 days for position history and logs, 90 for job runs and deliveries, 180 for
-resolved alert events, 400 for API usage hours, and 730 for audit events and trip events.
-Position history is per account: the `gps.positionHistory` entitlement's
-`configurationJson.retentionDays` overrides the default for that tenant.
+Defaults are 30 days for position history, logs and operator health checks, 90 for job runs,
+deliveries and operator sync runs, 180 for resolved alert events, 400 for API usage hours, and
+730 for audit events and trip events. Position history is per account: the
+`gps.positionHistory` entitlement's `configurationJson.retentionDays` overrides the default for
+that tenant.
 
 What each task deliberately keeps: failed job runs and the newest run per job key, alert events a
-notification delivery still references, and events of trips that have not reached a terminal status.
+notification delivery still references, events of trips that have not reached a terminal status,
+and the newest sync run and health check per operator.
 
 `ops.maintain_position_partitions()` creates the months covering the retention window plus three
 ahead and drops whole months once the longest retention on the platform has passed them. Run it

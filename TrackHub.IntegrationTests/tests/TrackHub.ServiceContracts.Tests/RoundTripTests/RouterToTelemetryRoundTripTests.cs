@@ -97,11 +97,12 @@ public class RouterToTelemetryRoundTripTests
     }
 
     [Test]
-    public async Task GetPositionHistoryRange_RoundTripsRowsAndVariableCoercion()
+    public async Task GetPositionHistoryFeed_RoundTripsRowsAcrossPagesAndVariableCoercion()
     {
         _sender
-            .Setup(s => s.Send(It.IsAny<GetPositionHistoryRangeQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([FakeData.TelemetryHistoryRow()]);
+            .SetupSequence(s => s.Send(It.IsAny<GetPositionHistoryQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new TelemetryModels.TransporterPositionHistoryPageVm([FakeData.TelemetryHistoryRow()], true, "page-2"))
+            .ReturnsAsync(new TelemetryModels.TransporterPositionHistoryPageVm([], false, null));
 
         var reader = new PositionHistoryReader(_factory);
         var from = FakeData.Timestamp.AddHours(-2);
@@ -123,14 +124,18 @@ public class RouterToTelemetryRoundTripTests
             Assert.That(position.State, Is.EqualTo("Bogota D.C."));
         }
 
-        // The query's UUID/DateTime/Int variables must coerce into the producer's request type.
+        // The query's UUID/DateTime/Int/String variables must coerce into the producer's request type.
         _sender.Verify(s => s.Send(
-            It.Is<GetPositionHistoryRangeQuery>(q =>
+            It.Is<GetPositionHistoryQuery>(q =>
                 q.AccountId == FakeData.AccountId
                 && q.TransporterId == FakeData.TransporterId
                 && q.From == from
                 && q.To == to
-                && q.MaxPoints == 10000),
+                && q.Take == 500
+                && q.Cursor == null),
+            It.IsAny<CancellationToken>()), Times.Once);
+        _sender.Verify(s => s.Send(
+            It.Is<GetPositionHistoryQuery>(q => q.Cursor == "page-2"),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 

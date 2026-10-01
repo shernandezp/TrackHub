@@ -43,9 +43,12 @@ public class RouterToManagerContractTests
         yield return new TestCaseData("AlertEventWriter.Resolve", AlertEventWriter.ResolveAlertEventsMutation);
         yield return new TestCaseData("CredentialWriter.UpdateToken", ManagerApi.CredentialWriter.UpdateTokenMutation);
         yield return new TestCaseData("DeviceSyncWriter.Synchronize", DeviceSyncWriter.SynchronizeOperatorDevicesMutation);
+        yield return new TestCaseData("OperatorSyncBackoff.Set", OperatorSyncBackoff.SetOperatorSyncBackoffMutation);
+        yield return new TestCaseData("OperatorSyncBackoff.Clear", OperatorSyncBackoff.ClearOperatorSyncBackoffMutation);
         yield return new TestCaseData("DeviceTransporterReader.GetVisibleByOperator", DeviceTransporterReader.VisibleDeviceTransportersByOperatorQuery);
         yield return new TestCaseData("DeviceTransporterReader.GetAssignedByOperator", DeviceTransporterReader.AssignedDeviceTransportersByOperatorQuery);
         yield return new TestCaseData("DeviceTransporterReader.GetById", DeviceTransporterReader.DeviceTransporterByIdQuery);
+        yield return new TestCaseData("DeviceTransporterReader.TransporterIdsByGroup", DeviceTransporterReader.TransporterIdsByGroupQuery);
         yield return new TestCaseData("GeocodingProviderReader.GetActive", GeocodingProviderReader.ActiveGeocodingProviderQuery);
         yield return new TestCaseData("GroupVisibilityReader.Validate", GroupVisibilityReader.ValidateGroupVisibilityQuery);
         yield return new TestCaseData("OperatorReader.GetOperatorsByUser", ManagerApi.OperatorReader.OperatorsByUserQuery);

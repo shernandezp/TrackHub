@@ -14,6 +14,7 @@
 //
 
 using Common.Web.Infrastructure;
+using Common.Web.BackgroundJobs;
 using Ardalis.GuardClauses;
 using Microsoft.AspNetCore.HttpOverrides;
 using TrackHub.Security.Infrastructure;
@@ -54,7 +55,8 @@ builder.Services.AddWebServices();
 
 // Add HealthChecks
 builder.Services.AddHealthChecks()
-            .AddDbContextCheck<ApplicationDbContext>();
+            .AddDbContextCheck<ApplicationDbContext>()
+            .AddCheck<TrackHub.Security.Web.Infrastructure.OutboxHealthCheck>("outbox");
 
 builder.Services.AddTrackHubGraphQLServer<Query, Mutation>(builder.Environment.IsDevelopment());
 
@@ -75,9 +77,11 @@ builder.Services.AddHsts(options =>
 });
 
 // Drains the cross-service outbox (the user mirror and audit forwarding Security owes Manager).
-builder.Services.AddHostedService<OutboxDispatchService>();
+builder.Services.AddScheduledJob<OutboxDispatchJob>();
 
 var app = builder.Build();
+
+app.UseExceptionHandler(options => { });
 
 app.UseHeaderPropagation();
 
@@ -98,8 +102,6 @@ app.UseStaticFiles();
 // pipeline inference.
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.UseExceptionHandler(options => { });
 
 app.MapGraphQL().RequireAuthorization();
 

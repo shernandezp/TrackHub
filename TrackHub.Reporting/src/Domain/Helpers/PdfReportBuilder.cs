@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Domain.Time;
 using System.Globalization;
 using MigraDoc.DocumentObjectModel;
 using MigraDoc.DocumentObjectModel.Shapes;
@@ -83,13 +84,16 @@ public sealed class PdfReportBuilder : IPdfReportBuilder
 
         var generated = section.AddParagraph(
             $"{ReportHeaderResolver.Resolve("GeneratedAt", culture)}: " +
-            dataset.GeneratedAt.ToString("yyyy-MM-dd HH:mm", culture));
+            Local(dataset.GeneratedAt, dataset.TimeZone).ToString("yyyy-MM-dd HH:mm", culture));
         generated.Format.Font.Size = 9;
+
+        var zone = section.AddParagraph($"{ReportHeaderResolver.Resolve("TimeZone", culture)}: {dataset.TimeZone.Id}");
+        zone.Format.Font.Size = 9;
 
         foreach (var filter in dataset.AppliedFilters)
         {
             var line = section.AddParagraph(
-                $"{ReportHeaderResolver.Resolve(filter.Key, culture)}: {filter.Value}");
+                $"{ReportHeaderResolver.Resolve(filter.Key, culture)}: {(filter.Value is DateTimeOffset at ? Local(at, dataset.TimeZone).ToString("yyyy-MM-dd HH:mm", culture) : filter.Value)}");
             line.Format.Font.Size = 9;
         }
 
@@ -129,12 +133,12 @@ public sealed class PdfReportBuilder : IPdfReportBuilder
             var row = table.AddRow();
             for (var col = 0; col < columns.Count; col++)
             {
-                AddCell(row.Cells[col], columns[col], values[col], culture);
+                AddCell(row.Cells[col], columns[col], values[col], culture, dataset.TimeZone);
             }
         }
     }
 
-    private static void AddCell(Cell cell, ReportColumn column, object? value, CultureInfo culture)
+    private static void AddCell(Cell cell, ReportColumn column, object? value, CultureInfo culture, AccountTimeZone timeZone)
     {
         if (value is byte[] image)
         {
@@ -147,15 +151,18 @@ public sealed class PdfReportBuilder : IPdfReportBuilder
             return;
         }
 
-        cell.AddParagraph(FormatValue(value, column, culture));
+        cell.AddParagraph(FormatValue(value, column, culture, timeZone));
     }
 
-    private static string FormatValue(object? value, ReportColumn column, CultureInfo culture)
+    private static DateTimeOffset Local(DateTimeOffset value, AccountTimeZone timeZone) => TimeZoneInfo.ConvertTime(value, timeZone.Zone);
+
+    private static string FormatValue(object? value, ReportColumn column, CultureInfo culture, AccountTimeZone timeZone)
         => value switch
         {
             null => string.Empty,
             string s => s,
-            DateTimeOffset dto => dto.ToString("yyyy-MM-dd HH:mm", culture),
+            DateTimeOffset dto => Local(dto, timeZone).ToString("yyyy-MM-dd HH:mm", culture),
+            DateOnly date => date.ToString("yyyy-MM-dd", culture),
             DateTime dt => dt.ToString("yyyy-MM-dd HH:mm", culture),
             double d => d.ToString(NumberFormat(column), culture),
             float f => f.ToString(NumberFormat(column), culture),

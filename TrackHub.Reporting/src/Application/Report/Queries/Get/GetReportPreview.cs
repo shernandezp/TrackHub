@@ -22,6 +22,7 @@ using TrackHub.Reporting.Domain.Interfaces;
 using TrackHub.Reporting.Domain.Interfaces.Factory;
 using TrackHub.Reporting.Domain.Models;
 using TrackHub.Reporting.Domain.Options;
+using TrackHub.Reporting.Domain.Paging;
 using TrackHub.Reporting.Domain.Records;
 
 namespace TrackHub.Reporting.Application.Report.Queries.Get;
@@ -38,6 +39,7 @@ public class GetReportPreviewQueryHandler(
     IUser user,
     IReportCatalogReader catalogReader,
     IAccountFeatureReader featureReader,
+    IIdentityService identityService,
     ReportingLimitsOptions limits)
         : IRequestHandler<GetReportPreviewQuery, ReportPreviewVm>
 {
@@ -51,9 +53,12 @@ public class GetReportPreviewQueryHandler(
         var accountId = user.AccountId ?? throw new UnauthorizedAccessException();
 
         await ReportAccessGuard.EnsureAccessAsync(
-            catalogReader, featureReader, user, accountId, request.ReportCode, cancellationToken);
+            catalogReader, featureReader, identityService, user, accountId, request.ReportCode, cancellationToken);
 
-        var dataset = await factory.GetReport(request.ReportCode).GetDatasetAsync(request.Filters, cancellationToken);
+        var report = factory.GetReport(request.ReportCode);
+        var window = report.StreamsInProducerOrder ? FeedDrain.BeginPreview(limits.PreviewRows) : null;
+        var dataset = await report.GetDatasetAsync(request.Filters, cancellationToken);
+        var total = window?.TotalCount ?? dataset.RowCount;
         var culture = ReportCulture.Resolve(request.Filters.Language);
 
         var columns = dataset.Columns
@@ -62,13 +67,12 @@ public class GetReportPreviewQueryHandler(
 
         // The preview runs the same report as the export, so it must answer to the same governed
         // ceiling; without this, asking for a preview was a way around MaxExportRows entirely.
-        if (dataset.RowCount > limits.MaxExportRows)
+        if (total > limits.MaxExportRows)
         {
             throw new ReportLimitExceededException(limits.MaxExportRows);
         }
 
         var rows = dataset.Rows.Take(limits.PreviewRows).ToArray();
-        var total = dataset.RowCount;
 
         return new ReportPreviewVm(columns, rows, total, total > limits.PreviewRows);
     }

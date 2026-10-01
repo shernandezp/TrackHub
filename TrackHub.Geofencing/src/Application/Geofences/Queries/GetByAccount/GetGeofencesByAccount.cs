@@ -14,16 +14,12 @@
 //
 
 using Common.Application.Interfaces;
+using Common.Application.Paging;
 
 namespace TrackHub.Geofencing.Application.Geofences.Queries.GetByAccount;
 
-// No [Caching]: the cache key is built from request properties only and this query resolves
-// the account from the caller, so a cached page would be served across
-// accounts (never put [Caching] on per-user/per-account queries). EnableCaching stays in the
-// contract for compatibility but is inert.
 [Authorize(Resource = Resources.Geofences, Action = Actions.Read)]
 public readonly record struct GetGeofencesByAccountQuery(
-    bool EnableCaching,
     int? Skip,
     int? Take,
     short? Type,
@@ -32,17 +28,13 @@ public readonly record struct GetGeofencesByAccountQuery(
 
 public class GetGeofencesByAccountQueryHandler(IGeofenceReader reader, IUserReader userReader, IUser user, IAccountFeatureReader accountFeatureReader) : IRequestHandler<GetGeofencesByAccountQuery, GeofencesPageVm>
 {
-    private const int DefaultPageSize = 50;
-    private const int MaxPageSize = 500;
-
     private Guid UserId { get; } = Guid.TryParse(user.Id, out var userId) ? userId : throw new UnauthorizedAccessException();
     public async Task<GeofencesPageVm> Handle(GetGeofencesByAccountQuery request, CancellationToken cancellationToken)
     {
         var user = await userReader.GetUserAsync(UserId, cancellationToken);
         await accountFeatureReader.EnsureFeatureEnabledAsync(user.AccountId, FeatureKeys.Geofencing, cancellationToken);
 
-        var skip = Math.Max(request.Skip ?? 0, 0);
-        var take = Math.Clamp(request.Take ?? DefaultPageSize, 1, MaxPageSize);
+        var (skip, take) = PageRequest.Clamp(request.Skip, request.Take);
         return await reader.GetGeofencesPageAsync(
             user.AccountId, skip, take, request.Type, request.Active, request.Search, cancellationToken);
     }

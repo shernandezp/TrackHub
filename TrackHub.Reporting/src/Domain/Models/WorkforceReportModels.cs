@@ -38,14 +38,14 @@ public readonly record struct ReportDriverAssignmentVm(
 
 public readonly record struct DriverRegistryRowVm(
     string DriverName, string EmployeeCode, string DocumentType, string DocumentNumber, string Phone,
-    string LicenseNumber, DateTimeOffset? LicenseExpiresAt, string DefaultTransporterId, bool Active);
+    string LicenseNumber, DateOnly? LicenseExpiresAt, string DefaultTransporterId, bool Active);
 
 public readonly record struct QualificationExpirationRowVm(
     // `LicenseCategory` (not `Category`) because the resx key `Category` is shared with the document
     // reports and resolves to "Type"/"Tipo" — next to `QualificationType` that produced two adjacent
     // columns both headed "Type". This column carries the licence category (A1–C3 per spec 09 §6).
     string DriverName, string QualificationType, string LicenseCategory, string Number,
-    string IssuingAuthority, DateTimeOffset? IssuedAt, DateTimeOffset? ExpiresAt,
+    string IssuingAuthority, DateOnly? IssuedAt, DateOnly? ExpiresAt,
     int? DaysRemaining, string Status);
 
 public readonly record struct DriverAssignmentHistoryRowVm(

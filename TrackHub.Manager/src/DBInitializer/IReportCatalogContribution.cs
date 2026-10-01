@@ -29,4 +29,10 @@ internal interface IReportCatalogContribution
     /// report's filter definitions (seeded as JSON; drives the portal's filter form).
     /// </summary>
     IReadOnlyList<(string Code, string Description, string Category, string? RequiredFeatureKey, bool ManagerOnly, bool SupportsPdf, int SortOrder, IReadOnlyList<ReportFilterDefinition> Filters)> Reports { get; }
+
+    /// <summary>
+    /// Per report code, the "Resource/Action" grants its feeds require beyond feature and role gating: the
+    /// catalog hides a report whose grants the caller lacks, and Reporting refuses to run it.
+    /// </summary>
+    IReadOnlyDictionary<string, string[]> RequiredGrants => new Dictionary<string, string[]>();
 }

@@ -8,6 +8,7 @@ public class NotificationTemplateConfiguration : IEntityTypeConfiguration<Notifi
 {
     public void Configure(EntityTypeBuilder<NotificationTemplate> builder)
     {
+        builder.Property(x => x.Version).HasColumnName("editversion").HasConversion<long>().IsConcurrencyToken();
         builder.ToTable(name: TableMetadata.NotificationTemplate, schema: SchemaMetadata.Application);
         builder.Property(x => x.NotificationTemplateId).HasColumnName("id");
         builder.Property(x => x.AccountId).HasColumnName("accountid");

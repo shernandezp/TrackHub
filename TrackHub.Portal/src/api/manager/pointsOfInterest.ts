@@ -20,6 +20,7 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { RequestOptions } from 'api/core/errors';
 import type { ListParams, Page } from 'api/core/paging';
 import type {
   PointOfInterestItemFragment as PointOfInterestItemType,
@@ -59,13 +60,15 @@ function toPoiFields(poi: PoiFields): PoiFields {
 }
 
 export async function getPointsOfInterestByAccount(
-  params: ListParams = {}
+  params: ListParams & { active?: boolean | null } = {},
+  options?: RequestOptions
 ): Promise<PointsOfInterestPage> {
   const data = await executeGraphQL('manager', GetPointsOfInterestByAccountDocument, {
     skip: params.skip ?? null,
     take: params.take ?? null,
     search: params.search ?? null,
-  });
+    active: params.active ?? null,
+  }, options);
   return data.pointsOfInterestByAccount;
 }
 
@@ -75,8 +78,8 @@ export async function getPointsOfInterestByAccount(
  * the server raises past its ceiling rather than truncating, so the map never
  * silently drops pins.
  */
-export async function getPointOfInterestLookup(): Promise<PointOfInterestLookup[]> {
-  const data = await executeGraphQL('manager', GetPointOfInterestLookupDocument);
+export async function getPointOfInterestLookup(options?: RequestOptions): Promise<PointOfInterestLookup[]> {
+  const data = await executeGraphQL('manager', GetPointOfInterestLookupDocument, undefined, options);
   return data.pointOfInterestLookup;
 }
 

@@ -44,7 +44,24 @@ export const ERROR_CODE_I18N: Record<string, string> = {
   // picker must say why it is empty rather than silently rendering nothing.
   LOOKUP_LIMIT_EXCEEDED: 'errors.lookupLimitExceeded',
   SEEDED_CATALOG_LIMIT_EXCEEDED: 'errors.seededCatalogLimitExceeded',
+  UNPAGED_READ_LIMIT_EXCEEDED: 'errors.unpagedReadLimitExceeded',
+  FORBIDDEN: 'errors.forbidden',
+  UNAUTHORIZED: 'errors.unauthorized',
+  TOO_MANY_REQUESTS: 'errors.tooManyRequests',
+  UPSTREAM_ERROR: 'errors.upstreamError',
+  CONCURRENT_UPDATE: 'errors.concurrentUpdate',
+  INVALID_CURSOR: 'errors.invalidCursor',
+  PUBLIC_LINK_EXPIRY_TOO_LONG: 'errors.publicLinkExpiryTooLong',
+  GEOFENCE_ID_MISMATCH: 'errors.geofenceIdMismatch',
+  REPORT_WINDOW_INVALID: 'errors.reportWindowInvalid',
+  OPERATOR_NOT_FOUND: 'errors.operatorNotFound',
+  OPERATOR_DISABLED: 'errors.operatorDisabled',
+  PROVIDER_CAPABILITY_NOT_SUPPORTED: 'errors.providerCapabilityNotSupported',
+  GEOCODER_UNAVAILABLE: 'errors.geocoderUnavailable',
+  POSITION_HISTORY_LIMIT_EXCEEDED: 'errors.positionHistoryLimitExceeded',
   // TrackHub.TripManagement Domain/Constants/TripConstants.cs → TripErrorCodes
+  TRIP_NOT_FOUND: 'errors.tripNotFound',
+  TRIP_FORBIDDEN: 'errors.tripForbidden',
   TRIP_NOT_ACTIVE: 'errors.tripNotActive',
   TRIP_ALREADY_TERMINAL: 'errors.tripAlreadyTerminal',
   TRIP_MODIFIED_CONCURRENTLY: 'errors.tripModifiedConcurrently',
@@ -54,6 +71,12 @@ export const ERROR_CODE_I18N: Record<string, string> = {
   STOP_ALREADY_SKIPPED: 'errors.stopAlreadySkipped',
   TRIP_STOPS_NOT_COMPLETE: 'errors.tripStopsNotComplete',
   POD_DOCUMENT_NOT_CLEAN: 'errors.podDocumentNotClean',
+  POD_DOCUMENT_INVALID: 'errors.podDocumentInvalid',
+  POD_REQUIRED: 'errors.podRequired',
+  DELIVERY_OUTCOME_RECORDED: 'errors.deliveryOutcomeRecorded',
+  TRIP_EVENT_TIME_OUT_OF_RANGE: 'errors.tripEventTimeOutOfRange',
+  TRIP_IMPORT_INVALID_ROW: 'errors.tripImportInvalidRow',
+  TOLL_IMPORT_INVALID_ROW: 'errors.tollImportInvalidRow',
   TRIP_DUPLICATE_CODE: 'errors.tripDuplicateCode',
   TRIP_DUPLICATE_EXTERNAL_REFERENCE: 'errors.tripDuplicateExternalReference',
   TRIP_HAS_HISTORY: 'errors.tripHasHistory',
@@ -96,13 +119,29 @@ export async function extractRestErrorEntries(data: unknown): Promise<GraphQLErr
   return [];
 }
 
-
 // See fromGraphQLErrors.
 const REFUSAL_CODES = new Set(['VALIDATION_ERROR', 'CONFLICT', 'NOT_FOUND']);
 
 function refusalMessage(entry: GraphQLErrorEntry): string {
   const fieldMessages = Object.values(entry.extensions?.errors ?? {}).flat();
   return fieldMessages.length > 0 ? fieldMessages.join(' ') : (entry.message ?? 'The request could not be completed.');
+}
+
+/** Per-call transport options; React Query hands `signal` to every queryFn. */
+export interface RequestOptions {
+  signal?: AbortSignal;
+}
+
+export const REQUEST_CANCELLED_CODE = 'REQUEST_CANCELLED';
+
+// Checked against the caller's own signal as well as the axios code: the caller abandoning the
+// request is what makes it a cancellation, whatever shape the transport reports it in.
+export function isCancellation(error: unknown, signal: { readonly aborted: boolean } | undefined): boolean {
+  return signal?.aborted === true || (error as { code?: string } | null)?.code === 'ERR_CANCELED';
+}
+
+export function isRequestCancelled(error: unknown): boolean {
+  return error instanceof ApiError && error.code === REQUEST_CANCELLED_CODE;
 }
 
 /** Shown for any failure the UI has no specific explanation for. */
@@ -114,6 +153,7 @@ function logUnmappedError(detail: string): void {
     console.debug('[api] unmapped server error:', detail);
   }
 }
+
 /**
  * Normalized API failure. The api layer THROWS these; deciding what a failure
  * means (fallback value, toast, retry) belongs to the caller — usually the
@@ -170,6 +210,10 @@ export class ApiError extends Error {
       status,
       graphQLErrors: errors,
     });
+  }
+
+  static cancelled(cause: unknown): ApiError {
+    return new ApiError('The request was cancelled.', { code: REQUEST_CANCELLED_CODE, cause });
   }
 
   static fromGraphQLErrors(errors: GraphQLErrorEntry[]): ApiError {
@@ -238,8 +282,16 @@ export class ApiError extends Error {
   }
 }
 
+// A coded refusal or a 4xx answers the same way twice; only a lost or failed transport is worth retrying.
+export function isTransportFailure(error: unknown): boolean {
+  if (!(error instanceof ApiError)) return false;
+  if (error.code || error.graphQLErrors.length > 0) return false;
+  return error.status === undefined || error.status >= 500;
+}
+
 /** Dispatches an error to the global notification toast (NotificationContext). */
 export function notifyApiError(error: unknown): void {
+  if (isRequestCancelled(error)) return;
   const detail: AppErrorDetail =
     error instanceof ApiError
       ? error.toAppErrorDetail()

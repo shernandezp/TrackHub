@@ -15,7 +15,7 @@
 
 namespace TrackHub.Manager.Domain.Interfaces;
 
-public readonly record struct TrialFeatureVm(string? Tier, DateTimeOffset? EffectiveTo, string? ConfigurationJson);
+public readonly record struct TrialFeatureVm(string? Tier, DateTimeOffset? EffectiveTo);
 
 public interface ITrialExpirationStore
 {

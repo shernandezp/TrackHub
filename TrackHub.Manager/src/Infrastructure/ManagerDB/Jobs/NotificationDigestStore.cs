@@ -25,9 +25,37 @@ public sealed class NotificationDigestStore(IApplicationDbContext context) : INo
 {
     private const string JobKey = BackgroundJobKeys.NotificationDigest;
 
-    public async Task<IReadOnlyCollection<DeferredDeliveryVm>> GetDeferredAsync(CancellationToken cancellationToken)
+    public async Task<IReadOnlyCollection<Guid>> GetAccountsWithDeferredAsync(CancellationToken cancellationToken)
         => await context.NotificationDeliveries
-            .Where(d => d.Status == DeliveryStatuses.Deferred && d.NotificationRuleId != null)
+            .Where(d => d.Status == DeliveryStatuses.Deferred)
+            .Select(d => d.AccountId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+    public async Task<int> ExpireOrphansAsync(Guid accountId, CancellationToken cancellationToken)
+    {
+        var accountExists = await context.Accounts.AnyAsync(a => a.AccountId == accountId, cancellationToken);
+        var orphans = await context.NotificationDeliveries
+            .AsTracking()
+            .Where(d => d.AccountId == accountId
+                && d.Status == DeliveryStatuses.Deferred
+                && (!accountExists
+                    || d.NotificationRuleId == null
+                    || !context.NotificationRules.Any(r => r.NotificationRuleId == d.NotificationRuleId && r.Enabled)))
+            .ToListAsync(cancellationToken);
+
+        foreach (var delivery in orphans)
+        {
+            delivery.Status = DeliveryStatuses.Expired;
+        }
+
+        await context.SaveChangesAsync(cancellationToken);
+        return orphans.Count;
+    }
+
+    public async Task<IReadOnlyCollection<DeferredDeliveryVm>> GetDeferredAsync(Guid accountId, CancellationToken cancellationToken)
+        => await context.NotificationDeliveries
+            .Where(d => d.AccountId == accountId && d.Status == DeliveryStatuses.Deferred && d.NotificationRuleId != null)
             .Select(d => new DeferredDeliveryVm(
                 d.NotificationDeliveryId, d.AccountId, d.NotificationRuleId!.Value, d.AlertEventId,
                 d.Channel, d.RecipientPrincipalType, d.Recipient))
@@ -39,7 +67,7 @@ public sealed class NotificationDigestStore(IApplicationDbContext context) : INo
             .Where(r => ruleIds.Contains(r.NotificationRuleId))
             .Select(r => new NotificationRuleVm(
                 r.NotificationRuleId, r.AccountId, r.RuleKey, r.RuleType, r.Enabled, r.TriggerEvent,
-                r.RecipientSelector, r.ChannelsJson, r.ThrottlingJson, r.ConfigurationJson, r.LastModified))
+                r.RecipientSelector, r.ChannelsJson, r.ThrottlingJson, r.ConfigurationJson, r.LastModified, r.Version))
             .ToListAsync(cancellationToken);
 
     public async Task<IReadOnlyCollection<string>> GetEventTypesAsync(

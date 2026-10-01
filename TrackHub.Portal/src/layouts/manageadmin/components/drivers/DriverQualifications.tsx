@@ -19,7 +19,7 @@
  * only; the backend commands carry the authoritative [RequireFeature] gate.
  */
 
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from '@mui/material/Icon';
 import Grid from '@mui/material/Grid';
@@ -44,9 +44,11 @@ import {
   qualificationTypeLabel,
   qualificationStatusLabel,
 } from 'layouts/manageadmin/components/drivers/qualificationConstants';
+import type { SearchOption } from 'edition/SearchSelect';
+import { accountDriverOptions } from 'edition/pickerOptions';
+import { useAccountCalendar } from 'context/account';
 import { useAccountByUser } from 'queries/accounts';
 import {
-  useDriversByAccount,
   useDriverQualifications,
   useCreateDriverQualification,
   useUpdateDriverQualification,
@@ -69,7 +71,9 @@ function ManageDriverQualifications() {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
   const [expanded, setExpanded] = useState(false);
-  const [driverId, setDriverId] = useState('');
+  const [driver, setDriver] = useState<SearchOption | null>(null);
+  const driverId = driver?.value ?? '';
+  const today = useAccountCalendar().today();
   const [open, setOpen] = useState(false);
   const [confirm, setConfirm] = useState<ConfirmState>({ open: false, id: null });
   const [values, handleChange, setValues, setErrors, validate, errors] =
@@ -77,8 +81,7 @@ function ManageDriverQualifications() {
 
   const accountQuery = useAccountByUser({ enabled: expanded });
   const accountId = accountQuery.data?.accountId;
-  const driversQuery = useDriversByAccount(accountId, { enabled: expanded && !!accountId });
-  const drivers = driversQuery.data ?? [];
+  const useDriverCatalogOptions = useMemo(() => accountDriverOptions(accountId), [accountId]);
 
   const hasDriver = !!driverId;
   const qualificationsQuery = useDriverQualifications(accountId, driverId || null, null, {
@@ -99,8 +102,8 @@ function ManageDriverQualifications() {
   const deleteQualification = useDeleteDriverQualification();
 
   useEffect(() => {
-    setLoading(qualificationsQuery.isFetching || driversQuery.isFetching);
-  }, [qualificationsQuery.isFetching, driversQuery.isFetching, setLoading]);
+    setLoading(qualificationsQuery.isFetching);
+  }, [qualificationsQuery.isFetching, setLoading]);
 
   const handleAddClick = () => {
     setValues({ status: 'Valid' });
@@ -187,9 +190,9 @@ function ManageDriverQualifications() {
             <Grid size={{ xs: 12, md: 6 }}>
               <DriverPicker
                 id="qualificationDriverId"
-                drivers={drivers}
-                value={driverId}
-                onChange={setDriverId}
+                useOptions={useDriverCatalogOptions}
+                value={driver}
+                onChange={setDriver}
                 label={t('workforce.selectDriver')}
                 placeholder={t('workforce.selectDriverPlaceholder')}
               />
@@ -235,7 +238,7 @@ function ManageDriverQualifications() {
               expiresAt: (
                 <ArgonBadge
                   badgeContent={formatDateOnly(qualification.expiresAt) || '-'}
-                  color={expiryColor(qualification.expiresAt)}
+                  color={expiryColor(qualification.expiresAt, today)}
                   size="xs"
                   container
                 />

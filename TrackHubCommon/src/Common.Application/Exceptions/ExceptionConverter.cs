@@ -13,7 +13,6 @@
 //  limitations under the License.
 //
 
-using FluentValidation.Results;
 using GraphQL;
 using HotChocolate;
 
@@ -24,10 +23,6 @@ public static class ExceptionConverter
 {
     // Converts a collection of GraphQLError objects to an array of IError objects
     public static IError[] ConvertToIError(this IEnumerable<GraphQLError> graphQLError)
-        => graphQLError.Select(error => error.ConvertToIError()).ToArray();
-
-    // Converts a collection of ValidationFailure objects to an array of IError objects
-    public static IError[] ConvertToIError(this IEnumerable<ValidationFailure> graphQLError)
         => graphQLError.Select(error => error.ConvertToIError()).ToArray();
 
     // Converts a GraphQLError object to an IError object
@@ -57,12 +52,6 @@ public static class ExceptionConverter
 
         return builder.Build();
     }
-
-    // Converts a ValidationFailure object to an IError object
-    public static IError ConvertToIError(this ValidationFailure validationFailure)
-        => ErrorBuilder.New()
-            .SetMessage(validationFailure.ErrorMessage)
-            .Build();
 
     public const string UpstreamErrorCode = "UPSTREAM_ERROR";
 

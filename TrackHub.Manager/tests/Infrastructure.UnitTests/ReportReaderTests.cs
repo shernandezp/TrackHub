@@ -41,7 +41,7 @@ public class ReportReaderTests
         => new(code, code, BasicType, true, "Administration", null, true, false, sortOrder);
 
     private static ReportReader Reader(ApplicationDbContext context, ICurrentPrincipal principal)
-        => new(context as IApplicationDbContext, principal);
+        => new(context as IApplicationDbContext, principal, Mock.Of<IIdentityService>());
 
     [Test]
     public async Task GetReportsAsync_GlobalReport_VisibleToPlainUser()

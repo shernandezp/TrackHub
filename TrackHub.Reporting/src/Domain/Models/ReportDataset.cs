@@ -13,7 +13,7 @@
 //  limitations under the License.
 //
 
-using System.Globalization;
+using Common.Domain.Time;
 using TrackHub.Reporting.Domain.Records;
 
 namespace TrackHub.Reporting.Domain.Models;
@@ -32,7 +32,10 @@ public sealed class ReportDataset
     public DateTimeOffset GeneratedAt { get; init; }
     public required IReadOnlyList<ReportColumn> Columns { get; init; }
     public required IReadOnlyList<object?[]> Rows { get; init; }
-    public IReadOnlyList<KeyValuePair<string, string>> AppliedFilters { get; init; } = [];
+    public IReadOnlyList<KeyValuePair<string, object>> AppliedFilters { get; init; } = [];
+
+    // The account calendar every instant is rendered in; the export stamps it once per report.
+    public AccountTimeZone TimeZone { get; init; } = AccountTimeZone.Utc;
 
     // Optional account branding rendered on the PDF header block when present.
     public string? AccountName { get; init; }
@@ -43,7 +46,11 @@ public sealed class ReportDataset
     // Returns a copy of this dataset with the account branding block populated. Used by
     // the export pipeline to attach branding fetched from Manager to a PDF export without the report itself
     // needing to know about branding. All other fields (data, columns, filters) are carried over unchanged.
-    public ReportDataset WithBranding(string? accountName, byte[]? logoImage) => new()
+    public ReportDataset WithBranding(string? accountName, byte[]? logoImage) => Copy(accountName, logoImage, TimeZone);
+
+    public ReportDataset InZone(AccountTimeZone timeZone) => Copy(AccountName, LogoImage, timeZone);
+
+    private ReportDataset Copy(string? accountName, byte[]? logoImage, AccountTimeZone timeZone) => new()
     {
         Title = Title,
         FromDate = FromDate,
@@ -53,7 +60,8 @@ public sealed class ReportDataset
         Rows = Rows,
         AppliedFilters = AppliedFilters,
         AccountName = accountName,
-        LogoImage = logoImage
+        LogoImage = logoImage,
+        TimeZone = timeZone
     };
 
     // Generic factory: reflects T's public instance properties (declaration order) into Columns and
@@ -101,11 +109,11 @@ public sealed class ReportDataset
 
     // Echoes each provided filter as ("Filter" + PascalCase(name), value) — e.g.
     // transporterId → FilterTransporterId — so PdfReportBuilder resolves the key as a resx
-    // label. Date-parseable values are normalized to "yyyy-MM-dd HH:mm"; everything else is
+    // label. Dates stay instants so the renderer shows them in the account zone; everything else is
     // echoed raw.
-    private static IReadOnlyList<KeyValuePair<string, string>> BuildAppliedFilters(FilterDto filters)
+    private static IReadOnlyList<KeyValuePair<string, object>> BuildAppliedFilters(FilterDto filters)
     {
-        var applied = new List<KeyValuePair<string, string>>();
+        var applied = new List<KeyValuePair<string, object>>();
         foreach (var (name, _) in filters.Values)
         {
             var text = filters.GetText(name);
@@ -114,10 +122,8 @@ public sealed class ReportDataset
                 continue;
             }
 
-            var value = filters.GetDate(name) is { } date
-                ? date.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)
-                : text;
-            applied.Add(new KeyValuePair<string, string>(
+            object value = filters.GetDate(name) is { } date ? date : text;
+            applied.Add(new KeyValuePair<string, object>(
                 $"Filter{char.ToUpperInvariant(name[0])}{name[1..]}", value));
         }
 

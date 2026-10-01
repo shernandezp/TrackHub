@@ -15,8 +15,9 @@
 
 namespace TrackHub.Manager.Domain.Interfaces;
 
+// One quarantined VERSION: the verdict belongs to these bytes, whichever version is current when it lands.
 public readonly record struct QuarantinedDocumentVm(
-    Guid DocumentId, Guid AccountId, int CurrentVersion, string StorageKey, string Category, string Status);
+    Guid DocumentId, Guid AccountId, int VersionNumber, string StorageKey, string Category, string Status);
 
 /// <summary>What the scan result means for the document, decided by the caller.</summary>
 public readonly record struct DocumentScanOutcome(string ScanStatus, bool Activate, bool RaiseInfectedAlert);
@@ -28,8 +29,8 @@ public interface IDocumentScanStore
     Task<bool> JobRunSucceededAsync(string idempotencyKey, CancellationToken cancellationToken);
 
     /// <summary>
-    /// The document's scan status and state transition, the current version's status, the infected
-    /// alert, the audit event and the job run, written as one commit. Starts from a clean change
+    /// The scanned version's status, the document's status and state transition when that version is
+    /// still the current one, the audit event and the job run, written as one commit. Starts from a clean change
     /// tracker so a document that failed earlier in the batch cannot be flushed under this one.
     /// </summary>
     Task ApplyScanResultAsync(

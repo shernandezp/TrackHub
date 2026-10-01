@@ -35,9 +35,7 @@ public sealed class AlertSubscriptionWriter(IApplicationDbContext context, ICurr
 
     public async Task UpdateAlertSubscriptionAsync(Guid alertSubscriptionId, AlertSubscriptionDto subscription, CancellationToken cancellationToken)
     {
-        var entity = await Context.AlertSubscriptions
-            .AsTracking().FirstAsync(x => x.AlertSubscriptionId == alertSubscriptionId, cancellationToken);
-        RequireAccountWriteAccess(entity.AccountId);
+        var entity = await RequireScopedAsync(Context.AlertSubscriptions.AsTracking(), x => x.AlertSubscriptionId == alertSubscriptionId, x => x.AccountId, alertSubscriptionId, forWrite: true, cancellationToken);
         RequireSelfOrPrivileged(entity.PrincipalType, entity.PrincipalId);
         if (subscription.AccountId != entity.AccountId)
         {
@@ -73,9 +71,7 @@ public sealed class AlertSubscriptionWriter(IApplicationDbContext context, ICurr
 
     public async Task DeleteAlertSubscriptionAsync(Guid alertSubscriptionId, CancellationToken cancellationToken)
     {
-        var entity = await Context.AlertSubscriptions
-            .AsTracking().FirstAsync(x => x.AlertSubscriptionId == alertSubscriptionId, cancellationToken);
-        RequireAccountWriteAccess(entity.AccountId);
+        var entity = await RequireScopedAsync(Context.AlertSubscriptions.AsTracking(), x => x.AlertSubscriptionId == alertSubscriptionId, x => x.AccountId, alertSubscriptionId, forWrite: true, cancellationToken);
         RequireSelfOrPrivileged(entity.PrincipalType, entity.PrincipalId);
         AddAuditEvent(entity.AccountId, "DeleteAlertSubscription", "AlertSubscription", $"{entity.AlertSubscriptionId}", Describe(entity), null);
         Context.AlertSubscriptions.Remove(entity);
@@ -134,5 +130,5 @@ public sealed class AlertSubscriptionWriter(IApplicationDbContext context, ICurr
 
     private static AlertSubscriptionVm ToVm(AlertSubscription x) => new(x.AlertSubscriptionId, x.AccountId, x.PrincipalType, x.PrincipalId, x.EventTypeFilter, x.Channel, x.Contact, x.Enabled, x.LastModified);
     private static string Describe(AlertSubscription subscription)
-        => $$"""{"principalType":{{AuditJson.Quote(subscription.PrincipalType)}},"principalId":"{{subscription.PrincipalId}}","eventTypeFilter":{{AuditJson.Quote(subscription.EventTypeFilter)}},"channel":{{AuditJson.Quote(subscription.Channel)}},"enabled":{{subscription.Enabled.ToString().ToLowerInvariant()}}}""";
+        => AuditJson.Of(new { subscription.PrincipalType, subscription.PrincipalId, subscription.EventTypeFilter, subscription.Channel, subscription.Enabled });
 }

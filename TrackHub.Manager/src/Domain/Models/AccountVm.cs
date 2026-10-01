@@ -24,5 +24,5 @@ public readonly record struct AccountVm(
     short StatusId,
     bool Active,
     string TimeZoneId,
-    DateTimeOffset LastModified
-    );
+    DateTimeOffset LastModified,
+    uint Version);

@@ -75,9 +75,10 @@ public sealed class OperatorWriter(IApplicationDbContext context, ICurrentPrinci
     {
         var @operator = await Context.Operators.FindAsync([operatorDto.OperatorId], cancellationToken)
             ?? throw new NotFoundException(nameof(Operator), $"{operatorDto.OperatorId}");
-        RequireAccountWriteAccess(@operator.AccountId);
+        RequireRowAccess(@operator.AccountId, nameof(Operator), @operator.OperatorId, forWrite: true);
 
         Context.Operators.Attach(@operator);
+        RowVersion.Expect(Context.Operators, @operator, operatorDto.ExpectedVersion);
 
         var previous = Describe(@operator);
         @operator.Name = operatorDto.Name;
@@ -98,7 +99,7 @@ public sealed class OperatorWriter(IApplicationDbContext context, ICurrentPrinci
     {
         var @operator = await Context.Operators.FindAsync([operatorId], cancellationToken)
             ?? throw new NotFoundException(nameof(Operator), $"{operatorId}");
-        RequireAccountWriteAccess(@operator.AccountId);
+        RequireRowAccess(@operator.AccountId, nameof(Operator), @operator.OperatorId, forWrite: true);
 
         Context.Operators.Attach(@operator);
 
@@ -111,7 +112,7 @@ public sealed class OperatorWriter(IApplicationDbContext context, ICurrentPrinci
     {
         var @operator = await Context.Operators.FindAsync([operatorId], cancellationToken)
             ?? throw new NotFoundException(nameof(Operator), $"{operatorId}");
-        RequireAccountWriteAccess(@operator.AccountId);
+        RequireRowAccess(@operator.AccountId, nameof(Operator), @operator.OperatorId, forWrite: true);
 
         Context.Operators.Attach(@operator);
         var previous = $$"""{"enabled":{{@operator.Enabled.ToString().ToLowerInvariant()}}}""";
@@ -125,7 +126,7 @@ public sealed class OperatorWriter(IApplicationDbContext context, ICurrentPrinci
     {
         var @operator = await Context.Operators.FindAsync([operatorId], cancellationToken)
             ?? throw new NotFoundException(nameof(Operator), $"{operatorId}");
-        RequireAccountWriteAccess(@operator.AccountId);
+        RequireRowAccess(@operator.AccountId, nameof(Operator), @operator.OperatorId, forWrite: true);
         Context.Operators.Attach(@operator);
         @operator.LastManualSyncAt = triggeredAt;
         await Context.SaveChangesAsync(cancellationToken);
@@ -138,7 +139,7 @@ public sealed class OperatorWriter(IApplicationDbContext context, ICurrentPrinci
     {
         var @operator = await Context.Operators.FindAsync([operatorId], cancellationToken)
             ?? throw new NotFoundException(nameof(Operator), $"{operatorId}");
-        RequireAccountWriteAccess(@operator.AccountId);
+        RequireRowAccess(@operator.AccountId, nameof(Operator), @operator.OperatorId, forWrite: true);
         Context.Operators.Attach(@operator);
 
         @operator.LastSuccessfulSyncAt = finishedAt;
@@ -150,6 +151,48 @@ public sealed class OperatorWriter(IApplicationDbContext context, ICurrentPrinci
 
         await Context.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task SetSyncBackoffAsync(Guid operatorId, int consecutiveFailures, DateTimeOffset retryAt, CancellationToken cancellationToken)
+    {
+        var accountId = await Context.Operators
+            .Where(o => o.OperatorId == operatorId)
+            .Select(o => (Guid?)o.AccountId)
+            .FirstOrDefaultAsync(cancellationToken)
+            ?? throw new NotFoundException(nameof(Operator), $"{operatorId}");
+        RequireRowAccess(accountId, nameof(Operator), operatorId, forWrite: true);
+
+        var backoff = await Context.OperatorSyncBackoffs.AsTracking().FirstOrDefaultAsync(b => b.OperatorId == operatorId, cancellationToken);
+        if (backoff is null)
+        {
+            await Context.OperatorSyncBackoffs.AddAsync(new OperatorSyncBackoff(operatorId, consecutiveFailures, retryAt), cancellationToken);
+        }
+        else
+        {
+            backoff.ConsecutiveFailures = consecutiveFailures;
+            backoff.RetryAt = retryAt;
+        }
+
+        await Context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task ClearSyncBackoffAsync(Guid operatorId, CancellationToken cancellationToken)
+    {
+        var accountId = await Context.Operators
+            .Where(o => o.OperatorId == operatorId)
+            .Select(o => (Guid?)o.AccountId)
+            .FirstOrDefaultAsync(cancellationToken)
+            ?? throw new NotFoundException(nameof(Operator), $"{operatorId}");
+        RequireRowAccess(accountId, nameof(Operator), operatorId, forWrite: true);
+
+        var backoff = await Context.OperatorSyncBackoffs.FirstOrDefaultAsync(b => b.OperatorId == operatorId, cancellationToken);
+        if (backoff is not null)
+        {
+            Context.OperatorSyncBackoffs.Remove(backoff);
+            await Context.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+
     private static string Describe(Operator @operator)
         => $$"""{"name":{{AuditJson.Quote(@operator.Name)}},"protocolType":{{@operator.ProtocolType}},"syncIntervalMinutes":{{@operator.SyncIntervalMinutes}},"enabled":{{@operator.Enabled.ToString().ToLowerInvariant()}}}""";
 }

@@ -112,14 +112,15 @@ public class AuditTrailKeysetPagingTests
     }
 
     [Test]
-    public async Task AGarbledCursorReadsAsTheStartOfTheFeed()
+    public void AGarbledCursorIsRefused()
     {
         using var context = Seeded($"audit-garbled-{Guid.NewGuid()}", 5, tied: false);
         var reader = new AuditEventReader(context, Principal());
 
-        var page = await reader.GetAuditTrailAsync(AccountId, null, null, "not-a-cursor", 50, CancellationToken.None);
+        var ex = Assert.ThrowsAsync<Common.Application.Exceptions.ValidationException>(
+            () => reader.GetAuditTrailAsync(AccountId, null, null, "not-a-cursor", 50, CancellationToken.None));
 
-        Assert.That(page.Items, Has.Count.EqualTo(5));
+        Assert.That(ex!.Code, Is.EqualTo(FeedCursor.InvalidCursorCode));
     }
 
     [Test]

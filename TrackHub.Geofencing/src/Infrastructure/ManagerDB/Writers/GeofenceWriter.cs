@@ -60,6 +60,12 @@ public sealed class GeofenceWriter(IApplicationDbContext context, IUser user) : 
         var oldValues = ToAuditJson(geofence);
 
         context.Geofences.Attach(geofence);
+        if (geofenceDto.ExpectedVersion is { } expectedVersion)
+        {
+            context.Geofences.Entry(geofence).Property(g => g.Version).OriginalValue = expectedVersion;
+        }
+
+        geofence.Version++;
 
         var (geom, circleCenter) = BuildGeometry(geofenceDto);
         var wasActive = geofence.Active;
@@ -211,7 +217,8 @@ public sealed class GeofenceWriter(IApplicationDbContext context, IUser user) : 
             geofence.CircleRadiusMeters,
             geofence.AlertOnEntry,
             geofence.AlertOnExit,
-            geofence.DwellThresholdMinutes);
+            geofence.DwellThresholdMinutes,
+            geofence.Version);
 
     private void AddAuditEvent(Guid accountId, string action, Guid geofenceId, string? oldValuesJson, string? newValuesJson)
     {

@@ -30,7 +30,7 @@ public sealed class ContainerValidationTests
 {
     // Anchored on a public Web type rather than Program: Program is generated from top-level
     // statements and making it addressable would mean editing production code to satisfy a test.
-    private sealed class GeofencingFactory : WebApplicationFactory<GeofenceDwellEvaluationService>
+    private sealed class GeofencingFactory : WebApplicationFactory<GeofenceDwellEvaluationJob>
     {
         protected override IHost CreateHost(IHostBuilder builder)
         {
@@ -60,7 +60,6 @@ public sealed class ContainerValidationTests
     // covers them transitively; naming them makes the failure point at the missing registration
     // rather than at a descriptor index.
     [TestCase(typeof(Common.Application.Interfaces.IGraphQLClientFactory))]
-    [TestCase(typeof(Common.Application.Interfaces.IFeatureFlagService))]
     public void CriticalCrossServiceDependencies_AreResolvable(Type contract)
     {
         using var factory = new GeofencingFactory();

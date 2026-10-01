@@ -26,5 +26,6 @@ public readonly record struct OperatorVm(
     DateTimeOffset? LastPositionSyncAt = null,
     string? HealthStatus = null,
     DateTimeOffset? LastHealthCheckAt = null,
-    DateTimeOffset? LastManualSyncAt = null
-    );
+    DateTimeOffset? LastManualSyncAt = null,
+    int SyncFailureCount = 0,
+    DateTimeOffset? SyncRetryAt = null);

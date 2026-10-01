@@ -40,7 +40,10 @@ export const BackgroundJobRunItemFragment = graphql(`
 export const GetBackgroundJobRunsDocument = graphql(`
   query GetBackgroundJobRuns($accountId: UUID!, $skip: Int!, $take: Int!) {
     backgroundJobRuns(query: { accountId: $accountId, skip: $skip, take: $take }) {
-      ...BackgroundJobRunItem
+      items {
+        ...BackgroundJobRunItem
+      }
+      totalCount
     }
   }
 `);

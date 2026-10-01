@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Ardalis.GuardClauses;
 using Common.Application.Interfaces;
 using Common.Domain.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +21,8 @@ using TrackHub.Security.Infrastructure;
 using TrackHub.Security.Infrastructure.Entities;
 using TrackHub.Security.Infrastructure.Interfaces;
 using TrackHub.Security.Infrastructure.Writers;
+using TrackHub.Security.Domain.Interfaces;
+using TrackHub.Security.Domain.Records;
 
 namespace Infrastructure.UnitTests;
 
@@ -31,12 +34,15 @@ public class DriverIdentityWriterTests
     private static ApplicationDbContext NewContext(string name)
         => new(new DbContextOptionsBuilder<ApplicationDbContext>().UseInMemoryDatabase(name).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking).Options);
 
-    private static DriverIdentityWriter NewWriter(ApplicationDbContext context)
+    private static DriverIdentityWriter NewWriter(ApplicationDbContext context, bool driverBelongsToAccount = true)
     {
         var principal = new Mock<ICurrentPrincipal>();
         principal.SetupGet(p => p.PrincipalType).Returns(PrincipalType.ServiceClient);
         principal.SetupGet(p => p.AccountId).Returns((Guid?)null);
-        return new DriverIdentityWriter(context as IApplicationDbContext, principal.Object);
+        var drivers = new Mock<IManagerDriverReader>();
+        drivers.Setup(d => d.DriverBelongsToAccountAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(driverBelongsToAccount);
+        return new DriverIdentityWriter(context as IApplicationDbContext, principal.Object, drivers.Object);
     }
 
     private static async Task<DriverCredential> SeedAsync(ApplicationDbContext context, Guid driverId, Guid accountId, string login)
@@ -49,6 +55,17 @@ public class DriverIdentityWriterTests
 
     private static async Task<DriverCredential> ReloadAsync(ApplicationDbContext context, Guid credentialId)
         => await context.DriverCredentials.AsNoTracking().SingleAsync(x => x.DriverCredentialId == credentialId);
+
+    [Test]
+    public async Task CreateCredential_ForADriverOfAnotherAccount_IsNotFound()
+    {
+        await using var context = NewContext(nameof(CreateCredential_ForADriverOfAnotherAccount_IsNotFound));
+        var writer = NewWriter(context, driverBelongsToAccount: false);
+        var dto = new DriverCredentialDto(Guid.NewGuid(), Guid.NewGuid(), "driver1", "secret", Active: true, ResetRequired: false);
+
+        Assert.ThrowsAsync<NotFoundException>(() => writer.CreateDriverCredentialAsync(dto, CancellationToken.None));
+        Assert.That(await context.DriverCredentials.CountAsync(), Is.Zero);
+    }
 
     [Test]
     public async Task Lock_Reset_Activate_EachReStampTheCredential()

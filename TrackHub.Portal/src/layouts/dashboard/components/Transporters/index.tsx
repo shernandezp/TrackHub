@@ -28,26 +28,17 @@ import type { PointOfInterestLookup } from 'api/manager/pointsOfInterest';
 import { getGroupLookup } from 'api/manager/groups';
 import type { GroupLookup } from 'api/manager/groups';
 import { useQueryClient } from '@tanstack/react-query';
-import {
-  getAllTransportersByGroup,
-  getAllTransporterDeviceAssignmentsByAccount,
-} from 'api/manager/transporters';
-import type { Transporter, TransporterAssignmentWithAudit } from 'api/manager/transporters';
 import { getOperatorLookup } from 'api/manager/operators';
 import type { OperatorLookup } from 'api/manager/operators';
-import { getDeviceLookup } from 'api/manager/devices';
-import type { DeviceLookup } from 'api/manager/devices';
 import { getAccountByUser } from 'api/manager/accounts';
-import { getAlertEvents } from 'api/manager/alertEvents';
+import { getOpenAlertCounts } from 'api/manager/alertEvents';
 import { getDevicePositions } from 'api/router/router';
-import type { Position } from 'api/router/router';
+import type { DevicePositionScope, Position } from 'api/router/router';
 import { getTransportersInGeofence } from 'api/geofencing/geofencing';
 import type { Geofence } from 'api/geofencing/geofencing';
 import type { AccountSettings } from 'api/manager/settings';
-import { transporterKeys } from 'queries/transporters';
 import { operatorKeys } from 'queries/operators';
 import { routerKeys } from 'queries/router';
-import { deviceKeys } from 'queries/devices';
 import { groupKeys } from 'queries/groups';
 import { poiKeys } from 'queries/pointsOfInterest';
 import { geofenceKeys } from 'queries/geofences';
@@ -110,9 +101,6 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
   const [filters, setFilters] = useState<DashboardFilters>({ transporterType: 'all', groupId: 'all', operatorId: 'all', status: 'all' });
   const [groupOptions, setGroupOptions] = useState<FilterOption[]>([]);
   const [operatorOptions, setOperatorOptions] = useState<FilterOption[]>([]);
-  // Sets of transporterIds the selected group/operator maps to; null = no narrowing.
-  const [groupTransporterIds, setGroupTransporterIds] = useState<Set<string> | null>(null);
-  const [operatorTransporterIds, setOperatorTransporterIds] = useState<Set<string> | null>(null);
   const [pois, setPois] = useState<PointOfInterestLookup[]>([]);
   const [showPois, setShowPois] = useState(false);
   const [followMode, setFollowMode] = useState(false);
@@ -123,12 +111,12 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
   // A slow round-trip (providers timing out server-side) can outlast the refresh
   // countdown; never stack overlapping position fetches.
   const positionsFetchInFlightRef = useRef(false);
-  // Lazy membership caches: fetched once per selected group/operator.
-  const groupMembershipCacheRef = useRef<Map<string | number, Set<string>>>(new Map());
-  const operatorMembershipCacheRef = useRef<Map<string | number, Set<string>>>(new Map());
-  // Account-wide device list + device-transporter assignments, fetched once
-  // on the first operator selection to map an operator to its transporters.
-  const operatorMappingRef = useRef<{ devices: DeviceLookup[]; assignments: TransporterAssignmentWithAudit[] } | null>(null);
+  const positionsLoadedOnceRef = useRef(false);
+  const accountIdRef = useRef<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  // Group/operator narrowing happens server-side; the refs are read by the polling closure.
+  const positionScopeRef = useRef<DevicePositionScope>({});
+  const displayedScopeRef = useRef<DevicePositionScope | null>(null);
 
   useEffect(() => {
     const typesObject = positions.reduce<Record<string, TypeSummaryItem>>((acc, position) => {
@@ -211,26 +199,48 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
       return;
     }
     positionsFetchInFlightRef.current = true;
-    setLoading(true);
+    // Only the first load blocks the screen; a periodic refresh shows inline progress on the map.
+    const blocking = !positionsLoadedOnceRef.current;
+    if (blocking) setLoading(true); else setRefreshing(true);
+    const scope = positionScopeRef.current;
     try {
       // A failed or empty refresh keeps the last known positions on the map
       // (the live map continues showing the cached positions it already has).
       // A total failure is surfaced by the global toast and swallowed here.
       const result = await queryClient.fetchQuery({
-        queryKey: routerKeys.devicePositions(),
-        queryFn: getDevicePositions,
+        queryKey: routerKeys.devicePositions(scope),
+        queryFn: ({ signal }) => getDevicePositions(scope, { signal }),
         staleTime: 0,
       });
-      if (Array.isArray(result) && result.length > 0) {
+      // An empty answer only counts as a glitch for the scope already on screen; a newly
+      // selected group or operator with no units must show none.
+      const superseded = scope !== positionScopeRef.current;
+      if (!superseded && Array.isArray(result) && (result.length > 0 || scope !== displayedScopeRef.current)) {
+        displayedScopeRef.current = scope;
         setPositions(result);
         setActive(countRecentDevices(result, settings.onlineInterval));
         setMovement(countDevicesInMovement(result));
       }
     } catch {
-      // Keep the last known positions on a failed refresh.
+      // Keep the last known positions on a failed or cancelled refresh.
     } finally {
       positionsFetchInFlightRef.current = false;
-      setLoading(false);
+      positionsLoadedOnceRef.current = true;
+      if (blocking) setLoading(false); else setRefreshing(false);
+    }
+    if (scope !== positionScopeRef.current) {
+      void fetchPositions();
+    }
+  };
+
+  const changePositionScope = (scope: DevicePositionScope) => {
+    const previous = positionScopeRef.current;
+    positionScopeRef.current = scope;
+    if (positionsFetchInFlightRef.current) {
+      // The aborted fetch notices the new scope when it settles and refetches.
+      void queryClient.cancelQueries({ queryKey: routerKeys.devicePositions(previous) });
+    } else {
+      void fetchPositions();
     }
   };
 
@@ -239,7 +249,7 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
     try {
       const result = await queryClient.fetchQuery({
         queryKey: geofenceKeys.transportersInGeofence,
-        queryFn: () => getTransportersInGeofence(),
+        queryFn: ({ signal }) => getTransportersInGeofence(null, null, { signal }),
         staleTime: 0,
       });
       // The query returns one row per (geofence, unit) pair; the tile counts units,
@@ -251,18 +261,14 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
     }
   };
 
-  // Open critical alerts: anything not acknowledged/resolved with
-  // Critical severity. A failed read (e.g. permissions) keeps the count at 0.
+  // Open critical alerts, counted server-side over every open alert the user can see, once when the
+  // dashboard opens. A failed read (e.g. permissions) keeps the count at 0.
   const fetchCriticalAlerts = async () => {
     try {
-      const account = await getAccountByUser();
-      if (!account?.accountId) return;
-      const events = await getAlertEvents(account.accountId, 0, 100);
-      const closedStatuses = ['acknowledged', 'resolved'];
-      setCriticalAlerts((events || []).filter(event =>
-        (event.severity || '').toLowerCase() === 'critical' &&
-        !closedStatuses.includes((event.status || '').toLowerCase())
-      ).length);
+      accountIdRef.current ??= (await getAccountByUser())?.accountId ?? null;
+      if (!accountIdRef.current) return;
+      const counts = await getOpenAlertCounts(accountIdRef.current);
+      setCriticalAlerts(counts.Critical ?? 0);
     } catch {
       setCriticalAlerts(0);
     }
@@ -274,13 +280,13 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
       // filter empty instead of rejecting the whole options load.
       queryClient.fetchQuery({
         queryKey: groupKeys.lookup(),
-        queryFn: getGroupLookup,
+        queryFn: ({ signal }) => getGroupLookup({ signal }),
       }).catch((): GroupLookup[] => []),
       // A failed operator read is surfaced by the global toast; keep the
       // operator filter empty instead of rejecting the whole options load.
       queryClient.fetchQuery({
         queryKey: operatorKeys.lookup(),
-        queryFn: getOperatorLookup,
+        queryFn: ({ signal }) => getOperatorLookup({ signal }),
       }).catch((): OperatorLookup[] => []),
     ]);
     setGroupOptions((groupList || []).map(group => ({ value: group.groupId, label: group.name })));
@@ -300,106 +306,14 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
     setSelectedTransporter(selected);
   };
 
-  // Resolves the transporter ids of a group, lazily and once per group.
-  const resolveGroupMembership = async (groupId: string | number) => {
-    if (!groupId || groupId === 'all') {
-      setGroupTransporterIds(null);
-      return;
-    }
-    const cache = groupMembershipCacheRef.current;
-    if (cache.has(groupId)) {
-      setGroupTransporterIds(cache.get(groupId)!);
-      return;
-    }
-    setLoading(true);
-    try {
-      let transportersInGroup: Transporter[];
-      try {
-        // Group filter option values are numeric group ids; 'all' is filtered
-        // out above, so a real selection is always a number at runtime.
-        // The group filter narrows the map to a membership set: read every page,
-        // or units in the group past the first page vanish from the map.
-        transportersInGroup = await queryClient.fetchQuery({
-          queryKey: transporterKeys.byGroup(groupId as number),
-          queryFn: () => getAllTransportersByGroup(groupId as number),
-        });
-      } catch {
-        // Fetch failed (already surfaced by the global toast): keep the map
-        // un-narrowed instead of blanking it.
-        setGroupTransporterIds(null);
-        return;
-      }
-      const ids = new Set(transportersInGroup.map(item => item.transporterId));
-      cache.set(groupId, ids);
-      setGroupTransporterIds(ids);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Resolves the transporter ids served by an operator, lazily and once per
-  // operator: account devices (operatorId per device) joined with the active
-  // device-transporter assignments (deviceId -> transporterId).
-  const resolveOperatorMembership = async (operatorId: string | number) => {
-    if (!operatorId || operatorId === 'all') {
-      setOperatorTransporterIds(null);
-      return;
-    }
-    const cache = operatorMembershipCacheRef.current;
-    if (cache.has(operatorId)) {
-      setOperatorTransporterIds(cache.get(operatorId)!);
-      return;
-    }
-    setLoading(true);
-    try {
-      if (!operatorMappingRef.current) {
-        let devices: DeviceLookup[];
-        let assignments: TransporterAssignmentWithAudit[];
-        try {
-          // Both sides of the operator→device→transporter join must be complete;
-          // `deviceLookup` now carries operatorId, so the picker feed is enough.
-          [devices, assignments] = await Promise.all([
-            queryClient.fetchQuery({
-              queryKey: deviceKeys.lookup(),
-              queryFn: getDeviceLookup,
-            }),
-            queryClient.fetchQuery({
-              queryKey: transporterKeys.allAssignmentsByAccount(settings?.accountId ?? '', true),
-              queryFn: () =>
-                getAllTransporterDeviceAssignmentsByAccount(settings?.accountId as string, true),
-            })
-          ]);
-        } catch {
-          // Assignments fetch failed (surfaced by the global toast): keep un-narrowed.
-          setOperatorTransporterIds(null);
-          return;
-        }
-        if (!Array.isArray(devices)) {
-          setOperatorTransporterIds(null);
-          return;
-        }
-        operatorMappingRef.current = { devices, assignments: assignments || [] };
-      }
-      const { devices, assignments } = operatorMappingRef.current;
-      const deviceIds = new Set(devices
-        .filter(device => device.operatorId === operatorId)
-        .map(device => device.deviceId));
-      const ids = new Set(assignments
-        .filter(assignment => deviceIds.has(assignment.deviceId))
-        .map(assignment => assignment.transporterId));
-      cache.set(operatorId, ids);
-      setOperatorTransporterIds(ids);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleFilterChange = (name: string, value: string | number) => {
-    setFilters(prev => ({ ...prev, [name]: value }) as DashboardFilters);
-    if (name === 'groupId') {
-      resolveGroupMembership(value);
-    } else if (name === 'operatorId') {
-      resolveOperatorMembership(value);
+    const next = { ...filters, [name]: value } as DashboardFilters;
+    setFilters(next);
+    if (name === 'groupId' || name === 'operatorId') {
+      changePositionScope({
+        groupId: next.groupId === 'all' ? null : Number(next.groupId),
+        operatorId: next.operatorId === 'all' ? null : next.operatorId,
+      });
     }
   };
 
@@ -410,7 +324,7 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
       // of which `pointOfInterestLookup` now carries.
       const result = await queryClient.fetchQuery({
         queryKey: poiKeys.lookup(),
-        queryFn: getPointOfInterestLookup,
+        queryFn: ({ signal }) => getPointOfInterestLookup({ signal }),
       }).catch((): PointOfInterestLookup[] => []);
       setPois(result);
       poisLoadedRef.current = true;
@@ -423,15 +337,14 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
     setFollowMode(false);
   }, []);
 
-  // Filters narrow the map view only; stats and table reflect the full set.
+  // Group/operator scope the fetched set (stats and table follow them); type/status narrow the map only.
   const filteredPositions = useMemo(
     () => filterPositions(positions, {
-      ...filters,
+      transporterType: filters.transporterType,
+      status: filters.status,
       onlineInterval: settings.onlineInterval,
-      groupTransporterIds,
-      operatorTransporterIds
     }),
-    [positions, filters, settings.onlineInterval, groupTransporterIds, operatorTransporterIds]
+    [positions, filters.transporterType, filters.status, settings.onlineInterval]
   );
 
   const typeOptions = useMemo<FilterOption[]>(
@@ -539,6 +452,7 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
                     height={`calc(100vh - ${mapViewportOffset}px)`}/>
                 <RefreshCounter
                     settings={settings}
+                    refreshing={refreshing}
                     fetchPositions={fetchPositions}
                     calculateReference={calculateReference} />
             </MapControlStyle>

@@ -15,12 +15,14 @@
 
 using Ardalis.GuardClauses;
 using Common.Application.Attributes;
+using Common.Application.Interfaces;
 using Common.Domain.Constants;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using TrackHub.Router.Domain.Models;
 using TrackHub.Router.Domain.Extensions;
 using TrackHub.Router.Domain.Helpers;
+using TrackHub.Router.Application.Positions;
 
 namespace TrackHub.Router.Application.DevicePositions.Queries.Get;
 
@@ -37,8 +39,10 @@ public class GetPositionByTransporterQueryHandler(
         IDeviceTransporterReader deviceReader,
         ITransporterPositionReader transporterPositionReader,
         IPositionSystemWriter positionSystemWriter,
+        IGroupVisibilityReader groupVisibilityReader,
+        ICurrentPrincipal principal,
         ILogger<GetPositionByTransporterQueryHandler> logger)
-        : IRequestHandler<GetPositionByTransporterQuery, PositionVm>
+        : PositionBaseHandler, IRequestHandler<GetPositionByTransporterQuery, PositionVm>
 {
     private string? EncryptionKey { get; } = configuration["AppSettings:EncryptionKey"];
 
@@ -52,6 +56,7 @@ public class GetPositionByTransporterQueryHandler(
     {
         // Resolved under the caller's identity, so Manager applies their account scope.
         var scoped = await operatorReader.GetOperatorByTransporterAsync(request.TransporterId, cancellationToken);
+        await EnsureTransporterVisibilityAsync(groupVisibilityReader, principal, scoped.AccountId, request.TransporterId, cancellationToken);
 
         // Mode split through the single resolver: integration enabled -> serve the
         // stored projection; disabled -> read the provider on demand.

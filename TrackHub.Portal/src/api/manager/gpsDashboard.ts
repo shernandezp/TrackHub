@@ -21,6 +21,7 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { RequestOptions } from 'api/core/errors';
 import type { GetGpsIntegrationDashboardQuery } from './generated/graphql';
 import { GetGpsIntegrationDashboardDocument } from './gpsDashboardOperations';
 
@@ -28,8 +29,9 @@ export type GpsIntegrationDashboard =
   GetGpsIntegrationDashboardQuery['gpsIntegrationDashboard'];
 
 export async function getGpsIntegrationDashboard(
-  accountId: string
+  accountId: string,
+  options?: RequestOptions
 ): Promise<GpsIntegrationDashboard> {
-  const data = await executeGraphQL('manager', GetGpsIntegrationDashboardDocument, { accountId });
+  const data = await executeGraphQL('manager', GetGpsIntegrationDashboardDocument, { accountId }, options);
   return data.gpsIntegrationDashboard;
 }

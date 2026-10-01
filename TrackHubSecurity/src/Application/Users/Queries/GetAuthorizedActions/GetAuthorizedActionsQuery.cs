@@ -19,6 +19,7 @@ namespace TrackHub.Security.Application.Users.Queries.GetAuthorizedActions;
 // Enforcement: the handler resolves the TARGET user through UserReader.GetUserAsync, whose
 // RequireAccountAccess check binds the caller to the target's owning account.
 [AccountScopeEnforcedInHandler]
+[AllowSuspendedAccount]
 public readonly record struct GetAuthorizedActionsQuery(Guid UserId) : IRequest<IReadOnlyCollection<ResourceActionVm>>;
 
 public class GetAuthorizedActionsQueryHandler(

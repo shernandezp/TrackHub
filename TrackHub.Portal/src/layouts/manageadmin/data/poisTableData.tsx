@@ -61,8 +61,6 @@ export interface PoiFormValues {
   active?: boolean;
 }
 
-/** Group option for the POI dialog's group select. */
-export interface PoiGroupOption { value: number; label: string; }
 
 /** A column descriptor / rendered row for the vendored POIs `Table`. */
 export interface PoiColumn { name: string; title?: string; align?: "left" | "right" | "center"; }
@@ -94,8 +92,8 @@ function usePoiTableData(
   const poisQuery = usePointsOfInterestByAccount(listParams, { enabled });
   const pois = poisQuery.data?.items ?? [];
   const totalCount = poisQuery.data?.totalCount ?? 0;
-  // The group select and the table's groupId->name map must cover every group,
-  // not the page the group LIST happens to be showing: hence the lookup.
+  // The table's groupId->name map must cover every group, not the page the group LIST happens to
+  // be showing: hence the lookup. The dialog's group picker searches the server.
   const groupsQuery = useGroupLookup({ enabled });
   const groups = groupsQuery.data ?? [];
   const createPoi = useCreatePointOfInterest();
@@ -227,12 +225,12 @@ function usePoiTableData(
     [pois, groups, t]
   );
 
-  const groupOptions: PoiGroupOption[] = groups.map(group => ({ value: group.groupId, label: group.name }));
+  const groupNames = useMemo(() => new Map(groups.map(group => [group.groupId, group.name])), [groups]);
 
   return {
     data,
     totalCount,
-    groupOptions,
+    groupNames,
     open,
     confirmOpen,
     onSave,

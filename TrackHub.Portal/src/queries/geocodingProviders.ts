@@ -33,7 +33,7 @@ export const geocodingProviderKeys = {
 export function useGeocodingProviders(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: geocodingProviderKeys.all,
-    queryFn: api.getGeocodingProviders,
+    queryFn: ({ signal }) => api.getGeocodingProviders({ signal }),
     enabled: options.enabled ?? true,
   });
 }

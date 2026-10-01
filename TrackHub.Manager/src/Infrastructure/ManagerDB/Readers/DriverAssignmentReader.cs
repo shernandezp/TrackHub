@@ -9,7 +9,7 @@ public sealed class DriverAssignmentReader(IApplicationDbContext context, ICurre
     private static int PageSize(int take) => Math.Clamp(take <= 0 ? 50 : take, 1, 500);
     private static int Offset(int skip) => Math.Max(0, skip);
 
-    public async Task<IReadOnlyCollection<DriverTransporterAssignmentVm>> GetDriverAssignmentHistoryAsync(Guid accountId, Guid? driverId, Guid? transporterId, DateTimeOffset? from, DateTimeOffset? to, int skip, int take, CancellationToken cancellationToken)
+    public async Task<DriverAssignmentHistoryPageVm> GetDriverAssignmentHistoryAsync(Guid accountId, Guid? driverId, Guid? transporterId, DateTimeOffset? from, DateTimeOffset? to, int skip, int take, CancellationToken cancellationToken)
     {
         var scopedAccountId = RequireAccountAccess(accountId);
         var query = Context.DriverTransporterAssignments.Where(x => x.AccountId == scopedAccountId);
@@ -37,9 +37,11 @@ public sealed class DriverAssignmentReader(IApplicationDbContext context, ICurre
             query = query.Where(x => x.EndsAt == null || x.EndsAt >= from.Value);
         }
 
-        return await Project(query)
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await Project(query)
             .Skip(Offset(skip)).Take(PageSize(take))
             .ToListAsync(cancellationToken);
+        return new DriverAssignmentHistoryPageVm(items, totalCount);
     }
 
 

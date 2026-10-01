@@ -19,12 +19,6 @@
   ],
   "PKCEClients": [
     {
-      "clientId": "postman_client",
-      "uri": "https://oauth.pstmn.io/v1/callback",
-      "postLogoutUri": "https://oauth.pstmn.io/v1/callback",
-      "scope": "web_scope"
-    },
-    {
       "clientId": "mobile_client",
       "uri": "trackhubmobile://callback",
       "postLogoutUri": "trackhubmobile://logoutcallback",
@@ -68,6 +62,11 @@
     {
       "clientId": "trip_client",
       "clientSecret": "96cd18c9-d1b6-424b-9e29-b17842046d01",
+      "scope": "service_scope"
+    },
+    {
+      "clientId": "manager_client",
+      "clientSecret": "b7e41f28-6c93-4d5a-8f10-3a92c6e5d074",
       "scope": "service_scope"
     },
     {

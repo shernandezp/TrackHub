@@ -2,8 +2,10 @@ using Common.Infrastructure;
 
 namespace TrackHub.Manager.Infrastructure.Entities;
 
-public sealed class NotificationTemplate(Guid? accountId, string templateKey, string channel, string locale, string? subject, string body, bool active) : BaseAuditableEntity
+public sealed class NotificationTemplate(Guid? accountId, string templateKey, string channel, string locale, string? subject, string body, bool active) : BaseAuditableEntity, IEditVersioned
 {
+    public uint Version { get; set; }
+
     public Guid NotificationTemplateId { get; private set; } = Guid.NewGuid();
     /// <summary>Null = platform default template (read-only to accounts).</summary>
     public Guid? AccountId { get; set; } = accountId;

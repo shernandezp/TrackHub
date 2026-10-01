@@ -10,10 +10,7 @@ public sealed class OperatorHealthCheckReader(IApplicationDbContext context, ICu
 {
     public async Task<IReadOnlyCollection<OperatorHealthCheckVm>> GetByOperatorAsync(Guid operatorId, int take, CancellationToken cancellationToken)
     {
-        var op = await Context.Operators.Where(o => o.OperatorId == operatorId)
-            .Select(o => new { o.AccountId }).FirstOrDefaultAsync(cancellationToken)
-            ?? throw new NotFoundException("Operator", $"{operatorId}");
-        RequireAccountAccess(op.AccountId);
+        await RequireOperatorAsync(operatorId, cancellationToken);
         var pageSize = Math.Clamp(take <= 0 ? 50 : take, 1, 500);
         return await Context.OperatorHealthChecks
             .Where(c => c.OperatorId == operatorId)
@@ -27,10 +24,7 @@ public sealed class OperatorHealthCheckReader(IApplicationDbContext context, ICu
 
     public async Task<OperatorHealthSummaryVm> GetSummaryAsync(Guid operatorId, DateTimeOffset since, CancellationToken cancellationToken)
     {
-        var op = await Context.Operators.Where(o => o.OperatorId == operatorId)
-            .Select(o => new { o.AccountId }).FirstOrDefaultAsync(cancellationToken)
-            ?? throw new NotFoundException("Operator", $"{operatorId}");
-        RequireAccountAccess(op.AccountId);
+        await RequireOperatorAsync(operatorId, cancellationToken);
 
         // Aggregated in SQL. The window is caller-controlled up to 90 days and there is a check per
         // sync cycle, so materialising the rows pulled six figures of them into the host to produce
@@ -81,13 +75,7 @@ public sealed class OperatorHealthCheckReader(IApplicationDbContext context, ICu
     // faithfully mirroring how Manager stamped those columns.
     public async Task<OperatorHealthVm> GetLatestHealthAsync(Guid operatorId, CancellationToken cancellationToken)
     {
-        var accountId = await Context.Operators.Where(o => o.OperatorId == operatorId)
-            .Select(o => o.AccountId).FirstOrDefaultAsync(cancellationToken);
-        if (accountId == Guid.Empty)
-        {
-            throw new NotFoundException("Operator", $"{operatorId}");
-        }
-        RequireAccountAccess(accountId);
+        await RequireOperatorAsync(operatorId, cancellationToken);
 
         // Current status + latency: most recent health check.
         var latestCheck = await Context.OperatorHealthChecks

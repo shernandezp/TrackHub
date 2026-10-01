@@ -24,7 +24,6 @@ public static class DependencyInjection
     {
         var assembly = Assembly.GetExecutingAssembly();
         services.AddApplicationServices(assembly);
-        services.AddDistributedMemoryCache();
         services.AddMemoryCache();
         // Single request-side mode resolver: all position handlers resolve the
         // gps.integration / gps.positionHistory flags through here, with a 60-second cache.

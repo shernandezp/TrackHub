@@ -17,14 +17,20 @@ using Common.Infrastructure;
 
 namespace TrackHub.Manager.Infrastructure.Entities;
 
-public sealed class Transporter(string name, short transporterTypeId, Guid accountId) : BaseAuditableEntity
+public sealed class Transporter(string name, short transporterTypeId, Guid accountId) : BaseAuditableEntity, IEditVersioned
 {
+    public uint Version { get; set; }
+
     private Account? _account;
 
     public Guid TransporterId { get; private set; } = Guid.NewGuid();
     public string Name { get; set; } = name;
     public short TransporterTypeId { get; set; } = transporterTypeId;
     public Guid AccountId { get; set; } = accountId;
+
+    // A retired unit leaves the fleet but keeps its history: trips, positions, documents and
+    // assignment records still name it.
+    public DateTimeOffset? RetiredAt { get; set; }
 
     public ICollection<Group> Groups { get; set; } = [];
     public ICollection<TransporterDeviceAssignment> Assignments { get; set; } = [];

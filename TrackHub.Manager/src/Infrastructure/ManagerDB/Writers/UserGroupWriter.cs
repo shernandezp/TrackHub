@@ -22,12 +22,21 @@ namespace TrackHub.Manager.Infrastructure.ManagerDB.Writers;
 // This class represents a writer for UserGroup entities in the infrastructure layer.
 public sealed class UserGroupWriter(IApplicationDbContext context, ICurrentPrincipal principal) : AccountScopedDataAccess(context, principal), IUserGroupWriter
 {
-    // UserGroup carries no account of its own; derive it from the group for the audit trail.
-    private async Task<Guid> ResolveGroupAccountAsync(long groupId, CancellationToken cancellationToken)
-        => await Context.Groups
-            .Where(g => g.GroupId == groupId)
-            .Select(g => g.AccountId)
-            .FirstOrDefaultAsync(cancellationToken);
+    // Both sides of a membership must be rows of one account the caller may write; anything else is
+    // answered NotFound.
+    private async Task<Guid> RequireMembershipAccountAsync(Guid userId, long groupId, CancellationToken cancellationToken)
+    {
+        var userAccount = await Context.Users.Where(u => u.UserId == userId)
+            .Select(u => (Guid?)u.AccountId).FirstOrDefaultAsync(cancellationToken);
+        var groupAccount = await Context.Groups.Where(g => g.GroupId == groupId)
+            .Select(g => (Guid?)g.AccountId).FirstOrDefaultAsync(cancellationToken);
+        if (userAccount is not { } accountId || groupAccount != accountId || !HasAccountAccess(accountId, forWrite: true))
+        {
+            throw new NotFoundException(nameof(UserGroup), $"{userId}:{groupId}");
+        }
+
+        return accountId;
+    }
 
     // Creates a new UserGroup asynchronously.
     // Parameters:
@@ -43,8 +52,7 @@ public sealed class UserGroupWriter(IApplicationDbContext context, ICurrentPrinc
             GroupId = userGroupDto.GroupId
         };
 
-        var accountId = await ResolveGroupAccountAsync(userGroup.GroupId, cancellationToken);
-        RequireAccountWriteAccess(accountId);
+        var accountId = await RequireMembershipAccountAsync(userGroup.UserId, userGroup.GroupId, cancellationToken);
         await Context.UsersGroup.AddAsync(userGroup, cancellationToken);
         AddAuditEvent(accountId, "CreateUserGroup", "UserGroup", $"{userGroup.UserId}:{userGroup.GroupId}", null,
             $$"""{"userId":"{{userGroup.UserId}}","groupId":{{userGroup.GroupId}}}""");
@@ -67,8 +75,7 @@ public sealed class UserGroupWriter(IApplicationDbContext context, ICurrentPrinc
         var userGroup = await Context.UsersGroup.FindAsync([groupId, userId], cancellationToken)
             ?? throw new NotFoundException(nameof(UserGroup), $"{userId},{groupId}");
 
-        var accountId = await ResolveGroupAccountAsync(groupId, cancellationToken);
-        RequireAccountWriteAccess(accountId);
+        var accountId = await RequireMembershipAccountAsync(userId, groupId, cancellationToken);
         Context.UsersGroup.Attach(userGroup);
 
         AddAuditEvent(accountId, "DeleteUserGroup", "UserGroup", $"{userId}:{groupId}",

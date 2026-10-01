@@ -20,8 +20,8 @@ namespace Common.Application.Interfaces;
 /// <summary>
 /// Cached (30 s) resolver of account operational status consumed by
 /// <see cref="Common.Application.Behaviors.AccountStatusBehavior{TRequest, TResponse}"/>. Mirrors
-/// <see cref="IFeatureFlagService"/>: Common ships a fail-open default; each enforcing service
-/// overrides it with a cache over its own <see cref="IAccountOperationalStatusReader"/>.
+/// <see cref="IFeatureFlagService"/>: there is no default; each enforcing service registers a cache
+/// over its own <see cref="IAccountOperationalStatusReader"/> or fails at startup.
 /// </summary>
 public interface IAccountOperationalStatusService
 {

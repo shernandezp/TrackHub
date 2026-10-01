@@ -14,6 +14,7 @@
 //
 
 using Common.Application.Interfaces;
+using Common.Domain.Evidence;
 using Microsoft.Extensions.Logging;
 using TrackHub.TripManagement.Application.Common;
 
@@ -25,9 +26,10 @@ namespace TrackHub.TripManagement.Application.ProofsOfDelivery.Commands.Record;
 /// surface of its own (spec 11 §11).
 /// <para>
 /// Every referenced document is validated to belong to the trip's account AND to be
-/// <c>ScanStatus = Clean</c> before anything is written. Linking a quarantined or unscanned file to
-/// a delivery record would put unverified bytes into an auditable evidence trail, so the rejection
-/// is <see cref="TripErrorCodes.PodDocumentNotClean"/> rather than a silent skip (acceptance 25).
+/// servable (<c>Clean</c>, or <c>NotScanned</c> where no scanner runs) before anything is written.
+/// Linking a quarantined or pending file to a delivery record would put unverified bytes into an
+/// auditable evidence trail, so the rejection is <see cref="TripErrorCodes.PodDocumentNotClean"/>
+/// rather than a silent skip (acceptance 25).
 /// </para>
 /// <para>
 /// Idempotent on the unique <c>(TripStopId, ClientEventId)</c> index (acceptance 15). No
@@ -52,8 +54,6 @@ public sealed class RecordProofOfDeliveryCommandHandler(
     IUser user,
     ILogger<RecordProofOfDeliveryCommandHandler> logger) : IRequestHandler<RecordProofOfDeliveryCommand, ProofOfDeliveryVm>
 {
-    private const string CleanScanStatus = "Clean";
-
     private Guid UserId { get; } = TripVisibility.RequireUserId(user);
 
     public async Task<ProofOfDeliveryVm> Handle(RecordProofOfDeliveryCommand request, CancellationToken cancellationToken)
@@ -79,12 +79,16 @@ public sealed class RecordProofOfDeliveryCommandHandler(
         if (!replay && TripStatuses.IsTerminal(trip.Status))
             throw TripValidationFailure.Create(nameof(RecordProofOfDeliveryCommand.TripId), TripErrorCodes.TripAlreadyTerminal);
 
-        foreach (var documentId in request.ProofOfDelivery.DocumentIds)
+        if (!replay && !TripEventTime.IsAcceptable(request.ProofOfDelivery.CapturedAt, TripEventSources.Portal, trip.ActualStartAt, DateTimeOffset.UtcNow))
+            throw TripValidationFailure.Create(nameof(ProofOfDeliveryDto.CapturedAt), TripErrorCodes.EventTimeOutOfRange);
+
+        var documentIds = request.ProofOfDelivery.DocumentIds.Distinct().ToList();
+        foreach (var documentId in documentIds)
         {
             var state = await documentClient.GetDocumentStateAsync(documentId, cancellationToken);
             if (state is not { } document
                 || document.AccountId != caller.AccountId
-                || !string.Equals(document.ScanStatus, CleanScanStatus, StringComparison.OrdinalIgnoreCase))
+                || !DocumentScan.IsServable(document.ScanStatus))
             {
                 throw TripValidationFailure.Create(nameof(ProofOfDeliveryDto.DocumentIds), TripErrorCodes.PodDocumentNotClean);
             }

@@ -30,7 +30,7 @@ export const actionKeys = {
 export function useActions(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: actionKeys.all,
-    queryFn: api.getActions,
+    queryFn: ({ signal }) => api.getActions({ signal }),
     enabled: options.enabled ?? true,
   });
 }

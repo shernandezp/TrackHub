@@ -13,8 +13,8 @@
 //  limitations under the License.
 //
 
+using Common.Application.Paging;
 using Common.Application.Interfaces;
-using TrackHub.Manager.Application.Lookups;
 
 namespace TrackHub.Manager.Application.Transporters.Queries.GetLookup;
 

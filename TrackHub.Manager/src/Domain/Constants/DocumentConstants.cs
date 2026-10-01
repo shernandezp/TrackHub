@@ -39,14 +39,23 @@ public static class DocumentScanStatuses
 {
     public const string Pending = nameof(Pending);
     public const string Quarantined = nameof(Quarantined);
-    public const string Clean = nameof(Clean);
+    public const string Clean = Common.Domain.Evidence.DocumentScan.Clean;
+    public const string NotScanned = Common.Domain.Evidence.DocumentScan.NotScanned;
     public const string Infected = nameof(Infected);
     public const string Failed = nameof(Failed);
 
     public static readonly IReadOnlyCollection<string> All =
-        [Pending, Quarantined, Clean, Infected, Failed];
+        [Pending, Quarantined, Clean, NotScanned, Infected, Failed];
 
     public static bool IsValid(string? value) => value != null && All.Contains(value);
+
+    public static bool IsServable(string? value) => Common.Domain.Evidence.DocumentScan.IsServable(value);
+}
+
+/// <summary>Who may see a document beyond its owner's audience. Only the owner scope is implemented.</summary>
+public static class DocumentVisibilityScopes
+{
+    public const string Owner = nameof(Owner);
 }
 
 /// <summary>Sensitivity classification values. Stored as strings.</summary>
@@ -59,6 +68,9 @@ public static class DocumentClassifications
 
     public static readonly IReadOnlyCollection<string> All =
         [Public, Internal, Confidential, Legal];
+
+    public static string? Normalize(string? value)
+        => All.FirstOrDefault(known => string.Equals(known, value?.Trim(), StringComparison.OrdinalIgnoreCase));
 
     public static bool IsValid(string? value) => value != null && All.Contains(value);
 

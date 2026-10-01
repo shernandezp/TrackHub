@@ -15,10 +15,11 @@
 */
 
 import { useEffect, useMemo, useContext } from 'react';
-import { useTransporterLookupByUser } from 'queries/transporters';
 import { useOperatorLookup } from 'queries/operators';
 import { useAllGeofences } from 'queries/geofences';
 import type { SelectListItem } from 'controls/Dialogs/CustomSelect';
+import type { SearchOptionsHook } from 'edition/SearchSelect';
+import { useUserTransporterOptions } from 'edition/pickerOptions';
 import { ACCOUNT_STATUS_NAME, ACCOUNT_STATUS_I18N } from 'data/accountStatuses';
 import { LoadingContext } from 'LoadingContext';
 import { useTranslation } from 'react-i18next';
@@ -89,10 +90,21 @@ export function parseFilterDefinitions(json: string | null | undefined): ReportF
   return definitions;
 }
 
-/** The resolved form model: definitions plus the option list behind each picker source. */
+export const SEARCH_PICKER_SOURCES = {
+  transporters: useUserTransporterOptions,
+} as const satisfies Partial<Record<FilterPickerSource, SearchOptionsHook>>;
+
+export type SearchPickerSource = keyof typeof SEARCH_PICKER_SOURCES;
+export type ListPickerSource = Exclude<FilterPickerSource, SearchPickerSource>;
+
+export function isSearchPickerSource(source: FilterPickerSource): source is SearchPickerSource {
+  return source in SEARCH_PICKER_SOURCES;
+}
+
+/** The resolved form model: definitions plus the option list behind each list picker source. */
 export interface ReportFiltersModel {
   definitions: ReportFilterDefinition[];
-  optionsBySource: Record<FilterPickerSource, SelectListItem[]>;
+  optionsBySource: Record<ListPickerSource, SelectListItem[]>;
 }
 
 /**
@@ -107,32 +119,22 @@ function useFiltersData(filtersJson: string | null | undefined): ReportFiltersMo
   const definitions = useMemo(() => parseFilterDefinitions(filtersJson), [filtersJson]);
   const needs = (source: FilterPickerSource) => definitions.some((d) => d.source === source);
 
-  const transportersQuery = useTransporterLookupByUser({
-    enabled: isAuthenticated && needs('transporters'),
-  });
   const operatorsQuery = useOperatorLookup({ enabled: isAuthenticated && needs('operators') });
-  const geofencesQuery = useAllGeofences(false, {}, {
+  const geofencesQuery = useAllGeofences({}, {
     enabled: isAuthenticated && needs('geofences'),
   });
 
   // Keep the global spinner UX while the picker lists load.
   useEffect(() => {
-    setLoading(
-      transportersQuery.isFetching || operatorsQuery.isFetching || geofencesQuery.isFetching
-    );
+    setLoading(operatorsQuery.isFetching || geofencesQuery.isFetching);
   }, [
-    transportersQuery.isFetching,
     operatorsQuery.isFetching,
     geofencesQuery.isFetching,
     setLoading,
   ]);
 
-  const optionsBySource = useMemo<Record<FilterPickerSource, SelectListItem[]>>(
+  const optionsBySource = useMemo<Record<ListPickerSource, SelectListItem[]>>(
     () => ({
-      transporters: (transportersQuery.data ?? []).map((transporter) => ({
-        value: transporter.transporterId,
-        label: transporter.name,
-      })),
       operators: (operatorsQuery.data ?? []).map((operator) => ({
         value: operator.operatorId,
         label: operator.name,
@@ -146,7 +148,7 @@ function useFiltersData(filtersJson: string | null | undefined): ReportFiltersMo
         label: t(ACCOUNT_STATUS_I18N[name]),
       })),
     }),
-    [transportersQuery.data, operatorsQuery.data, geofencesQuery.data, t]
+    [operatorsQuery.data, geofencesQuery.data, t]
   );
 
   return { definitions, optionsBySource };

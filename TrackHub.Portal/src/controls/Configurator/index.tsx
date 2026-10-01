@@ -64,6 +64,7 @@ interface ConfiguratorState {
   onlineInterval: string;
   refreshMap: boolean;
   refreshMapInterval: string;
+  version?: number;
 }
 
 const DEFAULT_INTERVAL_SECONDS = 60;
@@ -84,6 +85,7 @@ const toFormState = (settings: Partial<AccountSettings>): ConfiguratorState => (
   onlineInterval: String(settings.onlineInterval ?? DEFAULT_INTERVAL_SECONDS),
   refreshMap: settings.refreshMap ?? false,
   refreshMapInterval: String(settings.refreshMapInterval ?? DEFAULT_INTERVAL_SECONDS),
+  version: settings.version,
 });
 
 export interface ConfiguratorProps {
@@ -108,8 +110,14 @@ function Configurator({ settings, updateSettings }: ConfiguratorProps) {
   const [errors, setErrors] = useState<ConfiguratorErrors>({});
   const handleCloseConfigurator = () => setOpenConfigurator(dispatch, false);
 
+  // Reopening the panel refetches the row; an unchanged row must not wipe what the user is typing.
   useEffect(() => {
-    if (settings.maps) setAccountSettings(toFormState(settings));
+    if (!settings.maps) return;
+    setAccountSettings((current) =>
+      current.accountId === settings.accountId && current.version === settings.version
+        ? current
+        : toFormState(settings)
+    );
   }, [settings]);
 
   function handleMapsChange(e: FormChangeEvent) {
@@ -176,6 +184,7 @@ function Configurator({ settings, updateSettings }: ConfiguratorProps) {
         onlineInterval,
         refreshMap: accountSettings.refreshMap,
         refreshMapInterval,
+        expectedVersion: accountSettings.version ?? null,
       });
       notification?.showSuccess(t("settings.saveMessage"));
     } catch (error) {

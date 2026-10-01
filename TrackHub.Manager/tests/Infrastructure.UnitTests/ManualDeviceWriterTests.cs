@@ -69,7 +69,7 @@ public class ManualDeviceWriterTests
         var accountId = Guid.NewGuid();
         await using var context = NewContext(nameof(CreateManual_AutoAllocatesIdentifierAndDropsProviderMetadata));
         var operatorId = await SeedOperatorAsync(context, accountId);
-        var writer = new DeviceWriter(context, Principal(accountId));
+        var writer = new DeviceWriter(context, Principal(accountId), ImmediateOperatorCatalogGate.Instance);
 
         var vm = await writer.CreateManualDeviceAsync(Dto(accountId, operatorId), CancellationToken.None);
 
@@ -97,7 +97,7 @@ public class ManualDeviceWriterTests
         var operatorId = await SeedOperatorAsync(context, accountId);
         await context.Devices.AddAsync(new Device("X", 7, "s", DeviceTypeId, null, null, null, null, (int)DetectedStatus.Available, operatorId, accountId));
         await context.SaveChangesAsync();
-        var writer = new DeviceWriter(context, Principal(accountId));
+        var writer = new DeviceWriter(context, Principal(accountId), ImmediateOperatorCatalogGate.Instance);
 
         var vm = await writer.CreateManualDeviceAsync(Dto(accountId, operatorId), CancellationToken.None);
 
@@ -112,23 +112,23 @@ public class ManualDeviceWriterTests
         var operatorId = await SeedOperatorAsync(context, accountId);
         await context.Devices.AddAsync(new Device("X", 5, "s", DeviceTypeId, null, null, null, null, (int)DetectedStatus.Available, operatorId, accountId));
         await context.SaveChangesAsync();
-        var writer = new DeviceWriter(context, Principal(accountId));
+        var writer = new DeviceWriter(context, Principal(accountId), ImmediateOperatorCatalogGate.Instance);
 
         Assert.ThrowsAsync<ConflictException>(() =>
             writer.CreateManualDeviceAsync(Dto(accountId, operatorId, identifier: 5), CancellationToken.None));
     }
 
     [Test]
-    public async Task CreateManual_OperatorInAnotherAccount_ThrowsForbidden()
+    public async Task CreateManual_OperatorInAnotherAccount_ThrowsNotFound()
     {
         var accountId = Guid.NewGuid();
         var otherAccountId = Guid.NewGuid();
-        await using var context = NewContext(nameof(CreateManual_OperatorInAnotherAccount_ThrowsForbidden));
+        await using var context = NewContext(nameof(CreateManual_OperatorInAnotherAccount_ThrowsNotFound));
         // Operator belongs to a different account than the caller/DTO claims.
         var operatorId = await SeedOperatorAsync(context, otherAccountId);
-        var writer = new DeviceWriter(context, Principal(accountId));
+        var writer = new DeviceWriter(context, Principal(accountId), ImmediateOperatorCatalogGate.Instance);
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(() =>
+        Assert.ThrowsAsync<NotFoundException>(() =>
             writer.CreateManualDeviceAsync(Dto(accountId, operatorId), CancellationToken.None));
     }
 }

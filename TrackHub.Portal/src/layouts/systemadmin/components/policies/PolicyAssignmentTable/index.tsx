@@ -132,7 +132,7 @@ function PolicyAssignmentTable({ open }: PolicyAssignmentTableProps) {
       title={t('policy.resources')}
       data={data}
       columns={actions}
-      rows={resources}>
+      rows={policyResourcesQuery.isSuccess ? resources : []}>
       <CustomSelect
         list={policies}
         name="name"

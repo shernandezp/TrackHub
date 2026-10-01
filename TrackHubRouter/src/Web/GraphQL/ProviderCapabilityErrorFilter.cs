@@ -15,6 +15,7 @@
 
 using HotChocolate;
 using HotChocolate.Execution;
+using TrackHub.Router.Domain.Constants;
 using TrackHub.Router.Domain.Exceptions;
 
 namespace TrackHub.Router.Web.GraphQL;
@@ -29,7 +30,7 @@ public sealed class ProviderCapabilityErrorFilter : IErrorFilter
         => error.Exception is ProviderCapabilityNotSupportedException notSupported
             ? ErrorBuilder.FromError(error)
                 .SetMessage(notSupported.Message)
-                .SetCode("PROVIDER_CAPABILITY_NOT_SUPPORTED")
+                .SetCode(RouterErrorCodes.ProviderCapabilityNotSupported)
                 .SetExtension("protocol", notSupported.Protocol.ToString())
                 .SetExtension("capability", notSupported.Capability.ToString())
                 .Build()

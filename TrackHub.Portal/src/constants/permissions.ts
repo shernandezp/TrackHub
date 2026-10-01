@@ -26,6 +26,7 @@
 
 export const PermissionResources = {
   Trips: 'Trips',
+  DriverOperations: 'DriverOperations',
 } as const;
 
 export const PermissionActions = {

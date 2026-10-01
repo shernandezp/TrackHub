@@ -124,6 +124,7 @@ app.UseRequestLocalization(localizationOptions);
 // Trust reverse proxy headers (nginx terminates SSL)
 var forwardedHeadersOptions = TrustedProxies.Create(builder.Configuration);
 app.UseForwardedHeaders(forwardedHeadersOptions);
+app.UseExceptionHandler(options => { });
 
 app.UsePathBase("/Identity");
 
@@ -143,8 +144,6 @@ app.UseAuthorization();
 
 // After UseAuthentication so a partition can read the caller's claims.
 app.UseRateLimiter();
-
-app.UseExceptionHandler(options => { });
 
 app.MapGet("~/authorize", async (HttpContext context) =>
 {

@@ -50,31 +50,31 @@ public class AccountScopeGuardTests
     private static ICurrentPrincipal ForeignUser() => Principal(PrincipalType.User, Guid.NewGuid(), Roles.Manager);
 
     [Test]
-    public async Task OperatorWriter_Update_ForeignAccount_IsForbidden()
+    public async Task OperatorWriter_Update_ForeignAccount_IsNotFound()
     {
-        await using var context = NewContext(nameof(OperatorWriter_Update_ForeignAccount_IsForbidden));
+        await using var context = NewContext(nameof(OperatorWriter_Update_ForeignAccount_IsNotFound));
         var op = new Operator("gps", null, null, null, null, null, 1, Guid.NewGuid());
         await context.Operators.AddAsync(op);
         await context.SaveChangesAsync();
 
         var writer = new OperatorWriter(context as IApplicationDbContext, ForeignUser());
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.SetEnabledAsync(op.OperatorId, true, CancellationToken.None));
+        Assert.ThrowsAsync<NotFoundException>(() => writer.SetEnabledAsync(op.OperatorId, true, CancellationToken.None));
     }
 
     [Test]
-    public async Task TransporterWriter_UpdateAndDelete_ForeignAccount_IsForbidden()
+    public async Task TransporterWriter_UpdateAndDelete_ForeignAccount_IsNotFound()
     {
-        await using var context = NewContext(nameof(TransporterWriter_UpdateAndDelete_ForeignAccount_IsForbidden));
+        await using var context = NewContext(nameof(TransporterWriter_UpdateAndDelete_ForeignAccount_IsNotFound));
         var transporter = new Transporter("truck", 1, Guid.NewGuid());
         await context.Transporters.AddAsync(transporter);
         await context.SaveChangesAsync();
 
         var writer = new TransporterWriter(context as IApplicationDbContext, ForeignUser());
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.UpdateTransporterAsync(
+        Assert.ThrowsAsync<NotFoundException>(() => writer.UpdateTransporterAsync(
             new UpdateTransporterDto(transporter.TransporterId, "hijacked", 1), CancellationToken.None));
-        Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.DeleteTransporterAsync(
+        Assert.ThrowsAsync<NotFoundException>(() => writer.RetireTransporterAsync(
             transporter.TransporterId, CancellationToken.None));
         Assert.That(await context.Transporters.FindAsync(transporter.TransporterId), Is.Not.Null);
     }

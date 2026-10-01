@@ -92,7 +92,7 @@ public class GetReportQueryHandlerTests
 
     private GetReportQueryHandler BuildHandler()
         => new(_factory.Object, _user.Object, _audit.Object, _catalog.Object,
-            _features.Object, _branding.Object, _excel, _pdf, _limits);
+            _features.Object, Mock.Of<IIdentityService>(), Zones(), _branding.Object, _excel, _pdf, _limits);
 
     private static FilterDto Filters(string language = "en") => new() { Name = "Title", Language = language };
 
@@ -278,5 +278,12 @@ public class GetReportQueryHandlerTests
 
         var result = await BuildHandler().Handle(query, CancellationToken.None);
         Assert.That(result.ContentType, Does.Contain("spreadsheetml"));
+    }
+
+    private static Common.Domain.Time.IAccountTimeZoneResolver Zones()
+    {
+        var zones = new Mock<Common.Domain.Time.IAccountTimeZoneResolver>();
+        zones.Setup(z => z.ResolveAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(Common.Domain.Time.AccountTimeZone.Utc);
+        return zones.Object;
     }
 }

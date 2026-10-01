@@ -37,7 +37,7 @@ public class DeviceReconciliationTests
         var principal = new Mock<ICurrentPrincipal>();
         principal.SetupGet(p => p.PrincipalType).Returns(PrincipalType.ServiceClient);
         principal.SetupGet(p => p.AccountId).Returns((Guid?)null);
-        return new DeviceWriter(context as IApplicationDbContext, principal.Object);
+        return new DeviceWriter(context as IApplicationDbContext, principal.Object, ImmediateOperatorCatalogGate.Instance);
     }
 
     private static DeviceDto Dto(Guid accountId, Guid operatorId, int identifier)

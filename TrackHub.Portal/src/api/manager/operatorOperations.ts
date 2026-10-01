@@ -45,6 +45,7 @@ export const OperatorDetailFragment = graphql(`
     lastDeviceSyncAt
     lastPositionSyncAt
     lastModified
+    version
   }
 `);
 

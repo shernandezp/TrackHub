@@ -62,6 +62,19 @@ public class OutboxDispatcherTests
     }
 
     [Test]
+    public async Task DispatchDue_ManagerRefuses_RecordsTheRefusalCode()
+    {
+        var messageId = Guid.NewGuid();
+        _managerWriter.Setup(w => w.DeleteUserAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HotChocolate.GraphQLException(HotChocolate.ErrorBuilder.New().SetMessage("archived").SetCode("ACCOUNT_SUSPENDED").Build()));
+        Due(new OutboxMessageVm(messageId, OutboxMessageTypes.UserDeleted, JsonSerializer.Serialize(Guid.NewGuid()), 0));
+
+        await CreateDispatcher().DispatchDueAsync(CancellationToken.None);
+
+        _writer.Verify(w => w.MarkAttemptFailedAsync(messageId, It.Is<string>(e => e.Contains("ACCOUNT_SUSPENDED")), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Test]
     public async Task DispatchDue_ManagerDown_RecordsTheAttemptAndKeepsGoing()
     {
         var messageId = Guid.NewGuid();

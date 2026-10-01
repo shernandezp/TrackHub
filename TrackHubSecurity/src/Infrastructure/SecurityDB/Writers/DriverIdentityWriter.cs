@@ -21,12 +21,13 @@ using TrackHub.Security.Infrastructure.Interfaces;
 
 namespace TrackHub.Security.Infrastructure.Writers;
 
-public sealed class DriverIdentityWriter(IApplicationDbContext context, ICurrentPrincipal principal)
+public sealed class DriverIdentityWriter(IApplicationDbContext context, ICurrentPrincipal principal, IManagerDriverReader drivers)
     : AccountScopedDataAccess(context, principal), IDriverIdentityWriter
 {
     public async Task<DriverCredentialVm> CreateDriverCredentialAsync(DriverCredentialDto credential, CancellationToken cancellationToken)
     {
         var accountId = await RequireAccountAccessAsync(credential.AccountId, cancellationToken);
+        await RequireDriverOfAccountAsync(credential.DriverId, accountId, cancellationToken);
         var entity = new DriverCredential(credential.DriverId, accountId, NormalizeLogin(credential.Login), credential.Password.HashPassword(), credential.Active)
         {
             ResetRequired = credential.ResetRequired
@@ -94,6 +95,7 @@ public sealed class DriverIdentityWriter(IApplicationDbContext context, ICurrent
     public async Task<DriverDeviceRegistrationVm> RegisterDriverDeviceAsync(DriverDeviceRegistrationDto device, CancellationToken cancellationToken)
     {
         var accountId = await RequireAccountAccessAsync(device.AccountId, cancellationToken);
+        await RequireDriverOfAccountAsync(device.DriverId, accountId, cancellationToken);
         var entity = new DriverDeviceRegistration(device.DriverId, accountId, device.DeviceId, device.DeviceName, device.Platform, device.AppVersion, device.PushToken, device.RefreshTokenFamilyId);
         await Context.DriverDeviceRegistrations.AddAsync(entity, cancellationToken);
         await Context.SaveChangesAsync(cancellationToken);
@@ -121,17 +123,33 @@ public sealed class DriverIdentityWriter(IApplicationDbContext context, ICurrent
     private async Task<DriverCredential> GetCredentialForWriteAsync(Guid driverCredentialId, CancellationToken cancellationToken)
     {
         var entity = await Context.DriverCredentials
-            .AsTracking().FirstAsync(x => x.DriverCredentialId == driverCredentialId, cancellationToken);
-        await RequireAccountAccessAsync(entity.AccountId, cancellationToken);
+            .AsTracking().FirstOrDefaultAsync(x => x.DriverCredentialId == driverCredentialId, cancellationToken);
+        if (entity is null || !await HasAccountAccessAsync(entity.AccountId, cancellationToken))
+        {
+            throw new NotFoundException(nameof(DriverCredential), driverCredentialId.ToString());
+        }
+
         return entity;
     }
 
     private async Task<DriverDeviceRegistration> GetDeviceForWriteAsync(Guid driverDeviceRegistrationId, CancellationToken cancellationToken)
     {
         var entity = await Context.DriverDeviceRegistrations
-            .AsTracking().FirstAsync(x => x.DriverDeviceRegistrationId == driverDeviceRegistrationId, cancellationToken);
-        await RequireAccountAccessAsync(entity.AccountId, cancellationToken);
+            .AsTracking().FirstOrDefaultAsync(x => x.DriverDeviceRegistrationId == driverDeviceRegistrationId, cancellationToken);
+        if (entity is null || !await HasAccountAccessAsync(entity.AccountId, cancellationToken))
+        {
+            throw new NotFoundException(nameof(DriverDeviceRegistration), driverDeviceRegistrationId.ToString());
+        }
+
         return entity;
+    }
+
+    private async Task RequireDriverOfAccountAsync(Guid driverId, Guid accountId, CancellationToken cancellationToken)
+    {
+        if (!await drivers.DriverBelongsToAccountAsync(driverId, accountId, cancellationToken))
+        {
+            throw new NotFoundException(nameof(DriverCredential.DriverId), driverId.ToString());
+        }
     }
 
     private static string NormalizeLogin(string login) => login.Trim().ToUpperInvariant();

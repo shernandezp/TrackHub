@@ -14,12 +14,12 @@
 *  limitations under the License.
 */
 
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import DynamicTableDialog from 'controls/Dialogs/TableDialogs/DynamicTableDialog';
-import CustomSelect from 'controls/Dialogs/CustomSelect';
-import type { FormChangeHandler } from 'controls/Dialogs/useForm';
-import { useUserLookupByAccount } from 'queries/users';
+import SearchSelect from 'edition/SearchSelect';
+import type { SearchOption } from 'edition/SearchSelect';
+import { excludingOptions, useAccountUserOptions } from 'edition/pickerOptions';
 import { useUsersByRole, useCreateUserRole, useDeleteUserRole } from 'queries/roles';
 import { LoadingContext } from 'LoadingContext';
 
@@ -32,17 +32,18 @@ interface RoleAllocatorDialogProps {
 function RoleAllocatorDialog({ open, setOpen, roleId }: RoleAllocatorDialogProps) {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
-  const [userId, setUserId] = useState('');
+  const [user, setUser] = useState<SearchOption | null>(null);
 
-  // Set difference: available = account users minus assigned. Both operands come
-  // from unpaged lookups so a truncated one cannot offer an assigned user again.
-  const accountUsersQuery = useUserLookupByAccount({ enabled: open });
-  const accountUsers = accountUsersQuery.data ?? [];
-  // Assigned users only matter while the dialog is open.
+  // Assigned users only matter while the dialog is open; the picker searches the account
+  // server-side and hides whoever is already assigned.
   const assignedQuery = useUsersByRole(open ? roleId : undefined);
   const assignedUsers = assignedQuery.data ?? [];
   const createUserRole = useCreateUserRole();
   const deleteUserRole = useDeleteUserRole();
+  const useAvailableUserOptions = useMemo(
+    () => excludingOptions(useAccountUserOptions, new Set(assignedUsers.map((assigned) => assigned.userId))),
+    [assignedUsers]
+  );
 
   const columns = [
     { field: 'username', headerName: t('user.username') }
@@ -50,27 +51,15 @@ function RoleAllocatorDialog({ open, setOpen, roleId }: RoleAllocatorDialogProps
 
   // Keep the global spinner UX while the lists load/refresh.
   useEffect(() => {
-    setLoading(accountUsersQuery.isFetching || assignedQuery.isFetching);
-  }, [accountUsersQuery.isFetching, assignedQuery.isFetching, setLoading]);
-
-  const users = accountUsers
-    .filter(user => !assignedUsers.some(assignedUser => assignedUser.userId === user.userId))
-    .map(user => ({
-      value: user.userId,
-      label: user.username
-    }));
-
-  const handleChange: FormChangeHandler = (event) => {
-    setLoading(true);
-    setUserId(String(event.target.value ?? ''));
-    setLoading(false);
-  };
+    setLoading(assignedQuery.isFetching);
+  }, [assignedQuery.isFetching, setLoading]);
 
   const handleAdd = async () => {
+    if (!user) return;
     setLoading(true);
     try {
-      await createUserRole.mutateAsync({ userId, roleId });
-      setUserId('');
+      await createUserRole.mutateAsync({ userId: user.value, roleId });
+      setUser(null);
     } catch {
       // Failure is surfaced by the global toast.
     } finally {
@@ -84,7 +73,7 @@ function RoleAllocatorDialog({ open, setOpen, roleId }: RoleAllocatorDialogProps
       const deletePromises = selectedRows.map(index =>
         deleteUserRole.mutateAsync({ userId: assignedUsers[index].userId, roleId }));
       await Promise.all(deletePromises);
-      setUserId('');
+      setUser(null);
     } catch {
       // Failure is surfaced by the global toast.
     } finally {
@@ -93,7 +82,7 @@ function RoleAllocatorDialog({ open, setOpen, roleId }: RoleAllocatorDialogProps
   };
 
   const handleClose = async () => {
-    setUserId('');
+    setUser(null);
     setOpen(false);
   };
 
@@ -106,15 +95,13 @@ function RoleAllocatorDialog({ open, setOpen, roleId }: RoleAllocatorDialogProps
       open={open}
       data={assignedUsers}
       columns={columns}>
-      <CustomSelect
-        list={users}
-        name="userId"
+      <SearchSelect
         id="userId"
         label={t('user.singleTitle')}
-        value={userId}
-        handleChange={handleChange}
-        numericValue={false}
-        required
+        value={user?.value ?? null}
+        valueLabel={user?.label}
+        onChange={setUser}
+        useOptions={useAvailableUserOptions}
       />
     </DynamicTableDialog>
   );

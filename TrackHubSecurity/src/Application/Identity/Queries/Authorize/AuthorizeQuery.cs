@@ -18,6 +18,7 @@ using Common.Application.Interfaces;
 namespace TrackHub.Security.Application.Identity.Queries.Authorize;
 
 [PlatformScoped("Authorization pipeline: policy-authorization primitive underlying authorizeUser; IdentityCallerGuard.EnsureCallerIsSubjectUserOrService binds user callers to themselves. Trusted internal services may evaluate any user.")]
+[AllowSuspendedAccount]
 public readonly record struct AuthorizeQuery(Guid UserId, string Resource, string Action) : IRequest<bool>;
 
 public class GetUsersQueryHandler(IIdentityService service, IUser user) : IRequestHandler<AuthorizeQuery, bool>

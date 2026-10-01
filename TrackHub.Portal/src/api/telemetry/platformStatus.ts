@@ -20,10 +20,11 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { RequestOptions } from 'api/core/errors';
 import { GetPlatformSyncActivityDocument } from './platformStatusOperations';
 
-export async function getPlatformSyncActivity(lookbackMinutes = 60) {
-  const data = await executeGraphQL('telemetry', GetPlatformSyncActivityDocument, { lookbackMinutes });
+export async function getPlatformSyncActivity(lookbackMinutes = 60, options?: RequestOptions) {
+  const data = await executeGraphQL('telemetry', GetPlatformSyncActivityDocument, { lookbackMinutes }, options);
   return data.platformSyncActivity;
 }
 

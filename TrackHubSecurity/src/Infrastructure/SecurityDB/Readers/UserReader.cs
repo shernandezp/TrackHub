@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Infrastructure;
 using Common.Application.Interfaces;
 using Common.Domain.Helpers;
 using TrackHub.Security.Infrastructure.Interfaces;
@@ -105,9 +106,13 @@ public sealed class UserReader(IApplicationDbContext context, ICurrentPrincipal 
                 u.IntegrationUser,
                 u.Roles.Select(r => new RoleVm(r.RoleId, r.Name)).ToList(),
                 u.Policies.Select(p => new PolicyVm(p.PolicyId, p.Name)).ToList()))
-            .FirstAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken);
 
-        await RequireAccountAccessAsync(user.AccountId, cancellationToken);
+        if (user.UserId == Guid.Empty || !await HasAccountAccessAsync(user.AccountId, cancellationToken))
+        {
+            throw new NotFoundException(nameof(User), id.ToString());
+        }
+
         return user;
     }
 
@@ -270,7 +275,7 @@ public sealed class UserReader(IApplicationDbContext context, ICurrentPrincipal 
     /// <returns>A boolean indicating whether the specified email address is unique</returns>
     public async Task<bool> ValidateEmailAddressAsync(string emailAddress, CancellationToken cancellationToken)
         => !await Context.Users
-            .Where(u => u.EmailAddress.Equals(emailAddress))
+            .Where(u => u.EmailAddress == Common.Domain.Helpers.EmailAddresses.Normalize(emailAddress))
             .AnyAsync(cancellationToken);
 
     /// <summary>
@@ -282,7 +287,7 @@ public sealed class UserReader(IApplicationDbContext context, ICurrentPrincipal 
     /// <returns>A boolean indicating whether the specified email address is unique</returns>
     public async Task<bool> ValidateEmailAddressAsync(Guid userId, string emailAddress, CancellationToken cancellationToken)
         => !await Context.Users
-            .Where(u => !u.UserId.Equals(userId) && u.EmailAddress.Equals(emailAddress))
+            .Where(u => !u.UserId.Equals(userId) && u.EmailAddress == Common.Domain.Helpers.EmailAddresses.Normalize(emailAddress))
             .AnyAsync(cancellationToken);
 
     /// <summary>

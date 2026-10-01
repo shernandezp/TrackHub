@@ -32,7 +32,7 @@ export const clientKeys = {
 export function useClients(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: clientKeys.list(),
-    queryFn: () => api.getClients(),
+    queryFn: ({ signal }) => api.getClients(undefined, undefined, { signal }),
     enabled: options.enabled ?? true,
   });
 }

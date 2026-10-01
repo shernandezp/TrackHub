@@ -40,6 +40,7 @@ interface TripDetailProps {
   mapKey?: string | null;
   darkMode?: boolean;
   onStopAction: (action: 'arrive' | 'depart' | 'skip', tripStopId: string) => void;
+  stopActionPending?: boolean;
   /** Stop progress can only be recorded while the trip is actually running. */
   canRecordProgress: boolean;
   /** Opens the POD capture dialog for a stop. */
@@ -78,6 +79,7 @@ function TripDetail({
   mapKey,
   darkMode = false,
   onStopAction,
+  stopActionPending = false,
   canRecordProgress,
   onRecordPod,
   onAddDelivery,
@@ -178,6 +180,7 @@ function TripDetail({
             <ArgonButton
               variant="text"
               color="info"
+              disabled={stopActionPending}
               onClick={() => onStopAction('arrive', stop.tripStopId)}
             >
               <Icon>login</Icon>&nbsp;{t('tripStops.actions.arrive')}
@@ -195,6 +198,7 @@ function TripDetail({
           <ArgonButton
             variant="text"
             color="success"
+            disabled={stopActionPending}
             onClick={() => onStopAction('depart', stop.tripStopId)}
           >
             <Icon>logout</Icon>&nbsp;{t('tripStops.actions.depart')}
@@ -270,13 +274,15 @@ function TripDetail({
     ),
     action: canWriteDeliveries ? (
       <>
-        <ArgonButton variant="text" color="dark" onClick={() => onEditDelivery(delivery)}>
-          <Icon>edit</Icon>&nbsp;{t('generic.edit')}
-        </ArgonButton>
+        {delivery.status === 'Pending' && (
+          <ArgonButton variant="text" color="dark" onClick={() => onEditDelivery(delivery)}>
+            <Icon>edit</Icon>&nbsp;{t('generic.edit')}
+          </ArgonButton>
+        )}
         <ArgonButton variant="text" color="success" onClick={() => onDeliveryOutcome(delivery)}>
           <Icon>fact_check</Icon>&nbsp;{t('trips.deliveries.outcome')}
         </ArgonButton>
-        {canDeleteDeliveries && (
+        {canDeleteDeliveries && delivery.status === 'Pending' && (
           <ArgonButton variant="text" color="error" onClick={() => onDeleteDelivery(delivery)}>
             <Icon>delete</Icon>&nbsp;{t('generic.delete')}
           </ArgonButton>

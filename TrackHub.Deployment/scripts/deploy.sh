@@ -3,7 +3,7 @@
 # TrackHub Deployment Script
 # =============================================================================
 # Main deployment script for TrackHub application stack
-# Usage: ./deploy.sh [full|frontend|backend] [--build|--pull] [--no-cache]
+# Usage: ./deploy.sh [full|frontend|backend] [--build] [--no-cache]
 # Builds use Docker layer caching by default and reliably detect source changes.
 # Containers are always force recreated so updated images are deployed.
 # =============================================================================
@@ -15,6 +15,7 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
 # Source repository settings (GITHUB_OWNER / GITHUB_REPO / credentials)
 source "$SCRIPT_DIR/repo-config.sh"
+source "$SCRIPT_DIR/required-config.sh"
 
 
 export COMPOSE_BAKE=false
@@ -28,7 +29,6 @@ NC='\033[0m' # No Color
 
 # Default values
 DEPLOYMENT_TYPE="full"
-BUILD_TYPE="--build"
 SKIP_INIT=false
 NO_CACHE=false
 
@@ -66,8 +66,7 @@ usage() {
     echo "  backend   - Deploy only the backend services (split deployment: backend-only server)"
     echo ""
     echo "Options:"
-    echo "  --build     - Build images locally using Docker layer cache (default)"
-    echo "  --pull      - Pull images from registry"
+    echo "  --build     - Build images locally using Docker layer cache (always; kept for compatibility)"
     echo "  --no-cache  - Force a full rebuild ignoring the Docker layer cache"
     echo "                (rarely needed; normal builds already detect source changes)"
     echo "  --skip-init - Skip database initialization (for migrations)"
@@ -220,27 +219,10 @@ check_configuration() {
     fi
     print_success ".env file exists"
 
-    # These keys have no defaults in the compose files; an empty or placeholder value deploys a
-    # Telemetry service with no connection string and service clients that cannot authenticate.
-    # .env is grepped rather than sourced: values may contain shell metacharacters.
+    # REQUIRED_CONFIG_KEYS (required-config.sh) is the one list; sync-config.sh validate reads it too.
     if [ "$DEPLOYMENT_TYPE" != "frontend" ] && [ "$DEPLOYMENT_TYPE" != "portal" ]; then
-        local required_keys=(
-            DB_CONNECTION_TELEMETRY
-            SYNCWORKER_CLIENT_SECRET
-            ROUTER_CLIENT_SECRET
-            SECURITY_CLIENT_SECRET
-            GEOFENCE_CLIENT_SECRET
-            TRIP_CLIENT_SECRET
-            REPORTING_CLIENT_SECRET
-        )
-        local missing=()
-        local key value
-        for key in "${required_keys[@]}"; do
-            value="$(grep -E "^${key}=" "$PROJECT_DIR/.env" | tail -n 1 | cut -d= -f2-)"
-            case "$value" in
-                ""|your-*) missing+=("$key") ;;
-            esac
-        done
+        local missing
+        mapfile -t missing < <(missing_required_config "$PROJECT_DIR/.env")
         if [ ${#missing[@]} -gt 0 ]; then
             print_error "Missing or placeholder values in .env: ${missing[*]}"
             print_info "These keys have no defaults — set real values in $PROJECT_DIR/.env"
@@ -266,10 +248,15 @@ check_configuration() {
         print_success "SSL certificates found"
     fi
     
-    # Check clients.json for database initialization
+    # db-init seeds OAuth clients from config/clients.json. Without it the image's development set
+    # would be seeded instead, pointing web_client back at localhost.
     if [ ! -f "$PROJECT_DIR/config/clients.json" ]; then
-        print_warning "clients.json not found at config/clients.json"
-        print_info "Copy config/clients.json.example to config/clients.json and configure it"
+        if [ "$DEPLOYMENT_TYPE" != "frontend" ] && [ "$DEPLOYMENT_TYPE" != "portal" ] && [ "$SKIP_INIT" != true ]; then
+            print_error "clients.json not found at config/clients.json"
+            print_info "Copy config/clients.json.example to config/clients.json and configure it"
+            exit 1
+        fi
+        print_warning "clients.json not found at config/clients.json (not needed for this deployment)"
     else
         print_success "clients.json found"
     fi
@@ -385,6 +372,7 @@ deploy_portal() {
     # No "down", no db-init, no other service is recreated.
     print_info "Rebuilding the portal..."
     cd "$PROJECT_DIR"
+    ensure_source_repos
     "$SCRIPT_DIR/rollback.sh" tag frontend previous "$COMPOSE_FILE" > /dev/null 2>&1 \
         || print_warning "No current image for frontend — nothing to roll back to"
     if [ "$NO_CACHE" = true ]; then
@@ -412,75 +400,73 @@ deploy() {
         ensure_generated_config
     fi
 
-    # Build or pull images FIRST, while the current stack keeps running.
+    # Build images FIRST, while the current stack keeps running.
     # The stack is only taken down once new images exist, so a failed build
     # leaves the running deployment untouched.
     docker compose -f "$COMPOSE_FILE" config -q
-    if [ "$BUILD_TYPE" == "--build" ]; then
-        ensure_source_repos
-        check_build_capacity
-        tag_rollback_point
-        build_images
-    else
-        print_info "Pulling images..."
-        docker compose -f "$COMPOSE_FILE" pull
+    ensure_source_repos
+    check_build_capacity
+    tag_rollback_point
+    build_images
+
+    # Seed BEFORE the running stack is stopped: db-init is idempotent, and a seeder that fails here
+    # leaves the current deployment serving instead of taking it down with nothing to replace it.
+    if [ "$SKIP_INIT" != true ] && docker compose -f "$COMPOSE_FILE" config --services | grep -qx db-init; then
+        print_info "Running database initialization before switching over..."
+        if ! docker compose -f "$COMPOSE_FILE" run --rm --no-deps db-init; then
+            print_error "Database initialization failed; the running deployment was left in place."
+            exit 1
+        fi
+        print_success "Database initialization complete"
     fi
 
     # Stop existing containers
     print_info "Stopping existing containers..."
     docker compose -f "$COMPOSE_FILE" down --remove-orphans || true
 
-    # Start services
-    if [ "$SKIP_INIT" = true ]; then
-        print_warning "Skipping database initialization (--skip-init flag set)"
-        print_info "Starting services without db-init..."
+    # db-init already ran above (or was skipped on purpose), so the stack starts without it.
+    [ "$SKIP_INIT" = true ] && print_warning "Skipping database initialization (--skip-init flag set)"
+    print_info "Starting services without db-init..."
 
-        # Derive the service list from the compose file in use so that --skip-init
-        # works for every compose file. Never fall back to a command that would
-        # start db-init.
-        local services=()
-        local nginx_services=()
-        while IFS= read -r svc; do
-            [ -z "$svc" ] && continue
-            [ "$svc" = "db-init" ] && continue
-            if [ "$svc" = "nginx" ]; then
-                nginx_services+=("$svc")
-            else
-                services+=("$svc")
-            fi
-        done < <(docker compose -f "$COMPOSE_FILE" config --services)
-
-        if [ ${#services[@]} -eq 0 ] && [ ${#nginx_services[@]} -eq 0 ]; then
-            print_error "Could not determine the service list from $COMPOSE_FILE"
-            print_error "Refusing to start the stack, as that would also run db-init."
-            exit 1
+    # Derive the service list from the compose file in use so that starting without db-init works
+    # for every compose file. Never fall back to a command that would start db-init.
+    local services=()
+    local nginx_services=()
+    while IFS= read -r svc; do
+        [ -z "$svc" ] && continue
+        [ "$svc" = "db-init" ] && continue
+        if [ "$svc" = "nginx" ]; then
+            nginx_services+=("$svc")
+        else
+            services+=("$svc")
         fi
+    done < <(docker compose -f "$COMPOSE_FILE" config --services)
 
-        # --no-deps is mandatory here: "authority" declares
-        #   depends_on: db-init { condition: service_completed_successfully }
-        # so any dependency-resolving "up" would start db-init - exactly what
-        # --skip-init must prevent. The tradeoff is that Compose no longer orders the
-        # listed services either, so we restore the one ordering that actually matters
-        # by hand: nginx is started last, once the upstream containers exist. The APIs
-        # themselves tolerate any start order (they retry their dependencies), so two
-        # waves are enough.
-        if [ ${#services[@]} -gt 0 ]; then
-            print_info "Services: ${services[*]}"
-            docker compose -f "$COMPOSE_FILE" up -d --force-recreate --no-build --no-deps "${services[@]}"
-        fi
-
-        if [ ${#nginx_services[@]} -gt 0 ]; then
-            print_info "Starting nginx last (upstreams must exist first)..."
-            docker compose -f "$COMPOSE_FILE" up -d --force-recreate --no-build --no-deps "${nginx_services[@]}"
-        fi
-    else
-        print_info "Starting all services..."
-        docker compose -f "$COMPOSE_FILE" up -d --force-recreate --no-build
+    if [ ${#services[@]} -eq 0 ] && [ ${#nginx_services[@]} -eq 0 ]; then
+        print_error "Could not determine the service list from $COMPOSE_FILE"
+        print_error "Refusing to start the stack, as that would also run db-init."
+        exit 1
     fi
 
-    if [ "$BUILD_TYPE" == "--build" ]; then
-        prune_build_leftovers
+    # --no-deps is mandatory here: "authority" declares
+    #   depends_on: db-init { condition: service_completed_successfully }
+    # so any dependency-resolving "up" would run db-init again (or, with --skip-init, at all).
+    # The tradeoff is that Compose no longer orders the
+    # listed services either, so we restore the one ordering that actually matters
+    # by hand: nginx is started last, once the upstream containers exist. The APIs
+    # themselves tolerate any start order (they retry their dependencies), so two
+    # waves are enough.
+    if [ ${#services[@]} -gt 0 ]; then
+        print_info "Services: ${services[*]}"
+        docker compose -f "$COMPOSE_FILE" up -d --force-recreate --no-build --no-deps "${services[@]}"
     fi
+
+    if [ ${#nginx_services[@]} -gt 0 ]; then
+        print_info "Starting nginx last (upstreams must exist first)..."
+        docker compose -f "$COMPOSE_FILE" up -d --force-recreate --no-build --no-deps "${nginx_services[@]}"
+    fi
+
+    prune_build_leftovers
     
     print_success "Deployment complete!"
 }
@@ -515,9 +501,12 @@ while [[ $# -gt 0 ]]; do
             DEPLOYMENT_TYPE="$1"
             shift
             ;;
-        --build|--pull)
-            BUILD_TYPE="$1"
+        --build)
             shift
+            ;;
+        --pull)
+            print_error "--pull is not supported: images are built from source on this host."
+            exit 1
             ;;
         --no-cache)
             NO_CACHE=true

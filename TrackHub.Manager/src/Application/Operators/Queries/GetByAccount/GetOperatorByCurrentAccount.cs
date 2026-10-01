@@ -16,7 +16,6 @@
 using Common.Application.Interfaces;
 using Common.Application.Paging;
 using Common.Domain.Helpers;
-using TrackHub.Manager.Application.Lookups;
 
 namespace TrackHub.Manager.Application.Operators.Queries.GetByAccount;
 

@@ -14,7 +14,7 @@ public class AccountCreatedTests
         // Arrange
         var accountId = Guid.NewGuid();
         var writerMock = new Mock<IAccountSettingsWriter>();
-        writerMock.Setup(w => w.CreateAccountSettingsAsync(accountId, CancellationToken.None)).ReturnsAsync(new AccountSettingsVm(accountId, "", "", 0, false, 0));
+        writerMock.Setup(w => w.CreateAccountSettingsAsync(accountId, CancellationToken.None)).ReturnsAsync(new AccountSettingsVm(accountId, "", "", 0, false, 0, 0));
 
         var handler = new AccountCreated.Notification.EventHandler(writerMock.Object);
 

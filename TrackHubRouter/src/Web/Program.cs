@@ -70,6 +70,8 @@ builder.Services.AddHostedService<SyncDispatchService>();
 
 var app = builder.Build();
 
+app.UseExceptionHandler(options => { });
+
 // The REST surface description and its interactive explorer are development aids only.
 if (app.Environment.IsDevelopment())
 {
@@ -97,7 +99,6 @@ app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.UseExceptionHandler(options => { });
 app.MapEndpoints(Assembly.GetExecutingAssembly());
 
 app.MapGraphQL().RequireAuthorization();

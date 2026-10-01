@@ -29,6 +29,10 @@ namespace TrackHub.Manager.Infrastructure.ManagerDB;
 /// </summary>
 internal static class AuditJson
 {
+    private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web);
+
+    internal static string Of<T>(T payload) => JsonSerializer.Serialize(payload, Options);
+
     internal static string Quote(string? value) => value == null ? "null" : JsonSerializer.Serialize(value);
 
     internal static string Quote(DateTimeOffset? value) => value.HasValue ? Quote(value.Value.ToString("O")) : "null";

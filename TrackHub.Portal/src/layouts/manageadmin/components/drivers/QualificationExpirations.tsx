@@ -38,6 +38,7 @@ import {
 } from 'layouts/manageadmin/components/drivers/qualificationConstants';
 import { useAccountByUser } from 'queries/accounts';
 import { useDriverQualifications } from 'queries/drivers';
+import { useAccountCalendar } from 'context/account';
 import { LoadingContext } from 'LoadingContext';
 import { formatDateOnly } from 'utils/dateUtils';
 
@@ -48,6 +49,7 @@ function QualificationExpirations() {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);
   const [expanded, setExpanded] = useState(false);
+  const today = useAccountCalendar().today();
 
   const accountQuery = useAccountByUser({ enabled: expanded });
   const accountId = accountQuery.data?.accountId;
@@ -83,7 +85,7 @@ function QualificationExpirations() {
             { name: 'id' },
           ]}
           rows={expiring.map((qualification) => {
-            const days = daysUntil(qualification.expiresAt);
+            const days = daysUntil(qualification.expiresAt, today);
             return {
               driver: (
                 <ArgonTypography variant="caption" fontWeight="medium">
@@ -103,7 +105,7 @@ function QualificationExpirations() {
                         ? t('workforce.expirations.expired')
                         : String(days)
                   }
-                  color={expiryColor(qualification.expiresAt)}
+                  color={expiryColor(qualification.expiresAt, today)}
                   size="xs"
                   container
                 />

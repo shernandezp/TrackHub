@@ -25,8 +25,10 @@ import { useTranslation } from 'react-i18next';
 import Icon from '@mui/material/Icon';
 import Tooltip from '@mui/material/Tooltip';
 import Table from 'controls/Tables/Table';
+import ServerPagination from 'controls/Tables/ServerPagination';
+import ServerSearch from 'controls/Tables/ServerSearch';
+import { useClampPage, useServerList } from 'controls/Tables/useServerList';
 import TableAccordion from 'controls/Accordions/TableAccordion';
-import CustomTextField from 'controls/Dialogs/CustomTextField';
 import ArgonBadge from 'components/ArgonBadge';
 import ArgonBox from 'components/ArgonBox';
 import ArgonButton from 'components/ArgonButton';
@@ -36,20 +38,20 @@ import DriverDialog from 'layouts/manageadmin/components/drivers/DriverDialog';
 import type { DriverFormValues } from 'layouts/manageadmin/components/drivers/DriverDialog';
 import DriverDetailDialog from 'layouts/manageadmin/components/drivers/DriverDetailDialog';
 import ManageDriverQualifications from 'layouts/manageadmin/components/drivers/DriverQualifications';
-import ManageDriverAssignments from 'layouts/manageadmin/components/drivers/DriverAssignments';
 import QualificationExpirations from 'layouts/manageadmin/components/drivers/QualificationExpirations';
 import { TextCell, statusColor } from 'layouts/manageadmin/components/drivers/workforceShared';
 import type { BadgeColor } from 'layouts/manageadmin/components/drivers/workforceShared';
 import { credentialState } from 'layouts/manageadmin/components/drivers/credentialLifecycle';
 import { useFeatures } from 'context/features';
 import { useAccountByUser } from 'queries/accounts';
-import { useDriversByAccount, useCreateDriver, useUpdateDriver, useDeactivateDriver } from 'queries/drivers';
+import { useDriversPage, useCreateDriver, useUpdateDriver, useDeactivateDriver } from 'queries/drivers';
 import { useDriverCredentials } from 'queries/driverIdentity';
 import type { Driver, DriverDtoInput } from 'api/manager/drivers';
 import type { DriverCredential } from 'api/security/driverIdentity';
 import { LoadingContext } from 'LoadingContext';
 
 const WORKFORCE_FEATURE_KEY = 'workforce';
+const PAGE_SIZE = 25;
 
 function ManageDrivers() {
   const { t } = useTranslation();
@@ -58,15 +60,17 @@ function ManageDrivers() {
   const workforceEnabled = isFeatureEnabled(WORKFORCE_FEATURE_KEY);
   const [expanded, setExpanded] = useState(false);
   const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState('');
   const [detail, setDetail] = useState<Driver | null>(null);
   const [values, handleChange, setValues, setErrors, validate, errors] = useForm<DriverFormValues>({ active: true });
 
   const accountQuery = useAccountByUser({ enabled: expanded });
   const account = accountQuery.data ?? null;
   const accountId = account?.accountId;
-  const driversQuery = useDriversByAccount(accountId, { enabled: expanded && !!accountId });
-  const drivers = driversQuery.data ?? [];
+  const { page, setPage, searchDraft, setSearchDraft, params } = useServerList(PAGE_SIZE);
+  const driversQuery = useDriversPage(accountId, params, { enabled: expanded && !!accountId });
+  const drivers = driversQuery.data?.items ?? [];
+  const totalCount = driversQuery.data?.totalCount ?? 0;
+  useClampPage(page, PAGE_SIZE, totalCount, setPage);
   // One account-wide read feeds the credential column; the per-driver detail refetches its own.
   const credentialsQuery = useDriverCredentials(accountId, null, { enabled: expanded && !!accountId });
   const createDriver = useCreateDriver();
@@ -117,7 +121,7 @@ function ManageDrivers() {
     if (!validate(['name']) || !accountId) return;
     setLoading(true);
     try {
-      const driver = { ...values, accountId, active: values.active !== false };
+      const driver = { ...values, accountId, active: values.active !== false, expectedVersion: values.version ?? null };
       if (driver.driverId) {
         await updateDriver.mutateAsync({ driverId: driver.driverId, driver: driver as DriverDtoInput });
       } else {
@@ -160,19 +164,9 @@ function ManageDrivers() {
         setOpen={setOpen}
         handleAddClick={handleAddClick}
         setExpanded={setExpanded}>
-        <ArgonBox mb={1} maxWidth={420}>
-          <CustomTextField
-            margin="none"
-            name="driverSearch"
-            id="driverSearch"
-            type="search"
-            placeholder={t('driver.search')}
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-        </ArgonBox>
+        <ServerSearch value={searchDraft} onChange={setSearchDraft} placeholder={t('driver.search')} />
         <Table
-          searchQuery={search}
+          serverPaged
           columns={[
             { name: 'name', title: t('driver.name'), align: 'left' },
             { name: 'document', title: t('driver.document'), align: 'center' },
@@ -202,6 +196,7 @@ function ManageDrivers() {
           })}
           selectedField="name"
         />
+        <ServerPagination page={page} pageSize={PAGE_SIZE} totalCount={totalCount} pageLength={drivers.length} onPageChange={setPage} />
         {drivers.length === 0 && (
           <ArgonTypography variant="caption" color="secondary">
             {t('driver.empty')}
@@ -210,11 +205,11 @@ function ManageDrivers() {
       </TableAccordion>
 
       {/* Billable workforce surfaces — hidden without the feature (cosmetic
-          only; the backend gate is authoritative). */}
+          only; the backend gate is authoritative). Assignments are day-to-day dispatch and live on
+          the dashboard's drivers tab. */}
       {workforceEnabled && (
         <>
           <ManageDriverQualifications />
-          <ManageDriverAssignments />
           <QualificationExpirations />
         </>
       )}

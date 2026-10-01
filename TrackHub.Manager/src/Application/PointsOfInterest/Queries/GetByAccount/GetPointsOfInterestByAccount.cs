@@ -15,7 +15,6 @@
 
 using Common.Application.Interfaces;
 using Common.Application.Paging;
-using TrackHub.Manager.Application.Lookups;
 
 namespace TrackHub.Manager.Application.PointsOfInterest.Queries.GetByAccount;
 
@@ -23,7 +22,8 @@ namespace TrackHub.Manager.Application.PointsOfInterest.Queries.GetByAccount;
 public readonly record struct GetPointsOfInterestByAccountQuery(
     int? Skip,
     int? Take,
-    string? Search) : IRequest<PointsOfInterestPageVm>;
+    string? Search,
+    bool? Active = null) : IRequest<PointsOfInterestPageVm>;
 
 public class GetPointsOfInterestByAccountQueryHandler(
     IPointOfInterestReader reader,
@@ -39,7 +39,7 @@ public class GetPointsOfInterestByAccountQueryHandler(
         var (skip, take) = PageRequest.Clamp(request.Skip, request.Take);
 
         return await reader.GetPointsOfInterestByAccountAsync(
-            userVm.AccountId, VisibilityScope(principal, UserId), skip, take, request.Search, cancellationToken);
+            userVm.AccountId, VisibilityScope(principal, UserId), skip, take, request.Search, request.Active, cancellationToken);
     }
 
     // Administrators and managers see every POI in the account; other users only see

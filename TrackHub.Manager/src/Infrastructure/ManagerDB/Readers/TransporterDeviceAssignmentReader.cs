@@ -16,7 +16,7 @@ public sealed class TransporterDeviceAssignmentReader(IApplicationDbContext cont
             .Select(a => new { a.AccountId, Vm = Project(a) })
             .FirstOrDefaultAsync(cancellationToken)
             ?? throw new NotFoundException(nameof(TrackHub.Manager.Infrastructure.Entities.TransporterDeviceAssignment), $"{id}");
-        RequireAccountAccess(entity.AccountId);
+        RequireRowAccess(entity.AccountId, nameof(TrackHub.Manager.Infrastructure.Entities.TransporterDeviceAssignment), $"{id}", forWrite: false);
         return entity.Vm;
     }
 
@@ -25,7 +25,7 @@ public sealed class TransporterDeviceAssignmentReader(IApplicationDbContext cont
         var transporter = await Context.Transporters.Where(t => t.TransporterId == transporterId)
             .Select(t => new { t.AccountId }).FirstOrDefaultAsync(cancellationToken)
             ?? throw new NotFoundException("Transporter", $"{transporterId}");
-        RequireAccountAccess(transporter.AccountId);
+        RequireRowAccess(transporter.AccountId, "Transporter", $"{transporterId}", forWrite: false);
         var q = Context.TransporterDeviceAssignments.Where(a => a.TransporterId == transporterId);
         if (activeOnly) q = q.Where(a => a.Status == (int)AssignmentStatus.Active);
         return await PageAsync(q, skip, take, cancellationToken);

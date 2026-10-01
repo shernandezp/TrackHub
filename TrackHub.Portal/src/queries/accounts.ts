@@ -40,7 +40,7 @@ export const accountKeys = {
 export function useAccountByUser(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: accountKeys.byUser(),
-    queryFn: api.getAccountByUser,
+    queryFn: ({ signal }) => api.getAccountByUser({ signal }),
     enabled: options.enabled ?? true,
     staleTime: Infinity,
   });
@@ -50,7 +50,7 @@ export function useAccountByUser(options: { enabled?: boolean } = {}) {
 export function useAccounts(params: ListParams = {}, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: accountKeys.list(params),
-    queryFn: () => api.getAccounts(params),
+    queryFn: ({ signal }) => api.getAccounts(params, { signal }),
     enabled: options.enabled ?? true,
     // A page change swaps the query key; without a placeholder the list reads as EMPTY
     // (totalCount 0) while the next page loads, and the page clamp snaps it back to page one.

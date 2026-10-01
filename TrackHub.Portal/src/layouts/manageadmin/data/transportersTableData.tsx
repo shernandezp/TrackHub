@@ -27,6 +27,8 @@ import {
   useCreateTransporter,
   useUpdateTransporter,
   useDeleteTransporter,
+  useRetiredTransporters,
+  useRestoreTransporter,
 } from 'queries/transporters';
 import type {
   Transporter,
@@ -49,6 +51,7 @@ export interface TransporterFormValues {
   name?: string;
   transporterType?: string;
   transporterTypeId?: number;
+  version?: number;
 }
 
 /** A column descriptor / rendered row for the vendored transporters `Table`. */
@@ -60,7 +63,8 @@ function useTransporterTableData(
   fetchData: boolean,
   handleEditClick: (transporter: TransporterFormValues) => void,
   handleDeleteClick: (transporterId: string) => void,
-  listParams: ListParams
+  listParams: ListParams,
+  showRetired: boolean
 ) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -68,14 +72,19 @@ function useTransporterTableData(
   const { setLoading } = useContext(LoadingContext);
   const { isAuthenticated } = useAuth();
 
-  const transportersQuery = useTransportersByAccount(listParams, {
-    enabled: !!fetchData && isAuthenticated,
+  const currentQuery = useTransportersByAccount(listParams, {
+    enabled: !!fetchData && isAuthenticated && !showRetired,
   });
+  const retiredQuery = useRetiredTransporters(listParams, {
+    enabled: !!fetchData && isAuthenticated && showRetired,
+  });
+  const transportersQuery = showRetired ? retiredQuery : currentQuery;
   const transporters = transportersQuery.data?.items ?? [];
   const totalCount = transportersQuery.data?.totalCount ?? 0;
   const createTransporter = useCreateTransporter();
   const updateTransporter = useUpdateTransporter();
   const deleteTransporter = useDeleteTransporter();
+  const restoreTransporter = useRestoreTransporter();
 
   // Current account id, required to create a transporter (TransporterDtoInput.accountId).
   // Loaded the same way sibling manageadmin screens (drivers, accountFeatures) obtain it.
@@ -107,6 +116,7 @@ function useTransporterTableData(
           transporterId: transporter.transporterId,
           name: transporter.name,
           transporterTypeId: transporter.transporterTypeId,
+          expectedVersion: transporter.version ?? null,
         } as { transporterId: string } & Omit<UpdateTransporterDtoInput, 'transporterId'>);
       } else {
         await createTransporter.mutateAsync({
@@ -136,6 +146,17 @@ function useTransporterTableData(
     }
   };
 
+  const onRestore = async (transporterId: string) => {
+    setLoading(true);
+    try {
+      await restoreTransporter.mutateAsync(transporterId);
+    } catch {
+      // Failure is surfaced by the global toast.
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const buildTableData = (rows: Transporter[]): TransporterTableData => ({
     columns: [
       { name: "name", title:t('transporter.name'), align: "left" },
@@ -150,7 +171,14 @@ function useTransporterTableData(
           badgeContent={t(`transporterTypes.${cleanString(transporter.transporterType)}` as 'transporterTypes.car')}
           color="success" size="xs" container />
       ),
-      action: (
+      action: showRetired ? (
+        <ArgonButton
+          variant="text"
+          color="dark"
+          onClick={() => onRestore(transporter.transporterId)}>
+          <Icon>restore</Icon>&nbsp;{t('transporter.restore')}
+        </ArgonButton>
+      ) : (
         <>
           <ArgonButton
               variant="text"
@@ -162,7 +190,7 @@ function useTransporterTableData(
             variant="text"
             color="error"
             onClick={() => handleOpenDelete(transporter.transporterId)}>
-            <Icon>delete</Icon>&nbsp;{t('generic.delete')}
+            <Icon>archive</Icon>&nbsp;{t('transporter.retire')}
           </ArgonButton>
         </>
       ),
@@ -173,7 +201,7 @@ function useTransporterTableData(
   const data = useMemo(
     () => buildTableData(transporters),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [transporters, t]
+    [transporters, showRetired, t]
   );
 
   return {

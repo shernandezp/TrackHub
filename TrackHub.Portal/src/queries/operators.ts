@@ -60,7 +60,7 @@ export function useOperatorsByCurrentAccount(
 ) {
   return useQuery({
     queryKey: operatorKeys.byAccount(params),
-    queryFn: () => managerApi.getOperatorsByCurrentAccount(params),
+    queryFn: ({ signal }) => managerApi.getOperatorsByCurrentAccount(params, { signal }),
     enabled: options.enabled ?? true,
     // A page change swaps the query key; without a placeholder the list reads as EMPTY
     // (totalCount 0) while the next page loads, and the page clamp snaps it back to page one.
@@ -72,7 +72,7 @@ export function useOperatorsByCurrentAccount(
 export function useOperatorLookup(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: operatorKeys.lookup(),
-    queryFn: managerApi.getOperatorLookup,
+    queryFn: ({ signal }) => managerApi.getOperatorLookup({ signal }),
     enabled: options.enabled ?? true,
   });
 }
@@ -85,7 +85,7 @@ export function useOperatorLookup(options: { enabled?: boolean } = {}) {
 export function useGpsOperators(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: operatorKeys.gps(),
-    queryFn: managerApi.getAllGpsOperators,
+    queryFn: ({ signal }) => managerApi.getAllGpsOperators({ signal }),
     enabled: options.enabled ?? true,
   });
 }
@@ -152,7 +152,7 @@ export function useOperatorSyncRuns(
 ) {
   return useQuery({
     queryKey: operatorTelemetryKeys.syncRuns(accountId, operatorId, take),
-    queryFn: () => telemetryApi.getOperatorSyncRuns(accountId, operatorId, take),
+    queryFn: ({ signal }) => telemetryApi.getOperatorSyncRuns(accountId, operatorId, take, { signal }),
     enabled: (options.enabled ?? true) && !!accountId,
   });
 }

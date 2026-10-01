@@ -15,9 +15,8 @@
 
 namespace TrackHub.TripManagement.Infrastructure.TripDB.Entities;
 
-// Read-only projection of the Manager-owned app.account_features table. This is what backs this
-// service's own IFeatureFlagService override - without it Common's fail-open default would let
-// every [RequireFeature] pass silently (spec 11 section 15, acceptance 10).
+// Read-only projection of the Manager-owned app.account_features table backing this service's
+// fail-closed IFeatureFlagService (spec 11 section 15, acceptance 10).
 public sealed class AccountFeature
 {
     public Guid AccountFeatureId { get; set; }

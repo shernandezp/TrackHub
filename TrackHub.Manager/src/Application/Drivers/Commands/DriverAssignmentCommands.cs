@@ -4,7 +4,7 @@ namespace TrackHub.Manager.Application.Drivers.Commands;
 
 // Overlapping open assignments for the same (driver, transporter) pair are rejected with 409 by the
 // writer; cross-account transporters surface as 404 (spec 09 §7.4).
-[Authorize(Resource = Resources.Drivers, Action = Actions.Write)]
+[Authorize(Resource = Resources.DriverOperations, Action = Actions.Write)]
 [RequireFeature(FeatureKeys.Workforce)]
 // Enforcement: the reader/writer this handler delegates to extends AccountScopedDataAccess and
 // checks the loaded row's owning account (RequireAccountAccess) or filters on the caller's scope.
@@ -27,7 +27,7 @@ public class AssignDriverToTransporterCommandValidator : AbstractValidator<Assig
 }
 
 // Defaults to now; the writer rejects re-ending an already-closed assignment (immutability, AC3).
-[Authorize(Resource = Resources.Drivers, Action = Actions.Edit)]
+[Authorize(Resource = Resources.DriverOperations, Action = Actions.Edit)]
 [RequireFeature(FeatureKeys.Workforce)]
 // Enforcement: the reader/writer this handler delegates to extends AccountScopedDataAccess and
 // checks the loaded row's owning account (RequireAccountAccess) or filters on the caller's scope.

@@ -63,7 +63,8 @@ public sealed class PointOfInterestWriter(IApplicationDbContext context, ICurren
         var pointOfInterest = await Context.PointsOfInterest.FindAsync([pointOfInterestId], cancellationToken)
             ?? throw new NotFoundException(nameof(PointOfInterest), $"{pointOfInterestId}");
 
-        var accountId = RequireAccountWriteAccess(pointOfInterest.AccountId);
+        RequireRowAccess(pointOfInterest.AccountId, nameof(PointOfInterest), pointOfInterestId, forWrite: true);
+        var accountId = pointOfInterest.AccountId;
         await RequireGroupInAccountAsync(pointOfInterestDto.GroupId, accountId, cancellationToken);
 
         Context.PointsOfInterest.Attach(pointOfInterest);
@@ -88,7 +89,8 @@ public sealed class PointOfInterestWriter(IApplicationDbContext context, ICurren
         var pointOfInterest = await Context.PointsOfInterest.FindAsync([pointOfInterestId], cancellationToken)
             ?? throw new NotFoundException(nameof(PointOfInterest), $"{pointOfInterestId}");
 
-        var accountId = RequireAccountWriteAccess(pointOfInterest.AccountId);
+        RequireRowAccess(pointOfInterest.AccountId, nameof(PointOfInterest), pointOfInterestId, forWrite: true);
+        var accountId = pointOfInterest.AccountId;
 
         Context.PointsOfInterest.Attach(pointOfInterest);
         Context.PointsOfInterest.Remove(pointOfInterest);

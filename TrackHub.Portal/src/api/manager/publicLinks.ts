@@ -21,6 +21,7 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { Page } from 'api/core/paging';
 import type {
   PublicLinkGrantFieldsFragment as PublicLinkGrantFieldsType,
   PublicLinkGrantDtoInput,
@@ -38,7 +39,7 @@ export async function getPublicLinkGrantsByAccount(
   accountId: string,
   skip = 0,
   take = 50
-): Promise<PublicLinkGrant[]> {
+): Promise<Page<PublicLinkGrant>> {
   const data = await executeGraphQL('manager', GetPublicLinkGrantsByAccountDocument, {
     accountId,
     skip,
@@ -54,13 +55,7 @@ export async function createPublicLinkGrant(
   return data.createPublicLinkGrant;
 }
 
-export async function revokePublicLinkGrant(
-  publicLinkGrantId: string,
-  revokedBy: string
-): Promise<boolean> {
-  const data = await executeGraphQL('manager', RevokePublicLinkGrantDocument, {
-    publicLinkGrantId,
-    revokedBy,
-  });
+export async function revokePublicLinkGrant(publicLinkGrantId: string): Promise<boolean> {
+  const data = await executeGraphQL('manager', RevokePublicLinkGrantDocument, { publicLinkGrantId });
   return data.revokePublicLinkGrant;
 }

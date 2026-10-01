@@ -52,19 +52,41 @@ public abstract class AccountScopedDataAccess(IApplicationDbContext context, ICu
             throw new ForbiddenAccessException("Insufficient permissions. Required account access: a non-empty account id.");
         }
 
-        if (CanAccessAllAccounts || Principal.AccountId == accountId)
-        {
-            return accountId;
-        }
-
-        if (Principal.PrincipalType == PrincipalType.User
-            && Principal.UserId is { } userId
-            && await Context.Users.AnyAsync(x => x.UserId == userId && x.AccountId == accountId, cancellationToken))
+        if (await HasAccountAccessAsync(accountId, cancellationToken))
         {
             return accountId;
         }
 
         throw new ForbiddenAccessException($"Insufficient permissions. Required account access: {accountId}.");
+    }
+
+    protected async Task<bool> HasAccountAccessAsync(Guid accountId, CancellationToken cancellationToken)
+        => accountId != Guid.Empty
+            && (CanAccessAllAccounts
+                || Principal.AccountId == accountId
+                || (Principal.PrincipalType == PrincipalType.User
+                    && Principal.UserId is { } userId
+                    && await Context.Users.AnyAsync(x => x.UserId == userId && x.AccountId == accountId, cancellationToken)));
+
+    // A user outside the caller's reach is NotFound, so an id cannot be probed; a user holding a role
+    // at or above the caller's own may only be changed by themselves.
+    protected async Task<User> RequireUserForChangeAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var user = await Context.Users.FindAsync([userId], cancellationToken);
+        if (user is null || !await HasAccountAccessAsync(user.AccountId, cancellationToken))
+        {
+            throw new NotFoundException(nameof(User), userId.ToString());
+        }
+
+        if (Principal.PrincipalType == PrincipalType.User
+            && !CallerIsAdministrator
+            && Principal.UserId != userId
+            && await SubjectOutranksCallerAsync(userId, cancellationToken))
+        {
+            throw new ForbiddenAccessException("Insufficient permissions. The user holds a role at or above the caller's own.");
+        }
+
+        return user;
     }
 
     protected bool CallerIsAdministrator =>

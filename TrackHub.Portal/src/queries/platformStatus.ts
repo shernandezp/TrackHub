@@ -53,7 +53,7 @@ export const platformStatusKeys = {
 export function useServiceHealth() {
   return useQuery({
     queryKey: platformStatusKeys.health(),
-    queryFn: () => probeAllServices(),
+    queryFn: ({ signal }) => probeAllServices(undefined, signal),
     refetchInterval: STATUS_POLL_MS,
     refetchIntervalInBackground: false,
     // Health is the page's whole point — never serve a stale snapshot silently.
@@ -71,7 +71,7 @@ export function useServiceHealth() {
 export function useVisibleAnnouncements() {
   return useQuery({
     queryKey: platformStatusKeys.announcements(),
-    queryFn: getVisibleAnnouncements,
+    queryFn: ({ signal }) => getVisibleAnnouncements({ signal }),
     refetchInterval: STATUS_POLL_MS,
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: true,
@@ -85,7 +85,7 @@ export function useVisibleAnnouncements() {
 export function usePlatformSyncActivity(enabled: boolean) {
   return useQuery({
     queryKey: platformStatusKeys.syncActivity(),
-    queryFn: () => getPlatformSyncActivity(),
+    queryFn: ({ signal }) => getPlatformSyncActivity(undefined, { signal }),
     enabled,
     refetchInterval: STATUS_POLL_MS,
     refetchIntervalInBackground: false,
@@ -99,7 +99,7 @@ export function usePlatformSyncActivity(enabled: boolean) {
 export function useBackgroundJobStatus(enabled: boolean) {
   return useQuery({
     queryKey: platformStatusKeys.jobs(),
-    queryFn: getBackgroundJobStatus,
+    queryFn: ({ signal }) => getBackgroundJobStatus({ signal }),
     enabled,
     refetchInterval: STATUS_POLL_MS,
     refetchIntervalInBackground: false,
@@ -113,7 +113,7 @@ export function useBackgroundJobStatus(enabled: boolean) {
 export function useManagedAnnouncements(enabled: boolean) {
   return useQuery({
     queryKey: platformStatusKeys.managedAnnouncements(),
-    queryFn: () => getPlatformAnnouncements(),
+    queryFn: ({ signal }) => getPlatformAnnouncements(undefined, undefined, { signal }),
     enabled,
     retry: false,
     // Failure is rendered as page content, not as a toast.

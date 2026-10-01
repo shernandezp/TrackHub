@@ -19,14 +19,16 @@ public sealed class PublicLinkGrantReader(IApplicationDbContext context, ICurren
         return found;
     }
 
-    public async Task<IReadOnlyCollection<PublicLinkGrantVm>> GetPublicLinkGrantsByAccountAsync(Guid accountId, int skip, int take, CancellationToken cancellationToken)
+    public async Task<PublicLinkGrantsPageVm> GetPublicLinkGrantsByAccountAsync(Guid accountId, int skip, int take, CancellationToken cancellationToken)
     {
         var scopedAccountId = RequireAccountAccess(accountId);
-        return await Context.PublicLinkGrants
-            .Where(x => x.AccountId == scopedAccountId)
-            .OrderByDescending(x => x.LastModified).ThenBy(x => x.PublicLinkGrantId)
+        var query = Context.PublicLinkGrants.Where(x => x.AccountId == scopedAccountId);
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .OrderByDescending(x => x.Created).ThenBy(x => x.PublicLinkGrantId)
             .Skip(Offset(skip)).Take(PageSize(take))
             .Select(x => new PublicLinkGrantVm(x.PublicLinkGrantId, x.AccountId, x.ResourceType, x.ResourceId, x.Scopes, x.Purpose, x.ExpiresAt, x.RevokedAt, x.RevokedBy, x.CreatedByPrincipalId, x.AccessCount, x.LastAccessedAt, x.LastModified, null))
             .ToListAsync(cancellationToken);
+        return new PublicLinkGrantsPageVm(items, totalCount);
     }
 }

@@ -41,7 +41,7 @@ public sealed class PositionReader(
         var tracker = result?.List?.FirstOrDefault(t => t.Tracker_id == deviceDto.Identifier);
         return tracker is null
             ? throw new InvalidOperationException($"Device not found: {deviceDto.Identifier}")
-            : tracker.Value.MapToPositionVm(deviceDto);
+            : tracker.Value.MapToPositionVm(deviceDto, UserTimeZone);
     }
 
     /// <summary>
@@ -60,7 +60,7 @@ public sealed class PositionReader(
         var devicesDictionary = devices.ToDeviceLookup(device => device.Identifier);
         return result.List
             .Where(t => devicesDictionary.ContainsKey((int)t.Tracker_id) && t.Last_update.HasValue)
-            .MapToPositionVm(devicesDictionary)
+            .MapToPositionVm(devicesDictionary, UserTimeZone)
             .Distinct();
     }
 
@@ -76,11 +76,11 @@ public sealed class PositionReader(
             {
                 hash,
                 tracker_id = deviceDto.Identifier,
-                from = FormatNavixyDate(from),
-                to = FormatNavixyDate(to)
+                from = PositionMapper.FormatNavixyDate(from, UserTimeZone),
+                to = PositionMapper.FormatNavixyDate(to, UserTimeZone)
             },
             cancellationToken);
 
-        return result?.List is null ? [] : result.List.MapToPositionVm(deviceDto);
+        return result?.List is null ? [] : result.List.MapToPositionVm(deviceDto, UserTimeZone);
     }
 }

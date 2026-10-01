@@ -10,6 +10,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+source "$SCRIPT_DIR/required-config.sh"
 
 # Colors
 RED='\033[0;31m'
@@ -55,28 +56,11 @@ load_env() {
     return 1
 }
 
-# Validate required variables
+# Validate required variables (the same list deploy.sh enforces)
 validate_config() {
-    local missing=()
-    
-    # Required variables
-    local required=(
-        "DOMAIN"
-        "ALLOWED_CORS_ORIGINS"
-        "DB_CONNECTION_SECURITY"
-        "DB_CONNECTION_MANAGER"
-        "DB_CONNECTION_LOGGING"
-        "CERTIFICATE_PASSWORD"
-        "ENCRYPTION_KEY"
-        "AUTHORITY_URL"
-    )
-    
-    for var in "${required[@]}"; do
-        if [ -z "${!var}" ]; then
-            missing+=("$var")
-        fi
-    done
-    
+    local env_file="${1:-$PROJECT_DIR/.env}" missing
+    mapfile -t missing < <(missing_required_config "$env_file")
+
     if [ ${#missing[@]} -gt 0 ]; then
         print_error "Missing required configuration:"
         for var in "${missing[@]}"; do
@@ -193,7 +177,7 @@ case $COMMAND in
         generate_frontend_env
         ;;
     validate)
-        validate_config
+        validate_config "$ENV_FILE"
         ;;
     show)
         show_config

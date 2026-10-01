@@ -70,7 +70,6 @@ public static class DependencyInjection
 
         services.AddSingleton<IExecutionIntervalManager, ExecutionIntervalManager>();
         services.AddSingleton<IOperatorSyncLock, OperatorSyncLock>();
-        services.AddSingleton<IOperatorSyncBackoff, OperatorSyncBackoff>();
         services.AddSingleton<ISyncDispatchQueue, SyncDispatchQueue>();
         services.AddSingleton<IDeviceCatalogCache, DeviceCatalogCache>();
         // Singleton: provider sessions (Wialon sid, Navixy hash, Geotab session id, bearer tokens)

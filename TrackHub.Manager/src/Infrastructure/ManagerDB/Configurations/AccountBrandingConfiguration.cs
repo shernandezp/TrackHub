@@ -27,6 +27,7 @@ public class AccountBrandingConfiguration : IEntityTypeConfiguration<AccountBran
 
     public void Configure(EntityTypeBuilder<AccountBranding> builder)
     {
+        builder.Property(x => x.Version).HasColumnName("editversion").HasConversion<long>().IsConcurrencyToken();
         builder.ToTable(name: TableName, schema: SchemaMetadata.Application);
 
         builder.HasKey(x => x.AccountId);

@@ -29,6 +29,7 @@ export const GroupItemFragment = graphql(`
     description
     active
     accountId
+    version
   }
 `);
 

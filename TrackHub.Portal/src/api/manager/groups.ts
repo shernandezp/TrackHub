@@ -22,6 +22,7 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { RequestOptions } from 'api/core/errors';
 import { fetchAllPages } from 'api/core/paging';
 import type { ListParams, Page } from 'api/core/paging';
 import type {
@@ -51,12 +52,12 @@ export type GroupUser = GetUsersByGroupQuery['usersByGroup']['items'][number];
 export type GroupUsersPage = Page<GroupUser>;
 export type { GroupDtoInput, UpdateGroupDtoInput };
 
-export async function getGroups(params: ListParams = {}): Promise<GroupsPage> {
+export async function getGroups(params: ListParams = {}, options?: RequestOptions): Promise<GroupsPage> {
   const data = await executeGraphQL('manager', GetGroupsDocument, {
     skip: params.skip ?? null,
     take: params.take ?? null,
     search: params.search ?? null,
-  });
+  }, options);
   return data.groupsByAccount;
 }
 
@@ -65,8 +66,8 @@ export async function getGroups(params: ListParams = {}): Promise<GroupsPage> {
  * raises past its own ceiling rather than truncating) — for the dashboard group
  * filter, the POI form's group select and the POI table's groupId→name map.
  */
-export async function getGroupLookup(): Promise<GroupLookup[]> {
-  const data = await executeGraphQL('manager', GetGroupLookupDocument);
+export async function getGroupLookup(options?: RequestOptions): Promise<GroupLookup[]> {
+  const data = await executeGraphQL('manager', GetGroupLookupDocument, undefined, options);
   return data.groupLookup;
 }
 
@@ -89,6 +90,7 @@ export async function updateGroup(
     name: group.name,
     description: group.description,
     active: !!group.active,
+    expectedVersion: group.expectedVersion ?? null,
   };
   const data = await executeGraphQL('manager', UpdateGroupDocument, { id: groupId, group: input });
   return data.updateGroup;
@@ -102,14 +104,15 @@ export async function deleteGroup(groupId: number): Promise<number> {
 
 export async function getUsersByGroup(
   groupId: number,
-  params: ListParams = {}
+  params: ListParams = {},
+  options?: RequestOptions
 ): Promise<GroupUsersPage> {
   const data = await executeGraphQL('manager', GetUsersByGroupDocument, {
     groupId,
     skip: params.skip ?? null,
     take: params.take ?? null,
     search: params.search ?? null,
-  });
+  }, options);
   return data.usersByGroup;
 }
 
@@ -118,8 +121,8 @@ export async function getUsersByGroup(
  * lookup, and the allocator dialog subtracts this list from the account's users:
  * a truncated membership makes assigned users reappear as available.
  */
-export async function getAllUsersByGroup(groupId: number): Promise<GroupUser[]> {
-  return fetchAllPages(async (skip, take) => (await getUsersByGroup(groupId, { skip, take })).items);
+export async function getAllUsersByGroup(groupId: number, options?: RequestOptions): Promise<GroupUser[]> {
+  return fetchAllPages(async (skip, take) => (await getUsersByGroup(groupId, { skip, take }, options)).items);
 }
 
 export async function createUserGroup(

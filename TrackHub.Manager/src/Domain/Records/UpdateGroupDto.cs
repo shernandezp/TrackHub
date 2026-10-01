@@ -18,5 +18,5 @@ public readonly record struct UpdateGroupDto(
     long GroupId,
     string Name,
     string Description,
-    bool Active
-    );
+    bool Active,
+    uint? ExpectedVersion = null);

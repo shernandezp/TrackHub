@@ -21,6 +21,7 @@
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
+import type { RequestOptions } from 'api/core/errors';
 import type {
   GetOperatorSyncRunsQuery,
 } from './generated/graphql';
@@ -33,12 +34,13 @@ export type OperatorSyncRun = GetOperatorSyncRunsQuery['operatorSyncRuns'][numbe
 export async function getOperatorSyncRuns(
   accountId: string | null = null,
   operatorId: string | null = null,
-  take = 20
+  take = 20,
+  options?: RequestOptions
 ): Promise<OperatorSyncRun[]> {
   const data = await executeGraphQL('telemetry', GetOperatorSyncRunsDocument, {
     accountId,
     operatorId,
     take,
-  });
+  }, options);
   return data.operatorSyncRuns;
 }

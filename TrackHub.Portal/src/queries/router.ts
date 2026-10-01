@@ -24,11 +24,12 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { getProviderCapabilities } from 'api/router/router';
-import type { PositionSourceType } from 'api/router/router';
+import type { DevicePositionScope, PositionSourceType } from 'api/router/router';
 
 export const routerKeys = {
   all: ['router'] as const,
-  devicePositions: () => [...routerKeys.all, 'devicePositions'] as const,
+  devicePositions: ({ groupId = null, operatorId = null }: DevicePositionScope = {}) =>
+    [...routerKeys.all, 'devicePositions', groupId, operatorId] as const,
   trips: (transporterId: string, from: string, to: string, source: PositionSourceType) =>
     [...routerKeys.all, 'trips', transporterId, from, to, source] as const,
   providerCapabilities: () => [...routerKeys.all, 'providerCapabilities'] as const,
@@ -42,7 +43,7 @@ export const routerKeys = {
 export function useProviderCapabilities(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: routerKeys.providerCapabilities(),
-    queryFn: getProviderCapabilities,
+    queryFn: ({ signal }) => getProviderCapabilities({ signal }),
     staleTime: Infinity,
     enabled: options.enabled ?? true,
   });

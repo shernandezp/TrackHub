@@ -50,7 +50,7 @@ public class DriverOffboardingTests
 
     private void CurrentDriver(bool active)
         => _reader.Setup(r => r.GetDriverAsync(DriverId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new DriverVm(DriverId, AccountId, "Driver", null, null, null, active, null, null, null, null, DateTimeOffset.UtcNow));
+            .ReturnsAsync(new DriverVm(DriverId, AccountId, "Driver", null, null, null, active, null, null, null, null, DateTimeOffset.UtcNow, 0));
 
     private static DriverDto Dto(bool active) => new() { AccountId = AccountId, Name = "Driver", Active = active };
 

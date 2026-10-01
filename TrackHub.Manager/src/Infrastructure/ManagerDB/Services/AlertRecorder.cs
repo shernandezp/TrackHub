@@ -108,9 +108,7 @@ public sealed class AlertRecorder(IApplicationDbContext context, IAlertRuleEvalu
     }
 
     private static bool IsOpenAlertDuplicate(DbUpdateException exception)
-        => exception.InnerException is Npgsql.PostgresException postgres
-            && string.Equals(postgres.SqlState, "23505", StringComparison.Ordinal)
-            && postgres.ConstraintName?.Contains("alert_events_open_dedup", StringComparison.OrdinalIgnoreCase) == true;
+        => Common.Infrastructure.UniqueViolation.Matches(exception, "alert_events_open_dedup");
 
     private static AlertEventVm ToVm(AlertEvent x)
         => new(x.AlertEventId, x.AccountId, x.EventType, x.Severity, x.SourceModule, x.ResourceType, x.ResourceId, x.Status,

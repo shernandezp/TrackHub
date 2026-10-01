@@ -27,15 +27,21 @@ public sealed class ResourceActionPolicyWriter(IApplicationDbContext context) : 
     // returns: The created resource action policy view model.
     public async Task<ResourceActionPolicyVm> CreateResourceActionPolicyAsync(ResourceActionPolicyDto resourceActionPolicyDto, CancellationToken cancellationToken)
     {
-        var resourceActionPolicy = new ResourceActionPolicy
+        var resourceActionPolicy = await context.ResourceActionPolicy.FirstOrDefaultAsync(
+            r => r.ResourceId == resourceActionPolicyDto.ResourceId && r.ActionId == resourceActionPolicyDto.ActionId && r.PolicyId == resourceActionPolicyDto.PolicyId,
+            cancellationToken);
+        if (resourceActionPolicy is null)
         {
-            ResourceId = resourceActionPolicyDto.ResourceId,
-            ActionId = resourceActionPolicyDto.ActionId,
-            PolicyId = resourceActionPolicyDto.PolicyId
-        };
+            resourceActionPolicy = new ResourceActionPolicy
+            {
+                ResourceId = resourceActionPolicyDto.ResourceId,
+                ActionId = resourceActionPolicyDto.ActionId,
+                PolicyId = resourceActionPolicyDto.PolicyId
+            };
 
-        await context.ResourceActionPolicy.AddAsync(resourceActionPolicy, cancellationToken);
-        await context.SaveChangesAsync(cancellationToken);
+            await context.ResourceActionPolicy.AddAsync(resourceActionPolicy, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
+        }
 
         return new ResourceActionPolicyVm(
             resourceActionPolicy.ResourceActionPolicyId,

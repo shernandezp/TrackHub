@@ -30,7 +30,9 @@ import { useQueryClient } from '@tanstack/react-query';
 import { getTripsByTransporter } from 'api/router/router';
 import type { Trip, PositionSourceType } from 'api/router/router';
 import { routerKeys } from 'queries/router';
-import { useTransporterLookupByUser } from 'queries/transporters';
+import { useTransportersByUser } from 'queries/transporters';
+import SearchSelect from 'edition/SearchSelect';
+import { useUserTransporterOptions } from 'edition/pickerOptions';
 import { useFeatures } from 'context/features';
 import useForm from 'controls/Dialogs/useForm';
 import { usePlayback } from 'layouts/dashboard/utils/playback';
@@ -54,12 +56,10 @@ interface PositionsFormValues {
 }
 
 
-/** An option shown in the transporter selector. */
-interface FilterNavbarOption { value: string; label: string; }
-
 /** The query parameters of the currently loaded trip set (for CSV export). */
 interface LoadedQuery {
   transporterId?: string;
+  transporterName?: string;
   from?: string;
   to?: string;
   source: PositionSourceType;
@@ -90,30 +90,25 @@ function Positions({ settings, showGeofence, geofences }: PositionsProps) {
   const [loadedQuery, setLoadedQuery] = useState<LoadedQuery | null>(null);
   const [values, handleChange, setValues, setErrors, validate, errors] = useForm<PositionsFormValues>({});
 
-  const transportersQuery = useTransporterLookupByUser({ enabled: isAuthenticated });
-  const transporters = useMemo<FilterNavbarOption[]>(
-    () => (transportersQuery.data ?? []).map(transporter => ({
-      value: transporter.transporterId,
-      label: transporter.name
-    })),
-    [transportersQuery.data]
-  );
+  const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
+  const firstTransporterQuery = useTransportersByUser({ skip: 0, take: 1 }, { enabled: isAuthenticated });
   const defaultSelectionSetRef = useRef(false);
 
-  // Keep the global spinner UX while the transporter list loads.
+  // Keep the global spinner UX while the default unit loads.
   useEffect(() => {
-    setLoading(transportersQuery.isFetching);
-  }, [transportersQuery.isFetching, setLoading]);
+    setLoading(firstTransporterQuery.isFetching);
+  }, [firstTransporterQuery.isFetching, setLoading]);
 
-  // Default the filter to the first transporter, once, after the list first loads.
+  // Default the filter to the first transporter, once, after it first loads.
   useEffect(() => {
-    if (transportersQuery.isSuccess && !defaultSelectionSetRef.current) {
-      const list = transportersQuery.data ?? [];
-      setValues({ selectedItem: list.length > 0 ? list[0].transporterId : '' });
+    if (firstTransporterQuery.isSuccess && !defaultSelectionSetRef.current) {
+      const first = firstTransporterQuery.data?.items[0];
+      setValues({ selectedItem: first?.transporterId ?? '' });
+      setSelectedLabel(first?.name ?? null);
       defaultSelectionSetRef.current = true;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [transportersQuery.isSuccess, transportersQuery.data]);
+  }, [firstTransporterQuery.isSuccess, firstTransporterQuery.data]);
 
   const fetchPositions = async () => {
     setLoading(true);
@@ -124,7 +119,8 @@ function Positions({ settings, showGeofence, geofences }: PositionsProps) {
       // reach here (see handleSearch).
       result = await queryClient.fetchQuery({
         queryKey: routerKeys.trips(values.selectedItem!, values.startDate!, values.endDate!, usedSource),
-        queryFn: () => getTripsByTransporter(values.selectedItem!, values.startDate!, values.endDate!, usedSource),
+        queryFn: ({ signal }) =>
+          getTripsByTransporter(values.selectedItem!, values.startDate!, values.endDate!, usedSource, { signal }),
         staleTime: 0,
       });
     } catch {
@@ -134,6 +130,7 @@ function Positions({ settings, showGeofence, geofences }: PositionsProps) {
     setTrips(result);
     setLoadedQuery({
       transporterId: values.selectedItem,
+      transporterName: selectedLabel ?? undefined,
       from: values.startDate,
       to: values.endDate,
       source: usedSource
@@ -155,8 +152,7 @@ function Positions({ settings, showGeofence, geofences }: PositionsProps) {
 
   const handleExport = () => {
     if (trips.length === 0 || !loadedQuery) return;
-    const transporter = transporters.find(item => item.value === loadedQuery.transporterId);
-    const transporterName = transporter ? transporter.label : loadedQuery.transporterId;
+    const transporterName = loadedQuery.transporterName ?? loadedQuery.transporterId;
     const headers = [
       t('replay.exportTransporter'),
       t('replay.exportTrip'),
@@ -199,7 +195,20 @@ function Positions({ settings, showGeofence, geofences }: PositionsProps) {
       <Grid container spacing={3} sx={{ mb: 1 }}>
         <Grid size={{xs:12, lg:12}}>
           <FilterNavbar
-            list={transporters}
+            picker={
+              <SearchSelect
+                id="selectedItem"
+                label={t('filters.transporter')}
+                value={values.selectedItem || null}
+                valueLabel={selectedLabel}
+                onChange={(option) => {
+                  setSelectedLabel(option?.label ?? null);
+                  handleChange({ target: { name: 'selectedItem', value: option?.value ?? '' } });
+                }}
+                useOptions={useUserTransporterOptions}
+                errorMsg={errors.selectedItem}
+              />
+            }
             values={values}
             handleChange={handleChange}
             errors={errors}

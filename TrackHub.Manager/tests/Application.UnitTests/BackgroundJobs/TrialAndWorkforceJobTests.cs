@@ -35,35 +35,20 @@ public class TrialAndWorkforceJobTests
     private static readonly DateOnly Today = new(2026, 9, 14);
 
     [Test]
-    public void TrialEnd_ExplicitConfigurationWinsOverTheTierWindow()
-    {
-        var resolved = TrialExpirationJob.ResolveTrialEnd(
-        [
-            new TrialFeatureVm("trial", Now.AddDays(30), """{"trialEndsAt":"2026-09-01T00:00:00+00:00"}"""),
-        ]);
-
-        Assert.That(resolved, Is.EqualTo(new DateTimeOffset(2026, 9, 1, 0, 0, 0, TimeSpan.Zero)));
-    }
-
-    [Test]
     public void TrialEnd_TakesTheEarliestAcrossFeatures()
     {
         var resolved = TrialExpirationJob.ResolveTrialEnd(
         [
-            new TrialFeatureVm("trial", Now.AddDays(30), null),
-            new TrialFeatureVm("trial", Now.AddDays(5), null),
+            new TrialFeatureVm("trial", Now.AddDays(30)),
+            new TrialFeatureVm("trial", Now.AddDays(5)),
         ]);
 
         Assert.That(resolved, Is.EqualTo(Now.AddDays(5)));
     }
 
     [Test]
-    public void TrialEnd_NonTrialTierWithoutConfiguration_IsIgnored()
-        => Assert.That(TrialExpirationJob.ResolveTrialEnd([new TrialFeatureVm("standard", Now.AddDays(5), null)]), Is.Null);
-
-    [Test]
-    public void TrialEnd_UnparseableConfiguration_IsIgnored()
-        => Assert.That(TrialExpirationJob.ResolveTrialEnd([new TrialFeatureVm("standard", null, "not json")]), Is.Null);
+    public void TrialEnd_NonTrialTier_IsIgnored()
+        => Assert.That(TrialExpirationJob.ResolveTrialEnd([new TrialFeatureVm("standard", Now.AddDays(5))]), Is.Null);
 
     [Test]
     public async Task Trial_NotYetExpired_IsLeftAlone()
@@ -71,7 +56,7 @@ public class TrialAndWorkforceJobTests
         var store = new Mock<ITrialExpirationStore>();
         store.Setup(s => s.GetTrialAccountsAsync(It.IsAny<CancellationToken>())).ReturnsAsync([AccountId]);
         store.Setup(s => s.GetAccountFeaturesAsync(AccountId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync([new TrialFeatureVm("trial", Now.AddDays(3), null)]);
+            .ReturnsAsync([new TrialFeatureVm("trial", Now.AddDays(3))]);
 
         await new TrialExpirationJob(store.Object, Mock.Of<IPublisher>(), Mock.Of<ILogger<TrialExpirationJob>>())
             .RunOnceAsync(Now, CancellationToken.None);
@@ -87,7 +72,7 @@ public class TrialAndWorkforceJobTests
         var store = new Mock<ITrialExpirationStore>();
         store.Setup(s => s.GetTrialAccountsAsync(It.IsAny<CancellationToken>())).ReturnsAsync([AccountId]);
         store.Setup(s => s.GetAccountFeaturesAsync(AccountId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync([new TrialFeatureVm("trial", trialEnd, null)]);
+            .ReturnsAsync([new TrialFeatureVm("trial", trialEnd)]);
         store.Setup(s => s.SuspendAsync(AccountId, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
         var publisher = new Mock<IPublisher>();
@@ -108,7 +93,7 @@ public class TrialAndWorkforceJobTests
         var store = new Mock<ITrialExpirationStore>();
         store.Setup(s => s.GetTrialAccountsAsync(It.IsAny<CancellationToken>())).ReturnsAsync([AccountId]);
         store.Setup(s => s.GetAccountFeaturesAsync(AccountId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync([new TrialFeatureVm("trial", Now.AddDays(-1), null)]);
+            .ReturnsAsync([new TrialFeatureVm("trial", Now.AddDays(-1))]);
         store.Setup(s => s.SuspendAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
         var publisher = new Mock<IPublisher>();

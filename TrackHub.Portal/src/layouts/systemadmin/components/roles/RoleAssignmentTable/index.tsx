@@ -132,7 +132,7 @@ function RoleAssignmentTable({ open }: RoleAssignmentTableProps) {
       title={t('role.resources')}
       data={data}
       columns={actions}
-      rows={resources}>
+      rows={roleResourcesQuery.isSuccess ? resources : []}>
       <CustomSelect
         list={roles}
         name="name"

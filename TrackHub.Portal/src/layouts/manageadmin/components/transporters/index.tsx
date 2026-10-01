@@ -15,6 +15,8 @@
 */
 
 import { useState } from 'react';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Switch from '@mui/material/Switch';
 import { useTranslation } from 'react-i18next';
 import Table from "controls/Tables/Table";
 import ServerPagination from "controls/Tables/ServerPagination";
@@ -47,6 +49,7 @@ function ManageTransporters() {
   };
 
   const [expanded, setExpanded] = useState(false);
+  const [showRetired, setShowRetired] = useState(false);
   const { page, setPage, searchDraft, setSearchDraft, params } = useServerList(PAGE_SIZE);
   const {
     data,
@@ -56,7 +59,7 @@ function ManageTransporters() {
     onSave,
     onDelete,
     setOpen,
-    setConfirmOpen } = useTransporterTableData(expanded, handleEditClick, handleDeleteClick, params);
+    setConfirmOpen } = useTransporterTableData(expanded, handleEditClick, handleDeleteClick, params, showRetired);
   useClampPage(page, PAGE_SIZE, totalCount, setPage);
   const [values, handleChange, setValues, setErrors, validate, errors] = useForm<TransporterFormValues>({});
   const [toDelete, setToDelete] = useState<string | null>(null);
@@ -72,12 +75,16 @@ function ManageTransporters() {
     <>
       <TableAccordion sectionKey="transporters"
         title={t('transporter.title')}
-        showAddIcon={true}
+        showAddIcon={!showRetired}
         expanded={expanded}
         setOpen={setOpen}
         handleAddClick={handleAddClick}
         setExpanded={setExpanded}>
         <ServerSearch value={searchDraft} onChange={setSearchDraft} />
+        <FormControlLabel
+          control={<Switch checked={showRetired} onChange={(e) => { setShowRetired(e.target.checked); setPage(0); }} />}
+          label={t('transporter.showRetired')}
+        />
         <Table columns={columns} rows={rows} selectedField='name' serverPaged />
         <ServerPagination
           page={page}

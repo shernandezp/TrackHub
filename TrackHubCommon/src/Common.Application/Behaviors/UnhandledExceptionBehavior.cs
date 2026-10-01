@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Application.Exceptions;
 using Common.Application.Interfaces;
 using Common.Mediator;
 using Microsoft.Extensions.Logging;
@@ -22,7 +23,8 @@ namespace Common.Application.Behaviors;
 // This class is a pipeline behavior that handles unhandled exceptions in the application.
 public class UnhandledExceptionBehavior<TRequest, TResponse>(
     ILogger<TRequest> logger,
-    ICurrentPrincipal? principal = null) : IPipelineBehavior<TRequest, TResponse> where TRequest : notnull
+    ICurrentPrincipal? principal = null,
+    IEnumerable<IExpectedOutcomeClassifier>? classifiers = null) : IPipelineBehavior<TRequest, TResponse> where TRequest : notnull
 {
     // This method handles the request by invoking the next behavior in the pipeline and catching any unhandled exceptions.
     public async Task<TResponse> HandleAsync(TRequest request, Func<Task<TResponse>> next, CancellationToken cancellationToken)
@@ -30,6 +32,14 @@ public class UnhandledExceptionBehavior<TRequest, TResponse>(
         try
         {
             return await next();
+        }
+        catch (Exception ex) when (IsExpectedOutcome(ex, cancellationToken))
+        {
+            // A refusal the API answers with a code is an outcome, not a fault: no stack trace, and
+            // below the Warning cap of the database sink.
+            logger.LogInformation("Request {Name} refused with {Exception} (correlation {CorrelationId})",
+                typeof(TRequest).Name, ex.GetType().Name, principal?.CorrelationId ?? "none");
+            throw;
         }
         catch (Exception ex)
         {
@@ -41,4 +51,16 @@ public class UnhandledExceptionBehavior<TRequest, TResponse>(
             throw;
         }
     }
+
+    private bool IsExpectedOutcome(Exception exception, CancellationToken cancellationToken)
+        => exception is Exceptions.ValidationException
+            or Ardalis.GuardClauses.NotFoundException
+            or ForbiddenAccessException
+            or ConflictException
+            or FeatureDisabledException
+            or AccountSuspendedException
+            or TooManyRequestsException
+            or UnauthorizedAccessException
+            || (exception is OperationCanceledException && cancellationToken.IsCancellationRequested)
+            || (classifiers?.Any(c => c.IsExpected(exception)) ?? false);
 }

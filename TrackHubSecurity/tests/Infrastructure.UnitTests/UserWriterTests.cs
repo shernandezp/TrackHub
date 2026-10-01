@@ -49,7 +49,8 @@ internal class UserWriterTests : Context
         // Arrange
         var userDto = new CreateUserDto
         {
-            Password = "password"
+            Password = "password",
+            EmailAddress = "user@example.com"
         };
 
         // Setup mock behavior for adding user and saving changes
@@ -78,10 +79,11 @@ internal class UserWriterTests : Context
         _dbContextMock.Setup(m => m.SaveChangesAsync(It.IsAny<CancellationToken>()))
                       .ReturnsAsync(1);
 
-        await _userWriter.CreateUserAsync(new CreateUserDto { Password = "password" }, Guid.NewGuid(), CancellationToken.None);
+        await _userWriter.CreateUserAsync(new CreateUserDto { Password = "password", EmailAddress = " Ana.Lopez@Example.COM " }, Guid.NewGuid(), CancellationToken.None);
 
         Assert.That(added, Is.Not.Null);
         Assert.That(added!.Verified, Is.Not.Null, "an unverified user is refused by the AuthorityServer at sign-in");
+        Assert.That(added.EmailAddress, Is.EqualTo("ana.lopez@example.com"), "sign-in and uniqueness compare the normalized address");
     }
 
     [Test]
@@ -90,7 +92,7 @@ internal class UserWriterTests : Context
         // Arrange
         var userDto = new UpdateUserDto
         {
-            // Provide necessary user details
+            EmailAddress = "user@example.com"
         };
         var cancellationToken = new CancellationToken();
 

@@ -21,6 +21,9 @@ import CustomTextField from 'controls/Dialogs/CustomTextField';
 import CustomCheckbox from 'controls/Dialogs/CustomCheckbox';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
 import CustomReadOnly from 'controls/Dialogs/CustomReadOnly';
+import SearchSelect from 'edition/SearchSelect';
+import type { SearchOption } from 'edition/SearchSelect';
+import { useAccountOptions } from 'edition/pickerOptions';
 import type { FormChangeHandler } from 'controls/Dialogs/useForm';
 import { featureLabel } from 'utils/featureLabels';
 import { configFieldKey } from 'layouts/systemadmin/components/accountFeatures';
@@ -38,7 +41,7 @@ interface AccountFeatureDialogProps {
   handleChange: FormChangeHandler;
   errors: Record<string, string>;
   isAdd?: boolean;
-  accountOptions?: FeatureSelectOption[];
+  onAccountChange: (account: SearchOption | null) => void;
   featureOptions?: FeatureSelectOption[];
   configFields: Record<string, ConfigFieldDef[]>;
 }
@@ -46,7 +49,7 @@ interface AccountFeatureDialogProps {
 // SuperAdministrator editor for a single account feature. In "add" mode the account and feature
 // are chosen; in "edit" mode they are fixed. Feature enablement, tier and the storage/cost
 // configuration are billing-owned and only editable here.
-function AccountFeatureDialog({ open, setOpen, handleSubmit, values, handleChange, errors, isAdd, accountOptions, featureOptions, configFields }: AccountFeatureDialogProps) {
+function AccountFeatureDialog({ open, setOpen, handleSubmit, values, handleChange, errors, isAdd, onAccountChange, featureOptions, configFields }: AccountFeatureDialogProps) {
   const { t } = useTranslation();
   const fields = configFields[values.featureKey ?? ''] ?? [];
   const featureName = values.featureKey ? featureLabel(t, values.featureKey) : '';
@@ -62,15 +65,13 @@ function AccountFeatureDialog({ open, setOpen, handleSubmit, values, handleChang
         {isAdd
           ? (
             <>
-              <CustomSelect
-                name="accountId"
+              <SearchSelect
                 id="accountId"
                 label={t('account.title')}
-                list={accountOptions ?? []}
-                value={values.accountId || ''}
-                handleChange={handleChange}
-                numericValue={false}
-                required
+                value={values.accountId || null}
+                valueLabel={values.accountName}
+                onChange={onAccountChange}
+                useOptions={useAccountOptions}
                 errorMsg={errors.accountId}
               />
               <CustomSelect

@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 
+using Common.Application.Exceptions;
 using Common.Application.Interfaces;
 using Common.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -110,6 +111,22 @@ public class WriterPersistenceTests
     }
 
     [Test]
+    public async Task AssignTrip_ToAnotherVehicle_IsRefusedOnceTheTripHasStarted()
+    {
+        using var context = await SeededAsync();
+
+        var ex = Assert.ThrowsAsync<ConflictException>(async () => await new TripWriter(context, User())
+            .AssignTripAsync(TripId, WriterTestData.AccountId, DriverId, Guid.NewGuid(), CancellationToken.None));
+
+        var trip = await context.Trips.AsNoTracking().FirstAsync(t => t.TripId == TripId, CancellationToken.None);
+        Assert.Multiple(() =>
+        {
+            Assert.That(ex!.Message, Does.Contain(TripErrorCodes.TripArmed));
+            Assert.That(trip.TransporterId, Is.EqualTo(TransporterId));
+        });
+    }
+
+    [Test]
     public async Task ReorderStops_PersistsTheNewSequence()
     {
         using var context = await SeededAsync();
@@ -164,7 +181,7 @@ public class WriterPersistenceTests
 
         var recorded = await new DeliveryWriter(context).UpdateDeliveryOutcomeAsync(
             DeliveryId, WriterTestData.AccountId, DeliveryStatuses.Delivered, "Left at gate",
-            $"trip-outcome:{DeliveryId:N}", CancellationToken.None);
+            $"trip-outcome:{DeliveryId:N}", TripEventSources.Driver, CancellationToken.None);
 
         var delivery = await context.Deliveries.AsNoTracking().FirstAsync(d => d.DeliveryId == DeliveryId, CancellationToken.None);
         Assert.Multiple(() =>
@@ -172,6 +189,8 @@ public class WriterPersistenceTests
             Assert.That(recorded, Is.True);
             Assert.That(delivery.Status, Is.EqualTo(DeliveryStatuses.Delivered));
             Assert.That(delivery.Observations, Is.EqualTo("Left at gate"));
+            Assert.That(context.TripEvents.AsNoTracking().Single(e => e.IdempotencyKey == $"trip-outcome:{DeliveryId:N}").Source,
+                Is.EqualTo(TripEventSources.Driver), "the timeline names who recorded the outcome");
         });
     }
 

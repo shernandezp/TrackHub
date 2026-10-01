@@ -21,11 +21,9 @@ namespace TrackHub.Manager.Application.Transporters.Commands.Delete;
 [AccountScopeEnforcedInHandler]
 public record DeleteTransporterCommand(Guid Id) : IRequest;
 
-public class DeleteTransporterCommandHandler(ITransporterWriter writer, ITransporterPositionWriter transporterPositionWriter) : IRequestHandler<DeleteTransporterCommand>
+// Deleting a unit retires it: see ITransporterWriter.RetireTransporterAsync.
+public class DeleteTransporterCommandHandler(ITransporterWriter writer) : IRequestHandler<DeleteTransporterCommand>
 {
     public async Task Handle(DeleteTransporterCommand request, CancellationToken cancellationToken)
-    { 
-        await transporterPositionWriter.DeleteTransporterPositionAsync(request.Id, cancellationToken);
-        await writer.DeleteTransporterAsync(request.Id, cancellationToken);
-    }
+        => await writer.RetireTransporterAsync(request.Id, cancellationToken);
 }

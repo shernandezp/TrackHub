@@ -60,6 +60,7 @@ export const DELIVERY_STATUSES = [
   'Failed',
   'Deferred',
   'Digested',
+  'Expired',
 ] as const;
 
 /** Template keys: one per alert event type plus the system template keys. */

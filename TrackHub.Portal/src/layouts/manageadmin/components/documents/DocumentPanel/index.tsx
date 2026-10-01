@@ -15,6 +15,7 @@
 */
 
 import { useContext, useEffect, useRef, useState } from 'react';
+import { scanBadgeColor } from 'utils/documentScan';
 import { useTranslation } from 'react-i18next';
 import Icon from '@mui/material/Icon';
 import Table, { type TableColumn } from "controls/Tables/Table";
@@ -26,22 +27,12 @@ import ConfirmDialog from "controls/Dialogs/ConfirmDialog";
 import DocumentUploadDialog from "layouts/manageadmin/components/documents/DocumentUploadDialog";
 import type { UploadPayload } from "layouts/manageadmin/components/documents/DocumentUploadDialog";
 import ShareDialog from "layouts/manageadmin/components/documents/ShareDialog";
-import { getDocumentsForOwner, uploadDocument, uploadDocumentVersion, downloadDocument, voidDocument, deleteDocumentReference } from "api/manager/documents";
+import { getAllDocumentsForOwner, uploadDocument, uploadDocumentVersion, downloadDocument, voidDocument, deleteDocumentReference } from "api/manager/documents";
 import type { DocumentVm } from "api/manager/documents";
 import { useDocumentTypes } from "queries/documents";
 import { notifyApiError } from "api/core/errors";
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from "utils/dateUtils";
-
-const scanColor = (scanStatus: string): 'success' | 'error' | 'warning' | 'secondary' => {
-  switch (scanStatus) {
-    case 'Clean': return 'success';
-    case 'Infected':
-    case 'Failed': return 'error';
-    case 'Quarantined': return 'warning';
-    default: return 'secondary';
-  }
-};
 
 interface ConfirmState { open: boolean; kind?: 'void' | 'delete'; }
 
@@ -75,9 +66,9 @@ function DocumentPanel({ accountId = null, ownerEntityType, ownerEntityId = null
     if (!accountId || !ownerEntityId) { setDocs([]); return; }
     setLoading(true);
     try {
-      const items = await getDocumentsForOwner(accountId, ownerEntityType, ownerEntityId);
-      setDocs(items || []);
-      changedRef.current?.(items || []);
+      const items = await getAllDocumentsForOwner(accountId, ownerEntityType, ownerEntityId);
+      setDocs(items);
+      changedRef.current?.(items);
     } catch (error) {
       notifyApiError(error);
     } finally {
@@ -154,10 +145,10 @@ function DocumentPanel({ accountId = null, ownerEntityType, ownerEntityId = null
 
   const rows = docs.map(doc => ({
     fileName: <ArgonTypography variant="caption" fontWeight="medium">{doc.title || doc.fileName}</ArgonTypography>,
-    category: <ArgonTypography variant="caption" color="secondary">{doc.category}</ArgonTypography>,
+    category: <ArgonTypography variant="caption" color="secondary">{categories.find(type => type.category === doc.category)?.displayName || doc.category}</ArgonTypography>,
     classification: <ArgonTypography variant="caption" color="secondary">{t(`documentManagement.values.classification.${(doc.classification || '').toLowerCase()}` as 'documentManagement.values.classification.public', { defaultValue: doc.classification })}</ArgonTypography>,
     status: <ArgonTypography variant="caption" color="secondary">{t(`documentManagement.values.status.${(doc.status || '').toLowerCase()}` as 'documentManagement.values.status.active', { defaultValue: doc.status })}</ArgonTypography>,
-    scan: <ArgonBadge badgeContent={t(`documentManagement.values.scan.${(doc.scanStatus || '').toLowerCase()}` as 'documentManagement.values.scan.clean', { defaultValue: doc.scanStatus })} color={scanColor(doc.scanStatus)} size="xs" container />,
+    scan: <ArgonBadge badgeContent={t(`documentManagement.values.scan.${(doc.scanStatus || '').toLowerCase()}` as 'documentManagement.values.scan.clean', { defaultValue: doc.scanStatus })} color={scanBadgeColor(doc.scanStatus)} size="xs" container />,
     expires: <ArgonTypography variant="caption" color="secondary">{doc.expiresAt ? formatDateTime(doc.expiresAt) : '-'}</ArgonTypography>,
     version: <ArgonTypography variant="caption" color="secondary">{doc.currentVersion}</ArgonTypography>,
     action: (

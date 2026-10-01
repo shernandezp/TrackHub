@@ -109,13 +109,13 @@ public class OperatorReaderTests
     }
 
     [Test]
-    public async Task GetOperatorAsync_RefusesAnOperatorOwnedByAnotherAccount()
+    public async Task GetOperatorAsync_AnswersAnOperatorOwnedByAnotherAccountNotFound()
     {
         // The by-id read takes a caller-supplied GUID and its query carries no top-level AccountId,
         // so AccountScopeBehavior has nothing to bind and this reader is the only tenant control.
         // Without it a Manager-role principal could read any account's operator — including, for a
         // principal holding Credentials/Custom, its decrypted credential material.
-        await using var context = NewContext(nameof(GetOperatorAsync_RefusesAnOperatorOwnedByAnotherAccount));
+        await using var context = NewContext(nameof(GetOperatorAsync_AnswersAnOperatorOwnedByAnotherAccountNotFound));
 
         var victimAccountId = Guid.NewGuid();
         var attackerAccountId = Guid.NewGuid();
@@ -131,7 +131,7 @@ public class OperatorReaderTests
 
         Assert.That(
             async () => await reader.GetOperatorAsync(@operator.OperatorId, CancellationToken.None),
-            Throws.TypeOf<ForbiddenAccessException>());
+            Throws.TypeOf<NotFoundException>());
     }
 
     [Test]

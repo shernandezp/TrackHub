@@ -4,6 +4,8 @@ namespace TrackHub.Manager.Application.GpsIntegration.Queries;
 
 [Authorize(Resource = Resources.SynchronizedDevices, Action = Actions.Read)]
 
+// Enforcement: the writer or reader checks every referenced id against the request's account.
+[AccountScopeEnforcedInHandler]
 public readonly record struct GetSynchronizedDevicesQuery(
     Guid AccountId,
     DetectedStatus? DetectedStatus = null,

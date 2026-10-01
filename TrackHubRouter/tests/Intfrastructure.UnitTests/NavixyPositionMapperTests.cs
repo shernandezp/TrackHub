@@ -49,7 +49,7 @@ public class PositionMapperTests
                 Speed: 63,
                 Heading: 210));
 
-        var result = tracker.MapToPositionVm(Device);
+        var result = tracker.MapToPositionVm(Device, TimeZoneInfo.Utc);
 
         using (Assert.EnterMultipleScope())
         {
@@ -74,7 +74,7 @@ public class PositionMapperTests
     {
         var tracker = new Tracker(7788, "868324028712345", "Pickup-4", null);
 
-        var result = tracker.MapToPositionVm(Device);
+        var result = tracker.MapToPositionVm(Device, TimeZoneInfo.Utc);
 
         using (Assert.EnterMultipleScope())
         {
@@ -101,7 +101,7 @@ public class PositionMapperTests
             Gsm_lbs: false,
             Parking: false);
 
-        var result = point.MapToPositionVm(Device);
+        var result = point.MapToPositionVm(Device, TimeZoneInfo.Utc);
 
         using (Assert.EnterMultipleScope())
         {
@@ -120,7 +120,7 @@ public class PositionMapperTests
     {
         var point = new TrackPoint(4.710989, -74.072092, 2640, "17/07/2026 09:20", 63, 210, null, null, null, null);
 
-        var result = point.MapToPositionVm(Device);
+        var result = point.MapToPositionVm(Device, TimeZoneInfo.Utc);
 
         Assert.That(result.DeviceDateTime, Is.EqualTo(DateTimeOffset.MinValue));
     }
@@ -134,7 +134,7 @@ public class PositionMapperTests
         var unknownDevice = new Tracker(9999, "000000000000000", "Ghost", lastUpdate);
         var dictionary = new Dictionary<int, DeviceTransporterVm> { [7788] = Device };
 
-        var result = new[] { matched, noUpdate, unknownDevice }.MapToPositionVm(dictionary).ToList();
+        var result = new[] { matched, noUpdate, unknownDevice }.MapToPositionVm(dictionary, TimeZoneInfo.Utc).ToList();
 
         using (Assert.EnterMultipleScope())
         {

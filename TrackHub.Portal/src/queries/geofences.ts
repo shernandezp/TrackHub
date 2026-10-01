@@ -30,24 +30,20 @@ import type {
 
 export const geofenceKeys = {
   all: ['geofences'] as const,
-  byAccount: (enableCaching: boolean, filters: GeofenceListFilters = {}) =>
-    [...geofenceKeys.all, 'byAccount', enableCaching, filters] as const,
-  allByAccount: (
-    enableCaching: boolean,
-    filters: Omit<GeofenceListFilters, 'skip' | 'take'> = {}
-  ) => [...geofenceKeys.all, 'allByAccount', enableCaching, filters] as const,
+  byAccount: (filters: GeofenceListFilters = {}) => [...geofenceKeys.all, 'byAccount', filters] as const,
+  allByAccount: (filters: Omit<GeofenceListFilters, 'skip' | 'take'> = {}) =>
+    [...geofenceKeys.all, 'allByAccount', filters] as const,
   detail: (id: string) => [...geofenceKeys.all, 'detail', id] as const,
   transportersInGeofence: ['transportersInGeofence'] as const,
 };
 
 export function useGeofencesByAccount(
-  enableCaching = false,
   filters: GeofenceListFilters = {},
   options: { enabled?: boolean } = {}
 ) {
   return useQuery({
-    queryKey: geofenceKeys.byAccount(enableCaching, filters),
-    queryFn: () => api.getGeofencesByAccount(enableCaching, filters),
+    queryKey: geofenceKeys.byAccount(filters),
+    queryFn: ({ signal }) => api.getGeofencesByAccount(filters, { signal }),
     enabled: options.enabled ?? true,
     // A page change swaps the query key; without a placeholder the list reads as EMPTY
     // (totalCount 0) while the next page loads, and the page clamp snaps it back to page one.
@@ -63,13 +59,12 @@ export function useGeofencesByAccount(
  * refreshes it alongside the paged list.
  */
 export function useAllGeofences(
-  enableCaching = false,
   filters: Omit<GeofenceListFilters, 'skip' | 'take'> = {},
   options: { enabled?: boolean } = {}
 ) {
   return useQuery({
-    queryKey: geofenceKeys.allByAccount(enableCaching, filters),
-    queryFn: () => api.getAllGeofencesByAccount(enableCaching, filters),
+    queryKey: geofenceKeys.allByAccount(filters),
+    queryFn: ({ signal }) => api.getAllGeofencesByAccount(filters, { signal }),
     enabled: options.enabled ?? true,
   });
 }

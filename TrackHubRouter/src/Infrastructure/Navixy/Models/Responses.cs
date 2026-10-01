@@ -71,3 +71,11 @@ internal sealed record AuthResponse(
     string? Hash,
     NavixyStatus? Status = null
 ) : INavixyResponse;
+
+internal sealed record UserSettingsResponse(
+    bool Success,
+    NavixyUserSettings? Settings,
+    NavixyStatus? Status = null
+) : INavixyResponse;
+
+internal sealed record NavixyUserSettings(string? Time_zone);

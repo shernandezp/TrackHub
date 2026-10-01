@@ -21,8 +21,8 @@ using TrackHub.Manager.Domain.Constants;
 namespace TrackHub.Manager.Application.BackgroundJobs;
 
 /// <summary>
-/// Runs the AV scanner over Quarantined documents and transitions them to Clean (Active), Infected or
-/// Failed. Infected files stay undownloadable and raise a deduplicated alert. A security job, so it
+/// Runs the AV scanner over Quarantined document versions and records its verdict: Clean or NotScanned
+/// (servable; the document becomes Active), Infected or Failed. Infected files stay undownloadable and raise a deduplicated alert. A security job, so it
 /// runs regardless of the `documents` feature.
 /// </summary>
 public sealed class DocumentScanJob(
@@ -42,7 +42,7 @@ public sealed class DocumentScanJob(
 
         foreach (var document in pending)
         {
-            var idempotencyKey = $"scan:{document.DocumentId:N}:{document.CurrentVersion}";
+            var idempotencyKey = $"scan:{document.DocumentId:N}:{document.VersionNumber}";
             var startedAt = DateTimeOffset.UtcNow;
             try
             {
@@ -59,7 +59,7 @@ public sealed class DocumentScanJob(
                         document.AccountId, AlertEventTypes.DocumentScanFailed, AlertSeverities.High, "Documents",
                         "Document", document.DocumentId.ToString(), "Open",
                         JsonSerializer.Serialize(new { reason = "infected", category = document.Category }),
-                        AlertKeys.DocumentInfected(document.DocumentId, document.CurrentVersion)), cancellationToken);
+                        AlertKeys.DocumentInfected(document.DocumentId, document.VersionNumber)), cancellationToken);
                 }
 
                 await store.ApplyScanResultAsync(document, outcome, idempotencyKey, startedAt, cancellationToken);
@@ -81,8 +81,7 @@ public sealed class DocumentScanJob(
     public static DocumentScanOutcome Classify(QuarantinedDocumentVm document, string scanStatus)
         => new(
             scanStatus,
-            string.Equals(scanStatus, DocumentScanStatuses.Clean, StringComparison.OrdinalIgnoreCase)
-                && document.Status == DocumentStatuses.Uploaded,
+            DocumentScanStatuses.IsServable(scanStatus) && document.Status == DocumentStatuses.Uploaded,
             string.Equals(scanStatus, DocumentScanStatuses.Infected, StringComparison.OrdinalIgnoreCase));
 
     private async Task RecordFailureAsync(

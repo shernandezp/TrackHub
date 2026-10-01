@@ -56,18 +56,27 @@ public sealed class TripAutoCompletionService(
         }
 
         // The same key manual Complete uses, so the two paths converge on one event and one alert.
-        var completed = await tripWriter.TransitionTripAsync(
-            tripId,
-            accountId,
-            TripStatuses.Completed,
-            TripEventTypes.TripCompleted,
-            TripEventSources.Detection,
-            $"trip-complete:{tripId:N}",
-            null,
-            reason: null,
-            force: forced,
-            measuredAt: measuredEnd,
-            cancellationToken);
+        bool completed;
+        try
+        {
+            completed = await tripWriter.TransitionTripAsync(
+                tripId,
+                accountId,
+                TripStatuses.Completed,
+                TripEventTypes.TripCompleted,
+                TripEventSources.Detection,
+                $"trip-complete:{tripId:N}",
+                null,
+                reason: null,
+                force: forced,
+                measuredAt: measuredEnd,
+                cancellationToken);
+        }
+        catch (ConflictException exception) when (exception.Code == TripErrorCodes.PodRequired)
+        {
+            logger.LogDebug("Trip {TripId} waits for a proof of delivery before it can complete", tripId);
+            return false;
+        }
 
         if (!completed)
         {

@@ -9,7 +9,7 @@ import path from 'node:path';
 import { test, expect, unique, uniqueName } from '../fixtures';
 import { CrudFlow } from '../pages/crud';
 import { Section } from '../pages/tableAccordion';
-import { ConfirmDialog, FormDialog } from '../pages/dialogs';
+import { ConfirmDialog, FormDialog, pickOption } from '../pages/dialogs';
 
 test.describe('account management — documents & sharing', () => {
   test('the document library renders its filters and its scan-status column', async ({
@@ -127,8 +127,7 @@ test.describe('account management — documents & sharing', () => {
     await shell.open('manageAdmin');
     const qualifications = new Section(page, 'driver-qualifications', t);
     await qualifications.expand();
-    await qualifications.root.locator('#qualificationDriverId').click();
-    await page.getByRole('option', { name: driverName, exact: true }).click();
+    await pickOption(page, qualifications.root.locator('#qualificationDriverId'), driverName, true);
 
     const upload = qualifications.root.getByRole('button', {
       name: t('documentManagement.upload'),
@@ -205,8 +204,7 @@ test.describe('account management — documents & sharing', () => {
     await shell.open('manageAdmin');
     const qualifications = new Section(page, 'driver-qualifications', t);
     await qualifications.expand();
-    await qualifications.root.locator('#qualificationDriverId').click();
-    await page.getByRole('option', { name: driverName, exact: true }).click();
+    await pickOption(page, qualifications.root.locator('#qualificationDriverId'), driverName, true);
 
     await qualifications.root
       .getByRole('button', { name: t('documentManagement.upload') })

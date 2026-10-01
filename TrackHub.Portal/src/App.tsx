@@ -111,10 +111,13 @@ export default function App() {
   const { pathname } = useLocation();
   const { t, i18n } = useTranslation();
 
-  const saveAccountSettings = (
+  const saveAccountSettings = async (
     accountId: string,
     settings: Omit<AccountSettingsDtoInput, 'accountId'>
-  ) => updateAccountSettings(accountId, settings);
+  ) => {
+    await updateAccountSettings(accountId, settings);
+    setAccountSettings(await getAccountSettings());
+  };
 
   const [loading, setLoading] = useState(false);
   // Closed until bootstrap answers. Open defaults briefly showed every signed-in user the admin
@@ -244,6 +247,12 @@ export default function App() {
 
   // Change the openConfigurator state
   const handleConfiguratorOpen = () => setOpenConfigurator(dispatch, !openConfigurator);
+
+  // Other screens write the same settings row; open the panel on its current version.
+  useEffect(() => {
+    if (!openConfigurator || !isAuthenticated) return;
+    getAccountSettings().then(setAccountSettings).catch(() => undefined);
+  }, [openConfigurator, isAuthenticated]);
 
   // The Argon template's RTL support was dropped in this fork: the controller
   // has no `direction` state, so the app is LTR-only. The old effect wrote the

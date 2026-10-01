@@ -32,6 +32,7 @@ import { useAuth } from "AuthContext";
  * requirement is enforced by the dialog's validate() gate before save.
  */
 export interface GroupFormValues {
+  version?: number;
   groupId?: number;
   name?: string;
   description?: string;
@@ -88,6 +89,7 @@ function useGroupTableData(
           name: group.name,
           description: group.description,
           active: group.active,
+          expectedVersion: group.version ?? null,
         } as { groupId: number } & Omit<UpdateGroupDtoInput, 'groupId'>);
       } else {
         await createGroup.mutateAsync({

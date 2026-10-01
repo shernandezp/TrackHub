@@ -16,34 +16,34 @@
 using TrackHub.Reporting.Domain.Interfaces;
 using TrackHub.Reporting.Domain.Interfaces.Manager;
 using TrackHub.Reporting.Domain.Models;
+using TrackHub.Reporting.Domain.Paging;
 
 namespace TrackHub.Reporting.Infrastructure.GraphQLApi;
 
 public class WorkforceReportReader(IGraphQLClientFactory graphQLClient, IUser user, IAccountFeatureReader featureReader)
     : GraphQLService(graphQLClient.CreateClient(Clients.Manager)), IWorkforceReportReader
 {
-    // Manager clamps take to 500, so reports page through until exhausted or the report row limit.
-    private const int PageSize = 500;
-    private const int MaxRows = 100_000;
-
     internal const string DriversByAccountQuery = @"
                 query($accountId: UUID!, $skip: Int!, $take: Int!) {
                     driversByAccount(query: { accountId: $accountId, skip: $skip, take: $take }) {
-                        driverId name phone documentType documentNumber active employeeCode licenseNumber licenseExpiresAt defaultTransporterId
+                        items { driverId name phone documentType documentNumber active employeeCode licenseNumber licenseExpiresAt defaultTransporterId }
+                        totalCount
                     }
                 }";
 
     internal const string DriverQualificationsQuery = @"
                 query($accountId: UUID!, $driverId: UUID, $expiringWithinDays: Int, $skip: Int!, $take: Int!) {
                     driverQualifications(query: { accountId: $accountId, driverId: $driverId, expiringWithinDays: $expiringWithinDays, skip: $skip, take: $take }) {
-                        driverQualificationId driverId driverName qualificationType category number issuedAt expiresAt issuingAuthority status
+                        items { driverQualificationId driverId driverName qualificationType category number issuedAt expiresAt issuingAuthority status }
+                        totalCount
                     }
                 }";
 
     internal const string DriverAssignmentHistoryQuery = @"
                 query($accountId: UUID!, $driverId: UUID, $transporterId: UUID, $from: DateTime, $to: DateTime, $skip: Int!, $take: Int!) {
                     driverAssignmentHistory(query: { accountId: $accountId, driverId: $driverId, transporterId: $transporterId, from: $from, to: $to, skip: $skip, take: $take }) {
-                        driverId driverName transporterId transporterName startsAt endsAt assignmentType status createdByPrincipal
+                        items { driverId driverName transporterId transporterName startsAt endsAt assignmentType status createdByPrincipal }
+                        totalCount
                     }
                 }";
 
@@ -53,51 +53,24 @@ public class WorkforceReportReader(IGraphQLClientFactory graphQLClient, IUser us
         => featureReader.EnsureFeatureEnabledAsync(AccountId, FeatureKeys.Workforce, cancellationToken);
 
     public Task<IReadOnlyCollection<ReportDriverVm>> GetDriversAsync(CancellationToken cancellationToken)
-        => FetchAllAsync<ReportDriverVm>((skip, take) => new GraphQLRequest
-        {
-            Query = DriversByAccountQuery,
-            Variables = new { accountId = AccountId, skip, take }
-        }, cancellationToken);
+        => DrainAsync<ReportDriverVm>(DriversByAccountQuery, (skip, take) => new { accountId = AccountId, skip, take }, cancellationToken);
 
     public Task<IReadOnlyCollection<ReportDriverQualificationVm>> GetDriverQualificationsAsync(
         Guid? driverId, int? expiringWithinDays, CancellationToken cancellationToken)
-        => FetchAllAsync<ReportDriverQualificationVm>((skip, take) => new GraphQLRequest
-        {
-            Query = DriverQualificationsQuery,
-            Variables = new { accountId = AccountId, driverId, expiringWithinDays, skip, take }
-        }, cancellationToken);
+        => DrainAsync<ReportDriverQualificationVm>(DriverQualificationsQuery,
+            (skip, take) => new { accountId = AccountId, driverId, expiringWithinDays, skip, take }, cancellationToken);
 
     public Task<IReadOnlyCollection<ReportDriverAssignmentVm>> GetDriverAssignmentHistoryAsync(
         Guid? driverId, Guid? transporterId, DateTimeOffset? from, DateTimeOffset? to, CancellationToken cancellationToken)
-        => FetchAllAsync<ReportDriverAssignmentVm>((skip, take) => new GraphQLRequest
+        => DrainAsync<ReportDriverAssignmentVm>(DriverAssignmentHistoryQuery,
+            (skip, take) => new { accountId = AccountId, driverId, transporterId, from, to, skip, take }, cancellationToken);
+
+    private Task<IReadOnlyCollection<T>> DrainAsync<T>(string query, Func<int, int, object> variables, CancellationToken cancellationToken)
+        => FeedDrain.DrainAsync<T>(async (skip, take) =>
         {
-            Query = DriverAssignmentHistoryQuery,
-            Variables = new { accountId = AccountId, driverId, transporterId, from, to, skip, take }
-        }, cancellationToken);
+            var page = await QueryAsync<Page<T>>(new GraphQLRequest { Query = query, Variables = variables(skip, take) }, cancellationToken);
+            return (page.Items, page.TotalCount);
+        });
 
-    private async Task<IReadOnlyCollection<T>> FetchAllAsync<T>(Func<int, int, GraphQLRequest> buildRequest, CancellationToken cancellationToken)
-    {
-        var all = new List<T>();
-        var skip = 0;
-        // Fetch one page BEYOND the report limit so an over-limit result set reaches ExcelHelper, which
-        // then fails clearly (ReportLimitExceededException → 400) rather than silently truncating (AC12).
-        while (all.Count <= MaxRows)
-        {
-            var page = await QueryAsync<List<T>>(buildRequest(skip, PageSize), cancellationToken);
-            if (page.Count == 0)
-            {
-                break;
-            }
-
-            all.AddRange(page);
-            if (page.Count < PageSize)
-            {
-                break;
-            }
-
-            skip += PageSize;
-        }
-
-        return all;
-    }
+    private sealed record Page<T>(IReadOnlyCollection<T>? Items, int TotalCount);
 }

@@ -24,6 +24,9 @@ import FormDialog from 'controls/Dialogs/FormDialog';
 import CustomTextField from 'controls/Dialogs/CustomTextField';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
 import CustomCheckbox from 'controls/Dialogs/CustomCheckbox';
+import SearchSelect from 'edition/SearchSelect';
+import type { SearchOption } from 'edition/SearchSelect';
+import { usePointOfInterestOptions } from 'edition/pickerOptions';
 import ArgonBox from 'components/ArgonBox';
 import ArgonTypography from 'components/ArgonTypography';
 import { reverseGeocode } from 'api/router/router';
@@ -137,10 +140,6 @@ function StopDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, hasPoint, latitude, longitude]);
 
-  const poiOptions = pois
-    .filter((poi) => poi.active !== false)
-    .map((poi) => ({ value: poi.pointOfInterestId, label: poi.name }));
-
   const geofenceOptions = geofences
     .filter((geofence) => geofence.active)
     .map((geofence) => ({ value: geofence.geofenceId, label: geofence.name }));
@@ -156,8 +155,8 @@ function StopDialog({
     if (name && !values.name) handleChange({ target: { name: 'name', value: name } });
   };
 
-  const handlePoiPick: FormChangeHandler = (event) => {
-    const poi = pois.find((candidate) => candidate.pointOfInterestId === event.target.value);
+  const handlePoiPick = (option: SearchOption | null) => {
+    const poi = pois.find((candidate) => candidate.pointOfInterestId === option?.value);
     if (poi) applyPoint(poi.latitude, poi.longitude, poi.name, null);
   };
 
@@ -199,13 +198,12 @@ function StopDialog({
             </ArgonBox>
           </Grid>
           <Grid size={{ xs: 12, sm: 4 }}>
-            <CustomSelect
-              list={poiOptions}
-              handleChange={handlePoiPick}
-              name="poiPick"
+            <SearchSelect
               id="poiPick"
               label={t('tripStops.placement.byPoi')}
-              numericValue={false}
+              value={null}
+              onChange={handlePoiPick}
+              useOptions={usePointOfInterestOptions}
               placeholder={t('tripStops.placement.selectPoi')}
             />
           </Grid>

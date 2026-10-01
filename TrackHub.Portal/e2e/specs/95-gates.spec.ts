@@ -99,7 +99,7 @@ test.describe('gates and negative paths', () => {
     await shell.open('systemAdmin');
     const features = new Section(page, 'system-account-features', t);
     await features.expand();
-    await features.root.locator('#accountFilter').click();
+    await features.root.locator('#accountFilter').fill(account.name);
     await page.getByRole('option', { name: account.name, exact: true }).click();
 
     const row = await features.findRow(t('resources.geofencing'));
@@ -127,7 +127,7 @@ test.describe('gates and negative paths', () => {
     // Turning it back on restores both.
     await shell.open('systemAdmin');
     await features.expand();
-    await features.root.locator('#accountFilter').click();
+    await features.root.locator('#accountFilter').fill(account.name);
     await page.getByRole('option', { name: account.name, exact: true }).click();
     const off = await features.findRow(t('resources.geofencing'));
     await off.getByRole('button', { name: t('generic.edit') }).click();
@@ -167,7 +167,10 @@ test.describe('gates and negative paths', () => {
     await groups.expand();
 
     // The screen stays usable and the failure is reported, not swallowed.
-    await expect(page.getByRole('alert').first()).toBeVisible({ timeout: 45_000 });
+    const alert = page.getByRole('alert').first();
+    await expect(alert).toBeVisible({ timeout: 45_000 });
+    await expect(alert).toContainText(t('errors.forbidden'));
+    await expect(alert).not.toContainText('Insufficient permissions');
     await expect(groups.root).toBeVisible();
     await expect(shell.nav('dashboard')).toBeVisible();
   });
