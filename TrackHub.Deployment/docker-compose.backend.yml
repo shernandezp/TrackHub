@@ -507,7 +507,6 @@ services:
       - DB_CONNECTION_SECURITY=${DB_CONNECTION_SECURITY}
       - DB_CONNECTION_MANAGER=${DB_CONNECTION_MANAGER}
       - DB_CONNECTION_TELEMETRY=${DB_CONNECTION_TELEMETRY}
-      - DB_CONNECTION_LOGGING=${DB_CONNECTION_LOGGING}
       # Service-client secrets: the seeder reads {CLIENTID}_SECRET from here so .env is the single
       # source of truth and clients.json needs no real secrets.
       - SYNCWORKER_CLIENT_SECRET=${SYNCWORKER_CLIENT_SECRET}

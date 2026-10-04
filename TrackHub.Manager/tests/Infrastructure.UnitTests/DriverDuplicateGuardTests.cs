@@ -48,7 +48,7 @@ public class DriverDuplicateGuardTests
         DriverDto Dto(string name) => new(accountId, name, null, "CC", "1020", true, null, null, null, null);
 
         var created = await writer.CreateDriverAsync(Dto("Ana"), CancellationToken.None);
-        Assert.ThrowsAsync<ConflictException>(() => writer.CreateDriverAsync(Dto("Ana B"), CancellationToken.None));
+        await Assert.ThrowsAsync<ConflictException>(() => writer.CreateDriverAsync(Dto("Ana B"), CancellationToken.None));
 
         await writer.DeactivateDriverAsync(created.DriverId, CancellationToken.None);
         context.ChangeTracker.Clear();
@@ -81,10 +81,10 @@ public class DriverDuplicateGuardTests
         await writer.UpdateDriverAsync(carla.DriverId, Dto("Carla", "  "), CancellationToken.None);
         context.ChangeTracker.Clear();
 
-        Assert.Multiple(() =>
+        await Assert.MultipleAsync(async () =>
         {
             Assert.That(context.Drivers.Where(d => d.DriverId != ana.DriverId).Select(d => d.DocumentNumber), Is.All.Null);
-            Assert.ThrowsAsync<ConflictException>(() => writer.UpdateDriverAsync(beto.DriverId, Dto("Beto", " 1020 "), CancellationToken.None));
+            await Assert.ThrowsAsync<ConflictException>(() => writer.UpdateDriverAsync(beto.DriverId, Dto("Beto", " 1020 "), CancellationToken.None));
         });
     }
 }

@@ -57,7 +57,7 @@ public class DriverQualificationWriterTests
     }
 
     [Test]
-    public void Create_ForDriverInAnotherAccount_IsNotFound()
+    public async Task Create_ForDriverInAnotherAccount_IsNotFound()
     {
         using var context = NewContext(nameof(Create_ForDriverInAnotherAccount_IsNotFound));
         var accountId = Guid.NewGuid();
@@ -65,12 +65,12 @@ public class DriverQualificationWriterTests
         var writer = new DriverQualificationWriter(context, Principal(accountId), Mock.Of<IAlertRecorder>());
 
         // Cross-account references surface as 404, never as a permission hint (AC1).
-        Assert.ThrowsAsync<NotFoundException>(() =>
+        await Assert.ThrowsAsync<NotFoundException>(() =>
             writer.CreateDriverQualificationAsync(Dto(accountId, foreignDriver.DriverId), CancellationToken.None));
     }
 
     [Test]
-    public void Create_WithForeignDocumentLink_IsNotFound()
+    public async Task Create_WithForeignDocumentLink_IsNotFound()
     {
         using var context = NewContext(nameof(Create_WithForeignDocumentLink_IsNotFound));
         var accountId = Guid.NewGuid();
@@ -82,7 +82,7 @@ public class DriverQualificationWriterTests
 
         var writer = new DriverQualificationWriter(context, Principal(accountId), Mock.Of<IAlertRecorder>());
 
-        Assert.ThrowsAsync<NotFoundException>(() =>
+        await Assert.ThrowsAsync<NotFoundException>(() =>
             writer.CreateDriverQualificationAsync(Dto(accountId, driver.DriverId, foreignDocument.DocumentId), CancellationToken.None));
     }
 
@@ -127,7 +127,7 @@ public class DriverQualificationWriterTests
     }
 
     [Test]
-    public void Update_AcrossAccounts_IsForbidden()
+    public async Task Update_AcrossAccounts_IsForbidden()
     {
         using var context = NewContext(nameof(Update_AcrossAccounts_IsForbidden));
         var accountId = Guid.NewGuid();
@@ -136,7 +136,7 @@ public class DriverQualificationWriterTests
         var created = writer.CreateDriverQualificationAsync(Dto(accountId, driver.DriverId), CancellationToken.None).Result;
 
         var moved = Dto(Guid.NewGuid(), driver.DriverId);
-        Assert.ThrowsAsync<ForbiddenAccessException>(() =>
+        await Assert.ThrowsAsync<ForbiddenAccessException>(() =>
             writer.UpdateDriverQualificationAsync(created.DriverQualificationId, moved, CancellationToken.None));
     }
 

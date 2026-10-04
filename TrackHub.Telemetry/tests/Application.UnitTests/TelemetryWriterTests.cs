@@ -129,7 +129,7 @@ public class TelemetryWriterTests
         context.SaveChanges();
         var writer = new OperatorHealthCheckWriter(context, TestDb.PrincipalFor(callerAccount));
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.RecordAsync(new OperatorHealthCheckDto(
+        await Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.RecordAsync(new OperatorHealthCheckDto(
             callerAccount, operatorId, OperatorHealthCheckType.Ping, OperatorHealthStatus.Healthy,
             null, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, null, null, 0, null), CancellationToken.None));
         await context.DisposeAsync();

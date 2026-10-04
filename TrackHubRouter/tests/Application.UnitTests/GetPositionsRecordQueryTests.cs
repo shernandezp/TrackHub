@@ -110,7 +110,7 @@ public class GetPositionsRecordQueryTests : TestsContext
     }
 
     [Test]
-    public void Handle_ProviderWithoutHistoryCapability_ThrowsProviderCapabilityNotSupported()
+    public async Task Handle_ProviderWithoutHistoryCapability_ThrowsProviderCapabilityNotSupported()
     {
         // GpsGate declares no PositionHistory in its provider descriptor: the handler must fail
         // with the client-facing provider-limitation error before touching registry or provider,
@@ -128,7 +128,7 @@ public class GetPositionsRecordQueryTests : TestsContext
 
         var handler = CreateHandler();
 
-        var ex = Assert.ThrowsAsync<ProviderCapabilityNotSupportedException>(
+        var ex = await Assert.ThrowsAsync<ProviderCapabilityNotSupportedException>(
             async () => await handler.Handle(new GetPositionsRecordQuery(transporterId, from, to), CancellationToken.None));
 
         Assert.Multiple(() =>

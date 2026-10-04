@@ -67,7 +67,7 @@ internal class AccountScopeGuardTests
 
         var reader = new UserReader(context, ForeignUser());
 
-        Assert.ThrowsAsync<NotFoundException>(() => reader.GetUserAsync(target.UserId, CancellationToken.None));
+        await Assert.ThrowsAsync<NotFoundException>(() => reader.GetUserAsync(target.UserId, CancellationToken.None));
     }
 
     [Test]
@@ -108,7 +108,7 @@ internal class AccountScopeGuardTests
 
         var writer = new UserWriter(context, ForeignUser());
 
-        Assert.ThrowsAsync<NotFoundException>(() => writer.UpdateUserAsync(
+        await Assert.ThrowsAsync<NotFoundException>(() => writer.UpdateUserAsync(
             UpdateDtoFor(target) with { Username = "hijacked" }, CancellationToken.None));
         Assert.That((await context.Users.FindAsync(target.UserId))!.Username, Is.EqualTo("target"));
     }
@@ -123,7 +123,7 @@ internal class AccountScopeGuardTests
 
         var writer = new UserWriter(context, ForeignUser());
 
-        Assert.ThrowsAsync<NotFoundException>(() => writer.UpdatePasswordAsync(
+        await Assert.ThrowsAsync<NotFoundException>(() => writer.UpdatePasswordAsync(
             new UserPasswordDto(target.UserId, "newPassword1!"), verifyCurrentPassword: false, CancellationToken.None));
     }
 
@@ -137,7 +137,7 @@ internal class AccountScopeGuardTests
 
         var writer = new UserWriter(context, ForeignUser());
 
-        Assert.ThrowsAsync<NotFoundException>(() => writer.UnlockUserAsync(target.UserId, CancellationToken.None));
+        await Assert.ThrowsAsync<NotFoundException>(() => writer.UnlockUserAsync(target.UserId, CancellationToken.None));
     }
 
     [Test]
@@ -150,7 +150,7 @@ internal class AccountScopeGuardTests
 
         var writer = new UserWriter(context, ForeignUser());
 
-        Assert.ThrowsAsync<NotFoundException>(() => writer.DeleteUserAsync(target.UserId, CancellationToken.None));
+        await Assert.ThrowsAsync<NotFoundException>(() => writer.DeleteUserAsync(target.UserId, CancellationToken.None));
         Assert.That(await context.Users.FindAsync(target.UserId), Is.Not.Null);
     }
 
@@ -175,7 +175,7 @@ internal class AccountScopeGuardTests
         var writer = new UserWriter(context, ForeignUser());
         var dto = new CreateUserDto("new-user", "pw", "new@mail.com", "first", null, "last", null, null, true, false);
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.CreateUserAsync(dto, Guid.NewGuid(), CancellationToken.None));
+        await Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.CreateUserAsync(dto, Guid.NewGuid(), CancellationToken.None));
     }
 
     [Test]
@@ -188,7 +188,7 @@ internal class AccountScopeGuardTests
 
         var writer = new UserRoleWriter(context, ForeignUser());
 
-        Assert.ThrowsAsync<NotFoundException>(() => writer.CreateUserRoleAsync(
+        await Assert.ThrowsAsync<NotFoundException>(() => writer.CreateUserRoleAsync(
             new UserRoleDto(target.UserId, 1), CancellationToken.None));
     }
 
@@ -202,7 +202,7 @@ internal class AccountScopeGuardTests
 
         var writer = new UserPolicyWriter(context, ForeignUser());
 
-        Assert.ThrowsAsync<NotFoundException>(() => writer.CreateUserPolicyAsync(
+        await Assert.ThrowsAsync<NotFoundException>(() => writer.CreateUserPolicyAsync(
             new UserPolicyDto(target.UserId, 1), CancellationToken.None));
     }
 
@@ -227,7 +227,7 @@ internal class AccountScopeGuardTests
 
         var writer = new UserRoleWriter(context, Principal(PrincipalType.User, accountId, Roles.Manager));
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.CreateUserRoleAsync(
+        await Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.CreateUserRoleAsync(
             new UserRoleDto(target.UserId, administrator.RoleId), CancellationToken.None));
     }
 
@@ -260,7 +260,7 @@ internal class AccountScopeGuardTests
 
         var writer = new UserWriter(context, Principal(PrincipalType.User, accountId, Roles.Manager));
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.DeleteUserAsync(target.UserId, CancellationToken.None));
+        await Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.DeleteUserAsync(target.UserId, CancellationToken.None));
         Assert.That(await context.Users.FindAsync(target.UserId), Is.Not.Null);
     }
 
@@ -292,7 +292,7 @@ internal class AccountScopeGuardTests
 
         var writer = new UserPolicyWriter(context, Principal(PrincipalType.User, accountId, Roles.Manager));
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.CreateUserPolicyAsync(
+        await Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.CreateUserPolicyAsync(
             new UserPolicyDto(target.UserId, 7), CancellationToken.None));
     }
 
@@ -310,7 +310,7 @@ internal class AccountScopeGuardTests
 
         var writer = new UserPolicyWriter(context, Principal(PrincipalType.User, accountId, Roles.Administrator));
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.CreateUserPolicyAsync(
+        await Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.CreateUserPolicyAsync(
             new UserPolicyDto(target.UserId, 9), CancellationToken.None));
     }
 

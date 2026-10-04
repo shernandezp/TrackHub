@@ -62,7 +62,7 @@ public class CreateClientCommandHandlerTests
     }
 
     [Test]
-    public void Handle_MissingEncryptionKey_ThrowsException()
+    public async Task Handle_MissingEncryptionKey_ThrowsException()
     {
         // Arrange — config returns null for encryption key
         _configMock.Setup(c => c["AppSettings:EncryptionKey"]).Returns((string?)null);
@@ -71,7 +71,7 @@ public class CreateClientCommandHandlerTests
         var clientDto = new ClientDto(null, "Client", "Desc", "secret");
 
         // Act & Assert
-        Assert.ThrowsAsync<ArgumentNullException>(async () =>
+        await Assert.ThrowsAsync<ArgumentNullException>(async () =>
             await handler.Handle(new CreateClientCommand(clientDto), CancellationToken.None));
     }
 

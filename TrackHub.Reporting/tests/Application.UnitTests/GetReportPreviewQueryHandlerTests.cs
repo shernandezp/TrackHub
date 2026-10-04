@@ -58,13 +58,13 @@ public class GetReportPreviewQueryHandlerTests
     private static FilterDto Filters() => new() { Name = "T", Language = "en" };
 
     [Test]
-    public void Preview_IsDenied_WhenTheCallerLacksAFeedGrant()
+    public async Task Preview_IsDenied_WhenTheCallerLacksAFeedGrant()
     {
         _user.Setup(u => u.UserId).Returns(Guid.NewGuid());
         _catalog.Setup(c => c.GetReportByCodeAsync(Code, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ReportMetadataVm(Code, null, "Gps", null, false, false, 1, true, "SynchronizedDevices/Read"));
 
-        Assert.ThrowsAsync<ReportAccessDeniedException>(() => Handler().Handle(new GetReportPreviewQuery(Code, Filters()), CancellationToken.None));
+        await Assert.ThrowsAsync<ReportAccessDeniedException>(() => Handler().Handle(new GetReportPreviewQuery(Code, Filters()), CancellationToken.None));
     }
 
     [Test]
@@ -105,34 +105,34 @@ public class GetReportPreviewQueryHandlerTests
     }
 
     [Test]
-    public void Preview_UnknownCode_ThrowsReportNotFound()
+    public async Task Preview_UnknownCode_ThrowsReportNotFound()
     {
         _catalog.Setup(c => c.GetReportByCodeAsync(Code, It.IsAny<CancellationToken>()))
             .ReturnsAsync((ReportMetadataVm?)null);
 
-        Assert.ThrowsAsync<ReportNotFoundException>(() =>
+        await Assert.ThrowsAsync<ReportNotFoundException>(() =>
             Handler().Handle(new GetReportPreviewQuery(Code, Filters()), CancellationToken.None));
     }
 
     [Test]
-    public void Preview_ManagerOnly_PlainUser_ThrowsAccessDenied()
+    public async Task Preview_ManagerOnly_PlainUser_ThrowsAccessDenied()
     {
         _catalog.Setup(c => c.GetReportByCodeAsync(Code, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ReportMetadataVm(Code, null, "Gps", null, true, false, 1, true));
 
-        Assert.ThrowsAsync<ReportAccessDeniedException>(() =>
+        await Assert.ThrowsAsync<ReportAccessDeniedException>(() =>
             Handler().Handle(new GetReportPreviewQuery(Code, Filters()), CancellationToken.None));
     }
 
     [Test]
-    public void Preview_FeatureDisabled_Propagates()
+    public async Task Preview_FeatureDisabled_Propagates()
     {
         _catalog.Setup(c => c.GetReportByCodeAsync(Code, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ReportMetadataVm(Code, null, "Gps", FeatureKeys.Documents, false, false, 1, true));
         _features.Setup(f => f.EnsureFeatureEnabledAsync(_accountId, FeatureKeys.Documents, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new FeatureDisabledException(FeatureKeys.Documents));
 
-        Assert.ThrowsAsync<FeatureDisabledException>(() =>
+        await Assert.ThrowsAsync<FeatureDisabledException>(() =>
             Handler().Handle(new GetReportPreviewQuery(Code, Filters()), CancellationToken.None));
     }
 }

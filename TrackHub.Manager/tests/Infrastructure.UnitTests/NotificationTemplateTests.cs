@@ -64,7 +64,7 @@ public class NotificationTemplateTests
         nonPrivileged.SetupGet(p => p.Role).Returns("User");
         var writer = new NotificationTemplateWriter(context as IApplicationDbContext, nonPrivileged.Object);
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(async () => await writer.CreateNotificationTemplateAsync(
+        await Assert.ThrowsAsync<ForbiddenAccessException>(async () => await writer.CreateNotificationTemplateAsync(
             new NotificationTemplateDto(accountId, "CommunicationLoss", "Email", "en", null, "body", true), CancellationToken.None));
     }
 
@@ -78,7 +78,7 @@ public class NotificationTemplateTests
 
         var writer = new NotificationTemplateWriter(context as IApplicationDbContext, Principal(accountId));
 
-        Assert.ThrowsAsync<ConflictException>(async () => await writer.CreateNotificationTemplateAsync(
+        await Assert.ThrowsAsync<ConflictException>(async () => await writer.CreateNotificationTemplateAsync(
             new NotificationTemplateDto(accountId, "CommunicationLoss", "Email", "en", null, "other body", true), CancellationToken.None));
     }
 
@@ -93,7 +93,7 @@ public class NotificationTemplateTests
 
         var writer = new NotificationTemplateWriter(context as IApplicationDbContext, Principal(accountId));
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(async () => await writer.UpdateNotificationTemplateAsync(
+        await Assert.ThrowsAsync<ForbiddenAccessException>(async () => await writer.UpdateNotificationTemplateAsync(
             platformDefault.NotificationTemplateId,
             new NotificationTemplateDto(null, "CommunicationLoss", "Email", "en", null, "hacked", true), CancellationToken.None));
     }

@@ -72,12 +72,12 @@ public class AccountStatusWriterTests
     }
 
     [Test]
-    public void ChangeStatusAsync_MissingAccount_ThrowsNotFound()
+    public async Task ChangeStatusAsync_MissingAccount_ThrowsNotFound()
     {
         var context = NewContext(nameof(ChangeStatusAsync_MissingAccount_ThrowsNotFound));
         var writer = new AccountStatusWriter(context, Principal(Guid.NewGuid()));
 
-        Assert.ThrowsAsync<NotFoundException>(async () =>
+        await Assert.ThrowsAsync<NotFoundException>(async () =>
             await writer.ChangeStatusAsync(Guid.NewGuid(), AccountStatus.Suspended, "x", CancellationToken.None));
     }
 

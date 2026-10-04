@@ -50,7 +50,7 @@ public class AccountFeatureReaderTests
 
         var reader = new AccountFeatureReader(context as IApplicationDbContext, Principal(userAccountId));
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(async () =>
+        await Assert.ThrowsAsync<ForbiddenAccessException>(async () =>
             await reader.GetAccountFeaturesAsync(requestedAccountId, CancellationToken.None));
     }
 

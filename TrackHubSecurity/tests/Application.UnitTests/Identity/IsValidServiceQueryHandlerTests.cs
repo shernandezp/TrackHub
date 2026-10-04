@@ -54,21 +54,21 @@ public class IsValidServiceQueryHandlerTests
     }
 
     [Test]
-    public void Handle_ServiceAskingAboutAnotherClient_ThrowsForbidden()
+    public async Task Handle_ServiceAskingAboutAnotherClient_ThrowsForbidden()
     {
         var handler = new TrackHub.Security.Application.Identity.Queries.IsValidService.GetUsersQueryHandler(_serviceMock.Object, IdentityTestCallers.Service("my-client").Object);
 
-        Assert.ThrowsAsync<Common.Application.Exceptions.ForbiddenAccessException>(
+        await Assert.ThrowsAsync<Common.Application.Exceptions.ForbiddenAccessException>(
             () => handler.Handle(new IsValidServiceQuery("other-client"), CancellationToken.None));
         _serviceMock.Verify(s => s.IsValidServiceAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Test]
-    public void Handle_UserPrincipal_ThrowsForbidden()
+    public async Task Handle_UserPrincipal_ThrowsForbidden()
     {
         var handler = new TrackHub.Security.Application.Identity.Queries.IsValidService.GetUsersQueryHandler(_serviceMock.Object, IdentityTestCallers.User(Guid.NewGuid()).Object);
 
-        Assert.ThrowsAsync<Common.Application.Exceptions.ForbiddenAccessException>(
+        await Assert.ThrowsAsync<Common.Application.Exceptions.ForbiddenAccessException>(
             () => handler.Handle(new IsValidServiceQuery("my-client"), CancellationToken.None));
     }
 }

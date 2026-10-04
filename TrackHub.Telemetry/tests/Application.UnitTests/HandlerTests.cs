@@ -49,7 +49,7 @@ public class HandlerTests
         => new(accountId, transporterId, DateTimeOffset.UtcNow.AddHours(-1), DateTimeOffset.UtcNow);
 
     [Test]
-    public void HistoryRange_UserWithoutVisibility_IsForbidden_AndReaderNotCalled()
+    public async Task HistoryRange_UserWithoutVisibility_IsForbidden_AndReaderNotCalled()
     {
         var accountId = Guid.NewGuid();
         var transporterId = Guid.NewGuid();
@@ -60,7 +60,7 @@ public class HandlerTests
             .ReturnsAsync(new HashSet<Guid>()); // sees nothing
         var handler = new GetPositionHistoryRangeQueryHandler(reader.Object, visible.Object, User(userId));
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(() => handler.Handle(Query(accountId, transporterId), CancellationToken.None));
+        await Assert.ThrowsAsync<ForbiddenAccessException>(() => handler.Handle(Query(accountId, transporterId), CancellationToken.None));
         reader.Verify(r => r.GetRangeAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 

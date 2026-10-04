@@ -83,12 +83,12 @@ public class GetReportQueryHandlerEdgeCaseTests
     }
 
     [Test]
-    public void ReportThrows_PropagatesException()
+    public async Task ReportThrows_PropagatesException()
     {
         _report.Setup(r => r.GetDatasetAsync(It.IsAny<FilterDto>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("source unavailable"));
 
-        Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
             Handler().Handle(new GetReportQuery(Code, Filters()), CancellationToken.None));
     }
 

@@ -59,7 +59,7 @@ public class AccountScopeGuardTests
 
         var writer = new OperatorWriter(context as IApplicationDbContext, ForeignUser());
 
-        Assert.ThrowsAsync<NotFoundException>(() => writer.SetEnabledAsync(op.OperatorId, true, CancellationToken.None));
+        await Assert.ThrowsAsync<NotFoundException>(() => writer.SetEnabledAsync(op.OperatorId, true, CancellationToken.None));
     }
 
     [Test]
@@ -72,9 +72,9 @@ public class AccountScopeGuardTests
 
         var writer = new TransporterWriter(context as IApplicationDbContext, ForeignUser());
 
-        Assert.ThrowsAsync<NotFoundException>(() => writer.UpdateTransporterAsync(
+        await Assert.ThrowsAsync<NotFoundException>(() => writer.UpdateTransporterAsync(
             new UpdateTransporterDto(transporter.TransporterId, "hijacked", 1), CancellationToken.None));
-        Assert.ThrowsAsync<NotFoundException>(() => writer.RetireTransporterAsync(
+        await Assert.ThrowsAsync<NotFoundException>(() => writer.RetireTransporterAsync(
             transporter.TransporterId, CancellationToken.None));
         Assert.That(await context.Transporters.FindAsync(transporter.TransporterId), Is.Not.Null);
     }
@@ -104,8 +104,8 @@ public class AccountScopeGuardTests
         await context.SaveChangesAsync();
 
         var foreign = new UserWriter(context as IApplicationDbContext, ForeignUser());
-        Assert.ThrowsAsync<ForbiddenAccessException>(() => foreign.DeleteUserAsync(user.UserId, CancellationToken.None));
-        Assert.ThrowsAsync<ForbiddenAccessException>(() => foreign.CreateUserAsync(
+        await Assert.ThrowsAsync<ForbiddenAccessException>(() => foreign.DeleteUserAsync(user.UserId, CancellationToken.None));
+        await Assert.ThrowsAsync<ForbiddenAccessException>(() => foreign.CreateUserAsync(
             new UserDto(Guid.NewGuid(), "intruder", true, user.AccountId), CancellationToken.None));
 
         // Administrator parity with Security (tenant onboarding/maintenance relays under the admin token).
@@ -130,7 +130,7 @@ public class AccountScopeGuardTests
 
         var foreign = new UserSettingsWriter(
             context as IApplicationDbContext, Principal(PrincipalType.User, Guid.NewGuid(), Roles.User));
-        Assert.ThrowsAsync<ForbiddenAccessException>(() => foreign.UpdateUserSettingsAsync(
+        await Assert.ThrowsAsync<ForbiddenAccessException>(() => foreign.UpdateUserSettingsAsync(
             new UserSettingsDto("es", "dark", "compact", ownerId), CancellationToken.None));
 
         var self = new UserSettingsWriter(
@@ -149,6 +149,6 @@ public class AccountScopeGuardTests
 
         var reader = new AccountReader(context as IApplicationDbContext, ForeignUser());
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(() => reader.GetAccountAsync(account.AccountId, CancellationToken.None));
+        await Assert.ThrowsAsync<ForbiddenAccessException>(() => reader.GetAccountAsync(account.AccountId, CancellationToken.None));
     }
 }

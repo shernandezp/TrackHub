@@ -63,7 +63,7 @@ public class DriverIdentityWriterTests
         var writer = NewWriter(context, driverBelongsToAccount: false);
         var dto = new DriverCredentialDto(Guid.NewGuid(), Guid.NewGuid(), "driver1", "secret", Active: true, ResetRequired: false);
 
-        Assert.ThrowsAsync<NotFoundException>(() => writer.CreateDriverCredentialAsync(dto, CancellationToken.None));
+        await Assert.ThrowsAsync<NotFoundException>(() => writer.CreateDriverCredentialAsync(dto, CancellationToken.None));
         Assert.That(await context.DriverCredentials.CountAsync(), Is.Zero);
     }
 

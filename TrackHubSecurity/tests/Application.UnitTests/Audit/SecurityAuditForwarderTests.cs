@@ -43,7 +43,7 @@ public class SecurityAuditForwarderTests
     }
 
     [Test]
-    public void Handle_OutboxThrows_DoesNotBubble()
+    public async Task Handle_OutboxThrows_DoesNotBubble()
     {
         var outbox = new Mock<IOutboxWriter>();
         outbox.Setup(w => w.EnqueueAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
@@ -51,6 +51,6 @@ public class SecurityAuditForwarderTests
 
         var handler = MakeHandler(outbox.Object);
 
-        Assert.DoesNotThrowAsync(async () => await handler.Handle(MakeNotification(), CancellationToken.None));
+        await Assert.DoesNotThrowAsync(async () => await handler.Handle(MakeNotification(), CancellationToken.None));
     }
 }

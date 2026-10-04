@@ -172,7 +172,7 @@ public class OpenRouteServiceRoutingProviderTests
     // ----- Configuration -----------------------------------------------------------------------
 
     [Test]
-    public void GetRoute_WithoutAnApiKey_FailsWithRoutingNotConfiguredBeforeAnyCall()
+    public async Task GetRoute_WithoutAnApiKey_FailsWithRoutingNotConfiguredBeforeAnyCall()
     {
         // A deployment that never set AppSettings:Routing:ApiKey must get a distinct, actionable
         // code — ROUTING_UNAVAILABLE would send an operator hunting a provider outage that is
@@ -180,7 +180,7 @@ public class OpenRouteServiceRoutingProviderTests
         var stub = StubHandler.Returning(Ok(GeoJsonBody));
         var provider = Provider(stub, apiKey: null);
 
-        var ex = Assert.ThrowsAsync<RoutingUnavailableException>(
+        var ex = await Assert.ThrowsAsync<RoutingUnavailableException>(
             () => provider.GetRouteAsync(TwoWaypoints, CancellationToken.None));
 
         Assert.Multiple(() =>
@@ -191,11 +191,11 @@ public class OpenRouteServiceRoutingProviderTests
     }
 
     [Test]
-    public void GetRoute_WithoutABaseUrl_FailsWithRoutingNotConfigured()
+    public async Task GetRoute_WithoutABaseUrl_FailsWithRoutingNotConfigured()
     {
         var provider = Provider(StubHandler.Returning(Ok(GeoJsonBody)), baseUrl: null);
 
-        var ex = Assert.ThrowsAsync<RoutingUnavailableException>(
+        var ex = await Assert.ThrowsAsync<RoutingUnavailableException>(
             () => provider.GetRouteAsync(TwoWaypoints, CancellationToken.None));
 
         Assert.That(ex!.ErrorCode, Is.EqualTo(TripErrorCodes.RoutingNotConfigured));
@@ -216,14 +216,14 @@ public class OpenRouteServiceRoutingProviderTests
     // ----- Waypoint bounds ---------------------------------------------------------------------
 
     [Test]
-    public void GetRoute_AboveMaxWaypoints_IsRejectedBeforeAnyCallGoesOut()
+    public async Task GetRoute_AboveMaxWaypoints_IsRejectedBeforeAnyCallGoesOut()
     {
         // The ceiling exists to stop a 300-stop trip from burning the vendor quota on a request ORS
         // would reject anyway; enforcing it after the call would defeat the point.
         var stub = StubHandler.Returning(Ok(GeoJsonBody));
         var provider = Provider(stub, maxWaypoints: 2);
 
-        var ex = Assert.ThrowsAsync<RoutingUnavailableException>(() => provider.GetRouteAsync(
+        var ex = await Assert.ThrowsAsync<RoutingUnavailableException>(() => provider.GetRouteAsync(
             [new CoordinateVm(4.6, -74.0), new CoordinateVm(4.7, -74.1), new CoordinateVm(4.8, -74.2)],
             CancellationToken.None));
 
@@ -235,23 +235,23 @@ public class OpenRouteServiceRoutingProviderTests
     }
 
     [Test]
-    public void GetRoute_AtExactlyMaxWaypoints_IsAllowed()
+    public async Task GetRoute_AtExactlyMaxWaypoints_IsAllowed()
     {
         // An off-by-one on the ceiling silently caps every fleet at MaxWaypoints - 1 stops.
         var stub = StubHandler.Returning(Ok(GeoJsonBody));
         var provider = Provider(stub, maxWaypoints: 2);
 
-        Assert.DoesNotThrowAsync(() => provider.GetRouteAsync(TwoWaypoints, CancellationToken.None));
+        await Assert.DoesNotThrowAsync(() => provider.GetRouteAsync(TwoWaypoints, CancellationToken.None));
         Assert.That(stub.CallCount, Is.EqualTo(1));
     }
 
     [Test]
-    public void GetRoute_WithASingleWaypoint_IsRejected()
+    public async Task GetRoute_WithASingleWaypoint_IsRejected()
     {
         var stub = StubHandler.Returning(Ok(GeoJsonBody));
         var provider = Provider(stub);
 
-        var ex = Assert.ThrowsAsync<RoutingUnavailableException>(
+        var ex = await Assert.ThrowsAsync<RoutingUnavailableException>(
             () => provider.GetRouteAsync([new CoordinateVm(4.6, -74.0)], CancellationToken.None));
 
         Assert.Multiple(() =>
@@ -264,7 +264,7 @@ public class OpenRouteServiceRoutingProviderTests
     // ----- Failure containment: acceptance 18 --------------------------------------------------
 
     [Test]
-    public void GetRoute_OnAClientTimeout_SurfacesRoutingUnavailableRatherThanTaskCanceled()
+    public async Task GetRoute_OnAClientTimeout_SurfacesRoutingUnavailableRatherThanTaskCanceled()
     {
         // HttpClient.Timeout surfaces as TaskCanceledException with an UNCANCELLED token. That is
         // not an OperationCanceledException the caller asked for, so it must be translated — the
@@ -272,26 +272,26 @@ public class OpenRouteServiceRoutingProviderTests
         var stub = StubHandler.Throwing(() => new TaskCanceledException("The request timed out.", new TimeoutException()));
         var provider = Provider(stub);
 
-        var ex = Assert.ThrowsAsync<RoutingUnavailableException>(
+        var ex = await Assert.ThrowsAsync<RoutingUnavailableException>(
             () => provider.GetRouteAsync(TwoWaypoints, CancellationToken.None));
 
         Assert.That(ex!.ErrorCode, Is.EqualTo(TripErrorCodes.RoutingUnavailable));
     }
 
     [Test]
-    public void GetRoute_OnASocketFailure_SurfacesRoutingUnavailable()
+    public async Task GetRoute_OnASocketFailure_SurfacesRoutingUnavailable()
     {
         var stub = StubHandler.Throwing(() => new HttpRequestException("No such host is known."));
         var provider = Provider(stub);
 
-        var ex = Assert.ThrowsAsync<RoutingUnavailableException>(
+        var ex = await Assert.ThrowsAsync<RoutingUnavailableException>(
             () => provider.GetRouteAsync(TwoWaypoints, CancellationToken.None));
 
         Assert.That(ex!.ErrorCode, Is.EqualTo(TripErrorCodes.RoutingUnavailable));
     }
 
     [Test]
-    public void GetRoute_OnAFourHundredResponse_SurfacesRoutingUnavailableAndDoesNotRetry()
+    public async Task GetRoute_OnAFourHundredResponse_SurfacesRoutingUnavailableAndDoesNotRetry()
     {
         // A 4xx is the adapter's own fault (bad profile, bad key, bad coordinates). Retrying it
         // spends the vendor quota three times over to get the same answer.
@@ -301,7 +301,7 @@ public class OpenRouteServiceRoutingProviderTests
         });
         var provider = Provider(stub);
 
-        var ex = Assert.ThrowsAsync<RoutingUnavailableException>(
+        var ex = await Assert.ThrowsAsync<RoutingUnavailableException>(
             () => provider.GetRouteAsync(TwoWaypoints, CancellationToken.None));
 
         Assert.Multiple(() =>
@@ -312,12 +312,12 @@ public class OpenRouteServiceRoutingProviderTests
     }
 
     [Test]
-    public void GetRoute_OnAFourHundredOne_SurfacesRoutingUnavailableRatherThanLeakingTheKeyProblemAsAnUnhandledError()
+    public async Task GetRoute_OnAFourHundredOne_SurfacesRoutingUnavailableRatherThanLeakingTheKeyProblemAsAnUnhandledError()
     {
         var stub = StubHandler.Returning(new HttpResponseMessage(HttpStatusCode.Unauthorized));
         var provider = Provider(stub);
 
-        var ex = Assert.ThrowsAsync<RoutingUnavailableException>(
+        var ex = await Assert.ThrowsAsync<RoutingUnavailableException>(
             () => provider.GetRouteAsync(TwoWaypoints, CancellationToken.None));
 
         Assert.That(ex!.ErrorCode, Is.EqualTo(TripErrorCodes.RoutingUnavailable));
@@ -346,7 +346,7 @@ public class OpenRouteServiceRoutingProviderTests
     }
 
     [Test]
-    public void GetRoute_StopsRetryingAfterThreeAttempts()
+    public async Task GetRoute_StopsRetryingAfterThreeAttempts()
     {
         // The bound is the point. An unbounded retry against a provider having a bad hour holds the
         // request (and its DB context) open indefinitely and multiplies the load on a service that
@@ -354,7 +354,7 @@ public class OpenRouteServiceRoutingProviderTests
         var stub = StubHandler.Returning(() => new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
         var provider = Provider(stub);
 
-        var ex = Assert.ThrowsAsync<RoutingUnavailableException>(
+        var ex = await Assert.ThrowsAsync<RoutingUnavailableException>(
             () => provider.GetRouteAsync(TwoWaypoints, CancellationToken.None));
 
         Assert.Multiple(() =>
@@ -365,14 +365,14 @@ public class OpenRouteServiceRoutingProviderTests
     }
 
     [Test]
-    public void GetRoute_DoesNotRetryATransportFailure()
+    public async Task GetRoute_DoesNotRetryATransportFailure()
     {
         // A thrown request is translated immediately: the retry budget is spent on responses the
         // provider actually produced, not on a resolver or socket problem that will not change.
         var stub = StubHandler.Throwing(() => new HttpRequestException("Connection refused."));
         var provider = Provider(stub);
 
-        Assert.ThrowsAsync<RoutingUnavailableException>(
+        await Assert.ThrowsAsync<RoutingUnavailableException>(
             () => provider.GetRouteAsync(TwoWaypoints, CancellationToken.None));
 
         Assert.That(stub.CallCount, Is.EqualTo(1));
@@ -381,45 +381,45 @@ public class OpenRouteServiceRoutingProviderTests
     // ----- Malformed and unusable payloads -----------------------------------------------------
 
     [Test]
-    public void GetRoute_OnAMalformedBody_DoesNotLeakARawJsonException()
+    public async Task GetRoute_OnAMalformedBody_DoesNotLeakARawJsonException()
     {
         // A truncated body from a proxy is the realistic case. JsonException is not caught anywhere
         // above this adapter, so leaking it is an unhandled 500 on a trip command.
         var provider = Provider(StubHandler.Returning(Ok("{\"features\": [{\"geometry\":")));
 
-        var ex = Assert.ThrowsAsync<RoutingUnavailableException>(
+        var ex = await Assert.ThrowsAsync<RoutingUnavailableException>(
             () => provider.GetRouteAsync(TwoWaypoints, CancellationToken.None));
 
         Assert.That(ex!.ErrorCode, Is.EqualTo(TripErrorCodes.RoutingUnavailable));
     }
 
     [Test]
-    public void GetRoute_OnAnEmptyBody_DoesNotLeakARawJsonException()
+    public async Task GetRoute_OnAnEmptyBody_DoesNotLeakARawJsonException()
     {
         var provider = Provider(StubHandler.Returning(Ok(string.Empty)));
 
-        var ex = Assert.ThrowsAsync<RoutingUnavailableException>(
+        var ex = await Assert.ThrowsAsync<RoutingUnavailableException>(
             () => provider.GetRouteAsync(TwoWaypoints, CancellationToken.None));
 
         Assert.That(ex!.ErrorCode, Is.EqualTo(TripErrorCodes.RoutingUnavailable));
     }
 
     [Test]
-    public void GetRoute_OnAResponseWithNoFeatures_SurfacesRoutingUnavailable()
+    public async Task GetRoute_OnAResponseWithNoFeatures_SurfacesRoutingUnavailable()
     {
         // ORS answers 200 with an empty feature collection when it cannot route between the points
         // (an island, or a profile that cannot use the only road). Indexing features[0] on that
         // body is an IndexOutOfRangeException, which nothing above catches.
         var provider = Provider(StubHandler.Returning(Ok("{\"type\":\"FeatureCollection\",\"features\":[]}")));
 
-        var ex = Assert.ThrowsAsync<RoutingUnavailableException>(
+        var ex = await Assert.ThrowsAsync<RoutingUnavailableException>(
             () => provider.GetRouteAsync(TwoWaypoints, CancellationToken.None));
 
         Assert.That(ex!.ErrorCode, Is.EqualTo(TripErrorCodes.RoutingUnavailable));
     }
 
     [Test]
-    public void GetRoute_OnAFeatureWithNoGeometry_SurfacesRoutingUnavailable()
+    public async Task GetRoute_OnAFeatureWithNoGeometry_SurfacesRoutingUnavailable()
     {
         // An empty geometry would be stored as a route plan with nothing to draw and no corridor,
         // which then makes IsInsideCorridorAsync answer null for every fix on that trip.
@@ -427,14 +427,14 @@ public class OpenRouteServiceRoutingProviderTests
             {"features":[{"properties":{"summary":{"distance":1,"duration":1}}}]}
             """)));
 
-        var ex = Assert.ThrowsAsync<RoutingUnavailableException>(
+        var ex = await Assert.ThrowsAsync<RoutingUnavailableException>(
             () => provider.GetRouteAsync(TwoWaypoints, CancellationToken.None));
 
         Assert.That(ex!.ErrorCode, Is.EqualTo(TripErrorCodes.RoutingUnavailable));
     }
 
     [Test]
-    public void GetRoute_OnAFeatureWithNoSummary_SurfacesRoutingUnavailable()
+    public async Task GetRoute_OnAFeatureWithNoSummary_SurfacesRoutingUnavailable()
     {
         // Silently defaulting distance/duration to zero would publish a route plan claiming a
         // 0 m / 0 s journey, and every ETA derived from it would say "arriving now".
@@ -442,7 +442,7 @@ public class OpenRouteServiceRoutingProviderTests
             {"features":[{"geometry":{"coordinates":[[-74.08,4.60],[-74.10,4.70]]},"properties":{}}]}
             """)));
 
-        var ex = Assert.ThrowsAsync<RoutingUnavailableException>(
+        var ex = await Assert.ThrowsAsync<RoutingUnavailableException>(
             () => provider.GetRouteAsync(TwoWaypoints, CancellationToken.None));
 
         Assert.That(ex!.ErrorCode, Is.EqualTo(TripErrorCodes.RoutingUnavailable));

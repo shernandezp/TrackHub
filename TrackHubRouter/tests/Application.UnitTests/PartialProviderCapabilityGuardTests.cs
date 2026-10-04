@@ -81,7 +81,7 @@ public class PartialProviderCapabilityGuardTests : TestsContext
     }
 
     [Test]
-    public void DeviceSync_Manual_ThrowsTheProviderLimitationError()
+    public async Task DeviceSync_Manual_ThrowsTheProviderLimitationError()
     {
         var configuration = new Mock<IConfiguration>();
         configuration.Setup(x => x["AppSettings:EncryptionKey"]).Returns("4F2C2E66-107F-452A-ACDE-402DFD47B84C");
@@ -91,7 +91,7 @@ public class PartialProviderCapabilityGuardTests : TestsContext
             Mock.Of<IAlertEventWriter>(), Mock.Of<IOperatorSyncLock>(), EmptyCatalog,
             Mock.Of<ILogger<SyncOperatorDevicesCommandHandler>>());
 
-        var ex = Assert.ThrowsAsync<ProviderCapabilityNotSupportedException>(
+        var ex = await Assert.ThrowsAsync<ProviderCapabilityNotSupportedException>(
             async () => await handler.Handle(
                 new SyncOperatorDevicesCommand(CapabilityLessOperator(), "MANUAL"), CancellationToken.None));
         Assert.Multiple(() =>
@@ -151,7 +151,7 @@ public class PartialProviderCapabilityGuardTests : TestsContext
     }
 
     [Test]
-    public void ManualPing_ThrowsTheProviderLimitationError()
+    public async Task ManualPing_ThrowsTheProviderLimitationError()
     {
         var configuration = new Mock<IConfiguration>();
         configuration.Setup(x => x["AppSettings:EncryptionKey"]).Returns("4F2C2E66-107F-452A-ACDE-402DFD47B84C");
@@ -168,7 +168,7 @@ public class PartialProviderCapabilityGuardTests : TestsContext
             connectivityRegistry.Object, Mock.Of<IOperatorHealthCheckSystemWriter>(), EmptyCatalog,
             Mock.Of<ILogger<PingOperatorQueryHandler>>());
 
-        var ex = Assert.ThrowsAsync<ProviderCapabilityNotSupportedException>(
+        var ex = await Assert.ThrowsAsync<ProviderCapabilityNotSupportedException>(
             async () => await handler.Handle(new PingOperatorQuery(@operator.OperatorId), CancellationToken.None));
         Assert.Multiple(() =>
         {

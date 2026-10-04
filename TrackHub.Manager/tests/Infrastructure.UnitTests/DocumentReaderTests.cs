@@ -37,13 +37,13 @@ public class DocumentReaderTests
         => new(accountId, DocumentOwnerTypes.Transporter, ownerId, "User", "u", "local", "key", "application/pdf", 10, "hash", classification, status, null, "Owner", scan, "f.pdf", category);
 
     [Test]
-    public void GetDocumentsForOwnerAsync_OwnerNotVisible_Throws()
+    public async Task GetDocumentsForOwnerAsync_OwnerNotVisible_Throws()
     {
         using var context = NewContext(nameof(GetDocumentsForOwnerAsync_OwnerNotVisible_Throws));
         var accountId = Guid.NewGuid();
         var reader = new DocumentReader(context, Principal(accountId), Policy(ownerAllowed: false).Object);
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(() =>
+        await Assert.ThrowsAsync<ForbiddenAccessException>(() =>
             reader.GetDocumentsForOwnerAsync(accountId, DocumentOwnerTypes.Transporter, Guid.NewGuid().ToString(), null, null, 0, 50, CancellationToken.None));
     }
 
@@ -125,7 +125,7 @@ public class DocumentReaderTests
 
         var reader = new DocumentReader(context, Principal(accountId), Policy(clearedForSensitive: false).Object);
 
-        Assert.ThrowsAsync<Ardalis.GuardClauses.NotFoundException>(() =>
+        await Assert.ThrowsAsync<Ardalis.GuardClauses.NotFoundException>(() =>
             reader.GetDocumentAsync(doc.DocumentId, CancellationToken.None));
     }
 

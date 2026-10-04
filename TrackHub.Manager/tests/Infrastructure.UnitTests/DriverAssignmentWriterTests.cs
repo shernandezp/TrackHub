@@ -69,7 +69,7 @@ public class DriverAssignmentWriterTests
         await writer.AssignDriverToTransporterAsync(driver.DriverId, transporter.TransporterId, DateTimeOffset.UtcNow, DriverAssignmentTypes.Regular, CancellationToken.None);
 
         // One OPEN assignment per (driver, transporter) pair → 409 (AC3).
-        Assert.ThrowsAsync<ConflictException>(() => writer.AssignDriverToTransporterAsync(
+        await Assert.ThrowsAsync<ConflictException>(() => writer.AssignDriverToTransporterAsync(
             driver.DriverId, transporter.TransporterId, DateTimeOffset.UtcNow, DriverAssignmentTypes.Temporary, CancellationToken.None));
     }
 
@@ -92,7 +92,7 @@ public class DriverAssignmentWriterTests
     }
 
     [Test]
-    public void Assign_ForeignTransporter_IsNotFound()
+    public async Task Assign_ForeignTransporter_IsNotFound()
     {
         using var context = NewContext(nameof(Assign_ForeignTransporter_IsNotFound));
         var accountId = Guid.NewGuid();
@@ -102,24 +102,24 @@ public class DriverAssignmentWriterTests
         context.SaveChanges();
         var writer = new DriverAssignmentWriter(context, Principal(accountId));
 
-        Assert.ThrowsAsync<NotFoundException>(() => writer.AssignDriverToTransporterAsync(
+        await Assert.ThrowsAsync<NotFoundException>(() => writer.AssignDriverToTransporterAsync(
             driver.DriverId, foreign.TransporterId, DateTimeOffset.UtcNow, DriverAssignmentTypes.Regular, CancellationToken.None));
     }
 
     [Test]
-    public void Assign_InactiveDriver_FailsValidation()
+    public async Task Assign_InactiveDriver_FailsValidation()
     {
         using var context = NewContext(nameof(Assign_InactiveDriver_FailsValidation));
         var accountId = Guid.NewGuid();
         var (driver, transporter) = Seed(context, accountId, driverActive: false);
         var writer = new DriverAssignmentWriter(context, Principal(accountId));
 
-        Assert.ThrowsAsync<ValidationException>(() => writer.AssignDriverToTransporterAsync(
+        await Assert.ThrowsAsync<ValidationException>(() => writer.AssignDriverToTransporterAsync(
             driver.DriverId, transporter.TransporterId, DateTimeOffset.UtcNow, DriverAssignmentTypes.Regular, CancellationToken.None));
     }
 
     [Test]
-    public void Assign_ExpiredLicense_BlockedOnlyWhenAccountOptsIn()
+    public async Task Assign_ExpiredLicense_BlockedOnlyWhenAccountOptsIn()
     {
         var accountId = Guid.NewGuid();
         var yesterday = DateOnly.FromDateTime(DateTimeOffset.UtcNow.UtcDateTime).AddDays(-1);
@@ -134,7 +134,7 @@ public class DriverAssignmentWriterTests
             context.SaveChanges();
 
             var writer = new DriverAssignmentWriter(context, Principal(accountId));
-            Assert.DoesNotThrowAsync(() => writer.AssignDriverToTransporterAsync(
+            await Assert.DoesNotThrowAsync(() => writer.AssignDriverToTransporterAsync(
                 driver.DriverId, transporter.TransporterId, DateTimeOffset.UtcNow, DriverAssignmentTypes.Regular, CancellationToken.None));
         }
 
@@ -148,7 +148,7 @@ public class DriverAssignmentWriterTests
             context.SaveChanges();
 
             var writer = new DriverAssignmentWriter(context, Principal(accountId));
-            Assert.ThrowsAsync<ValidationException>(() => writer.AssignDriverToTransporterAsync(
+            await Assert.ThrowsAsync<ValidationException>(() => writer.AssignDriverToTransporterAsync(
                 driver.DriverId, transporter.TransporterId, DateTimeOffset.UtcNow, DriverAssignmentTypes.Regular, CancellationToken.None));
         }
     }
@@ -156,7 +156,7 @@ public class DriverAssignmentWriterTests
     // A renewed licence supersedes an expired one. Asking "does an expired licence exist?" instead of
     // "does a valid one exist?" would permanently block every driver who has ever renewed.
     [Test]
-    public void Assign_WithRenewedLicense_IsAllowedEvenWhenEnforcementIsOn()
+    public async Task Assign_WithRenewedLicense_IsAllowedEvenWhenEnforcementIsOn()
     {
         using var context = NewContext(nameof(Assign_WithRenewedLicense_IsAllowedEvenWhenEnforcementIsOn));
         var accountId = Guid.NewGuid();
@@ -170,14 +170,14 @@ public class DriverAssignmentWriterTests
         context.SaveChanges();
 
         var writer = new DriverAssignmentWriter(context, Principal(accountId));
-        Assert.DoesNotThrowAsync(() => writer.AssignDriverToTransporterAsync(
+        await Assert.DoesNotThrowAsync(() => writer.AssignDriverToTransporterAsync(
             driver.DriverId, transporter.TransporterId, DateTimeOffset.UtcNow, DriverAssignmentTypes.Regular, CancellationToken.None));
     }
 
     // Enforcement targets drivers whose licence has lapsed, not accounts that have not entered
     // qualifications yet — otherwise enabling workforce would lock out every existing driver.
     [Test]
-    public void Assign_WithNoLicenseRecordAtAll_IsAllowedEvenWhenEnforcementIsOn()
+    public async Task Assign_WithNoLicenseRecordAtAll_IsAllowedEvenWhenEnforcementIsOn()
     {
         using var context = NewContext(nameof(Assign_WithNoLicenseRecordAtAll_IsAllowedEvenWhenEnforcementIsOn));
         var accountId = Guid.NewGuid();
@@ -185,7 +185,7 @@ public class DriverAssignmentWriterTests
         EnableWorkforce(context, accountId, """{"blockAssignmentOnExpiredLicense":true}""");
 
         var writer = new DriverAssignmentWriter(context, Principal(accountId));
-        Assert.DoesNotThrowAsync(() => writer.AssignDriverToTransporterAsync(
+        await Assert.DoesNotThrowAsync(() => writer.AssignDriverToTransporterAsync(
             driver.DriverId, transporter.TransporterId, DateTimeOffset.UtcNow, DriverAssignmentTypes.Regular, CancellationToken.None));
     }
 
@@ -216,7 +216,7 @@ public class DriverAssignmentWriterTests
     }
 
     [Test]
-    public void Assign_MalformedFeatureConfiguration_DoesNotBlock()
+    public async Task Assign_MalformedFeatureConfiguration_DoesNotBlock()
     {
         using var context = NewContext(nameof(Assign_MalformedFeatureConfiguration_DoesNotBlock));
         var accountId = Guid.NewGuid();
@@ -228,7 +228,7 @@ public class DriverAssignmentWriterTests
         var writer = new DriverAssignmentWriter(context, Principal(accountId));
 
         // The strict behavior is the opt-in, so unreadable configuration must fall back to "not enforced".
-        Assert.DoesNotThrowAsync(() => writer.AssignDriverToTransporterAsync(
+        await Assert.DoesNotThrowAsync(() => writer.AssignDriverToTransporterAsync(
             driver.DriverId, transporter.TransporterId, DateTimeOffset.UtcNow, DriverAssignmentTypes.Regular, CancellationToken.None));
     }
 
@@ -252,7 +252,7 @@ public class DriverAssignmentWriterTests
         });
 
         // Ended assignments are immutable (AC3).
-        Assert.ThrowsAsync<ConflictException>(() =>
+        await Assert.ThrowsAsync<ConflictException>(() =>
             writer.EndDriverAssignmentAsync(created.DriverTransporterAssignmentId, null, CancellationToken.None));
     }
 
@@ -272,7 +272,7 @@ public class DriverAssignmentWriterTests
         await context.SaveChangesAsync();
         context.ChangeTracker.Clear();
 
-        Assert.ThrowsAsync<ConflictException>(() =>
+        await Assert.ThrowsAsync<ConflictException>(() =>
             writer.EndDriverAssignmentAsync(created.DriverTransporterAssignmentId, DateTimeOffset.UtcNow.AddDays(5), CancellationToken.None));
     }
 
@@ -286,7 +286,7 @@ public class DriverAssignmentWriterTests
         var created = await writer.AssignDriverToTransporterAsync(driver.DriverId, transporter.TransporterId,
             DateTimeOffset.UtcNow, DriverAssignmentTypes.Regular, CancellationToken.None);
 
-        Assert.ThrowsAsync<ValidationException>(() => writer.EndDriverAssignmentAsync(
+        await Assert.ThrowsAsync<ValidationException>(() => writer.EndDriverAssignmentAsync(
             created.DriverTransporterAssignmentId, DateTimeOffset.UtcNow.AddDays(-5), CancellationToken.None));
     }
 
@@ -326,11 +326,11 @@ public class DriverAssignmentWriterTests
         await writer.EndDriverAssignmentAsync(first.DriverTransporterAssignmentId, DateTimeOffset.UtcNow.AddDays(-20), CancellationToken.None);
 
         // B backdated to 25 days ago would cover 25→20 days ago twice.
-        Assert.ThrowsAsync<ConflictException>(() => writer.AssignDriverToTransporterAsync(
+        await Assert.ThrowsAsync<ConflictException>(() => writer.AssignDriverToTransporterAsync(
             driver.DriverId, transporter.TransporterId, DateTimeOffset.UtcNow.AddDays(-25), DriverAssignmentTypes.Regular, CancellationToken.None));
 
         // Starting exactly where the previous one ended is contiguous, not overlapping — allowed.
-        Assert.DoesNotThrowAsync(() => writer.AssignDriverToTransporterAsync(
+        await Assert.DoesNotThrowAsync(() => writer.AssignDriverToTransporterAsync(
             driver.DriverId, transporter.TransporterId, DateTimeOffset.UtcNow.AddDays(-20), DriverAssignmentTypes.Regular, CancellationToken.None));
     }
 
@@ -347,7 +347,7 @@ public class DriverAssignmentWriterTests
         await context.SaveChangesAsync(CancellationToken.None);
 
         var writer = new DriverAssignmentWriter(context, Principal(accountId));
-        Assert.DoesNotThrowAsync(() => writer.AssignDriverToTransporterAsync(
+        await Assert.DoesNotThrowAsync(() => writer.AssignDriverToTransporterAsync(
             driver.DriverId, transporter.TransporterId, DateTimeOffset.UtcNow, DriverAssignmentTypes.Regular, CancellationToken.None));
     }
 }

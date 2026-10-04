@@ -106,12 +106,12 @@ public class TripStopProgressTests
     }
 
     [Test]
-    public void RecordStopArrival_OnATripThatIsNotInProgress_IsRejectedWithTripNotActive()
+    public async Task RecordStopArrival_OnATripThatIsNotInProgress_IsRejectedWithTripNotActive()
     {
         var harness = new ProgressHarness(tripStatus: TripStatuses.Created);
         var handler = harness.ArrivalHandler();
 
-        var ex = Assert.ThrowsAsync<ValidationException>(async () =>
+        var ex = await Assert.ThrowsAsync<ValidationException>(async () =>
             await handler.Handle(Arrival(), CancellationToken.None));
 
         Assert.That(ex!.Errors.Values.SelectMany(v => v), Does.Contain(TripErrorCodes.TripNotActive));

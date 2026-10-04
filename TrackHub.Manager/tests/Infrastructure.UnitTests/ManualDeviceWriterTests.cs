@@ -114,7 +114,7 @@ public class ManualDeviceWriterTests
         await context.SaveChangesAsync();
         var writer = new DeviceWriter(context, Principal(accountId), ImmediateOperatorCatalogGate.Instance);
 
-        Assert.ThrowsAsync<ConflictException>(() =>
+        await Assert.ThrowsAsync<ConflictException>(() =>
             writer.CreateManualDeviceAsync(Dto(accountId, operatorId, identifier: 5), CancellationToken.None));
     }
 
@@ -128,7 +128,7 @@ public class ManualDeviceWriterTests
         var operatorId = await SeedOperatorAsync(context, otherAccountId);
         var writer = new DeviceWriter(context, Principal(accountId), ImmediateOperatorCatalogGate.Instance);
 
-        Assert.ThrowsAsync<NotFoundException>(() =>
+        await Assert.ThrowsAsync<NotFoundException>(() =>
             writer.CreateManualDeviceAsync(Dto(accountId, operatorId), CancellationToken.None));
     }
 }

@@ -63,7 +63,7 @@ internal class DeleteUserTests
     }
 
     [Test]
-    public void Handle_InvalidCommand_ThrowsUnauthorizedAccessException()
+    public async Task Handle_InvalidCommand_ThrowsUnauthorizedAccessException()
     {
         // Arrange
         var userId = Guid.NewGuid();
@@ -77,7 +77,7 @@ internal class DeleteUserTests
         var command = new DeleteUserCommand(userId);
 
         // Act & Assert
-        Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
             await handler.Handle(command, CancellationToken.None));
 
         // Assert

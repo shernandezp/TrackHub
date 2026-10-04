@@ -93,8 +93,8 @@ public class TransporterVisibilityTests
         Assert.Multiple(async () =>
         {
             Assert.That((await reader.GetTransporterAsync(fleet.InGroup.TransporterId, CancellationToken.None)).TransporterId, Is.EqualTo(fleet.InGroup.TransporterId));
-            Assert.ThrowsAsync<NotFoundException>(() => reader.GetTransporterAsync(fleet.Ungrouped.TransporterId, CancellationToken.None));
-            Assert.ThrowsAsync<NotFoundException>(() => reader.GetTransporterAsync(fleet.InInactiveGroup.TransporterId, CancellationToken.None));
+            await Assert.ThrowsAsync<NotFoundException>(() => reader.GetTransporterAsync(fleet.Ungrouped.TransporterId, CancellationToken.None));
+            await Assert.ThrowsAsync<NotFoundException>(() => reader.GetTransporterAsync(fleet.InInactiveGroup.TransporterId, CancellationToken.None));
         });
     }
 
@@ -111,7 +111,7 @@ public class TransporterVisibilityTests
         Assert.Multiple(async () =>
         {
             Assert.That((await reader.GetTransportersByGroupAsync(fleet.GroupId, 0, 50, null, CancellationToken.None)).TotalCount, Is.EqualTo(1));
-            Assert.ThrowsAsync<NotFoundException>(() => reader.GetTransportersByGroupAsync(other.GroupId, 0, 50, null, CancellationToken.None));
+            await Assert.ThrowsAsync<NotFoundException>(() => reader.GetTransportersByGroupAsync(other.GroupId, 0, 50, null, CancellationToken.None));
         });
     }
 

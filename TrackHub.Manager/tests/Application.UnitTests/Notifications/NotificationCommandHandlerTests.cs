@@ -22,12 +22,12 @@ public class NotificationCommandHandlerTests
         new(Guid.NewGuid(), "key", "Notifications", true, "CommunicationLoss", "", channelsJson, null, null);
 
     [Test]
-    public void CreateNotificationRule_EmailChannelWithoutEntitlement_ThrowsFeatureDisabled()
+    public async Task CreateNotificationRule_EmailChannelWithoutEntitlement_ThrowsFeatureDisabled()
     {
         var writer = new Mock<INotificationWriter>();
         var handler = new CreateNotificationRuleCommandHandler(writer.Object, FeatureFlags(emailEnabled: false).Object);
 
-        Assert.ThrowsAsync<FeatureDisabledException>(async () =>
+        await Assert.ThrowsAsync<FeatureDisabledException>(async () =>
             await handler.Handle(new CreateNotificationRuleCommand(Rule("""["InApp","Email"]""")), CancellationToken.None));
         writer.Verify(w => w.CreateNotificationRuleAsync(It.IsAny<NotificationRuleDto>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -59,13 +59,13 @@ public class NotificationCommandHandlerTests
     }
 
     [Test]
-    public void SendTestNotification_WhatsAppWithoutEntitlement_ThrowsFeatureDisabled()
+    public async Task SendTestNotification_WhatsAppWithoutEntitlement_ThrowsFeatureDisabled()
     {
         var writer = new Mock<INotificationWriter>();
         var principal = new Mock<ICurrentPrincipal>();
         var handler = new SendTestNotificationCommandHandler(writer.Object, FeatureFlags(whatsAppEnabled: false).Object, principal.Object);
 
-        Assert.ThrowsAsync<FeatureDisabledException>(async () =>
+        await Assert.ThrowsAsync<FeatureDisabledException>(async () =>
             await handler.Handle(new SendTestNotificationCommand(Guid.NewGuid(), "WhatsApp", "+573001234567"), CancellationToken.None));
     }
 

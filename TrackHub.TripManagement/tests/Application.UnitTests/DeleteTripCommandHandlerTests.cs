@@ -27,11 +27,11 @@ namespace TrackHub.TripManagement.Application.UnitTests;
 public class DeleteTripCommandHandlerTests
 {
     [Test]
-    public void ATripWithEvents_IsRejectedWithConflict()
+    public async Task ATripWithEvents_IsRejectedWithConflict()
     {
         var harness = new DeleteHarness(TripStatuses.Created, hasEvents: true);
 
-        var ex = Assert.ThrowsAsync<ConflictException>(async () =>
+        var ex = await Assert.ThrowsAsync<ConflictException>(async () =>
             await harness.Handler().Handle(new DeleteTripCommand(TestFactory.TripId), CancellationToken.None));
 
         Assert.That(ex!.Message, Is.EqualTo(TripErrorCodes.TripHasHistory));
@@ -43,11 +43,11 @@ public class DeleteTripCommandHandlerTests
     [TestCase(TripStatuses.Completed)]
     [TestCase(TripStatuses.Cancelled)]
     [TestCase(TripStatuses.Aborted)]
-    public void ATripPastCreated_IsRejectedWithConflict(string status)
+    public async Task ATripPastCreated_IsRejectedWithConflict(string status)
     {
         var harness = new DeleteHarness(status, hasEvents: false);
 
-        Assert.ThrowsAsync<ConflictException>(async () =>
+        await Assert.ThrowsAsync<ConflictException>(async () =>
             await harness.Handler().Handle(new DeleteTripCommand(TestFactory.TripId), CancellationToken.None));
 
         harness.Writer.Verify(w => w.DeleteTripAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);

@@ -71,7 +71,7 @@ public class PositionHistoryVisibilityTests
         await using var _ = context;
         var principal = TestDb.PrincipalFor(accountId, PrincipalType.User, userId, role: null);
 
-        Assert.ThrowsAsync<NotFoundException>(() => Handler(context, principal).Handle(new GetPositionHistoryQuery(accountId, outOfGroup), CancellationToken.None));
+        await Assert.ThrowsAsync<NotFoundException>(() => Handler(context, principal).Handle(new GetPositionHistoryQuery(accountId, outOfGroup), CancellationToken.None));
     }
 
     [Test]

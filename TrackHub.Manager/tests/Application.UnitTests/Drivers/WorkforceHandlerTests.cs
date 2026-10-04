@@ -36,11 +36,11 @@ public class WorkforceHandlerTests
     }
 
     [Test]
-    public void GetMyDriverProfile_WithoutADriverIdentity_IsUnauthorized()
+    public async Task GetMyDriverProfile_WithoutADriverIdentity_IsUnauthorized()
     {
         var handler = new GetMyDriverProfileQueryHandler(Mock.Of<IDriverReader>(), Principal(null).Object);
 
-        Assert.ThrowsAsync<UnauthorizedAccessException>(() => handler.Handle(new GetMyDriverProfileQuery(), CancellationToken.None));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => handler.Handle(new GetMyDriverProfileQuery(), CancellationToken.None));
     }
 
     [Test]

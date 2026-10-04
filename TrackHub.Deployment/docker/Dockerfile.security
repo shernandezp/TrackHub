@@ -37,7 +37,7 @@ RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet restore Trac
 COPY TrackHubCommon/ TrackHubCommon/
 COPY TrackHubSecurity/ TrackHubSecurity/
 
-RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish TrackHubSecurity/src/Web/Web.csproj -c Release -o /app/publish --no-restore
+RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish TrackHubSecurity/src/Web/Web.csproj -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app

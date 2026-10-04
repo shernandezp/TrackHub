@@ -66,11 +66,11 @@ public class NotificationAdminSurfaceTests
         await using var context = NewContext(nameof(PlainUser_IsRefusedTheAdministrativeReads));
         var reader = Reader(context, Principal(accountId, Roles.User));
 
-        Assert.Multiple(() =>
+        await Assert.MultipleAsync(async () =>
         {
-            Assert.ThrowsAsync<ForbiddenAccessException>(() => reader.GetNotificationRulesAsync(accountId, 0, 50, CancellationToken.None));
-            Assert.ThrowsAsync<ForbiddenAccessException>(() => reader.GetNotificationDeliveriesAsync(accountId, null, null, null, null, 0, 50, CancellationToken.None));
-            Assert.ThrowsAsync<ForbiddenAccessException>(() => reader.GetDeliveryHealthAsync(accountId, DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow, CancellationToken.None));
+            await Assert.ThrowsAsync<ForbiddenAccessException>(() => reader.GetNotificationRulesAsync(accountId, 0, 50, CancellationToken.None));
+            await Assert.ThrowsAsync<ForbiddenAccessException>(() => reader.GetNotificationDeliveriesAsync(accountId, null, null, null, null, 0, 50, CancellationToken.None));
+            await Assert.ThrowsAsync<ForbiddenAccessException>(() => reader.GetDeliveryHealthAsync(accountId, DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow, CancellationToken.None));
         });
     }
 
@@ -124,7 +124,7 @@ public class NotificationAdminSurfaceTests
         await context.SaveChangesAsync(CancellationToken.None);
         var writer = new NotificationWriter(context as IApplicationDbContext, Principal(accountId, Roles.Manager));
 
-        Assert.ThrowsAsync<ValidationException>(() => writer.UpdateNotificationRuleAsync(rule.NotificationRuleId,
+        await Assert.ThrowsAsync<ValidationException>(() => writer.UpdateNotificationRuleAsync(rule.NotificationRuleId,
             new NotificationRuleDto(accountId, "mail", "Notifications", true, "TripStarted", Selector, """["Webhook"]""", null,
                 """{"webhookUrl":"https://partner.example/hook"}"""),
             CancellationToken.None));

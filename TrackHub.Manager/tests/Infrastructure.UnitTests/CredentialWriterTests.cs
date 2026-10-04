@@ -62,7 +62,7 @@ public class CredentialWriterTests
         var writer = new CredentialWriter(context as IApplicationDbContext, Principal(Guid.NewGuid()));
         var dto = new CredentialDto("https://provider.example", "user", "pass", null, null, @operator.OperatorId);
 
-        Assert.ThrowsAsync<NotFoundException>(async () =>
+        await Assert.ThrowsAsync<NotFoundException>(async () =>
             await writer.CreateCredentialAsync(dto, [1, 2, 3, 4, 5, 6, 7, 8], EncryptionKey, CancellationToken.None));
     }
 
@@ -84,7 +84,7 @@ public class CredentialWriterTests
         var writer = new CredentialWriter(context as IApplicationDbContext, Principal(Guid.NewGuid()));
         var dto = new UpdateCredentialDto(credential.CredentialId, "https://changed.example", "new-user", "new-pass", "new-key", "new-key-2");
 
-        Assert.ThrowsAsync<NotFoundException>(async () =>
+        await Assert.ThrowsAsync<NotFoundException>(async () =>
             await writer.UpdateCredentialAsync(dto, [1, 2, 3, 4, 5, 6, 7, 8], EncryptionKey, CancellationToken.None));
     }
 
@@ -133,7 +133,7 @@ public class CredentialWriterTests
         var writer = new CredentialWriter(context as IApplicationDbContext, Principal(Guid.NewGuid()));
         var dto = new UpdateTokenDto(credential.CredentialId, "token", DateTimeOffset.UtcNow.AddHours(1), "refresh", DateTimeOffset.UtcNow.AddDays(1));
 
-        Assert.ThrowsAsync<NotFoundException>(async () =>
+        await Assert.ThrowsAsync<NotFoundException>(async () =>
             await writer.UpdateTokenAsync(dto, EncryptionKey, CancellationToken.None));
     }
 
@@ -203,7 +203,7 @@ public class CredentialWriterTests
 
         var writer = new CredentialWriter(context as IApplicationDbContext, Principal(accountId));
 
-        Assert.DoesNotThrowAsync(async () =>
+        await Assert.DoesNotThrowAsync(async () =>
             await writer.DeleteCredentialByOperatorAsync(@operator.OperatorId, CancellationToken.None));
     }
 
@@ -224,7 +224,7 @@ public class CredentialWriterTests
 
         var writer = new CredentialWriter(context as IApplicationDbContext, Principal(Guid.NewGuid()));
 
-        Assert.ThrowsAsync<NotFoundException>(async () =>
+        await Assert.ThrowsAsync<NotFoundException>(async () =>
             await writer.DeleteCredentialByOperatorAsync(@operator.OperatorId, CancellationToken.None));
     }
 }

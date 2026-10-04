@@ -75,12 +75,12 @@ public class GetUsersQueryHandlerTests
     }
 
     [Test]
-    public void WrongPassword_BelowThreshold_RecordsIncrementedAttempt_WithoutLock()
+    public async Task WrongPassword_BelowThreshold_RecordsIncrementedAttempt_WithoutLock()
     {
         var user = ActiveUser(loginAttempts: 2);
         SetupReader(user);
 
-        Assert.ThrowsAsync<AuthenticationException>(async () =>
+        await Assert.ThrowsAsync<AuthenticationException>(async () =>
             await Handler().Handle(new GetUsersQuery(user.EmailAddress, WrongPassword), CancellationToken.None));
 
         // 3rd failure — below the 5-attempt threshold, so no lock is set.
@@ -88,12 +88,12 @@ public class GetUsersQueryHandlerTests
     }
 
     [Test]
-    public void WrongPassword_FifthAttempt_SetsTimedLock()
+    public async Task WrongPassword_FifthAttempt_SetsTimedLock()
     {
         var user = ActiveUser(loginAttempts: 4);
         SetupReader(user);
 
-        Assert.ThrowsAsync<AuthenticationException>(async () =>
+        await Assert.ThrowsAsync<AuthenticationException>(async () =>
             await Handler().Handle(new GetUsersQuery(user.EmailAddress, WrongPassword), CancellationToken.None));
 
         // The 5th consecutive failure trips the lock (~15 minutes ahead).
@@ -106,12 +106,12 @@ public class GetUsersQueryHandlerTests
 
     [TestCase(CorrectPassword)]
     [TestCase(WrongPassword)]
-    public void LockedAccount_AnswersTheGenericRejection_WithoutTouchingCounter(string password)
+    public async Task LockedAccount_AnswersTheGenericRejection_WithoutTouchingCounter(string password)
     {
         var user = ActiveUser(loginAttempts: 5, lockedUntil: DateTimeOffset.UtcNow.AddMinutes(10));
         SetupReader(user);
 
-        var ex = Assert.ThrowsAsync<AuthenticationException>(async () =>
+        var ex = await Assert.ThrowsAsync<AuthenticationException>(async () =>
             await Handler().Handle(new GetUsersQuery(user.EmailAddress, password), CancellationToken.None));
 
         Assert.That(ex!.Message, Is.EqualTo("Email or password is incorrect"), "a distinct answer to the right password would confirm it");
@@ -133,22 +133,22 @@ public class GetUsersQueryHandlerTests
     }
 
     [Test]
-    public void UnknownEmail_ThrowsAuthentication()
+    public async Task UnknownEmail_ThrowsAuthentication()
     {
         _reader.Setup(r => r.GetUserAsync(It.IsAny<UserLoginDto>(), It.IsAny<CancellationToken>())).ReturnsAsync(default(UserVm));
 
-        Assert.ThrowsAsync<AuthenticationException>(async () =>
+        await Assert.ThrowsAsync<AuthenticationException>(async () =>
             await Handler().Handle(new GetUsersQuery("nobody@mail.com", CorrectPassword), CancellationToken.None));
         _writer.VerifyNoOtherCalls();
     }
 
     [Test]
-    public void InactiveUser_ThrowsAuthentication_WithoutRecordingFailure()
+    public async Task InactiveUser_ThrowsAuthentication_WithoutRecordingFailure()
     {
         var user = ActiveUser() with { Active = false };
         SetupReader(user);
 
-        Assert.ThrowsAsync<AuthenticationException>(async () =>
+        await Assert.ThrowsAsync<AuthenticationException>(async () =>
             await Handler().Handle(new GetUsersQuery(user.EmailAddress, CorrectPassword), CancellationToken.None));
         _writer.VerifyNoOtherCalls();
     }

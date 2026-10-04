@@ -53,7 +53,7 @@ public class CreateResourceActionRoleCommandHandlerTests
     }
 
     [Test]
-    public void Handle_NonAdminUser_ThrowsUnauthorizedAccessException()
+    public async Task Handle_NonAdminUser_ThrowsUnauthorizedAccessException()
     {
         var userId = Guid.NewGuid();
         _userMock.Setup(u => u.Id).Returns(userId.ToString());
@@ -62,7 +62,7 @@ public class CreateResourceActionRoleCommandHandlerTests
 
         var handler = new CreateResourceActionRoleCommandHandler(_writerMock.Object, _userReaderMock.Object, _userMock.Object, new Mock<Common.Mediator.IPublisher>().Object);
 
-        Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
             await handler.Handle(new CreateResourceActionRoleCommand(new ResourceActionRoleDto(1, 2, 3)), CancellationToken.None));
     }
 

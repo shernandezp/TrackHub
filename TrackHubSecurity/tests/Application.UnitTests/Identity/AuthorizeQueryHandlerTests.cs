@@ -67,11 +67,11 @@ public class AuthorizeQueryHandlerTests
     }
 
     [Test]
-    public void Handle_UserAskingAboutAnotherUser_ThrowsForbidden()
+    public async Task Handle_UserAskingAboutAnotherUser_ThrowsForbidden()
     {
         var handler = new GetUsersQueryHandler(_serviceMock.Object, IdentityTestCallers.User(Guid.NewGuid()).Object);
 
-        Assert.ThrowsAsync<Common.Application.Exceptions.ForbiddenAccessException>(
+        await Assert.ThrowsAsync<Common.Application.Exceptions.ForbiddenAccessException>(
             () => handler.Handle(new AuthorizeQuery(Guid.NewGuid(), "Resource", "Action"), CancellationToken.None));
         _serviceMock.Verify(s => s.AuthorizeAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }

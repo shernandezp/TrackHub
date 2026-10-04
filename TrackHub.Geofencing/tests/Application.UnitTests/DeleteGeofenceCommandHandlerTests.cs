@@ -54,7 +54,7 @@ public class DeleteGeofenceCommandHandlerTests
     }
 
     [Test]
-    public void Handle_ForeignGeofence_AnswersNotFound()
+    public async Task Handle_ForeignGeofence_AnswersNotFound()
     {
         var id = Guid.NewGuid();
         _readerMock.Setup(r => r.GetGeofenceAsync(id, It.IsAny<CancellationToken>()))
@@ -62,7 +62,7 @@ public class DeleteGeofenceCommandHandlerTests
 
         var handler = new DeleteGeofenceCommandHandler(_writerMock.Object, _readerMock.Object, _userReaderMock.Object, _userMock.Object, _featureReaderMock.Object);
 
-        Assert.ThrowsAsync<Ardalis.GuardClauses.NotFoundException>(() => handler.Handle(new DeleteGeofenceCommand(id), CancellationToken.None));
+        await Assert.ThrowsAsync<Ardalis.GuardClauses.NotFoundException>(() => handler.Handle(new DeleteGeofenceCommand(id), CancellationToken.None));
         _writerMock.Verify(w => w.DeleteGeofenceAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

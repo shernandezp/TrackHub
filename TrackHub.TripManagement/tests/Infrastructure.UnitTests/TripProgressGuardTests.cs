@@ -64,7 +64,7 @@ public class TripProgressGuardTests
     {
         using var context = await SeededAsync(TripStopStatuses.Arrived, requiresPod: true);
 
-        var ex = Assert.ThrowsAsync<ConflictException>(() => DepartAsync(context, DateTimeOffset.UtcNow));
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => DepartAsync(context, DateTimeOffset.UtcNow));
 
         Assert.That(ex!.Code, Is.EqualTo(TripErrorCodes.PodRequired));
     }
@@ -82,7 +82,7 @@ public class TripProgressGuardTests
     {
         using var context = await SeededAsync(TripStopStatuses.Arrived, requiresPod: false);
 
-        var ex = Assert.ThrowsAsync<ConflictException>(() => DepartAsync(context, DateTimeOffset.UtcNow.AddHours(-1.5)));
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => DepartAsync(context, DateTimeOffset.UtcNow.AddHours(-1.5)));
 
         Assert.That(ex!.Code, Is.EqualTo(TripErrorCodes.EventTimeOutOfRange));
     }
@@ -92,7 +92,7 @@ public class TripProgressGuardTests
     {
         using var context = await SeededAsync(TripStopStatuses.Arrived, requiresPod: false);
 
-        var ex = Assert.ThrowsAsync<ConflictException>(() => DepartAsync(context, DateTimeOffset.UtcNow.AddHours(1)));
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => DepartAsync(context, DateTimeOffset.UtcNow.AddHours(1)));
 
         Assert.That(ex!.Code, Is.EqualTo(TripErrorCodes.EventTimeOutOfRange));
     }
@@ -103,7 +103,7 @@ public class TripProgressGuardTests
         using var context = await SeededAsync(TripStopStatuses.Departed, requiresPod: true);
         var writer = new TripWriter(context, Mock.Of<Common.Application.Interfaces.IUser>());
 
-        var ex = Assert.ThrowsAsync<ConflictException>(() => writer.TransitionTripAsync(
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => writer.TransitionTripAsync(
             TripId, WriterTestData.AccountId, TripStatuses.Completed, TripEventTypes.TripCompleted,
             TripEventSources.Detection, "trip-complete:auto", null, null, false, DateTimeOffset.UtcNow, CancellationToken.None));
         var forced = await writer.TransitionTripAsync(
@@ -122,7 +122,7 @@ public class TripProgressGuardTests
     {
         using var context = await SeededAsync(TripStopStatuses.Departed, requiresPod: false, tripStatus: TripStatuses.Completed);
 
-        var ex = Assert.ThrowsAsync<ConflictException>(() => new DeliveryWriter(context).UpdateDeliveryAsync(
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => new DeliveryWriter(context).UpdateDeliveryAsync(
             DeliveryId, WriterTestData.AccountId, new DeliveryDto("R", "Acme", null, null, null, 0), CancellationToken.None));
 
         Assert.That(ex!.Code, Is.EqualTo(TripErrorCodes.TripAlreadyTerminal));
@@ -133,7 +133,7 @@ public class TripProgressGuardTests
     {
         using var context = await SeededAsync(TripStopStatuses.Arrived, requiresPod: false, deliveryStatus: DeliveryStatuses.Delivered);
 
-        var ex = Assert.ThrowsAsync<ConflictException>(() => new DeliveryWriter(context).DeleteDeliveryAsync(
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => new DeliveryWriter(context).DeleteDeliveryAsync(
             DeliveryId, WriterTestData.AccountId, CancellationToken.None));
 
         var remaining = await context.Deliveries.AsNoTracking().CountAsync();

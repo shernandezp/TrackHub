@@ -121,12 +121,12 @@ public class OperatorHealthDerivationTests
     }
 
     [Test]
-    public void GetLatestHealth_UnknownOperator_Throws()
+    public async Task GetLatestHealth_UnknownOperator_Throws()
     {
         var context = TestDb.NewContext();
         var reader = new OperatorHealthCheckReader(context, TestDb.PrincipalFor(Guid.NewGuid()));
 
-        Assert.ThrowsAsync<NotFoundException>(() => reader.GetLatestHealthAsync(Guid.NewGuid(), CancellationToken.None));
+        await Assert.ThrowsAsync<NotFoundException>(() => reader.GetLatestHealthAsync(Guid.NewGuid(), CancellationToken.None));
         context.Dispose();
     }
 }

@@ -114,7 +114,7 @@ public class TripAssignmentSyncTests
         context.ChangeTracker.Clear();
         var stale = new DateTimeOffset(2000, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
-        var ex = Assert.ThrowsAsync<ConflictException>(() => writer.UpdateTripAsync(trip.TripId, Dto(SecondDriver), WriterTestData.AccountId, stale, CancellationToken.None));
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => writer.UpdateTripAsync(trip.TripId, Dto(SecondDriver), WriterTestData.AccountId, stale, CancellationToken.None));
 
         Assert.That(ex!.Code, Is.EqualTo(TripErrorCodes.TripModifiedConcurrently));
     }

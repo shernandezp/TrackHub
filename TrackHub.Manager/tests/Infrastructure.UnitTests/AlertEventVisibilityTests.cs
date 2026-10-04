@@ -86,7 +86,7 @@ public class AlertEventVisibilityTests
 
         var writer = new AlertEventWriter(context as IApplicationDbContext, Principal(accountId, userId: Guid.NewGuid(), role: "Administrator"), new AlertRecorder(context as IApplicationDbContext, Mock.Of<IAlertRuleEvaluator>(), NullLogger<AlertRecorder>.Instance));
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(async () => await writer.RecordAlertEventAsync(
+        await Assert.ThrowsAsync<ForbiddenAccessException>(async () => await writer.RecordAlertEventAsync(
             new AlertEventDto(accountId, "CommunicationLoss", "Warning", "Notifications", "Transporter", foreignTransporter.TransporterId.ToString(), "Open", null, "dedup-1"), CancellationToken.None));
     }
 

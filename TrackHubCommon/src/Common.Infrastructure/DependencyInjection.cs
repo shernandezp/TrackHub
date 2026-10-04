@@ -20,10 +20,10 @@ using Common.Infrastructure.Interceptors;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
-using System.Security.Cryptography.X509Certificates;
 using Microsoft.IdentityModel.Tokens;
 using Common.Application.Interfaces;
 using Common.Infrastructure;
+using Common.Infrastructure.DataProtection;
 using Ardalis.GuardClauses;
 using Common.Domain.Constants;
 
@@ -58,29 +58,7 @@ public static class DependencyInjection
                 }
                 if (validateSigningKey)
                 {
-                    X509Certificate2? certificate = null;
-                    var loadCertFromFile = configuration.GetValue<bool>("OpenIddict:LoadCertFromFile");
-                    if (loadCertFromFile)
-                    {
-                        var certificatePath = configuration.GetValue<string>("OpenIddict:Path");
-                        var certificatePassword = configuration.GetValue<string>("OpenIddict:Password");
-
-                        var bytes = File.ReadAllBytes(certificatePath ?? "");
-                        certificate = X509CertificateLoader.LoadPkcs12(bytes, certificatePassword);
-                    }
-                    else
-                    {
-                        var thumbprint = configuration.GetValue<string>("OpenIddict:Thumbprint");
-                        Guard.Against.Null(thumbprint, message: $"Thumbprint for OpenIddict not found");
-                        var store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
-                        store.Open(OpenFlags.ReadOnly);
-                        var certificates = store.Certificates.Find(
-                            X509FindType.FindByThumbprint,
-                            thumbprint,
-                            false);
-                        certificate = certificates.Count > 0 ? certificates[0] : null;
-                    }
-                    Guard.Against.Null(certificate, message: $"Certificate for OpenIddict not found");
+                    var certificate = OpenIddictCertificate.Load(configuration);
                     var signingKey = new X509SecurityKey(certificate);
                     options.TokenValidationParameters.IssuerSigningKey = signingKey;
                 }

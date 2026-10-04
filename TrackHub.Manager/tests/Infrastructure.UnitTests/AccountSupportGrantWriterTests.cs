@@ -67,7 +67,7 @@ public class AccountSupportGrantWriterTests
         // The approver IS the creator.
         var writer = new AccountSupportGrantWriter(context as IApplicationDbContext, AdminPrincipal(accountId, creatorId));
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(async () =>
+        await Assert.ThrowsAsync<ForbiddenAccessException>(async () =>
             await writer.ApproveAccountSupportGrantAsync(grant.AccountSupportGrantId, CancellationToken.None));
         Assert.That(context.AccountSupportGrants.Single().ApprovedAt, Is.Null, "self-approval must not approve the grant");
     }
@@ -117,7 +117,7 @@ public class AccountSupportGrantWriterTests
 
         var writer = new AccountSupportGrantWriter(context as IApplicationDbContext, AdminPrincipal(Guid.NewGuid(), grant.SupportUserId));
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(async () =>
+        await Assert.ThrowsAsync<ForbiddenAccessException>(async () =>
             await writer.ApproveAccountSupportGrantAsync(grant.AccountSupportGrantId, CancellationToken.None));
     }
 }

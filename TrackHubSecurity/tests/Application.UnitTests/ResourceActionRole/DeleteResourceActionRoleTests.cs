@@ -49,7 +49,7 @@ public class DeleteResourceActionRoleCommandHandlerTests
     }
 
     [Test]
-    public void Handle_NonAdminUser_ThrowsUnauthorizedAccessException()
+    public async Task Handle_NonAdminUser_ThrowsUnauthorizedAccessException()
     {
         var userId = Guid.NewGuid();
         _userMock.Setup(u => u.Id).Returns(userId.ToString());
@@ -58,7 +58,7 @@ public class DeleteResourceActionRoleCommandHandlerTests
 
         var handler = new DeleteResourceActionRoleCommandHandler(_writerMock.Object, _userReaderMock.Object, _userMock.Object, new Mock<Common.Mediator.IPublisher>().Object);
 
-        Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
             await handler.Handle(new DeleteResourceActionRoleCommand(1, 2, 3), CancellationToken.None));
 
         _writerMock.Verify(w => w.DeleteResourceActionRoleAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);

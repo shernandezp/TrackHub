@@ -66,13 +66,13 @@ public class DriverOffboardingTests
     }
 
     [Test]
-    public void Deactivate_WhenSecurityRefuses_LeavesTheDriverActive()
+    public async Task Deactivate_WhenSecurityRefuses_LeavesTheDriverActive()
     {
         CurrentDriver(active: true);
         _revoker.Setup(r => r.RevokeDriverCredentialsAsync(DriverId, AccountId, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("security down"));
 
-        Assert.ThrowsAsync<HttpRequestException>(() => new DeactivateDriverCommandHandler(_reader.Object, _revoker.Object, _writer.Object)
+        await Assert.ThrowsAsync<HttpRequestException>(() => new DeactivateDriverCommandHandler(_reader.Object, _revoker.Object, _writer.Object)
             .Handle(new DeactivateDriverCommand(DriverId), CancellationToken.None));
 
         _writer.Verify(w => w.DeactivateDriverAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);

@@ -106,7 +106,7 @@ public class DeviceReconciliationTests
         await using var context = NewContext(nameof(AnEmptyCatalog_ForAPopulatedOperator_IsRefusedAndChangesNothing));
         var (_, op, device, _, _) = await SeedAsync(context);
 
-        Assert.ThrowsAsync<ConflictException>(() => Writer(context).ReconcileSynchronizedDevicesAsync(op.OperatorId, [], false, CancellationToken.None));
+        await Assert.ThrowsAsync<ConflictException>(() => Writer(context).ReconcileSynchronizedDevicesAsync(op.OperatorId, [], false, CancellationToken.None));
         Assert.That((await context.Devices.AsNoTracking().SingleAsync(d => d.DeviceId == device.DeviceId)).DetectedStatus, Is.EqualTo((int)DetectedStatus.Assigned));
     }
 

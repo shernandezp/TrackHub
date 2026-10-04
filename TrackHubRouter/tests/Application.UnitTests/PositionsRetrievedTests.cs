@@ -97,7 +97,7 @@ public class PositionsRetrievedTests : TestsContext
         positionWriterMock.Setup(x => x.AddOrUpdatePositionAsync(It.IsAny<IEnumerable<PositionVm>>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("boom"));
 
-        Assert.DoesNotThrowAsync(async () => await handler.Handle(notification, CancellationToken.None));
+        await Assert.DoesNotThrowAsync(async () => await handler.Handle(notification, CancellationToken.None));
 
         syncRunMock.Verify(x => x.RecordAsync(It.Is<OperatorSyncRunDto>(d => d.Result == "FAILED" && d.ErrorCode == "InvalidOperationException"), It.IsAny<CancellationToken>()), Times.Once);
         alertMock.Verify(x => x.RecordAsync(It.Is<AlertEventDto>(a => a.EventType == "GpsOperatorPositionSyncFailed"), It.IsAny<CancellationToken>()), Times.Once);
@@ -127,7 +127,7 @@ public class PositionsRetrievedTests : TestsContext
             ProviderErrorCode: "HttpRequestException",
             ProviderErrorMessage: "provider unreachable");
 
-        Assert.DoesNotThrowAsync(async () => await handler.Handle(notification, CancellationToken.None));
+        await Assert.DoesNotThrowAsync(async () => await handler.Handle(notification, CancellationToken.None));
 
         syncRunMock.Verify(x => x.RecordAsync(It.Is<OperatorSyncRunDto>(d => d.Result == "FAILED" && d.ErrorCode == "HttpRequestException"), It.IsAny<CancellationToken>()), Times.Once);
         alertMock.Verify(x => x.RecordAsync(It.Is<AlertEventDto>(a => a.EventType == "GpsOperatorPositionSyncFailed"), It.IsAny<CancellationToken>()), Times.Once);
@@ -186,7 +186,7 @@ public class PositionsRetrievedTests : TestsContext
         geofenceWriterMock.Setup(x => x.ProcessPositionsAsync(It.IsAny<IEnumerable<PositionVm>>(), account.AccountId, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("geofencing down"));
 
-        Assert.DoesNotThrowAsync(async () => await handler.Handle(notification, CancellationToken.None));
+        await Assert.DoesNotThrowAsync(async () => await handler.Handle(notification, CancellationToken.None));
 
         syncRunMock.Verify(x => x.RecordAsync(It.Is<OperatorSyncRunDto>(d => d.Result == "SUCCEEDED" && d.PositionsAccepted == 1), It.IsAny<CancellationToken>()), Times.Once);
         alertMock.Verify(x => x.RecordAsync(It.IsAny<AlertEventDto>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -266,7 +266,7 @@ public class PositionsRetrievedTests : TestsContext
         tripWriterMock.Setup(x => x.ProcessTripPositionsAsync(It.IsAny<IEnumerable<PositionVm>>(), account.AccountId, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("trip management down"));
 
-        Assert.DoesNotThrowAsync(async () => await handler.Handle(notification, CancellationToken.None));
+        await Assert.DoesNotThrowAsync(async () => await handler.Handle(notification, CancellationToken.None));
 
         syncRunMock.Verify(x => x.RecordAsync(It.Is<OperatorSyncRunDto>(d => d.Result == "SUCCEEDED" && d.PositionsAccepted == 1), It.IsAny<CancellationToken>()), Times.Once);
         alertMock.Verify(x => x.RecordAsync(It.IsAny<AlertEventDto>(), It.IsAny<CancellationToken>()), Times.Never);

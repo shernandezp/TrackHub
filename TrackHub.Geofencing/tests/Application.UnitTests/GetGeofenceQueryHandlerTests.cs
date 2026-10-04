@@ -53,7 +53,7 @@ public class GetGeofenceQueryHandlerTests
     }
 
     [Test]
-    public void Handle_ForeignGeofence_AnswersNotFound()
+    public async Task Handle_ForeignGeofence_AnswersNotFound()
     {
         // Arrange
         var id = Guid.NewGuid();
@@ -65,7 +65,7 @@ public class GetGeofenceQueryHandlerTests
         var query = new GetGeofenceQuery(id);
 
         // Act & Assert
-        Assert.ThrowsAsync<Ardalis.GuardClauses.NotFoundException>(() => handler.Handle(query, CancellationToken.None));
+        await Assert.ThrowsAsync<Ardalis.GuardClauses.NotFoundException>(() => handler.Handle(query, CancellationToken.None));
         _featureReaderMock.Verify(r => r.EnsureFeatureEnabledAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 

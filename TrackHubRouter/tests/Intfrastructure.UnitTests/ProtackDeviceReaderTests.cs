@@ -52,7 +52,7 @@ public class DeviceReaderTests : DeviceReaderTestsBase<DeviceReader>
     }
 
     [Test]
-    public void GetDeviceAsync_WithNullResponse_ThrowsInvalidOperationException()
+    public async Task GetDeviceAsync_WithNullResponse_ThrowsInvalidOperationException()
     {
         // Arrange
         var deviceDto = CreateDeviceTransporterVm(1, "IMEI123");
@@ -62,7 +62,7 @@ public class DeviceReaderTests : DeviceReaderTestsBase<DeviceReader>
             .ReturnsAsync(response);
 
         // Act & Assert
-        Assert.ThrowsAsync<InvalidOperationException>(
+        await Assert.ThrowsAsync<InvalidOperationException>(
             async () => await DeviceReader.GetDeviceAsync(deviceDto, TestCancellationToken));
     }
 

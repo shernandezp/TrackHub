@@ -151,7 +151,7 @@ public class NotificationReaderTests
         await using var context = NewContext(nameof(GetMyNotificationsAsync_ServiceClient_ThrowsForbidden));
         var reader = NewReader(context, Principal(null, PrincipalType.ServiceClient));
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(async () => await reader.GetMyNotificationsAsync(false, 0, 50, CancellationToken.None));
+        await Assert.ThrowsAsync<ForbiddenAccessException>(async () => await reader.GetMyNotificationsAsync(false, 0, 50, CancellationToken.None));
     }
 
     [Test]

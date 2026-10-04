@@ -275,16 +275,16 @@ public class WorkforceReportsTests
     }
 
     [Test]
-    public void AllReports_EnforceTheWorkforceFeatureBeforeReading()
+    public async Task AllReports_EnforceTheWorkforceFeatureBeforeReading()
     {
         _reader.Setup(r => r.EnsureWorkforceFeatureAsync(It.IsAny<CancellationToken>()))
             .ThrowsAsync(new UnauthorizedAccessException());
 
-        Assert.ThrowsAsync<UnauthorizedAccessException>(
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(
             () => new DriverRegistryReport(_reader.Object).GetDatasetAsync(_filters, CancellationToken.None));
-        Assert.ThrowsAsync<UnauthorizedAccessException>(
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(
             () => new QualificationExpirationsReport(_reader.Object, Mock.Of<Common.Application.Interfaces.IUser>(u => u.AccountId == Guid.NewGuid()), UtcZones()).GetDatasetAsync(_filters, CancellationToken.None));
-        Assert.ThrowsAsync<UnauthorizedAccessException>(
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(
             () => new AssignmentHistoryReport(_reader.Object).GetDatasetAsync(_filters, CancellationToken.None));
 
         _reader.Verify(r => r.GetDriversAsync(It.IsAny<CancellationToken>()), Times.Never);

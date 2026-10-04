@@ -72,48 +72,6 @@ wait_for_db() {
 wait_for_db "$DB_CONNECTION_SECURITY" "Security"
 
 # -----------------------------------------------------------------------------
-# Step 0: the logging database (idempotent)
-# -----------------------------------------------------------------------------
-# The Serilog sink creates its TABLE but never its database. Logs live in their own database so a
-# burst of warnings during an incident competes for nothing the fleet queries need.
-ensure_database() {
-    local connection_string=$1
-    local host port user pass db
-
-    host=$(echo "$connection_string" | grep -oP 'server=\K[^;]+')
-    port=$(echo "$connection_string" | grep -oP 'port=\K[^;]+'); port=${port:-5432}
-    user=$(echo "$connection_string" | grep -oP 'user id=\K[^;]+')
-    pass=$(echo "$connection_string" | grep -oP 'password=\K[^;]+')
-    db=$(echo "$connection_string" | grep -oP 'database=\K[^;]+')
-
-    if [ -z "$db" ]; then
-        print_warning "No database named in the connection string; skipping."
-        return 0
-    fi
-
-    if PGPASSWORD="$pass" psql -h "$host" -p "$port" -U "$user" -d postgres -tAc \
-        "SELECT 1 FROM pg_database WHERE datname = '$db'" | grep -q 1; then
-        print_info "Database $db already exists."
-        return 0
-    fi
-
-    PGPASSWORD="$pass" psql -h "$host" -p "$port" -U "$user" -d postgres -c "CREATE DATABASE \"$db\"" \
-        && print_success "Created database $db." \
-        || { print_error "Could not create database $db"; return 1; }
-}
-
-# The logging database is part of the platform, not an option: without it every service's log sink
-# fails and the purge functions for it are never installed.
-: "${DB_CONNECTION_LOGGING:?DB_CONNECTION_LOGGING must be set for db-init}"
-
-echo ""
-echo "=========================================="
-echo "Step 0: Ensuring the logging database"
-echo "=========================================="
-ensure_database "$DB_CONNECTION_LOGGING"
-
-
-# -----------------------------------------------------------------------------
 # Step 1: ClientSeeder (idempotent - runs every deploy)
 # -----------------------------------------------------------------------------
 echo ""
@@ -217,7 +175,7 @@ echo ""
 echo "=========================================="
 echo "Step 3b: Pinning database time zones to UTC"
 echo "=========================================="
-for conn in "$DB_CONNECTION_SECURITY" "$DB_CONNECTION_MANAGER" "${DB_CONNECTION_TELEMETRY:-}" "$DB_CONNECTION_LOGGING"; do
+for conn in "$DB_CONNECTION_SECURITY" "$DB_CONNECTION_MANAGER" "${DB_CONNECTION_TELEMETRY:-}"; do
     [ -n "$conn" ] && pin_utc_timezone "$conn"
 done
 
@@ -252,7 +210,6 @@ echo "=========================================="
 echo "Step 4: Installing the retention functions"
 echo "=========================================="
 install_sql "$DB_CONNECTION_MANAGER" /app/sql/purge-functions.sql
-install_sql "$DB_CONNECTION_LOGGING" /app/sql/purge-functions-logs.sql
 
 
 echo ""

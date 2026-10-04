@@ -36,7 +36,7 @@ public class AtomicWriteTests
         using var context = NewContext();
         var accountId = Guid.NewGuid();
 
-        Assert.ThrowsAsync<InvalidOperationException>(() => new AtomicWrite(context).RunAsync<int>(() =>
+        await Assert.ThrowsAsync<InvalidOperationException>(() => new AtomicWrite(context).RunAsync<int>(() =>
         {
             context.Groups.Add(new Group("Failed attempt", "", true, accountId));
             throw new InvalidOperationException("boom");

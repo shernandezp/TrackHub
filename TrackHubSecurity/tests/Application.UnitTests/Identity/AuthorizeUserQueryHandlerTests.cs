@@ -57,24 +57,24 @@ public class AuthorizeUserQueryHandlerTests
     }
 
     [Test]
-    public void Handle_UserAskingAboutAnotherUser_ThrowsForbidden()
+    public async Task Handle_UserAskingAboutAnotherUser_ThrowsForbidden()
     {
         var handler = new AuthorizeUserQueryHandler(_serviceMock.Object, IdentityTestCallers.User(Guid.NewGuid()).Object);
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(
+        await Assert.ThrowsAsync<ForbiddenAccessException>(
             () => handler.Handle(new AuthorizeUserQuery(Guid.NewGuid(), "Operators", "Read"), CancellationToken.None));
         _serviceMock.Verify(s => s.AuthorizeUserAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Test]
-    public void Handle_AnonymousCaller_ThrowsUnauthorized()
+    public async Task Handle_AnonymousCaller_ThrowsUnauthorized()
     {
         var anonymous = new Mock<IUser>();
         anonymous.Setup(u => u.Id).Returns((string?)null);
 
         var handler = new AuthorizeUserQueryHandler(_serviceMock.Object, anonymous.Object);
 
-        Assert.ThrowsAsync<UnauthorizedAccessException>(
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(
             () => handler.Handle(new AuthorizeUserQuery(Guid.NewGuid(), "Operators", "Read"), CancellationToken.None));
     }
 }

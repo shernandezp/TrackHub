@@ -71,7 +71,7 @@ public class CredentialReaderTests
 
         var reader = new CredentialReader(context as IApplicationDbContext, Principal(Guid.NewGuid()));
 
-        Assert.ThrowsAsync<NotFoundException>(async () =>
+        await Assert.ThrowsAsync<NotFoundException>(async () =>
             await reader.GetCredentialAsync(credential.CredentialId, EncryptionKey, CancellationToken.None));
     }
 

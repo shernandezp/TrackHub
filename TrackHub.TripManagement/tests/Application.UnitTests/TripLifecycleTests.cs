@@ -105,7 +105,7 @@ public class TripLifecycleTests
     }
 
     [Test]
-    public void StartTrip_OnATerminalTrip_ThrowsAndWritesNothing()
+    public async Task StartTrip_OnATerminalTrip_ThrowsAndWritesNothing()
     {
         var harness = new LifecycleHarness(TripStatuses.Completed);
         var handler = new StartTripCommandHandler(
@@ -113,14 +113,14 @@ public class TripLifecycleTests
             harness.AlertEmitter.Object, harness.UserReader.Object, harness.User.Object,
             TestFactory.Logger<StartTripCommandHandler>());
 
-        Assert.ThrowsAsync<ValidationException>(async () =>
+        await Assert.ThrowsAsync<ValidationException>(async () =>
             await handler.Handle(new StartTripCommand(TestFactory.TripId), CancellationToken.None));
 
         harness.Writer.VerifyNoOtherCalls();
     }
 
     [Test]
-    public void PauseTrip_FromCreated_IsRejected()
+    public async Task PauseTrip_FromCreated_IsRejected()
     {
         var harness = new LifecycleHarness(TripStatuses.Created);
         var handler = new PauseTripCommandHandler(
@@ -128,14 +128,14 @@ public class TripLifecycleTests
             harness.AlertEmitter.Object, harness.UserReader.Object, harness.User.Object,
             TestFactory.Logger<PauseTripCommandHandler>());
 
-        Assert.ThrowsAsync<ValidationException>(async () =>
+        await Assert.ThrowsAsync<ValidationException>(async () =>
             await handler.Handle(new PauseTripCommand(TestFactory.TripId), CancellationToken.None));
 
         harness.Writer.VerifyNoOtherCalls();
     }
 
     [Test]
-    public void CompleteTrip_WithAnOpenStop_IsRejectedWithStopsNotComplete()
+    public async Task CompleteTrip_WithAnOpenStop_IsRejectedWithStopsNotComplete()
     {
         var harness = new LifecycleHarness(TripStatuses.InProgress);
         harness.Reader
@@ -147,7 +147,7 @@ public class TripLifecycleTests
             harness.AlertEmitter.Object, harness.UserReader.Object, harness.User.Object,
             TestFactory.Logger<CompleteTripCommandHandler>());
 
-        var ex = Assert.ThrowsAsync<ValidationException>(async () =>
+        var ex = await Assert.ThrowsAsync<ValidationException>(async () =>
             await handler.Handle(new CompleteTripCommand(TestFactory.TripId, false), CancellationToken.None));
 
         Assert.That(ex!.Errors.Values.SelectMany(v => v), Does.Contain(TripErrorCodes.StopsNotComplete));

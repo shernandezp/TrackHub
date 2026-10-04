@@ -248,18 +248,12 @@ loaded at zero.
 
 ### Database Server Requirements
 
-The deployment assumes an existing PostgreSQL server. Three databases are required:
+The deployment assumes an existing PostgreSQL server. Two databases are required:
 
 | Database | Purpose |
 |----------|---------|
 | `TrackHubSecurity` | Identity, users, roles, policies |
-| `TrackHub` | Assets, transporters, devices, geofences, trips, positions |
-| `TrackHubLogs` | The Serilog sink table, written by every service |
-
-`TrackHubLogs` is created by `init-databases.sh` on every deploy, and the sink creates its own
-table. Ageing it out is `ops.purge_logs()`, run against that database (see Retention below). It is
-separate so that a burst of warnings during an incident competes for nothing the fleet queries
-need; pointing `DB_CONNECTION_LOGGING` back at `TrackHub` still works.
+| `TrackHub` | Assets, transporters, devices, geofences, trips, positions, and the `public.logs` Serilog table |
 
 The PostgreSQL server must be accessible from the application server(s) over the network.
 
@@ -613,7 +607,7 @@ This will:
 - Install `certbot` if not present
 - Obtain a free Let's Encrypt certificate (valid 90 days, auto-renewed)
 - Generate the OpenIddict `.pfx` certificate for token signing
-- Set up a daily cron job that checks for renewal
+- Install the certbot deploy hook that copies renewed files into `certificates/` and reloads nginx
 
 If nginx is already running, it uses the **webroot** method (zero downtime). Otherwise, it uses **standalone** mode.
 
@@ -631,6 +625,9 @@ sudo cp /etc/letsencrypt/live/trackhub.example.com/fullchain.pem certificates/
 sudo cp /etc/letsencrypt/live/trackhub.example.com/privkey.pem certificates/
 sudo chown $USER:$USER certificates/*.pem
 ```
+
+Then run `sudo ./scripts/generate-certs.sh` once anyway: with a valid certificate already in place it only installs
+the renewal deploy hook (and the OpenIddict `.pfx`). Without the hook, renewals never reach nginx.
 
 #### OpenIddict Certificate (for Token Signing)
 
@@ -818,7 +815,7 @@ The master template at `config/appsettings.template.json` shows all configurable
 | `${DB_CONNECTION_SECURITY}` | Authority, Security | Security database (`TrackHubSecurity`) |
 | `${DB_CONNECTION_MANAGER}` | Manager, Geofencing, TripManagement | Manager database (`TrackHub`) |
 | `${DB_CONNECTION_TELEMETRY}` | Telemetry | Telemetry DB — **must be the same `TrackHub` database** (schema `telemetry`) |
-| `${DB_CONNECTION_LOGGING}` | All backend services | Centralized logging database |
+| `${DB_CONNECTION_LOGGING}` | All backend services | Serilog sink (`public.logs` in the `TrackHub` database) |
 | `${CERTIFICATE_PATH}` | All services | Path to OpenIddict certificate |
 | `${CERTIFICATE_PASSWORD}` | All services | Certificate password |
 | `${ENCRYPTION_KEY}` | Security, Manager, Router, SyncWorker | Database encryption key |
@@ -1062,8 +1059,7 @@ nano .env
 ### PostgreSQL Requirements
 
 - PostgreSQL 14+
-- Three databases: `TrackHubSecurity`, `TrackHub` and `TrackHubLogs`
-  (`init-databases.sh` creates the logs one on every deploy)
+- Two databases: `TrackHubSecurity` and `TrackHub`
 - The **`postgis`** extension in the `TrackHub` database (required by Geofencing and by
   TripManagement — their migrations declare `HasPostgresExtension("postgis")`). One
   `CREATE EXTENSION` covers both; they share the database.
@@ -1320,16 +1316,20 @@ The script will:
 2. Obtain a free SSL certificate from Let's Encrypt
 3. Copy `fullchain.pem` and `privkey.pem` to `certificates/`
 4. Generate the OpenIddict `certificate.pfx` for token signing
-5. Add a daily cron job for automatic renewal
+5. Install the certbot deploy hook (`/etc/letsencrypt/renewal-hooks/deploy/trackhub-nginx.sh`) that copies
+   renewed files into `certificates/` and reloads nginx
 
-Certificates are valid for 90 days and renew automatically. The renewal script uses the **webroot** method so nginx stays online during renewal.
+Certificates are valid for 90 days. certbot's own systemd timer renews them with the **webroot** method, so nginx
+stays online, and the deploy hook publishes the result to nginx. Without the hook, nginx keeps serving the old copy
+in `certificates/` until it expires.
 
 ```bash
 # Manual renewal check
 ./scripts/renew-ssl.sh
 
-# Verify renewal cron is set up
-crontab -l | grep renew-ssl
+# Verify the renewal chain
+ls -l /etc/letsencrypt/renewal-hooks/deploy/trackhub-nginx.sh
+sudo certbot renew --dry-run
 ```
 
 ### OpenIddict Certificate (Token Signing)
@@ -1853,18 +1853,17 @@ Purging lives in the database. Nothing inside the services deletes aged rows, so
 scheduled — pgAgent, cron, Windows Task Scheduler or your own runner — or the tables grow forever.
 
 ```bash
-psql -d TrackHub     -c "CALL ops.run_purge();"
-psql -d TrackHubLogs -c "SELECT ops.purge_logs();"
+psql -d TrackHub -c "CALL ops.run_purge();"
 ```
 
-db-init installs both files on every deploy (`scripts/sql/purge-functions.sql` and
-`scripts/sql/purge-functions-logs.sql`, both idempotent); scheduling them is yours.
+db-init installs `scripts/sql/purge-functions.sql` (idempotent) on every deploy; scheduling it is
+yours.
 
 `ops.run_purge()` runs every task in its own transaction and reports each one: a task that fails
 is logged as a warning and the rest still run. `ops.purge_all()` does the same work in one
 transaction and returns a row per task, for an ad-hoc run. Together they cover position
 history, monthly partition maintenance, background job runs, resolved alert events, audit events,
-notification deliveries, API usage hours, trip events, operator sync runs and operator health
+notification deliveries, API usage hours, logs, trip events, operator sync runs and operator health
 checks. Daily is enough.
 
 Each task is also callable on its own, with the retention window as an argument:
@@ -1895,14 +1894,15 @@ Manager on `DocumentStorage:RetentionDays`.
 
 ### SSL Certificate Renewal
 
-Let's Encrypt certificates auto-renew via a daily cron job set up by `generate-certs.sh`. The renewal uses the webroot method (no downtime).
+Let's Encrypt certificates are renewed by certbot's systemd timer (webroot, no downtime). The deploy hook installed by `generate-certs.sh` copies the renewed files into `certificates/` and reloads nginx.
 
 ```bash
-# Check renewal status
+# Manual renewal check
 ./scripts/renew-ssl.sh
 
-# Verify auto-renewal cron
-crontab -l | grep renew-ssl
+# Verify the renewal chain
+ls -l /etc/letsencrypt/renewal-hooks/deploy/trackhub-nginx.sh
+sudo certbot renew --dry-run
 ```
 
 ### Service Management

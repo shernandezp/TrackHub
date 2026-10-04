@@ -54,11 +54,11 @@ public class GetUserNameQueryHandlerTests
     }
 
     [Test]
-    public void Handle_UserAskingAboutAnotherUser_ThrowsForbidden()
+    public async Task Handle_UserAskingAboutAnotherUser_ThrowsForbidden()
     {
         var handler = new TrackHub.Security.Application.Identity.Queries.GetUsername.GetUsersQueryHandler(_serviceMock.Object, IdentityTestCallers.User(Guid.NewGuid()).Object);
 
-        Assert.ThrowsAsync<Common.Application.Exceptions.ForbiddenAccessException>(
+        await Assert.ThrowsAsync<Common.Application.Exceptions.ForbiddenAccessException>(
             () => handler.Handle(new GetUserNameQuery(Guid.NewGuid()), CancellationToken.None));
     }
 }

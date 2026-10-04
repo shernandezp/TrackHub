@@ -35,7 +35,7 @@ public class NotificationWriterTests
 
         var writer = new NotificationWriter(context as IApplicationDbContext, Principal(accountId, userId: Guid.NewGuid(), role: "Administrator"));
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(async () => await writer.CreateNotificationRuleAsync(
+        await Assert.ThrowsAsync<ForbiddenAccessException>(async () => await writer.CreateNotificationRuleAsync(
             new TrackHub.Manager.Domain.Records.NotificationRuleDto(accountId, "rule", "Notifications", true, "CommunicationLoss",
                 $$"""{"userIds":["{{foreignUserId}}"]}""", """["InApp"]""", null, null), CancellationToken.None));
     }
@@ -71,7 +71,7 @@ public class NotificationWriterTests
 
         var writer = new NotificationWriter(context as IApplicationDbContext, Principal(accountId, userId: userId, role: "User"));
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(async () => await writer.CreateNotificationRuleAsync(
+        await Assert.ThrowsAsync<ForbiddenAccessException>(async () => await writer.CreateNotificationRuleAsync(
             new TrackHub.Manager.Domain.Records.NotificationRuleDto(accountId, "rule", "Notifications", true, "CommunicationLoss",
                 "", """["InApp"]""", null, null), CancellationToken.None));
     }
@@ -89,7 +89,7 @@ public class NotificationWriterTests
 
         var writer = new NotificationWriter(context as IApplicationDbContext, Principal(accountId, userId: userId, role: "User"));
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(async () => await writer.RetryNotificationDeliveryAsync(delivery.NotificationDeliveryId, CancellationToken.None));
+        await Assert.ThrowsAsync<ForbiddenAccessException>(async () => await writer.RetryNotificationDeliveryAsync(delivery.NotificationDeliveryId, CancellationToken.None));
     }
 
     [Test]
@@ -121,7 +121,7 @@ public class NotificationWriterTests
 
         var writer = new NotificationWriter(context as IApplicationDbContext, Principal(accountId, userId: Guid.NewGuid(), role: "Administrator"));
 
-        Assert.ThrowsAsync<ConflictException>(async () => await writer.RetryNotificationDeliveryAsync(delivery.NotificationDeliveryId, CancellationToken.None));
+        await Assert.ThrowsAsync<ConflictException>(async () => await writer.RetryNotificationDeliveryAsync(delivery.NotificationDeliveryId, CancellationToken.None));
     }
 
     [Test]
@@ -151,7 +151,7 @@ public class NotificationWriterTests
 
         var writer = new NotificationWriter(context as IApplicationDbContext, Principal(accountId, userId: Guid.NewGuid()));
 
-        Assert.ThrowsAsync<NotFoundException>(async () => await writer.MarkNotificationReadAsync(delivery.NotificationDeliveryId, CancellationToken.None));
+        await Assert.ThrowsAsync<NotFoundException>(async () => await writer.MarkNotificationReadAsync(delivery.NotificationDeliveryId, CancellationToken.None));
     }
 
     [Test]
