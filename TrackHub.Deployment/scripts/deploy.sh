@@ -247,6 +247,12 @@ check_configuration() {
     else
         print_success "SSL certificates found"
     fi
+
+    # certbot renews into /etc/letsencrypt; without the deploy hook nginx keeps serving
+    # the copy in certificates/ until it expires.
+    if [ -d /etc/letsencrypt/live ] && [ ! -x /etc/letsencrypt/renewal-hooks/deploy/trackhub-nginx.sh ]; then
+        print_warning "certbot renewal deploy hook not installed - run: sudo ./scripts/generate-certs.sh"
+    fi
     
     # db-init seeds OAuth clients from config/clients.json. Without it the image's development set
     # would be seeded instead, pointing web_client back at localhost.

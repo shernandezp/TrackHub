@@ -38,11 +38,11 @@ public class ProviderConcurrencyTests
     }
 
     [Test]
-    public void ReadEachDeviceAsync_OneFailingDevice_KeepsTheOthersAndReportsAPartialRead()
+    public async Task ReadEachDeviceAsync_OneFailingDevice_KeepsTheOthersAndReportsAPartialRead()
     {
         var devices = new[] { Device(1), Device(2), Device(3) };
 
-        var ex = Assert.ThrowsAsync<PartialPositionReadException>(() => ProviderConcurrency.ReadEachDeviceAsync(
+        var ex = await Assert.ThrowsAsync<PartialPositionReadException>(() => ProviderConcurrency.ReadEachDeviceAsync(
             devices,
             (device, _) => device.Identifier == 2
                 ? throw new HttpRequestException("timeout")
@@ -59,12 +59,12 @@ public class ProviderConcurrencyTests
     }
 
     [Test]
-    public void ReadEachDeviceAsync_Cancellation_IsNotReportedAsADeviceFailure()
+    public async Task ReadEachDeviceAsync_Cancellation_IsNotReportedAsADeviceFailure()
     {
         using var cts = new CancellationTokenSource();
         cts.Cancel();
 
-        Assert.CatchAsync<OperationCanceledException>(() => ProviderConcurrency.ReadEachDeviceAsync(
+        await Assert.CatchAsync<OperationCanceledException>(() => ProviderConcurrency.ReadEachDeviceAsync(
             [Device(1)],
             (_, token) => Task.FromCanceled<PositionVm>(token),
             cts.Token));

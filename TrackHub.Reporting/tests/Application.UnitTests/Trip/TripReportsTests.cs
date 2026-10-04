@@ -511,7 +511,7 @@ public class TripReportsTests
     // ---- feature gate ----
 
     [Test]
-    public void AllReports_EnforceTheTripManagementFeatureBeforeReading()
+    public async Task AllReports_EnforceTheTripManagementFeatureBeforeReading()
     {
         _reader.Setup(r => r.EnsureTripManagementFeatureAsync(It.IsAny<CancellationToken>()))
             .ThrowsAsync(new UnauthorizedAccessException());
@@ -528,7 +528,7 @@ public class TripReportsTests
 
         foreach (var report in reports)
         {
-            Assert.ThrowsAsync<UnauthorizedAccessException>(
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(
                 () => report.GetDatasetAsync(_filters, CancellationToken.None), report.ReportCode);
         }
 
@@ -675,7 +675,7 @@ public class TripReportsTests
     }
 
     [Test]
-    public void Summary_WindowLongerThan400Days_IsRefused()
+    public async Task Summary_WindowLongerThan400Days_IsRefused()
     {
         var filters = _filters with
         {
@@ -684,7 +684,7 @@ public class TripReportsTests
                 (FilterNames.To, DateTimeOffset.UtcNow.ToString("O")))
         };
 
-        Assert.ThrowsAsync<TrackHub.Reporting.Domain.Exceptions.ReportWindowInvalidException>(
+        await Assert.ThrowsAsync<TrackHub.Reporting.Domain.Exceptions.ReportWindowInvalidException>(
             () => new TripSummaryReport(_reader.Object).GetDatasetAsync(filters, CancellationToken.None));
     }
 }

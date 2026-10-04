@@ -7,7 +7,7 @@
 # CRITICAL: Excluding host build artifacts is required for deterministic builds.
 # Without this, host-generated bin/ and obj/ directories are copied into the
 # image and overwrite the container's own restore/compile output. `dotnet
-# publish --no-restore` then treats the stale obj/ as up-to-date and skips
+# publish` then treats the stale obj/ as up-to-date and skips
 # recompilation, shipping OLD binaries. Likewise, a host node_modules/ would
 # clobber the container's fresh npm install. Keeping these out of the context
 # also lets Docker layer caching correctly detect real source changes, so

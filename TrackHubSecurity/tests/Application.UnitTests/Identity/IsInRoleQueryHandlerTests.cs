@@ -56,11 +56,11 @@ public class IsInRoleQueryHandlerTests
     }
 
     [Test]
-    public void Handle_UserAskingAboutAnotherUser_ThrowsForbidden()
+    public async Task Handle_UserAskingAboutAnotherUser_ThrowsForbidden()
     {
         var handler = new TrackHub.Security.Application.Identity.Queries.IsInRole.GetUsersQueryHandler(_serviceMock.Object, IdentityTestCallers.User(Guid.NewGuid()).Object);
 
-        Assert.ThrowsAsync<Common.Application.Exceptions.ForbiddenAccessException>(
+        await Assert.ThrowsAsync<Common.Application.Exceptions.ForbiddenAccessException>(
             () => handler.Handle(new IsInRoleQuery(Guid.NewGuid(), "Admin", "Write"), CancellationToken.None));
     }
 }

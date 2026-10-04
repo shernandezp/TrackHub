@@ -76,6 +76,6 @@ public class UserReplicaRoleTests
         await using var context = NewContext(nameof(AnUpdateForAUserWithNoReplica_AndNoAccount_IsNotFound));
         var writer = new UserWriter(context as IApplicationDbContext, Service());
 
-        Assert.ThrowsAsync<NotFoundException>(() => writer.UpdateUserAsync(new UpdateUserDto(Guid.NewGuid(), "ghost", true), CancellationToken.None));
+        await Assert.ThrowsAsync<NotFoundException>(() => writer.UpdateUserAsync(new UpdateUserDto(Guid.NewGuid(), "ghost", true), CancellationToken.None));
     }
 }

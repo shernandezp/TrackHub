@@ -37,16 +37,16 @@ public class RetentionDeleteTranslationTests
     }
 
     [Test]
-    public void ExecuteDeleteInChunksBuildsSql()
+    public async Task ExecuteDeleteInChunksBuildsSql()
     {
         using var context = NewNpgsqlContext();
         var cutoff = DateTimeOffset.UtcNow.AddDays(-30);
 
         // A connection failure is the ONLY passing outcome: it proves EF built the SQL and Npgsql
         // tried to send it. "Could not be translated" means the hand-built predicate is wrong.
-        var failure = Assert.CatchAsync(async () => await context.AuditEvents
+        var failure = (await Assert.CatchAsync(async () => await context.AuditEvents
             .Where(x => x.OccurredAt < cutoff)
-            .ExecuteDeleteInChunksAsync(x => x.AuditEventId, CancellationToken.None))!;
+            .ExecuteDeleteInChunksAsync(x => x.AuditEventId, CancellationToken.None)))!;
 
         Assert.That(IsConnectionFailure(failure), Is.True, failure.ToString());
     }

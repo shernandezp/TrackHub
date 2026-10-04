@@ -160,7 +160,7 @@ public class LifecycleFunnelTests
         var writer = new TripWriter(context, User().Object);
         context.FailNextSaveOn("ux_trips_transporterid_inprogress");
 
-        var ex = Assert.ThrowsAsync<ConflictException>(async () => await writer.TransitionTripAsync(
+        var ex = await Assert.ThrowsAsync<ConflictException>(async () => await writer.TransitionTripAsync(
             TripId, WriterTestData.AccountId, TripStatuses.InProgress, TripEventTypes.TripStarted,
             TripEventSources.Portal, $"trip-start:{TripId:N}", null, null, false, Measured, CancellationToken.None));
 
@@ -204,7 +204,7 @@ public class LifecycleFunnelTests
 
         await writer.ArmTripAsync(TripId, WriterTestData.AccountId, CancellationToken.None);
 
-        Assert.DoesNotThrowAsync(() => writer.DeleteTripAsync(TripId, WriterTestData.AccountId, CancellationToken.None));
+        await Assert.DoesNotThrowAsync(() => writer.DeleteTripAsync(TripId, WriterTestData.AccountId, CancellationToken.None));
     }
 
     [Test]
@@ -273,7 +273,7 @@ public class LifecycleFunnelTests
         using var context = await SeededAsync(TripStatuses.InProgress);
         var writer = new TripWriter(context, User().Object);
 
-        var ex = Assert.ThrowsAsync<ConflictException>(async () => await writer.UpdateTripAsync(
+        var ex = await Assert.ThrowsAsync<ConflictException>(async () => await writer.UpdateTripAsync(
             TripId, Dto(originLatitude: 5.10), WriterTestData.AccountId, null, CancellationToken.None));
 
         Assert.That(ex!.Message, Does.Contain(TripErrorCodes.TripArmed));
@@ -347,7 +347,7 @@ public class LifecycleFunnelTests
 
         // Those stops carry arrivals, departures, deliveries and POD. A "re-plan" that deleted them
         // would erase measurements, which is why the partner import checks this too (§9.2).
-        var ex = Assert.ThrowsAsync<ConflictException>(async () => await writer.ReplaceStopsAsync(
+        var ex = await Assert.ThrowsAsync<ConflictException>(async () => await writer.ReplaceStopsAsync(
             TripId, WriterTestData.AccountId, [], CancellationToken.None));
 
         Assert.That(ex!.Message, Does.Contain(TripErrorCodes.TripNotActive));

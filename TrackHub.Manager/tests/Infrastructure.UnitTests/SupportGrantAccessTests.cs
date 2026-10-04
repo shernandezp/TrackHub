@@ -74,7 +74,7 @@ public class SupportGrantAccessTests
 
         var writer = new DriverWriter(context as IApplicationDbContext, SupportPrincipal(supportUserId));
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(async () =>
+        await Assert.ThrowsAsync<ForbiddenAccessException>(async () =>
             await writer.CreateDriverAsync(DriverForAccount(targetAccountId), CancellationToken.None));
         Assert.That(context.Drivers.Count(), Is.EqualTo(0), "read-only grant must not create a driver");
     }
@@ -127,7 +127,7 @@ public class SupportGrantAccessTests
 
         var writer = new DriverWriter(context as IApplicationDbContext, SupportPrincipal(supportUserId));
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(async () =>
+        await Assert.ThrowsAsync<ForbiddenAccessException>(async () =>
             await writer.CreateDriverAsync(DriverForAccount(targetAccountId), CancellationToken.None));
     }
 }

@@ -63,7 +63,7 @@ public class ClientWriterTests
         var writer = new ClientWriter(context as IApplicationDbContext);
         var dto = new ClientDto(null, "integration_client", "desc", "s3cr3t");
 
-        Assert.ThrowsAsync<ConflictException>(async () =>
+        await Assert.ThrowsAsync<ConflictException>(async () =>
             await writer.CreateClientAsync(dto, Salt, Key, CancellationToken.None));
         Assert.That(context.Clients.Count(), Is.EqualTo(1), "the duplicate name must not create a second client");
     }

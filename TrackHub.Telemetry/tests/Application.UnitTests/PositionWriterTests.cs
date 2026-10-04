@@ -116,7 +116,7 @@ public class PositionWriterTests
         context.SaveChanges();
         var writer = new OperatorSyncRunWriter(context, TestDb.PrincipalFor(caller));
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.RecordAsync(new OperatorSyncRunDto(caller, operatorId, SyncTriggerType.Manual, OperatorSyncResult.Succeeded,
+        await Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.RecordAsync(new OperatorSyncRunDto(caller, operatorId, SyncTriggerType.Manual, OperatorSyncResult.Succeeded,
             DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, 0, 0, 0, 0, 0, 0, 0, 0, null, null, null), CancellationToken.None));
         await context.DisposeAsync();
     }
@@ -175,7 +175,7 @@ public class PositionWriterTests
         context.SaveChanges();
         var writer = new TransporterPositionWriter(context, AccountPrincipal(Guid.NewGuid()));
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.BulkTransporterPositionAsync(
+        await Assert.ThrowsAsync<ForbiddenAccessException>(() => writer.BulkTransporterPositionAsync(
             [PositionDto(transporterId, 10, DateTimeOffset.UtcNow)], CancellationToken.None));
 
         Assert.That(await context.TransporterPositions.AnyAsync(), Is.False);

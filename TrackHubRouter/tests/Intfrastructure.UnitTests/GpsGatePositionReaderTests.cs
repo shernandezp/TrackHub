@@ -65,7 +65,7 @@ public class PositionReaderTests : PositionReaderTestsBase<PositionReader>
     }
 
     [Test]
-    public void GetPositionAsync_WithDateRange_ThrowsProviderCapabilityNotSupported()
+    public async Task GetPositionAsync_WithDateRange_ThrowsProviderCapabilityNotSupported()
     {
         // Arrange
         var deviceDto = CreateDeviceTransporterVm(1, "TestDevice");
@@ -73,7 +73,7 @@ public class PositionReaderTests : PositionReaderTestsBase<PositionReader>
         var to = DateTimeOffset.Now;
 
         // Act & Assert
-        var ex = Assert.ThrowsAsync<ProviderCapabilityNotSupportedException>(
+        var ex = await Assert.ThrowsAsync<ProviderCapabilityNotSupportedException>(
             async () => await PositionReader.GetPositionAsync(from, to, deviceDto, TestCancellationToken));
         Assert.Multiple(() =>
         {

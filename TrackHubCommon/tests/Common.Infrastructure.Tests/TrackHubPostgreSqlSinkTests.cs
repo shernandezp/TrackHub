@@ -43,11 +43,11 @@ public class TrackHubPostgreSqlSinkTests
     [Fact]
     public async Task A_logged_event_lands_as_a_timestamptz_instant_in_PostgreSQL()
     {
-        var admin = await LocalPostgresAsync();
+        var admin = await LocalPostgres.ConnectionAsync();
         Assert.SkipWhen(admin is null, "No local Postgres answered (set COMMON_TEST_CONNECTION, or run the local instance).");
 
         var database = $"sink_tests_{Guid.NewGuid():N}";
-        await ExecuteAsync(admin!, $"CREATE DATABASE \"{database}\"");
+        await LocalPostgres.ExecuteAsync(admin!, $"CREATE DATABASE \"{database}\"");
         var connection = new NpgsqlConnectionStringBuilder(admin) { Database = database }.ConnectionString;
         try
         {
@@ -76,41 +76,7 @@ public class TrackHubPostgreSqlSinkTests
         finally
         {
             NpgsqlConnection.ClearAllPools();
-            await ExecuteAsync(admin!, $"DROP DATABASE IF EXISTS \"{database}\" WITH (FORCE)");
+            await LocalPostgres.ExecuteAsync(admin!, $"DROP DATABASE IF EXISTS \"{database}\" WITH (FORCE)");
         }
-    }
-
-    private static async Task<string?> LocalPostgresAsync()
-    {
-        var candidates = new List<string>();
-        var explicitConnection = Environment.GetEnvironmentVariable("COMMON_TEST_CONNECTION");
-        if (!string.IsNullOrWhiteSpace(explicitConnection))
-        {
-            candidates.Add(explicitConnection);
-        }
-        candidates.Add("Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=super;Timeout=3");
-        candidates.Add("Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=postgres;Timeout=3");
-
-        foreach (var candidate in candidates)
-        {
-            try
-            {
-                await using var connection = new NpgsqlConnection(candidate);
-                await connection.OpenAsync(TestContext.Current.CancellationToken);
-                return candidate;
-            }
-            catch (Exception)
-            {
-            }
-        }
-        return null;
-    }
-
-    private static async Task ExecuteAsync(string connectionString, string sql)
-    {
-        await using var connection = new NpgsqlConnection(connectionString);
-        await connection.OpenAsync(TestContext.Current.CancellationToken);
-        await using var command = new NpgsqlCommand(sql, connection);
-        await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
     }
 }

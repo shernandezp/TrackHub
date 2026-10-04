@@ -60,7 +60,7 @@ public class TriggerOperatorSyncCommandHandlerTests : TestsContext
     }
 
     [Test]
-    public void Handle_CrossAccountOperator_ThrowsOperatorNotFound()
+    public async Task Handle_CrossAccountOperator_ThrowsOperatorNotFound()
     {
         var accountId = Guid.NewGuid();
         var otherAccount = Guid.NewGuid();
@@ -68,13 +68,13 @@ public class TriggerOperatorSyncCommandHandlerTests : TestsContext
         SetupOperator(op);
 
         // A2: operator that does not belong to the account -> typed error, never a silent false.
-        Assert.ThrowsAsync<OperatorNotFoundException>(() => CreateHandler().Handle(
+        await Assert.ThrowsAsync<OperatorNotFoundException>(() => CreateHandler().Handle(
             new TriggerOperatorSyncCommand(accountId, op.OperatorId), CancellationToken.None));
         _queueMock.Verify(q => q.TryEnqueue(It.IsAny<SyncDispatchRequest>()), Times.Never);
     }
 
     [Test]
-    public void Handle_OperatorDisabled_ThrowsOperatorDisabled()
+    public async Task Handle_OperatorDisabled_ThrowsOperatorDisabled()
     {
         var accountId = Guid.NewGuid();
         var op = new OperatorVm(Guid.NewGuid(), (int)ProtocolType.CommandTrack, accountId, TestCredentialTokenVm,
@@ -82,7 +82,7 @@ public class TriggerOperatorSyncCommandHandlerTests : TestsContext
         SetupOperator(op);
 
         // A2: disabled operator -> typed error, never a silent false.
-        Assert.ThrowsAsync<OperatorDisabledException>(() => CreateHandler().Handle(
+        await Assert.ThrowsAsync<OperatorDisabledException>(() => CreateHandler().Handle(
             new TriggerOperatorSyncCommand(accountId, op.OperatorId), CancellationToken.None));
         _queueMock.Verify(q => q.TryEnqueue(It.IsAny<SyncDispatchRequest>()), Times.Never);
     }
@@ -130,7 +130,7 @@ public class TriggerOperatorSyncCommandHandlerTests : TestsContext
     }
 
     [Test]
-    public void Handle_QueueFull_ThrowsTooManyRequests()
+    public async Task Handle_QueueFull_ThrowsTooManyRequests()
     {
         var accountId = Guid.NewGuid();
         var op = new OperatorVm(Guid.NewGuid(), (int)ProtocolType.CommandTrack, accountId, TestCredentialTokenVm);
@@ -138,7 +138,7 @@ public class TriggerOperatorSyncCommandHandlerTests : TestsContext
         _queueMock.Setup(q => q.TryEnqueue(It.IsAny<SyncDispatchRequest>())).Returns(false);
 
         // A refused trigger must say so — never answer "accepted" for work that was dropped.
-        Assert.ThrowsAsync<TooManyRequestsException>(() => CreateHandler().Handle(
+        await Assert.ThrowsAsync<TooManyRequestsException>(() => CreateHandler().Handle(
             new TriggerOperatorSyncCommand(accountId, op.OperatorId), CancellationToken.None));
     }
 }

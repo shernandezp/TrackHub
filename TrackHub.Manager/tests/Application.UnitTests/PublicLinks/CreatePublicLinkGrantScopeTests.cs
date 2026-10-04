@@ -28,13 +28,13 @@ public class CreatePublicLinkGrantScopeTests
     }
 
     [Test]
-    public void User_MintingAGrantForAForeignAccount_IsForbidden_AndNothingIsWritten()
+    public async Task User_MintingAGrantForAForeignAccount_IsForbidden_AndNothingIsWritten()
     {
         var writer = new Mock<IPublicLinkGrantWriter>();
         var handler = new CreatePublicLinkGrantCommandHandler(
             writer.Object, Principal(PrincipalType.User, Guid.NewGuid()));
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(() => handler.Handle(
+        await Assert.ThrowsAsync<ForbiddenAccessException>(() => handler.Handle(
             new CreatePublicLinkGrantCommand(GrantFor(Guid.NewGuid())), CancellationToken.None));
         writer.Verify(
             w => w.CreatePublicLinkGrantAsync(It.IsAny<PublicLinkGrantDto>(), It.IsAny<CancellationToken>()),

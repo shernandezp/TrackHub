@@ -47,11 +47,11 @@ public class ProofOfDeliveryAndDeliveryOutcomeTests
     [TestCase("Pending")]
     [TestCase("Infected")]
     [TestCase("Quarantined")]
-    public void Pod_WithANonCleanDocument_IsRejected(string scanStatus)
+    public async Task Pod_WithANonCleanDocument_IsRejected(string scanStatus)
     {
         var harness = new PodHarness(scanStatus, TestFactory.AccountId);
 
-        var ex = Assert.ThrowsAsync<ValidationException>(async () =>
+        var ex = await Assert.ThrowsAsync<ValidationException>(async () =>
             await harness.Handler().Handle(new RecordProofOfDeliveryCommand(TestFactory.TripId, Pod()), CancellationToken.None));
 
         Assert.That(ex!.Errors.Values.SelectMany(v => v), Does.Contain(TripErrorCodes.PodDocumentNotClean));
@@ -60,22 +60,22 @@ public class ProofOfDeliveryAndDeliveryOutcomeTests
     }
 
     [Test]
-    public void Pod_WithACleanDocumentFromAnotherAccount_IsRejected()
+    public async Task Pod_WithACleanDocumentFromAnotherAccount_IsRejected()
     {
         var harness = new PodHarness("Clean", Guid.NewGuid());
 
-        var ex = Assert.ThrowsAsync<ValidationException>(async () =>
+        var ex = await Assert.ThrowsAsync<ValidationException>(async () =>
             await harness.Handler().Handle(new RecordProofOfDeliveryCommand(TestFactory.TripId, Pod()), CancellationToken.None));
 
         Assert.That(ex!.Errors.Values.SelectMany(v => v), Does.Contain(TripErrorCodes.PodDocumentNotClean));
     }
 
     [Test]
-    public void Pod_WithAnUnknownDocument_IsRejected()
+    public async Task Pod_WithAnUnknownDocument_IsRejected()
     {
         var harness = new PodHarness(null, null);
 
-        Assert.ThrowsAsync<ValidationException>(async () =>
+        await Assert.ThrowsAsync<ValidationException>(async () =>
             await harness.Handler().Handle(new RecordProofOfDeliveryCommand(TestFactory.TripId, Pod()), CancellationToken.None));
     }
 
@@ -165,14 +165,14 @@ public class ProofOfDeliveryAndDeliveryOutcomeTests
     }
 
     [Test]
-    public void DeliveryOutcome_ForADeliveryOfAnotherTrip_IsNotFound()
+    public async Task DeliveryOutcome_ForADeliveryOfAnotherTrip_IsNotFound()
     {
         var harness = new OutcomeHarness();
         harness.Reader.Setup(r => r.FindVisibleTripIdByDeliveryAsync(
                 DeliveryId, TestFactory.AccountId, It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Guid.NewGuid());
 
-        Assert.ThrowsAsync<Ardalis.GuardClauses.NotFoundException>(async () => await harness.Handler().Handle(
+        await Assert.ThrowsAsync<Ardalis.GuardClauses.NotFoundException>(async () => await harness.Handler().Handle(
             new UpdateDeliveryOutcomeCommand(TestFactory.TripId, DeliveryId, DeliveryStatuses.Delivered, null, ClientEventId),
             CancellationToken.None));
 
@@ -211,13 +211,13 @@ public class ProofOfDeliveryAndDeliveryOutcomeTests
 
     /// <summary>A genuinely NEW proof of delivery on a closed trip is still refused.</summary>
     [Test]
-    public void ANewPodOnAClosedTrip_IsStillRejected()
+    public async Task ANewPodOnAClosedTrip_IsStillRejected()
     {
         var harness = new PodHarness("Clean", TestFactory.AccountId);
         harness.Reader.Setup(r => r.GetTripAsync(TestFactory.TripId, TestFactory.AccountId, It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(TestFactory.Trip(TripStatuses.Completed));
 
-        var ex = Assert.ThrowsAsync<ValidationException>(async () =>
+        var ex = await Assert.ThrowsAsync<ValidationException>(async () =>
             await harness.Handler().Handle(new RecordProofOfDeliveryCommand(TestFactory.TripId, Pod()), CancellationToken.None));
 
         Assert.That(ex!.Errors.Values.SelectMany(v => v), Does.Contain(TripErrorCodes.TripAlreadyTerminal));

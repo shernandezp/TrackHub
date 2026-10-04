@@ -2,10 +2,8 @@
 # =============================================================================
 # TrackHub SSL Certificate Renewal Script
 # =============================================================================
-# Automatically renews Let's Encrypt certificates using webroot method
-# (no nginx downtime required).
-# Add to crontab for automatic renewal:
-#   0 3 * * * /opt/trackhub/TrackHub.Deployment/scripts/renew-ssl.sh >> /var/log/trackhub-ssl-renewal.log 2>&1
+# Manual renewal check. Automatic renewal is certbot.timer plus the deploy hook that
+# generate-certs.sh installs (copies the renewed files here and reloads nginx).
 # =============================================================================
 
 set -e

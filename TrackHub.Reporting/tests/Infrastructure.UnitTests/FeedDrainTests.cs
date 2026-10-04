@@ -61,15 +61,15 @@ public class FeedDrainTests
     }
 
     [Test]
-    public void EveryVariant_RaisesPastTheLimit_InsteadOfTruncating()
+    public async Task EveryVariant_RaisesPastTheLimit_InsteadOfTruncating()
     {
-        Assert.Multiple(() =>
+        await Assert.MultipleAsync(async () =>
         {
-            Assert.ThrowsAsync<ReportLimitExceededException>(() => FeedDrain.DrainAsync<int>((skip, take) =>
+            await Assert.ThrowsAsync<ReportLimitExceededException>(() => FeedDrain.DrainAsync<int>((skip, take) =>
                 Task.FromResult<(IReadOnlyCollection<int>?, int)>((Page(skip, take), FeedDrain.MaxRows + FeedDrain.PageSize))));
-            Assert.ThrowsAsync<ReportLimitExceededException>(() => FeedDrain.DrainByNextSkipAsync<int>((skip, take) =>
+            await Assert.ThrowsAsync<ReportLimitExceededException>(() => FeedDrain.DrainByNextSkipAsync<int>((skip, take) =>
                 Task.FromResult<(IReadOnlyCollection<int>?, bool, int)>((Page(skip, take), true, skip + take))));
-            Assert.ThrowsAsync<ReportLimitExceededException>(() => FeedDrain.DrainByCursorAsync<int>(cursor =>
+            await Assert.ThrowsAsync<ReportLimitExceededException>(() => FeedDrain.DrainByCursorAsync<int>(cursor =>
                 Task.FromResult<(IReadOnlyCollection<int>?, bool, string?)>((Page(0, FeedDrain.PageSize), true, Guid.NewGuid().ToString()))));
         });
     }

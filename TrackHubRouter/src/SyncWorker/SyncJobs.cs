@@ -51,7 +51,7 @@ public sealed class DeviceSyncJob(OperatorFanOut fanOut) : IScheduledJob
 // not a separately billed feature.
 public sealed class OperatorHealthJob(OperatorFanOut fanOut) : IScheduledJob
 {
-    public static TimeSpan Interval => TimeSpan.FromMinutes(1);
+    public static TimeSpan Interval => TimeSpan.FromMinutes(5);
 
     public static TimeSpan StartupDelay => TimeSpan.FromSeconds(20);
 

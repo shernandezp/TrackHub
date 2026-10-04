@@ -53,7 +53,7 @@ public class AlertSubscriptionWriterTests
 
         var writer = new AlertSubscriptionWriter(context as IApplicationDbContext, Principal(accountId, userId: Guid.NewGuid(), role: "Administrator"));
 
-        Assert.ThrowsAsync<ConflictException>(async () => await writer.CreateAlertSubscriptionAsync(
+        await Assert.ThrowsAsync<ConflictException>(async () => await writer.CreateAlertSubscriptionAsync(
             new AlertSubscriptionDto(accountId, RecipientPrincipalTypes.User, subscriberId, "CommunicationLoss", NotificationChannels.InApp, null, true), CancellationToken.None));
     }
 
@@ -70,7 +70,7 @@ public class AlertSubscriptionWriterTests
 
         var writer = new AlertSubscriptionWriter(context as IApplicationDbContext, Principal(accountId, userId: selfId, role: "Operator"));
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(async () => await writer.CreateAlertSubscriptionAsync(
+        await Assert.ThrowsAsync<ForbiddenAccessException>(async () => await writer.CreateAlertSubscriptionAsync(
             new AlertSubscriptionDto(accountId, RecipientPrincipalTypes.User, otherId, null, NotificationChannels.InApp, null, true), CancellationToken.None));
     }
 
@@ -101,7 +101,7 @@ public class AlertSubscriptionWriterTests
 
         var writer = new AlertSubscriptionWriter(context as IApplicationDbContext, Principal(accountId, userId: Guid.NewGuid(), role: "Administrator"));
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(async () => await writer.CreateAlertSubscriptionAsync(
+        await Assert.ThrowsAsync<ForbiddenAccessException>(async () => await writer.CreateAlertSubscriptionAsync(
             new AlertSubscriptionDto(accountId, RecipientPrincipalTypes.User, foreignUserId, null, NotificationChannels.InApp, null, true), CancellationToken.None));
     }
 

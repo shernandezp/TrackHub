@@ -24,6 +24,7 @@ using TrackHub.Geofencing.Web.GraphQL.Query;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddTrackHubSerilog();
+builder.AddTrackHubDataProtection();
 
 var allowedCORSOrigins = builder.Configuration.GetAllowedCorsOrigins();
 Guard.Against.NullOrEmpty(allowedCORSOrigins, message: $"Allowed Origins configuration for CORS not loaded");

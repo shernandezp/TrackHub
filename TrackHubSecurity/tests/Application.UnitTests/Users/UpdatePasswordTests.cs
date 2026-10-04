@@ -82,7 +82,7 @@ public class UpdatePasswordTests
     }
 
     [Test]
-    public void Handle_NonManagerOnAnotherUser_Throws()
+    public async Task Handle_NonManagerOnAnotherUser_Throws()
     {
         var callerId = Guid.NewGuid();
         var subjectId = Guid.NewGuid();
@@ -91,7 +91,7 @@ public class UpdatePasswordTests
             .ReturnsAsync(false);
         var command = new UpdatePasswordCommand(new UserPasswordDto(subjectId, "New-Passw0rd!"));
 
-        Assert.ThrowsAsync<UnauthorizedAccessException>(() => CreateHandler().Handle(command, CancellationToken.None));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => CreateHandler().Handle(command, CancellationToken.None));
         _writerMock.Verify(x => x.UpdatePasswordAsync(It.IsAny<UserPasswordDto>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

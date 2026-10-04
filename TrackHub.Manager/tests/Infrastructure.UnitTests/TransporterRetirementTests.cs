@@ -94,7 +94,7 @@ public class TransporterRetirementTests
         context.ChangeTracker.Clear();
         var loaded = context.Transporters.AsNoTracking().Single().Version;
 
-        Assert.ThrowsAsync<DbUpdateConcurrencyException>(() => new TransporterWriter(context, Administrator(accountId))
+        await Assert.ThrowsAsync<DbUpdateConcurrencyException>(() => new TransporterWriter(context, Administrator(accountId))
             .UpdateTransporterAsync(new UpdateTransporterDto(transporter.TransporterId, "Truck 2", 1, loaded + 1), CancellationToken.None));
         context.ChangeTracker.Clear();
 

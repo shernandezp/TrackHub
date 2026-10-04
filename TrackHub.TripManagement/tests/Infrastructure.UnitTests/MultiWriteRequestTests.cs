@@ -308,7 +308,7 @@ public class MultiWriteRequestTests
 
         context.FailNextSaveOn("ux_trips_transporterid_inprogress");
 
-        Assert.ThrowsAsync<Common.Application.Exceptions.ConflictException>(async () =>
+        await Assert.ThrowsAsync<Common.Application.Exceptions.ConflictException>(async () =>
             await writer.TransitionTripAsync(
                 TripId, WriterTestData.AccountId, TripStatuses.InProgress, TripEventTypes.TripStarted,
                 TripEventSources.Detection, $"trip-start:{TripId:N}", null, null, false, Fix, CancellationToken.None));

@@ -607,7 +607,7 @@ This will:
 - Install `certbot` if not present
 - Obtain a free Let's Encrypt certificate (valid 90 days, auto-renewed)
 - Generate the OpenIddict `.pfx` certificate for token signing
-- Set up a daily cron job that checks for renewal
+- Install the certbot deploy hook that copies renewed files into `certificates/` and reloads nginx
 
 If nginx is already running, it uses the **webroot** method (zero downtime). Otherwise, it uses **standalone** mode.
 
@@ -625,6 +625,9 @@ sudo cp /etc/letsencrypt/live/trackhub.example.com/fullchain.pem certificates/
 sudo cp /etc/letsencrypt/live/trackhub.example.com/privkey.pem certificates/
 sudo chown $USER:$USER certificates/*.pem
 ```
+
+Then run `sudo ./scripts/generate-certs.sh` once anyway: with a valid certificate already in place it only installs
+the renewal deploy hook (and the OpenIddict `.pfx`). Without the hook, renewals never reach nginx.
 
 #### OpenIddict Certificate (for Token Signing)
 
@@ -1313,16 +1316,20 @@ The script will:
 2. Obtain a free SSL certificate from Let's Encrypt
 3. Copy `fullchain.pem` and `privkey.pem` to `certificates/`
 4. Generate the OpenIddict `certificate.pfx` for token signing
-5. Add a daily cron job for automatic renewal
+5. Install the certbot deploy hook (`/etc/letsencrypt/renewal-hooks/deploy/trackhub-nginx.sh`) that copies
+   renewed files into `certificates/` and reloads nginx
 
-Certificates are valid for 90 days and renew automatically. The renewal script uses the **webroot** method so nginx stays online during renewal.
+Certificates are valid for 90 days. certbot's own systemd timer renews them with the **webroot** method, so nginx
+stays online, and the deploy hook publishes the result to nginx. Without the hook, nginx keeps serving the old copy
+in `certificates/` until it expires.
 
 ```bash
 # Manual renewal check
 ./scripts/renew-ssl.sh
 
-# Verify renewal cron is set up
-crontab -l | grep renew-ssl
+# Verify the renewal chain
+ls -l /etc/letsencrypt/renewal-hooks/deploy/trackhub-nginx.sh
+sudo certbot renew --dry-run
 ```
 
 ### OpenIddict Certificate (Token Signing)
@@ -1887,14 +1894,15 @@ Manager on `DocumentStorage:RetentionDays`.
 
 ### SSL Certificate Renewal
 
-Let's Encrypt certificates auto-renew via a daily cron job set up by `generate-certs.sh`. The renewal uses the webroot method (no downtime).
+Let's Encrypt certificates are renewed by certbot's systemd timer (webroot, no downtime). The deploy hook installed by `generate-certs.sh` copies the renewed files into `certificates/` and reloads nginx.
 
 ```bash
-# Check renewal status
+# Manual renewal check
 ./scripts/renew-ssl.sh
 
-# Verify auto-renewal cron
-crontab -l | grep renew-ssl
+# Verify the renewal chain
+ls -l /etc/letsencrypt/renewal-hooks/deploy/trackhub-nginx.sh
+sudo certbot renew --dry-run
 ```
 
 ### Service Management

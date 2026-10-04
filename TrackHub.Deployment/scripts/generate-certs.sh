@@ -165,20 +165,25 @@ else
     )
     print_success "OpenIddict certificate generated: certificate.pfx"
 fi
-
-
 # =============================================================================
-# Setup auto-renewal cron job
+# Renewal deploy hook
 # =============================================================================
-RENEW_SCRIPT="$PROJECT_DIR/scripts/renew-ssl.sh"
-CRON_JOB="0 3 * * * $RENEW_SCRIPT >> /var/log/trackhub-ssl-renewal.log 2>&1"
-
-if ! crontab -l 2>/dev/null | grep -qF "$RENEW_SCRIPT"; then
-    (crontab -l 2>/dev/null; echo "$CRON_JOB") | crontab -
-    print_success "Auto-renewal cron job added (runs daily at 3 AM)"
-else
-    print_info "Auto-renewal cron job already exists"
-fi
+# certbot's own timer renews into /etc/letsencrypt; nginx serves the copy in $CERT_DIR,
+# so this hook copies the new files there and reloads nginx after every renewal. No cron to forget.
+HOOK="/etc/letsencrypt/renewal-hooks/deploy/trackhub-nginx.sh"
+mkdir -p "$(dirname "$HOOK")"
+cat > "$HOOK" << EOF
+#!/bin/bash
+# Installed by TrackHub.Deployment/scripts/generate-certs.sh; certbot runs it after each successful renewal.
+set -e
+case " \$RENEWED_DOMAINS " in *" $DOMAIN "*) ;; *) exit 0 ;; esac
+cp "\$RENEWED_LINEAGE/fullchain.pem" "\$RENEWED_LINEAGE/privkey.pem" "$CERT_DIR/"
+chmod 644 "$CERT_DIR/fullchain.pem"
+chmod 600 "$CERT_DIR/privkey.pem"
+docker exec trackhub-nginx nginx -s reload || docker restart trackhub-nginx
+EOF
+chmod 755 "$HOOK"
+print_success "Renewal deploy hook installed at $HOOK"
 
 print_success "Certificate setup complete!"
 echo ""
@@ -192,4 +197,4 @@ echo ""
 print_info "OpenIddict Certificate:"
 echo "  - certificate.pfx (protected by CERTIFICATE_PASSWORD)"
 echo ""
-print_info "Certificates will auto-renew via cron. Check logs at /var/log/trackhub-ssl-renewal.log"
+print_info "Renewal: certbot.timer renews, the deploy hook copies the files here and reloads nginx. Test: sudo certbot renew --dry-run"

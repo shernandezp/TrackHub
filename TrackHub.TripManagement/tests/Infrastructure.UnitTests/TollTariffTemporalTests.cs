@@ -176,7 +176,7 @@ public class TollTariffTemporalTests
         await writer.CreateTariffAsync(
             Tariff(12_500m, January, new DateOnly(2026, 6, 30)), CancellationToken.None);
 
-        var conflict = Assert.ThrowsAsync<ConflictException>(() => writer.CreateTariffAsync(
+        var conflict = await Assert.ThrowsAsync<ConflictException>(() => writer.CreateTariffAsync(
             Tariff(13_000m, new DateOnly(2026, 3, 1), new DateOnly(2026, 4, 1)), CancellationToken.None));
 
         Assert.That(conflict!.Code, Is.EqualTo(TripErrorCodes.OverlappingTariff));
@@ -193,7 +193,7 @@ public class TollTariffTemporalTests
 
         await writer.CreateTariffAsync(Tariff(14_200m, July), CancellationToken.None);
 
-        var conflict = Assert.ThrowsAsync<ConflictException>(
+        var conflict = await Assert.ThrowsAsync<ConflictException>(
             () => writer.CreateTariffAsync(Tariff(12_500m, new DateOnly(2026, 6, 1)), CancellationToken.None));
 
         Assert.That(conflict!.Code, Is.EqualTo(TripErrorCodes.OverlappingTariff));
@@ -215,7 +215,7 @@ public class TollTariffTemporalTests
 
         await writer.CreateTariffAsync(Tariff(14_200m, July), CancellationToken.None);
 
-        var conflict = Assert.ThrowsAsync<ConflictException>(
+        var conflict = await Assert.ThrowsAsync<ConflictException>(
             () => writer.CreateTariffAsync(Tariff(15_000m, July), CancellationToken.None));
 
         Assert.That(conflict!.Code, Is.EqualTo(TripErrorCodes.OverlappingTariff));
@@ -249,7 +249,7 @@ public class TollTariffTemporalTests
         var writer = Writer(context);
         context.FailNextSaveOn("ux_toll_stations_name_code");
 
-        var conflict = Assert.ThrowsAsync<ConflictException>(() => writer.CreateStationAsync(
+        var conflict = await Assert.ThrowsAsync<ConflictException>(() => writer.CreateStationAsync(
             new TollStationDto("Peaje Chusaca", "CHU", 4.55, -74.25, "CO", null, null, null, null, null),
             CancellationToken.None));
 
@@ -270,7 +270,7 @@ public class TollTariffTemporalTests
         // A distinct code: the point under test is which ERROR CODE the violation is translated
         // into, and the violation is injected, so re-adding the seeded key would only trip the
         // in-memory provider's own tracking rules before the writer got a chance to translate.
-        var conflict = Assert.ThrowsAsync<ConflictException>(() => writer.CreateVehicleClassAsync(
+        var conflict = await Assert.ThrowsAsync<ConflictException>(() => writer.CreateVehicleClassAsync(
             new TollVehicleClassDto("IV", "Clase IV", null, 4), CancellationToken.None));
 
         Assert.Multiple(() =>
@@ -289,7 +289,7 @@ public class TollTariffTemporalTests
         var writer = Writer(context);
         context.FailNextSaveOn("ux_toll_tariffs_station_class_open");
 
-        var conflict = Assert.ThrowsAsync<ConflictException>(
+        var conflict = await Assert.ThrowsAsync<ConflictException>(
             () => writer.CreateTariffAsync(Tariff(12_500m, January), CancellationToken.None));
 
         Assert.That(conflict!.Code, Is.EqualTo(TripErrorCodes.OverlappingTariff));
@@ -305,7 +305,7 @@ public class TollTariffTemporalTests
         var writer = Writer(context);
         context.FailNextSaveOn("ux_toll_stations_name_code");
 
-        Assert.ThrowsAsync<ConflictException>(() => writer.CreateStationAsync(
+        await Assert.ThrowsAsync<ConflictException>(() => writer.CreateStationAsync(
             new TollStationDto("Peaje Chusaca", "CHU", 4.55, -74.25, "CO", null, null, null, null, null),
             CancellationToken.None));
 

@@ -100,7 +100,7 @@ public class GetDevicesByOperatorQueryHandlerTests : TestsContext
     }
 
     [Test]
-    public void Handle_WithInvalidOperator_ThrowsException()
+    public async Task Handle_WithInvalidOperator_ThrowsException()
     {
         // Arrange
         var operatorId = Guid.NewGuid();
@@ -109,7 +109,7 @@ public class GetDevicesByOperatorQueryHandlerTests : TestsContext
             .Throws(new ArgumentException());
 
         // Act & Assert
-        Assert.ThrowsAsync<ArgumentException>(async () =>
+        await Assert.ThrowsAsync<ArgumentException>(async () =>
             await _handler.Handle(new GetDevicesByOperatorQuery(operatorId), CancellationToken.None));
     }
 

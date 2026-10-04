@@ -189,7 +189,7 @@ public class WorkforceExpirationScanTests
         context.AlertEvents.Add(alertEvent);
         await context.SaveChangesAsync(CancellationToken.None);
 
-        Assert.ThrowsAsync<InvalidOperationException>(() => evaluator.Object.EvaluateAsync(
+        await Assert.ThrowsAsync<InvalidOperationException>(() => evaluator.Object.EvaluateAsync(
             new AlertEventVm(alertEvent.AlertEventId, accountId, alertEvent.EventType, alertEvent.Severity,
                 alertEvent.SourceModule, alertEvent.ResourceType, alertEvent.ResourceId, alertEvent.Status,
                 alertEvent.FirstSeenAt, alertEvent.LastSeenAt, alertEvent.PayloadJson, alertEvent.DeduplicationKey,

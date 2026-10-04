@@ -157,46 +157,46 @@ public class GetReportQueryHandlerTests
     }
 
     [Test]
-    public void UnknownCode_ThrowsReportNotFound()
+    public async Task UnknownCode_ThrowsReportNotFound()
     {
         _catalog.Setup(c => c.GetReportByCodeAsync(Code, It.IsAny<CancellationToken>()))
             .ReturnsAsync((ReportMetadataVm?)null);
 
-        Assert.ThrowsAsync<ReportNotFoundException>(() =>
+        await Assert.ThrowsAsync<ReportNotFoundException>(() =>
             BuildHandler().Handle(new GetReportQuery(Code, Filters()), CancellationToken.None));
     }
 
     [Test]
-    public void InactiveReport_ThrowsReportNotFound()
+    public async Task InactiveReport_ThrowsReportNotFound()
     {
         _catalog.Setup(c => c.GetReportByCodeAsync(Code, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Metadata(active: false));
 
-        Assert.ThrowsAsync<ReportNotFoundException>(() =>
+        await Assert.ThrowsAsync<ReportNotFoundException>(() =>
             BuildHandler().Handle(new GetReportQuery(Code, Filters()), CancellationToken.None));
     }
 
     [Test]
-    public void RequiredFeature_Enforced_FeatureDisabledPropagates()
+    public async Task RequiredFeature_Enforced_FeatureDisabledPropagates()
     {
         _catalog.Setup(c => c.GetReportByCodeAsync(Code, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Metadata(feature: FeatureKeys.Geofencing));
         _features.Setup(f => f.EnsureFeatureEnabledAsync(_accountId, FeatureKeys.Geofencing, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new FeatureDisabledException(FeatureKeys.Geofencing));
 
-        Assert.ThrowsAsync<FeatureDisabledException>(() =>
+        await Assert.ThrowsAsync<FeatureDisabledException>(() =>
             BuildHandler().Handle(new GetReportQuery(Code, Filters()), CancellationToken.None));
         _features.Verify(f => f.EnsureFeatureEnabledAsync(_accountId, FeatureKeys.Geofencing, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
-    public void ManagerOnly_PlainUser_ThrowsAccessDenied()
+    public async Task ManagerOnly_PlainUser_ThrowsAccessDenied()
     {
         _catalog.Setup(c => c.GetReportByCodeAsync(Code, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Metadata(managerOnly: true));
         _user.Setup(u => u.Role).Returns(Roles.User);
 
-        Assert.ThrowsAsync<ReportAccessDeniedException>(() =>
+        await Assert.ThrowsAsync<ReportAccessDeniedException>(() =>
             BuildHandler().Handle(new GetReportQuery(Code, Filters()), CancellationToken.None));
     }
 
@@ -223,40 +223,40 @@ public class GetReportQueryHandlerTests
     }
 
     [Test]
-    public void PdfOnExcelOnlyReport_ThrowsUnsupportedFormat()
+    public async Task PdfOnExcelOnlyReport_ThrowsUnsupportedFormat()
     {
         _catalog.Setup(c => c.GetReportByCodeAsync(Code, It.IsAny<CancellationToken>()))
             .ReturnsAsync(Metadata(supportsPdf: false));
 
-        Assert.ThrowsAsync<UnsupportedReportFormatException>(() =>
+        await Assert.ThrowsAsync<UnsupportedReportFormatException>(() =>
             BuildHandler().Handle(new GetReportQuery(Code, Filters(), "pdf"), CancellationToken.None));
     }
 
     [Test]
-    public void PdfOverMaxPdfRows_ThrowsLimitExceeded()
+    public async Task PdfOverMaxPdfRows_ThrowsLimitExceeded()
     {
         _limits.MaxPdfRows = 2;
         _report.Setup(r => r.GetDatasetAsync(It.IsAny<FilterDto>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Dataset(3));
 
-        var ex = Assert.ThrowsAsync<ReportLimitExceededException>(() =>
+        var ex = await Assert.ThrowsAsync<ReportLimitExceededException>(() =>
             BuildHandler().Handle(new GetReportQuery(Code, Filters(), "pdf"), CancellationToken.None));
         Assert.That(ex!.MaxRows, Is.EqualTo(2));
     }
 
     [Test]
-    public void UnsupportedFormat_ThrowsUnsupportedFormat()
+    public async Task UnsupportedFormat_ThrowsUnsupportedFormat()
     {
-        Assert.ThrowsAsync<UnsupportedReportFormatException>(() =>
+        await Assert.ThrowsAsync<UnsupportedReportFormatException>(() =>
             BuildHandler().Handle(new GetReportQuery(Code, Filters(), "csv"), CancellationToken.None));
     }
 
     [Test]
-    public void MissingAccount_ThrowsUnauthorized()
+    public async Task MissingAccount_ThrowsUnauthorized()
     {
         _user.Setup(u => u.AccountId).Returns((Guid?)null);
 
-        Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
             BuildHandler().Handle(new GetReportQuery(Code, Filters()), CancellationToken.None));
     }
 

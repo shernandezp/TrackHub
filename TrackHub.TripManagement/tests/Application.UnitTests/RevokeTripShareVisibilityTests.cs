@@ -75,7 +75,7 @@ public sealed class RevokeTripShareVisibilityTests
     /// share is real — and NOTHING is revoked, locally or in Manager.
     /// </summary>
     [Test]
-    public void Revoke_ByDispatcherOutsideTheTripsGroups_ThrowsNotFoundAndRevokesNothing()
+    public async Task Revoke_ByDispatcherOutsideTheTripsGroups_ThrowsNotFoundAndRevokesNothing()
     {
         var user = TestFactory.User(Roles.User);
 
@@ -87,7 +87,7 @@ public sealed class RevokeTripShareVisibilityTests
 
         var handler = Handler(user);
 
-        Assert.ThrowsAsync<Ardalis.GuardClauses.NotFoundException>(async () =>
+        await Assert.ThrowsAsync<Ardalis.GuardClauses.NotFoundException>(async () =>
             await handler.Handle(new RevokeTripShareCommand(TestFactory.TripId, TripShareId), CancellationToken.None));
 
         shareWriter.Verify(
@@ -110,7 +110,7 @@ public sealed class RevokeTripShareVisibilityTests
 
     /// <summary>An unknown share id is the same answer as an invisible one (non-disclosure).</summary>
     [Test]
-    public void Revoke_OfAShareThatIsNotInTheAccount_ThrowsNotFound()
+    public async Task Revoke_OfAShareThatIsNotInTheAccount_ThrowsNotFound()
     {
         shareReader
             .Setup(r => r.FindTripIdByShareAsync(TripShareId, TestFactory.AccountId, It.IsAny<CancellationToken>()))
@@ -118,7 +118,7 @@ public sealed class RevokeTripShareVisibilityTests
 
         var handler = Handler(TestFactory.User(Roles.User));
 
-        Assert.ThrowsAsync<Ardalis.GuardClauses.NotFoundException>(async () =>
+        await Assert.ThrowsAsync<Ardalis.GuardClauses.NotFoundException>(async () =>
             await handler.Handle(new RevokeTripShareCommand(TestFactory.TripId, TripShareId), CancellationToken.None));
 
         grantClient.Verify(

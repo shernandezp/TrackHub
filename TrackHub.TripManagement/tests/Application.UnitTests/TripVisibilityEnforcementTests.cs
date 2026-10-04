@@ -50,11 +50,11 @@ public class TripVisibilityEnforcementTests
 
     /// <summary>A user asking for a FOREIGN account's report feed must be refused.</summary>
     [Test]
-    public void ReportScope_UserRequestingForeignAccount_IsForbidden()
+    public async Task ReportScope_UserRequestingForeignAccount_IsForbidden()
     {
         var foreignAccountId = Guid.NewGuid();
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(() => TripVisibility.ResolveReportScopeAsync(
+        await Assert.ThrowsAsync<ForbiddenAccessException>(() => TripVisibility.ResolveReportScopeAsync(
             TestFactory.User(Roles.Manager).Object, TestFactory.UserReader().Object, foreignAccountId, CancellationToken.None));
     }
 
@@ -91,13 +91,13 @@ public class TripVisibilityEnforcementTests
 
     /// <summary>A partner credential of one tenant must never read another tenant's feeds.</summary>
     [Test]
-    public void ReportScope_ServiceIdentity_RequestingAnotherAccount_IsForbidden()
+    public async Task ReportScope_ServiceIdentity_RequestingAnotherAccount_IsForbidden()
     {
-        Assert.Multiple(() =>
+        await Assert.MultipleAsync(async () =>
         {
-            Assert.ThrowsAsync<ForbiddenAccessException>(() => TripVisibility.ResolveReportScopeAsync(
+            await Assert.ThrowsAsync<ForbiddenAccessException>(() => TripVisibility.ResolveReportScopeAsync(
                 ServiceIdentity(Guid.NewGuid()).Object, TestFactory.UserReader().Object, Guid.NewGuid(), CancellationToken.None));
-            Assert.ThrowsAsync<ForbiddenAccessException>(() => TripVisibility.ResolveReportScopeAsync(
+            await Assert.ThrowsAsync<ForbiddenAccessException>(() => TripVisibility.ResolveReportScopeAsync(
                 ServiceIdentity(null).Object, TestFactory.UserReader().Object, Guid.NewGuid(), CancellationToken.None),
                 "a global identity with no account claim has no tenant to read for");
         });
@@ -163,7 +163,7 @@ public class TripVisibilityEnforcementTests
     /// able to probe which trip ids exist in sibling groups (spec 11 §7.10, non-disclosure).
     /// </summary>
     [Test]
-    public void ATripOutsideTheCallersGroups_IsNotFound_NotForbidden()
+    public async Task ATripOutsideTheCallersGroups_IsNotFound_NotForbidden()
     {
         var reader = new Mock<ITripReader>();
         reader.Setup(r => r.GetTripAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
@@ -177,7 +177,7 @@ public class TripVisibilityEnforcementTests
             TestFactory.UserReader().Object,
             TestFactory.User(Roles.User).Object);
 
-        Assert.ThrowsAsync<Ardalis.GuardClauses.NotFoundException>(async () =>
+        await Assert.ThrowsAsync<Ardalis.GuardClauses.NotFoundException>(async () =>
             await handler.Handle(new DeleteTripCommand(TestFactory.TripId), CancellationToken.None));
 
         writer.Verify(w => w.DeleteTripAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -188,7 +188,7 @@ public class TripVisibilityEnforcementTests
     // -----------------------------------------------------------------------------------------
 
     [Test]
-    public void RemovingAStopOfAnInvisibleTrip_IsNotFound_AndWritesNothing()
+    public async Task RemovingAStopOfAnInvisibleTrip_IsNotFound_AndWritesNothing()
     {
         var reader = new Mock<ITripReader>();
         reader.Setup(r => r.FindVisibleTripIdByStopAsync(
@@ -199,14 +199,14 @@ public class TripVisibilityEnforcementTests
         var handler = new RemoveTripStopCommandHandler(
             writer.Object, reader.Object, TestFactory.UserReader().Object, TestFactory.User(Roles.User).Object);
 
-        Assert.ThrowsAsync<Ardalis.GuardClauses.NotFoundException>(async () =>
+        await Assert.ThrowsAsync<Ardalis.GuardClauses.NotFoundException>(async () =>
             await handler.Handle(new RemoveTripStopCommand(TestFactory.StopId), CancellationToken.None));
 
         writer.Verify(w => w.RemoveStopAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Test]
-    public void DeletingADeliveryOfAnInvisibleTrip_IsNotFound_AndWritesNothing()
+    public async Task DeletingADeliveryOfAnInvisibleTrip_IsNotFound_AndWritesNothing()
     {
         var reader = new Mock<ITripReader>();
         reader.Setup(r => r.FindVisibleTripIdByDeliveryAsync(
@@ -217,7 +217,7 @@ public class TripVisibilityEnforcementTests
         var handler = new DeleteDeliveryCommandHandler(
             writer.Object, reader.Object, TestFactory.UserReader().Object, TestFactory.User(Roles.User).Object);
 
-        Assert.ThrowsAsync<Ardalis.GuardClauses.NotFoundException>(async () =>
+        await Assert.ThrowsAsync<Ardalis.GuardClauses.NotFoundException>(async () =>
             await handler.Handle(new DeleteDeliveryCommand(DeliveryId), CancellationToken.None));
 
         writer.Verify(w => w.DeleteDeliveryAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -233,7 +233,7 @@ public class TripVisibilityEnforcementTests
     /// transporter and driver names into this account's report output.
     /// </summary>
     [Test]
-    public void AnAdministrator_CannotPointATripAtAnotherAccountsTransporter()
+    public async Task AnAdministrator_CannotPointATripAtAnotherAccountsTransporter()
     {
         var reader = new Mock<ITripReader>();
         reader.Setup(r => r.TransporterExistsInAccountAsync(
@@ -242,7 +242,7 @@ public class TripVisibilityEnforcementTests
 
         var user = TestFactory.User(Roles.Administrator).Object;
 
-        Assert.ThrowsAsync<Ardalis.GuardClauses.NotFoundException>(async () =>
+        await Assert.ThrowsAsync<Ardalis.GuardClauses.NotFoundException>(async () =>
             await TripVisibility.EnsureTransporterVisibleAsync(
                 reader.Object, user, TestFactory.AccountId, TestFactory.UserId, ForeignTransporterId, CancellationToken.None));
 
@@ -254,7 +254,7 @@ public class TripVisibilityEnforcementTests
 
     /// <summary>An in-account transporter outside the caller's groups is still 403, not 404.</summary>
     [Test]
-    public void AnInAccountTransporterOutsideTheCallersGroups_IsForbidden()
+    public async Task AnInAccountTransporterOutsideTheCallersGroups_IsForbidden()
     {
         var reader = new Mock<ITripReader>();
         reader.Setup(r => r.TransporterExistsInAccountAsync(
@@ -264,7 +264,7 @@ public class TripVisibilityEnforcementTests
                 TestFactory.AccountId, TestFactory.UserId, TestFactory.TransporterId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(async () =>
+        await Assert.ThrowsAsync<ForbiddenAccessException>(async () =>
             await TripVisibility.EnsureTransporterVisibleAsync(
                 reader.Object, TestFactory.User(Roles.User).Object, TestFactory.AccountId,
                 TestFactory.UserId, TestFactory.TransporterId, CancellationToken.None));
@@ -299,7 +299,7 @@ public class TripVisibilityEnforcementTests
     /// presented as a success is worse than a rejection.
     /// </summary>
     [Test]
-    public void AddingAStopWithACrossAccountGeofence_IsNotFound_AndWritesNothing()
+    public async Task AddingAStopWithACrossAccountGeofence_IsNotFound_AndWritesNothing()
     {
         var reader = new Mock<ITripReader>();
         reader.Setup(r => r.GetTripAsync(TestFactory.TripId, TestFactory.AccountId, It.IsAny<Guid?>(), It.IsAny<CancellationToken>()))
@@ -312,7 +312,7 @@ public class TripVisibilityEnforcementTests
         var handler = new AddTripStopCommandHandler(
             writer.Object, reader.Object, TestFactory.UserReader().Object, TestFactory.User().Object);
 
-        Assert.ThrowsAsync<Ardalis.GuardClauses.NotFoundException>(async () =>
+        await Assert.ThrowsAsync<Ardalis.GuardClauses.NotFoundException>(async () =>
             await handler.Handle(new AddTripStopCommand(TestFactory.TripId, Stop(ForeignGeofenceId)), CancellationToken.None));
 
         writer.Verify(
@@ -353,7 +353,7 @@ public class TripVisibilityEnforcementTests
     /// registration alone.
     /// </summary>
     [Test]
-    public void ARejectedServiceOrderReference_StopsTheCreate()
+    public async Task ARejectedServiceOrderReference_StopsTheCreate()
     {
         var serviceOrderId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
 
@@ -376,7 +376,7 @@ public class TripVisibilityEnforcementTests
             serviceOrders.Object,
             new Mock<ITransporterTollClassStore>().Object);
 
-        Assert.ThrowsAsync<Ardalis.GuardClauses.NotFoundException>(async () =>
+        await Assert.ThrowsAsync<Ardalis.GuardClauses.NotFoundException>(async () =>
             await handler.Handle(new CreateTripCommand(Trip(serviceOrderId)), CancellationToken.None));
 
         writer.Verify(

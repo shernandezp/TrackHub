@@ -115,7 +115,7 @@ public class WriterPersistenceTests
     {
         using var context = await SeededAsync();
 
-        var ex = Assert.ThrowsAsync<ConflictException>(async () => await new TripWriter(context, User())
+        var ex = await Assert.ThrowsAsync<ConflictException>(async () => await new TripWriter(context, User())
             .AssignTripAsync(TripId, WriterTestData.AccountId, DriverId, Guid.NewGuid(), CancellationToken.None));
 
         var trip = await context.Trips.AsNoTracking().FirstAsync(t => t.TripId == TripId, CancellationToken.None);

@@ -84,11 +84,11 @@ public class TripStartBackfillServiceTests
     }
 
     [Test]
-    public void WithNeitherEvidenceNorADeclaredTime_TheCallerIsToldWhatIsMissing()
+    public async Task WithNeitherEvidenceNorADeclaredTime_TheCallerIsToldWhatIsMissing()
     {
         var harness = new BackfillHarness(originGeofenceId: null);
 
-        var ex = Assert.ThrowsAsync<ValidationException>(async () => await harness.Service().ApplyAsync(
+        var ex = await Assert.ThrowsAsync<ValidationException>(async () => await harness.Service().ApplyAsync(
             TestFactory.TripId, TestFactory.AccountId, null, null, CancellationToken.None));
 
         Assert.That(ex!.Errors.Values.SelectMany(v => v), Does.Contain(TripErrorCodes.StartEvidenceRequired));

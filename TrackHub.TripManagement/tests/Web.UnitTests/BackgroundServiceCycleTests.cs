@@ -104,12 +104,12 @@ public class BackgroundServiceCycleTests
                 It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("Manager is unreachable"));
 
-        Assert.DoesNotThrowAsync(() => harness.EtaService().RunOnceAsync(DateTimeOffset.UtcNow, CancellationToken.None));
+        await Assert.DoesNotThrowAsync(() => harness.EtaService().RunOnceAsync(DateTimeOffset.UtcNow, CancellationToken.None));
         await Task.CompletedTask;
     }
 
     [Test]
-    public void EtaRefresh_AFailureInTheWorkItselfSurfaces()
+    public async Task EtaRefresh_AFailureInTheWorkItselfSurfaces()
     {
         // The complement: only the RECORDING is swallowed. A broken refresh must reach the outer
         // loop's log rather than being quietly absorbed and reported as a healthy cycle.
@@ -118,7 +118,7 @@ public class BackgroundServiceCycleTests
             .Setup(s => s.RefreshEtasAsync(It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("the database is gone"));
 
-        Assert.ThrowsAsync<InvalidOperationException>(
+        await Assert.ThrowsAsync<InvalidOperationException>(
             () => harness.EtaService().RunOnceAsync(DateTimeOffset.UtcNow, CancellationToken.None));
     }
 
@@ -165,7 +165,7 @@ public class BackgroundServiceCycleTests
     }
 
     [Test]
-    public void ScheduleReminder_WhenTheRecorderFails_TheCycleStillSucceeds()
+    public async Task ScheduleReminder_WhenTheRecorderFails_TheCycleStillSucceeds()
     {
         var harness = new CycleHarness(raised: 5);
         harness.Recorder
@@ -175,7 +175,7 @@ public class BackgroundServiceCycleTests
                 It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("Manager is unreachable"));
 
-        Assert.DoesNotThrowAsync(() => harness.ReminderService().RunOnceAsync(DateTimeOffset.UtcNow, CancellationToken.None));
+        await Assert.DoesNotThrowAsync(() => harness.ReminderService().RunOnceAsync(DateTimeOffset.UtcNow, CancellationToken.None));
     }
 
     [Test]

@@ -99,7 +99,7 @@ public class TriggerOperatorDeviceSyncCommandHandlerTests
     }
 
     [Test]
-    public void Handle_WithinThrottleWindow_ThrowsTooManyRequests()
+    public async Task Handle_WithinThrottleWindow_ThrowsTooManyRequests()
     {
         var accountId = Guid.NewGuid();
         var operatorId = Guid.NewGuid();
@@ -118,7 +118,7 @@ public class TriggerOperatorDeviceSyncCommandHandlerTests
             configuration.Object,
             Mock.Of<ILogger<TriggerOperatorDeviceSyncCommandHandler>>());
 
-        Assert.ThrowsAsync<Common.Application.Exceptions.TooManyRequestsException>(
+        await Assert.ThrowsAsync<Common.Application.Exceptions.TooManyRequestsException>(
             () => handler.Handle(new TriggerOperatorDeviceSyncCommand(operatorId), CancellationToken.None));
         operatorWriter.Verify(x => x.MarkManualSyncTriggeredAsync(It.IsAny<Guid>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Never);
         dispatcher.Verify(x => x.DispatchManualSyncAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<bool?>(), It.IsAny<CancellationToken>()), Times.Never);

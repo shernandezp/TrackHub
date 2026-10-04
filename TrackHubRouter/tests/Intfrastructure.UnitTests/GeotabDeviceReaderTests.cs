@@ -30,45 +30,45 @@ public class DeviceReaderTests
     }
 
     [Test]
-    public void GetDeviceAsync_WithNullGeotabApi_ThrowsInvalidOperationException()
+    public async Task GetDeviceAsync_WithNullGeotabApi_ThrowsInvalidOperationException()
     {
         // Arrange
         var deviceDto = new DeviceTransporterVm { Identifier = 1 };
         var cancellationToken = CancellationToken.None;
 
         // Act & Assert
-        Assert.ThrowsAsync<InvalidOperationException>(async () => await _deviceReader.GetDeviceAsync(deviceDto, cancellationToken));
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await _deviceReader.GetDeviceAsync(deviceDto, cancellationToken));
     }
 
     [Test]
-    public void GetDevicesAsync_WithNullGeotabApi_ThrowsInvalidOperationException()
+    public async Task GetDevicesAsync_WithNullGeotabApi_ThrowsInvalidOperationException()
     {
         // Arrange
         var devices = new List<DeviceTransporterVm> { new () { Identifier = 1 }, new () { Identifier = 2 } };
         var cancellationToken = CancellationToken.None;
 
         // Act & Assert
-        Assert.ThrowsAsync<InvalidOperationException>(async () => await _deviceReader.GetDevicesAsync(devices, cancellationToken));
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await _deviceReader.GetDevicesAsync(devices, cancellationToken));
     }
 
     [Test]
-    public void GetDevicesAsync_WithEmptyDeviceList_ThrowsInvalidOperationException()
+    public async Task GetDevicesAsync_WithEmptyDeviceList_ThrowsInvalidOperationException()
     {
         // Arrange
         var devices = new List<DeviceTransporterVm>();
         var cancellationToken = CancellationToken.None;
 
         // Act & Assert
-        Assert.ThrowsAsync<InvalidOperationException>(async () => await _deviceReader.GetDevicesAsync(devices, cancellationToken));
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await _deviceReader.GetDevicesAsync(devices, cancellationToken));
     }
 
     [Test]
-    public void GetDevicesAsync_WithNullGeotabApi_ThrowsInvalidOperationException_NoParams()
+    public async Task GetDevicesAsync_WithNullGeotabApi_ThrowsInvalidOperationException_NoParams()
     {
         // Arrange
         var cancellationToken = CancellationToken.None;
 
         // Act & Assert
-        Assert.ThrowsAsync<InvalidOperationException>(async () => await _deviceReader.GetDevicesAsync(cancellationToken));
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await _deviceReader.GetDevicesAsync(cancellationToken));
     }
 }

@@ -191,12 +191,12 @@ public class DriverWorkforceReaderTests
     }
 
     [Test]
-    public void GetDriverQualifications_ForAnotherAccount_IsForbidden()
+    public async Task GetDriverQualifications_ForAnotherAccount_IsForbidden()
     {
         using var context = NewContext(nameof(GetDriverQualifications_ForAnotherAccount_IsForbidden));
         var reader = new DriverQualificationReader(context, Principal(Guid.NewGuid()));
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(() =>
+        await Assert.ThrowsAsync<ForbiddenAccessException>(() =>
             reader.GetDriverQualificationsAsync(Guid.NewGuid(), null, null, 0, 50, CancellationToken.None));
     }
 

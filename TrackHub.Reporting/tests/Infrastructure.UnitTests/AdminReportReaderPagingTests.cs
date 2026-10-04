@@ -155,7 +155,7 @@ public class AdminReportReaderPagingTests
     // A set larger than a report may carry must RAISE. Returning the first 100k rows would be a
     // truncated export that nothing in the output identifies as truncated.
     [Test]
-    public void OverTheRowLimit_ThrowsInsteadOfReturningATruncatedExport()
+    public async Task OverTheRowLimit_ThrowsInsteadOfReturningATruncatedExport()
     {
         var requests = 0;
         _client
@@ -167,7 +167,7 @@ public class AdminReportReaderPagingTests
                 return Task.FromResult(new GraphQLResponse<object> { Data = GroupPage(PageSize, 500_000) });
             });
 
-        Assert.ThrowsAsync<ReportLimitExceededException>(() => _reader.GetGroupsByAccountAsync(CancellationToken.None));
+        await Assert.ThrowsAsync<ReportLimitExceededException>(() => _reader.GetGroupsByAccountAsync(CancellationToken.None));
         Assert.That(requests, Is.EqualTo(201));
     }
 }

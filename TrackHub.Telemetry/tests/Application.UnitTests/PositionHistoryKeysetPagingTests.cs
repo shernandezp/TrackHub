@@ -128,7 +128,7 @@ public class PositionHistoryKeysetPagingTests
         context.SaveChanges();
 
         var reader = new TransporterPositionHistoryReader(context, TestDb.PrincipalFor(accountId));
-        var ex = Assert.ThrowsAsync<Common.Application.Exceptions.ValidationException>(
+        var ex = await Assert.ThrowsAsync<Common.Application.Exceptions.ValidationException>(
             () => reader.GetAsync(ForAccount(accountId), 50, null, null, "not-a-cursor", null, CancellationToken.None));
 
         Assert.That(ex!.Code, Is.EqualTo(FeedCursor.InvalidCursorCode));

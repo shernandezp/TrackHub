@@ -47,7 +47,7 @@ public class ServiceClientPermissionWriterTests
         var writer = new ServiceClientPermissionWriter(context as IApplicationDbContext);
         await writer.CreateServiceClientPermissionAsync(Dto("Write"), CancellationToken.None);
 
-        Assert.ThrowsAsync<ConflictException>(async () =>
+        await Assert.ThrowsAsync<ConflictException>(async () =>
             await writer.CreateServiceClientPermissionAsync(Dto("Write"), CancellationToken.None));
         Assert.That(context.ServiceClientPermissions.Count(), Is.EqualTo(1));
     }
@@ -73,7 +73,7 @@ public class ServiceClientPermissionWriterTests
         var second = await writer.CreateServiceClientPermissionAsync(Dto("Write"), CancellationToken.None);
 
         // Re-point the second grant's action onto the first grant's key.
-        Assert.ThrowsAsync<ConflictException>(async () =>
+        await Assert.ThrowsAsync<ConflictException>(async () =>
             await writer.UpdateServiceClientPermissionAsync(second.ServiceClientPermissionId, Dto("Read"), CancellationToken.None));
     }
 }

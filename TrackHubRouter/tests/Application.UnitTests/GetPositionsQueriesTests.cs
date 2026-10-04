@@ -431,7 +431,7 @@ public class GetPositionsQueriesTests : TestsContext
     }
 
     [Test]
-    public void GetPositionByTransporter_OnDemand_RefusesAUserOutsideTheTransporterGroups()
+    public async Task GetPositionByTransporter_OnDemand_RefusesAUserOutsideTheTransporterGroups()
     {
         var accountId = Guid.NewGuid();
         var transporterId = Guid.NewGuid();
@@ -460,7 +460,7 @@ public class GetPositionsQueriesTests : TestsContext
             _principalMock.Object,
             Mock.Of<ILogger<GetPositionByTransporterQueryHandler>>());
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(() => handler.Handle(new GetPositionByTransporterQuery(transporterId), CancellationToken.None));
+        await Assert.ThrowsAsync<ForbiddenAccessException>(() => handler.Handle(new GetPositionByTransporterQuery(transporterId), CancellationToken.None));
         _positionRegistryMock.Verify(x => x.GetReader(It.IsAny<ProtocolType>()), Times.Never);
     }
 

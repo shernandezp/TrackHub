@@ -150,11 +150,11 @@ public class WorkforceReportReaderPagingTests
 
     // A set larger than a report may carry raises instead of returning a truncated export.
     [Test]
-    public void OverTheRowLimit_RaisesAfterOneOverLimitPage()
+    public async Task OverTheRowLimit_RaisesAfterOneOverLimitPage()
     {
         RespondWithDrivers(500_000);
 
-        Assert.ThrowsAsync<ReportLimitExceededException>(() => _reader.GetDriversAsync(CancellationToken.None));
+        await Assert.ThrowsAsync<ReportLimitExceededException>(() => _reader.GetDriversAsync(CancellationToken.None));
         Assert.That(_requests, Has.Count.EqualTo(201));
     }
 

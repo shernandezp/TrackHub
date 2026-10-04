@@ -77,19 +77,19 @@ public class DocumentWriterTests
     }
 
     [Test]
-    public void RegisterUploadedDocumentAsync_NonPrivilegedOwnerDenied_Throws()
+    public async Task RegisterUploadedDocumentAsync_NonPrivilegedOwnerDenied_Throws()
     {
         using var context = NewContext(nameof(RegisterUploadedDocumentAsync_NonPrivilegedOwnerDenied_Throws));
         var accountId = Guid.NewGuid();
         SeedDocumentType(context, accountId);
         var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy(privileged: false, ownerAllowed: false), Mock.Of<IAlertRecorder>());
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(() =>
+        await Assert.ThrowsAsync<ForbiddenAccessException>(() =>
             writer.RegisterUploadedDocumentAsync(Guid.NewGuid(), Dto(accountId, "Uploaded", "Quarantined"), CancellationToken.None));
     }
 
     [Test]
-    public void RegisterUploadedDocumentAsync_PrivilegedButCrossAccountOwner_Throws()
+    public async Task RegisterUploadedDocumentAsync_PrivilegedButCrossAccountOwner_Throws()
     {
         // AC1: even a privileged principal cannot attach to a registered owner the resolver rejects
         // (e.g. a transporter in another account) — the owner check runs for everyone.
@@ -98,7 +98,7 @@ public class DocumentWriterTests
         SeedDocumentType(context, accountId);
         var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy(privileged: true, ownerAllowed: false), Mock.Of<IAlertRecorder>());
 
-        Assert.ThrowsAsync<ForbiddenAccessException>(() =>
+        await Assert.ThrowsAsync<ForbiddenAccessException>(() =>
             writer.RegisterUploadedDocumentAsync(Guid.NewGuid(), Dto(accountId), CancellationToken.None));
     }
 
@@ -250,7 +250,7 @@ public class DocumentWriterTests
         var accountId = Guid.NewGuid();
         var writer = new DocumentWriter(context, Principal(accountId), PrivilegedPolicy(), Mock.Of<IAlertRecorder>());
 
-        Assert.ThrowsAsync<Common.Application.Exceptions.ValidationException>(() =>
+        await Assert.ThrowsAsync<Common.Application.Exceptions.ValidationException>(() =>
             writer.RegisterUploadedDocumentAsync(Guid.NewGuid(), Dto(accountId), CancellationToken.None));
     }
 
@@ -265,12 +265,12 @@ public class DocumentWriterTests
 
         var accepted = await writer.RegisterUploadedDocumentAsync(Guid.NewGuid(), evidence, CancellationToken.None);
 
-        Assert.Multiple(() =>
+        await Assert.MultipleAsync(async () =>
         {
             Assert.That(accepted.Category, Is.EqualTo(Common.Domain.Evidence.PlatformDocumentCategories.Pod));
-            Assert.ThrowsAsync<Common.Application.Exceptions.ValidationException>(() =>
+            await Assert.ThrowsAsync<Common.Application.Exceptions.ValidationException>(() =>
                 writer.RegisterUploadedDocumentAsync(Guid.NewGuid(), Dto(accountId), CancellationToken.None), "a compliance category");
-            Assert.ThrowsAsync<Common.Application.Exceptions.ValidationException>(() =>
+            await Assert.ThrowsAsync<Common.Application.Exceptions.ValidationException>(() =>
                 writer.RegisterUploadedDocumentAsync(Guid.NewGuid(), evidence with { Classification = DocumentClassifications.Public }, CancellationToken.None), "a public document");
         });
     }

@@ -162,7 +162,7 @@ public class OperatorReaderTests
         await using var context = NewContext(nameof(GetOperatorAsync_NotFound_Throws));
         var reader = new OperatorReader(context as IApplicationDbContext, Principal(), IdentityService().Object);
 
-        Assert.ThrowsAsync<NotFoundException>(async () =>
+        await Assert.ThrowsAsync<NotFoundException>(async () =>
             await reader.GetOperatorAsync(Guid.NewGuid(), CancellationToken.None));
     }
 

@@ -77,31 +77,31 @@ public class GpsReportsTests
     }
 
     [Test]
-    public void PositionHistory_ShouldRequireGpsPositionHistoryFeature()
+    public async Task PositionHistory_ShouldRequireGpsPositionHistoryFeature()
     {
         _features.Setup(f => f.EnsureFeatureEnabledAsync(_accountId, FeatureKeys.GpsPositionHistory, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new FeatureDisabledException(FeatureKeys.GpsPositionHistory));
         var report = new GpsPositionHistoryReport(_user.Object, _features.Object, _telemetry.Object, _limits);
-        Assert.ThrowsAsync<FeatureDisabledException>(() => report.GetDatasetAsync(_filters, CancellationToken.None));
+        await Assert.ThrowsAsync<FeatureDisabledException>(() => report.GetDatasetAsync(_filters, CancellationToken.None));
         _telemetry.Verify(m => m.GetPositionHistoryAsync(It.IsAny<Guid>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<DateTimeOffset?>(), It.IsAny<DateTimeOffset?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Test]
-    public void UnassignedDevices_ShouldRequireGpsIntegrationFeature()
+    public async Task UnassignedDevices_ShouldRequireGpsIntegrationFeature()
     {
         _features.Setup(f => f.EnsureFeatureEnabledAsync(_accountId, FeatureKeys.GpsIntegration, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new FeatureDisabledException(FeatureKeys.GpsIntegration));
         var report = new GpsUnassignedDevicesReport(_user.Object, _features.Object, _manager.Object);
-        Assert.ThrowsAsync<FeatureDisabledException>(() => report.GetDatasetAsync(_filters, CancellationToken.None));
+        await Assert.ThrowsAsync<FeatureDisabledException>(() => report.GetDatasetAsync(_filters, CancellationToken.None));
         _manager.Verify(m => m.GetUnassignedDevicesAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Test]
-    public void Report_ShouldThrowUnauthorized_WhenAccountClaimMissing()
+    public async Task Report_ShouldThrowUnauthorized_WhenAccountClaimMissing()
     {
         _user.Setup(u => u.AccountId).Returns((Guid?)null);
         var report = new GpsUnassignedDevicesReport(_user.Object, _features.Object, _manager.Object);
-        Assert.ThrowsAsync<UnauthorizedAccessException>(() => report.GetDatasetAsync(_filters, CancellationToken.None));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => report.GetDatasetAsync(_filters, CancellationToken.None));
         _features.Verify(f => f.EnsureFeatureEnabledAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
