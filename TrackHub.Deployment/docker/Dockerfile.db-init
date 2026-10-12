@@ -21,7 +21,13 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
 # Install PostgreSQL client for connectivity checks
-RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y postgresql-client gdal-bin curl unzip && rm -rf /var/lib/apt/lists/*
+
+# Local geocoding data build (import-geocoding.sh)
+ARG DUCKDB_VERSION=1.5.5
+RUN curl -fsSL -o /tmp/duckdb.zip "https://github.com/duckdb/duckdb/releases/download/v${DUCKDB_VERSION}/duckdb_cli-linux-$(dpkg --print-architecture).zip" \
+    && unzip /tmp/duckdb.zip -d /usr/local/bin && rm /tmp/duckdb.zip \
+    && duckdb -c "INSTALL httpfs; INSTALL spatial; INSTALL postgres;"
 
 # Copy published applications
 COPY --from=build /app/client-seeder ./client-seeder/
@@ -30,7 +36,8 @@ COPY --from=build /app/manager-init ./manager-init/
 
 # Copy initialization scripts
 COPY TrackHub.Deployment/scripts/init-databases.sh ./init-databases.sh
-COPY TrackHub.Deployment/scripts/sql/purge-functions.sql ./sql/
-RUN chmod +x ./init-databases.sh
+COPY TrackHub.Deployment/scripts/import-geocoding.sh ./import-geocoding.sh
+COPY TrackHub.Deployment/scripts/sql/purge-functions.sql TrackHub.Deployment/scripts/sql/geocoding-schema.sql TrackHub.Deployment/scripts/sql/geocoding-load.sql ./sql/
+RUN chmod +x ./init-databases.sh ./import-geocoding.sh
 
 ENTRYPOINT ["./init-databases.sh"]

@@ -23,6 +23,7 @@ import useForm from 'controls/Dialogs/useForm';
 import ConfirmDialog from 'controls/Dialogs/ConfirmDialog';
 import useGeocodingProvidersTableData from 'layouts/systemadmin/data/geocodingProvidersTableData';
 import type { GeocodingProviderFormValues } from 'layouts/systemadmin/data/geocodingProvidersTableData';
+import { localGeocodingProviderType } from 'data/geocodingProviderTypes';
 
 function ManageGeocodingProviders() {
   const { t } = useTranslation();
@@ -55,11 +56,13 @@ function ManageGeocodingProviders() {
   const { columns, rows } = data;
 
   const handleSubmit = async () => {
-    const requiredFields = ['name', 'type', 'endpointUri'];
+    const isLocal = Number(values.type) === localGeocodingProviderType;
+    const requiredFields = isLocal ? ['name', 'type'] : ['name', 'type', 'endpointUri'];
 
     if (validate(requiredFields)) {
       onSave({
         ...values,
+        endpointUri: values.endpointUri ?? '',
         requestsPerSecond: parseInt(String(values.requestsPerSecond), 10) || 1,
         timeoutSeconds: parseInt(String(values.timeoutSeconds), 10) || 5
       });

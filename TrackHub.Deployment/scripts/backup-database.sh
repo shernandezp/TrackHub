@@ -69,7 +69,7 @@ backup_database() {
     # A failed dump must fail the backup: a partial file next to a success message is how a
     # restore discovers, too late, that there was never a backup.
     if ! PGPASSWORD="$pass" pg_dump -h "$host" -p "$port" -U "$user" -d "$db" \
-        --format=custom --compress=9 --verbose \
+        --format=custom --compress=9 --verbose --exclude-table-data='geocoding.*' \
         -f "$output_file" > "$output_file.log" 2>&1; then
         tail -20 "$output_file.log"
         rm -f "$output_file" "$output_file.log"

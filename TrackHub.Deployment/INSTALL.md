@@ -189,6 +189,37 @@ ORS_MAX_WAYPOINTS=50
 > happens to have activated. Nominatim remains the default reverse-geocoder; adding an ORS
 > `GeocodingProvider` row is optional and independent of route planning.
 
+#### Local Geocoding (optional)
+
+The **Local** geocoding provider resolves addresses inside PostgreSQL, from reference tables in
+the `geocoding` schema of the `TrackHub` database (admin areas, roads, places, settlements). No
+external service is called at lookup time. The data covers Colombia and Costa Rica; outside it,
+positions get no address.
+
+1. Set `LOCAL_GEOCODING=true` in `.env` and deploy. While the geocoding tables are empty,
+   `db-init` downloads the data from the original sources (Overture Maps, latest release unless
+   `GEOCODING_OVERTURE_RELEASE` is set; Geofabrik OpenStreetMap; the Medellín and Bogotá barrio
+   layers), builds it and loads it. That takes about 30 minutes and needs internet access from
+   the server; later deploys skip it. A failed import only logs a warning and is retried on the
+   next deploy. The build is capped at `GEOCODING_MEMORY_LIMIT` (default `2GB`) and spills to
+   disk beyond it (allow about 5 GB free in Docker's storage); raise the cap on a server with
+   more free memory to speed it up.
+2. In systemAdmin → Geocoding Providers, add a provider of type **Local** (no endpoint or API key)
+   and activate it. Lookups are cheap, so raise `requestsPerSecond` (e.g. 100) and the
+   enrichment budget in `configurationJson` (e.g. `{"enrichmentBudget": 500}`).
+
+**Refreshing with newer data:**
+
+```bash
+docker compose run --rm --no-deps --entrypoint /app/import-geocoding.sh db-init --refresh
+```
+
+Add `-f docker-compose.backend.yml` on a split deployment. The new tables are built aside and
+swapped in at the end, so lookups keep working during the reload.
+
+`backup-database.sh` skips the `geocoding` table data (about 500 MB). After a restore the tables
+are empty, and the next deploy downloads them again.
+
 #### Toll Catalog Bootstrap (empty by design)
 
 The platform ships with **zero toll stations, zero tariffs and zero vehicle classes**. This

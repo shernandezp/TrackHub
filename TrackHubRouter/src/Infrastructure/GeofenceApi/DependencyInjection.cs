@@ -14,6 +14,7 @@
 //
 
 using Common.Domain.Constants;
+using TrackHub.Router.Domain.Interfaces.Geocoding;
 using TrackHub.Router.Infrastructure.GeofenceApi;
 
 namespace Microsoft.Extensions.DependencyInjection;
@@ -28,6 +29,8 @@ public static class DependencyInjection
         // propagation handler throws when no request context ever initialized the headers.
         services.AddGraphQLClient(Clients.Geofence, propagateHeaders: headerPropagation);
         services.AddScoped<IGeofenceWriter, GeofenceWriter>();
+        services.AddGraphQLServiceClient(Clients.Geofence);
+        services.AddScoped<IReverseGeocoder, LocalReverseGeocoder>();
         return services;
     }
 }

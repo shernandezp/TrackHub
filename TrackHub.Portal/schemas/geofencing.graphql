@@ -4,6 +4,8 @@ schema {
 }
 
 type Query {
+  localReverseGeocode(query: ReverseGeocodeQueryInput!): AddressVm
+    @cost(weight: "10")
   geofenceEvents(query: GetGeofenceEventsQueryInput!): GeofenceEventsPageVm!
     @cost(weight: "10")
   geofence(query: GetGeofenceQueryInput!): GeofenceVm! @cost(weight: "10")
@@ -21,6 +23,13 @@ type Mutation {
   updateGeofence(id: UUID!, command: UpdateGeofenceCommandInput!): Boolean!
     @cost(weight: "10")
   deleteGeofence(id: UUID!): UUID! @cost(weight: "10")
+}
+
+type AddressVm {
+  address: String
+  city: String
+  state: String
+  country: String
 }
 
 type CoordinateVm {
@@ -142,6 +151,11 @@ input MultiPolygonVmInput {
 input ProcessPositionsCommandInput {
   accountId: UUID!
   positions: [TransporterPositionDtoInput!]!
+}
+
+input ReverseGeocodeQueryInput {
+  latitude: Float!
+  longitude: Float!
 }
 
 input TransporterPositionDtoInput {

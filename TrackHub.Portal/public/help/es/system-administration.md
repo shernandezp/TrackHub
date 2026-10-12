@@ -74,7 +74,7 @@ Las categorías de unidades rastreadas y los umbrales de movimiento usados para 
 Los servicios usados para convertir coordenadas en direcciones; solo un proveedor está activo a la vez. Haga clic en el ícono **+** para abrir el diálogo **Detalle del Proveedor de Geocodificación**:
 
 - **Nombre** (obligatorio).
-- **Tipo** (obligatorio) — **Nominatim**, **OpenRouteService** o **Google**.
+- **Tipo** (obligatorio) — **Nominatim**, **OpenRouteService**, **Google** o **Local (integrado)**. Local resuelve direcciones con datos de referencia guardados en la base de datos de TrackHub, por lo que no necesita URI de endpoint ni clave API; solo cubre las regiones que un administrador haya cargado.
 - **URI del Endpoint** (obligatorio) y una **Clave API** opcional.
 - **Solicitudes por Segundo** (predeterminado 1) y **Tiempo de Espera (Segundos)** (predeterminado 5).
 - **Configuración (JSON)** — ajustes avanzados opcionales.

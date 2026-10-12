@@ -74,7 +74,7 @@ The categories of tracked units and the movement thresholds used to interpret th
 The services used to turn coordinates into street addresses; only one provider is active at a time. Click the **+** icon to open the **Geocoding Provider Details** dialog:
 
 - **Name** (required).
-- **Type** (required) — **Nominatim**, **OpenRouteService**, or **Google**.
+- **Type** (required) — **Nominatim**, **OpenRouteService**, **Google**, or **Local (built-in)**. Local resolves addresses from reference data stored in the TrackHub database, so it needs no Endpoint URI or API key; it only covers the regions an administrator has loaded.
 - **Endpoint URI** (required) and an optional **API Key**.
 - **Requests per Second** (default 1) and **Timeout (Seconds)** (default 5).
 - **Configuration (JSON)** — optional advanced settings.

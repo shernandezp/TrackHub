@@ -37,6 +37,7 @@ public class GeofenceContractTests
     private static IEnumerable<TestCaseData> Calls()
     {
         yield return new TestCaseData("Router→Geofence GeofenceWriter.ProcessPositions", GeofenceWriter.ProcessPositionsMutation);
+        yield return new TestCaseData("Router→Geofence LocalReverseGeocoder.LocalReverseGeocode", LocalReverseGeocoder.LocalReverseGeocodeQuery);
         yield return new TestCaseData("Reporting→Geofence GeofenceReader.GetTransportersInGeofence", GeofenceReader.TransportersInGeofenceQuery);
         yield return new TestCaseData("Reporting→Geofence GeofenceReader.GetGeofenceEvents", GeofenceReader.GeofenceEventsQuery);
     }

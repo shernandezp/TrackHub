@@ -29,7 +29,7 @@ Significado en lenguaje sencillo de los términos y de la información en pantal
 
 **Credencial** — El nombre de usuario, la contraseña o las claves que TrackHub usa para conectarse al servicio de un operador. Normalmente prueba una credencial con **Probar Credencial**; una prueba exitosa confirma que TrackHub puede comunicarse con el proveedor.
 
-**Proveedor de Geocodificación** — Un servicio que convierte las coordenadas del mapa (latitud y longitud) en una dirección legible. Los proveedores admitidos incluyen **Nominatim, OpenRouteService** y **Google**.
+**Proveedor de Geocodificación** — Un servicio que convierte las coordenadas del mapa (latitud y longitud) en una dirección legible. Los proveedores admitidos incluyen **Nominatim, OpenRouteService, Google** y **Local** (datos de referencia integrados, sin servicio externo).
 
 ## Información de posición (lo que el mapa muestra de una unidad)
 

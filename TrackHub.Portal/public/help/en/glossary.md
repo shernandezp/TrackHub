@@ -29,7 +29,7 @@ Plain-language meaning of the terms and on-screen information you will meet acro
 
 **Credential** — The username, password, or keys TrackHub uses to connect to an operator's service. You normally test a credential with **Test Credential**; a successful test confirms TrackHub can reach the provider.
 
-**Geocoding Provider** — A service that turns map coordinates (latitude and longitude) into a readable street address. Supported providers include **Nominatim, OpenRouteService,** and **Google**.
+**Geocoding Provider** — A service that turns map coordinates (latitude and longitude) into a readable street address. Supported providers include **Nominatim, OpenRouteService, Google,** and **Local** (built-in reference data, no external service).
 
 ## Position information (what the map shows about a unit)
 

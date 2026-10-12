@@ -51,6 +51,7 @@ public static class DependencyInjection
         services.AddScoped<IUserReader, UserReader>();
         services.AddScoped<ITransportersInGeofence, TransportersInGeofence>();
         services.AddScoped<IAccountFeatureReader, AccountFeatureReader>();
+        services.AddScoped<ILocalGeocoder, LocalGeocoder>();
 
         // Cross-service account-status enforcement.
         services.AddMemoryCache();
