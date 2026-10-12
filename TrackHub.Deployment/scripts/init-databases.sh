@@ -211,6 +211,14 @@ echo "Step 4: Installing the retention functions"
 echo "=========================================="
 install_sql "$DB_CONNECTION_MANAGER" /app/sql/purge-functions.sql
 
+echo ""
+echo "=========================================="
+echo "Step 5: Local geocoding schema and data"
+echo "=========================================="
+install_sql "$DB_CONNECTION_MANAGER" /app/sql/geocoding-schema.sql
+if [ "${LOCAL_GEOCODING:-false}" = true ]; then
+    /app/import-geocoding.sh || print_warning "Local geocoding import failed; the next deploy retries it."
+fi
 
 echo ""
 print_success "Initialization complete."

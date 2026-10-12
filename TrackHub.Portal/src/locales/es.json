@@ -800,7 +800,8 @@
     "types": {
       "nominatim": "Nominatim",
       "openRouteService": "OpenRouteService",
-      "google": "Google"
+      "google": "Google",
+      "local": "Local (integrado)"
     }
   },
   "group": {

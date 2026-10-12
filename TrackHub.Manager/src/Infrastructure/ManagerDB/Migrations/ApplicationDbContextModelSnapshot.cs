@@ -1527,7 +1527,7 @@ namespace TrackHub.Manager.Infrastructure.Migrations
                     b.Property<short>("Type")
                         .HasColumnType("smallint")
                         .HasColumnName("type")
-                        .HasComment("Geocoding backend this provider row configures. Values: 1=Nominatim, 2=OpenRouteService, 3=Google.");
+                        .HasComment("Geocoding backend this provider row configures. Values: 1=Nominatim, 2=OpenRouteService, 3=Google, 4=Local.");
 
                     b.HasKey("GeocodingProviderId");
 
@@ -1538,7 +1538,7 @@ namespace TrackHub.Manager.Infrastructure.Migrations
 
                     b.ToTable("geocoding_providers", "map", t =>
                         {
-                            t.HasCheckConstraint("ck_geocoding_providers_type", "type in (1, 2, 3)");
+                            t.HasCheckConstraint("ck_geocoding_providers_type", "type in (1, 2, 3, 4)");
                         });
                 });
 

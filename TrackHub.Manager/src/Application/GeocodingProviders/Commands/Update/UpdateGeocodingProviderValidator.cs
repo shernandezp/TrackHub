@@ -33,7 +33,8 @@ public sealed class UpdateGeocodingProviderValidator : AbstractValidator<UpdateG
             .NotEmpty()
             .MaximumLength(ColumnMetadata.DefaultDescriptionLength)
             .Must(uri => Uri.TryCreate(uri, UriKind.Absolute, out _))
-            .WithMessage("EndpointUri must be an absolute URI.");
+            .WithMessage("EndpointUri must be an absolute URI.")
+            .When(v => v.GeocodingProvider.Type != (int)GeocodingProviderType.Local);
 
         RuleFor(v => v.GeocodingProvider.Type)
             .Must(type => Enum.IsDefined(typeof(GeocodingProviderType), (int)type))

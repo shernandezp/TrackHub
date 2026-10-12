@@ -20,7 +20,7 @@ import FormDialog from "controls/Dialogs/FormDialog";
 import CustomTextField from 'controls/Dialogs/CustomTextField';
 import CustomPasswordField from 'controls/Dialogs/CustomPasswordField';
 import CustomSelect from 'controls/Dialogs/CustomSelect';
-import { geocodingProviderTypes } from 'data/geocodingProviderTypes';
+import { geocodingProviderTypes, localGeocodingProviderType } from 'data/geocodingProviderTypes';
 import { toCamelCase } from 'utils/stringUtils';
 import type { FormChangeHandler } from 'controls/Dialogs/useForm';
 import type { GeocodingProviderFormValues } from 'layouts/systemadmin/data/geocodingProvidersTableData';
@@ -84,7 +84,7 @@ function GeocodingProviderFormDialog({ open, setOpen, handleSubmit, values, hand
             value={values.endpointUri || ''}
             onChange={handleChange}
             errorMsg={errors.endpointUri}
-            required
+            required={Number(values.type) !== localGeocodingProviderType}
           />
 
           <CustomPasswordField

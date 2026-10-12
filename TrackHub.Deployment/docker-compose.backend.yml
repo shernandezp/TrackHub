@@ -507,6 +507,9 @@ services:
       - DB_CONNECTION_SECURITY=${DB_CONNECTION_SECURITY}
       - DB_CONNECTION_MANAGER=${DB_CONNECTION_MANAGER}
       - DB_CONNECTION_TELEMETRY=${DB_CONNECTION_TELEMETRY}
+      - LOCAL_GEOCODING=${LOCAL_GEOCODING:-false}
+      - GEOCODING_OVERTURE_RELEASE=${GEOCODING_OVERTURE_RELEASE:-}
+      - GEOCODING_MEMORY_LIMIT=${GEOCODING_MEMORY_LIMIT:-}
       # Service-client secrets: the seeder reads {CLIENTID}_SECRET from here so .env is the single
       # source of truth and clients.json needs no real secrets.
       - SYNCWORKER_CLIENT_SECRET=${SYNCWORKER_CLIENT_SECRET}

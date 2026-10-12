@@ -20,4 +20,5 @@ public enum GeocodingProviderType
     Nominatim = 1,
     OpenRouteService = 2,
     Google = 3,
+    Local = 4,
 }
