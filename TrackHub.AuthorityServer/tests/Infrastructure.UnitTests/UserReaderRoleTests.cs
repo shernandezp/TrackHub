@@ -21,7 +21,7 @@ using TrackHub.AuthorityServer.Infrastructure.Readers;
 namespace TrackHub.AuthorityServer.Infrastructure.UnitTests;
 
 // The access token's role claim comes from this lookup over the
-// pre-existing security.roles / security.user_role tables (read-only bounded-context mapping).
+// security.roles / security.user_role tables (read-only bounded-context mapping).
 // The seeded hierarchy is Administrator(1) → Manager(2) → User(3): the lowest id wins.
 [TestFixture]
 public class UserReaderRoleTests

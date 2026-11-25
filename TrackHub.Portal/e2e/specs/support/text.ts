@@ -1,8 +1,6 @@
 /**
- * The portal's own key-shaping helpers, restated so a spec can build the same
- * i18n key a component builds. Kept byte-for-byte in step with
- * `src/utils/stringUtils.ts`; importing from `src/` is not possible here because
- * that module's neighbours resolve through the portal's `src/*` path aliases.
+ * Restated from `src/utils/stringUtils.ts` (keep in step): importing from `src/`
+ * is not possible because its neighbours resolve through the `src/*` path aliases.
  */
 
 /** `Live_Report` / `live.report` / `live-report` → `liveReport`. */

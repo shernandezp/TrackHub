@@ -23,10 +23,8 @@ internal class TransporterGroupConfiguration : IEntityTypeConfiguration<Transpor
 {
     public void Configure(EntityTypeBuilder<TransporterGroup> builder)
     {
-        //Table name
         builder.ToTable(name: TableMetadata.TransporterGroup, schema: SchemaMetadata.Application);
 
-        //Column names
         builder.Property(x => x.TransporterId).HasColumnName("transporterid");
         builder.Property(x => x.GroupId).HasColumnName("groupid");
 

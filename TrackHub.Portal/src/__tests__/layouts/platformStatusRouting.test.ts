@@ -14,13 +14,9 @@
 *  limitations under the License.
 */
 
-// Route-table guarantees for the public /status route.
-//
-// These pin the two defects found in the spec-28 audit:
-//   * omitting `principalTypes` DEFAULTS to [User] rather than meaning "public", so a Staff or
-//     public-link principal was redirected to /dashboard — itself User-only — looping forever;
-//   * the Sidenav applied the same default, hiding the link from the roles it was meant to serve.
-// The `public` flag is what makes /status genuinely reachable by everyone.
+// Omitting `principalTypes` DEFAULTS to [User] rather than meaning "public", which redirected a
+// Staff or public-link principal to the User-only /dashboard, looping forever, and hid the Sidenav
+// link. The `public` flag is what makes /status reachable by everyone.
 
 import { describe, it, expect } from 'vitest';
 import routes from 'routes';
@@ -81,7 +77,7 @@ describe('platformStatus route definition', () => {
   });
 
   // Only two screens are public: the status page, and the anonymous customer trip
-  // tracking page (spec 11 §8) whose visitors have no account to sign in with.
+  // tracking page whose visitors have no account to sign in with.
   it('shares the public flag with no route beyond the known anonymous screens', () => {
     expect(allRoutes.filter((route) => route.public).map((route) => route.key).sort()).toEqual(
       ['platformStatus', 'tripTracking']

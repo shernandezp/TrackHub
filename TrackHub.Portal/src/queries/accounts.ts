@@ -15,13 +15,8 @@
 */
 
 /**
- * Account query/mutation hooks. Components consume these — not the api layer
- * directly. Loading/error state comes from the hooks; failures also surface in
- * the global toast via the query client's error handlers.
- *
- * `useAccountByUser` is the shared "current account id" source for create flows
- * (transporters, POIs, staff, ...). Account identity rarely changes, so it is
- * cached indefinitely (staleTime: Infinity) and refetched only on invalidation.
+ * `useAccountByUser` is the shared "current account id" source for create flows; account identity
+ * rarely changes, so it is cached indefinitely and refetched only on invalidation.
  */
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -46,7 +41,6 @@ export function useAccountByUser(options: { enabled?: boolean } = {}) {
   });
 }
 
-/** One server page of accounts (`{ items, totalCount }`) for the systemadmin list. */
 export function useAccounts(params: ListParams = {}, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: accountKeys.list(params),
@@ -80,11 +74,7 @@ export function useUpdateAccount() {
   });
 }
 
-/**
- * Platform-side account edit for the systemadmin console (Administrator-only).
- * `useUpdateAccount` stays the account-scoped hook an account administrator uses
- * on its own account.
- */
+/** Administrator-only; `useUpdateAccount` is the own-account hook. */
 export function useUpdateAccountMaster() {
   const queryClient = useQueryClient();
   return useMutation({

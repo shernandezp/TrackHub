@@ -2,17 +2,10 @@ import { readdirSync } from 'node:fs';
 import type { CodegenConfig } from '@graphql-codegen/cli';
 
 /**
- * GraphQL codegen for the six TrackHub GraphQL backends (Reporting is
- * REST-only). Schemas in schemas/<service>.graphql are exported by the
- * contract-test suite (TrackHub.IntegrationTests → SchemaSdlExport) — run
- * `dotnet test TrackHub.IntegrationTests/TrackHub.IntegrationTests.slnx`
- * to refresh them, then `npm run codegen`.
- *
- * Operations live in src/api/<backend>/**, written with the generated
- * `graphql()` tag; values always travel as GraphQL variables.
+ * Schemas in schemas/<service>.graphql are exported by the contract-test suite
+ * (SchemaSdlExport); refresh them there, then `npm run codegen`.
  */
 
-/** HotChocolate scalar → TypeScript mappings (UTC ISO strings for date/time). */
 const scalars = {
   UUID: 'string',
   DateTime: 'string',

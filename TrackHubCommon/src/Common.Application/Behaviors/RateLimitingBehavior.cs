@@ -81,8 +81,8 @@ public class RateLimitingBehavior<TRequest, TResponse>(IUser user, ILogger<RateL
             return requested;
         }
 
-        // Falling back rather than skipping: a "client" partition evaluated on a user token used
-        // to resolve nothing and bypass the limit entirely, silently.
+        // Fall back rather than skip: a "client" partition on a user token would otherwise resolve nothing
+        // and bypass the limit entirely.
         var fallback = user.Id ?? user.Client ?? user.SubjectId;
         logger.LogWarning(
             "Rate limit partition '{PartitionKey}' resolved no value for {Request}; falling back to {Fallback}.",

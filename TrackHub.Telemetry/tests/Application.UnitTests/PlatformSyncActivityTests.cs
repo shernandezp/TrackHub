@@ -24,7 +24,7 @@ using TrackHub.Telemetry.Infrastructure.TelemetryDB.Readers;
 
 namespace TrackHub.Telemetry.Application.UnitTests;
 
-// SyncWorker liveness is derived from data recency (spec 28 ST-04): the worker has no HTTP
+// SyncWorker liveness is derived from data recency: the worker has no HTTP
 // listener, so the rows it writes every cycle ARE the health signal. This reader is deliberately
 // unscoped — it must see every account's rows, which these tests pin.
 [TestFixture]

@@ -22,7 +22,7 @@ namespace TrackHub.TripManagement.Application.Trips.Commands.Lifecycle;
 /// The one place a lifecycle transition is applied. Every lifecycle command funnels through here
 /// so the transition matrix (<see cref="TripStatuses.CanTransition"/>) is consulted exactly once,
 /// in one implementation: an illegal transition returns a validation error carrying
-/// <see cref="TripErrorCodes.InvalidTransition"/> and changes nothing (acceptance 11).
+/// <see cref="TripErrorCodes.InvalidTransition"/> and changes nothing.
 /// </summary>
 public static class TripLifecycleTransition
 {
@@ -31,10 +31,8 @@ public static class TripLifecycleTransition
     /// then emits the alert. Alert emission is best-effort and isolated: a Manager outage must never
     /// roll back a transition the operator already saw succeed.
     /// <para>
-    /// The <paramref name="source"/> is a PARAMETER, not the hardcoded <c>Portal</c> it used to be.
-    /// Detection transitions trips now, and the timeline's source is the permanent record of whether
-    /// a start was measured or declared — a hardcoded value made every automatic transition claim to
-    /// be a dispatcher's click (spec 11a §5.3, §12.1).
+    /// The <paramref name="source"/> is the permanent timeline record of whether a start was measured
+    /// or declared, so automatic transitions must not claim to be a dispatcher's click.
     /// </para>
     /// </summary>
     public static async Task<TripVm> ExecuteAsync(
@@ -75,17 +73,15 @@ public static class TripLifecycleTransition
             eventType,
             source,
             idempotencyKey,
-            // Serialized, not string-built: a reason containing a quote or a backslash produced an
-            // invalid JSON payload on the timeline row.
+            // Serialized, not string-built, so a reason containing a quote or a backslash stays valid JSON.
             reason is null ? null : System.Text.Json.JsonSerializer.Serialize(new { reason, forced = force }),
             reason,
             force,
             measuredAt,
             cancellationToken);
 
-        // A duplicate or a lost race wrote NOTHING, so it must emit nothing either. The writer's
-        // result is discarded no longer: swallowing it is what let a racing start emit two alerts
-        // for one trip (spec 11a §12.1).
+        // A duplicate or a lost race wrote NOTHING, so it must emit nothing either, or a racing start
+        // would emit two alerts for one trip.
         if (!applied)
         {
             return trip;

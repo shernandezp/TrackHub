@@ -15,10 +15,9 @@
  */
 
 /**
- * The password rule must survive the eye toggle. `useForm` used to read the rule from the live DOM
- * `type`, which flips to "text" when the field is revealed — so a revealed field fell through to a
- * bare non-empty check and accepted a one-character secret. The field now declares its rule, and
- * these pin both halves: the attribute reaching the input, and validate() honouring it.
+ * The password rule must survive the eye toggle: a rule read from the live DOM `type` flips to
+ * "text" when revealed and would accept a one-character secret. These pin the declared rule
+ * reaching the input and validate() honouring it.
  */
 
 import { render, screen, fireEvent } from '@testing-library/react';

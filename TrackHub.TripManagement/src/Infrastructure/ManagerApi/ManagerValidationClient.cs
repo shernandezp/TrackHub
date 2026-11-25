@@ -18,7 +18,7 @@ namespace TrackHub.TripManagement.Infrastructure.ManagerApi;
 /// <summary>
 /// Cross-account reference validation against Manager, under the service's own
 /// <c>trip_client</c> identity: staff-to-transporter assignment, group visibility over a
-/// referenced resource, and the account's feature keys (spec 11 §5).
+/// referenced resource, and the account's feature keys.
 /// Manager's <c>resourceId</c> arguments are strings on the wire.
 /// </summary>
 public class ManagerValidationClient(IGraphQLClientFactory graphQLClient)

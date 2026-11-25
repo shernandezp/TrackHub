@@ -26,8 +26,8 @@ namespace TrackHub.TripManagement.Infrastructure.TripDB.Readers;
 /// </para>
 /// <para>
 /// Neither is origin or stop containment, and the dividing line is worth stating: those geometries
-/// are already materialized with the working set, so testing them in PostGIS was a round trip per
-/// fix that no index was helping (both queries filter to one row by key). A CORRIDOR is different —
+/// are already materialized with the working set, so testing them in PostGIS would be a round trip per
+/// fix that no index helps. A CORRIDOR is different —
 /// it buffers an entire route, is far too large to load per batch, and so is tested where it lives.
 /// </para>
 /// </summary>
@@ -99,8 +99,8 @@ public sealed class TripDetectionReader(IApplicationDbContext context) : ITripDe
     public async Task<IReadOnlyCollection<EtaCandidateVm>> GetEtaCandidatesAsync(Guid accountId, DateTimeOffset positionFreshnessCutoff, CancellationToken cancellationToken)
     {
         // Deliberately NOT filtered by position freshness. A trip whose tracker went dark still
-        // needs its ETA moved off a stale Ors value onto the planned schedule; excluding it here
-        // made the fallback path in TripEtaService unreachable (spec 11 §10, §18.11). Freshness is
+        // needs its ETA moved off a stale Ors value onto the planned schedule, which is TripEtaService's
+        // fallback path. Freshness is
         // computed below from LastPositionAt and travels as a flag - no column stores it.
         var rows = await context.Trips
             .Where(t => t.AccountId == accountId
@@ -161,7 +161,7 @@ public sealed class TripDetectionReader(IApplicationDbContext context) : ITripDe
         // Both bounds matter. With only the upper one, the window is "any time before now + lead",
         // so the first cycle after a deployment reminds about every trip ever created and never
         // started. The idempotency guard makes that a one-off burst rather than a loop, but a
-        // one-off burst of alerts for last year's trips is still noise (spec 11 §10).
+        // one-off burst of alerts for last year's trips is still noise.
         var trips = await context.Trips
             .Where(t => t.AccountId == accountId
                 && t.Status == TripStatuses.Created

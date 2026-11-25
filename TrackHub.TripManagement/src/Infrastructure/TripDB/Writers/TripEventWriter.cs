@@ -19,7 +19,7 @@ namespace TrackHub.TripManagement.Infrastructure.TripDB.Writers;
 
 /// <summary>
 /// The single idempotent event log. Manual overrides and automatic detections both land here,
-/// discriminated by <c>Source</c> (spec 11 section 18.13).
+/// discriminated by <c>Source</c>.
 /// </summary>
 public sealed class TripEventWriter(IApplicationDbContext context) : ITripEventWriter
 {
@@ -56,7 +56,7 @@ public sealed class TripEventWriter(IApplicationDbContext context) : ITripEventW
         catch (DbUpdateException exception) when (UniqueViolation.Matches(exception, "ux_trip_events_idempotencykey"))
         {
             // A retry, not an error. The caller skips the side effects (alert emission, status
-            // change) rather than treating the duplicate as a failure (acceptance 15).
+            // change) rather than treating the duplicate as a failure.
             context.TripEvents.Entry(entity).State = EntityState.Detached;
             return false;
         }
@@ -68,10 +68,8 @@ public sealed class TripEventWriter(IApplicationDbContext context) : ITripEventW
                 && e.AccountId == accountId
                 // Job-sourced events do NOT count as execution history. The guard exists so a trip
                 // that produced stops, POD or documents can never be deleted out from under them —
-                // and a schedule reminder produces none of that. Counting it meant the
-                // trip-schedule-reminder job silently made every mistaken trip undeletable an hour
-                // before its planned start, leaving Cancel as the only exit and parking a bogus row
-                // on the dispatch board and in reports (acceptance 16).
+                // and a schedule reminder produces none of that; counting it would make every mistaken trip
+                // undeletable an hour before its planned start, leaving Cancel as the only exit.
                 && e.Source != TripEventSources.Job,
             cancellationToken);
 

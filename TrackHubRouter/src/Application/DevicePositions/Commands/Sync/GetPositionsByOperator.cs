@@ -47,12 +47,6 @@ public class GetPositionsByOperatorCommandHandler(
 {
     private string? EncryptionKey { get; } = configuration["AppSettings:EncryptionKey"];
 
-    /// <summary>
-    /// Retrieves the device positions asynchronously
-    /// </summary>
-    /// <param name="request"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>Returns the collection of PositionVm</returns>
     public async Task<bool> Handle(GetPositionsByOperatorCommand request, CancellationToken cancellationToken)
     {
         Guard.Against.Null(EncryptionKey, message: "Credential key not found.");
@@ -76,8 +70,8 @@ public class GetPositionsByOperatorCommandHandler(
             var reader = positionRegistry.GetReader((ProtocolType)request.Operator.ProtocolTypeId);
             await reader.Init(request.Operator.Credential.Value.Decrypt(EncryptionKey), cancellationToken);
             // The device→transporter catalog changes rarely; serve it from a short-TTL cache so the
-            // 10-second position loop does not re-fetch it from Manager every cycle per operator
-            // (router-audit A-12). A device sync moves LastDeviceSyncAt, which invalidates it.
+            // 10-second position loop does not re-fetch it from Manager every cycle per operator.
+            // A device sync moves LastDeviceSyncAt, which invalidates it.
             var devices = await deviceCatalogCache.GetOrLoadAsync(
                 request.Settings.AccountId,
                 request.Operator.OperatorId,
@@ -100,11 +94,9 @@ public class GetPositionsByOperatorCommandHandler(
         return true;
     }
 
-    // A provider position-fetch failure must NOT masquerade as a successful sync with zero fixes
-    // the error is logged and returned so PositionsRetrieved records the run
-    // as FAILED with the error code and raises the sync-failed alert. Returning empty here (rather
-    // than throwing) keeps the failure isolated to this operator — the notification still fires so
-    // the run is recorded, and cancellation propagates.
+    // A provider position-fetch failure must NOT masquerade as a successful sync with zero fixes:
+    // the error is returned so PositionsRetrieved records the run as FAILED and raises the
+    // sync-failed alert. Not throwing keeps the failure isolated to this operator.
     private async Task<(IEnumerable<PositionVm> Positions, string? ErrorCode, string? ErrorMessage)> TryGetPositionsAsync(
         IPositionReader reader,
         OperatorVm @operator,

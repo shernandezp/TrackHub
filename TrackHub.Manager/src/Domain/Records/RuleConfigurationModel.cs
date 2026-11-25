@@ -15,17 +15,15 @@
 
 namespace TrackHub.Manager.Domain.Records;
 
-/// <summary>NotificationRule.ConfigurationJson knobs consumed by this module.</summary>
 public sealed record RuleConfigurationModel
 {
     /// <summary>CommunicationLoss rules: minutes without a position before an alert (default 60).</summary>
     public int? ThresholdMinutes { get; init; }
     /// <summary>Critical alerts unacknowledged this long escalate once to account administrators.</summary>
     public int? EscalateAfterMinutes { get; init; }
-    /// <summary>Webhook channel: target URL.</summary>
     public string? WebhookUrl { get; init; }
-    /// <summary>Webhook channel: shared secret for the HMAC-SHA256 signature header.</summary>
+    /// <summary>Shared secret for the HMAC-SHA256 signature header.</summary>
     public string? WebhookSecret { get; init; }
-    /// <summary>Template locale for rendered messages when the recipient has no user language (en/es).</summary>
+    /// <summary>Used when the recipient has no user language (en/es).</summary>
     public string? Locale { get; init; }
 }

@@ -52,17 +52,11 @@ import {
 } from 'queries/trips';
 import type { TollStation, TollTariff, TollVehicleClass } from 'api/tripManagement/trips';
 
-/** One page of stations; the catalog is platform reference data, not a large dataset. */
 const STATION_PAGE_SIZE = 100;
 
 /**
- * SuperAdministrator toll catalog. Platform reference data — no `AccountId` —
- * so it lives in the system admin screen alongside the geocoding providers,
- * whose accordion + table + dialog conventions it mirrors.
- *
- * The platform ships an EMPTY catalog on purpose (spec 11 §7.7): an operator
- * enters the classes, stations and tariffs their own routes need. The empty
- * states here say so rather than looking like a failed load.
+ * The platform ships an EMPTY catalog on purpose: an operator enters the classes, stations and
+ * tariffs their own routes need. The empty states say so rather than looking like a failed load.
  */
 function ManageTollCatalog() {
   const { t } = useTranslation();
@@ -91,8 +85,6 @@ function ManageTollCatalog() {
   const createTariff = useCreateTollTariff();
   const updateTariff = useUpdateTollTariff();
   const deleteTariff = useDeleteTollTariff();
-
-  /* ------------------------------------------------------- vehicle classes */
 
   const [classOpen, setClassOpen] = useState(false);
   const [classValues, classChange, setClassValues, setClassErrors, validateClass, classErrors] =
@@ -137,8 +129,6 @@ function ManageTollCatalog() {
       // Surfaced by the global toast; keep the dialog open so the entry survives.
     }
   };
-
-  /* --------------------------------------------------------------- stations */
 
   const [stationOpen, setStationOpen] = useState(false);
   const [
@@ -202,8 +192,6 @@ function ManageTollCatalog() {
     }
   };
 
-  /* ---------------------------------------------------------------- tariffs */
-
   const [tariffOpen, setTariffOpen] = useState(false);
   const [
     tariffValues,
@@ -256,8 +244,6 @@ function ManageTollCatalog() {
       // Overlapping windows come back as TOLL_OVERLAPPING_TARIFF in the toast.
     }
   };
-
-  /* ----------------------------------------------------------------- tables */
 
   const classData = useMemo(
     () => ({

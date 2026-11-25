@@ -18,10 +18,8 @@ namespace Common.Domain.Enums;
 public static class AccountStatusExtensions
 {
     /// <summary>
-    /// True when the account is in an operational state (<see cref="AccountStatus.Trial"/> or
-    /// <see cref="AccountStatus.Active"/>) and account-scoped operations are permitted. All other
-    /// states are non-operational and are blocked by the account-status enforcement pipeline
-    /// (except allow-listed billing/support/read-own-status/lifecycle operations).
+    /// True for <see cref="AccountStatus.Trial"/> and <see cref="AccountStatus.Active"/>; every other state is
+    /// blocked by the account-status pipeline except allow-listed operations.
     /// </summary>
     public static bool IsOperational(this AccountStatus status)
         => status is AccountStatus.Trial or AccountStatus.Active;

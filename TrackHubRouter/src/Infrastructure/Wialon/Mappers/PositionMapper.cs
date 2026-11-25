@@ -19,9 +19,6 @@ namespace TrackHub.Router.Infrastructure.Wialon.Mappers;
 
 internal static class PositionMapper
 {
-    /// <summary>
-    /// Maps a Unit with position data to a PositionVm object.
-    /// </summary>
     public static PositionVm MapToPositionVm(this Unit unit, DeviceTransporterVm deviceDto)
     {
         var position = unit.Pos;
@@ -48,9 +45,6 @@ internal static class PositionMapper
         );
     }
 
-    /// <summary>
-    /// Maps a Message to a PositionVm object.
-    /// </summary>
     public static PositionVm MapToPositionVm(this Message message, DeviceTransporterVm deviceDto)
     {
         var position = message.Pos;
@@ -78,9 +72,6 @@ internal static class PositionMapper
         );
     }
 
-    /// <summary>
-    /// Maps a collection of Unit objects to PositionVm objects using a dictionary of DeviceTransporterVm.
-    /// </summary>
     public static IEnumerable<PositionVm> MapToPositionVm(this IEnumerable<Unit> units, IDictionary<int, DeviceTransporterVm> devicesDictionary)
     {
         foreach (var unit in units)
@@ -92,9 +83,6 @@ internal static class PositionMapper
         }
     }
 
-    /// <summary>
-    /// Maps a collection of Message objects to PositionVm objects.
-    /// </summary>
     public static IEnumerable<PositionVm> MapToPositionVm(this IEnumerable<Message> messages, DeviceTransporterVm deviceDto)
     {
         foreach (var message in messages)

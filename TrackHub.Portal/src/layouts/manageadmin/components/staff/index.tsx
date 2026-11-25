@@ -14,12 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Staff: one row per staff, a search box for accounts with hundreds of them, and three
- * icon actions. Credentials and devices live in the detail dialog rather than in another
- * accordion.
- */
-
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from '@mui/material/Icon';
@@ -232,8 +226,7 @@ function ManageStaff() {
         )}
       </TableAccordion>
 
-      {/* Billable workforce surfaces — hidden without the feature (cosmetic
-          only; the backend gate is authoritative). */}
+      {/* Hidden without the feature, cosmetic only; the backend gate is authoritative. */}
       {workforceEnabled && (
         <>
           <ManageStaffQualifications />

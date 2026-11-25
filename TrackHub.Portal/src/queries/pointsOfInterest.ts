@@ -14,11 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Point-of-interest query/mutation hooks. Components consume these — not the api
- * layer directly.
- */
-
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from 'api/manager/pointsOfInterest';
 import type {
@@ -33,7 +28,6 @@ export const poiKeys = {
   lookup: () => [...poiKeys.all, 'lookup'] as const,
 };
 
-/** One server page of POIs (`{ items, totalCount }`) for the POI list. */
 export function usePointsOfInterestByAccount(
   params: ListParams & { active?: boolean | null } = {},
   options: { enabled?: boolean } = {}
@@ -48,13 +42,7 @@ export function usePointsOfInterestByAccount(
   });
 }
 
-/**
- * The account's POIs as the map projection — coordinates, colour, type,
- * description, address and the active flag, everything the overlays render.
- * Unpaged by design (the server raises past its ceiling rather than
- * truncating). Keyed under {@link poiKeys.all} so one invalidation refreshes it
- * alongside the paged list.
- */
+/** Unpaged by design. Keyed under {@link poiKeys.all} so one invalidation refreshes it alongside the paged list. */
 export function usePointOfInterestLookup(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: poiKeys.lookup(),

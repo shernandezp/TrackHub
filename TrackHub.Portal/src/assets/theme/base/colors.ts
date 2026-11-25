@@ -29,12 +29,6 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
-/**
- * The base colors for the Argon Dashboard 2 MUI.
- * You can add new color using this file.
- * You can customized the colors for the entire Argon Dashboard 2 MUI using thie file.
- */
-
 const colors = {
   background: {
     default: "#F3F5F8",

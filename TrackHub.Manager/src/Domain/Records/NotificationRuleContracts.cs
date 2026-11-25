@@ -20,8 +20,7 @@ using System.Text.RegularExpressions;
 namespace TrackHub.Manager.Domain.Records;
 
 /// <summary>
-/// Formalized JSON contracts for the NotificationRule columns. Existing rows written
-/// as '' by the legacy portal dialog parse as empty (no channels / no recipients) — no migration.
+/// JSON contracts for the NotificationRule columns. Rows stored as '' parse as empty.
 /// </summary>
 public static partial class NotificationRuleContracts
 {
@@ -41,7 +40,7 @@ public static partial class NotificationRuleContracts
     public static bool IsE164(string? value) => value != null && E164Regex().IsMatch(value);
     public static bool IsEmail(string? value) => value != null && EmailRegex().IsMatch(value);
 
-    /// <summary>Parses ChannelsJson. Empty/blank input yields an empty list; invalid JSON throws JsonException.</summary>
+    /// <summary>Invalid JSON throws JsonException.</summary>
     public static IReadOnlyCollection<string> ParseChannels(string? channelsJson)
         => string.IsNullOrWhiteSpace(channelsJson)
             ? []

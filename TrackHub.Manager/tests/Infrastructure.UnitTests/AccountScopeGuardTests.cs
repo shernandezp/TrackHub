@@ -26,8 +26,7 @@ using TrackHub.Manager.Infrastructure.ManagerDB.Writers;
 namespace Infrastructure.UnitTests;
 
 /// <summary>
-/// Foreign-deny pins for the TS-06 by-id guards added to the previously unguarded Manager
-/// writers/readers: OperatorWriter, TransporterWriter, the user REPLICA writer (Security-parity
+/// Foreign-deny pins for the by-id guards on the Manager writers/readers: OperatorWriter, TransporterWriter, the user REPLICA writer (Security-parity
 /// policy), UserSettingsWriter (self-bind) and the by-id account reads. Removing a guard call
 /// fails one of these.
 /// </summary>

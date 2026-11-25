@@ -15,45 +15,19 @@
 
 namespace Common.Application.Attributes;
 
-/// <summary>
-/// Specifies the class this attribute is applied to requires rate limiting.
-/// </summary>
 [AttributeUsage(AttributeTargets.All, AllowMultiple = false, Inherited = true)]
 public sealed class RateLimitingAttribute : Attribute
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="RateLimitingAttribute"/> class.
-    /// </summary>
     public RateLimitingAttribute() { }
 
-    /// <summary>
-    /// Gets or sets the maximum number of requests allowed within the time window.
-    /// Default is 100 requests.
-    /// </summary>
     public int PermitLimit { get; set; } = 100;
 
-    /// <summary>
-    /// Gets or sets the time window in seconds for rate limiting.
-    /// Default is 60 seconds (1 minute).
-    /// </summary>
     public int WindowSeconds { get; set; } = 60;
 
-    /// <summary>
-    /// Gets or sets the segment size for sliding window algorithm.
-    /// Default is 1 segment (fixed window).
-    /// </summary>
     public int SegmentsPerWindow { get; set; } = 1;
 
-    /// <summary>
-    /// Gets or sets the queued request limit.
-    /// Default is 0 (no queueing).
-    /// </summary>
     public int QueueLimit { get; set; } = 0;
 
-    /// <summary>
-    /// Gets or sets the partition key resolver.
-    /// Standard values: "user", "client", "endpoint"
-    /// Default is "user" (rate limit per authenticated user).
-    /// </summary>
+    /// <summary>Standard values: "user", "client", "endpoint".</summary>
     public string PartitionKey { get; set; } = "user";
 }

@@ -21,7 +21,7 @@ public class StaffTransporterAssignmentConfiguration : IEntityTypeConfiguration<
 
         // Explicit names: the auto-generated spellings land at 58 and 63 characters, the latter exactly
         // on PostgreSQL's identifier limit where EF's `~` truncation and Postgres' silent truncation
-        // start to diverge (rules.md "Database conventions").
+        // start to diverge.
         builder.HasIndex(x => new { x.AccountId, x.StaffId, x.Status })
             .HasDatabaseName("ix_staff_assignments_account_staff_status");
         builder.HasIndex(x => new { x.AccountId, x.TransporterId, x.Status })

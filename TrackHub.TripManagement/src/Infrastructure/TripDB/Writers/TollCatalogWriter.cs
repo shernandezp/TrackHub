@@ -23,7 +23,7 @@ namespace TrackHub.TripManagement.Infrastructure.TripDB.Writers;
 
 /// <summary>
 /// Administrator-only toll administration. Every write is audited - station and tariff
-/// changes move money on estimates (spec 11 section 7.6, acceptance 26).
+/// changes move money on estimates.
 /// </summary>
 public sealed class TollCatalogWriter(IApplicationDbContext context, ITollCatalogReader reader, IUser user) : ITollCatalogWriter
 {
@@ -188,7 +188,7 @@ public sealed class TollCatalogWriter(IApplicationDbContext context, ITollCatalo
 
         // Overlap check EXCLUDES the row this insert is about to close: closing it at
         // EffectiveFrom - 1 day is exactly how a price change is expressed, and that is not a
-        // conflict. Anything else overlapping is a 409 (spec 11 section 6.2).
+        // conflict. Anything else overlapping is a 409.
         var overlapping = await reader.HasOverlappingTariffAsync(
             tariff.TollStationId,
             tariff.TollVehicleClassCode,
@@ -210,7 +210,7 @@ public sealed class TollCatalogWriter(IApplicationDbContext context, ITollCatalo
             }
 
             // CLOSE, never overwrite: the old price stays queryable so a historical trip's
-            // estimate remains reproducible (acceptance 21).
+            // estimate remains reproducible.
             open.EffectiveTo = tariff.EffectiveFrom.AddDays(-1);
         }
 
@@ -289,8 +289,7 @@ public sealed class TollCatalogWriter(IApplicationDbContext context, ITollCatalo
 
         foreach (var row in rows)
         {
-            // No partial-failure rollback: a bad row is reported and skipped, the batch continues
-            // (the spec 08 geofence-import contract).
+            // No partial-failure rollback: a bad row is reported and skipped, the batch continues.
             if (string.IsNullOrWhiteSpace(row.StationName) || row.Latitude is null || row.Longitude is null)
             {
                 errors.Add(new TollCatalogImportErrorVm(row.RowNumber, "INVALID_STATION", "Station name and coordinates are required."));
@@ -337,8 +336,8 @@ public sealed class TollCatalogWriter(IApplicationDbContext context, ITollCatalo
             catch (ConflictException exception)
             {
                 // The thrown code, not a hardcoded one: this block also catches a duplicate station
-                // and a backdated EffectiveFrom, and labelling those "overlapping tariff" left the
-                // administrator with a row-level report that named the wrong problem.
+                // and a backdated EffectiveFrom, and labelling those "overlapping tariff" would name the wrong
+                // problem in the administrator's row-level report.
                 errors.Add(new TollCatalogImportErrorVm(row.RowNumber, exception.Message, exception.Message));
             }
             catch (DbUpdateException exception)
@@ -346,8 +345,7 @@ public sealed class TollCatalogWriter(IApplicationDbContext context, ITollCatalo
                 // The failed Added entries MUST leave the change tracker. The context is scoped to
                 // the request, so a dead insert left behind is replayed by the NEXT row's
                 // SaveChangesAsync — one bad row would cascade into failing the entire remainder of
-                // the batch, which is precisely the partial-failure behaviour spec 11 §7.6 forbids
-                // ("row-level error report, no partial-failure rollback").
+                // the batch.
                 DetachFailedEntries();
                 errors.Add(new TollCatalogImportErrorVm(row.RowNumber, "ROW_REJECTED", exception.Message));
             }
@@ -358,7 +356,7 @@ public sealed class TollCatalogWriter(IApplicationDbContext context, ITollCatalo
 
     private async Task<(Guid TollStationId, bool Created)> UpsertStationAsync(TollCatalogImportRowDto row, CancellationToken cancellationToken)
     {
-        // Upsert by station code when supplied, otherwise by name + coordinates (spec 11 7.6).
+        // Upsert by station code when supplied, otherwise by name + coordinates.
         var existing = string.IsNullOrWhiteSpace(row.StationCode)
             ? await context.TollStations.AsTracking().FirstOrDefaultAsync(s => s.Name == row.StationName, cancellationToken)
             : await context.TollStations.AsTracking().FirstOrDefaultAsync(s => s.Code == row.StationCode, cancellationToken);
@@ -407,10 +405,9 @@ public sealed class TollCatalogWriter(IApplicationDbContext context, ITollCatalo
     /// <summary>
     /// Saves, translating a violation of <paramref name="indexName"/> into <paramref name="errorCode"/>.
     /// <para>
-    /// The code is a REQUIRED argument rather than a constant. Every caller previously got
-    /// <c>TOLL_OVERLAPPING_TARIFF</c>, so a duplicate station name or a duplicate vehicle-class
-    /// code was reported to the administrator as an overlapping tariff window — an error about a
-    /// different entity entirely, which is unactionable in the §7.6 row-level import report.
+    /// The code is a REQUIRED argument rather than a constant, so a duplicate station name or a
+    /// duplicate vehicle-class code is not reported to the administrator as an overlapping tariff
+    /// window.
     /// </para>
     /// </summary>
     private Task SaveUniqueAsync(string indexName, string errorCode, CancellationToken cancellationToken)
@@ -461,8 +458,7 @@ public sealed class TollCatalogWriter(IApplicationDbContext context, ITollCatalo
     /// <c>Added</c> entries are detached outright — they were never persisted. <c>Modified</c>
     /// entries are reverted to their original values rather than detached, so a partially-applied
     /// station upsert cannot leak into a later row's save. Without this, one rejected row cascades
-    /// into failing the entire remainder of the batch, which is exactly the partial-failure
-    /// behaviour spec 11 §7.6 forbids.
+    /// into failing the entire remainder of the batch.
     /// </para>
     /// </summary>
     private void DetachFailedEntries()

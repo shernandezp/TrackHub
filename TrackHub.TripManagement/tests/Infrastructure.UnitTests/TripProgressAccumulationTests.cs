@@ -27,7 +27,7 @@ namespace Infrastructure.UnitTests;
 /// <para>
 /// This is the only writer detection calls for EVERY position of EVERY open trip, and it is the
 /// source of <c>ActualDistanceMeters</c> — the number every distance report, every plan-vs-actual
-/// comparison and every fuel reconciliation downstream is built on. It had no test at all.
+/// comparison and every fuel reconciliation downstream is built on.
 /// </para>
 /// <para>
 /// The out-of-order guard is the part that matters most, and it is why the method returns
@@ -109,7 +109,6 @@ public class TripProgressAccumulationTests
         });
     }
 
-    // ----- The out-of-order guard --------------------------------------------------------------
 
     [Test]
     public async Task AnOlderFix_IsRejectedAndMovesNothing()
@@ -176,8 +175,7 @@ public class TripProgressAccumulationTests
     /// Tenant scope on the write path, not only on the read path: the position feed is keyed by
     /// transporter, and a mis-scoped batch must not write one account's movement onto another's trip.
     /// <para>
-    /// The guarantee moved with the code and got stronger. It used to be a per-call account filter
-    /// on the update; now the working set itself is loaded per account, so a trip belonging to
+    /// The working set itself is loaded per account, so a trip belonging to
     /// somebody else is not merely un-writable — it is not in the unit at all, and every mutator is
     /// a no-op against an id it never loaded.
     /// </para>

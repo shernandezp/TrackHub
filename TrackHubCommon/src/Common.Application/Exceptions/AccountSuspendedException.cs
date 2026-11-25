@@ -17,11 +17,7 @@ using Common.Domain.Enums;
 
 namespace Common.Application.Exceptions;
 
-/// <summary>
-/// Thrown by <see cref="Common.Application.Behaviors.AccountStatusBehavior{TRequest, TResponse}"/>
-/// when an account-scoped request resolves to a non-operational account. Mapped to the GraphQL
-/// <c>ACCOUNT_SUSPENDED</c> error code and to HTTP 403 for REST.
-/// </summary>
+/// <summary>Non-operational account; GraphQL <c>ACCOUNT_SUSPENDED</c>, HTTP 403 for REST.</summary>
 public sealed class AccountSuspendedException(Guid accountId, AccountStatus status)
     : Exception($"Account '{accountId}' is not operational (status: {status}).")
 {

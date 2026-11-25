@@ -83,7 +83,6 @@ const OSMTripsMap = ({
     return new L.Icon({ iconUrl: singleIconUrl, iconSize: [size, size] });
   };
 
-  // Helper function to calculate the bounding box of an array of coordinates
   const calculateBoundingBox = (coordinates: [number, number][]): [number, number][] => {
     const latitudes = coordinates.map(coord => coord[0]);
     const longitudes = coordinates.map(coord => coord[1]);
@@ -92,7 +91,6 @@ const OSMTripsMap = ({
     return [southWest, northEast];
   };
 
-  // Function to calculate the bounding box of all trips
   const calculateBounds = (): [number, number][] => {
     if (trips.length === 0) {
       return [[4.624335, -74.063644], [4.624335, -74.063644]];
@@ -101,12 +99,10 @@ const OSMTripsMap = ({
     return calculateBoundingBox(allCoords);
   };
 
-  // Function to calculate the bounding box of a specific trip
   const calculateTripBounds = (trip: MapTrip): [number, number][] => {
     return calculateBoundingBox(trip.coordinates);
   };
 
-  // Center in selected polygon
   useEffect(() => {
     if (mapRef.current && selectedTrip) {
       const map = mapRef.current;
@@ -118,7 +114,6 @@ const OSMTripsMap = ({
     }
   }, [selectedTrip, trips]);
 
-  // Center the map to the bounding box of all trips
   useEffect(() => {
     if (mapRef.current) {
       const map = mapRef.current;

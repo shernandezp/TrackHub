@@ -18,9 +18,7 @@ using TrackHub.Security.Application.Audit.Events;
 
 namespace TrackHub.Security.Application.ServiceClientPermissions.Commands;
 
-// The account is nested in ServiceClientPermissionDto, so this went unpoliced until TrackHubCommon
-// 1.0.7. Resources.ServiceClients is Administrator-only (DBInitializer role matrix), and the only
-// caller is the portal's systemadmin console.
+// Resources.ServiceClients is Administrator-only (DBInitializer role matrix).
 [Authorize(Resource = Resources.ServiceClients, Action = Actions.Write)]
 [AllowCrossAccount("Platform administration of service-client grants (portal systemadmin console). Binding a PARTNER client to a tenant means writing that tenant's accountid on the grant, so the target account is by definition not the platform operator's own — this is precisely the account-binding that findings.md TS-01 requires before a partner integration can ship. Internal service grants carry a null account and are unaffected.")]
 public readonly record struct CreateServiceClientPermissionCommand(ServiceClientPermissionDto Permission) : IRequest<ServiceClientPermissionVm>;

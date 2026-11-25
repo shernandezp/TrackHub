@@ -15,8 +15,8 @@ public sealed class TransporterPositionHistoryReader(IApplicationDbContext conte
         var q = Context.TransporterPositionHistory.AsQueryable();
         q = filters.Apply(q);
 
-        // Bounded in SQL. Applied after a newest-first Take, the window intersected only the most
-        // recent page, so an export of an older month came back near-empty on an active fleet.
+        // Bounded in SQL. Applied after a newest-first Take, the window would intersect only the most
+        // recent page, so an export of an older month would come back near-empty on an active fleet.
         if (from.HasValue)
         {
             q = q.Where(x => x.SourceTimestamp >= from.Value);

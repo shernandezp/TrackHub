@@ -91,7 +91,6 @@ public class RegisterManualDeviceCommandHandlerTests
     [Test]
     public async Task Handle_AutoAssign_CreatesTransporterNamedAfterDeviceAndAssigns()
     {
-        // Arrange
         var dto = CreateDto();
         var vm = CreateVm(dto);
         var transporterId = Guid.NewGuid();
@@ -104,10 +103,8 @@ public class RegisterManualDeviceCommandHandlerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TransporterVm(transporterId, "ABC123", TransporterType.Asset, (short)TransporterType.Asset, 0));
 
-        // Act
         var result = await CreateHandler().Handle(new RegisterManualDeviceCommand(dto), CancellationToken.None);
 
-        // Assert
         Assert.That(result, Is.EqualTo(vm));
         _transporterGroupWriter.Verify(x => x.CreateTransporterGroupAsync(
             It.Is<TransporterGroupDto>(g => g.TransporterId == transporterId && g.GroupId == DefaultGroupId),
@@ -124,7 +121,6 @@ public class RegisterManualDeviceCommandHandlerTests
     [Test]
     public async Task Handle_AutoAssign_AdoptsExistingTransporterWithoutCreatingOne()
     {
-        // Arrange
         var dto = CreateDto();
         var vm = CreateVm(dto);
         var adoptedId = Guid.NewGuid();
@@ -166,7 +162,7 @@ public class RegisterManualDeviceCommandHandlerTests
     [Test]
     public async Task Handle_BlankDeviceName_NamesTransporterAfterSerial()
     {
-        // Arrange: the writer echoes whatever name it stored; the transporter falls back to serial.
+        // The writer echoes whatever name it stored; the transporter falls back to serial.
         var dto = CreateDto(name: "  ", serial: "IMEI-9");
         var vm = CreateVm(dto);
         _deviceWriter.Setup(x => x.CreateManualDeviceAsync(dto, It.IsAny<CancellationToken>()))
@@ -174,10 +170,8 @@ public class RegisterManualDeviceCommandHandlerTests
         _transporterWriter.Setup(x => x.CreateTransporterAsync(It.IsAny<TransporterDto>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TransporterVm(Guid.NewGuid(), "IMEI-9", TransporterType.Person, (short)TransporterType.Person, 0));
 
-        // Act
         await CreateHandler().Handle(new RegisterManualDeviceCommand(dto), CancellationToken.None);
 
-        // Assert
         _transporterWriter.Verify(x => x.CreateTransporterAsync(
             It.Is<TransporterDto>(t => t.Name == "IMEI-9"), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -185,7 +179,6 @@ public class RegisterManualDeviceCommandHandlerTests
     [Test]
     public async Task Handle_ExistingDefaultGroup_DoesNotCreateAnother()
     {
-        // Arrange
         var dto = CreateDto();
         var vm = CreateVm(dto);
         _deviceWriter.Setup(x => x.CreateManualDeviceAsync(dto, It.IsAny<CancellationToken>()))
@@ -196,10 +189,8 @@ public class RegisterManualDeviceCommandHandlerTests
         _transporterWriter.Setup(x => x.CreateTransporterAsync(It.IsAny<TransporterDto>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TransporterVm(Guid.NewGuid(), "ABC123", TransporterType.Person, (short)TransporterType.Person, 0));
 
-        // Act
         await CreateHandler().Handle(new RegisterManualDeviceCommand(dto), CancellationToken.None);
 
-        // Assert
         _groupWriter.Verify(x => x.CreateGroupAsync(It.IsAny<GroupDto>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

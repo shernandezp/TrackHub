@@ -1,13 +1,7 @@
 /**
- * Global teardown: leave the account exactly as the run found it.
- *
- * Two jobs, in order:
- *  1. delete the manager/user principals the setup project created itself
- *     (`e2e/.auth/created.json`) — they are real accounts users, not fixtures;
- *  2. sweep `e2e-*` rows an earlier, crashed run abandoned.
- *
- * Nothing here throws: a teardown failure must not turn a green run red, but it
- * must be visible, so every failure is printed.
+ * Deletes the principals the setup project created (`e2e/.auth/created.json`),
+ * then sweeps `e2e-*` rows earlier runs abandoned. Never throws, so a teardown
+ * failure cannot turn a green run red; every failure is printed instead.
  */
 
 import fs from 'node:fs';

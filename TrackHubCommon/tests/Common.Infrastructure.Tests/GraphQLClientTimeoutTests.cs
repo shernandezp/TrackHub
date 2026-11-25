@@ -7,15 +7,8 @@ using Microsoft.Extensions.Options;
 namespace Common.Infrastructure.Tests;
 
 /// <summary>
-/// Pins that a client's declared <c>timeoutSeconds</c> actually reaches the RESILIENCE PIPELINE.
-///
-/// <para>
-/// The pipeline sits inside <c>HttpClient.Timeout</c>, so its own limits fire first. Left at the
-/// standard defaults it cuts every attempt off at 10 s and the request at 30 s — which silently
-/// made a client registered with `timeoutSeconds: 120` behave as a 10 s client. That is what killed
-/// Manager's sync dispatch to the Router while the Router's app pool was cold, reported as
-/// `Router-standard/Standard-AttemptTimeout` with the provider itself answering in under a second.
-/// </para>
+/// Pins that a client's declared <c>timeoutSeconds</c> reaches the resilience pipeline, which sits inside
+/// <c>HttpClient.Timeout</c> and would otherwise cut every attempt off at its 10 s default.
 /// </summary>
 public class GraphQLClientTimeoutTests
 {
@@ -24,8 +17,7 @@ public class GraphQLClientTimeoutTests
     private static ServiceProvider Build(int timeoutSeconds, GraphQLClientResilience resilience)
     {
         var services = new ServiceCollection();
-        // A real host always has configuration. The client registration now composes an auth
-        // pipeline, and its token provider reads configuration to acquire the host token.
+        // A real host always has configuration; the token provider reads it to acquire the host token.
         services.AddSingleton<IConfiguration>(new ConfigurationBuilder().Build());
         services.AddLogging();
         services.AddGraphQLClient(ClientName, propagateHeaders: false, resilience, timeoutSeconds);
@@ -61,9 +53,8 @@ public class GraphQLClientTimeoutTests
     }
 
     /// <summary>
-    /// The standard handler disables HttpClient.Timeout so the pipeline governs. This is precisely
-    /// why the pipeline must be configured: with the outer timeout gone, an unconfigured pipeline's
-    /// 10 s default is the ONLY limit in force, whatever the caller declared.
+    /// The standard handler disables HttpClient.Timeout, so an unconfigured pipeline's 10 s default would be
+    /// the only limit in force, whatever the caller declared.
     /// </summary>
     [Fact]
     public void ResiliencePipeline_TakesOverFromHttpClientTimeout()
@@ -88,8 +79,8 @@ public class GraphQLClientTimeoutTests
     }
 
     /// <summary>
-    /// The library validates these against each other on first resolution; an invalid combination
-    /// throws at STARTUP, so resolving the client is the assertion.
+    /// The library validates these against each other on first resolution and throws at startup, so
+    /// resolving the client is the assertion.
     /// </summary>
     [Theory]
     [InlineData(1)]

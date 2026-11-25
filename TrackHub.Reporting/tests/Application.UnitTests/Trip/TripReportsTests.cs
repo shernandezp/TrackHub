@@ -98,7 +98,6 @@ public class TripReportsTests
         });
     }
 
-    // ---- trip-summary ----
 
     [Test]
     public async Task Summary_OrdersMostRecentFirst_AndConvertsDistanceToKilometers()
@@ -155,7 +154,7 @@ public class TripReportsTests
             Assert.That(result.Cell(0, "StaffName"), Is.EqualTo(string.Empty));
             Assert.That(result.Cell(0, "TollCurrency"), Is.EqualTo(string.Empty));
             // A missing plan or an unpopulated toll catalog stays NULL — never 0, which would read
-            // as "no distance"/"free" (spec 11 §7.7).
+            // as "no distance"/"free".
             Assert.That(result.Cell(0, "PlannedDistanceKm"), Is.Null);
             Assert.That(result.Cell(0, "EstimatedTollAmount"), Is.Null);
         });
@@ -215,7 +214,6 @@ public class TripReportsTests
         }));
     }
 
-    // ---- trip-detail ----
 
     [Test]
     public async Task Detail_OrdersByTripThenSequence_AndComputesDwell()
@@ -274,7 +272,6 @@ public class TripReportsTests
         }));
     }
 
-    // ---- trip-on-time-performance ----
 
     [Test]
     public async Task OnTime_AggregatesPerTransporterStaffCustomer()
@@ -359,7 +356,6 @@ public class TripReportsTests
         }));
     }
 
-    // ---- trip-stop-dwell ----
 
     [Test]
     public async Task Dwell_AggregatesPerStopAndCustomer_LongestAverageFirst()
@@ -419,7 +415,6 @@ public class TripReportsTests
         }));
     }
 
-    // ---- trip-toll-cost ----
 
     // The whole point of the report: a station with no tariff for the trip's class must arrive as a
     // flagged NULL, never as a zero that quietly nets into the total.
@@ -466,7 +461,6 @@ public class TripReportsTests
         }));
     }
 
-    // ---- trip-pod-export ----
 
     [Test]
     public async Task Pod_OrdersMostRecentCaptureFirst_AndKeepsCoordinatesNullable()
@@ -508,7 +502,6 @@ public class TripReportsTests
         }));
     }
 
-    // ---- feature gate ----
 
     [Test]
     public async Task AllReports_EnforceTheTripManagementFeatureBeforeReading()
@@ -538,7 +531,6 @@ public class TripReportsTests
             It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<Guid?>(), It.IsAny<Guid?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
-    // ---- resx column headers (all three Resources*.resx) ----
 
     private static readonly Type[] TripRowVms =
     [
@@ -632,7 +624,7 @@ public class TripReportsTests
         }
     }
 
-    // One header wholly containing another in the same report (the spec 09 "Type"/"Qualification Type"
+    // One header wholly containing another in the same report ("Type" beside "Qualification Type")
     // defect) passes an equality check but still makes a column meaningless to whoever reads the export.
     [TestCase("en")]
     [TestCase("es")]

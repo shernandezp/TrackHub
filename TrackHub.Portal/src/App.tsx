@@ -31,27 +31,21 @@ Coded by www.creative-tim.com
 import { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import type { ReactNode } from 'react';
 
-// react-router components
 import { Routes, Route, Navigate, useLocation } from "react-router";
 
-// @mui material components
 import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import GlobalStyles from "@mui/material/GlobalStyles";
 
-// Argon Dashboard 2 MUI example components
 import Sidenav from "controls/Sidenav";
 import Configurator from "controls/Configurator";
 
-// Argon Dashboard 2 MUI themes
 import theme from "assets/theme";
 import themeDark from "assets/theme-dark";
 
-// Argon Dashboard 2 MUI routes
 import routes from "routes";
 import type { RouteDefinition } from "routes";
 
-// Argon Dashboard 2 MUI contexts
 import {
   useArgonController,
   setDarkSidenav,
@@ -59,11 +53,9 @@ import {
   setDarkMode,
  } from "context";
 
-// Images
 import brand from "assets/images/logo-th.svg";
 import brandDark from "assets/images/logo-th-dark.svg";
 
-// Icon Fonts
 import "assets/css/nucleo-icons.css";
 import "assets/css/nucleo-svg.css";
 
@@ -90,11 +82,7 @@ import { getAuthorizedActions } from "api/security/permissions";
 import type { AuthorizedAction } from "api/security/permissions";
 import AnnouncementBanner from "components/AnnouncementBanner";
 
-/**
- * Public, chrome-less routes (see routes.tsx `platformStatus` / `tripTracking`).
- * Both are reachable signed-out and render their own full-page shell, so the
- * Sidenav, Configurator and announcement banner are all suppressed on them.
- */
+/** Both render their own full-page shell, so the Sidenav, Configurator and banner are suppressed. */
 const PUBLIC_ROUTES = ["/status", "/track"] as const;
 
 export default function App() {
@@ -130,8 +118,6 @@ export default function App() {
   const [currentPrincipal, setCurrentPrincipal] = useState<CurrentPrincipal | null>(null);
 
   useEffect(() => {
-    // Redirect to login page if not authenticated
-    // Skip redirect if: on callback page, already logging in, on error page, or auth error occurred
     const isAuthRoute = pathname.startsWith("/authentication/");
     const isErrorPage = pathname === "/error";
     // The public pages must never bounce to the login flow: the status page's
@@ -167,16 +153,14 @@ export default function App() {
 
       // The rest of the bootstrap is independent — fan out instead of chaining five
       // sequential round trips behind each other.
-      // Graceful fallbacks on failure (matching the old services' silent handling):
-      // null principal ⇒ routes fall back to the default principal type, false roles
-      // ⇒ admin/manager routes stay locked down, no toast either way.
+      // Failures degrade silently: null principal ⇒ default principal type, false roles ⇒
+      // admin/manager routes stay locked down.
       const [principal, admin, manager, settings, context] = await Promise.all([
         getCurrentPrincipal().catch(() => null),
         isAdmin().catch(() => false),
         isManager().catch(() => false),
         getAccountSettings().catch(() => null),
-        // Single bootstrap read (status + branding + features); allowed on non-operational accounts
-        // so the shell can render a suspension state instead of issuing operational queries.
+        // Allowed on non-operational accounts so the shell can render a suspension state.
         getAccountContext().catch(() => null),
       ]);
 
@@ -212,7 +196,7 @@ export default function App() {
 
     // Only once the caller is authenticated: fetchPermissions returns immediately while signed out,
     // and releasing the gate on that pass would decide every gated route against role flags that have
-    // not loaded — a deep link opened signed out was redirected away before sign-in even completed.
+    // not loaded, redirecting a deep link away before sign-in completed.
     if (!isAuthenticated) {
       return;
     }
@@ -223,7 +207,6 @@ export default function App() {
     fetchPermissions().finally(() => setBootstrapLoaded(true));
   }, [isAuthenticated]);
 
-  // Open sidenav when mouse enter on mini sidenav
   const handleOnMouseEnter = () => {
     if (miniSidenav && !onMouseEnter) {
       setMiniSidenav(dispatch, false);
@@ -231,7 +214,6 @@ export default function App() {
     }
   };
 
-  // Close sidenav when mouse leave mini sidenav
   const handleOnMouseLeave = () => {
     if (onMouseEnter) {
       setMiniSidenav(dispatch, true);
@@ -245,10 +227,6 @@ export default function App() {
     getAccountSettings().then(setAccountSettings).catch(() => undefined);
   }, [openConfigurator, isAuthenticated]);
 
-  // The Argon template's RTL support was dropped in this fork: the controller
-  // has no `direction` state, so the app is LTR-only. The old effect wrote the
-  // invalid dir="undefined" to <body>; it is intentionally gone.
-
   // The snippet in index.html paints <html> from the mirrored preference before the
   // bundle loads; take it over here so a mid-session theme switch also moves the
   // backdrop and the native scrollbars/form controls with it.
@@ -258,7 +236,6 @@ export default function App() {
     document.documentElement.style.colorScheme = darkMode ? "dark" : "light";
   }, [darkMode]);
 
-  // Setting page scroll to 0 when changing the route
   useEffect(() => {
     document.documentElement.scrollTop = 0;
     if (document.scrollingElement) {
@@ -266,7 +243,6 @@ export default function App() {
     }
   }, [pathname]);
 
-  // Operational statuses (Trial/Active) permit normal access; anything else renders a suspension shell.
   const accountOperational = !accountStatus || accountStatus === 'TRIAL' || accountStatus === 'ACTIVE';
 
   // The public pages render chrome-less for everyone (signed in or not) and stay
@@ -325,7 +301,7 @@ export default function App() {
   };
 
   // Screens the principal can actually reach (feature + role filtered) — the
-  // help index hides topics for screens outside this set (UX filtering, CH-01).
+  // help index hides topics for screens outside this set.
   const allowedScreens = enabledRoutes
     .filter(route => route.type === 'route' && !!route.route && routeAllowed(route))
     .map(route => route.key);
@@ -404,15 +380,14 @@ export default function App() {
                />
           </>
         )}
-        {/* Platform announcements reach every signed-in user on every screen; the
-            status page renders its own copy, so it is skipped there. */}
+        {/* Platform announcements reach every signed-in user; the status page renders its own copy. */}
         {isAuthenticated && !onChromelessPage && <AnnouncementBanner />}
         {/* Screens load on demand, so the router needs a boundary to render while one arrives. */}
         <Suspense fallback={null}>
           <Routes>
             {getRoutes(enabledRoutes)}
             {/* Feature-gated routes are absent until the account context loads; deciding the
-                catch-all before that bounced every reload or deep link of such a screen to the
+                catch-all before that bounces every reload or deep link of such a screen to the
                 dashboard. Signed-out visitors have no context to wait for. */}
             <Route
               path="*"

@@ -3,8 +3,8 @@ using Common.Infrastructure;
 namespace TrackHub.Manager.Infrastructure.Entities;
 
 /// <summary>
-/// Time-bounded staff↔transporter assignment history (spec 09 §6). Authoritative operational record;
-/// <c>Staff.DefaultTransporterId</c> stays as the pre-selected default (spec 09 §18.2). At most one
+/// Time-bounded staff↔transporter assignment history. Authoritative operational record;
+/// <c>Staff.DefaultTransporterId</c> stays as the pre-selected default. At most one
 /// open assignment may exist per (staff, transporter) pair — enforced by the writer, which returns
 /// 409 on overlap. A staff may hold several concurrent assignments to DIFFERENT transporters.
 /// </summary>

@@ -19,14 +19,12 @@ import type { ReactNode } from 'react';
 import { AuthProvider, useAuth } from 'AuthContext';
 import { refreshAccessToken } from 'services/auth';
 
-// Mock the auth service
 vi.mock('services/auth', () => ({
   refreshAccessToken: vi.fn(),
   revokeAccessToken: vi.fn().mockResolvedValue(undefined),
   logout: vi.fn().mockResolvedValue(undefined),
 }));
 
-// Mock authutils
 vi.mock('utils/authutils', () => ({
   generateCodeVerifier: vi.fn(() => 'mock-verifier'),
   generateCodeChallenge: vi.fn(() => 'mock-challenge'),

@@ -73,9 +73,8 @@ public static class NonRoutableAddress
                 || MetadataHosts.Contains(host, StringComparer.OrdinalIgnoreCase));
 
     /// <summary>
-    /// Literal-address and well-known-name check for a URL being stored. A name that RESOLVES to a
-    /// non-routable address is caught at dial time instead, which is what a later DNS change cannot
-    /// evade.
+    /// Literal-address and well-known-name check for a URL being stored. A name that resolves to a
+    /// non-routable address is caught at dial time instead, which a later DNS change cannot evade.
     /// </summary>
     public static bool TargetsNonRoutableHost(string? uri)
     {

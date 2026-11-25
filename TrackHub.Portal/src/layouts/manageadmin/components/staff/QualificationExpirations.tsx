@@ -15,9 +15,8 @@
 */
 
 /**
- * Account-wide qualification expirations inside the next 30 days, severity
- * coloured by remaining days (the same 30/15/7/0 thresholds the backend scan
- * alerts on). Gated by the `workforce` feature — cosmetically only.
+ * Severity uses the same 30/15/7/0-day thresholds the backend scan alerts on. Gated by the
+ * `workforce` feature, cosmetically only.
  */
 
 import { useContext, useEffect, useState } from 'react';
@@ -43,7 +42,6 @@ import { useAccountCalendar } from 'context/account';
 import { LoadingContext } from 'LoadingContext';
 import { formatDateOnly } from 'utils/dateUtils';
 
-/** The spec's expirations view window (spec 09 §8). */
 const EXPIRING_WITHIN_DAYS = 30;
 
 function QualificationExpirations() {

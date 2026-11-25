@@ -22,10 +22,6 @@ using TrackHub.Router.Domain.Interfaces.Manager;
 
 namespace TrackHub.Router.Infrastructure.Protrack;
 
-/// <summary>
-/// Base class for Protrack readers providing common functionality for API communication.
-/// Protrack uses access token authentication obtained via MD5-based signature.
-/// </summary>
 public class ProtrackReaderBase
 {
     private readonly ICredentialHttpClientFactory _httpClientFactory;
@@ -34,17 +30,10 @@ public class ProtrackReaderBase
 
     protected IHttpClientService HttpClientService { get; }
 
-    // Protrack protocol type (value 9, not yet in the shared enum)
     public ProtocolType Protocol => ProtocolType.Protrack;
 
-    /// <summary>
-    /// Gets the current access token.
-    /// </summary>
     protected string AccessToken { get; private set; } = string.Empty;
 
-    /// <summary>
-    /// Gets the base URL for API calls.
-    /// </summary>
     protected string BaseUrl { get; private set; } = string.Empty;
 
     protected ProtrackReaderBase(
@@ -58,10 +47,6 @@ public class ProtrackReaderBase
         _tokenHelper = new TokenHelper(credentialWriter, sessionStore);
     }
 
-    /// <summary>
-    /// Initializes the Protrack reader with the provided credential.
-    /// Authenticates using MD5-based signature to obtain an access token.
-    /// </summary>
     public virtual async Task Init(CredentialTokenDto credential, CancellationToken cancellationToken = default)
     {
         _credential = credential;

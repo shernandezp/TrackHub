@@ -17,30 +17,22 @@
 import { ApiError, ERROR_CODE_I18N } from './errors';
 
 /**
- * Skip/take exhaustion helper for the api layer.
- *
  * Every Manager/Security list query clamps `take` to 1..500 server-side, so a
- * single call can never be assumed to return the whole set: a caller that asks
- * for "all staff" and reads one page silently loses every row past the page
- * boundary. This mirrors the `FetchAllAsync` exhaustion the Reporting service
- * uses — page at the server's maximum until a short page comes back.
+ * single call can never be assumed to return the whole set; this pages at the
+ * server maximum until a short page comes back.
  */
 
 /** The server-side clamp ceiling shared by every paged Manager/Security query. */
 export const MAX_PAGE_SIZE = 500;
 
 /**
- * Hard ceiling on an exhaustive read. Reaching it means the caller is pulling a
- * genuinely unbounded dataset (e.g. an account's whole assignment history) and
- * must narrow with filters instead — surfaces compare `items.length` against
- * this constant to say so out loud rather than truncating in silence.
+ * Reaching it means the caller is pulling an unbounded dataset and must narrow with
+ * filters; surfaces compare `items.length` against it to say so rather than
+ * truncating in silence.
  */
 export const MAX_FETCH_ALL_ITEMS = 5000;
 
-/**
- * Skip/take/search arguments shared by every paged Manager list query. The
- * server requires the wrapping input object but each member is optional.
- */
+/** The server requires the wrapping input object but each member is optional. */
 export interface ListParams {
   skip?: number | null;
   take?: number | null;
@@ -54,8 +46,8 @@ export interface Page<T> {
 }
 
 /**
- * One page of an APPEND-ONLY feed. Those are paged by cursor and report only whether more rows
- * exist: an exact count over a fact table nobody ever shrinks costs O(rows) on every request.
+ * Append-only feeds are paged by cursor and report only whether more rows exist: an
+ * exact count over a fact table costs O(rows) on every request.
  */
 export interface CursorPage<T> {
   items: T[];
@@ -69,11 +61,7 @@ export interface FetchAllOptions {
   maxItems?: number;
 }
 
-/**
- * Pages through `fetchPage` until it returns a short page (or nothing), and
- * returns the concatenated result. A set larger than `maxItems` is refused with
- * LOOKUP_LIMIT_EXCEEDED rather than returned short: a truncated list reads as complete.
- */
+/** A set larger than `maxItems` is refused with LOOKUP_LIMIT_EXCEEDED: a truncated list reads as complete. */
 export async function fetchAllPages<T>(
   fetchPage: (skip: number, take: number) => Promise<T[]>,
   { pageSize = MAX_PAGE_SIZE, maxItems = MAX_FETCH_ALL_ITEMS }: FetchAllOptions = {}
@@ -85,7 +73,6 @@ export async function fetchAllPages<T>(
     const page = await fetchPage(skip, take);
     if (!page || page.length === 0) break;
     items.push(...page);
-    // A short page means the server had nothing more to give.
     if (page.length < take) break;
   }
 

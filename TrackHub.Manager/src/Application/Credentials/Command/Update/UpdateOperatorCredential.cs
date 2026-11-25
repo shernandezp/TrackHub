@@ -29,19 +29,15 @@ public class UpdateOperatorCredentialCommandHandler(ICredentialWriter writer, IO
 {
     public async Task Handle(UpdateOperatorCredentialCommand request, CancellationToken cancellationToken)
     {
-        // Retrieve the encryption key from the configuration
         var key = configuration["AppSettings:EncryptionKey"];
         Guard.Against.Null(key, message: "Credential key not found.");
 
-        // Generate a salt for encryption
         var salt = CryptographyExtensions.GenerateAesKey(256);
 
-        // Retrieve the operator based on the provided OperatorId
         var @operator = await operatorReader.GetOperatorAsync(request.Credential.OperatorId, cancellationToken);
         Guard.Against.Null(@operator.Credential, nameof(@operator.Credential));
         var credentialId = @operator.Credential.Value.CredentialId;
 
-        // Update the credential using the writer
         await writer.UpdateCredentialAsync(
             new UpdateCredentialDto(
                 credentialId,

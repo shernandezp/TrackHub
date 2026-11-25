@@ -29,8 +29,7 @@ namespace TrackHub.TripManagement.Infrastructure.RoutingApi;
 /// <para>
 /// Every failure path leaves as a <see cref="RoutingUnavailableException"/> carrying
 /// <c>ROUTING_UNAVAILABLE</c> or <c>ROUTING_NOT_CONFIGURED</c>; nothing else escapes, because the
-/// planning handler turns that into a <c>Failed</c> route plan and the trip stays fully usable
-/// (spec 11 §7.3, §14, acceptance 18).
+/// planning handler turns that into a <c>Failed</c> route plan and the trip stays fully usable.
 /// </para>
 /// </summary>
 public sealed class OpenRouteServiceRoutingProvider(
@@ -46,12 +45,11 @@ public sealed class OpenRouteServiceRoutingProvider(
     // Throttle state is process-wide: the provider itself is registered Scoped, but the vendor
     // rate limit is per deployment (the Router ReverseGeocodingService pattern).
     //
-    // Two lanes, because interactive route planning and the ETA job are not equal callers. A single
-    // queue meant a dispatcher's PlanTripRoute waited behind everything the background job had already
-    // enqueued — unbounded, since the job walks every account and up to MaxTripsPerCycle trips in each.
-    // Each lane now queues separately; only the pacing clock, which is what the vendor limit actually
+    // Two lanes, because interactive route planning and the ETA job are not equal callers: with a
+    // single queue a dispatcher's PlanTripRoute would wait behind the job's whole backlog. Each lane
+    // queues separately; only the pacing clock, which is what the vendor limit actually
     // constrains, is shared, so an interactive caller waits for at most one in-flight background
-    // request rather than for the whole background backlog.
+    // request.
     private static readonly SemaphoreSlim InteractiveGate = new(1, 1);
     private static readonly SemaphoreSlim BackgroundGate = new(1, 1);
     private static readonly SemaphoreSlim PacingGate = new(1, 1);

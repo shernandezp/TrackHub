@@ -35,7 +35,6 @@ public class GpsGateReaderBase
         _httpClientFactory = httpClientFactory;
     }
 
-    // Initializes the GpsGate reader with the provided credential.
     public virtual Task Init(CredentialTokenDto credential, CancellationToken cancellationToken = default)
     {
         var httpClient = _httpClientFactory.CreateClientAsync(credential, cancellationToken);

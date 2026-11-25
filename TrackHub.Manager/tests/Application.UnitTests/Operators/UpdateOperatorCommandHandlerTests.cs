@@ -33,30 +33,24 @@ public class UpdateOperatorCommandHandlerTests
     [Test]
     public async Task Handle_ValidCommand_DelegatesToWriter()
     {
-        // Arrange
         var dto = new UpdateOperatorDto(Guid.NewGuid(), "Updated", "Desc", "+1", "e@e.com", "Addr", "Contact", 2, 60);
         var command = new UpdateOperatorCommand(dto);
         var handler = new UpdateOperatorCommandHandler(_writerMock.Object);
 
-        // Act
         await handler.Handle(command, CancellationToken.None);
 
-        // Assert
         _writerMock.Verify(w => w.UpdateOperatorAsync(dto, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Test]
     public async Task Handle_PassesExactDto_ToWriter()
     {
-        // Arrange — ensure the exact DTO reference is passed through
         var operatorId = Guid.NewGuid();
         var dto = new UpdateOperatorDto(operatorId, "Name", null, null, null, null, null, 1, 60);
         var handler = new UpdateOperatorCommandHandler(_writerMock.Object);
 
-        // Act
         await handler.Handle(new UpdateOperatorCommand(dto), CancellationToken.None);
 
-        // Assert
         _writerMock.Verify(w => w.UpdateOperatorAsync(
             It.Is<UpdateOperatorDto>(d => d.OperatorId == operatorId && d.Name == "Name"),
             It.IsAny<CancellationToken>()), Times.Once);

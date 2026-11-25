@@ -19,7 +19,6 @@ import CustomPasswordField from "controls/Dialogs/CustomPasswordField";
 import FormDialog from "controls/Dialogs/FormDialog";
 import { useTranslation } from "react-i18next";
 
-// Shared shape of the password-change form values (also consumed by ProfileInfoCard).
 export interface PasswordFormValues {
   currentPassword?: string;
   password?: string;

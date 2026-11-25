@@ -73,13 +73,9 @@ public sealed class StaffMemberWriter(IApplicationDbContext context, ICurrentPri
         await Context.SaveChangesAsync(cancellationToken);
     }
 
-    /// <summary>
-    /// Spec 09 §5: cross-account transporter references must fail. Without this, a staff in account A
-    /// could be pointed at a transporter in account B, and because <c>ValidateStaffAssignment</c>
-    /// accepts the default-transporter match, <c>DocumentAccessPolicy</c> would then grant that staff
-    /// access to account B's documents. The assignment path always checked this; the default-transporter
-    /// scalar did not.
-    /// </summary>
+    // Cross-account transporter references must fail: ValidateStaffAssignment accepts the
+    // default-transporter match, so DocumentAccessPolicy would otherwise grant the staff access to
+    // another account's documents.
     private async Task RequireTransporterInAccountAsync(Guid? transporterId, Guid accountId, CancellationToken cancellationToken)
     {
         if (!transporterId.HasValue)

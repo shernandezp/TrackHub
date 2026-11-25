@@ -7,14 +7,8 @@ using HotChocolate;
 namespace Common.Web.Tests.Infrastructure;
 
 /// <summary>
-/// The filter is the ONLY thing that turns a domain exception into a code a client can branch on.
-/// Two gaps here were invisible to every other suite, because handler tests assert on the thrown
-/// exception and never on what a GraphQL caller actually receives:
-/// <list type="bullet">
-/// <item>no <see cref="ValidationException"/> branch at all, so deliberate domain rejections
-/// surfaced as an unmapped "Unexpected Execution Error" with no code;</item>
-/// <item>a hardcoded <c>CONFLICT</c>, which collapsed every specific conflict literal into one.</item>
-/// </list>
+/// The filter is the only thing that turns a domain exception into a code a client can branch on; handler
+/// tests assert on the thrown exception, never on what a GraphQL caller receives.
 /// </summary>
 public class TrackHubGraphQLErrorFilterTests
 {
@@ -70,8 +64,8 @@ public class TrackHubGraphQLErrorFilterTests
     [Fact]
     public void OnError_ConflictExceptionWithProseMessage_KeepsTheGenericCode()
     {
-        // The pre-existing shape used by Manager and Security, which pass a human sentence and no
-        // code. Their contract must not change just because a code-carrying overload now exists.
+        // The shape used by Manager and Security, which pass a human sentence and no code; their contract
+        // must not change because a code-carrying overload exists.
         var result = _filter.OnError(ErrorFor(new ConflictException("An identical subscription already exists.")));
 
         result.Code.Should().Be(ConflictException.DefaultCode);
@@ -97,10 +91,8 @@ public class TrackHubGraphQLErrorFilterTests
     [Fact]
     public void OnError_NotFoundException_IsMappedRatherThanFallingThrough()
     {
-        // Caught by a smoke test, not by the audit: creating a trip with another account's
-        // transporter answered "Unexpected Execution Error" instead of a 404-shaped rejection.
-        // Cross-account ids are deliberately answered NotFound so they cannot be probed, so this
-        // branch carries the platform's whole non-disclosure story on GraphQL.
+        // Cross-account ids are deliberately answered NotFound so they cannot be probed, so this branch
+        // carries the platform's whole non-disclosure story on GraphQL.
         var result = _filter.OnError(ErrorFor(new Ardalis.GuardClauses.NotFoundException("abc", "Transporter")));
 
         result.Code.Should().Be("NOT_FOUND");

@@ -26,7 +26,7 @@ public readonly record struct GeometryLineVm(IReadOnlyCollection<CoordinateVm> C
 
 /// <summary>
 /// A route-replay point stream. <paramref name="Truncated"/> is explicit: Telemetry's 10 000-point
-/// cap must never silently shorten a route (spec 11 §7.5, acceptance 22).
+/// cap must never silently shorten a route.
 /// </summary>
 public readonly record struct RouteReplayVm(
     IReadOnlyCollection<RouteReplayPointVm> Points,

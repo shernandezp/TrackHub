@@ -96,10 +96,8 @@ public class SynchronizeOperatorDevicesCommandHandler(
 
         await operatorWriter.UpdateSyncSummaryAsync(request.OperatorId, finishedAt, triggerType, cancellationToken);
 
-        // Manager no longer records the sync run: it returns the counts and Router is
-        // the single writer of sync-run telemetry, recording exactly one run per attempt (success or
-        // failure) with identical field completeness. OperatorSyncRunId is left empty because this VM
-        // is not persisted here.
+        // Router is the single writer of sync-run telemetry; this VM only carries the counts and is
+        // not persisted here, hence the empty OperatorSyncRunId.
         return new OperatorSyncRunVm(
             OperatorSyncRunId: Guid.Empty,
             request.AccountId,

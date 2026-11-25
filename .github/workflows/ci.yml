@@ -82,9 +82,8 @@ jobs:
           echo "services=[${out%,}]" >> "$GITHUB_OUTPUT"
 
   # ---------------------------------------------------------------------------
-  # Deliberately NOT path-filtered. Building the whole graph is what catches the
-  # cross-service breakage the polyrepo layout used to hide, and at this size it
-  # costs a few minutes.
+  # Deliberately NOT path-filtered. Building the whole graph is what catches
+  # cross-service breakage, and at this size it costs a few minutes.
   # ---------------------------------------------------------------------------
   build:
     runs-on: ubuntu-latest
@@ -98,7 +97,7 @@ jobs:
           path: ~/.nuget/packages
           key: nuget-${{ runner.os }}-${{ hashFiles('**/Directory.Packages.props') }}
           restore-keys: nuget-${{ runner.os }}-
-      # TrackHubCommon is a ProjectReference now, so one solution covers the whole
+      # TrackHubCommon is a ProjectReference, so one solution covers the whole
       # graph and there is nothing to pack before restoring.
       - name: Build the whole graph
         run: dotnet build TrackHub.slnx -c Release
@@ -143,8 +142,7 @@ jobs:
         run: dotnet test "${{ steps.dir.outputs.dir }}" -c Release
 
   # ---------------------------------------------------------------------------
-  # The cross-service GraphQL contract suite. Its `contracts` output was computed
-  # but consumed by no job, so a contract break reached develop green.
+  # The cross-service GraphQL contract suite.
   # ---------------------------------------------------------------------------
   contracts:
     needs: [changes, build]

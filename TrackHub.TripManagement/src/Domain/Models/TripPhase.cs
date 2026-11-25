@@ -17,8 +17,7 @@ namespace TrackHub.TripManagement.Domain.Models;
 
 /// <summary>
 /// What a trip is doing right now, in the dispatcher's terms rather than the database's: "loading at
-/// Plant 3", "in transit to Client X", "overdue to start". Status alone cannot say any of that — a
-/// board full of rows reading <c>InProgress</c> is why the dispatcher used to have to open each one.
+/// Plant 3", "in transit to Client X", "overdue to start". Status alone cannot say any of that.
 /// </summary>
 public readonly record struct TripPhaseVm(
     string Phase,
@@ -27,9 +26,8 @@ public readonly record struct TripPhaseVm(
     DateTimeOffset? PhaseEtaAt,
 
     // Whether the stop this phase is about has already raised TripDelayed. It travels with the
-    // phase so the board's "Delayed" exception means exactly what the alert means — the portal used
-    // to re-derive it as "next-stop ETA later than the trip's planned END", a second, looser
-    // definition of the same word sitting next to the first on the same screen.
+    // phase so the board's "Delayed" exception means exactly what the alert means, not a second,
+    // looser definition of the same word on the same screen.
     bool PhaseDelayed);
 
 /// <summary>The minimum a stop contributes to the phase reading.</summary>
@@ -42,7 +40,7 @@ public readonly record struct PhaseStopVm(
     DateTimeOffset? DelayAlertedAt);
 
 /// <summary>
-/// The single derivation of <see cref="TripPhaseVm"/> (spec 11a §4.3), shared by every reader.
+/// The single derivation of <see cref="TripPhaseVm"/>, shared by every reader.
 /// <para>
 /// Deliberately a pure function over recorded facts and never a stored column: a persisted phase is
 /// one more thing that can disagree with the timestamps it was derived from, and it would need
@@ -78,7 +76,7 @@ public static class TripPhaseResolver
         {
             // Overdue is a READING, not a status change: the trip stays Created and stays queued.
             // Skipping it silently would run Thursday's trip before anyone noticed Monday's never
-            // left, and that call belongs to a dispatcher (spec 11a §7).
+            // left, and that call belongs to a dispatcher.
             if (now > plannedStartAt.AddMinutes(overdueGraceMinutes))
             {
                 return new TripPhaseVm(TripPhases.Overdue, null, null, null, false);
@@ -86,23 +84,19 @@ public static class TripPhaseResolver
 
             // No PhaseEtaAt before the trip is running. It means "when we expect to reach
             // PhaseStopName", and the only honest answer for a trip that has not left is the
-            // planned start — which the board already shows in its own column. Putting it here
-            // rendered "Waiting at Plant 3 (ETA 07:00)", an estimate of nothing.
+            // planned start — which the board already shows in its own column.
             return armedAt.HasValue
                 ? new TripPhaseVm(TripPhases.Armed, originName, TripStopActivities.Load, null, false)
                 : new TripPhaseVm(TripPhases.Scheduled, null, null, null, false);
         }
 
         // Running, and MEASURED into its origin zone without having measurably left it: that is
-        // loading, because origin dwell IS loading time by definition (§4.2) — which is why the
+        // loading, because origin dwell IS loading time by definition — which is why the
         // activity is stated rather than looked up.
         //
-        // Both halves matter. Keying on "no departure recorded" alone read AtOrigin for every trip
-        // whose origin is not measured at all, and those are not edge cases: an account running with
-        // `autoLifecycle` off never arms, a trip that predates the zero-touch migration has no
-        // OriginGeom (§14), and a manual override starts a trip that detection never saw. All three
-        // sat on "Loading at <origin>" for their entire run while the truck was hundreds of km away,
-        // which is worse than no phase at all. With no origin measurement the stops are the only
+        // Both halves matter: keying on "no departure recorded" alone would read AtOrigin for every trip
+        // whose origin is not measured at all (`autoLifecycle` off, a trip that predates zero-touch, a
+        // manual start detection never saw). With no origin measurement the stops are the only
         // honest source, so fall through to them.
         if (originArrivedAt is not null && originDepartedAt is null)
         {

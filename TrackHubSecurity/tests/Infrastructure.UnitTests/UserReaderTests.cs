@@ -21,13 +21,8 @@ using TrackHub.Security.Infrastructure.Readers;
 
 namespace Infrastructure.UnitTests;
 
-/// <summary>
-/// <c>usersByAccount</c> now returns the paged envelope (items + unpaged total) that the users
-/// screen needs for an exact "showing X–Y of Z" and a real search box. These tests pin the total,
-/// the tiebreaker that keeps the page window stable across tied usernames, and account isolation.
-/// The <c>ILike</c> search itself is a PostgreSQL function with no in-memory implementation, so the
-/// forwarding of the search term is asserted at the handler level instead.
-/// </summary>
+// Pins the unpaged total, the tiebreaker for tied usernames, and account isolation. ILike has no
+// in-memory implementation, so search forwarding is asserted at the handler level instead.
 [TestFixture]
 internal class UserReaderTests
 {

@@ -18,16 +18,13 @@ using Common.Domain.Enums;
 namespace Common.Application.Interfaces;
 
 /// <summary>
-/// Per-service port that reads the authoritative operational status of an account. Each
-/// account-scoped service implements this the same way it already implements its account/feature
-/// reader: Manager/Geofencing/Telemetry over the shared Manager database directly; Reporting/Router
-/// via Manager GraphQL. The cached <see cref="IAccountOperationalStatusService"/> wraps it.
+/// Per-service port reading an account's authoritative operational status; wrapped by the cached
+/// <see cref="IAccountOperationalStatusService"/>.
 /// </summary>
 public interface IAccountOperationalStatusReader
 {
     /// <summary>
-    /// Returns the account's lifecycle status, or <c>null</c> when the account does not exist
-    /// (so the status gate never masks a genuine not-found with <c>ACCOUNT_SUSPENDED</c>).
+    /// Null when the account does not exist, so the status gate never masks a not-found with <c>ACCOUNT_SUSPENDED</c>.
     /// </summary>
     Task<AccountStatus?> GetAccountStatusAsync(Guid accountId, CancellationToken cancellationToken);
 }

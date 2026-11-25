@@ -17,7 +17,7 @@ namespace TrackHub.Router.Domain.Interfaces;
 
 // In-process store of per-credential provider session artifacts (Wialon sid, Navixy hash,
 // Geotab session id, CommandTrack/Protrack bearer tokens) so session-auth providers do not
-// re-login on every sync/ping cycle (router-audit RA-12b). Entries are keyed by CredentialId and
+// re-login on every sync/ping cycle. Entries are keyed by CredentialId and
 // fingerprinted by the full decrypted credential: a rotated credential is a cache miss, never a
 // stale session. Single-instance semantics, consistent with the SyncWorker deployment
 // (IOperatorSyncLock, ExecutionIntervalManager).

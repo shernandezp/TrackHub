@@ -14,11 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Alert-subscription API (Manager backend): plain typed async functions. Failures
- * THROW ApiError — consumed imperatively (load-on-expand), caller owns try/catch.
- */
-
 import { executeGraphQL } from 'api/core/graphqlClient';
 import type { RequestOptions } from 'api/core/errors';
 import type { Page } from 'api/core/paging';

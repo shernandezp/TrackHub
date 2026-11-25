@@ -46,13 +46,7 @@ public class GetPositionTripsQueryHandler(
 {
     private string? EncryptionKey { get; } = configuration["AppSettings:EncryptionKey"];
 
-    /// <summary>
-    /// Retrieves and position trips asynchronously. Both sources feed the same
-    /// trip-segmentation pipeline, so segmentation logic exists once.
-    /// </summary>
-    /// <param name="request"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>Returns the collection of TripVm</returns>
+    // Both sources feed the same trip-segmentation pipeline.
     public async Task<IEnumerable<TripVm>> Handle(GetPositionTripsQuery request, CancellationToken cancellationToken)
     {
         Guard.Against.Null(EncryptionKey, message: "Credential key not found.");

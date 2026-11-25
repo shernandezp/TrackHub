@@ -19,19 +19,12 @@ using TrackHub.Router.Domain.Extensions;
 
 namespace TrackHub.Router.Infrastructure.GpsGate;
 
-// This class represents a reader for GpsGate api - devices.
 public sealed class DeviceReader(
     ICredentialHttpClientFactory httpClientFactory, 
     IHttpClientService httpClientService)
     : GpsGateReaderBase(httpClientFactory, httpClientService), IExternalDeviceReader
 {
 
-    /// <summary>
-    /// Retrieves a single device asynchronously based on the provided device DTO. 
-    /// </summary>
-    /// <param name="deviceDto"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>Returns the device as an DeviceVm.</returns>
     public async Task<DeviceVm> GetDeviceAsync(DeviceTransporterVm deviceDto, CancellationToken cancellationToken)
     {
         var url = $"api/v.1/{ApplicationId}/users/{UserId}/devices/{deviceDto.Identifier}";
@@ -39,12 +32,6 @@ public sealed class DeviceReader(
         return DeviceMapper.Instance.Map(device, deviceDto);
     }
 
-    /// <summary>
-    /// Retrieves multiple devices asynchronously based on the provided device DTOs.
-    /// </summary>
-    /// <param name="devices"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>Returns the devices as a collection of DeviceVm.</returns>
     public async Task<IEnumerable<DeviceVm>> GetDevicesAsync(IEnumerable<DeviceTransporterVm> devices, CancellationToken cancellationToken)
     {
         var url = $"api/v.1/{ApplicationId}/users/{UserId}/devices";
@@ -57,11 +44,6 @@ public sealed class DeviceReader(
         return DeviceMapper.Instance.Map(result, devicesDictionary);
     }
 
-    /// <summary>
-    /// Retrieves all devices asynchronously.
-    /// </summary>
-    /// <param name="cancellationToken"></param>
-    /// <returns>Returns all devices as a collection of DeviceVm.</returns>
     public async Task<IEnumerable<DeviceVm>> GetDevicesAsync(CancellationToken cancellationToken)
     {
         var url = $"api/v.1/{ApplicationId}/users/{UserId}/devices";

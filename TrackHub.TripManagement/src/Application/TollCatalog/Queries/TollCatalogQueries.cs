@@ -17,7 +17,7 @@ using Ardalis.GuardClauses;
 
 namespace TrackHub.TripManagement.Application.TollCatalog.Queries;
 
-// Readable by ANY authenticated account user (spec 11 §5): it describes public road
+// Readable by ANY authenticated account user: it describes public road
 // infrastructure, not tenant business data. Not feature-flagged, and carrying no accountId.
 
 /// <summary>Paged toll-station browser for the admin panel and the planner.</summary>
@@ -75,7 +75,7 @@ public sealed class GetTollStationDetailValidator : AbstractValidator<GetTollSta
         => RuleFor(v => v.TollStationId).NotEmpty();
 }
 
-/// <summary>The deployment's vehicle classes. Empty until an operator defines them (spec 11 §7.7).</summary>
+/// <summary>The deployment's vehicle classes. Empty until an operator defines them.</summary>
 [Authorize(Resource = Resources.TollCatalog, Action = Actions.Read)]
 [PlatformScoped("SVD-12 toll catalog: stations, tariffs and vehicle classes are platform-owned reference data administered by the platform operator; no tenant owns a row.")]
 public readonly record struct GetTollVehicleClassesQuery : IRequest<IReadOnlyCollection<TollVehicleClassVm>>;

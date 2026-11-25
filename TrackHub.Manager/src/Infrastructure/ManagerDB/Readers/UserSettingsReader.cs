@@ -17,15 +17,8 @@ using TrackHub.Manager.Infrastructure.Interfaces;
 
 namespace TrackHub.Manager.Infrastructure.ManagerDB.Readers;
 
-// UserSettingsReader class for reading user settings data
 public sealed class UserSettingsReader(IApplicationDbContext context) : IUserSettingsReader
 {
-    /// <summary>
-    /// Retrieves a user settings by ID
-    /// </summary>
-    /// <param name="id"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>Returns an UserSettingsVm object</returns>
     public async Task<UserSettingsVm> GetUserSettingsAsync(Guid id, CancellationToken cancellationToken)
     {
         var found = await context.UserSettings

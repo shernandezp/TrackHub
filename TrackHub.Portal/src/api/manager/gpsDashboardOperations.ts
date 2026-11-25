@@ -14,11 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * GPS-integration dashboard GraphQL document (Manager backend). Codegen
- * validates this against schemas/manager.graphql; values travel as variables.
- */
-
 import { graphql } from './generated';
 
 export const GetGpsIntegrationDashboardDocument = graphql(`

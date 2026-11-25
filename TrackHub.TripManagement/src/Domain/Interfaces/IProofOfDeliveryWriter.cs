@@ -17,8 +17,7 @@ namespace TrackHub.TripManagement.Domain.Interfaces;
 
 /// <summary>
 /// Proof-of-delivery capture. Idempotent on the unique <c>(TripStopId, ClientEventId)</c> index,
-/// so a retried submission returns the existing record instead of creating a second one
-/// (acceptance 15).
+/// so a retried submission returns the existing record instead of creating a second one.
 /// </summary>
 public interface IProofOfDeliveryWriter
 {
@@ -28,10 +27,9 @@ public interface IProofOfDeliveryWriter
     /// not authorize.
     /// <para>
     /// <c>Created</c> is false when the unique <c>(TripStopId, ClientEventId)</c> index matched an
-    /// existing row. Callers MUST check it before applying side effects: the handler used to mark
-    /// the stop's deliveries <c>Delivered</c> unconditionally, so a replayed POD — exactly what
-    /// spec 10's offline outbox produces — silently reverted a later, genuine <c>Rejected</c>
-    /// outcome. Idempotent means no second row AND no repeated side effect.
+    /// existing row. Callers MUST check it before applying side effects, or a replayed POD would
+    /// silently revert a later, genuine <c>Rejected</c> outcome. Idempotent means no second row AND no
+    /// repeated side effect.
     /// </para>
     /// </summary>
     Task<(ProofOfDeliveryVm ProofOfDelivery, bool Created)> RecordAsync(
@@ -41,13 +39,11 @@ public interface IProofOfDeliveryWriter
         CancellationToken cancellationToken);
 
     /// <summary>
-    /// Whether this exact submission was already recorded — the <c>(TripStopId, ClientEventId)</c>
-    /// key acceptance 15 rests on.
+    /// Whether this exact submission was already recorded — the <c>(TripStopId, ClientEventId)</c> key.
     /// <para>
     /// Exposed so the handler can settle idempotency BEFORE its trip-state guard. A POD is delivery
-    /// evidence and the trip closes right behind it — auto-completion fires the moment the last stop
-    /// does (§5.2) — so a device re-sending a POD the server already has must be told yes, not
-    /// <c>TRIP_ALREADY_TERMINAL</c>, which spec 10's outbox can only retry forever.
+    /// evidence and the trip closes right behind it, so a device re-sending a POD the server already
+    /// has must be told yes, not <c>TRIP_ALREADY_TERMINAL</c>, which the outbox can only retry forever.
     /// </para>
     /// </summary>
     Task<bool> HasAsync(Guid accountId, Guid tripStopId, Guid clientEventId, CancellationToken cancellationToken);

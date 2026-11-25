@@ -20,7 +20,6 @@ namespace TrackHub.Security.Infrastructure.Readers;
 public sealed class ActionReader(IApplicationDbContext context) : IActionReader
 {
 
-    // Get all actions
     public async Task<IReadOnlyCollection<ActionVm>> GetActionsAsync(CancellationToken cancellationToken)
         => await context.Actions
             .Select(a => new ActionVm(a.ActionId, a.ActionName, 0))

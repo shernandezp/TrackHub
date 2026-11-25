@@ -32,11 +32,9 @@ Coded by www.creative-tim.com
 import { forwardRef, createContext, useContext, useMemo } from "react";
 import type { ReactNode } from "react";
 
-// Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
 import type { ArgonButtonProps } from "components/ArgonButton";
 
-// Custom styles for ArgonPagination
 import ArgonPaginationItemRoot from "components/ArgonPagination/ArgonPaginationItemRoot";
 
 type PaginationColor = NonNullable<ArgonButtonProps["color"]>;
@@ -47,7 +45,6 @@ interface PaginationContextValue {
   size: "small" | "medium" | "large";
 }
 
-// The Pagination main context
 const Context = createContext<PaginationContextValue | null>(null);
 
 export interface ArgonPaginationProps

@@ -14,23 +14,12 @@
 *  limitations under the License.
 */
 
-/**
- * Shared presentation config for every portal map so the dashboard overlay and
- * the geofence editor render and feel identical. Both the clustered maps
- * (dashboard) and the geofence editors consume these constants together with
- * the tile configs in {@link ../utils/darkMapStyles} and the default center
- * {@link MAP_DEFAULTS} — the only per-map differences left are the clustering vs
- * editing behaviours, never the styling.
- */
+/** Shared so every portal map (dashboard overlay, geofence editor) renders identically. */
 
-/** CSS class (controls/Maps/css/map.css) that rounds the corners and clips the map viewport. */
 export const MAP_CONTAINER_CLASS = 'map-container';
 
-/** Initial OSM/Leaflet zoom used before the viewport is fit to loaded data. */
 export const DEFAULT_OSM_ZOOM = 13;
 
-/** Initial Google Maps zoom used before the viewport is fit to loaded data. */
 export const DEFAULT_GOOGLE_ZOOM = 6;
 
-/** Padding (px) kept around loaded geofences when fitting the viewport to them. */
 export const GEOFENCE_FIT_PADDING = 40;

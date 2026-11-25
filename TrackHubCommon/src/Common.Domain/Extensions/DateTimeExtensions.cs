@@ -15,8 +15,7 @@
 
 namespace Common.Domain.Extensions;
 
-// Timestamps are DateTimeOffset (UTC) everywhere; DateTime overloads were removed on purpose
-// so naive DateTime values cannot re-enter the formatting paths.
+// Only DateTimeOffset (UTC) overloads exist, so naive DateTime values cannot re-enter the formatting paths.
 public static class DateTimeExtensions
 {
     public static string ToIso8601String(this DateTimeOffset date)

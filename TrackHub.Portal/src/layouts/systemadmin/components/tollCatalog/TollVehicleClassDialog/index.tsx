@@ -20,7 +20,6 @@ import FormDialog from 'controls/Dialogs/FormDialog';
 import CustomTextField from 'controls/Dialogs/CustomTextField';
 import type { FormChangeHandler } from 'controls/Dialogs/useForm';
 
-/** Dialog/form state for a toll vehicle class. */
 export interface TollVehicleClassFormValues {
   tollVehicleClassId?: string;
   code?: string;

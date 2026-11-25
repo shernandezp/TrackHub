@@ -14,12 +14,7 @@
 *  limitations under the License.
 */
 
-/**
- * Device query/mutation hooks. Components consume these — not the api layer
- * directly. Loading/error state comes from the hooks; failures also surface in
- * the global toast via the query client's error handlers. Synchronized-device
- * reads/mutations are called imperatively from the GPS-integration screens.
- */
+/** Synchronized-device reads/mutations are called imperatively from the GPS-integration screens. */
 
 import { keepPreviousData, useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from 'api/manager/devices';
@@ -48,7 +43,6 @@ export function useUnassignedSynchronizedDevices(
   });
 }
 
-/** One server page of devices (`{ items, totalCount }`) for the device list. */
 export function useDevicesByAccount(params: ListParams = {}, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: deviceKeys.byAccount(params),
@@ -60,7 +54,6 @@ export function useDevicesByAccount(params: ListParams = {}, options: { enabled?
   });
 }
 
-/** Names exactly the given devices, for the rows of one table page. */
 export function useDeviceNames(deviceIds: readonly string[]) {
   const results = useQueries({
     queries: deviceIds.map((deviceId) => ({

@@ -36,8 +36,7 @@ public class Account(string name, string? description, short type, bool active) 
     // Legacy on/off flag, retained as a derived compatibility surface: Active == Status ∈ {Trial, Active}.
     public bool Active { get; set; } = active;
 
-    // Authoritative operational state. Backfilled from Active on migration; seeded
-    // from Active on create.
+    // Authoritative operational state.
     public short Status { get; set; } = (short)AccountStatusExtensions.FromActiveFlag(active);
 
     public DateTimeOffset? StatusChangedAt { get; set; }

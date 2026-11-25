@@ -27,7 +27,6 @@ public readonly record struct UpdateTokenCommand(UpdateTokenDto Credential) : IR
 
 public class UpdateCommandHandler(ICredentialWriter writer, IConfiguration configuration) : IRequestHandler<UpdateTokenCommand>
 {
-    // This method handles the update token command.
     public async Task Handle(UpdateTokenCommand request, CancellationToken cancellationToken)
     {
         var key = configuration["AppSettings:EncryptionKey"];

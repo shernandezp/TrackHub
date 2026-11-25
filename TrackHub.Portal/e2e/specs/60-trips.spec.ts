@@ -1,16 +1,12 @@
 /**
- * Trips (feature `trip-management`): the dispatch board, trip planning and the
- * detail workspace.
- *
- * The lifecycle is AUTOMATIC (spec 11a): a trip starts when its unit leaves the
- * origin zone and completes at its last stop. The manual verbs behind
- * "Override" are exception handling, and a browser cannot fabricate the GPS that
- * drives the real transitions — so what is exercised here is planning, the
- * workspace, and the overrides that a `Created` trip legitimately offers.
+ * The lifecycle is automatic (a trip starts when its unit leaves the origin zone
+ * and completes at its last stop) and a browser cannot fabricate the GPS that
+ * drives it, so planning, the workspace and the `Created`-state overrides are
+ * what is exercised.
  *
  * Every trip a test creates is released by that test: a `Created` trip holds its
  * unit's arming slot, and a leftover silently absorbs the arming of every trip
- * created after it (spec 11b).
+ * created after it.
  */
 
 import { test, expect, unique, uniqueName, optional } from '../fixtures';

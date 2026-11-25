@@ -17,8 +17,6 @@ namespace TrackHub.Manager.Domain.Interfaces;
 
 public interface IAccountBrandingWriter
 {
-    /// <summary>
-    /// Upserts the 1:1 branding row for the account and writes a <c>BrandingChanged</c> audit event.
-    /// </summary>
+    /// <summary>Upserts the 1:1 branding row and writes a <c>BrandingChanged</c> audit event.</summary>
     Task<AccountBrandingVm> UpsertBrandingAsync(AccountBrandingDto branding, CancellationToken cancellationToken);
 }

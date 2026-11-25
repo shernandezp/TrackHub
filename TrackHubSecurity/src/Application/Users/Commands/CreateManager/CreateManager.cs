@@ -26,8 +26,6 @@ public readonly record struct CreateManagerCommand(CreateUserDto User, Guid Acco
 public class CreateManagerCommandHandler(IUserWriter writer, IPublisher publisher, ICurrentPrincipal principal) : IRequestHandler<CreateManagerCommand, UserVm>
 {
 
-    // Handle the Create Manager command
-    // This method creates a new user with the role of manager
     public async Task<UserVm> Handle(CreateManagerCommand request, CancellationToken cancellationToken)
     {
         var user = await writer.CreateUserAsync(request.User, request.AccountId, cancellationToken);

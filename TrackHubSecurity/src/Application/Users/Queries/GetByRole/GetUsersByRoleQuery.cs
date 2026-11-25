@@ -22,14 +22,10 @@ namespace TrackHub.Security.Application.Users.Queries.GetByRole;
 [AccountScopeEnforcedInHandler]
 public readonly record struct GetUsersByRoleQuery(int RoleId) : IRequest<IReadOnlyCollection<UserVm>>;
 
-// The GetUsersByRoleQueryHandler is a class that implements the IRequestHandler interface to handle the GetUsersByRoleQuery.
-// It takes an IUserReader dependency in the constructor and provides the implementation for handling the query.
 public class GetUsersByRoleQueryHandler(IUserReader reader, IUser user) : IRequestHandler<GetUsersByRoleQuery, IReadOnlyCollection<UserVm>>
 {
     private Guid UserId { get; } = Guid.TryParse(user.Id, out var userId) ? userId : throw new UnauthorizedAccessException();
 
-    // The Handle method is responsible for handling the GetUsersByRoleQuery and returning the result.
-    // It asynchronously calls the GetUsersByRoleAsync method of the IUserReader dependency to retrieve the users by account and role ID.
     public async Task<IReadOnlyCollection<UserVm>> Handle(GetUsersByRoleQuery request, CancellationToken cancellationToken)
     {
         var user = await reader.GetUserAsync(UserId, cancellationToken);

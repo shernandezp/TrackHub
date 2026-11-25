@@ -23,10 +23,8 @@ using Common.Application.Interfaces;
 namespace Common.Infrastructure;
 
 /// <summary>
-/// Builds the typed <see cref="IGraphQLClient"/> for a named inter-service endpoint. Building one
-/// is pure: authentication is attached per request by <see cref="ClientCredentialsTokenHandler"/> on
-/// the named HttpClient, so constructing a client — which every client class does in its own
-/// constructor, and therefore during DI resolution — performs no network I/O.
+/// Building a client is pure: authentication is attached per request by <see cref="ClientCredentialsTokenHandler"/>,
+/// so constructing one during DI resolution performs no network I/O.
 /// </summary>
 public sealed class GraphQLClientFactory(
     IHttpClientFactory httpClientFactory,
@@ -36,9 +34,8 @@ public sealed class GraphQLClientFactory(
     public IGraphQLClient CreateClient(string name) => CreateClient(name, asService: false);
 
     /// <summary>
-    /// When <paramref name="asService"/> is true the <c>{name}AsService</c> HttpClient is used: it
-    /// does not propagate the caller's headers, so its token handler supplies the host's own
-    /// identity instead of the caller's.
+    /// The <c>{name}AsService</c> client does not propagate the caller's headers, so its token handler
+    /// supplies the host's own identity.
     /// </summary>
     public IGraphQLClient CreateClient(string name, bool asService)
     {
@@ -52,8 +49,7 @@ public sealed class GraphQLClientFactory(
     }
 
     /// <summary>
-    /// The rare outbound call that is not GraphQL still needs the same token on a plain HttpClient;
-    /// exposing it here is what stops a second, uncached token dance being written beside it.
+    /// Exposed so a non-GraphQL outbound call reuses the cached token instead of a second token dance.
     /// </summary>
     public Task<string?> GetClientCredentialsTokenAsync() => tokens.GetTokenAsync();
 }

@@ -22,7 +22,7 @@ namespace TrackHub.TripManagement.Application.Trips.Queries.GetTripPodReportData
 /// POD register export feed behind <c>trip-pod-export</c>. Rows carry a document COUNT, never the
 /// documents: this is a register, and the bytes stay behind Manager's access policy. Rows carry
 /// receiver names, identity documents and signature coordinates, and the export audits through the
-/// same governed path as every other report — severity classification is spec 24a's scope.
+/// same governed path as every other report.
 /// </summary>
 [Authorize(Resource = Resources.Trips, Action = Actions.Export, PrincipalTypes = "User,ServiceClient")]
 [RequireFeature(FeatureKeys.TripManagement)]

@@ -29,7 +29,6 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
-// @mui material components
 import Typography from "@mui/material/Typography";
 import { styled } from "@mui/material/styles";
 import type { CSSObject } from "@mui/material/styles";
@@ -69,7 +68,6 @@ export default styled(Typography)<{ ownerState: ArgonTypographyOwnerState }>(
     const { linearGradient } = functions;
     const paletteColors = palette as unknown as ArgonColorMap;
 
-    // fontWeight styles
     const fontWeights: Record<string, number | string | undefined> = {
       light: fontWeightLight,
       regular: fontWeightRegular,
@@ -90,7 +88,6 @@ export default styled(Typography)<{ ownerState: ArgonTypographyOwnerState }>(
       zIndex: 1,
     });
 
-    // color value
     let colorValue =
       color === "inherit" || !paletteColors[color!] ? "inherit" : paletteColors[color!].main;
 

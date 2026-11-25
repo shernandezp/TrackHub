@@ -21,16 +21,15 @@ namespace TrackHub.TripManagement.Application.TripStops.Commands.Update;
 /// <summary>
 /// Edits a stop's plan data.
 /// <para>
-/// The command is addressed by stop id and carries no trip id, so it used to reach the writer with
-/// nothing but the account scope — a dispatcher could edit any stop in the account, including one
-/// belonging to another group's trip. The owning trip is resolved under the caller's visibility
-/// scope first; an invisible or unknown stop is a 404, not a 403 (non-disclosure).
+/// The command is addressed by stop id and carries no trip id, so the owning trip is resolved
+/// under the caller's visibility scope first; an invisible or unknown stop is a 404, not a 403
+/// (non-disclosure).
 /// </para>
 /// </summary>
 [Authorize(Resource = Resources.Trips, Action = Actions.Edit)]
 [RequireFeature(FeatureKeys.TripManagement)]
 // Enforcement: the handler derives the caller's own account and passes it to the reader/writer,
-// which filters every row on it (TripVisibility is the single visibility resolver - spec 11).
+// which filters every row on it (TripVisibility is the single visibility resolver).
 [AccountScopeEnforcedInHandler]
 public readonly record struct UpdateTripStopCommand(Guid TripStopId, TripStopDto Stop) : IRequest;
 

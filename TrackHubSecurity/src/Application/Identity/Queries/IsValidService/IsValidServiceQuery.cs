@@ -26,7 +26,6 @@ public readonly record struct IsValidServiceQuery(string? Client) : IRequest<boo
 
 public class GetUsersQueryHandler(IIdentityService service, IUser user) : IRequestHandler<IsValidServiceQuery, bool>
 {
-    // Handles the IsValidServiceQuery by calling the IsValidServiceAsync method of the IIdentityService
     public async Task<bool> Handle(IsValidServiceQuery request, CancellationToken cancellationToken)
     {
         IdentityCallerGuard.EnsureCallerIsSubjectService(user, request.Client, "IsValidService");

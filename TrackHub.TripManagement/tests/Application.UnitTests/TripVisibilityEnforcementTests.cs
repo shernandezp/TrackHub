@@ -24,15 +24,12 @@ using TrackHub.TripManagement.Application.TripStops.Commands.Remove;
 namespace TrackHub.TripManagement.Application.UnitTests;
 
 /// <summary>
-/// Acceptance 1-4: the group-visibility predicate that guards the list, detail and report paths
+/// The group-visibility predicate that guards the list, detail and report paths
 /// must guard the WRITE paths and route replay identically, and every cross-account parent
 /// reference must be rejected at write time.
 /// <para>
 /// Each test below is a negative: the attempt a dispatcher (or a partner integration) would
-/// actually make with a borrowed id. They exist because all of these previously SUCCEEDED — the
-/// single-trip lookup applied only the account predicate, the stop- and delivery-addressed commands
-/// looked nothing up at all, and the transporter check returned early for anyone who sees the whole
-/// account.
+/// actually make with a borrowed id.
 /// </para>
 /// </summary>
 [TestFixture]
@@ -42,11 +39,9 @@ public class TripVisibilityEnforcementTests
     private static readonly Guid ForeignGeofenceId = Guid.Parse("88888888-8888-8888-8888-888888888888");
     private static readonly Guid DeliveryId = Guid.Parse("99999999-9999-9999-9999-999999999999");
 
-    // -----------------------------------------------------------------------------------------
     // The [AllowCrossAccount] compensation on the four report feeds. The marker switches the
     // pipeline guard off for EVERY caller, so this handler-side binding is the only thing keeping
     // a user from exporting another tenant's trips — pin it so it cannot rot.
-    // -----------------------------------------------------------------------------------------
 
     /// <summary>A user asking for a FOREIGN account's report feed must be refused.</summary>
     [Test]
@@ -103,14 +98,12 @@ public class TripVisibilityEnforcementTests
         });
     }
 
-    // -----------------------------------------------------------------------------------------
-    // Defect 2 - the single-trip lookup used by every write path and by route replay.
-    // -----------------------------------------------------------------------------------------
+    // The single-trip lookup used by every write path and by route replay.
 
     /// <summary>
     /// A dispatcher scoped to their groups must have their user id pushed into the reader, so the
     /// reader can apply the same <c>vw_visible_transporter</c> predicate the list path applies.
-    /// Passing null here is exactly the bug: it means "sees the whole account".
+    /// Passing null here would mean "sees the whole account".
     /// </summary>
     [Test]
     public async Task GroupScopedDispatcher_PassesTheirUserIdAsTheReaderScope()
@@ -160,7 +153,7 @@ public class TripVisibilityEnforcementTests
 
     /// <summary>
     /// The reader answering "not visible" must surface as 404, never 403: a dispatcher must not be
-    /// able to probe which trip ids exist in sibling groups (spec 11 §7.10, non-disclosure).
+    /// able to probe which trip ids exist in sibling groups.
     /// </summary>
     [Test]
     public async Task ATripOutsideTheCallersGroups_IsNotFound_NotForbidden()
@@ -183,9 +176,7 @@ public class TripVisibilityEnforcementTests
         writer.Verify(w => w.DeleteTripAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
-    // -----------------------------------------------------------------------------------------
-    // Defect 2 - the stop- and delivery-addressed commands, which carried no trip id at all.
-    // -----------------------------------------------------------------------------------------
+    // The stop- and delivery-addressed commands, which carry no trip id.
 
     [Test]
     public async Task RemovingAStopOfAnInvisibleTrip_IsNotFound_AndWritesNothing()
@@ -223,13 +214,11 @@ public class TripVisibilityEnforcementTests
         writer.Verify(w => w.DeleteDeliveryAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
-    // -----------------------------------------------------------------------------------------
-    // Defect 5 - the transporter account check that whole-account principals used to skip.
-    // -----------------------------------------------------------------------------------------
+    // The transporter account check, applied to whole-account principals too.
 
     /// <summary>
-    /// The leak this closes is concrete: the report readers resolve TransporterName/StaffName by
-    /// unscoped id, so a trip pointing at another account's transporter printed that account's
+    /// The report readers resolve TransporterName/StaffName by
+    /// unscoped id, so a trip pointing at another account's transporter would print that account's
     /// transporter and staff names into this account's report output.
     /// </summary>
     [Test]
@@ -288,14 +277,12 @@ public class TripVisibilityEnforcementTests
         Assert.Pass();
     }
 
-    // -----------------------------------------------------------------------------------------
-    // Defect 4 - the stop geofence, which failed SILENTLY rather than loudly.
-    // -----------------------------------------------------------------------------------------
+    // The stop geofence, which must fail loudly rather than silently.
 
     /// <summary>
-    /// Before this check, a cross-account or simply wrong <c>GeofenceId</c> was accepted, and the
-    /// arrival snapshot quietly substituted a radius buffer — the dispatcher believed detection ran
-    /// against their polygon while it actually ran against a 150 m circle. A detection failure
+    /// Without this check, a cross-account or simply wrong <c>GeofenceId</c> would be accepted, and the
+    /// arrival snapshot would quietly substitute a radius buffer — the dispatcher would believe detection ran
+    /// against their polygon while it ran against a 150 m circle. A detection failure
     /// presented as a success is worse than a rejection.
     /// </summary>
     [Test]
@@ -342,14 +329,12 @@ public class TripVisibilityEnforcementTests
             Times.Never);
     }
 
-    // -----------------------------------------------------------------------------------------
-    // Defect 3 - ServiceOrderId, validated through the spec-12 port.
-    // -----------------------------------------------------------------------------------------
+    // ServiceOrderId, validated through the service-order reference port.
 
     /// <summary>
-    /// The port is consulted on every create. Its default implementation is permissive because
-    /// spec 12 owns service orders, but the CALL SITE is what this asserts: a rejecting
-    /// implementation must actually stop the write, so spec 12 enforces the reference by
+    /// The port is consulted on every create. Its default implementation is permissive, but the
+    /// CALL SITE is what this asserts: a rejecting
+    /// implementation must actually stop the write, so a real implementation enforces the reference by
     /// registration alone.
     /// </summary>
     [Test]

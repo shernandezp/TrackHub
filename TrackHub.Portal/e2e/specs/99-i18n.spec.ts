@@ -1,13 +1,7 @@
 /**
- * The same shell and one CRUD flow, in Spanish.
- *
- * Runs under the `chromium-es` project, which binds the `t` fixture to the
- * Spanish bundle. The UI language is a per-user setting, so the first test
- * switches it and the last one puts it back — the account is left as found.
- *
- * The "no raw keys" check is exact rather than heuristic: every dotted token in
- * the visible text is looked up in the real key list, so a rendered `trips.board`
- * fails while `example.com` or `v1.1.0` do not.
+ * Runs under the `chromium-es` project. The "no raw keys" check is exact: every
+ * dotted token in the visible text is looked up in the real key list, so a
+ * rendered `trips.board` fails while `example.com` or `v1.1.0` do not.
  */
 
 import { test, expect, uniqueName } from '../fixtures';
@@ -28,12 +22,8 @@ async function leakedKeys(page: Page): Promise<string[]> {
 }
 
 /**
- * Switches the signed-in user's language and saves it.
- *
- * `from` is not decoration: the settings card renders `en` as its initial state
- * and REPLACES it when the account's real preference arrives, so a switch made
- * before that lands is silently overwritten. Waiting for the stored value first
- * is what makes the change stick.
+ * `from` matters: the settings card renders `en` initially and REPLACES it when
+ * the real preference arrives, so a switch made before that is overwritten.
  */
 async function setLanguage(page: Page, from: 'en' | 'es', to: 'en' | 'es'): Promise<void> {
   const card = cardOf(page, 'platform-settings');

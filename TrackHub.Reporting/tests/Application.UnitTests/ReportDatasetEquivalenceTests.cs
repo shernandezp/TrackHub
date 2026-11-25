@@ -4,8 +4,8 @@ using TrackHub.Reporting.Domain.Records;
 namespace TrackHub.Reporting.Application.UnitTests;
 
 // Dataset-equivalence tests: for a representative VM per report family, the dataset's
-// columns must equal the VM's public property names in declaration order, and each row must carry the
-// same values the pre-refactor ClosedXML pipeline exported (it reflected the same properties).
+// columns must equal the VM's public property names in declaration order, and each row must carry
+// the values of those properties.
 [TestFixture]
 public class ReportDatasetEquivalenceTests
 {
@@ -28,11 +28,9 @@ public class ReportDatasetEquivalenceTests
         var properties = typeof(T).GetProperties();
         var dataset = ReportDataset.Create(Filters(), rows);
 
-        // Columns == property names, in declaration order.
         Assert.That(dataset.Columns.Select(c => c.PropertyName), Is.EqualTo(properties.Select(p => p.Name)));
         Assert.That(dataset.Columns.Select(c => c.PropertyType), Is.EqualTo(properties.Select(p => p.PropertyType)));
 
-        // Rows carry the same values the old pipeline projected.
         Assert.That(dataset.RowCount, Is.EqualTo(rows.Count));
         var rowList = rows.ToList();
         for (var r = 0; r < rowList.Count; r++)

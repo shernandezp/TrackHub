@@ -14,11 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Geocoding-provider query/mutation hooks. Components consume these — not the
- * api layer directly.
- */
-
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from 'api/manager/geocodingProviders';
 import type {

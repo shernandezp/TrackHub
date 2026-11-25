@@ -22,7 +22,7 @@ using TrackHub.ServiceContracts.Tests.Harness;
 
 namespace TrackHub.ServiceContracts.Tests.ContractTests;
 
-// The Router's trip position feed (spec 11 §15): the batch pushed to TripManagement right after
+// The Router's trip position feed: the batch pushed to TripManagement right after
 // the geofence feed, under the router_client/syncworker_client identity. Validated against
 // TripManagement's real, in-process-built schema.
 [TestFixture]

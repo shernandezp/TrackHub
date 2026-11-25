@@ -28,7 +28,6 @@ using TrackHub.AuthorityServer.Application.Users.Queries.GetUsers;
 
 namespace TrackHub.AuthorityServer.Web.Endpoints;
 
-// Responsible for handling token exchange requests.
 public sealed class TokenHandler(
     IClientReader clientReader,
     IUserReader userReader,
@@ -39,23 +38,13 @@ public sealed class TokenHandler(
     // account uses to pick which tenant the token is issued for.
     internal const string AccountIdParameter = "account_id";
 
-    /// <summary>
-    /// Handles the token exchange request.
-    /// </summary>
-    /// <param name="context">The HttpContext object representing the current HTTP request.</param>
-    /// <returns>An asynchronous task that represents the token exchange operation.</returns>
-    /// <exception cref="InvalidOperationException"></exception>
-    /// <exception cref="NotImplementedException"></exception>
     public async Task<IResult> Exchange(HttpContext context)
     {
-        // Retrieve the OpenID Connect request from the context
         var request = context.GetOpenIddictServerRequest() ??
             throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
 
-        // Check if the grant type is supported
         if (request.IsAuthorizationCodeGrantType() || request.IsRefreshTokenGrantType())
         {
-            // Retrieve the claims principal stored in the authorization code
             var claimsPrincipal = (await context.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme)).Principal
                 ?? throw new NotImplementedException("The specified grant type is not implemented.");
 
@@ -81,12 +70,10 @@ public sealed class TokenHandler(
                 await RefreshUserRoleClaimAsync(claimsPrincipal, context.RequestAborted);
             }
 
-            // Return the result based on the claims principal
             return Results.SignIn(claimsPrincipal, properties: null, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
         }
         else if (request.IsClientCredentialsGrantType())
         {
-            // Validate the client credentials
             var applicationManager = context.RequestServices.GetRequiredService<IOpenIddictApplicationManager>();
             if (string.IsNullOrEmpty(request.ClientId) || string.IsNullOrEmpty(request.ClientSecret)) 
             {
@@ -100,11 +87,9 @@ public sealed class TokenHandler(
                 return Results.Unauthorized();
             }
 
-            //Retrieve the user linked to the client if available
             var client = await clientReader.GetClientAsync(request.ClientId, context.RequestAborted);
             var subject = client != default && client.UserId.HasValue ? client.UserId.Value.ToString() : request.ClientId;
 
-            // Create a new claims principal
             var identity = new ClaimsIdentity(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
             identity.AddClaim(OpenIddictConstants.Claims.Subject, subject,
                 OpenIddictConstants.Destinations.AccessToken);
@@ -143,14 +128,11 @@ public sealed class TokenHandler(
 
             var principal = new ClaimsPrincipal(identity);
 
-            // Set the scopes granted to the client application
             principal.SetScopes(request.GetScopes());
 
-            // Resolve and set resources (audience) from the granted scopes.
             var scopeManager = context.RequestServices.GetRequiredService<IOpenIddictScopeManager>();
             principal.SetResources(await scopeManager.ListResourcesAsync(principal.GetScopes()).ToListAsync());
 
-            // Return the result based on the claims principal
             return Results.SignIn(principal, properties: null, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
         }
         else if (request.IsPasswordGrantType())
@@ -163,7 +145,6 @@ public sealed class TokenHandler(
         }
     }
 
-    // Decides the account claim of a client-credentials token from the client's effective grants.
     //   * A client holding a declared platform-wide grant stays UNSCOPED (no claim): a cross-account
     //     grant matches regardless of the token's account, and Security's matcher rejects an
     //     account-bearing token against an unbound grant — so claiming an account here would break
@@ -172,7 +153,7 @@ public sealed class TokenHandler(
     //   * A client with grants on several accounts is ambiguous and must name the tenant it wants
     //     through the account_id request parameter; issuing an arbitrary one would silently give a
     //     partner the wrong tenant.
-    //   * A client with no account-bound grant at all stays unscoped, as before.
+    //   * A client with no account-bound grant at all stays unscoped.
     internal static (Guid? AccountId, string? Error) ResolveServiceClientAccount(
         string? requestedAccountId,
         ServiceClientAccountScopeVm scope)
@@ -199,8 +180,6 @@ public sealed class TokenHandler(
             : (null, "The client holds grants on several accounts; specify the account_id parameter.");
     }
 
-    // Replaces the role claim with the user's current role (most privileged, from security.user_role)
-    // so refreshed access tokens track role changes without a re-login.
     internal async Task RefreshUserRoleClaimAsync(ClaimsPrincipal principal, CancellationToken cancellationToken)
     {
         var principalType = principal.FindFirst("principal_type")?.Value ?? "User";

@@ -17,7 +17,7 @@ namespace TrackHub.TripManagement.Infrastructure.TripDB.Entities;
 
 /// <summary>
 /// Backing entity for trip.vw_visible_transporter - the SINGLE source of portal group visibility
-/// for this service (spec 11 section 5, acceptance 4). No handler re-implements the group graph;
+/// for this service. No handler re-implements the group graph;
 /// the view joins app.user_group, app.transporter_group and app.transporters so visibility costs
 /// no cross-service call.
 /// </summary>

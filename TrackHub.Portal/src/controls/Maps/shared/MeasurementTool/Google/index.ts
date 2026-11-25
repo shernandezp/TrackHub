@@ -44,7 +44,6 @@ const MeasurementTool = ({ mapRef, position = 'TOP_RIGHT', unit = 'metric', enab
 
         const map = mapRef.current;
 
-        // Create measurement button
         const measureButton = document.createElement('button');
         measureButton.textContent = '📏';
         measureButton.title = t('utilsmap.measureDistance');
@@ -65,29 +64,23 @@ const MeasurementTool = ({ mapRef, position = 'TOP_RIGHT', unit = 'metric', enab
         buttonRef.current = measureButton;
 
         const clearMeasurement = () => {
-            // Remove markers
             markersRef.current.forEach(marker => marker.setMap(null));
             markersRef.current = [];
 
-            // Remove polyline
             if (polylineRef.current) {
                 polylineRef.current.setMap(null);
                 polylineRef.current = null;
             }
 
-            // Close info window
             if (infoWindowRef.current) {
                 infoWindowRef.current.close();
                 infoWindowRef.current = null;
             }
 
-            // Clear points
             pointsRef.current = [];
 
-            // Reset cursor
             map.setOptions({ draggableCursor: null });
 
-            // Remove listener
             if (listenerRef.current) {
                 window.google.maps.event.removeListener(listenerRef.current);
                 listenerRef.current = null;
@@ -103,7 +96,6 @@ const MeasurementTool = ({ mapRef, position = 'TOP_RIGHT', unit = 'metric', enab
                 const latlng = { lat: e.latLng!.lat(), lng: e.latLng!.lng() };
                 pointsRef.current.push(latlng);
 
-                // Add marker
                 const marker = new window.google.maps.Marker({
                     position: latlng,
                     map: map,
@@ -118,7 +110,6 @@ const MeasurementTool = ({ mapRef, position = 'TOP_RIGHT', unit = 'metric', enab
                 });
                 markersRef.current.push(marker);
 
-                // Draw polyline
                 if (pointsRef.current.length > 1) {
                     if (polylineRef.current) {
                         polylineRef.current.setMap(null);
@@ -133,11 +124,9 @@ const MeasurementTool = ({ mapRef, position = 'TOP_RIGHT', unit = 'metric', enab
                         map: map
                     });
 
-                    // Calculate and show distance
                     const distance = calculatePathDistance(pointsRef.current);
                     const formattedDistance = formatDistance(distance, unit);
 
-                    // Close previous info window
                     if (infoWindowRef.current) {
                         infoWindowRef.current.close();
                     }

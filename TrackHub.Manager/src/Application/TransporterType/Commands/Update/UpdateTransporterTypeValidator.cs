@@ -28,8 +28,7 @@ public sealed class UpdateTransporterTypeValidator : AbstractValidator<UpdateTra
         RuleFor(v => v.TransporterType.StoppedGap)
             .GreaterThan(0);
 
-        // No rule on AccBased: it is a bool, and NotEmpty() rejects `false`, which made it
-        // impossible to switch a transporter type to non-ACC-based tracking.
+        // No rule on AccBased: it is a bool, and NotEmpty() would reject `false`.
 
         RuleFor(v => v.TransporterType.MaxDistance)
             .GreaterThan(0);

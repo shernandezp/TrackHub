@@ -37,8 +37,8 @@ import esTranslations from 'locales/es.json';
 import editionEnTranslations from 'edition/locales/en.json';
 import editionEsTranslations from 'edition/locales/es.json';
 
-// Deep-merges the edition bundle (src/edition/locales, empty in this repository) over a
-// core bundle, so additional screens bring their own keys without touching the core files.
+// Deep-merges the edition bundle (src/edition/locales) over a core bundle, so additional screens
+// bring their own keys without touching the core files.
 function mergeTranslations(core: unknown, edition: unknown): unknown {
   if (core === null || edition === null || typeof core !== 'object' || typeof edition !== 'object') {
     return edition ?? core;
@@ -62,7 +62,7 @@ i18n
         translation: mergeTranslations(esTranslations, editionEsTranslations) as typeof esTranslations & typeof editionEsTranslations
       }
     },
-    fallbackLng: 'en', // use 'en' as the fallback language
+    fallbackLng: 'en',
     supportedLngs: ['en', 'es'],
     detection: {
       convertDetectedLanguage: (lng: string) => lng.split('-')[0]
@@ -79,14 +79,11 @@ import { queryClient } from "queries/queryClient";
 import App from "App";
 import AuthWrapper from 'AuthWrapper';
 
-// Soft UI Context Provider
 import { ArgonControllerProvider } from "context";
 import { NotificationProvider } from "context/NotificationContext";
 
-// react-perfect-scrollbar component
 import PerfectScrollbar from "react-perfect-scrollbar";
 
-// react-perfect-scrollbar styles
 import "react-perfect-scrollbar/dist/css/styles.css";
 
 const container = document.getElementById("root");

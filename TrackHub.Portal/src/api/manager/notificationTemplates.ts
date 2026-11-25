@@ -14,12 +14,7 @@
 *  limitations under the License.
 */
 
-/**
- * Notification-template API (Manager backend): plain typed async functions.
- * Failures THROW ApiError — consumed imperatively (load-on-expand), caller owns
- * the try/catch. The read returns platform defaults (accountId == null,
- * read-only) merged with the account's overrides.
- */
+/** The read returns platform defaults (accountId == null, read-only) merged with the account's overrides. */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
 import type {

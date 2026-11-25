@@ -1,19 +1,13 @@
 /**
- * Environment for the end-to-end suite.
- *
- * Two sources, kept separate on purpose:
- *  - the PORTAL's own `.env` / `.env.local` (`REACT_APP_*`), read through Vite's
- *    `loadEnv` so the tests always talk to the same backends the app under test
- *    was configured with — never a hardcoded URL;
- *  - `e2e/.env.e2e` (`E2E_*`), the suite's own knobs (credentials, opt-in flags).
- *    Committed template: `e2e/.env.e2e.example`.
+ * Endpoints come from the portal's own `.env` / `.env.local` (via Vite's
+ * `loadEnv`) so tests talk to the same backends as the app under test; suite
+ * knobs come from `e2e/.env.e2e` (template: `e2e/.env.e2e.example`).
  */
 
 import fs from 'node:fs';
 import path from 'node:path';
 import { loadEnv } from 'vite';
 
-/** Portal root (this file lives at `<root>/e2e/fixtures/env.ts`). */
 export const PORTAL_ROOT = path.resolve(__dirname, '..', '..');
 export const AUTH_DIR = path.join(PORTAL_ROOT, 'e2e', '.auth');
 
@@ -45,7 +39,6 @@ export const e2eEnv: Record<string, string | undefined> = {
   ...Object.fromEntries(Object.entries(process.env).filter(([key]) => key.startsWith('E2E_'))),
 };
 
-/** The portal's own endpoint configuration (`.env` + `.env.local`). */
 export const portalEnv = loadEnv('development', PORTAL_ROOT, 'REACT_APP_');
 
 export const flag = (name: string): boolean => e2eEnv[name] === '1' || e2eEnv[name] === 'true';
@@ -54,7 +47,6 @@ export const optional = (name: string): string | undefined => e2eEnv[name] || un
 
 const stripGraphql = (url: string): string => url.replace(/graphql\/?$/, '').replace(/\/+$/, '');
 
-/** Everything a test or a fixture needs to reach the portal and its backends. */
 export const config = {
   baseURL: value('E2E_BASE_URL', portalEnv.REACT_APP_CALLBACK_ENDPOINT
     ? new URL(portalEnv.REACT_APP_CALLBACK_ENDPOINT).origin
@@ -90,9 +82,7 @@ export const config = {
   },
 } as const;
 
-/** Storage-state / captured-token paths, one set per role. */
 export type RoleName = 'admin' | 'manager' | 'user';
 export const storageStatePath = (role: RoleName): string => path.join(AUTH_DIR, `${role}.json`);
 export const tokenPath = (role: RoleName): string => path.join(AUTH_DIR, `${role}.token.json`);
-/** Roles the setup project created itself, so global teardown can remove them. */
 export const createdPath = path.join(AUTH_DIR, 'created.json');

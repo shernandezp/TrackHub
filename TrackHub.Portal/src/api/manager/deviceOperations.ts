@@ -14,15 +14,8 @@
 *  limitations under the License.
 */
 
-/**
- * Device GraphQL documents (Manager backend). Codegen validates these against
- * schemas/manager.graphql and emits typed document nodes — values always travel
- * as variables, never string interpolation.
- */
-
 import { graphql } from './generated';
 
-/** Device record for the account device list. */
 export const DeviceItemFragment = graphql(`
   fragment DeviceItem on DeviceVm {
     deviceId
@@ -36,7 +29,6 @@ export const DeviceItemFragment = graphql(`
   }
 `);
 
-/** Synchronized (provider-detected) device record for the GPS-integration screens. */
 export const SynchronizedDeviceFragment = graphql(`
   fragment SynchronizedDevice on DeviceVm {
     deviceId
@@ -68,9 +60,8 @@ export const GetDevicesByAccountDocument = graphql(`
 `);
 
 /**
- * Id + display name + owning operator: the picker/name-map projection, unpaged
- * by design. `operatorId` is here so the dashboard's operator→device→transporter
- * join reads the lookup instead of draining the full device pages.
+ * Unpaged by design. `operatorId` lets the dashboard's operator→device→transporter join read the
+ * lookup instead of draining the full device pages.
  */
 export const GetDeviceNameDocument = graphql(`
   query GetDeviceName($id: UUID!) {

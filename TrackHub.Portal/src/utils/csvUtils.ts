@@ -14,10 +14,7 @@
 *  limitations under the License.
 */
 
-/**
- * Escapes a single CSV cell (RFC 4180): wraps the value in double quotes
- * when it contains a comma, quote or line break and doubles inner quotes.
- */
+/** RFC 4180: quotes a cell containing a comma, quote or line break and doubles inner quotes. */
 function escapeCsvCell(value: unknown): string {
   if (value === undefined || value === null) return '';
   // Spreadsheets treat a leading =, +, -, @, tab or CR as the start of a formula, so an
@@ -27,28 +24,19 @@ function escapeCsvCell(value: unknown): string {
   return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 
-/**
- * Builds CSV content from a header row and data rows.
- */
 export function buildCsvContent(headers: string[], rows: unknown[][]): string {
   return [headers, ...rows]
     .map(row => row.map(escapeCsvCell).join(','))
     .join('\r\n');
 }
 
-/**
- * Replaces characters that are unsafe in file names with dashes.
- */
 export function sanitizeFileNamePart(value: unknown): string {
   return String(value ?? '')
     .replace(/[^\w.-]+/g, '-')
     .replace(/^-+|-+$/g, '');
 }
 
-/**
- * Triggers a client-side download of the given rows as a UTF-8 CSV file
- * (with BOM so Excel detects the encoding).
- */
+/** UTF-8 with BOM so Excel detects the encoding. */
 export function downloadCsv(filename: string, headers: string[], rows: unknown[][]): void {
   const blob = new Blob(['﻿' + buildCsvContent(headers, rows)], {
     type: 'text/csv;charset=utf-8;'

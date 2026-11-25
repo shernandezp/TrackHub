@@ -19,12 +19,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import { useTranslation } from 'react-i18next';
 import { validateEmail, validatePassword } from 'utils/validationUtils';
 
-/**
- * Change event consumed by {@link useForm.handleChange}. Every dialog control
- * (native inputs, `CustomSelect`, `CustomCheckbox`, …) emits a `target` bearing
- * a `name`; the value may be a string, a numeric select value, or a checkbox
- * boolean. Native `ChangeEvent`s are structurally assignable to this shape.
- */
+/** Every dialog control emits a `target` bearing a `name`; native `ChangeEvent`s are assignable to this shape. */
 export interface FormChangeEvent {
   target: {
     name: string;
@@ -38,17 +33,9 @@ export interface FormChangeEvent {
 
 export type FormChangeHandler = (event: FormChangeEvent) => void;
 
-/** Map of field name to its (single) validation message. */
 export type FormErrors = Record<string, string>;
 
-/**
- * Fixed tuple returned by {@link useForm}, generic over the form values shape.
- * Order: `[values, handleChange, setValues, setErrors, validate, errors,
- * validateMatch]`.
- *
- * `setErrors` intentionally accepts sparse maps (undefined entries) so callers
- * can clear individual fields; reads (`errors`) surface only defined messages.
- */
+/** `setErrors` accepts sparse maps (undefined entries) so callers can clear individual fields. */
 export type UseFormResult<T> = [
   T,
   FormChangeHandler,
@@ -59,14 +46,6 @@ export type UseFormResult<T> = [
   (field1: string, field2: string) => boolean,
 ];
 
-/**
- * Custom hook for managing form state.
- *
- * @param initialValues - The initial values for the form fields (or a lazy
- *   initializer, matching React's `useState` contract).
- * @returns A tuple of `[values, handleChange, setValues, setErrors, validate,
- *   errors, validateMatch]`.
- */
 function useForm<T extends object>(initialValues: T | (() => T)): UseFormResult<T> {
   const { t } = useTranslation();
   const [values, setValues] = useState<T>(initialValues);
@@ -74,12 +53,8 @@ function useForm<T extends object>(initialValues: T | (() => T)): UseFormResult<
   const [types, setTypes] = useState<Record<string, string | undefined>>({});
 
   /**
-   * Handles the change event for form inputs.
-   *
-   * Functional updaters are required, not a style choice: pickers apply several
-   * fields in one synchronous handler (a stop's latitude, longitude, geofence,
-   * address, …). Spreading the render-time `values` snapshot would make each
-   * call overwrite the previous one's field, so only the last write survives.
+   * Functional updaters are required: pickers apply several fields in one synchronous handler, and
+   * spreading the render-time `values` snapshot would let only the last write survive.
    */
   const handleChange: FormChangeHandler = (event) => {
     const isCheckbox = event.target.type === 'checkbox';
@@ -95,18 +70,10 @@ function useForm<T extends object>(initialValues: T | (() => T)): UseFormResult<
     }));
   };
 
-  /**
-   * Exposes the errors setter while tolerating sparse maps (undefined entries).
-   */
   const setErrors = (next: Record<string, string | undefined>): void => {
     setErrorsState(next as FormErrors);
   };
 
-  /**
-   * Validates the form values.
-   *
-   * @returns Whether the form is valid.
-   */
   const validate = (requiredFields: string[]): boolean => {
     const newErrors: FormErrors = {};
     const current = values as Record<string, unknown>;
@@ -140,13 +107,6 @@ function useForm<T extends object>(initialValues: T | (() => T)): UseFormResult<
     return Object.keys(newErrors).length === 0;
   };
 
-  /**
-   * Validates whether two fields have matching values.
-   *
-   * @param field1 - The name of the first field.
-   * @param field2 - The name of the second field.
-   * @returns Whether the two fields match.
-   */
   const validateMatch = (field1: string, field2: string): boolean => {
     const newErrors: FormErrors = { ...errors };
     const current = values as Record<string, unknown>;

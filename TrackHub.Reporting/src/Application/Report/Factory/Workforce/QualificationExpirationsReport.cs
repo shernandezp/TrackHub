@@ -22,7 +22,7 @@ using TrackHub.Reporting.Domain.Records;
 
 namespace TrackHub.Reporting.Application.Report.Factory.Workforce;
 
-// Staff qualification expirations (spec 09 §13). Qualifications expiring inside the window
+// Staff qualification expirations. Qualifications expiring inside the window
 // (withinDays, default 30), nearest expiry first. Short report — also SupportsPdf.
 public sealed class QualificationExpirationsReport(IWorkforceReportReader reader, IUser user, IAccountTimeZoneResolver zones) : IReport
 {

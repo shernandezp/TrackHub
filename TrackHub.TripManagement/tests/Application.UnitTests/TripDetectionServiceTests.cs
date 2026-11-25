@@ -20,15 +20,14 @@ using TrackHub.TripManagement.Application.Trips.Services.Interfaces;
 namespace TrackHub.TripManagement.Application.UnitTests;
 
 /// <summary>
-/// Acceptance 13 (arrival exactly once on replay, 30 s departure debounce) and
-/// acceptance 14 (one deviation per episode, re-entry clears the state).
+/// Arrival exactly once on replay, 30 s departure debounce, one deviation per episode, and
+/// re-entry clears the state.
 /// <para>
 /// <b>The multi-call tests are the point of this fixture.</b> Router feeds this service exactly ONE
 /// position per transporter per call (<c>PositionsRetrieved</c> takes the latest fix per
 /// transporter), so a scenario played out inside a single <c>ProcessPositionsAsync</c> call is a
-/// shape production never produces. Departure and deviation detection were both dead in production
-/// while single-call tests stayed green, because the debounce clock and the run length lived in
-/// per-request memory. Every state-spanning assertion below therefore calls the service repeatedly
+/// shape production never produces, and it would pass with state kept in per-request memory.
+/// Every state-spanning assertion below therefore calls the service repeatedly
 /// with one position each, and <see cref="DetectionHarness"/> round-trips the state through the
 /// writers exactly as the database does.
 /// </para>
@@ -152,14 +151,13 @@ public class TripDetectionServiceTests
         Assert.That(result.StopsDeparted, Is.Zero);
     }
 
-    // ----- The production shape: one position per call ---------------------------------------
 
     [Test]
     public async Task Departure_AcrossSeparateCalls_DoesNotFireOnTheFirstOutsideFixAndDoesOnceThirtySecondsHaveElapsed()
     {
-        // THE regression test. Router pushes one fix per call; before OutsideSinceAt was persisted,
-        // every call re-stamped the clock and the 30 s comparison was unreachable, so a stop stayed
-        // Arrived forever and its trip could only ever be completed with `force`.
+        // Router pushes one fix per call; unless OutsideSinceAt is persisted, every call re-stamps
+        // the clock and the 30 s comparison is unreachable, so a stop stays
+        // Arrived forever and its trip can only ever be completed with `force`.
         var harness = new DetectionHarness([TestFactory.OpenStop(TestFactory.StopId, TripStopStatuses.Arrived)]);
         harness.StopsContainingPoint();
         var service = harness.Service();
@@ -461,7 +459,6 @@ public class TripDetectionServiceTests
         });
     }
 
-    // ----- The odometer ------------------------------------------------------------------------
 
     [Test]
     public async Task Distance_TheFirstFixAddsNothing()
@@ -560,7 +557,6 @@ public class TripDetectionServiceTests
             TestFactory.TripId, It.IsAny<DateTimeOffset?>(), 2), Times.Never);
     }
 
-    // ----- The corridor's three-way answer -----------------------------------------------------
 
     [Test]
     public async Task Deviation_ARoutePlanWithNoCorridorRaisesNothingHoweverManyFixesArrive()
@@ -621,11 +617,8 @@ public class TripDetectionServiceTests
     }
 
     /// <summary>
-    /// An EMPTY working set short-circuits — which is a different statement from the one this test
-    /// used to make. Before zero-touch the reader could only ever return <c>InProgress</c> trips, so
-    /// "no open trips" and "nothing to do" were the same thing; now a <c>Created</c> trip in its
-    /// activation window is very much actionable, and the reader decides. What is still true is that
-    /// a batch the reader answers with nothing costs nothing.
+    /// An EMPTY working set short-circuits. A <c>Created</c> trip in its activation window is
+    /// actionable, so the reader decides what is open; a batch it answers with nothing costs nothing.
     /// </summary>
     [Test]
     public async Task AnEmptyWorkingSet_ShortCircuits()
@@ -638,13 +631,12 @@ public class TripDetectionServiceTests
         Assert.That(result, Is.EqualTo(new TripProcessingResultVm(1, 0, 0, 0)));
     }
 
-    // ----- Zero-touch lifecycle (spec 11a §5-§7) ------------------------------------------------
 
     [Test]
     public async Task Arming_HappensOnceAndWritesNoEvent()
     {
         // Arming must leave NO TripEvent: a trip that was armed and never ran has to stay deletable
-        // (acceptance 16). A Detection-sourced row here would quietly make every queued trip
+        // (it has no events). A Detection-sourced row here would quietly make every queued trip
         // permanent the moment its window opened.
         var harness = new DetectionHarness(status: TripStatuses.Created);
         var service = harness.Service();
@@ -670,7 +662,7 @@ public class TripDetectionServiceTests
         Assert.Multiple(() =>
         {
             // OriginArrivedAt is stamped BEFORE the transition, so the funnel adopts it as the
-            // measured ActualStartAt instead of reaching for the server clock (§12.3).
+            // measured ActualStartAt instead of reaching for the server clock.
             harness.UnitOfWork.Verify(u => u.RecordOriginVisit(TestFactory.TripId, T0, null), Times.Once);
 
             // The SAME key manual Start uses: the two paths race safely and exactly one wins.
@@ -697,8 +689,8 @@ public class TripDetectionServiceTests
     }
 
     /// <summary>
-    /// THE hazard spec 11 §10 refused to accept, and the reason §6 puts auto-start before the
-    /// odometer: nothing may accrue against a trip that has not measurably started. A queued trip
+    /// Auto-start runs before the odometer: nothing may accrue against a trip that has not
+    /// measurably started. A queued trip
     /// that picks up a distance baseline would report a journey it never made.
     /// </summary>
     [Test]
@@ -719,8 +711,7 @@ public class TripDetectionServiceTests
     public async Task OriginDeparture_RequiresTheSameThirtySecondDebounceAcrossCalls()
     {
         // One position per call — the deployed shape. A per-request clock would be re-stamped every
-        // call and the window could never elapse, which is the defect that killed stop departure
-        // detection in production.
+        // call and the window could never elapse.
         var harness = new DetectionHarness(hasOriginGeom: true, armedAt: T0.AddHours(-1));
         harness.StopsContainingPoint();
         var service = harness.Service();
@@ -741,7 +732,7 @@ public class TripDetectionServiceTests
                 TestFactory.TripId, T0.AddSeconds(31)), Times.Once);
 
             // Timeline only, and never a Manager alert type: origin departure is measurement, not
-            // something anyone needs to be woken up for (§11).
+            // something anyone needs to be woken up for.
             harness.EventWriter.Verify(w => w.AppendAsync(
                 TestFactory.AccountId, TestFactory.TripId, null, TripEventTypes.TripOriginDeparted,
                 T0.AddSeconds(31), TripEventSources.Detection, null,
@@ -829,7 +820,7 @@ public class TripDetectionServiceTests
     /// The depot case, and the reason completion is NOT gated on "a stop just closed": a truck that
     /// arrives home and parks never departs its final stop, so no departure ever fires — but it
     /// keeps reporting, and the dwell rule has to be asked on those fixes. Gated on a stop closing,
-    /// this trip would have waited for the sweep, which exists for the opposite case (§5.2).
+    /// this trip would have waited for the sweep, which exists for the opposite case.
     /// </summary>
     [Test]
     public async Task AParkedTruckAtItsArrivedFinalStop_IsStillOfferedForCompletion()
@@ -888,9 +879,9 @@ public class TripDetectionServiceTests
     }
 
     /// <summary>
-    /// The account kill switch (§8). With <c>autoLifecycle</c> off the reader is asked for
+    /// The account kill switch. With <c>autoLifecycle</c> off the reader is asked for
     /// <c>InProgress</c> trips only — no arming window at all — so a fleet without reliable GPS runs
-    /// the manual flow exactly as it did before zero-touch.
+    /// the manual flow.
     /// </summary>
     [Test]
     public async Task AutoLifecycleOff_AsksForNoArmableTrips()
@@ -1129,9 +1120,7 @@ public class TripDetectionServiceTests
         /// <summary>
         /// Deliberately <see cref="Nullable{T}"/>, matching <c>ITripDetectionReader</c>: null means
         /// "this route plan has no corridor geometry to test against", which is a THIRD outcome and
-        /// not a synonym for "outside". A harness typed plain <c>bool</c> made that branch
-        /// unreachable, so treating null as false stayed green while raising a false deviation on a
-        /// vehicle driving its route perfectly.
+        /// not a synonym for "outside".
         /// </summary>
         public bool? InsideCorridor { get; set; } = true;
 
@@ -1159,8 +1148,8 @@ public class TripDetectionServiceTests
         public Mock<ITripWriter> TripWriter { get; } = new();
 
         /// <summary>
-        /// The detection working set. It replaced six writer calls per fix with a load-once,
-        /// commit-once unit, so the harness models the unit rather than the writers it retired.
+        /// The detection working set: a load-once, commit-once unit, modelled as the unit rather than
+        /// as individual writers.
         /// </summary>
         public Mock<ITripDetectionUnitOfWork> UnitOfWork { get; } = new();
 

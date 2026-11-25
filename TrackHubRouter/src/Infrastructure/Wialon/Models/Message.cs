@@ -25,7 +25,6 @@ internal sealed record MessageResponse(
 ) : IWialonResponse;
 
 /// <summary>
-/// Wialon message (historical position data)
 /// T = timestamp, Tp = type, Pos = position, P = params
 /// </summary>
 internal readonly record struct Message(
@@ -36,7 +35,6 @@ internal readonly record struct Message(
 );
 
 /// <summary>
-/// Message parameters containing sensor data
 /// Odo = odometer, Pwr_ext = external power, Hdop = hdop
 /// </summary>
 internal readonly record struct MessageParams(

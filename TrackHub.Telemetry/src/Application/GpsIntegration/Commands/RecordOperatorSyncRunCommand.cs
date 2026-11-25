@@ -15,9 +15,8 @@
 
 namespace TrackHub.Telemetry.Application.GpsIntegration.Commands;
 
-// The handler no longer writes the denormalized operator sync-summary
-// columns (Telemetry has read-only access to the operator master row); the summary is derived from
-// the telemetry tables at read time.
+// The operator sync summary is derived from the telemetry tables at read time; Telemetry has
+// read-only access to the operator master row.
 // The account is nested in OperatorSyncRunDto. The User half of PrincipalTypes is the manual
 // "sync now" path, which reaches here through Router's TriggerOperatorSyncCommand — that command
 // carries a TOP-LEVEL AccountId (still guarded) and its handler rejects an operator belonging to a

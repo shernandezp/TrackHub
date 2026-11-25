@@ -47,11 +47,7 @@ interface ResolvedView {
   anchor?: string;
 }
 
-/**
- * Resolve the top navigation entry against the manifest. `auto` becomes the
- * current screen's primary topic; a topic id absent from the manifest (stale
- * cache) degrades to the index with a notice.
- */
+/** A topic id absent from the manifest (stale cache) degrades to the index with a notice. */
 function resolveView(
   entry: HelpNavEntry | undefined,
   manifest: HelpManifest,
@@ -70,7 +66,6 @@ function resolveView(
   return topic ? { kind: 'topic', topic, anchor: entry.anchor } : { kind: 'missing' };
 }
 
-/** Contextual help modal. Rendered once by HelpProvider. */
 function HelpDialog() {
   const { t, i18n } = useTranslation();
   const theme = useTheme();

@@ -33,13 +33,10 @@ interface TollPanelProps {
 }
 
 /**
- * Toll estimate with a per-station breakdown and a vehicle-class selector.
- *
- * Three honesty rules the backend encodes and this panel must not paper over:
- * an empty catalog gives `NoStations` and a NULL amount (never a zero cost);
- * `PartialNoTariff` means at least one station on the route has no tariff for
- * the class, so the figure understates the real cost and says so; and a null
- * amount is rendered as "—", never as 0.
+ * Honesty rules the backend encodes and this panel must not paper over: an empty catalog gives
+ * `NoStations` and a NULL amount (never a zero cost); `PartialNoTariff` means a station on the
+ * route has no tariff for the class, so the figure understates the cost and says so; a null
+ * amount renders as "—", never 0.
  */
 function TollPanel({ routePlan, vehicleClasses, tripVehicleClass }: TollPanelProps) {
   const { t } = useTranslation();

@@ -25,7 +25,6 @@ import ArgonBox from 'components/ArgonBox';
 import type { FormChangeHandler } from 'controls/Dialogs/useForm';
 import type { TollVehicleClass } from 'api/tripManagement/trips';
 
-/** Dialog/form state for an effective-dated tariff row. */
 export interface TollTariffFormValues {
   tollTariffId?: string;
   tollStationId?: string;

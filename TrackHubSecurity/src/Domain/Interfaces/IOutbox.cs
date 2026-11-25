@@ -22,8 +22,7 @@ public interface IOutboxWriter
 
     /// <summary>
     /// Atomically moves ONE pending message to Dispatching. False when another instance got there
-    /// first — the table has no lease otherwise, so two Security replicas drained the same batch and
-    /// sent Manager duplicate creates, audit rows and deletes.
+    /// first, so two Security replicas never send Manager the same message.
     /// </summary>
     Task<bool> TryClaimAsync(Guid outboxMessageId, string owner, CancellationToken cancellationToken);
 

@@ -39,9 +39,8 @@ interface PodDialogProps {
   values: PodFormValues;
   handleChange: FormChangeHandler;
   errors: Record<string, string>;
-  /** Human label of the stop the evidence belongs to. */
   stopLabel: string;
-  /** Deliveries on that stop — leaving the picker empty closes the whole stop. */
+  /** Leaving the picker empty closes the whole stop. */
   deliveries: TripDelivery[];
   attachments: PodAttachment[];
   onUploadFiles: (files: File[]) => void;
@@ -51,22 +50,11 @@ interface PodDialogProps {
 }
 
 /**
- * Proof-of-delivery capture from the dispatch desk. Spec 11 §9 makes this the
- * module's whole pre-staff-app operating mode: dispatchers record arrivals,
- * departures and POD from the portal.
- *
- * Two contract details drive the shape of this dialog:
- *
- * 1. **Attachments are ordinary spec 04 documents.** They are uploaded through
- *    the existing Manager multipart endpoint and referenced by id — there is no
- *    POD-specific upload surface. A document is only accepted once its scan
- *    reports `Clean`, so each attachment shows its verdict and can be
- *    re-checked; submitting with a non-clean one comes back as
- *    `POD_DOCUMENT_NOT_CLEAN`.
- * 2. **The capture is idempotent on `(tripStopId, clientEventId)`.** The id is
- *    minted once when the dialog opens and reused for every retry of that same
- *    attempt, which is what makes a failed-then-retried submission produce one
- *    POD rather than two.
+ * Attachments are ordinary Manager documents uploaded through the multipart endpoint and
+ * referenced by id; one is accepted only once its scan reports `Clean`, otherwise the capture
+ * comes back `POD_DOCUMENT_NOT_CLEAN`. The capture is idempotent on
+ * `(tripStopId, clientEventId)`: the id is minted when the dialog opens and reused for every
+ * retry, so a failed-then-retried submission produces one POD.
  */
 function PodDialog({
   open,

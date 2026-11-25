@@ -23,9 +23,6 @@ interface LatLngPoint {
 
 type MeasurementUnit = 'metric' | 'imperial';
 
-/**
- * Calculate total distance along a path of coordinates
- */
 export const calculatePathDistance = (latlngs: LatLngPoint[]): number => {
     if (!latlngs || latlngs.length < 2) return 0;
 
@@ -40,9 +37,6 @@ export const calculatePathDistance = (latlngs: LatLngPoint[]): number => {
     return totalDistance;
 };
 
-/**
- * Format distance to human-readable string
- */
 export const formatDistance = (meters: number, unit: MeasurementUnit = 'metric'): string => {
     if (unit === 'imperial') {
         const feet = meters * 3.28084;
@@ -53,7 +47,6 @@ export const formatDistance = (meters: number, unit: MeasurementUnit = 'metric')
         return `${miles.toFixed(2)} mi`;
     }
 
-    // Metric
     if (meters < 1000) {
         return `${Math.round(meters)} m`;
     }

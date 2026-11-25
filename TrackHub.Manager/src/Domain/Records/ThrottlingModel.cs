@@ -15,7 +15,6 @@
 
 namespace TrackHub.Manager.Domain.Records;
 
-/// <summary>NotificationRule.ThrottlingJson contract.</summary>
 public sealed record ThrottlingModel
 {
     public int? DedupeWindowMinutes { get; init; }

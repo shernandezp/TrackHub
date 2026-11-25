@@ -21,9 +21,8 @@ using Microsoft.Extensions.Logging;
 namespace Common.Web.BackgroundJobs;
 
 /// <summary>
-/// Drives one <see cref="IScheduledJob"/>: startup delay, a scope per cycle, and an exponential
-/// backoff after consecutive failures. A broken dependency otherwise produces an error every cycle
-/// around the clock — plus the downstream chatter each attempt causes.
+/// Drives one <see cref="IScheduledJob"/>: startup delay, a scope per cycle, and exponential backoff after
+/// consecutive failures so a broken dependency does not produce an error every cycle around the clock.
 /// </summary>
 public sealed class ScheduledJobHost<TJob>(
     IServiceScopeFactory scopeFactory,

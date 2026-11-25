@@ -19,11 +19,9 @@ using TrackHub.Router.Domain.Records;
 
 namespace TrackHub.Router.Infrastructure.GpsGate;
 
-// This class represents a connectivity tester for GpsGate.
 public sealed class ConnectivityTester(ICredentialHttpClientFactory httpClientFactory, IHttpClientService httpClientService)
     : GpsGateReaderBase(httpClientFactory, httpClientService), IConnectivityTester
 {
-    // Sends a ping request to the GpsGate server.
     public async Task Ping(CredentialTokenDto credential, CancellationToken cancellationToken)
     {
         await Init(credential, cancellationToken);

@@ -19,7 +19,7 @@ namespace TrackHub.TripManagement.Application.TollCatalog.Commands.VehicleClasse
 // public road infrastructure — the same classification as geocoding providers, roles, resources and
 // actions — not a tenant capability. Gating it on `trip-management` would make platform reference
 // data disappear for an account that had the module switched off, which is a different (and wrong)
-// statement about who owns the data (spec 11 §3, §5). Write access is restricted to
+// statement about who owns the data. Write access is restricted to
 // Administrator through the Security role matrix on Resources.TollCatalog.
 
 /// <summary>Defines an axle/weight category tariffs are priced by. The platform ships no rows.</summary>

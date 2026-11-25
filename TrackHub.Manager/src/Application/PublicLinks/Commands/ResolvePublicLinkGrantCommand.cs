@@ -15,21 +15,9 @@
 
 namespace TrackHub.Manager.Application.PublicLinks.Commands;
 
-/// <summary>
-/// Resolves an anonymous public link on behalf of a downstream service (spec 11 §7.8).
-/// <para>
-/// ServiceClient-only, modelled on <c>GetActiveGeocodingProviderQuery</c>: a portal user has no
-/// business exchanging a raw public-link token through this surface, and a PublicLink principal
-/// cannot reach any <c>[Authorize]</c> operation at all. Manager's own anonymous REST endpoint does
-/// NOT go through this command — it calls <see cref="IPublicLinkGrantResolver"/> directly, because it
-/// has no principal for the authorization pipeline to evaluate.
-/// </para>
-/// <para>
-/// Deliberately NOT feature-gated on <c>public-links</c>: an account downgraded after issuing a link
-/// must still have its already-issued links resolve or fail on their own terms (revocation, expiry),
-/// mirroring the ungated revoke path (spec 02 §7.4 precedent).
-/// </para>
-/// </summary>
+// ServiceClient-only: Manager's own anonymous endpoint calls IPublicLinkGrantResolver directly, as it
+// has no principal to authorize. Deliberately NOT feature-gated, so links issued before a downgrade
+// still resolve or fail on their own terms (revocation, expiry).
 [Authorize(Resource = Resources.PublicLinks, Action = Actions.Read, PrincipalTypes = "ServiceClient")]
 [AllowCrossAccount("Anonymous public-link resolution: TripManagement's public tracking endpoint resolves a link under its own global trip_client service identity, and the account is a property OF the link being resolved, not of any caller. There is no principal account to compare against.")]
 public readonly record struct ResolvePublicLinkGrantCommand(

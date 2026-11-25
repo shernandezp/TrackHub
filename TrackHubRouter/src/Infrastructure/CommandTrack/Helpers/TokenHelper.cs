@@ -22,7 +22,7 @@ using TrackHub.Router.Domain.Interfaces;
 using TrackHub.Router.Domain.Interfaces.Manager;
 
 namespace TrackHub.Router.Infrastructure.CommandTrack.Helpers;
-// Helper class for managing tokens. The durable copy lives on the Manager credential
+// The durable token copy lives on the Manager credential (UpdateTokenAsync); the in-process
 // (UpdateTokenAsync); the in-process session store is a fast path that keeps the token usable
 // while the Manager write-back is still propagating through cached operator reads.
 internal class TokenHelper(ICredentialWriter credentialWriter, IProviderSessionStore sessionStore)
@@ -52,9 +52,6 @@ internal class TokenHelper(ICredentialWriter credentialWriter, IProviderSessionS
 
         if (newToken.Token is null)
         {
-            // Typed rather than a raw Exception (rules.md forbids raw throws): the provider
-            // authenticated but returned no token. Surfaces through the sync pipeline as a FAILED
-            // run.
             throw new InvalidOperationException("CommandTrack authentication did not return a token.");
         }
 

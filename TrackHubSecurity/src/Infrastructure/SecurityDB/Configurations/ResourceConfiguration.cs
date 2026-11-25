@@ -22,10 +22,8 @@ public class ResourceConfiguration : IEntityTypeConfiguration<Resource>
 {
     public void Configure(EntityTypeBuilder<Resource> builder)
     {
-        //Table name
         builder.ToTable(name: TableMetadata.Resource, schema: SchemaMetadata.Security);
 
-        //Column names
         builder.Property(x => x.ResourceId).HasColumnName("id");
         builder.Property(x => x.ResourceName).HasColumnName("name");
 
@@ -33,7 +31,6 @@ public class ResourceConfiguration : IEntityTypeConfiguration<Resource>
             .HasMaxLength(ColumnMetadata.DefaultNameLength)
             .IsRequired();
 
-        //Constraints
         builder
             .HasMany(e => e.ResourceActions)
             .WithOne(e => e.Resource)

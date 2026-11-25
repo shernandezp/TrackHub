@@ -15,8 +15,7 @@
 
 namespace TrackHub.Manager.Domain.Models;
 
-// Account branding output view model. Carries no secrets. An absent branding row resolves to
-// platform-default branding rather than a not-found.
+// An absent branding row resolves to platform-default branding rather than a not-found.
 public readonly record struct AccountBrandingVm(
     Guid AccountId,
     string DisplayName,

@@ -19,8 +19,8 @@ using NetTopologySuite.Geometries;
 namespace TrackHub.TripManagement.Infrastructure.TripDB.Entities;
 
 /// <summary>
-/// Platform toll reference data - no AccountId (spec 11 section 5). <see cref="Point"/> carries a
-/// GiST index: route matching is an ST_DWithin against it (spec 11 section 6.2).
+/// Platform toll reference data - no AccountId. <see cref="Point"/> carries a
+/// GiST index: route matching is an ST_DWithin against it.
 /// </summary>
 public sealed class TollStation : BaseAuditableEntity
 {

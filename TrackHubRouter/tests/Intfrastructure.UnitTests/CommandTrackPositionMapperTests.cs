@@ -18,8 +18,8 @@ using TrackHub.Router.Infrastructure.CommandTrack.Models;
 
 namespace TrackHub.Router.Infrastructure.CommandTrack.Tests;
 
-// Value-correctness tests for the CommandTrack mapper (TT-01): a realistic populated payload is
-// asserted field-by-field so a reordered or dropped constructor argument fails the build's suite.
+// A realistic populated payload is asserted field-by-field so a reordered or dropped constructor
+// argument fails the suite.
 [TestFixture]
 public class PositionMapperTests
 {

@@ -14,11 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Audit-trail GraphQL documents (Manager backend). Codegen validates these
- * against schemas/manager.graphql — values always travel as variables.
- */
-
 import { graphql } from './generated';
 
 export const AuditEventItemFragment = graphql(`

@@ -1,8 +1,6 @@
 /**
- * The shared dialog controls: `FormDialog`, `ConfirmDialog`, `MessageDialog`,
- * `DynamicTableDialog` (allocators) and `CheckboxTableDialog` (permission
- * matrices). Each carries a stable `data-testid`, because a screen can have four
- * of them mounted at once and `getByRole('dialog')` cannot tell them apart.
+ * Each shared dialog carries a stable `data-testid`, because a screen can have
+ * several mounted at once and `getByRole('dialog')` cannot tell them apart.
  */
 
 import { expect } from '@playwright/test';
@@ -10,12 +8,8 @@ import type { Locator, Page } from '@playwright/test';
 import type { Translator } from '../fixtures/i18n';
 
 /**
- * Picks the first REAL choice of a `CustomSelect`, wherever it is mounted.
- *
- * MUI renders the options in a portal outside the control's own subtree, so the
- * option list is always looked up on the page; the first entry is the disabled
- * placeholder. Returns the label chosen, so the caller can find the row it
- * produced.
+ * MUI renders the options in a portal outside the control's subtree, so they are
+ * looked up on the page; the first entry is the disabled placeholder.
  */
 export async function selectFirstOption(
   page: Page,
@@ -75,7 +69,6 @@ export class FormDialog {
     return this.root;
   }
 
-  /** A text/number/date field, addressed by the `id` its control renders. */
   field(id: string): Locator {
     return this.root.locator(`#${id}`);
   }
@@ -86,33 +79,21 @@ export class FormDialog {
     }
   }
 
-  /**
-   * A `CustomSelect`: MUI renders the trigger as a combobox and the options in a
-   * portal outside the dialog, so the option is looked up on the page.
-   */
+  /** MUI renders the options in a portal outside the dialog. */
   async select(id: string, optionLabel: string | RegExp): Promise<void> {
     await pickOption(this.page, this.root.locator(`#${id}`), optionLabel);
   }
 
-  /**
-   * Picks the first REAL choice of a `CustomSelect`, for pickers whose options
-   * are data (provider types, unit types) rather than a fixed vocabulary. The
-   * first option is the placeholder and is rendered disabled.
-   */
+  /** The first option is the placeholder and is rendered disabled. */
   async selectFirst(id: string): Promise<string> {
     return selectFirstOption(this.page, this.root, id);
   }
 
-  /** Validation message rendered under a field by `useForm`. */
   error(id: string): Locator {
     return this.root.locator(`#${id}-helper-text, #${id}-error`);
   }
 
-  /**
-   * Every validation message currently rendered in the dialog. `useForm` gives
-   * each one the id `<field>-helper-text`, so they are addressable without
-   * reaching for a MUI class name.
-   */
+  /** `useForm` gives each message the id `<field>-helper-text`. */
   get anyError(): Locator {
     return this.root.locator('[id$="-helper-text"], [id$="-error"]');
   }
@@ -171,7 +152,6 @@ export class MessageDialog {
   }
 }
 
-/** The allocator dialog: a picker plus the current assignments and add/remove. */
 export class AllocatorDialog {
   constructor(
     readonly page: Page,
@@ -187,13 +167,11 @@ export class AllocatorDialog {
     return this.root;
   }
 
-  /** Picks the single entity in the dialog's select and adds it. */
   async add(optionLabel: string | RegExp): Promise<void> {
     await pickOption(this.page, this.root.getByRole('combobox').first(), optionLabel);
     await this.root.getByRole('button', { name: this.t('generic.add') }).click();
   }
 
-  /** The assignment rows currently listed (excluding the header row). */
   get rows(): Locator {
     return this.root.locator('tbody tr');
   }
@@ -202,7 +180,6 @@ export class AllocatorDialog {
     return this.rows.filter({ hasText: text }).first();
   }
 
-  /** Ticks a row's checkbox and removes it. */
   async remove(text: string | RegExp): Promise<void> {
     await this.row(text).locator('input[type="checkbox"]').check();
     await this.root.getByRole('button', { name: this.t('generic.delete') }).click();
@@ -215,9 +192,8 @@ export class AllocatorDialog {
 }
 
 /**
- * The resource/action matrix (`CheckboxTableDialog`). It is not a MUI dialog —
- * it renders inline inside a section — and its checkboxes carry
- * `data-row-id`/`data-column-id`, which is exactly the addressing a test needs.
+ * Not a MUI dialog: it renders inline inside a section, and its checkboxes carry
+ * `data-row-id`/`data-column-id`.
  */
 export class PermissionMatrix {
   constructor(
@@ -230,10 +206,7 @@ export class PermissionMatrix {
     return this.scope.locator('input[type="checkbox"][data-row-id]');
   }
 
-  /**
-   * The first cell that is NOT granted, so a test can grant and then revoke it
-   * and leave the matrix exactly as it found it.
-   */
+  /** Granted then revoked by the caller, leaving the matrix as it was found. */
   async firstUngranted(): Promise<Locator> {
     const total = await this.cells.count();
     for (let index = 0; index < total; index += 1) {

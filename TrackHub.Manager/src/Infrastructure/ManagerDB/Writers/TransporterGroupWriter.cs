@@ -20,7 +20,6 @@ using TrackHub.Manager.Infrastructure.ManagerDB;
 
 namespace TrackHub.Manager.Infrastructure.Writers;
 
-// TransporterGroupWriter class for writing transporter group data
 public sealed class TransporterGroupWriter(IApplicationDbContext context, ICurrentPrincipal principal) : AccountScopedDataAccess(context, principal), ITransporterGroupWriter
 {
     // Both sides of a membership must be rows of one account the caller may write; anything else is
@@ -47,12 +46,6 @@ public sealed class TransporterGroupWriter(IApplicationDbContext context, ICurre
             .Select(t => t.AccountId)
             .FirstOrDefaultAsync(cancellationToken);
 
-    /// <summary>
-    /// Create a new transporter group asynchronously.
-    /// </summary>
-    /// <param name="transporterGroupDto"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>The created transporter group view model</returns>
     public async Task<TransporterGroupVm> CreateTransporterGroupAsync(TransporterGroupDto transporterGroupDto, CancellationToken cancellationToken)
     {
         var transporterGroup = new TransporterGroup
@@ -72,13 +65,6 @@ public sealed class TransporterGroupWriter(IApplicationDbContext context, ICurre
             transporterGroup.GroupId);
     }
 
-    /// <summary>
-    /// Delete a transporter group asynchronously.
-    /// </summary>
-    /// <param name="transporterId"></param>
-    /// <param name="groupId"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     public async Task DeleteTransporterGroupAsync(Guid transporterId, long groupId, CancellationToken cancellationToken)
     {
         var transporterGroup = await Context.TransportersGroup.FindAsync([groupId, transporterId], cancellationToken);
@@ -95,12 +81,6 @@ public sealed class TransporterGroupWriter(IApplicationDbContext context, ICurre
         }
     }
 
-    /// <summary>
-    /// Delete all transporter groups that match the given transporterId asynchronously.
-    /// </summary>
-    /// <param name="transporterId"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     public async Task DeleteTransporterGroupsAsync(Guid transporterId, CancellationToken cancellationToken)
     {
         var transporterGroups = await Context.TransportersGroup

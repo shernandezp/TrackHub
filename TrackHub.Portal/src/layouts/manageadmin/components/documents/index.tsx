@@ -46,8 +46,6 @@ import { formatDateTime } from "utils/dateUtils";
 
 const PAGE_SIZE = 25;
 
-// Change event shape emitted by the vendored dialog controls.
-
 interface FilterValues { category?: string; status?: string; }
 
 const DOCUMENTS_FEATURE_KEY = "documents";
@@ -150,7 +148,6 @@ function ManageDocuments() {
     if (!validateType(['category']) || !account?.accountId) return;
     setLoading(true);
     try {
-      // validateType(['category']) gates the required field; assert the mutation input at the boundary.
       await configureDocumentType({
         accountId: account.accountId,
         category: typeValues.category,
@@ -178,7 +175,6 @@ function ManageDocuments() {
 
   return (
     <>
-      {/* Document library / global search */}
       <TableAccordion sectionKey="documents-library" title={t('documentManagement.library')} expanded={ctx.library} setExpanded={(v) => setCtx({ ...ctx, library: v })}>
         <ArgonBox display="flex" gap={2} mb={1} alignItems="flex-end" flexWrap="wrap">
           <CustomTextField margin="none" name="category" id="filterCategory" label={t('documentManagement.category')} type="text" value={filters.category || ''} onChange={handleFilterChange} />
@@ -214,7 +210,6 @@ function ManageDocuments() {
         <ServerPagination page={library.page} pageSize={PAGE_SIZE} totalCount={docsTotal} pageLength={docs.length} onPageChange={library.setPage} />
       </TableAccordion>
 
-      {/* Expiration dashboard */}
       <TableAccordion sectionKey="documents-expiring" title={t('documentManagement.expiring')} expanded={ctx.expiring} setExpanded={(v) => setCtx({ ...ctx, expiring: v })}>
         <Table
           columns={[
@@ -237,7 +232,6 @@ function ManageDocuments() {
         <ServerPagination page={expiringList.page} pageSize={PAGE_SIZE} totalCount={expiringTotal} pageLength={expiring.length} onPageChange={expiringList.setPage} />
       </TableAccordion>
 
-      {/* Document-type configuration */}
       <TableAccordion sectionKey="document-types" title={t('documentManagement.types')} expanded={ctx.types} showAddIcon={enabled} setOpen={setTypeOpen} handleAddClick={handleAddType} setExpanded={(v) => setCtx({ ...ctx, types: v })}>
         <Table
           columns={[

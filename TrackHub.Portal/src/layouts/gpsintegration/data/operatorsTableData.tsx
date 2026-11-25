@@ -45,16 +45,10 @@ import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
 import { notifyGpsIntegrationRefresh } from "layouts/gpsintegration/gpsIntegrationEvents";
 
-/** A manual sync is accepted, then runs off the request; poll its run for at most ~20s. */
 const SYNC_RUN_POLL_ATTEMPTS = 10;
 const SYNC_RUN_POLL_INTERVAL_MS = 2000;
 
-/**
- * Dialog/form state for an operator. Merges an API {@link Operator} (when editing)
- * with the loose fresh-add shape (`{ protocolTypeId, syncIntervalMinutes }`); all
- * fields are optional and the `name`/`protocolTypeId` requirement is enforced by
- * the dialog's validate() gate before save.
- */
+/** Merges an API {@link Operator} (when editing) with the loose fresh-add shape; required fields are enforced by validate(). */
 export interface OperatorFormValues {
   operatorId?: string;
   version?: number;
@@ -73,7 +67,6 @@ export interface OperatorFormValues {
   lastModified?: string;
 }
 
-/** Dialog/form state for a credential (all fields blank/undefined until typed). */
 export interface CredentialFormValues {
   credentialId?: string;
   operatorId?: string;
@@ -82,11 +75,9 @@ export interface CredentialFormValues {
   password?: string | null;
   key?: string | null;
   key2?: string | null;
-  /** Form-only: the operator's provider, which decides the fields the dialog asks for. */
   protocolTypeId?: number;
 }
 
-/** A column descriptor / rendered row for the vendored operators `Table`. */
 export interface OperatorTableColumn { name: string; title?: string; align?: "left" | "right" | "center"; }
 export type OperatorTableRow = Record<string, ReactNode>;
 export interface OperatorTableData { columns: OperatorTableColumn[]; rows: OperatorTableRow[]; }
@@ -133,7 +124,6 @@ function useOperatorTableData(
   const setOperatorEnabled = useSetOperatorEnabled();
   const triggerOperatorDeviceSync = useTriggerOperatorDeviceSync();
 
-  // Keep the global spinner UX for the initial load / invalidation refetch.
   useEffect(() => {
     setLoading(operatorsQuery.isFetching);
   }, [operatorsQuery.isFetching, setLoading]);
@@ -190,7 +180,6 @@ function useOperatorTableData(
   const onSaveCredential = async (credential: CredentialFormValues) => {
     setLoading(true);
     try {
-      // validate(['uri']) gates this; operatorId is carried on the loaded form.
       await handleSaveCredential(
         credential as CredentialFormInput,
         createCredential,
@@ -245,8 +234,6 @@ function useOperatorTableData(
   const handleToggleEnabled = async (operator: Operator) => {
     setLoading(true);
     try {
-      // Mutation success invalidates the operators cache, so the list refetches
-      // with the new enabled/health values (replaces the old manual re-read).
       await setOperatorEnabled.mutateAsync({ operatorId: operator.operatorId, enabled: !operator.enabled });
       notifyGpsIntegrationRefresh();
     } catch {

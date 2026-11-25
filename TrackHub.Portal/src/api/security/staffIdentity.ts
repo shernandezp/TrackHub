@@ -14,12 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Staff identity API (Security backend): credentials and device registrations
- * as plain typed async functions. Failures THROW ApiError — fallbacks and
- * toasts belong to the caller layer (src/queries).
- */
-
 import { executeGraphQL } from 'api/core/graphqlClient';
 import type { RequestOptions } from 'api/core/errors';
 import { fetchAllPages } from 'api/core/paging';
@@ -75,7 +69,7 @@ export async function getStaffDevices(
   return data.staffDevices;
 }
 
-/** Every credential matching the filter, paged to exhaustion (server clamps take to 1..500). */
+/** Paged to exhaustion (server clamps take to 1..500). */
 export async function getAllStaffCredentials(
   accountId: string,
   staffId: string | null = null,
@@ -84,7 +78,6 @@ export async function getAllStaffCredentials(
   return fetchAllPages((skip, take) => getStaffCredentials(accountId, staffId, skip, take, options));
 }
 
-/** Every device registration matching the filter, paged to exhaustion. */
 export async function getAllStaffDevices(
   accountId: string,
   staffId: string | null = null,

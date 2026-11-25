@@ -24,7 +24,6 @@ import CustomPasswordField from 'controls/Dialogs/CustomPasswordField';
 import { useProviderCapabilities } from 'queries/router';
 import type { CredentialFormValues } from 'layouts/gpsintegration/data/operatorsTableData';
 
-// Change event shape emitted by the vendored dialog controls.
 type FormChangeHandler = (
   event: { target: { name: string; value: string; type?: string; checked?: boolean } }
 ) => void;
@@ -38,7 +37,6 @@ const DEFAULT_FIELD_NAMES: Record<CredentialField, ParseKeys> = {
   key2: 'credential.key2',
 };
 
-// What each provider calls the generic credential fields, keyed by the Router's protocol name.
 const PROVIDER_FIELD_NAMES: Record<string, Partial<Record<CredentialField | 'uriHelp', ParseKeys>>> = {
   CommandTrack: { key: 'credential.providers.CommandTrack.key' },
   GeoTab: { key: 'credential.providers.GeoTab.key' },

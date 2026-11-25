@@ -38,10 +38,9 @@ public sealed class TollStationConfiguration : IEntityTypeConfiguration<TollStat
         builder.Property(x => x.Active).HasColumnName("active").HasDefaultValue(true);
 
         // TWO partial unique indexes, not one over (name, code). `Code` is nullable and PostgreSQL
-        // treats NULLs as distinct, so the single index accepted unlimited (name, NULL) rows — and
-        // an operator entering the same code-less station twice got it matched twice by
-        // ST_DWithin and its toll charged twice in the estimate, because dedup is by TollStationId.
-        // Same defect and same remedy as TransporterTollClassConfiguration.
+        // treats NULLs as distinct, so a single index would accept unlimited (name, NULL) rows and
+        // a code-less station entered twice would be matched twice by ST_DWithin and charged twice.
+        // Same remedy as TransporterTollClassConfiguration.
         builder.HasIndex(x => new { x.Name, x.Code }, "toll_stations_name_code")
             .HasDatabaseName("ux_toll_stations_name_code")
             .IsUnique()

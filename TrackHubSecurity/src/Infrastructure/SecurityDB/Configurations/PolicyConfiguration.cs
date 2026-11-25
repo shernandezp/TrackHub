@@ -22,10 +22,8 @@ public class PolicyConfiguration : IEntityTypeConfiguration<Policy>
 {
     public void Configure(EntityTypeBuilder<Policy> builder)
     {
-        //Table name
         builder.ToTable(name: TableMetadata.Policy, schema: SchemaMetadata.Security);
 
-        //Column names
         builder.Property(x => x.PolicyId).HasColumnName("id");
         builder.Property(x => x.Name).HasColumnName("name");
         builder.Property(x => x.Description).HasColumnName("description");

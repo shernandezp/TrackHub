@@ -20,13 +20,12 @@ namespace TrackHub.TripManagement.Application.Trips.Commands.Create;
 
 /// <summary>
 /// Creates a trip in the CALLER's account. <see cref="TripDto"/> deliberately carries no
-/// <c>AccountId</c>: the tenant is resolved from the token, never accepted from the wire
-/// (acceptance 1).
+/// <c>AccountId</c>: the tenant is resolved from the token, never accepted from the wire.
 /// </summary>
 [Authorize(Resource = Resources.Trips, Action = Actions.Write)]
 [RequireFeature(FeatureKeys.TripManagement)]
 // Enforcement: the handler derives the caller's own account and passes it to the reader/writer,
-// which filters every row on it (TripVisibility is the single visibility resolver - spec 11).
+// which filters every row on it (TripVisibility is the single visibility resolver).
 [AccountScopeEnforcedInHandler]
 public readonly record struct CreateTripCommand(TripDto Trip) : IRequest<TripVm>;
 
@@ -45,11 +44,11 @@ public sealed class CreateTripCommandHandler(
     {
         var caller = await userReader.GetUserAsync(UserId, cancellationToken);
 
-        // Group visibility AND account, through the single visibility source (acceptance 3, 4).
+        // Group visibility AND account, through the single visibility source.
         await TripVisibility.EnsureTransporterVisibleAsync(reader, user, caller.AccountId, UserId, request.Trip.TransporterId, cancellationToken);
 
-        // Every referenced parent is validated against the trip's account at write time
-        // (acceptance 2). A staff qualifies only through Manager's assignment rules.
+        // Every referenced parent is validated against the trip's account at write time.
+        // A staff qualifies only through Manager's assignment rules.
         if (request.Trip.StaffId is { } staffId)
         {
             var assignable = await managerValidationClient.ValidateStaffAssignmentAsync(
@@ -58,10 +57,8 @@ public sealed class CreateTripCommandHandler(
                 throw new ForbiddenAccessException(Resources.Trips, Actions.Write, TripErrorCodes.StaffNotAssignable);
         }
 
-        // Spec 11 §5 lists ServiceOrderId among the cross-account references validated at write
-        // time. Spec 12 owns service orders, so this goes through a port whose default accepts any
-        // reference — the call site is correct today and starts enforcing the moment spec 12
-        // registers a real implementation (see IServiceOrderValidator).
+        // ServiceOrderId goes through a port whose default accepts any reference; the call site starts
+        // enforcing once a real implementation is registered (see IServiceOrderValidator).
         await TripVisibility.EnsureServiceOrderInAccountAsync(
             serviceOrderValidator, request.Trip.ServiceOrderId, caller.AccountId, cancellationToken);
 
@@ -85,7 +82,7 @@ public sealed class CreateTripCommandHandler(
 
         // No TripEvent row is written here on purpose: TripCreated is a DOMAIN event raised by the
         // writer. A TripEvent row would make the trip undeletable the instant it was created,
-        // because delete is permitted only for a Created trip with no events (acceptance 16).
+        // because delete is permitted only for a Created trip with no events.
         return await writer.CreateTripAsync(trip, caller.AccountId, cancellationToken);
     }
 }

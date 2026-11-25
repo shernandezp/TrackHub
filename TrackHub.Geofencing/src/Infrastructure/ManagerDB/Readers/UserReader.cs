@@ -15,15 +15,8 @@
 
 namespace TrackHub.Geofencing.Infrastructure.Readers;
 
-// This class represents a reader for retrieving user data from the database.
 public sealed class UserReader(IApplicationDbContext context) : IUserReader
 {
-    /// <summary>
-    /// Retrieves a user by their ID.
-    /// </summary>
-    /// <param name="id"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>A UserVm object representing the retrieved user.</returns>
     public async Task<UserVm> GetUserAsync(Guid id, CancellationToken cancellationToken)
     {
         // The view hides inactive users; a missing row must read as "user not visible",

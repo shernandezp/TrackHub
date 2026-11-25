@@ -24,10 +24,8 @@ import type { FormChangeHandler } from 'controls/Dialogs/useForm';
 import { ALERT_EVENT_TYPES, SUBSCRIPTION_CHANNELS } from 'utils/notificationsCatalog';
 import { toCamelCase } from 'utils/stringUtils';
 
-/** Sentinel select value meaning "all event types" (eventTypeFilter = null). */
 export const ALL_EVENTS = 'all';
 
-/** Dialog/form state for an alert subscription — a partial superset of the API record. */
 export interface AlertSubscriptionFormValues {
   alertSubscriptionId?: string;
   principalType?: string;

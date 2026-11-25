@@ -3,10 +3,8 @@ using TrackHub.Reporting.Domain.Interfaces.Factory;
 
 namespace TrackHub.Reporting.Application;
 
-// Scoped, and resolves the report from the CALLER's own request scope. The previous singleton
-// created a throw-away scope, resolved the report from it and disposed that scope on return, so
-// every report ran on dependencies (GraphQL clients, IUser, feature readers) whose owning scope
-// was already gone — the same disposed-scope hand-off the Router registries had to be cured of.
+// Scoped, and resolves the report from the CALLER's own request scope, so the report's dependencies
+// (GraphQL clients, IUser, feature readers) live as long as the request instead of a disposed scope.
 public class ReportFactory(IServiceProvider serviceProvider) : IReportFactory
 {
     public IReport GetReport(string reportCode)

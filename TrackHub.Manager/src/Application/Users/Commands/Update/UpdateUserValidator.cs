@@ -26,7 +26,6 @@ public sealed class UpdateUserValidator : AbstractValidator<UpdateUserCommand>
             .MaximumLength(ColumnMetadata.DefaultUserNameLength)
             .NotEmpty();
 
-        // No rule on Active: it is a bool, and NotEmpty() rejects `false`, which made it
-        // impossible to deactivate a user through this command.
+        // No rule on Active: it is a bool, and NotEmpty() would reject `false`.
     }
 }

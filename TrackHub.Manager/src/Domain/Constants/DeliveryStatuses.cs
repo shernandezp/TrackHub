@@ -15,7 +15,6 @@
 
 namespace TrackHub.Manager.Domain.Constants;
 
-/// <summary>NotificationDelivery lifecycle status values. Stored as strings.</summary>
 public static class DeliveryStatuses
 {
     public const string Pending = nameof(Pending);

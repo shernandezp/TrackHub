@@ -23,18 +23,13 @@ namespace TrackHub.TripManagement.Application.TripStops.Commands.Progress;
 /// <summary>
 /// Dispatcher-side manual arrival, the override for weak GPS, indoor docks and devices that were
 /// off. Idempotent on <c>trip-arrive:{tripStopId:N}:{clientEventId:N}</c>: a duplicate submission
-/// returns success and creates no second row (acceptance 15) — the guarantee spec 10's offline
+/// returns success and creates no second row — the guarantee the mobile app's offline
 /// outbox is built on.
-/// <para>
-/// This spec declares no <c>PrincipalTypes = "Staff"</c> operation (acceptance 6). Spec 10 widens
-/// this command to staff by adding <c>Staff</c> to the attribute below plus an assignment check
-/// and <c>[RequireFeature(FeatureKeys.StaffMobile)]</c> — additively, one line, no fork.
-/// </para>
 /// </summary>
 [Authorize(Resource = Resources.Trips, Action = Actions.Edit)]
 [RequireFeature(FeatureKeys.TripManagement)]
 // Enforcement: the handler derives the caller's own account and passes it to the reader/writer,
-// which filters every row on it (TripVisibility is the single visibility resolver - spec 11).
+// which filters every row on it (TripVisibility is the single visibility resolver).
 [AccountScopeEnforcedInHandler]
 public readonly record struct RecordStopArrivalCommand(
     Guid TripId,

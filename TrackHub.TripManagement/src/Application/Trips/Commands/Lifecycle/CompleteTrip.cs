@@ -22,12 +22,12 @@ namespace TrackHub.TripManagement.Application.Trips.Commands.Lifecycle;
 /// <summary>
 /// <c>InProgress → Completed</c>. Every stop must be <c>Departed</c> or <c>Skipped</c> first,
 /// unless <paramref name="Force"/> is passed — a forced completion is a deliberate operator
-/// override, so it is recorded on the timeline as forced and audited (spec 11 §7.3, acceptance 26).
+/// override, so it is recorded on the timeline as forced and audited.
 /// </summary>
 [Authorize(Resource = Resources.Trips, Action = Actions.Edit)]
 [RequireFeature(FeatureKeys.TripManagement)]
 // Enforcement: the handler derives the caller's own account and passes it to the reader/writer,
-// which filters every row on it (TripVisibility is the single visibility resolver - spec 11).
+// which filters every row on it (TripVisibility is the single visibility resolver).
 [AccountScopeEnforcedInHandler]
 public readonly record struct CompleteTripCommand(Guid TripId, bool Force) : IRequest;
 

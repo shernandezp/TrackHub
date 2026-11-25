@@ -21,7 +21,7 @@ public sealed class PositionRetentionPolicyReader(IApplicationDbContext context,
 
         // The effective window is part of the entitlement: without it a lapsed feature still reads
         // as enabled. Ordering also needs the null guard — PostgreSQL sorts NULLS FIRST on DESC, so
-        // a row with no EffectiveFrom used to win over the current one.
+        // a row with no EffectiveFrom would otherwise win over the current one.
         var feature = await Context.AccountFeatures
             .Where(f => f.AccountId == scoped
                 && f.FeatureKey == FeatureKeys.GpsPositionHistory

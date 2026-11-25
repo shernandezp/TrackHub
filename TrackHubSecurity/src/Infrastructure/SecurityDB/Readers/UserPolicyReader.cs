@@ -17,11 +17,9 @@ using TrackHub.Security.Infrastructure.Interfaces;
 
 namespace TrackHub.Security.Infrastructure.Readers;
 
-// This class represents a reader for user policies in the security database.
 public sealed class UserPolicyReader(IApplicationDbContext context) : IUserPolicyReader
 {
 
-    // Retrieves the names of the policies associated with a user.
     public async Task<IReadOnlyCollection<string>> GetUserPolicyNamesAsync(Guid userId, CancellationToken cancellationToken)
         => await context.UserPolicies
             .Include(up => up.Policy)
@@ -29,7 +27,6 @@ public sealed class UserPolicyReader(IApplicationDbContext context) : IUserPolic
             .Select(up => up.Policy.Name)
             .ToListAsync(cancellationToken);
 
-    // Retrieves the IDs of the policies associated with a user.
     public async Task<IReadOnlyCollection<int>> GetUserPolicyIdsAsync(Guid userId, CancellationToken cancellationToken)
         => await context.UserPolicies
             .Where(up => up.UserId.Equals(userId))

@@ -22,10 +22,10 @@ using TrackHub.Router.Domain.Interfaces;
 namespace TrackHub.Router.Infrastructure.Navixy;
 
 /// <summary>
-/// Base class for Navixy readers providing common functionality for API communication.
-/// Navixy uses session hash authentication obtained via the user/auth endpoint; the hash is
-/// reused, with the user's time zone (Navixy v2 reads and writes every date in it), across sync/ping cycles through <see cref="IProviderSessionStore"/> A dropped
-/// session surfaces as <c>success: false</c> with status code 3/4 and triggers one re-auth + retry.
+/// Navixy authenticates with a session hash from user/auth; the hash and the user's time zone (Navixy v2
+/// reads and writes every date in it) are reused across sync/ping cycles through
+/// <see cref="IProviderSessionStore"/>. A dropped session surfaces as <c>success: false</c> with
+/// status code 3/4 and triggers one re-auth + retry.
 /// </summary>
 public class NavixyReaderBase
 {
@@ -46,14 +46,8 @@ public class NavixyReaderBase
 
     public ProtocolType Protocol => ProtocolType.Navixy;
 
-    /// <summary>
-    /// Gets the current session hash.
-    /// </summary>
     protected string Hash { get; private set; } = string.Empty;
 
-    /// <summary>
-    /// Gets the base URL for API calls.
-    /// </summary>
     protected string BaseUrl { get; private set; } = string.Empty;
 
     protected TimeZoneInfo UserTimeZone { get; private set; } = TimeZoneInfo.Utc;

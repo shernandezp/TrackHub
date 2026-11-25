@@ -15,13 +15,9 @@
 */
 
 /**
- * Resource/action names as the backend spells them. These must match
- * `Common.Domain.Constants.Resources` / `.Actions` EXACTLY — `authorizedActions`
- * returns the seeded strings and `can()` compares them literally, so a typo
- * silently reads as "not permitted" rather than failing loudly.
- *
- * Only the pairs the portal actually gates on live here; the full catalog is the
- * backend's. See the wiki's User Permissions Overview.
+ * Must match `Common.Domain.Constants.Resources` / `.Actions` EXACTLY: `can()` compares the
+ * seeded strings literally, so a typo silently reads as "not permitted". Only the pairs the
+ * portal gates on live here.
  */
 
 export const PermissionResources = {

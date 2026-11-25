@@ -20,7 +20,7 @@ using TrackHub.Reporting.Domain.Records;
 
 namespace TrackHub.Reporting.Application.Report.Factory.Trip;
 
-// On-time performance (spec 11 §13): punctuality percentage, average and worst delay, and delayed
+// On-time performance: punctuality percentage, average and worst delay, and delayed
 // stop counts grouped by transporter/staff/customer. Filters: from/to = window, transporterId =
 // optional unit. Aggregated, so it stays inside the 500-row PDF limit — SupportsPdf.
 //

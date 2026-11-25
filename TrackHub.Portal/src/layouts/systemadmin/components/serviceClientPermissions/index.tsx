@@ -35,12 +35,6 @@ import type { ServiceClientPermission, ServiceClientPermissionDtoInput } from "a
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from "utils/dateUtils";
 
-/**
- * Dialog/form state for a service-client permission. Merges an API
- * {@link ServiceClientPermission} (when editing) with a fresh-add blank; all
- * fields are optional and the requirement set is enforced by the dialog's
- * validate() gate before save.
- */
 export interface ServiceClientPermissionFormValues {
   serviceClientPermissionId?: string;
   clientId?: string;
@@ -79,7 +73,6 @@ function ManageServiceClientPermissions() {
   const updatePermission = useUpdateServiceClientPermission();
   const deletePermission = useDeleteServiceClientPermission();
 
-  // Keep the global spinner UX for the initial load / invalidation refetch.
   useEffect(() => {
     setLoading(permissionsQuery.isFetching);
   }, [permissionsQuery.isFetching, setLoading]);
@@ -99,7 +92,6 @@ function ManageServiceClientPermissions() {
     if (!validate(['clientId', 'resource', 'action', 'scope', 'audience'])) return;
     setLoading(true);
     try {
-      // The validate() gate above guarantees the required fields are present.
       const dto = {
         clientId: values.clientId,
         accountId: values.accountId || null,

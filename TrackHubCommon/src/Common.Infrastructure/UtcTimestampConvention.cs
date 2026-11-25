@@ -19,10 +19,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Common.Infrastructure;
 
 /// <summary>
-/// Normalizes every <see cref="DateTimeOffset"/> property to UTC before it is written.
-/// PostgreSQL `timestamp with time zone` stores a UTC instant (no zone), and Npgsql
-/// rejects non-zero offsets on write; applying this convention makes any DbContext safe
-/// regardless of the offset a value was constructed with. Reads come back as UTC.
+/// Normalizes every <see cref="DateTimeOffset"/> property to UTC before write, since Npgsql rejects
+/// non-zero offsets for <c>timestamp with time zone</c>.
 /// </summary>
 public static class UtcTimestampConvention
 {

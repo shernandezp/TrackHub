@@ -24,7 +24,7 @@ namespace TrackHub.TripManagement.Application.Trips.Queries.GetTripTollReportDat
 /// A match with no tariff for the trip's class on the plan date comes back with a <b>null</b>
 /// amount and <c>hasTariff = false</c>. That pair is what the report renders as its
 /// <c>PartialNoTariff</c> column — a zero here would net a catalog gap silently into the total and
-/// present an understated cost as a fact (spec 11 §18.9, acceptance 21).
+/// present an understated cost as a fact.
 /// </para>
 /// </summary>
 [Authorize(Resource = Resources.Trips, Action = Actions.Export, PrincipalTypes = "User,ServiceClient")]

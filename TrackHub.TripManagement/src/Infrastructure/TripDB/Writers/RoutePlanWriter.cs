@@ -22,7 +22,7 @@ namespace TrackHub.TripManagement.Infrastructure.TripDB.Writers;
 /// <summary>
 /// Route-plan persistence. A provider failure is stored as a <c>Failed</c> plan with an error
 /// code - never surfaced as an exception to the trip command's caller, and never a reason the trip
-/// cannot proceed (spec 11 section 7.3, acceptance 18).
+/// cannot proceed.
 /// </summary>
 public sealed class RoutePlanWriter(IApplicationDbContext context) : IRoutePlanWriter
 {
@@ -43,14 +43,14 @@ public sealed class RoutePlanWriter(IApplicationDbContext context) : IRoutePlanW
         var line = TripGeometryFactory.Line(geometry);
         var corridor = TripGeometryFactory.Corridor(line, corridorMeters);
 
-        // A Ready plan MUST carry both geometries (spec 11 §6.1: null only on a Failed plan). Both
+        // A Ready plan MUST carry both geometries (null only on a Failed plan). Both
         // factories return null for a degenerate provider response — a single-vertex line, or a
         // buffer that does not come back a Polygon — and storing that as Ready is far worse than
         // failing: HasReadyRoutePlan flips on, every position then tests against a null corridor,
         // and IsInsideCorridorAsync cannot distinguish "no corridor" from "off route". The vehicle
         // drives the route perfectly and gets a TripRouteDeviation on the third fix, with no
         // re-entry able to clear it. Degrade to Failed so the trip stays usable and the reason is
-        // visible (acceptance 18).
+        // visible.
         if (line is null || corridor is null)
         {
             return await SaveFailedPlanAsync(

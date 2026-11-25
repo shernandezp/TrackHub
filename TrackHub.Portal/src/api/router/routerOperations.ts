@@ -14,12 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Router GraphQL documents (Router backend). Codegen validates these against
- * schemas/router.graphql and emits typed document nodes — values always
- * travel as variables, never string interpolation.
- */
-
 import { graphql } from './generated';
 
 export const PositionFieldsFragment = graphql(`

@@ -79,7 +79,7 @@ internal static class TripGeometryFactory
     /// produces a polygon with holes, and the enclosed area is genuinely NOT within
     /// <paramref name="corridorMeters"/> of the route. Keeping only the exterior ring fills those
     /// holes in, so on an out-and-back or ring-road route a vehicle could abandon the plan anywhere
-    /// inside the loop and never trip the <c>ST_Contains</c> deviation test (spec 11 §7.4).
+    /// inside the loop and never trip the <c>ST_Contains</c> deviation test.
     /// </para>
     /// </summary>
     internal static Polygon? Corridor(LineString? line, int corridorMeters)

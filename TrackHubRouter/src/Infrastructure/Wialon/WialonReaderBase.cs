@@ -22,7 +22,6 @@ using TrackHub.Router.Domain.Interfaces;
 namespace TrackHub.Router.Infrastructure.Wialon;
 
 /// <summary>
-/// Base class for Wialon readers providing common functionality for API communication.
 /// Wialon uses token-based authentication via the token/login endpoint; the resulting session id
 /// (sid) is reused across sync/ping cycles through <see cref="IProviderSessionStore"/>
 /// instead of re-logging-in every Init. Wialon sessions die after ~5 minutes of inactivity, so the
@@ -73,9 +72,6 @@ public class WialonReaderBase
         _sid = await _sessionStore.AcquireAsync(SessionScope, credential, null, LoginAsync, cancellationToken);
     }
 
-    /// <summary>
-    /// Logs in with the credential token.
-    /// </summary>
     private async Task<ProviderSessionGrant> LoginAsync(CancellationToken cancellationToken)
     {
         var loginUrl = $"{_baseUrl}/wialon/ajax.html?svc=token/login";

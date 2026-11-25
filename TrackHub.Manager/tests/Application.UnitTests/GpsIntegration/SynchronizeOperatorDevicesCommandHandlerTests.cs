@@ -137,7 +137,7 @@ public class SynchronizeOperatorDevicesCommandHandlerTests
             new SynchronizeOperatorDevicesCommand(accountId, operatorId, [device], "corr-1", "MANUAL"),
             CancellationToken.None);
 
-        // Manager no longer records the run (A6); it returns the counts in the VM for Router to write.
+        // Manager does not record the run; it returns the counts in the VM for Router to write.
         Assert.Multiple(() =>
         {
             Assert.That(result.TriggerType, Is.EqualTo(SyncTriggerType.Manual));
@@ -154,7 +154,7 @@ public class SynchronizeOperatorDevicesCommandHandlerTests
                 && dto.IsPrimary
                 && dto.AssignmentReason == "Initial provider sync"),
             It.IsAny<CancellationToken>()), Times.Once);
-        // The auto-provisioned transporter is placed into the account's default group (A1).
+        // The auto-provisioned transporter is placed into the account's default group.
         _groupWriter.Verify(x => x.CreateGroupAsync(
             It.Is<GroupDto>(dto => dto.Name == "General"),
             accountId,
@@ -319,10 +319,9 @@ public class SynchronizeOperatorDevicesCommandHandlerTests
         _assignmentWriter.Verify(x => x.AssignAsync(It.IsAny<TransporterDeviceAssignmentDto>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
-    // The default-group resolution used to SCAN the account's groups for one named "General". Now
-    // that groupsByAccount is paged, a scan would only ever see page 1 — so an account whose default
-    // group sat past the window would fail to find it and create a SECOND "General" on every sync.
-    // The resolution must therefore go to the database by name, not filter a page in memory.
+    // groupsByAccount is paged, so SCANNING it for the group named "General" would only ever see
+    // page 1 — an account whose default group sits past the window would get a SECOND "General" on
+    // every sync. The resolution must go to the database by name, not filter a page in memory.
     [Test]
     public async Task Handle_ResolvesDefaultGroupByNameRatherThanScanningAPageOfGroups()
     {

@@ -24,9 +24,8 @@ using TrackHub.Reporting.Domain.Options;
 namespace TrackHub.Reporting.Domain.Helpers;
 
 /// <summary>
-/// Helper class for exporting a <see cref="ReportDataset"/> to Excel format. Produces output equivalent
-/// to the pre-refactor generic pipeline: title cell A1, a resx-localized header row, typed/formatted
-/// data rows, and a single ClosedXML table on a sheet named "Report".
+/// Exports a <see cref="ReportDataset"/> to Excel: title cell A1, a resx-localized header row,
+/// typed/formatted data rows, and a single ClosedXML table on a sheet named "Report".
 /// </summary>
 public sealed class ExcelHelper(ReportingLimitsOptions limits) : IExcelHelper
 {
@@ -139,9 +138,6 @@ public sealed class ExcelHelper(ReportingLimitsOptions limits) : IExcelHelper
         }
     }
 
-    /// <summary>
-    /// Sets the format of a column based on the property type (unchanged from the pre-refactor helper).
-    /// </summary>
     private static void SetColumnFormat(IXLWorksheet worksheet, int colNumber, Type propertyType, string propertyName)
     {
         switch (propertyType)

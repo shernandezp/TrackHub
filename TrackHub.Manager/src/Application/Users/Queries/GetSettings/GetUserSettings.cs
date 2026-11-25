@@ -23,7 +23,6 @@ public readonly record struct GetUserSettingsQuery() : IRequest<UserSettingsVm>;
 public class GetUserSettingsQueryHandler(IUserSettingsReader reader, IUser user) : IRequestHandler<GetUserSettingsQuery, UserSettingsVm>
 {
     private Guid UserId { get; } = Guid.TryParse(user.Id, out var userId) ? userId : throw new UnauthorizedAccessException();
-    // This method handles the GetUserSettingsQuery and returns an UserSettingsVm
     public async Task<UserSettingsVm> Handle(GetUserSettingsQuery request, CancellationToken cancellationToken)
         => await reader.GetUserSettingsAsync(UserId, cancellationToken);
 

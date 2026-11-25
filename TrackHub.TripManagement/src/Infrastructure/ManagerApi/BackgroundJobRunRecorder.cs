@@ -18,7 +18,7 @@ namespace TrackHub.TripManagement.Infrastructure.ManagerApi;
 /// <summary>
 /// Records background job runs via Manager's <c>createBackgroundJobRun</c> under the
 /// <c>trip_client</c> identity (TripManagement has no local BackgroundJobRun table). Both trip
-/// jobs are on-work-only recorders (SVD-11), so a row is written only when work happened.
+/// jobs are on-work-only recorders, so a row is written only when work happened.
 /// </summary>
 public class BackgroundJobRunRecorder(IGraphQLClientFactory graphQLClient)
     : GraphQLService(graphQLClient.CreateClient(Clients.Manager, asService: true)), IBackgroundJobRunRecorder

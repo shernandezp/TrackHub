@@ -27,7 +27,7 @@ public sealed class OperatorHealthCheckReader(IApplicationDbContext context, ICu
         await RequireOperatorAsync(operatorId, cancellationToken);
 
         // Aggregated in SQL. The window is caller-controlled up to 90 days and there is a check per
-        // sync cycle, so materialising the rows pulled six figures of them into the host to produce
+        // sync cycle, so materialising the rows would pull six figures of them into the host to produce
         // eleven scalars.
         var checks = Context.OperatorHealthChecks
             .Where(c => c.OperatorId == operatorId && c.StartedAt >= since);
@@ -69,7 +69,7 @@ public sealed class OperatorHealthCheckReader(IApplicationDbContext context, ICu
             lastFailure?.ErrorCode);
     }
 
-    // Derived from the telemetry tables: Telemetry no longer maintains the
+    // Derived from the telemetry tables: Telemetry does not maintain the
     // denormalized operator health/sync-summary columns, so the current health snapshot is computed
     // at read time — status/latency from the latest health check, sync timestamps from the sync runs,
     // faithfully mirroring how Manager stamped those columns.

@@ -15,7 +15,6 @@
 
 namespace TrackHub.Manager.Domain.Records;
 
-/// <summary>Write model for <c>StaffQualification</c> (spec 09 §6).</summary>
 public readonly record struct StaffQualificationDto(
     Guid AccountId,
     Guid StaffId,

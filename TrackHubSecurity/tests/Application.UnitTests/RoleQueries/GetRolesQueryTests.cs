@@ -21,12 +21,8 @@ using TrackHub.Security.Domain.Models;
 
 namespace Application.UnitTests.RoleQueries;
 
-/// <summary>
-/// The Administrator exclusion used to run AFTER the fetch, over a materialized list. That is a
-/// latent ragged-result bug — the moment this read gains a window, the filter removes a row from
-/// inside the window and the caller silently receives a short page — and it also read back a row the
-/// caller was never entitled to see. These tests pin the decision to the QUERY.
-/// </summary>
+// The Administrator exclusion belongs in the QUERY: filtering after the fetch would yield short
+// pages once the read is windowed, and would read back a row the caller may not see.
 [TestFixture]
 public class GetRolesQueryTests
 {

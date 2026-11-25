@@ -22,7 +22,6 @@ public readonly record struct CreateAccountCommand(AccountDto Account) : IReques
 
 public class CreateAccountCommandHandler(IAccountWriter writer, ISecurityWriter securityWriter, IPublisher publisher) : IRequestHandler<CreateAccountCommand, AccountVm>
 {
-    // This class handles the logic for creating an account
     public async Task<AccountVm> Handle(CreateAccountCommand request, CancellationToken cancellationToken)
     { 
         var account = await writer.CreateAccountAsync(request.Account, cancellationToken);
@@ -30,9 +29,8 @@ public class CreateAccountCommandHandler(IAccountWriter writer, ISecurityWriter 
         await securityWriter.CreateUserAsync(new CreateUserDto
         (
             account.AccountId,
-            // The username is the email address: the account form has no username field, and this used
-            // to pass the literal role name, which collides on Security's unique username index from the
-            // second account onwards (the account row was created, the manager user never was).
+            // The account form has no username field; anything constant would collide on Security's
+            // unique username index from the second account onwards.
             request.Account.EmailAddress,
             request.Account.Password,
             request.Account.EmailAddress,

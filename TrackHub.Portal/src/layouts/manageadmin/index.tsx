@@ -46,14 +46,11 @@ import { SECTION_GROUP_KEYS } from "layouts/manageadmin/data/sectionGroups";
 import type { SectionGroupKey } from "layouts/manageadmin/data/sectionGroups";
 import { useFeatures } from "context/features";
 
-/** A Manage section, optionally gated by an account feature flag. */
 interface SectionEntry {
   Section: ComponentType;
-  /** Feature key gating the section's backend queries; ungated sections omit it. */
   featureKey?: string;
 }
 
-// Sections per functional group; the group order lives in sectionGroups.ts.
 // Feature keys mirror the backend [RequireFeature] gates so disabled features
 // hide their sections instead of erroring server-side. Alert events stay
 // visible: their read path is deliberately ungated (other modules emit them).

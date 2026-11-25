@@ -20,7 +20,7 @@ namespace TrackHub.TripManagement.Infrastructure.TripDB.Readers;
 
 /// <summary>
 /// Platform toll reference data. No <c>accountId</c> parameter anywhere by design - this is road
-/// infrastructure, readable by any authenticated account user (spec 11 section 5).
+/// infrastructure, readable by any authenticated account user.
 /// </summary>
 public sealed class TollCatalogReader(IApplicationDbContext context) : ITollCatalogReader
 {
@@ -54,7 +54,7 @@ public sealed class TollCatalogReader(IApplicationDbContext context) : ITollCata
 
         var totalCount = await query.CountAsync(cancellationToken);
 
-        // Ordering on entity columns, before projection (rules.md, Forbidden patterns).
+        // Ordering on entity columns, before projection.
         var stations = await query
             .OrderBy(s => s.Name)
             .ThenBy(s => s.TollStationId)
@@ -72,7 +72,7 @@ public sealed class TollCatalogReader(IApplicationDbContext context) : ITollCata
             ?? throw new NotFoundException($"{tollStationId}", nameof(TollStation));
 
         // Full history, newest window first: tariffs are append-only so an operator can see
-        // exactly which price a historical estimate used (acceptance 21).
+        // exactly which price a historical estimate used.
         var tariffs = await context.TollTariffs
             .Where(t => t.TollStationId == tollStationId)
             .OrderBy(t => t.TollVehicleClassCode)
@@ -131,8 +131,8 @@ public sealed class TollCatalogReader(IApplicationDbContext context) : ITollCata
             })
             .ToListAsync(cancellationToken);
 
-        // De-duplicate per station per plan (spec 11 section 6.2). A key-based DistinctBy, never
-        // Distinct() over a projection - see rules.md on set operations and untyped columns.
+        // De-duplicate per station per plan. A key-based DistinctBy, never
+        // Distinct() over a projection.
         return [.. rows
             .DistinctBy(r => r.TollStationId)
             .Select(r => new TollStationMatchVm(
@@ -178,7 +178,7 @@ public sealed class TollCatalogReader(IApplicationDbContext context) : ITollCata
     /// <summary>
     /// Builds the planned line the match runs against. Fewer than two distinct vertices is not a
     /// route, so it matches nothing rather than throwing - an unplanned trip still estimates as
-    /// <c>NoStations</c> (spec 11 section 7.7).
+    /// <c>NoStations</c>.
     /// </summary>
     private static LineString? BuildRouteLine(IReadOnlyCollection<CoordinateVm> route)
     {

@@ -15,7 +15,6 @@
 
 namespace TrackHub.Manager.Domain.Records;
 
-/// <summary>NotificationRule.RecipientSelector contract — any combination.</summary>
 public sealed record RecipientSelectorModel
 {
     public List<string>? Roles { get; init; }

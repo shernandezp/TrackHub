@@ -29,15 +29,12 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
-// @mui material components
 import Fade from "@mui/material/Fade";
 
-// Argon Dashboard 2 MUI base styles
 import colors from "assets/theme/base/colors";
 import typography from "assets/theme/base/typography";
 import borders from "assets/theme/base/borders";
 
-// Argon Dashboard 2 MUI helper functions
 import pxToRem from "assets/theme/functions/pxToRem";
 
 const { black, light } = colors;
@@ -47,7 +44,6 @@ const { borderRadius } = borders;
 const tooltip = {
   defaultProps: {
     arrow: true,
-    // v9 replaced Tooltip's TransitionComponent prop with the transition slot.
     slots: { transition: Fade },
   },
 

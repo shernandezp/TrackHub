@@ -18,7 +18,6 @@ using TrackHub.Router.Infrastructure.Traccar.Models;
 
 namespace TrackHub.Router.Infrastructure.Traccar.Tests;
 
-// Value-correctness tests for the Traccar mapper (TT-01).
 [TestFixture]
 public class PositionMapperTests
 {

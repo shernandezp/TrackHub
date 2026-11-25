@@ -68,7 +68,7 @@ public sealed class AccountFeatureReader(IApplicationDbContext context) : IAccou
         var now = DateTimeOffset.UtcNow;
 
         // Same predicate and ordering as IsFeatureEnabledAsync above: with more than one row and no
-        // ORDER BY, PostgreSQL returned an arbitrary one, so a superseded row could silently decide
+        // ORDER BY, PostgreSQL would return an arbitrary one, so a superseded row could silently decide
         // whether trips auto-start and auto-complete.
         var configurationJson = await context.AccountFeatures
             .Where(x => x.AccountId == accountId

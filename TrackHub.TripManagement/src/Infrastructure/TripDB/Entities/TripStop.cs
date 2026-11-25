@@ -19,8 +19,8 @@ using NetTopologySuite.Geometries;
 namespace TrackHub.TripManagement.Infrastructure.TripDB.Entities;
 
 /// <summary>
-/// An ordered stop on a trip. <see cref="ArrivalGeom"/> is a SNAPSHOT taken when the trip starts
-/// (spec 11 section 18.4): either the linked geofence polygon or the stop point buffered by
+/// An ordered stop on a trip. <see cref="ArrivalGeom"/> is a SNAPSHOT taken when the trip starts:
+/// either the linked geofence polygon or the stop point buffered by
 /// <see cref="ArrivalRadiusMeters"/>. Snapshotting is what makes a running trip immune to a
 /// geofence being edited mid-execution. It is null until the trip transitions to InProgress.
 /// </summary>
@@ -38,7 +38,7 @@ public sealed class TripStop : BaseAuditableEntity
     public string? Address { get; set; }
 
     /// <summary>
-    /// Coarse locality, and the ONLY location label §7.8 permits in the anonymous tracking
+    /// Coarse locality, and the ONLY location label permitted in the anonymous tracking
     /// snapshot. Held separately from <see cref="Address"/> on purpose: a link holder on a
     /// multi-drop trip may learn that a stop is in Chia, never that it is at Cra 7 #71-52.
     /// Sourced from the same Router reverse-geocode response the portal already calls when a stop
@@ -71,7 +71,7 @@ public sealed class TripStop : BaseAuditableEntity
     /// When this <c>Arrived</c> stop was first seen OUTSIDE <see cref="ArrivalGeom"/>. The 30 s
     /// departure debounce is measured from here and the value is PERSISTED, because Router pushes
     /// one position per transporter per call — a per-request clock is reset before the window can
-    /// ever elapse, which is why departure never fired (spec 11 section 7.4). Cleared by a fix back
+    /// ever elapse. Cleared by a fix back
     /// inside the geometry and by arrival.
     /// </summary>
     public DateTimeOffset? OutsideSinceAt { get; set; }
@@ -80,8 +80,6 @@ public sealed class TripStop : BaseAuditableEntity
     public string? Observations { get; set; }
 
     public Trip? Trip { get; set; }
-
-    // ---------------------------------------------------------------- behaviour
 
     /// <summary>The persisted exit-debounce clock; null restarts it from zero.</summary>
     public bool SetOutsideSince(DateTimeOffset? outsideSinceAt)
@@ -99,12 +97,12 @@ public sealed class TripStop : BaseAuditableEntity
     /// Applies a stop progression and hands back everything needed to undo it.
     /// <para>
     /// <b>Timestamps once written are never overwritten</b> by a later detection or manual override
-    /// (acceptance 12) — the status still advances, but only the first recorded instant survives.
+    /// — the status still advances, but only the first recorded instant survives.
     /// </para>
     /// <para>
     /// The revert token is the same reason the trip has one: the row may be carrying a pending
-    /// arrival-geometry snapshot from arming in this very batch, and detaching it to undo a
-    /// duplicate progress event — which the writer used to do — discarded that silently.
+    /// arrival-geometry snapshot from arming in this very batch, which detaching it to undo a
+    /// duplicate progress event would discard silently.
     /// </para>
     /// </summary>
     public TripStopProgressRevert ApplyProgress(string toStatus, DateTimeOffset occurredAt, string? reason)

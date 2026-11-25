@@ -14,12 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Trip management API (TripManagement backend): plain typed async functions.
- * Failures THROW ApiError — fallbacks and toasts belong to the caller layer
- * (src/queries/trips.ts handles both for components).
- */
-
 import { executeGraphQL } from 'api/core/graphqlClient';
 import type { RequestOptions } from 'api/core/errors';
 import type {
@@ -162,8 +156,6 @@ export interface TollStationFilters {
   take?: number | null;
 }
 
-/* ---------------------------------------------------------------- queries */
-
 export async function getTrips(filters: TripListFilters = {}, options?: RequestOptions): Promise<TripsPage> {
   const data = await executeGraphQL('tripManagement', GetTripsDocument, {
     statuses: filters.statuses ?? null,
@@ -200,9 +192,8 @@ export async function getTripTimeline(
 }
 
 /**
- * Recorded positions for the replay control. `truncated` reports Telemetry's
- * 10 000-point cap and MUST be surfaced — a silently shortened route is a lie
- * about where the vehicle went (spec 11 acceptance 22).
+ * `truncated` reports Telemetry's 10 000-point cap and MUST be surfaced: a silently shortened route
+ * misrepresents where the vehicle went.
  */
 export async function getTripRouteReplay(
   tripId: string,
@@ -242,10 +233,7 @@ export async function getTollStationDetail(tollStationId: string, options?: Requ
   return data.tollStationDetail;
 }
 
-/**
- * Re-prices a computed route plan for another vehicle class. An empty catalog
- * answers `NoStations` with a null amount — never zero-as-fact (spec 11 §7.7).
- */
+/** An empty catalog answers `NoStations` with a null amount, never zero-as-fact. */
 export async function estimateTolls(
   routePlanId: string,
   tollVehicleClass?: string | null,
@@ -257,8 +245,6 @@ export async function estimateTolls(
   }, options);
   return data.estimateTolls;
 }
-
-/* -------------------------------------------------------------- mutations */
 
 export async function createTrip(trip: TripDtoInput): Promise<Trip> {
   const data = await executeGraphQL('tripManagement', CreateTripDocument, { trip });
@@ -278,7 +264,6 @@ export async function updateTrip(
   return data.updateTrip;
 }
 
-/** Returns the id of the deleted trip (schema: `deleteTrip: UUID!`). */
 export async function deleteTrip(tripId: string): Promise<string> {
   const data = await executeGraphQL('tripManagement', DeleteTripDocument, { id: tripId });
   return data.deleteTrip;
@@ -298,9 +283,8 @@ export async function assignTrip(
 }
 
 /**
- * Requests an ORS route plan. A routing failure comes back as a `Failed` plan
- * with an error code, NOT as a thrown error (spec 11 §17.18) — the caller must
- * read `status` rather than assuming success.
+ * A routing failure comes back as a `Failed` plan with an error code, NOT as a thrown error: read
+ * `status` rather than assuming success.
  */
 export async function planTripRoute(
   tripId: string,
@@ -345,10 +329,7 @@ export async function abortTrip(tripId: string, reason: string): Promise<boolean
   return data.abortTrip;
 }
 
-/**
- * Creates a public tracking link. The plaintext `token` is returned exactly
- * once, here — it is never readable again (spec 11 acceptance 23).
- */
+/** The plaintext `token` is returned exactly once, here; it is never readable again. */
 export async function shareTrip(
   tripId: string,
   expiresAt: string,
@@ -451,8 +432,6 @@ export async function skipStop(
   return data.skipStop;
 }
 
-/* ----------------------------------------------------- delivery mutations */
-
 export async function createDelivery(
   tripStopId: string,
   delivery: DeliveryDtoInput
@@ -476,9 +455,7 @@ export async function updateDelivery(
 }
 
 /**
- * Records a delivery outcome. `clientEventId` is the server's idempotency key —
- * callers MUST reuse the same id when retrying one attempt, or the retry stops
- * being idempotent (spec 11 §7.3, §9).
+ * `clientEventId` is the server's idempotency key: reuse the same id when retrying one attempt.
  */
 export async function updateDeliveryOutcome(
   tripId: string,
@@ -497,20 +474,15 @@ export async function updateDeliveryOutcome(
   return data.updateDeliveryOutcome;
 }
 
-/** Returns the id of the deleted delivery (schema: `deleteDelivery: UUID!`). */
 export async function deleteDelivery(deliveryId: string): Promise<string> {
   const data = await executeGraphQL('tripManagement', DeleteDeliveryDocument, { id: deliveryId });
   return data.deleteDelivery;
 }
 
-/* ---------------------------------------------------------- POD mutation  */
-
 /**
- * Captures proof of delivery for a stop. Every `documentIds` entry must already
- * be an uploaded Manager document whose scan finished `Clean` — otherwise the
- * backend answers `POD_DOCUMENT_NOT_CLEAN` (spec 11 §9). Idempotent on
- * `(tripStopId, clientEventId)`, so a retry of the same capture must carry the
- * same `clientEventId`.
+ * Every `documentIds` entry must be an uploaded Manager document whose scan finished `Clean`,
+ * otherwise the backend answers `POD_DOCUMENT_NOT_CLEAN`. Idempotent on
+ * `(tripStopId, clientEventId)`, so a retry must carry the same `clientEventId`.
  */
 export async function recordProofOfDelivery(
   tripId: string,
@@ -523,13 +495,9 @@ export async function recordProofOfDelivery(
   return data.recordProofOfDelivery;
 }
 
-/* ------------------------------------------------- toll catalog mutations */
-
 /**
- * Maps a transporter type — or one transporter as a row-level override — to a
- * toll vehicle class for THIS account. Without a mapping a new trip's
- * `TollVehicleClass` can never be defaulted, so toll estimation silently never
- * picks up a class (spec 11 §7.3 `CreateTripCommand`, §7.6).
+ * Maps a transporter type, or one transporter as an override, to a toll vehicle class for this
+ * account. Without a mapping a new trip's `TollVehicleClass` can never be defaulted.
  */
 export async function setTransporterTollClass(
   transporterTypeId: number | null,
@@ -637,19 +605,13 @@ export async function importTollCatalog(csv: string): Promise<TollCatalogImportR
   return data.importTollCatalog;
 }
 
-/**
- * Bulk trip planning (spec 11a §9.1). Same contract as the toll upload: valid rows
- * land, rejected ones come back with their line number and reason.
- */
+/** Same contract as the toll upload: valid rows land, rejected ones come back with line number and reason. */
 export async function importTripsCsv(csv: string): Promise<TripCsvImportResult> {
   const data = await executeGraphQL('tripManagement', ImportTripsCsvDocument, { csv });
   return data.importTripsCsv;
 }
 
-/**
- * Declares a freshly planned trip already under way (spec 11a §5.4). `startedAt` is
- * only used when Geofencing has no record of the vehicle leaving the origin zone.
- */
+/** `startedAt` is only used when Geofencing has no record of the vehicle leaving the origin zone. */
 export async function declareTripInTransit(
   tripId: string,
   startedAt: string | null

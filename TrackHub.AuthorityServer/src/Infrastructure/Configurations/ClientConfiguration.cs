@@ -23,10 +23,8 @@ public class ClientConfiguration : IEntityTypeConfiguration<Client>
 {
     public void Configure(EntityTypeBuilder<Client> builder)
     {
-        //Table name
         builder.ToTable(name: TableMetadata.Client, schema: SchemaMetadata.Security, t => t.ExcludeFromMigrations());
 
-        //Column names
         builder.Property(x => x.ClientId).HasColumnName("id");
         builder.Property(x => x.UserId).HasColumnName("userid");
         builder.Property(x => x.Name).HasColumnName("name");

@@ -1,8 +1,3 @@
-/**
- * Account Management → Operations & Monitoring: the audit trail and the
- * background-job table.
- */
-
 import { test, expect, uniqueName } from '../fixtures';
 import { CrudFlow } from '../pages/crud';
 import { Section } from '../pages/tableAccordion';

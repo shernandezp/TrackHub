@@ -15,14 +15,11 @@
 */
 
 /**
- * Lightweight in-window refresh bus for the GPS-integration screens. An operator
- * toggle / sync / credential save dispatches the event; the dashboard, sync-run,
- * device and assignment panels listen for it and invalidate/refetch. The spec
- * retires this bus in a later pass (query-key invalidation); until then it stays.
+ * In-window refresh bus: an operator toggle / sync / credential save dispatches the event and the
+ * GPS-integration panels invalidate/refetch.
  */
 export const GPS_INTEGRATION_REFRESH_EVENT = 'gps-integration-refresh';
 
-/** Listener signature the panels register with `window.addEventListener`. */
 export type GpsIntegrationRefreshListener = (event: Event) => void;
 
 export const notifyGpsIntegrationRefresh = (): void => {

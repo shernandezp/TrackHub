@@ -19,10 +19,6 @@ using TrackHub.Router.Domain.Interfaces;
 
 namespace TrackHub.Router.Infrastructure.Flespi;
 
-/// <summary>
-/// Base class for Flespi readers providing common functionality for API communication.
-/// Flespi uses FlespiToken bearer authentication.
-/// </summary>
 public class FlespiReaderBase
 {
     private readonly ICredentialHttpClientFactory _httpClientFactory;
@@ -37,10 +33,6 @@ public class FlespiReaderBase
         _httpClientFactory = httpClientFactory;
     }
 
-    /// <summary>
-    /// Initializes the Flespi reader with the provided credential.
-    /// Sets up FlespiToken authentication header.
-    /// </summary>
     public virtual Task Init(CredentialTokenDto credential, CancellationToken cancellationToken = default)
     {
         var httpClient = _httpClientFactory.CreateClientAsync(credential, cancellationToken);

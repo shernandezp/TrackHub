@@ -14,11 +14,7 @@
 *  limitations under the License.
 */
 
-/**
- * Operator health / sync-run GraphQL documents (Telemetry backend). These
- * reads were split out of the former dual-backend operator service. Codegen validates them against schemas/telemetry.graphql; values
- * always travel as variables.
- */
+/** Operator health / sync-run documents (Telemetry backend). */
 
 import { graphql } from './generated';
 

@@ -20,7 +20,7 @@ public interface ITripShareWriter
     /// <summary>
     /// Stores the local half of a share. The grant itself lives in Manager; this row records
     /// exactly which field groups the snapshot may expose, because public projection is
-    /// field-configured server-side and never filtered by the client (spec 11 §5).
+    /// field-configured server-side and never filtered by the client.
     /// </summary>
     Task<TripShareVm> CreateShareAsync(
         Guid tripId,
@@ -35,7 +35,7 @@ public interface ITripShareWriter
     /// Stamps <c>RevokedAt</c> locally and returns the <b>Manager <c>PublicLinkGrantId</c></b> the
     /// share is backed by — not the local <c>TripShareId</c>. The caller feeds the returned value
     /// straight into Manager's revoke, so returning the wrong id would leave the public link live
-    /// after a successful-looking revoke (acceptance 24). Idempotent: re-revoking keeps the first
+    /// after a successful-looking revoke. Idempotent: re-revoking keeps the first
     /// revocation instant.
     /// </summary>
     Task<Guid> RevokeShareAsync(Guid tripShareId, Guid accountId, CancellationToken cancellationToken);

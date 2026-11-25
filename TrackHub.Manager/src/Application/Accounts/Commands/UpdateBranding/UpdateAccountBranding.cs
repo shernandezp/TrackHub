@@ -19,7 +19,6 @@ using TrackHub.Manager.Application.Accounts.Events;
 
 namespace TrackHub.Manager.Application.Accounts.Commands.UpdateBranding;
 
-// Account-Administrator own-account branding upsert.
 [Authorize(Resource = Resources.Accounts, Action = Actions.Edit)]
 // Enforcement: the writer or reader checks every referenced id against the request's account.
 [AccountScopeEnforcedInHandler]
@@ -55,7 +54,6 @@ public sealed partial class UpdateAccountBrandingValidator : AbstractValidator<U
             .Must(c => c is not null && HexColorRegex().IsMatch(c))
             .WithMessage("PrimaryColor must be a hex color in the form #RRGGBB.");
 
-        // Logo, if present, must be a Document owned by the same account with owner type AccountBranding.
         RuleFor(x => x.Branding)
             .MustAsync(async (b, ct) => !b.LogoDocumentId.HasValue
                 || await brandingReader.LogoDocumentBelongsToAccountAsync(b.AccountId, b.LogoDocumentId.Value, ct))

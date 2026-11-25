@@ -23,15 +23,10 @@ import type { RouteMapProps } from './routeMapProps';
 export type { RouteMapProps };
 
 export interface RouteMapDispatcherProps extends RouteMapProps {
-  /** Account map preference ('OSM' | 'Google'), from account settings. */
   mapType?: MapProvider;
 }
 
-/**
- * Picks the route-map host for the account's configured provider. Consumers
- * render this, never a host directly — the provider choice is account
- * configuration, not a screen decision.
- */
+/** Consumers render this, never a host directly: the provider choice is account configuration. */
 const RouteMap = ({ mapType = MAP_PROVIDERS.OSM, ...props }: RouteMapDispatcherProps) =>
   mapType === MAP_PROVIDERS.GOOGLE ? <GoogleRouteMap {...props} /> : <OSMRouteMap {...props} />;
 

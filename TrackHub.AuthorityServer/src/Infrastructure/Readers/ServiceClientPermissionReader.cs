@@ -20,9 +20,8 @@ namespace TrackHub.AuthorityServer.Infrastructure.Readers;
 
 public sealed class ServiceClientPermissionReader(SecurityDbContext context) : IServiceClientPermissionReader
 {
-    // Reads the currently effective grants of a service client and reduces them to the account
-    // reach the token must declare. Only active, in-effect rows count: an expired or deactivated
-    // grant must not keep a token account-bound after Security revoked it.
+    // Only active, in-effect rows count: an expired or deactivated grant must not keep a token
+    // account-bound after Security revoked it.
     public async Task<ServiceClientAccountScopeVm> GetAccountScopeAsync(string clientId, CancellationToken cancellationToken)
     {
         var now = DateTimeOffset.UtcNow;

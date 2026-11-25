@@ -41,12 +41,7 @@ export function reportLabels(
   };
 }
 
-/**
- * Maps a preview payload's positional rows onto the {@link Table} shape: each
- * cell array is keyed by its column's `name`, with a stable `id` per row. Column
- * headers (already localized by the backend) become the table column titles.
- * Pure — cell display formatting is applied separately at render time.
- */
+/** Column headers arrive already localized by the backend. */
 export function mapPreviewToTable(preview: ReportPreview): {
   columns: TableColumn[];
   rows: TableRowData[];
@@ -82,9 +77,6 @@ export function formatPreviewCell(value: ReportPreviewCell): string {
   return String(value);
 }
 
-/**
- * Fetches a list using the provided fetch function and maps the result using the provided map function.
- */
 export const fetchList = async <T, U>(
     fetchFunction: () => Promise<T[]>,
     mapFunction: (value: T, index: number, array: T[]) => U

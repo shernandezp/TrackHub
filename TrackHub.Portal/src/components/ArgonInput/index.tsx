@@ -32,10 +32,8 @@ Coded by www.creative-tim.com
 import { forwardRef } from "react";
 import type { InputBaseProps } from "@mui/material/InputBase";
 
-// Custom styles for ArgonInput
 import ArgonInputRoot from "components/ArgonInput/ArgonInputRoot";
 
-// Argon Dashboard 2 MUI context
 import { useArgonController } from "context";
 
 export interface ArgonInputProps extends Omit<InputBaseProps, "size"> {

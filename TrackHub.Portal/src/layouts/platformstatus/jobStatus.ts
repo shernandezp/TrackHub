@@ -15,12 +15,9 @@
 */
 
 /**
- * Background-job presentation rules.
- *
- * The critical rule (ST-05): staleness may ONLY be asserted for jobs the backend
- * audit verified record on every cycle — `recordsEveryCycle` on the VM. Every
- * other job legitimately writes a row only when it did work, so an old timestamp
- * is the normal healthy state and must render neutrally as "last activity …".
+ * Staleness may ONLY be asserted for jobs that record on every cycle (`recordsEveryCycle`). Every
+ * other job writes a row only when it did work, so an old timestamp is the normal healthy state and
+ * must render neutrally as "last activity …".
  */
 
 /** Matches TrackHub.Manager Domain/Constants/BackgroundJobKeys.StalenessThresholdHours. */
@@ -49,7 +46,6 @@ export function deriveJobState(job: JobStatusLike, now: number = Date.now()): Jo
 
   if (age <= STALENESS_THRESHOLD_MS) return 'ok';
 
-  // Past the threshold: only a verified per-cycle job can be called stale.
   return job.recordsEveryCycle ? 'stale' : 'idle';
 }
 

@@ -47,7 +47,6 @@ import { LoadingContext } from 'LoadingContext';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "AuthContext";
 
-/** Map-related account settings the geofence editor reads. */
 interface GeofenceMapSettings {
   maps: string;
   mapsKey: string | null;
@@ -63,7 +62,6 @@ function GeofenceManager() {
   const { setLoading } = useContext(LoadingContext);
   const [settings, setSettings] = useState<GeofenceMapSettings>({maps:'OSM', mapsKey:'', refreshMapInterval: 60});
 
-  // List filters + paging (server-side).
   const [searchDraft, setSearchDraft] = useState('');
   // The status filter defaults to Active — retired (inactive) zones stay one click away.
   const [filters, setFilters] = useState<{ search: string; type: string; active: string }>({ search: '', type: ALL, active: 'active' });
@@ -233,10 +231,8 @@ function GeofenceManager() {
     setFilters(prev => ({ ...prev, [name]: String(value) }));
   };
 
-  // Debounce the free-text search into the server-side query params: the list is
-  // server-paged, so apply ~350ms after the last keystroke (no button) and jump
-  // back to the first page so the new results start from the top. The ref guards
-  // against re-applying an unchanged value (e.g. the initial empty draft).
+  // Debounced (~350ms) into the server-side query params, jumping back to the first page. The ref
+  // guards against re-applying an unchanged value (e.g. the initial empty draft).
   const appliedSearchRef = useRef('');
   useEffect(() => {
     const handle = setTimeout(() => {
@@ -284,11 +280,8 @@ function GeofenceManager() {
       <ArgonBox py={1}>
         <Grid container spacing={3}>
           <Grid size={{xs: 12, lg: 9}} sx={{ position: 'relative', zIndex: 1 }}>
-            {/* Compact single-row filter toolbar across the top of the map (same
-                CompactSelect look as the dashboard filter bar). The filters drive
-                the server-paged LIST (right column); the map keeps showing every
-                geofence via the full (unpaged) set. The name search lives in the
-                navbar search box, mirroring the dashboard. */}
+            {/* The filters drive the server-paged LIST; the map keeps showing every geofence via the full
+                (unpaged) set. */}
             <ArgonBox
               display="flex"
               flexWrap="wrap"

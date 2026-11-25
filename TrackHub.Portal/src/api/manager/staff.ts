@@ -14,11 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Staff API (Manager backend): plain typed async functions. Failures THROW
- * ApiError — fallbacks and toasts belong to the caller layer (src/queries).
- */
-
 import { executeGraphQL } from 'api/core/graphqlClient';
 import type { RequestOptions } from 'api/core/errors';
 import { fetchAllPages } from 'api/core/paging';
@@ -54,11 +49,10 @@ export type Staff = StaffItemType;
 export type StaffLookup = GetStaffLookupQuery['staffLookup'][number];
 export type StaffQualification = StaffQualificationItemType;
 export type StaffTransporterAssignment = StaffAssignmentItemType;
-/** Time-aware active assignment projection (spec 09 §7.2); no assignment row id. */
+/** Time-aware active assignment projection; no assignment row id. */
 export type StaffActiveAssignment = StaffActiveAssignmentItemType;
 export type { StaffMemberDtoInput, StaffQualificationDtoInput };
 
-/** Filters accepted by the account-wide assignment-history query. */
 export interface StaffAssignmentHistoryFilters {
   staffId?: string | null;
   transporterId?: string | null;
@@ -66,7 +60,6 @@ export interface StaffAssignmentHistoryFilters {
   to?: string | null;
 }
 
-/** Builds a clean StaffMemberDtoInput, dropping any extra fields carried by the form. */
 function toStaffMemberDto(staff: StaffMemberDtoInput): StaffMemberDtoInput {
   return {
     accountId: staff.accountId,
@@ -104,10 +97,8 @@ export async function getStaffMembersByAccount(
 }
 
 /**
- * Every staff on the account, paged to exhaustion. The staff pickers on every
- * workforce surface read from this: a single clamped page would make staff
- * past the page boundary unadministrable (no credential, no qualification, no
- * assignment could ever be created for them) with no error shown.
+ * Paged to exhaustion: a single clamped page would make staff past the page boundary
+ * unadministrable (no credential, qualification or assignment) with no error shown.
  */
 export async function getAllStaffMembersByAccount(accountId: string, options?: RequestOptions): Promise<Staff[]> {
   return fetchAllPages(async (skip, take) => (await getStaffMembersByAccount(accountId, skip, take, null, null, options)).items);
@@ -131,7 +122,6 @@ export async function deactivateStaffMember(staffId: string): Promise<boolean> {
   return data.deactivateStaffMember;
 }
 
-/** Builds a clean StaffQualificationDtoInput, dropping form-only fields. */
 function toQualificationDto(q: StaffQualificationDtoInput): StaffQualificationDtoInput {
   return {
     accountId: q.accountId,
@@ -166,7 +156,6 @@ export async function getStaffQualifications(
   return data.staffQualifications;
 }
 
-/** Every qualification matching the filter, paged to exhaustion. */
 export async function getAllStaffQualifications(
   accountId: string,
   staffId: string | null = null,
@@ -225,9 +214,8 @@ export async function getStaffAssignmentHistory(
 }
 
 /**
- * Every history row matching the filter, paged to exhaustion (capped by
- * `MAX_FETCH_ALL_ITEMS` — the caller compares against it and asks the user to
- * narrow the filters rather than truncating silently).
+ * Capped by `MAX_FETCH_ALL_ITEMS`: the caller compares against it and asks the user to narrow the
+ * filters rather than truncating silently.
  */
 export async function getAllStaffAssignmentHistory(
   accountId: string,
@@ -240,14 +228,10 @@ export async function getAllStaffAssignmentHistory(
 }
 
 /**
- * The staff's currently-active assignments (spec 09 §7.2). Unpaged and
- * time-aware server-side, so it is the only correct source for an "active"
- * list — the history query is ordered `StartsAt DESC` and paged, so a long-lived
- * assignment sorts below any page boundary and would disappear.
- *
- * Note the VM carries no assignment row id: `resourceId` is the transporter id,
- * and the last entry may be the synthesized default-transporter one, which has
- * no underlying row at all.
+ * Unpaged and time-aware server-side, so it is the only correct source for an "active" list: the
+ * paged history is ordered `StartsAt DESC`, so a long-lived assignment sorts past a page boundary.
+ * `resourceId` is the transporter id, and the last entry may be the synthesized
+ * default-transporter one, which has no underlying row.
  */
 export async function getStaffAssignments(staffId: string, options?: RequestOptions): Promise<StaffActiveAssignment[]> {
   const data = await executeGraphQL('manager', GetStaffAssignmentsDocument, { staffId }, options);

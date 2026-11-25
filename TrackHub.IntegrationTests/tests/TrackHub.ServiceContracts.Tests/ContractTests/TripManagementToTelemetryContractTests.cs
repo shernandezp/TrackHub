@@ -22,7 +22,7 @@ using TrackHub.TripManagement.Infrastructure.TelemetryApi;
 
 namespace TrackHub.ServiceContracts.Tests.ContractTests;
 
-// TripManagement's route-replay read against Telemetry (spec 11 §7.5), issued under the
+// TripManagement's route-replay read against Telemetry, issued under the
 // trip_client identity, validated against Telemetry's real, in-process-built schema.
 [TestFixture]
 public class TripManagementToTelemetryContractTests

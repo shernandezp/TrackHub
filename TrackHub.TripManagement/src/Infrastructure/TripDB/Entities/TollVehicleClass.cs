@@ -18,9 +18,9 @@ using Common.Infrastructure;
 namespace TrackHub.TripManagement.Infrastructure.TripDB.Entities;
 
 /// <summary>
-/// Platform toll reference data - NO AccountId by design (spec 11 section 5): it describes public
+/// Platform toll reference data - NO AccountId by design: it describes public
 /// road infrastructure, not tenant business data. The platform ships zero rows; each deployment
-/// defines its own axle/weight categories (spec 11 section 7.7).
+/// defines its own axle/weight categories.
 /// </summary>
 public sealed class TollVehicleClass : BaseAuditableEntity
 {

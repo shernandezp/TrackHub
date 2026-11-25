@@ -19,13 +19,8 @@ using TrackHub.Security.Infrastructure.Interfaces;
 
 namespace TrackHub.Security.Infrastructure.Writers;
 
-// This class represents a writer for the ResourceActionRole entity in the security database.
 public sealed class ResourceActionRoleWriter(IApplicationDbContext context) : IResourceActionRoleWriter
 {
-    // Creates a new ResourceActionRole asynchronously and returns the created ResourceActionRoleVm.
-    // param name="resourceActionRoleDto": The ResourceActionRoleDto object.
-    // param name="cancellationToken": The cancellation token.
-    // returns: The created ResourceActionRoleVm.
     public async Task<ResourceActionRoleVm> CreateResourceActionRoleAsync(ResourceActionRoleDto resourceActionRoleDto, CancellationToken cancellationToken)
     {
         var resourceActionRole = await context.ResourceActionRole.FirstOrDefaultAsync(
@@ -51,10 +46,6 @@ public sealed class ResourceActionRoleWriter(IApplicationDbContext context) : IR
             resourceActionRole.RoleId);
     }
 
-    // Deletes a ResourceActionRole asynchronously based on the provided resource, actions and role ids.
-    // param name="resourceId": The resource id.
-    // param name="actionId": The action id.
-    // param name="roleId": The role id.
     public async Task DeleteResourceActionRoleAsync(int resourceId, int actionId, int roleId, CancellationToken cancellationToken)
     {
         var resourceActionRole = await context.ResourceActionRole

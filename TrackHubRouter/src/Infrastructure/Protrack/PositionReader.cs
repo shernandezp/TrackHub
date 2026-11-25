@@ -24,7 +24,6 @@ using TrackHub.Router.Domain.Helpers;
 namespace TrackHub.Router.Infrastructure.Protrack;
 
 /// <summary>
-/// Reader for retrieving position information from Protrack API.
 /// Uses /api/track for current positions and /api/playback for historical data.
 /// Playback is paged (max 1000 records per request).
 /// </summary>
@@ -38,10 +37,6 @@ public sealed class PositionReader(
     // Maximum number of records returned per playback request
     private const int PlaybackPageSize = 1000;
 
-    /// <summary>
-    /// Retrieves the last position of a single device asynchronously.
-    /// Uses /api/track with the device's IMEI.
-    /// </summary>
     public async Task<PositionVm> GetDevicePositionAsync(DeviceTransporterVm deviceDto, CancellationToken cancellationToken)
     {
         var result = await WithReauthenticationAsync(
@@ -57,7 +52,6 @@ public sealed class PositionReader(
     }
 
     /// <summary>
-    /// Retrieves the last positions of multiple devices asynchronously.
     /// Uses /api/track with comma-separated IMEIs (max 100).
     /// </summary>
     public async Task<IEnumerable<PositionVm>> GetDevicePositionAsync(IEnumerable<DeviceTransporterVm> devices, CancellationToken cancellationToken)
@@ -81,7 +75,6 @@ public sealed class PositionReader(
     }
 
     /// <summary>
-    /// Retrieves the positions of a device within a specified time range asynchronously.
     /// Uses /api/playback endpoint with pagination (max 1000 records per page).
     /// When 1000 records are returned, continues requesting with begintime = last record's gpstime.
     /// </summary>
@@ -108,13 +101,11 @@ public sealed class PositionReader(
             var positions = ParsePlaybackRecord(result.Record, deviceDto);
             allPositions.AddRange(positions);
 
-            // If we got fewer than the page size, we have all the data
             if (positions.Count < PlaybackPageSize)
             {
                 break;
             }
 
-            // For the next page, use the last record's gpstime as the new begintime
             var lastPosition = positions[^1];
             beginTime = lastPosition.DeviceDateTime.ToUnixTimeSeconds() + 1;
         }
@@ -123,7 +114,6 @@ public sealed class PositionReader(
     }
 
     /// <summary>
-    /// Parses the playback record string into a list of PositionVm objects.
     /// Format: "longitude,latitude,gpstime,speed,course;longitude,latitude,gpstime,speed,course;..."
     /// </summary>
     internal static List<PositionVm> ParsePlaybackRecord(string record, DeviceTransporterVm deviceDto)

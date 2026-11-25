@@ -18,13 +18,13 @@ namespace TrackHub.TripManagement.Domain.Interfaces;
 /// <summary>
 /// Cross-account reference validation against Manager. Every referenced parent — transporter,
 /// staff, document — is checked against the trip's account at write time; a mismatch is a
-/// 403/404 per the disclosure rules, never a silent accept (spec 11 §5, acceptance 2).
+/// 403/404 per the disclosure rules, never a silent accept.
 /// </summary>
 public interface IManagerValidationClient
 {
     /// <summary>
     /// Manager's <c>validateStaffAssignment</c>. Only the <c>"Transporter"</c> resource type is
-    /// accepted today (spec 09); a staff qualifies through an active
+    /// accepted today; a staff qualifies through an active
     /// <c>StaffTransporterAssignment</c> or their <c>DefaultTransporterId</c>.
     /// </summary>
     Task<bool> ValidateStaffAssignmentAsync(Guid staffId, string resourceType, Guid resourceId, CancellationToken cancellationToken);

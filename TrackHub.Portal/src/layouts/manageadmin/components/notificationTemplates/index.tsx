@@ -110,7 +110,6 @@ function ManageNotificationTemplates() {
     if (!validate(['templateKey', 'channel', 'locale', 'body']) || !account?.accountId) return;
     setLoading(true);
     try {
-      // validate() gates the required fields; assert the mutation input at the boundary.
       // Account overrides always carry the accountId (platform defaults are read-only).
       const template = {
         accountId: account.accountId,
@@ -129,7 +128,6 @@ function ManageNotificationTemplates() {
       setOpen(false);
       await loadTemplates();
     } catch (error) {
-      // Keep the dialog open on failure so the user can retry without re-entering.
       notifyApiError(error);
     } finally {
       setLoading(false);

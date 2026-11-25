@@ -39,10 +39,8 @@ public class CreateUserCommandHandlerTests
     [Test]
     public async Task Handle_ValidCommand_ReturnsUserVm()
     {
-        // Arrange
         var createUserDto = new CreateUserDto
         {
-            // Set up the properties of the CreateUserDto object
         };
         var createUserCommand = new CreateUserCommand(createUserDto);
         var accountId = Guid.NewGuid();
@@ -65,10 +63,8 @@ public class CreateUserCommandHandlerTests
 
         var handler = new CreateUserCommandHandler(_mockUserWriter.Object, _mockUserReader.Object, _mockUser.Object, _mockPublisher.Object, _mockUser.Object);
 
-        // Act
         var result = await handler.Handle(createUserCommand, CancellationToken.None);
 
-        // Assert
         Assert.That(result, Is.EqualTo(user));
         _mockPublisher.Verify(x => x.Publish(It.Is<UserCreated.Notification>(n => n.User == shrankUser), It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -76,10 +72,8 @@ public class CreateUserCommandHandlerTests
     [Test]
     public void Handle_InvalidCommand_ThrowsUnauthorizedAccessException()
     {
-        // Arrange
         var createUserDto = new CreateUserDto
         {
-            // Set up the properties of the CreateUserDto object
         };
         var createUserCommand = new CreateUserCommand(createUserDto);
         var user = new UserVm
@@ -97,7 +91,6 @@ public class CreateUserCommandHandlerTests
         _mockPublisher.Setup(x => x.Publish(It.IsAny<UserCreated.Notification>(), It.IsAny<CancellationToken>()))
             .Verifiable();
 
-        // Act & Assert
         Assert.Throws<UnauthorizedAccessException>(() =>
             new CreateUserCommandHandler(
             _mockUserWriter.Object,

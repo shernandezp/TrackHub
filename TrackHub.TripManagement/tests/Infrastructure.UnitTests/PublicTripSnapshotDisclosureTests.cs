@@ -25,15 +25,12 @@ using TrackHub.TripManagement.Infrastructure.TripDB.Readers;
 namespace Infrastructure.UnitTests;
 
 /// <summary>
-/// Tests over the anonymous public-tracking disclosure boundary (spec 11 §7.8, acceptance 23).
+/// Tests over the anonymous public-tracking disclosure boundary.
 /// <para>
-/// This suite exists because there were previously ZERO tests here and four separate leaks survived
-/// into shipped code: every other stop's exact street address projected into the "city" slot, the
-/// consignee's name projected with no flag gating it at all, the full planned route attached
-/// unconditionally, and — in the other direction — two flags (<c>IncludeVehicle</c>,
-/// <c>IncludeStaffName</c>) that were inert. A field-by-field assertion of the all-off and all-on
+/// Leaks here are silent: a street address in the "city" slot, an ungated consignee name, an
+/// unconditional planned route, or an inert flag. A field-by-field assertion of the all-off and all-on
 /// snapshots, plus a sweep asserting the forbidden data cannot appear under ANY flag combination,
-/// is what makes those failures loud instead of silent.
+/// makes them loud.
 /// </para>
 /// </summary>
 [TestFixture]
@@ -47,7 +44,7 @@ public sealed class PublicTripSnapshotDisclosureTests
     private static readonly Guid StaffId = Guid.Parse("eeeeeeee-0000-0000-0000-000000000001");
     private static readonly Guid GrantId = Guid.Parse("ffffffff-0000-0000-0000-000000000001");
 
-    // Every one of these is data §7.8 forbids in a public snapshot. Each appears in the seeded rows
+    // Every one of these is data forbidden in a public snapshot. Each appears in the seeded rows
     // so a regression that starts projecting it is caught by the sweep below rather than by a
     // customer noticing their competitor's drop list.
     private static readonly string[] ForbiddenValues =
@@ -206,7 +203,7 @@ public sealed class PublicTripSnapshotDisclosureTests
 
         Assert.Multiple(() =>
         {
-            // Ungated by §7.8: code, status, planned/actual start and end.
+            // Ungated: code, status, planned/actual start and end.
             Assert.That(trip.Code, Is.EqualTo("TRIP-0001"));
             Assert.That(trip.Status, Is.EqualTo(TripStatuses.InProgress));
             Assert.That(trip.PlannedStartAt, Is.EqualTo(new DateTimeOffset(2026, 7, 21, 12, 0, 0, TimeSpan.Zero)));
@@ -226,11 +223,8 @@ public sealed class PublicTripSnapshotDisclosureTests
     /// <summary>
     /// The disclosure boundary is pinned STRUCTURALLY, not field by field.
     /// <para>
-    /// Spec 11 §7.8 is an exhaustive allow-list, so the risk is a field being ADDED — and no
+    /// The allow-list is exhaustive, so the risk is a field being ADDED — and no
     /// value-based assertion can catch a member that did not exist when it was written.
-    /// <c>CustomerName</c> was exactly that: it sat on this type projected to a hardcoded null, so
-    /// every runtime assertion passed while the slot stayed one edit away from disclosing which
-    /// customer a multi-drop trip belongs to, to every holder of every link on it.
     /// </para>
     /// </summary>
     [Test]
@@ -320,7 +314,7 @@ public sealed class PublicTripSnapshotDisclosureTests
 
     /// <summary>
     /// <c>IncludeLivePosition</c> is necessary but not sufficient: a completed trip's last known
-    /// position is where the vehicle finished, which is a customer's premises (acceptance 23).
+    /// position is where the vehicle finished, which is a customer's premises.
     /// </summary>
     [Test]
     public async Task LivePosition_IsSuppressedWhenTheTripIsNotInProgress()
@@ -378,7 +372,7 @@ public sealed class PublicTripSnapshotDisclosureTests
 
     /// <summary>
     /// The account is not decoration on the lookup: a grant id resolved against the wrong account
-    /// returns nothing rather than another tenant's trip (acceptance 1).
+    /// returns nothing rather than another tenant's trip.
     /// </summary>
     [Test]
     public async Task Snapshot_IsNullForAnotherAccountsGrantId()
@@ -394,7 +388,7 @@ public sealed class PublicTripSnapshotDisclosureTests
     /// <summary>
     /// A revoked share stops projecting at the store, independently of Manager's grant state — the
     /// two checks are belt and braces because either alone leaving a link live is a disclosure
-    /// incident (acceptance 24).
+    /// incident.
     /// </summary>
     [Test]
     public async Task Snapshot_IsNullOnceTheShareIsRevoked()

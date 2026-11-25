@@ -20,7 +20,6 @@ import Select from '@mui/material/Select';
 import type { SelectChangeEvent } from '@mui/material/Select';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
-/** An option for a {@link CompactSelect}. */
 export interface CompactSelectOption {
   value: string | number;
   label: string;

@@ -20,7 +20,7 @@ using TrackHub.Reporting.Domain.Records;
 
 namespace TrackHub.Reporting.Application.Report.Factory.Trip;
 
-// Dwell distribution per stop/customer (spec 11 §13). Filters: from/to = window, transporterId =
+// Dwell distribution per stop/customer. Filters: from/to = window, transporterId =
 // optional unit. Longest average dwell first — the reason to read the report is to
 // find where time is lost. Excel only.
 //

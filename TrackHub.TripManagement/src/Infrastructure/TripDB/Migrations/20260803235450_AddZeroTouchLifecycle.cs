@@ -87,7 +87,7 @@ namespace TrackHub.TripManagement.Infrastructure.Migrations
             // enforced that before, so existing data may already violate it — and a bare CREATE
             // UNIQUE INDEX would fail with Postgres's own message naming two row ids and nothing
             // else. Fail LOUDLY instead, naming the vehicles, so the operator can resolve the
-            // duplicates before applying (spec 11a §14).
+            // duplicates before applying.
             //
             // Paused is in scope alongside InProgress: a paused trip has not released its vehicle,
             // and treating it as idle let the next trip in the queue auto-start on the same unit.

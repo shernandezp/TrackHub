@@ -21,20 +21,12 @@ using TrackHub.Manager.Infrastructure.Interfaces;
 
 namespace TrackHub.Manager.Infrastructure.ManagerDB.Readers;
 
-// AccountSettingsReader class for reading account settings data
 public sealed class AccountSettingsReader(IApplicationDbContext context, ICurrentPrincipal principal)
     : AccountScopedDataAccess(context, principal), IAccountSettingsReader
 {
-    /// <summary>
-    /// Retrieves an account settings by ID
-    /// </summary>
-    /// <param name="id"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>Returns an AccountSettingsVm object</returns>
     public async Task<AccountSettingsVm> GetAccountSettingsAsync(Guid id, CancellationToken cancellationToken)
     {
-        // By-id tenant guard ([AccountScopeEnforcedInHandler] on GetAccountSettingsQuery cites
-        // this); the master path is the Filters overload below (accountSettingsMaster surface).
+        // By-id tenant guard that [AccountScopeEnforcedInHandler] on GetAccountSettingsQuery relies on.
         RequireAccountAccess(id);
 
         var accountSettings = await Context.AccountSettings
@@ -45,12 +37,6 @@ public sealed class AccountSettingsReader(IApplicationDbContext context, ICurren
         return ToVm(accountSettings);
     }
 
-    /// <summary>
-    /// Retrieves a collection of account settings
-    /// </summary>
-    /// <param name="filters">Filters</param>
-    /// <param name="cancellationToken">Cancellation token</param>
-    /// <returns>Returns a collection of AccountSettingsVm objects</returns>
     public async Task<IReadOnlyCollection<AccountSettingsVm>> GetAccountSettingsAsync(Filters filters, int skip, int take, CancellationToken cancellationToken)
     {
         // Every per-account call made for a non-operational tenant is refused downstream.

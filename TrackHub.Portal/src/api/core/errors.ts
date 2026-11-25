@@ -23,14 +23,8 @@ export interface GraphQLErrorEntry {
 }
 
 /**
- * Maps well-known backend error codes to user-facing i18n keys. Covers the
- * Reporting REST envelope codes, the shared account/feature codes, and the
- * TripManagement rejection codes (`TripErrorCodes`), so both blob/JSON REST
- * responses and GraphQL error extensions surface as friendly localized toasts
- * rather than raw server text.
- *
- * Codes with no entry fall through to the server's message — deliberately: an
- * unmapped code is better shown verbatim than hidden behind a generic string.
+ * Codes with no entry fall through to the server's message: an unmapped code is
+ * better shown verbatim than hidden behind a generic string.
  */
 export const ERROR_CODE_I18N: Record<string, string> = {
   FEATURE_DISABLED: 'errors.featureDisabled',
@@ -95,9 +89,8 @@ export const ERROR_CODE_I18N: Record<string, string> = {
 };
 
 /**
- * Extracts the `{ errors: [...] }` envelope from a REST error response body.
- * The download path receives the body as a `Blob` (responseType: 'blob'); the
- * preview/JSON path receives a parsed object. Returns `[]` when nothing parses.
+ * The download path receives the body as a `Blob`, the preview path as a parsed
+ * object. Returns `[]` when nothing parses.
  */
 export async function extractRestErrorEntries(data: unknown): Promise<GraphQLErrorEntry[]> {
   if (data == null) return [];
@@ -155,18 +148,13 @@ function logUnmappedError(detail: string): void {
 }
 
 /**
- * Normalized API failure. The api layer THROWS these; deciding what a failure
- * means (fallback value, toast, retry) belongs to the caller — usually the
- * query layer's global error handler.
+ * The api layer THROWS these; deciding what a failure means (fallback, toast,
+ * retry) belongs to the caller, usually the query layer's global error handler.
  */
 export class ApiError extends Error {
-  /** Well-known backend code (e.g. ACCOUNT_SUSPENDED, FEATURE_DISABLED) if present. */
   readonly code?: string;
-  /** Translation key for user-facing display, when the code maps to one. */
   readonly i18nKey?: string;
-  /** HTTP status, when the failure was a transport error. */
   readonly status?: number;
-  /** Raw GraphQL error entries, when the failure came from a GraphQL payload. */
   readonly graphQLErrors: GraphQLErrorEntry[];
 
   constructor(
@@ -187,11 +175,6 @@ export class ApiError extends Error {
     this.graphQLErrors = options.graphQLErrors ?? [];
   }
 
-  /**
-   * Builds an ApiError from a REST error envelope (`{ errors: [...] }`), mapping
-   * well-known Reporting codes to friendly i18n keys. Falls back to the transport
-   * message when no envelope/code is present.
-   */
   static fromRestErrors(
     errors: GraphQLErrorEntry[],
     fallbackMessage: string,
@@ -289,7 +272,6 @@ export function isTransportFailure(error: unknown): boolean {
   return error.status === undefined || error.status >= 500;
 }
 
-/** Dispatches an error to the global notification toast (NotificationContext). */
 export function notifyApiError(error: unknown): void {
   if (isRequestCancelled(error)) return;
   const detail: AppErrorDetail =

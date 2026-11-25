@@ -15,11 +15,8 @@
 */
 
 /**
- * Group query/mutation hooks. Components consume these — not the api layer
- * directly. Group CRUD and the user-membership read are on the query layer;
- * the membership-delete mutations keep their legacy silent semantics and are
- * therefore invoked directly from the allocator dialogs (see api/manager/groups),
- * with `groupKeys` used for the follow-up invalidation.
+ * The membership-delete mutations keep their silent semantics and are invoked directly from the
+ * allocator dialogs, with `groupKeys` used for the follow-up invalidation.
  */
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -35,7 +32,6 @@ export const groupKeys = {
   staffByGroup: (groupId: number) => [...groupKeys.all, 'staff', groupId] as const,
 };
 
-/** One server page of groups (`{ items, totalCount }`) for the group list. */
 export function useGroups(params: ListParams = {}, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: groupKeys.byAccount(params),
@@ -47,11 +43,7 @@ export function useGroups(params: ListParams = {}, options: { enabled?: boolean 
   });
 }
 
-/**
- * The account's groups as id + name, for pickers and groupId→name maps. Keyed
- * under {@link groupKeys.all} so a group mutation refreshes it alongside the
- * paged list.
- */
+/** Keyed under {@link groupKeys.all} so a group mutation refreshes it alongside the paged list. */
 export function useGroupLookup(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: groupKeys.lookup(),
@@ -61,9 +53,8 @@ export function useGroupLookup(options: { enabled?: boolean } = {}) {
 }
 
 /**
- * A group's complete membership (every server page drained). The allocator
- * dialog subtracts it from the account's users, so a partial list would offer
- * already-assigned users again.
+ * All pages drained: the allocator dialog subtracts it from the account's users, so a partial list
+ * would offer already-assigned users again.
  */
 export function useUsersByGroup(groupId: number | undefined) {
   return useQuery({

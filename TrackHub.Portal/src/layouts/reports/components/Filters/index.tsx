@@ -30,33 +30,24 @@ import type { ReportFilterValues } from "api/reporting/reports";
 import { formatDateTimeOffSet, formatJSONValue } from 'utils/dataUtils';
 import { useTranslation } from 'react-i18next';
 
-/** The action a filter-form button triggers. */
 export type ReportAction = 'preview' | 'xlsx' | 'pdf';
 
-/** Raw form state: filter name → the control's raw string value. */
 type FormValues = Record<string, string>;
 
 interface ReportFiltersProps {
   selectedReport?: string;
-  /** The catalog row's filter-definitions JSON (ReportVm.filters). */
   filtersJson?: string | null;
   supportsPdf?: boolean;
   running?: boolean;
   onRun: (values: ReportFilterValues, action: ReportAction) => void | Promise<void>;
 }
 
-/** Maps a definition's raw form value to the wire value the Reporting request carries. */
 function toWireValue(definition: ReportFilterDefinition, raw: string | undefined): string | null {
   if (definition.type === 'datetime') return formatDateTimeOffSet(raw || null);
   return formatJSONValue(raw?.trim() || null);
 }
 
-/**
- * The report filter form, rendered entirely from the catalog row's filter
- * definitions: a definition with a picker source becomes a select whose empty
- * option is a selectable "All" (every filter is optional — empty means "no
- * filter" server-side); otherwise the datatype picks the input control.
- */
+/** Every filter is optional: a picker's empty option is a selectable "All" ("no filter" server-side). */
 function ReportFilters({ selectedReport, filtersJson, supportsPdf = false, running = false, onRun }: ReportFiltersProps) {
   const [values, handleChange, setValues, setErrors, validate, errors] =
     useForm<FormValues>({});
@@ -65,7 +56,6 @@ function ReportFilters({ selectedReport, filtersJson, supportsPdf = false, runni
   const { definitions, optionsBySource } = useFiltersData(filtersJson);
   const [searchLabels, setSearchLabels] = useState<Record<string, string>>({});
 
-  // Reset the form whenever the selected report (and therefore its filters) changes.
   useEffect(() => {
     setValues({});
     setErrors({});

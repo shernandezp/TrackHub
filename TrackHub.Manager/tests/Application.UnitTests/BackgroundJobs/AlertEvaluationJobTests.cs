@@ -22,8 +22,6 @@ using Common.Domain.Constants;
 
 namespace Application.UnitTests.BackgroundJobs;
 
-// The comm-loss threshold, the escalation policy and the daily credential scan had no unit-test
-// surface while they lived in the Web layer against a raw DbContext.
 [TestFixture]
 public class AlertEvaluationJobTests
 {

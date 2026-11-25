@@ -106,8 +106,8 @@ public class PositionsRetrievedTests : TestsContext
     [Test]
     public async Task EventHandler_RecordsFailedRunAndAlert_WhenProviderErrorProvided()
     {
-        // Regression for router-audit A-08: a provider position-fetch that threw is carried on the
-        // notification as ProviderErrorCode. It must be recorded as a FAILED run (not a silent
+        // A provider position-fetch that threw is carried on the notification as
+        // ProviderErrorCode. It must be recorded as a FAILED run (not a silent
         // SUCCEEDED/read=0) and raise the sync-failed alert, even with zero positions.
         var positionWriterMock = new Mock<TrackHub.Router.Domain.Interfaces.Manager.IPositionWriter>();
         var geofenceWriterMock = new Mock<TrackHub.Router.Domain.Interfaces.Geofence.IGeofenceWriter>();
@@ -168,7 +168,7 @@ public class PositionsRetrievedTests : TestsContext
     [Test]
     public async Task EventHandler_GeofenceFailureDoesNotFailRun_WhenPositionsStored()
     {
-        // Regression for router-audit A-09: a Geofencing outage after a successful position write
+        // A Geofencing outage after a successful position write
         // must not flip the run to FAILED nor raise a false alert — positions were stored.
         var positionWriterMock = new Mock<TrackHub.Router.Domain.Interfaces.Manager.IPositionWriter>();
         var geofenceWriterMock = new Mock<TrackHub.Router.Domain.Interfaces.Geofence.IGeofenceWriter>();
@@ -195,8 +195,6 @@ public class PositionsRetrievedTests : TestsContext
     [Test]
     public async Task EventHandler_CallsTripWriter_WhenTripManagementEnabled()
     {
-        // Spec 11 §15: the trip position feed runs right after the geofence feed, gated by the
-        // already-populated AccountSettingsVm.TripManagementEnabled.
         var positionWriterMock = new Mock<TrackHub.Router.Domain.Interfaces.Manager.IPositionWriter>();
         var geofenceWriterMock = new Mock<TrackHub.Router.Domain.Interfaces.Geofence.IGeofenceWriter>();
         var syncRunMock = new Mock<TrackHub.Router.Domain.Interfaces.Manager.IOperatorSyncRunWriter>();
@@ -247,7 +245,7 @@ public class PositionsRetrievedTests : TestsContext
     [Test]
     public async Task EventHandler_TripFeedFailureDoesNotFailRun_WhenPositionsStored()
     {
-        // Mirrors the geofence isolation guarantee (router-audit A-09): a TripManagement outage
+        // Mirrors the geofence isolation guarantee: a TripManagement outage
         // after a successful position write must not flip the run to FAILED nor raise an alert.
         var positionWriterMock = new Mock<TrackHub.Router.Domain.Interfaces.Manager.IPositionWriter>();
         var geofenceWriterMock = new Mock<TrackHub.Router.Domain.Interfaces.Geofence.IGeofenceWriter>();
@@ -275,7 +273,7 @@ public class PositionsRetrievedTests : TestsContext
     [Test]
     public async Task EventHandler_WritesFreshProjectionFirstThenReUpsertsEnrichedAddresses()
     {
-        // Regression for router-audit A-10: the fresh projection is written BEFORE reverse-geocoding
+        // The fresh projection is written BEFORE reverse-geocoding
         // (so geocoding's fleet-wide throttle cannot delay position storage); enrichment then
         // resolves the blank address and re-upserts only the changed projection.
         var positionWriterMock = new Mock<TrackHub.Router.Domain.Interfaces.Manager.IPositionWriter>();
@@ -305,7 +303,7 @@ public class PositionsRetrievedTests : TestsContext
 
         await handler.Handle(notification, CancellationToken.None);
 
-        // Phase 1 (fresh) + Phase 2 (enriched re-upsert) = two writes.
+        // Fresh write + enriched re-upsert.
         positionWriterMock.Verify(x => x.AddOrUpdatePositionAsync(It.IsAny<IEnumerable<PositionVm>>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
         // The re-upsert carried the resolved address.
         positionWriterMock.Verify(x => x.AddOrUpdatePositionAsync(

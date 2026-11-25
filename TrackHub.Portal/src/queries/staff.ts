@@ -14,11 +14,7 @@
 *  limitations under the License.
 */
 
-/**
- * Staff query/mutation hooks. Components consume these — not the api layer
- * directly. The account id (required to list/create staff) is still sourced
- * from the account service by the screen.
- */
+/** The account id (required to list/create staff) is sourced from the account service by the screen. */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from 'api/manager/staff';
@@ -67,9 +63,8 @@ export const staffAssignmentKeys = {
 };
 
 /**
- * Every staff on the account (paged to exhaustion in the api layer). The
- * pickers on every workforce surface depend on completeness — a clamped single
- * page leaves staff past the boundary unadministrable.
+ * Paged to exhaustion in the api layer: a clamped single page leaves staff past the boundary
+ * unadministrable.
  */
 export function useStaffMembersByAccount(
   accountId: string | undefined,
@@ -207,11 +202,7 @@ export function useStaffAssignmentHistoryPage(
   });
 }
 
-/**
- * The staff's currently-active assignments straight from the server-side
- * time-aware query (spec 09 §7.2) — never a client-side filter over a page of
- * history.
- */
+/** From the server-side time-aware query, never a client-side filter over a page of history. */
 export function useStaffActiveAssignments(
   staffId: string | null | undefined,
   options: { enabled?: boolean } = {}

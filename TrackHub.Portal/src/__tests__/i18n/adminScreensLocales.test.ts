@@ -32,8 +32,7 @@ const flatten = (obj: Record<string, unknown>, prefix = ''): string[] =>
       : [`${prefix}${key}`]
   );
 
-// Keys rendered by the reworked GPS-integration dashboard (summary cards +
-// provider/status pivot table).
+// Keys rendered by the GPS-integration dashboard (summary cards + provider/status pivot table).
 const GPS_DASHBOARD_KEYS = [
   'gpsIntegration.dashboard.operators',
   'gpsIntegration.dashboard.devices',

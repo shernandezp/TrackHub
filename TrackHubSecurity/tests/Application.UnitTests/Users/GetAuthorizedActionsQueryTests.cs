@@ -29,7 +29,6 @@ internal class GetAuthorizedActionsQueryTests
     [Test]
     public async Task Handle_Should_Return_All_Authorized_Actions()
     {
-        // Arrange
         var userId = Guid.NewGuid();
         var userRoles = new List<int> { 1, 2 };
         var userPolicies = new List<int> { 3, 4 };
@@ -57,17 +56,14 @@ internal class GetAuthorizedActionsQueryTests
             _resourceActionRoleReaderMock.Object,
             _resourceActionPolicyReaderMock.Object);
 
-        // Act
         var result = await handler.Handle(query, CancellationToken.None);
 
-        // Assert
         Assert.That(result, Is.EqualTo(allAuthorizedActions));
     }
 
     [Test]
     public async Task Handle_Should_Return_Empty_Actions_When_No_Roles_And_Policies()
     {
-        // Arrange
         var userId = Guid.NewGuid();
         var userRoles = new List<int>();
         var userPolicies = new List<int>();
@@ -95,17 +91,14 @@ internal class GetAuthorizedActionsQueryTests
             _resourceActionRoleReaderMock.Object,
             _resourceActionPolicyReaderMock.Object);
 
-        // Act
         var result = await handler.Handle(query, CancellationToken.None);
 
-        // Assert
         Assert.That(result, Is.EqualTo(allAuthorizedActions));
     }
 
     [Test]
     public async Task Handle_Should_Return_Role_Authorized_Actions_When_No_Policies()
     {
-        // Arrange
         var userId = Guid.NewGuid();
         var userRoles = new List<int> { 1, 2 };
         var userPolicies = new List<int>();
@@ -133,17 +126,14 @@ internal class GetAuthorizedActionsQueryTests
             _resourceActionRoleReaderMock.Object,
             _resourceActionPolicyReaderMock.Object);
 
-        // Act
         var result = await handler.Handle(query, CancellationToken.None);
 
-        // Assert
         Assert.That(result, Is.EqualTo(allAuthorizedActions));
     }
 
     [Test]
     public async Task Handle_Should_Return_Policy_Authorized_Actions_When_No_Roles()
     {
-        // Arrange
         var userId = Guid.NewGuid();
         var userRoles = new List<int>();
         var userPolicies = new List<int> { 3, 4 };
@@ -171,10 +161,8 @@ internal class GetAuthorizedActionsQueryTests
             _resourceActionRoleReaderMock.Object,
             _resourceActionPolicyReaderMock.Object);
 
-        // Act
         var result = await handler.Handle(query, CancellationToken.None);
 
-        // Assert
         Assert.That(result, Is.EqualTo(allAuthorizedActions));
     }
 }

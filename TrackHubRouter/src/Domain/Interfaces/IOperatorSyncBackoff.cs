@@ -19,7 +19,7 @@ namespace TrackHub.Router.Domain.Interfaces;
 
 // Per-operator exponential backoff for the background sync/health loops. A persistently failing
 // operator (e.g. wrong credentials, a decommissioned provider) must not be re-attempted at full
-// cadence forever — that hammers the provider, spams logs, and wastes cycles (router-audit A-15).
+// cadence forever — that hammers the provider, spams logs, and wastes cycles.
 // The window is persisted in Manager and read back on the operator projection, so it survives a
 // worker restart.
 public interface IOperatorSyncBackoff

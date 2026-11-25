@@ -17,7 +17,7 @@ namespace TrackHub.TripManagement.Domain.Interfaces;
 
 /// <summary>
 /// Platform toll reference data. No <c>accountId</c> parameter anywhere by design — this is road
-/// infrastructure, readable by any authenticated account user (spec 11 §5).
+/// infrastructure, readable by any authenticated account user.
 /// </summary>
 public interface ITollCatalogReader
 {
@@ -33,7 +33,7 @@ public interface ITollCatalogReader
     /// resolved is the one effective on <paramref name="onDate"/> for
     /// <paramref name="vehicleClassCode"/> — a matched station with no such tariff comes back
     /// with a null amount so the estimate can report <c>PartialNoTariff</c> instead of
-    /// silently understating cost (spec 11 §6.2).
+    /// silently understating cost.
     /// </summary>
     Task<IReadOnlyCollection<TollStationMatchVm>> MatchStationsAsync(
         IReadOnlyCollection<CoordinateVm> route,

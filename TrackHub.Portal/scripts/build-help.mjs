@@ -14,14 +14,10 @@
  *  limitations under the License.
  */
 
-// Help content validator + manifest generator.
-//
-// Parses public/help/{lang}/*.md, validates the authoring contract, and emits
-// public/help/manifest.json (gitignored). Run modes:
-//   node scripts/build-help.mjs           validate + write manifest (predev/prebuild)
-//   node scripts/build-help.mjs --check   validate only (CI: npm run help:check)
-//
-// All violations are collected and reported together (never fail-fast).
+// Validates public/help/{lang}/*.md and emits public/help/manifest.json (gitignored).
+//   node scripts/build-help.mjs           validate + write manifest
+//   node scripts/build-help.mjs --check   validate only
+// All violations are collected and reported together.
 
 import fs from "node:fs";
 import path from "node:path";
@@ -40,12 +36,9 @@ export const CATEGORIES = {
 const REQUIRED_FIELDS = ["id", "title", "description", "category", "screens", "order"];
 
 /**
- * Extract route keys from routes.tsx without executing it. Each entry lists
- * `type` before `key`, so a pairwise non-greedy match is sufficient; it never
- * crosses a brace, so the `type:` of the RouteDefinition interface cannot pair
- * with the first entry's key. Returns
- * the keys of user-visible screens (type: "route") only — hidden/title/divider
- * entries need no help topic.
+ * Each entry lists `type` before `key`, so a pairwise non-greedy match suffices; it
+ * never crosses a brace, so the RouteDefinition interface's `type:` cannot pair with
+ * the first entry's key. Only `type: "route"` entries need a help topic.
  */
 export function extractRouteKeys(routesSource) {
   const keys = [];
@@ -72,12 +65,7 @@ function lineOf(content, index) {
   return content.slice(0, index).split("\n").length;
 }
 
-/**
- * Validate all help content under `helpDir` against the route keys of
- * `routesFile`. Returns { errors, languages, topics } where `topics` is the
- * merged per-topic model keyed by id (present even when there are errors, for
- * reporting; only trust it when errors is empty).
- */
+/** `topics` is present even when there are errors; only trust it when errors is empty. */
 export function validateHelpContent({ helpDir, routesFile }) {
   const errors = [];
   const addError = (file, line, message) => errors.push({ file, line, message });
@@ -93,8 +81,7 @@ export function validateHelpContent({ helpDir, routesFile }) {
     addError(routesFile, null, "no route keys could be extracted from routes.tsx");
   }
 
-  // Edition extension point: routes registered in src/edition/routes.ts(x) are part of
-  // the merged route table, so their keys are valid help screens too.
+  // Edition routes registered in src/edition/routes.ts(x) are valid help screens too.
   for (const editionFile of ["routes.ts", "routes.tsx"].map((name) =>
     path.join(path.dirname(routesFile), "edition", name)
   )) {
@@ -326,7 +313,6 @@ function contentHash(...parts) {
   return crypto.createHash("sha256").update(parts.join("\n ")).digest("hex").slice(0, 12);
 }
 
-/** Build the manifest object from a valid (error-free) validation result. */
 export function buildManifest({ languages, topics }) {
   const usedCategories = new Set();
   const manifestTopics = [];

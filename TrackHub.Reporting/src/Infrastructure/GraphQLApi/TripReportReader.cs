@@ -22,7 +22,7 @@ using TrackHub.Reporting.Domain.Models;
 namespace TrackHub.Reporting.Infrastructure.GraphQLApi;
 
 /// <summary>
-/// Drains the TripManagement report feeds for the spec 11 §13 reports. Query-only, so the client is
+/// Drains the TripManagement report feeds for the trip reports. Query-only, so the client is
 /// registered with retry resilience.
 /// </summary>
 public class TripReportReader(IGraphQLClientFactory graphQLClient, IUser user, IAccountFeatureReader featureReader)
@@ -31,7 +31,7 @@ public class TripReportReader(IGraphQLClientFactory graphQLClient, IUser user, I
     // Single source of truth for the queries this reader sends; the ServiceContracts tests validate
     // these exact strings against the TripManagement schema.
     //
-    // `tripReportData` is the trip-level feed (GetTripReportDataQuery, spec 11 §7.5). The other three
+    // `tripReportData` is the trip-level feed (GetTripReportDataQuery). The other three
     // are the stop-, toll- and POD-level feeds the stop/dwell/toll/POD reports need — TripVm carries
     // none of that detail. All four take the same filter arguments and return { items, totalCount }.
 
@@ -170,14 +170,9 @@ public class TripReportReader(IGraphQLClientFactory graphQLClient, IUser user, I
         => DrainAsync<ReportTripPodVm, TripPodReportDataPageVm>(
             TripPodReportDataQuery, p => p.Items, p => p.NextSkip, p => p.HasMore, from, to, transporterId, staffId, cancellationToken);
 
-    // One drain loop for all four feeds, driven by the PRODUCER'S cursor.
-    //
-    // It used to skip by rows.Count and stop on rows.Count >= totalCount. That silently assumed
-    // every feed pages in the same unit it returns rows in — true for three of them, false for the
-    // toll feed, which pages route plans and expands each into one row per matched station. With
-    // 700 plans averaging three stations, page one returned ~1500 rows against a totalCount of 700,
-    // the loop terminated immediately, and trip-toll-cost under-reported by 200 trips with no
-    // error anywhere. Following NextSkip/HasMore removes the assumption entirely.
+    // One drain loop for all four feeds, driven by the PRODUCER'S cursor: the toll feed pages route
+    // plans and expands each into one row per matched station, so skipping by the rows returned
+    // would silently under-report it.
     private async Task<IReadOnlyCollection<TRow>> DrainAsync<TRow, TPage>(
         string query,
         Func<TPage, IEnumerable<TRow>?> itemsOf,

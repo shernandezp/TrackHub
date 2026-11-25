@@ -30,7 +30,6 @@ internal class UpdateUserTests
     [SetUp]
     public void Setup()
     {
-        // Initialize the mock and the object under test before each test
         _writerMock = new Mock<IUserWriter>();
         _publisherMock = new Mock<IPublisher>();
         _principalMock = new Mock<Common.Application.Interfaces.ICurrentPrincipal>();
@@ -39,25 +38,20 @@ internal class UpdateUserTests
     [Test]
     public async Task Handle_ValidCommand_UpdatesUserAndPublishesNotification()
     {
-        // Arrange
         var userDto = new UpdateUserDto { UserId = Guid.NewGuid() };
-        var userId = userDto.UserId; // Assuming UserDto has a UserId property
+        var userId = userDto.UserId;
         var cancellationToken = new CancellationToken();
 
         _writerMock.Setup(m => m.UpdateUserAsync(userDto, cancellationToken))
-                  .Returns(Task.CompletedTask); // UpdateUserAsync returns a completed task
+                  .Returns(Task.CompletedTask);
 
         var handler = new UpdateUserCommandHandler(_writerMock.Object, Mock.Of<IUserReader>(), _publisherMock.Object, _principalMock.Object);
         var command = new UpdateUserCommand { User = userDto };
 
-        // Act
         await handler.Handle(command, cancellationToken);
 
-        // Assert
-        // Verify that UpdateUserAsync was called with the correct arguments
         _writerMock.Verify(m => m.UpdateUserAsync(userDto, cancellationToken), Times.Once);
 
-        // Verify that Publish was called with the correct arguments
         _publisherMock.Verify(m => m.Publish(It.IsAny<UserUpdated.Notification>(), cancellationToken), Times.Once);
     }
 }

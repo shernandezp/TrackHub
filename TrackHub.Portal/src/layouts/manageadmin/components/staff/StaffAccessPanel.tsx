@@ -15,9 +15,8 @@
 */
 
 /**
- * Staff credential and device administration (Security backend) for ONE staff, inside the
- * staff detail dialog. Core platform surface: never gated behind an account feature (spec 09
- * §3, AC8). Device rows show the server-masked push token only.
+ * Core platform surface: never gated behind an account feature. Device rows show the server-masked
+ * push token only.
  */
 
 import { useContext, useEffect, useState } from 'react';
@@ -56,7 +55,6 @@ import type { StaffCredential } from 'api/security/staffIdentity';
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from 'utils/dateUtils';
 
-/** Who the portal records as the revoking principal on device revocation. */
 const REVOKED_BY = 'portal';
 
 interface PendingConfirm {

@@ -53,7 +53,6 @@ function TransporterAllocatorDialog({ open, setOpen, groupId }: TransporterAlloc
     { field: 'name', headerName: t('transporter.name') }
   ];
 
-  // Keep the global spinner UX while the assigned-transporter list loads/refreshes.
   useEffect(() => {
     setLoading(assignedQuery.isFetching);
   }, [assignedQuery.isFetching, setLoading]);
@@ -62,20 +61,17 @@ function TransporterAllocatorDialog({ open, setOpen, groupId }: TransporterAlloc
     if (!transporter) return;
     setLoading(true);
     try {
-      // createTransporterGroup surfaces failures via the global toast (legacy handleError).
       await createTransporterGroup(transporter.value, groupId);
     } catch (e) {
       notifyApiError(e);
     }
     setTransporter(null);
-    // Group membership is read via the transporters query; refetch it manually.
     await assignedQuery.refetch();
     setLoading(false);
   };
 
   const handleDelete = async (selectedRows: number[]) => {
     setLoading(true);
-    // deleteTransporterGroup keeps the legacy silent semantics (handleSilentError).
     const deletePromises = selectedRows.map(index =>
       deleteTransporterGroup(assignedTransporters[index].transporterId, groupId).catch(() => undefined));
     await Promise.all(deletePromises);

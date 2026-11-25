@@ -29,8 +29,6 @@ public class DeleteUserCommandHandler(IUserWriter writer, IUser user, IPublisher
 {
     private Guid UserId { get; } = Guid.TryParse(user.Id, out var userId) ? userId : throw new UnauthorizedAccessException();
 
-    // Handle method to delete a user
-    // The user cannot delete itself
     public async Task Handle(DeleteUserCommand request, CancellationToken cancellationToken)
     {
         if (request.Id == UserId)

@@ -20,8 +20,8 @@ namespace TrackHub.Manager.Domain.Models;
 // LookupLimits, which THROWS past the ceiling instead of returning a short list.
 
 /// <summary>
-/// Minimal transporter projection for select controls. The type travels with it because the
-/// toll-class dialog derives its whole transporter-type list from the picker feed.
+/// The type travels with it because the toll-class dialog derives its transporter-type list from
+/// the picker feed.
 /// </summary>
 public readonly record struct TransporterLookupVm(
     Guid TransporterId,
@@ -30,10 +30,8 @@ public readonly record struct TransporterLookupVm(
     short TransporterTypeId);
 
 /// <summary>
-/// Minimal point-of-interest projection for select controls. Carries what the map overlays draw as
-/// well as the identity: coordinates place the pin, colour paints it, and type/description/address
-/// fill the popup — so the dashboard and the route planner render straight from this feed instead
-/// of draining the paged read. Everything else on a POI stays off it.
+/// Carries what the map overlays draw so the dashboard and route planner render straight from this
+/// feed instead of draining the paged read.
 /// </summary>
 public readonly record struct PointOfInterestLookupVm(
     Guid PointOfInterestId,
@@ -46,24 +44,21 @@ public readonly record struct PointOfInterestLookupVm(
     string? Address,
     bool Active);
 
-/// <summary>Minimal group projection for select controls.</summary>
 public readonly record struct GroupLookupVm(
     long GroupId,
     string Name);
 
-/// <summary>Minimal operator projection for select controls.</summary>
 public readonly record struct OperatorLookupVm(
     Guid OperatorId,
     string Name);
 
-/// <summary>Minimal user projection for select controls.</summary>
 public readonly record struct UserLookupVm(
     Guid UserId,
     string Username);
 
 /// <summary>
-/// Minimal device projection for select controls. The owning operator travels with it because the
-/// dashboard's operator filter joins operator→device→transporter over the whole account.
+/// The owning operator travels with it because the dashboard's operator filter joins
+/// operator→device→transporter over the whole account.
 /// </summary>
 public readonly record struct DeviceLookupVm(
     Guid DeviceId,

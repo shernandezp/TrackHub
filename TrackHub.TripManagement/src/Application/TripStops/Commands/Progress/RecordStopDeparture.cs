@@ -23,15 +23,12 @@ namespace TrackHub.TripManagement.Application.TripStops.Commands.Progress;
 /// <summary>
 /// Dispatcher-side manual departure. Idempotent on
 /// <c>trip-depart:{tripStopId:N}:{clientEventId:N}</c>: a duplicate submission returns success and
-/// creates no second row (acceptance 15) — the guarantee spec 10's offline outbox is built on.
-/// <para>
-/// No <c>PrincipalTypes = "Staff"</c> here (acceptance 6); spec 10 widens the attribute additively.
-/// </para>
+/// creates no second row — the guarantee the mobile app's offline outbox is built on.
 /// </summary>
 [Authorize(Resource = Resources.Trips, Action = Actions.Edit)]
 [RequireFeature(FeatureKeys.TripManagement)]
 // Enforcement: the handler derives the caller's own account and passes it to the reader/writer,
-// which filters every row on it (TripVisibility is the single visibility resolver - spec 11).
+// which filters every row on it (TripVisibility is the single visibility resolver).
 [AccountScopeEnforcedInHandler]
 public readonly record struct RecordStopDepartureCommand(
     Guid TripId,

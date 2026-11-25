@@ -78,7 +78,7 @@ public sealed class StaffMemberReader(IApplicationDbContext context, ICurrentPri
     }
 
     /// <summary>
-    /// Real assignment rows first (spec 09 §7.2), then the synthesized default-transporter entry — but
+    /// Real assignment rows first, then the synthesized default-transporter entry — but
     /// only when no active assignment already covers that transporter, so the caller never sees the
     /// same transporter twice.
     /// </summary>
@@ -122,9 +122,8 @@ public sealed class StaffMemberReader(IApplicationDbContext context, ICurrentPri
     }
 
     /// <summary>
-    /// Backward-compatible extension (spec 09 §7.2): satisfied by an ACTIVE assignment row or by the
-    /// legacy default-transporter check. Existing <c>DocumentAccessPolicy</c> callers keep working and
-    /// silently gain the richer semantics. Resource types other than Transporter stay unknown → false.
+    /// Satisfied by an ACTIVE assignment row or by the default-transporter check. Resource types
+    /// other than Transporter are unknown → false.
     /// </summary>
     public async Task<bool> ValidateStaffAssignmentAsync(Guid staffId, string resourceType, string resourceId, CancellationToken cancellationToken)
     {
@@ -145,9 +144,8 @@ public sealed class StaffMemberReader(IApplicationDbContext context, ICurrentPri
             return false;
         }
 
-        // The transporter must belong to the staff's account too. Writers now reject a cross-account
-        // DefaultTransporterId, but rows written before that check existed could otherwise satisfy this
-        // validator and hand a staff access to another tenant's documents via DocumentAccessPolicy.
+        // The transporter must belong to the staff's account too: an older row with a cross-account
+        // DefaultTransporterId would otherwise hand a staff another tenant's documents.
         var matchesDefault = await Context.StaffMembers.AnyAsync(x =>
             x.StaffId == staffId
             && x.DefaultTransporterId == parsedResourceId
@@ -175,7 +173,7 @@ public sealed class StaffMemberReader(IApplicationDbContext context, ICurrentPri
 
     /// <summary>
     /// Staff self-view. The staff id is supplied by the handler from the authenticated principal, so
-    /// this can only ever return the caller's own record set (spec 09 AC2).
+    /// this can only ever return the caller's own record set.
     /// </summary>
     public async Task<MyStaffProfileVm> GetMyStaffProfileAsync(Guid staffId, CancellationToken cancellationToken)
     {

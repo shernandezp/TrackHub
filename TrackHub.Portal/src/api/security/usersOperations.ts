@@ -14,11 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * User GraphQL documents (Security backend). Codegen validates these against
- * schemas/security.graphql; values always travel as variables.
- */
-
 import { graphql } from './generated';
 
 export const UserDetailFragment = graphql(`

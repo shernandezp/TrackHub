@@ -109,7 +109,7 @@ public class SyncPositionCommandHandlerTests : TestsContext
     [Test]
     public async Task Handle_OneOperatorThrows_IsolatesFailureAndStillUpdatesInterval()
     {
-        // Regression for router-audit A-05: a single failing operator (e.g. bad credentials, an
+        // A single failing operator (e.g. bad credentials, an
         // unregistered protocol) must not abort the account fan-out nor skip the interval update —
         // otherwise the account re-polls every loop tick instead of at its storing interval.
         var accountId = Guid.NewGuid();

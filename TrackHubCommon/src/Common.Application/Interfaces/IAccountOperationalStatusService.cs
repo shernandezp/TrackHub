@@ -18,15 +18,10 @@ using Common.Domain.Enums;
 namespace Common.Application.Interfaces;
 
 /// <summary>
-/// Cached (30 s) resolver of account operational status consumed by
-/// <see cref="Common.Application.Behaviors.AccountStatusBehavior{TRequest, TResponse}"/>. Mirrors
-/// <see cref="IFeatureFlagService"/>: there is no default; each enforcing service registers a cache
+/// Cached (30 s) account status resolver. There is no default; each enforcing service registers a cache
 /// over its own <see cref="IAccountOperationalStatusReader"/> or fails at startup.
 /// </summary>
 public interface IAccountOperationalStatusService
 {
-    /// <summary>
-    /// Returns the account's lifecycle status, or <c>null</c> when it cannot be resolved.
-    /// </summary>
     Task<AccountStatus?> GetStatusAsync(Guid accountId, CancellationToken cancellationToken);
 }

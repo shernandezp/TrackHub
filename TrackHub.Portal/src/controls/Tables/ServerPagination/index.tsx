@@ -21,23 +21,15 @@ import ArgonTypography from 'components/ArgonTypography';
 import ArgonPagination from 'components/ArgonPagination';
 
 /**
- * Footer for a SERVER-paged table: the "showing X–Y of Z" range plus prev/next.
- *
- * The shared `Table` control pages, filters and sorts client-side, so a screen
- * that reads one server page must turn that off (`serverPaged`) and render this
- * instead — otherwise the built-in pager silently pages within the page.
- *
- * Every paged query now reports its unpaged total, so the range is always exact
- * and the last page is arithmetic.
+ * The shared `Table` pages, filters and sorts client-side, so a screen reading one server page
+ * turns that off (`serverPaged`) and renders this instead; otherwise the built-in pager silently
+ * pages within the page.
  */
 export interface ServerPaginationProps {
-  /** Zero-based page index. */
   page: number;
-  /** Rows requested per page. */
   pageSize: number;
   /** Total rows matching the current server filters. */
   totalCount: number;
-  /** Row count in the page currently rendered — drives the range end. */
   pageLength: number;
   onPageChange: (page: number) => void;
 }

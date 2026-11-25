@@ -19,17 +19,9 @@ using TrackHub.Manager.Infrastructure.Interfaces;
 
 namespace TrackHub.Manager.Infrastructure.ManagerDB.Readers;
 
-// Represents a reader for retrieving credentials
 public sealed class CredentialReader(IApplicationDbContext context, ICurrentPrincipal principal)
     : AccountScopedDataAccess(context, principal), ICredentialReader
 {
-    // Retrieves a credential asynchronously
-    // Parameters:
-    //   id: The ID of the credential
-    //   key: The encryption key
-    //   cancellationToken: The cancellation token
-    // Returns:
-    //   A CredentialVm object representing the retrieved credential
     public async Task<CredentialVm> GetCredentialAsync(Guid id, string key, CancellationToken cancellationToken)
     {
         var credential = await Context.Credentials
@@ -87,15 +79,6 @@ public sealed class CredentialReader(IApplicationDbContext context, ICurrentPrin
             credential.Key2?.DecryptData(key, salt));
     }
 
-    // Retrieves a token asynchronously
-    // Parameters:
-    //   id: The ID of the credential
-    //   key: The encryption key
-    //   cancellationToken: The cancellation token
-    // Returns:
-    //   A TokenVm object representing the retrieved token
-    // Remarks:
-    //   This method might not be needed
     public async Task<TokenVm> GetTokenAsync(Guid id, string key, CancellationToken cancellationToken)
     {
         var token = await Context.Credentials
@@ -184,11 +167,8 @@ public sealed class CredentialReader(IApplicationDbContext context, ICurrentPrin
             .ToListAsync(cancellationToken);
     }
 
-    /// <summary>
-    /// The DECRYPTED username with only its tail showing: enough for the operator to recognise
-    /// which login the credential holds, never enough to reuse it. Masking the ciphertext, as
-    /// this once did, showed four meaningless characters.
-    /// </summary>
+    // The DECRYPTED username with only its tail showing: enough for the operator to recognise
+    // which login the credential holds, never enough to reuse it.
     private static string MaskUsername(string encryptedUsername, string key, byte[] salt)
     {
         if (string.IsNullOrEmpty(encryptedUsername))

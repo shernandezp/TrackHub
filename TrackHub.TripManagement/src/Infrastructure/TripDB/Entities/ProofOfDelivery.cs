@@ -18,8 +18,8 @@ using Common.Infrastructure;
 namespace TrackHub.TripManagement.Infrastructure.TripDB.Entities;
 
 /// <summary>
-/// Proof of delivery. Idempotent on the unique (TripStopId, ClientEventId) index so the spec 10
-/// offline outbox can retry a submission safely (spec 11 section 6.1, acceptance 15).
+/// Proof of delivery. Idempotent on the unique (TripStopId, ClientEventId) index so the
+/// offline outbox can retry a submission safely.
 /// </summary>
 public sealed class ProofOfDelivery : BaseAuditableEntity
 {

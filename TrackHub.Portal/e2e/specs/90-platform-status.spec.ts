@@ -1,10 +1,6 @@
 /**
- * The public platform status page — the screen that has to work when nothing
- * else does.
- *
- * This is the one place the suite is allowed to break something on purpose: a
- * single health URL is failed with `page.route` so the "not working" state can
- * be asserted. Everything else runs against the real probes.
+ * The one place the suite breaks something on purpose: a single health URL is
+ * failed with `page.route` so the "not working" state can be asserted.
  */
 
 import { test, expect, unique } from '../fixtures';
@@ -57,7 +53,7 @@ test.describe('platform status', () => {
     t,
   }) => {
     // The only deliberate breakage in the suite: one probe is failed so the
-    // page's outage state can be exercised. SVD-10 — a CORS/network failure has
+    // page's outage state can be exercised. A CORS/network failure has
     // to read as "down", and the rest of the page must still render.
     await anonPage.route('**/Manager/health', (route) => route.abort('failed'));
 

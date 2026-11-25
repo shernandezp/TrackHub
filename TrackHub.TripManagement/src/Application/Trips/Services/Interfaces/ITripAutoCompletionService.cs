@@ -16,7 +16,7 @@
 namespace TrackHub.TripManagement.Application.Trips.Services.Interfaces;
 
 /// <summary>
-/// Closes a trip whose route is done (spec 11a §5.2). One implementation, two callers: the detection
+/// Closes a trip whose route is done. One implementation, two callers: the detection
 /// pipeline evaluates it the instant a stop closes, and the <c>trip-eta-refresh</c> loop sweeps for
 /// the trips detection can never reach — a truck that arrives home, parks and whose tracker goes
 /// quiet produces no further fix, so nothing would ever ask again.
@@ -45,7 +45,7 @@ public interface ITripAutoCompletionService
     /// <para>
     /// Returns the number of trips completed. It rides the existing <c>trip-eta-refresh</c> cycle
     /// rather than adding a <c>BackgroundJobKeys</c> entry, and reports zero when it did nothing so
-    /// the on-work-only recorder (SVD-11) stays on-work-only.
+    /// the on-work-only recorder stays on-work-only.
     /// </para>
     /// </summary>
     Task<int> SweepAsync(CancellationToken cancellationToken);

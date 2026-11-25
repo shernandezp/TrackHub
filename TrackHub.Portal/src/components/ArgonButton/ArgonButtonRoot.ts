@@ -29,7 +29,6 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
-// @mui material components
 import Button from "@mui/material/Button";
 import { styled } from "@mui/material/styles";
 
@@ -57,18 +56,14 @@ export default styled(Button)<{ ownerState: ArgonButtonOwnerState }>(({ theme, o
 
   // styles for the button with variant="contained"
   const containedStyles = () => {
-    // background color value
     const backgroundValue = paletteColors[color!] ? paletteColors[color!].main : white.main;
 
-    // backgroundColor value when button is focused
     const focusedBackgroundValue = paletteColors[color!] ? paletteColors[color!].focus : white.focus;
 
-    // boxShadow value
     const boxShadowValue = paletteColors[color!]
       ? boxShadow([0, 0], [0, 3.2], paletteColors[color!].main, 0.5)
       : boxShadow([0, 0], [0, 3.2], dark.main, 0.5);
 
-    // color value
     let colorValue = white.main;
 
     if (color === "white" || !paletteColors[color!]) {
@@ -79,7 +74,6 @@ export default styled(Button)<{ ownerState: ArgonButtonOwnerState }>(({ theme, o
       colorValue = palette.background.default;
     }
 
-    // color value when button is focused
     let focusedColorValue = white.main;
 
     if (color === "white") {
@@ -112,18 +106,14 @@ export default styled(Button)<{ ownerState: ArgonButtonOwnerState }>(({ theme, o
 
   // styles for the button with variant="outlined"
   const outliedStyles = () => {
-    // background color value
     const backgroundValue = color === "white" ? rgba(white.main, 0.1) : transparent.main;
 
-    // color value
     const colorValue = paletteColors[color!] ? paletteColors[color!].main : white.main;
 
-    // boxShadow value
     const boxShadowValue = paletteColors[color!]
       ? boxShadow([0, 0], [0, 3.2], paletteColors[color!].main, 0.5)
       : boxShadow([0, 0], [0, 3.2], white.main, 0.5);
 
-    // border color value
     let borderColorValue = paletteColors[color!] ? paletteColors[color!].main : rgba(white.main, 0.75);
 
     if (color === "white") {
@@ -160,13 +150,11 @@ export default styled(Button)<{ ownerState: ArgonButtonOwnerState }>(({ theme, o
 
   // styles for the button with variant="gradient"
   const gradientStyles = () => {
-    // background value
     const backgroundValue =
       color === "white" || !gradients[color!]
         ? white.main
         : linearGradient(gradients[color!].main, gradients[color!].state);
 
-    // color value
     let colorValue = white.main;
 
     if (color === "white") {
@@ -192,10 +180,8 @@ export default styled(Button)<{ ownerState: ArgonButtonOwnerState }>(({ theme, o
 
   // styles for the button with variant="text"
   const textStyles = () => {
-    // color value
     const colorValue = paletteColors[color!] ? paletteColors[color!].main : white.main;
 
-    // color value when button is focused
     const focusedColorValue = paletteColors[color!] ? paletteColors[color!].focus : white.focus;
 
     return {
@@ -218,7 +204,6 @@ export default styled(Button)<{ ownerState: ArgonButtonOwnerState }>(({ theme, o
 
   // styles for the button with iconOnly={true}
   const iconOnlyStyles = () => {
-    // width, height, minWidth and minHeight values
     let sizeValue = pxToRem(38);
 
     if (size === "small") {
@@ -230,7 +215,6 @@ export default styled(Button)<{ ownerState: ArgonButtonOwnerState }>(({ theme, o
       sizeValue = pxToRem(52);
     }
 
-    // padding value
     let paddingValue = `${pxToRem(11)} ${pxToRem(11)} ${pxToRem(10)}`;
 
     if (size === "small") {

@@ -91,7 +91,7 @@ public class DocumentWriterTests
     [Test]
     public async Task RegisterUploadedDocumentAsync_PrivilegedButCrossAccountOwner_Throws()
     {
-        // AC1: even a privileged principal cannot attach to a registered owner the resolver rejects
+        // Even a privileged principal cannot attach to a registered owner the resolver rejects
         // (e.g. a transporter in another account) — the owner check runs for everyone.
         using var context = NewContext(nameof(RegisterUploadedDocumentAsync_PrivilegedButCrossAccountOwner_Throws));
         var accountId = Guid.NewGuid();

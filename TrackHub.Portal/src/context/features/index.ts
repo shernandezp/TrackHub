@@ -20,18 +20,12 @@ import type { AccountContext } from 'api/manager/accounts';
 export type AccountFeature = AccountContext['features'][number];
 
 export interface FeaturesContextValue {
-  /** Feature rows from the account-context bootstrap read (empty until it resolves). */
   features: AccountFeature[];
-  /** Whether the account feature is enabled and inside its effective window. */
   isFeatureEnabled: (featureKey?: string | null) => boolean;
   reload: () => Promise<void>;
 }
 
-/**
- * Mirrors the backend FeatureFlagService decision: a missing row means
- * disabled, and enablement is bounded by the effective-from/to window.
- * A nullish key means the caller is not feature-gated.
- */
+/** Mirrors the backend FeatureFlagService: a missing row means disabled; a nullish key means not gated. */
 export function isFeatureActive(
   features: AccountFeature[],
   featureKey?: string | null,
@@ -48,14 +42,13 @@ export function isFeatureActive(
   );
 }
 
-/** Default renders everything so components stay harmless outside the provider (tests, auth pages). */
+/** Renders everything by default so components stay harmless outside the provider (tests, auth pages). */
 export const FeaturesContext = createContext<FeaturesContextValue>({
   features: [],
   isFeatureEnabled: () => true,
   reload: async () => {},
 });
 
-/** Public API for components: `const { isFeatureEnabled } = useFeatures();`. */
 export function useFeatures(): FeaturesContextValue {
   return useContext(FeaturesContext);
 }

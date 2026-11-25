@@ -40,11 +40,6 @@ interface ProviderStatusBreakdownProps {
   items?: ProviderStatusItem[];
 }
 
-/**
- * One pivoted table row per operator (collapsed by default): unassigned /
- * assigned / ignored / removed counts plus a total, sorted by total so the
- * screen stays usable with many providers.
- */
 function ProviderStatusBreakdown({ items }: ProviderStatusBreakdownProps) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);

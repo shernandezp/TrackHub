@@ -21,13 +21,9 @@ using Microsoft.Extensions.Configuration;
 namespace Common.Web.Infrastructure;
 
 /// <summary>
-/// Forwarded-header options for a service that runs behind the deployment's reverse proxy.
-/// <para>
-/// The client IP these headers carry is what the anonymous rate limiter partitions on and what audit
-/// rows record, so it may only be taken from a proxy the deployment actually has. Trusting the header
-/// unconditionally lets anyone who can reach the service port choose their own client IP and with it
-/// their own rate-limit bucket.
-/// </para>
+/// Forwarded-header options for services behind the reverse proxy. The client IP drives the anonymous
+/// rate limiter and audit rows, so it is trusted only from known proxies; otherwise anyone reaching the
+/// port could choose their own rate-limit bucket.
 /// </summary>
 public static class TrustedProxies
 {
@@ -62,10 +58,8 @@ public static class TrustedProxies
         var configured = configuration.GetSection(NetworksKey).Get<string[]>();
         AddNetworks(options, configured is { Length: > 0 } ? configured : DefaultNetworks);
 
-        // A configuration whose every entry was malformed would otherwise leave the service trusting
-        // NOTHING, and then every request carries the proxy's own address: one rate-limit bucket for
-        // the whole internet, and one audit trail that names the proxy. The defaults are the safer
-        // reading of "this was meant to be configured".
+        // A configuration whose every entry was malformed would trust nothing, putting the whole internet in
+        // the proxy's rate-limit bucket and audit trail; the defaults are the safer reading.
         if (options.KnownIPNetworks.Count == 0)
         {
             AddNetworks(options, DefaultNetworks);

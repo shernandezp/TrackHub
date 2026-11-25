@@ -29,13 +29,11 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
-// react-router components
 import { useLocation, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "AuthContext";
 import { useContext, useState } from "react";
 import type { ChangeEventHandler, MouseEvent, ReactNode } from "react";
-// @mui core components
 import IconButton from "@mui/material/IconButton";
 import Icon from "@mui/material/Icon";
 import Badge from "@mui/material/Badge";
@@ -43,23 +41,18 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Tooltip from "@mui/material/Tooltip";
 
-// Contextual help
 import { useHelp } from "context/help/HelpContext";
 
-// Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
 import ArgonTypography from "components/ArgonTypography";
 import ArgonInput from "components/ArgonInput";
 
-// In-app notification feed
 import { useMyNotifications, useMarkNotificationRead } from "queries/notifications";
 import { formatDateTime } from "utils/dateUtils";
 import { toCamelCase } from "utils/stringUtils";
 
-// Custom styles for DashboardNavbar
 import { navbar, navbarIconButton } from "controls/Navbars/DashboardNavbar/styles";
 
-// Argon Dashboard 2 MUI context
 import { useArgonController, setMiniSidenav, setOpenConfigurator } from "context";
 import { CurrentAccountContext } from "context/account";
 import routes from "routes";
@@ -68,7 +61,6 @@ export interface DashboardNavbarProps {
   searchVisibility?: boolean;
   searchQuery?: string;
   handleSearch?: ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement>;
-  /** Screen-level tabs, rendered on the bar beside the title. */
   tabs?: ReactNode;
 }
 

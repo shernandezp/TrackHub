@@ -15,10 +15,7 @@
  */
 
 /**
- * Spec 11 §7.3 write surfaces the dispatcher drives from the portal: delivery
- * CRUD, delivery outcome, proof of delivery, and the transporter → toll-class
- * mapping. The assertions here are about the CONTRACT — which backend is
- * addressed, that every value travels as a GraphQL variable, and that the
+ * Which backend is addressed, that every value travels as a GraphQL variable, and that the
  * idempotency keys are passed straight through.
  */
 

@@ -32,12 +32,11 @@ namespace Infrastructure.UnitTests;
 /// This is the counterpart to <see cref="MultiWriteRequestTests"/>, and it guards the OPPOSITE
 /// failure. Under a <c>NoTracking</c> context a mutation is only saved if the row was fetched
 /// <c>AsTracking()</c>; forget that and <c>SaveChangesAsync</c> writes NOTHING, returns success, and
-/// the caller — and its audit trail — reports a change that never happened. Unlike the attach
-/// conflict it replaced, that failure is completely silent, so it cannot be left to review.
+/// the caller — and its audit trail — reports a change that never happened. That failure is
+/// completely silent, so it cannot be left to review.
 /// </para>
 /// <para>
-/// Every method here is one whose tracking was changed when the <c>Attach</c> calls came out. Each
-/// test writes, then re-reads with <c>AsNoTracking</c> — reading through the tracked instance would
+/// Each test writes, then re-reads with <c>AsNoTracking</c> — reading through the tracked instance would
 /// pass on an unsaved in-memory mutation and prove nothing.
 /// </para>
 /// </summary>

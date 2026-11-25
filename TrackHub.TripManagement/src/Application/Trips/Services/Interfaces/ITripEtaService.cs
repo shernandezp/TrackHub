@@ -17,7 +17,7 @@ namespace TrackHub.TripManagement.Application.Trips.Services.Interfaces;
 
 /// <summary>
 /// The two hosted trip jobs' business logic, kept in Application so the Web hosted services stay
-/// thin loops. Both are <b>on-work-only</b> recorders (SVD-11): they return how much work they did
+/// thin loops. Both are <b>on-work-only</b> recorders: they return how much work they did
 /// and only then is a <c>BackgroundJobRun</c> row written.
 /// </summary>
 public interface ITripEtaService

@@ -23,7 +23,7 @@ public sealed class GeofenceConfiguration : IEntityTypeConfiguration<Geofence>
     public void Configure(EntityTypeBuilder<Geofence> builder)
     {
         // Geofencing-owned table: read-only here, never part of this repo migrations. It is read
-        // once per trip start to snapshot each stop arrival geometry (spec 11 section 18.4).
+        // once per trip start to snapshot each stop arrival geometry.
         builder.ToTable(name: TableMetadata.Geofence, schema: SchemaMetadata.Geofencing, t => t.ExcludeFromMigrations());
         builder.HasKey(x => x.GeofenceId);
         builder.Property(x => x.GeofenceId).HasColumnName("id");

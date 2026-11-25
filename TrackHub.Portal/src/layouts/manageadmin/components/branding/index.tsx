@@ -28,7 +28,6 @@ import type { AccountBranding, AccountBrandingDtoInput } from "api/manager/brand
 import { notifyApiError } from "api/core/errors";
 import { LoadingContext } from 'LoadingContext';
 
-// Dialog/form state for account branding — a partial view of the API record.
 type BrandingFormValues = Partial<AccountBranding>;
 
 const HEX_COLOR = /^#[0-9A-Fa-f]{6}$/;
@@ -74,8 +73,6 @@ function ManageBranding() {
     }
     setLoading(true);
     try {
-      // Gated by validate(['displayName']) + the hex-color test, so displayName/
-      // primaryColor are present and accountId was set on load — assert the input.
       const saved = await updateAccountBranding(values as AccountBrandingDtoInput);
       if (saved) {
         setValues({ ...saved });

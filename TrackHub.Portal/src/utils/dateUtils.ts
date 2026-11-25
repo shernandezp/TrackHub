@@ -14,10 +14,6 @@
 *  limitations under the License.
 */
 
-/**
-* Formats a date value into a string in the format MM/DD/YYYY.
-* Returns an empty string if the input is invalid.
-*/
 export function formatDate(value: string | number | Date | null | undefined): string {
     if (value === null || value === undefined || value === '') {
         return '';
@@ -29,10 +25,6 @@ export function formatDate(value: string | number | Date | null | undefined): st
     return `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()}`;
 }
 
-/**
-* Formats a date value into a string in the format MM/DD/YYYY HH:MM:SS.
-* Returns an empty string if the input is invalid.
-*/
 export function formatDateTime(value: string | number | Date | null | undefined): string {
     if (value === null || value === undefined || value === '') {
         return '';
@@ -50,15 +42,9 @@ export function formatShortDateTime(value: string | number | Date | null | undef
 }
 
 /**
- * DateOnly (GraphQL `LocalDate`) handling.
- *
- * A DateOnly carries NO instant: `2027-03-04` is that calendar day everywhere.
- * `new Date('2027-03-04')` however parses as UTC midnight, so reading local
- * getters off it renders 03/03/2027 for any viewer west of UTC. These helpers
- * work on the calendar parts directly and never construct an instant.
- *
- * DateTimeOffset values (which DO carry an instant and must be converted to the
- * viewer's zone) keep using formatDate/formatDateTime — do not route them here.
+ * A DateOnly (GraphQL `LocalDate`) carries NO instant, but `new Date('2027-03-04')` parses as UTC
+ * midnight and renders 03/03/2027 west of UTC, so these helpers work on the calendar parts directly.
+ * DateTimeOffset values keep using formatDate/formatDateTime.
  */
 const DATE_ONLY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})/;
 
@@ -68,7 +54,6 @@ interface DateParts {
   day: number;
 }
 
-/** Parses the leading `YYYY-MM-DD` of a DateOnly value without building a Date. */
 function parseDateOnly(value: string | null | undefined): DateParts | null {
   if (!value) return null;
   const match = DATE_ONLY_PATTERN.exec(value.trim());
@@ -79,11 +64,7 @@ function parseDateOnly(value: string | null | undefined): DateParts | null {
   return parts;
 }
 
-/**
- * Formats a DateOnly (`YYYY-MM-DD`, optionally with a trailing time part) as
- * MM/DD/YYYY. Timezone-stable: the rendered day always equals the stored day.
- * Returns an empty string when the value is absent or unparseable.
- */
+/** Timezone-stable: the rendered day always equals the stored day. */
 export function formatDateOnly(value: string | null | undefined): string {
     const parts = parseDateOnly(value);
     if (!parts) return '';
@@ -91,10 +72,8 @@ export function formatDateOnly(value: string | null | undefined): string {
 }
 
 /**
- * Whole calendar days from `today` until a DateOnly value; negative once the day
- * has passed, 0 on the day itself. `today` is a calendar day (`yyyy-MM-dd`) taken
- * from the ACCOUNT calendar: an expiry is a fleet date, so the viewer's browser
- * zone must not move it.
+ * Negative once the day has passed. `today` comes from the ACCOUNT calendar: an expiry is a fleet
+ * date, so the viewer's browser zone must not move it.
  */
 export function daysUntilDateOnly(value: string | null | undefined, today: string): number | null {
     const parts = parseDateOnly(value);
@@ -106,14 +85,9 @@ export function daysUntilDateOnly(value: string | null | undefined, today: strin
     return Math.round((target - Date.UTC(start.year, start.month - 1, start.day)) / 86_400_000);
 }
 
-/**
-* Converts a date value to an ISO string with timezone.
-*/
 export function toISOStringWithTimezone(value: Date): string {
     // https://www.30secondsofcode.org/js/s/iso-format-date-with-timezone/
-    // Pad a number to 2 digits
     const pad = (n: number): string => `${Math.floor(Math.abs(n))}`.padStart(2, '0');
-    // Get timezone offset in ISO format (+hh:mm or -hh:mm)
     const getTimezoneOffset = (date: Date): string => {
         const tzOffset = -date.getTimezoneOffset();
         const diff = tzOffset >= 0 ? '+' : '-';
@@ -130,14 +104,9 @@ export function toISOStringWithTimezone(value: Date): string {
 }
 
 /**
- * Converts an ISO-8601 UTC instant into the `YYYY-MM-DDTHH:mm` shape an `<input type="datetime-local">`
- * expects — which is **local wall time**, with no zone suffix.
- *
- * The browser interprets the control's value in the viewer's timezone, so the UTC instant is shifted
- * by the local offset. This is the exact inverse of {@link fromDateTimeLocalInput}, which parses the
- * field back as local time — the pair round-trips an instant unchanged in any timezone.
- *
- * Returns '' for null/undefined/unparseable input so a missing value renders as an empty control.
+ * `datetime-local` holds **local wall time** with no zone suffix, so the UTC instant is shifted by
+ * the local offset; the exact inverse of {@link fromDateTimeLocalInput}, so the pair round-trips an
+ * instant unchanged in any timezone.
  */
 export function toDateTimeLocalInput(value: string | number | Date | null | undefined): string {
     if (!value) return '';
@@ -147,20 +116,14 @@ export function toDateTimeLocalInput(value: string | number | Date | null | unde
     return new Date(parsed.getTime() - offsetMs).toISOString().slice(0, 16);
 }
 
-/**
- * Inverse of {@link toDateTimeLocalInput}: reads a `datetime-local` value as local wall time and
- * returns the corresponding ISO-8601 UTC instant, or null when the field is empty/unparseable.
- */
+/** Inverse of {@link toDateTimeLocalInput}; null when the field is empty/unparseable. */
 export function fromDateTimeLocalInput(value: string | null | undefined): string | null {
     if (!value) return null;
     const parsed = new Date(value);
     return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
 }
 
-/**
- * Formats a duration given in seconds into a string like "1h 23m".
- * Kept here for compatibility with older imports.
- */
+/** Kept for older imports. */
 export function formatDurationString(seconds: number | null | undefined): string {
     if (!seconds || seconds <= 0) return '0h 0m';
     const hrs = Math.floor(seconds / 3600);

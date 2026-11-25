@@ -14,11 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Audit-trail API (Manager backend): plain typed async functions. Failures
- * THROW ApiError — consumed imperatively (load-on-expand), caller owns try/catch.
- */
-
 import { executeGraphQL } from 'api/core/graphqlClient';
 import type { AuditEventItemFragment as AuditEventItemType, GetAuditTrailQuery } from './generated/graphql';
 import { GetAuditTrailDocument } from './auditEventsOperations';

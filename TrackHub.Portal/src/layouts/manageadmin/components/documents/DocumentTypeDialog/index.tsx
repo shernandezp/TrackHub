@@ -22,7 +22,6 @@ import CustomCheckbox from 'controls/Dialogs/CustomCheckbox';
 import ArgonBox from "components/ArgonBox";
 import type { FormChangeHandler } from 'controls/Dialogs/useForm';
 
-/** Dialog/form state for configuring an account document type / category. */
 export interface DocumentTypeFormValues {
   category?: string;
   displayName?: string;
@@ -40,7 +39,6 @@ interface DocumentTypeDialogProps {
   errors: Record<string, string>;
 }
 
-// Configure an account document type / Category with required + expiring flags.
 function DocumentTypeDialog({ open, setOpen, handleSubmit, values, handleChange, errors }: DocumentTypeDialogProps) {
   const { t } = useTranslation();
 

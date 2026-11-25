@@ -14,7 +14,6 @@
 *  limitations under the License.
 */
 
-/** Payload dispatched on the `app-error` CustomEvent. */
 export interface AppErrorDetail {
   message: string;
   type: string;
@@ -22,9 +21,6 @@ export interface AppErrorDetail {
   i18nKey: string | undefined;
 }
 
-/**
- * Handles the given error by logging it to the console (non-production only).
- */
 export function handleSilentError(error: unknown): void {
   if (process.env.NODE_ENV !== 'production') {
     console.error(error);

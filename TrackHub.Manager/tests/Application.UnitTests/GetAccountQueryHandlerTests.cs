@@ -34,7 +34,6 @@ public class GetAccountQueryHandlerTests
     [Test]
     public async Task Handle_WhenAccountExists_ReturnsAccountVm()
     {
-        // Arrange
         var accountId = Guid.NewGuid();
         var accountVm = new AccountVm { AccountId = accountId, Name = "Customer" };
         _mockReader.Setup(reader => reader.GetAccountAsync(accountId, CancellationToken.None))
@@ -42,10 +41,8 @@ public class GetAccountQueryHandlerTests
 
         var query = new GetAccountQuery(accountId);
 
-        // Act
         var result = await _handler.Handle(query, CancellationToken.None);
 
-        // Assert
         Assert.That(result, Is.EqualTo(accountVm));
     }
 }

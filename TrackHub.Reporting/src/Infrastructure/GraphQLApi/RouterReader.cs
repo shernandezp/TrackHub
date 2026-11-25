@@ -50,11 +50,6 @@ public class RouterReader(IGraphQLClientFactory graphQLClient)
                     }
                 }";
 
-    /// <summary>
-    /// Retrieves the device positions asynchronously
-    /// </summary>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     public async Task<IEnumerable<PositionVm>> GetDevicePositionsAsync(CancellationToken cancellationToken)
     {
         var request = new GraphQLRequest

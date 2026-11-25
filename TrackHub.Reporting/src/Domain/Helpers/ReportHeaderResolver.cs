@@ -19,7 +19,7 @@ using System.Resources;
 namespace TrackHub.Reporting.Domain.Helpers;
 
 // Resolves a report column/label key to its localized text through the Reporting ResourceManager,
-// falling back to the key itself when unmapped — the same mechanism the pre-refactor ExcelHelper used.
+// falling back to the key itself when unmapped.
 // Exposed publicly so the Excel/PDF formatters and the Application preview handler share one resolver.
 public static class ReportHeaderResolver
 {

@@ -21,19 +21,12 @@ using TransporterType = Common.Domain.Enums.TransporterType;
 
 namespace TrackHub.Manager.Infrastructure.ManagerDB.Readers;
 
-// TransporterReader class for reading transporter information
 // Tenant scoping: TransporterVm deliberately does not expose AccountId, so the owning account is
 // read alongside the projection and authorized before the row is returned. See the note on
 // UserReader for why this cannot be left to AccountScopeBehavior.
 public sealed class TransporterReader(IApplicationDbContext context, ICurrentPrincipal principal)
     : AccountScopedDataAccess(context, principal), ITransporterReader
 {
-    /// <summary>
-    /// GetTransporterAsync method retrieves a transporter by its ID
-    /// </summary>
-    /// <param name="id">The ID of the transporter</param>
-    /// <param name="cancellationToken">A cancellation token to cancel the operation</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains the TransporterVm object.</returns>
     public async Task<TransporterVm> GetTransporterAsync(Guid id, CancellationToken cancellationToken)
     {
         var row = await Context.Transporters
@@ -59,15 +52,6 @@ public sealed class TransporterReader(IApplicationDbContext context, ICurrentPri
         return row.Vm;
     }
 
-    /// <summary>
-    /// GetTransportersByGroupAsync method retrieves a page of transporters by group ID
-    /// </summary>
-    /// <param name="groupId">The ID of the group</param>
-    /// <param name="skip">Rows to skip</param>
-    /// <param name="take">Rows to return</param>
-    /// <param name="search">Optional name filter</param>
-    /// <param name="cancellationToken">A cancellation token to cancel the operation</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains a page of TransporterVm objects.</returns>
     public async Task<TransportersPageVm> GetTransportersByGroupAsync(long groupId, int skip, int take, string? search, CancellationToken cancellationToken)
     {
         var members = await GroupMembersAsync(groupId, invisibleAsEmpty: false, cancellationToken);
@@ -131,15 +115,6 @@ public sealed class TransporterReader(IApplicationDbContext context, ICurrentPri
             .Distinct();
     }
 
-    /// <summary>
-    /// GetTransportersByUserAsync method retrieves a page of transporters visible to a user
-    /// </summary>
-    /// <param name="userId">The ID of the user</param>
-    /// <param name="skip">Rows to skip</param>
-    /// <param name="take">Rows to return</param>
-    /// <param name="search">Optional name filter</param>
-    /// <param name="cancellationToken">A cancellation token to cancel the operation</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains a page of TransporterVm objects.</returns>
     public async Task<TransportersPageVm> GetTransportersByUserAsync(Guid userId, int skip, int take, string? search, CancellationToken cancellationToken)
     {
         var subjectAccountId = await Context.Users
@@ -171,15 +146,6 @@ public sealed class TransporterReader(IApplicationDbContext context, ICurrentPri
         return new TransportersPageVm(items, totalCount);
     }
 
-    /// <summary>
-    /// GetTransportersByAccountAsync method retrieves a page of transporters by account ID
-    /// </summary>
-    /// <param name="accountId">The ID of the account</param>
-    /// <param name="skip">Rows to skip</param>
-    /// <param name="take">Rows to return</param>
-    /// <param name="search">Optional name filter</param>
-    /// <param name="cancellationToken">A cancellation token to cancel the operation</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains a page of TransporterVm objects.</returns>
     public async Task<TransportersPageVm> GetTransportersByAccountAsync(Guid accountId, int skip, int take, string? search, CancellationToken cancellationToken)
     {
         var query = ApplySearch(Scope(accountId), search);

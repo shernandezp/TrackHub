@@ -25,17 +25,12 @@ public class AuthorizationBehavior<TRequest, TResponse>(
     IUser user,
     IIdentityService identityService) : IPipelineBehavior<TRequest, TResponse> where TRequest : notnull
 {
-    // Handles the request by performing authorization checks.
-    // If the user is not authorized, it throws an UnauthorizedAccessException or ForbiddenAccessException.
-    // If the user is authorized or authorization is not required, it proceeds to the next handler in the pipeline.
     public async Task<TResponse> HandleAsync(TRequest request, Func<Task<TResponse>> next, CancellationToken cancellationToken)
     {
-        // Get the AuthorizeAttributes applied to the request type
         var authorizeAttributes = request.GetType().GetCustomAttributes<AuthorizeAttribute>();
 
         if (authorizeAttributes.Any())
         {
-            // Check if the user is authenticated
             if (user.Id == null)
             {
                 throw new UnauthorizedAccessException();
@@ -58,10 +53,8 @@ public class AuthorizationBehavior<TRequest, TResponse>(
                     break;
 
                 case PrincipalType.Staff:
-                    // Staff branch: a staff principal is authorized by principal type + claims only.
-                    // Require a staff identity and an account scope; assignment-level checks (e.g. Manager
-                    // ValidateStaffAssignment) are the handler's responsibility per the platform rules.
-                    // Staff never carry roles/policies, so the user branch is skipped entirely.
+                    // A staff principal is authorized by principal type and claims only; assignment-level checks
+                    // are the handler's responsibility, and staff never carry roles or policies.
                     if (user.StaffId is not { } staffId || staffId == Guid.Empty
                         || user.AccountId is not { } staffAccountId || staffAccountId == Guid.Empty)
                     {
@@ -74,8 +67,7 @@ public class AuthorizationBehavior<TRequest, TResponse>(
                     break;
 
                 case PrincipalType.PublicLink:
-                    // Public-link principals never invoke authorized operations. Public-link data access flows
-                    // exclusively through Manager's anonymous resolution endpoint; reject fail-closed here.
+                    // Public-link data access flows exclusively through Manager's anonymous resolution endpoint.
                     {
                         var attribute = authorizeAttributes.First();
                         throw new ForbiddenAccessException(
@@ -90,13 +82,12 @@ public class AuthorizationBehavior<TRequest, TResponse>(
                         throw new UnauthorizedAccessException();
                     }
 
-                    // Iterate through each AuthorizeAttribute
                     foreach (var attribute in authorizeAttributes)
                     {
                         var resource = attribute.Resource;
                         var action = attribute.Action;
 
-                        // Single combined role + policy decision, evaluated by Security in one call
+                        // Single combined role + policy decision, evaluated by Security in one call.
                         if (!await identityService.AuthorizeUserAsync(userId, resource, action, cancellationToken))
                         {
                             throw new ForbiddenAccessException(resource, action);
@@ -106,7 +97,6 @@ public class AuthorizationBehavior<TRequest, TResponse>(
             }
         }
 
-        // User is authorized / authorization not required, proceed to the next handler
         return await next();
     }
 

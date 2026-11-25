@@ -14,13 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Operator API (Manager backend): plain typed async functions. Failures THROW
- * ApiError — fallbacks and toasts belong to the caller layer (src/queries).
- * Operator health / sync-run reads are a separate Telemetry module
- * (api/telemetry/operatorHealth).
- */
-
 import { executeGraphQL } from 'api/core/graphqlClient';
 import type { RequestOptions } from 'api/core/errors';
 import { fetchAllPages } from 'api/core/paging';
@@ -53,7 +46,6 @@ export type { OperatorDtoInput, UpdateOperatorDtoInput, TriggerOperatorDeviceSyn
 
 const DEFAULT_SYNC_INTERVAL_MINUTES = 30;
 
-/** Legacy `formatPositiveInteger`: keep a positive int, otherwise the fallback. */
 function positiveIntOr(value: unknown, fallback: number): number {
   const parsed = Number.parseInt(value as string, 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
@@ -71,16 +63,12 @@ export async function getOperatorsByCurrentAccount(
   return data.operatorsByCurrentAccount;
 }
 
-/**
- * Minimal id + name list for the dashboard and report operator filters. Unpaged
- * by design — the server raises past its own ceiling rather than truncating.
- */
+/** Unpaged by design: the server raises past its own ceiling rather than truncating. */
 export async function getOperatorLookup(options?: RequestOptions): Promise<OperatorLookup[]> {
   const data = await executeGraphQL('manager', GetOperatorLookupDocument, undefined, options);
   return data.operatorLookup;
 }
 
-/** Operator page (name map + sync metadata) for the GPS-integration screens. */
 export async function getGpsOperators(params: ListParams = {}, options?: RequestOptions): Promise<GpsOperatorsPage> {
   const data = await executeGraphQL('manager', GetGpsOperatorsDocument, {
     skip: params.skip ?? null,
@@ -91,9 +79,8 @@ export async function getGpsOperators(params: ListParams = {}, options?: Request
 }
 
 /**
- * Every operator with its sync metadata, all server pages drained. The GPS
- * screens filter and label rows by operator, and the lookup carries only
- * id + name, so the full record set is genuinely required here.
+ * All pages drained: the GPS screens filter and label rows by operator, and the lookup carries
+ * only id + name, so the full record set is required.
  */
 export async function getAllGpsOperators(options?: RequestOptions): Promise<GpsOperator[]> {
   return fetchAllPages(async (skip, take) => (await getGpsOperators({ skip, take }, options)).items);
@@ -134,7 +121,6 @@ export async function updateOperator(
   return data.updateOperator;
 }
 
-/** Returns the id of the deleted operator (schema: `deleteOperator: UUID!`). */
 export async function deleteOperator(operatorId: string): Promise<string> {
   const data = await executeGraphQL('manager', DeleteOperatorDocument, { id: operatorId });
   return data.deleteOperator;

@@ -20,8 +20,8 @@ using TrackHub.TripManagement.Application.ProofsOfDelivery.Commands.Record;
 namespace TrackHub.TripManagement.Application.UnitTests;
 
 /// <summary>
-/// Acceptance 15 for the POD and delivery-outcome paths, and acceptance 25 for document scanning:
-/// unverified bytes must never enter an auditable evidence trail.
+/// POD, delivery-outcome and document-scanning paths: unverified bytes must never enter an
+/// auditable evidence trail.
 /// </summary>
 [TestFixture]
 public class ProofOfDeliveryAndDeliveryOutcomeTests
@@ -103,14 +103,13 @@ public class ProofOfDeliveryAndDeliveryOutcomeTests
     }
 
     /// <summary>
-    /// Acceptance 15 is about SIDE EFFECTS, not just row counts.
+    /// Replay idempotency is about SIDE EFFECTS, not just row counts.
     /// <para>
-    /// The writer was already idempotent — the unique (TripStopId, ClientEventId) index returns the
-    /// existing POD instead of inserting a second one — but the handler could not tell a replay from
-    /// a first submission and marked the stop's deliveries <c>Delivered</c> either way. The real
-    /// sequence that breaks: POD recorded, deliveries go Delivered; the operator then records a
-    /// genuine <c>Rejected</c> outcome; spec 10's offline outbox re-sends the original POD and
-    /// silently reverts the rejection. Exactly one row, and a destroyed business outcome.
+    /// The writer is idempotent (the unique (TripStopId, ClientEventId) index returns the
+    /// existing POD), so the handler must tell a replay from a first submission before marking
+    /// the stop's deliveries <c>Delivered</c>. The sequence that breaks otherwise: POD recorded,
+    /// deliveries go Delivered; the operator records a genuine <c>Rejected</c> outcome; the offline
+    /// outbox re-sends the original POD and silently reverts the rejection.
     /// </para>
     /// </summary>
     [Test]
@@ -184,13 +183,12 @@ public class ProofOfDeliveryAndDeliveryOutcomeTests
         => new(TestFactory.StopId, null, "R. Gomez", null, null, DateTimeOffset.UtcNow, 4.7, -74.0, [DocumentId], ClientEventId);
 
     /// <summary>
-    /// A POD the server already holds is re-accepted even though the trip has since closed. Found by
-    /// the deployed smoke suite.
+    /// A POD the server already holds is re-accepted even though the trip has since closed.
     /// <para>
     /// POD is the last thing recorded at a stop, and closing that stop auto-completes the trip
-    /// (§5.2) — so by the time an offline device re-sends, the trip is routinely terminal. Answering
-    /// <c>TRIP_ALREADY_TERMINAL</c> to a submission already on file is a permanent failure spec 10's
-    /// outbox can only retry forever, which is exactly what acceptance 15 forbids.
+    /// — so by the time an offline device re-sends, the trip is routinely terminal. Answering
+    /// <c>TRIP_ALREADY_TERMINAL</c> to a submission already on file is a permanent failure the
+    /// offline outbox can only retry forever.
     /// </para>
     /// </summary>
     [Test]

@@ -31,15 +31,12 @@ interface DeliveryDialogProps {
   values: DeliveryFormValues;
   handleChange: FormChangeHandler;
   errors: Record<string, string>;
-  /** Human label of the stop the delivery belongs to — a delivery cannot move stops. */
   stopLabel: string;
 }
 
 /**
- * Delivery editor. A delivery always belongs to one stop: the backend rejects
- * cross-stop moves, so the stop is shown as context and is never editable here
- * (spec 11 §7.3). The delivery's OUTCOME is not set from this dialog either —
- * that is an idempotent, separately audited command.
+ * The backend rejects cross-stop moves, so the stop is shown as context and never edited here.
+ * The OUTCOME is a separate, idempotent, audited command.
  */
 function DeliveryDialog({
   open,

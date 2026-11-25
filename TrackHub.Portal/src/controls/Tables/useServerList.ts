@@ -20,10 +20,8 @@ import { SEARCH_DEBOUNCE_MS } from 'utils/useDebouncedValue';
 
 
 export interface UseServerListResult {
-  /** Zero-based page index. */
   page: number;
   setPage: (page: number) => void;
-  /** Live value of the search box (not yet applied). */
   searchDraft: string;
   setSearchDraft: (value: string) => void;
   /** `{ skip, take, search }` for the paged query — stable between keystrokes. */
@@ -31,15 +29,9 @@ export interface UseServerListResult {
 }
 
 /**
- * Paging + server-side search state for a list screen backed by a paged query.
- *
- * The shared `Table` control searches and pages CLIENT-side, so a screen that
- * reads one server page must drive both from here instead: the draft is
- * debounced into `params.search`, jumping back to the first page since the new
- * results start from the top.
- *
- * Call {@link useClampPage} with the server total afterwards so a delete that
- * empties the last page does not strand the user on it.
+ * The shared `Table` searches and pages CLIENT-side, so a screen reading one server page drives
+ * both from here: the draft is debounced into `params.search`, jumping back to the first page.
+ * Call {@link useClampPage} with the server total afterwards.
  */
 export function useServerList(pageSize: number): UseServerListResult {
   const [page, setPage] = useState(0);
@@ -71,11 +63,7 @@ export function useServerList(pageSize: number): UseServerListResult {
   return { page, setPage, searchDraft, setSearchDraft, params };
 }
 
-/**
- * Snaps the page back when the result set shrinks below its start — deleting the
- * last row of a non-first page otherwise leaves the user on an empty page with
- * no rows to act on. Call it after the paged query has reported its total.
- */
+/** Deleting the last row of a non-first page otherwise leaves the user on an empty page. */
 export function useClampPage(
   page: number,
   pageSize: number,

@@ -39,12 +39,7 @@ interface TopicViewProps {
   anchor?: string;
 }
 
-/**
- * Rendered topic: category chip, GFM body mapped onto MUI, and "Related
- * topics" chips (frontmatter related + other topics sharing a screen). A
- * topic missing on the server (stale manifest cache) degrades to the index
- * view with a non-blocking notice.
- */
+/** A topic missing on the server (stale manifest cache) degrades to the index view with a notice. */
 function TopicView({ manifest, topic, lang, anchor }: TopicViewProps) {
   const { t } = useTranslation();
   const { navigateToTopic, allowedScreens, isFeatureEnabled } = useHelpContext();

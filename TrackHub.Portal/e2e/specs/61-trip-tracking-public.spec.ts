@@ -1,10 +1,6 @@
 /**
- * Public trip tracking (`/track`) — the one screen an anonymous customer sees.
- *
- * The link is minted through the real Share dialog, then opened in a browser
- * context with no session at all. The malformed/expired/unknown cases are
- * exercised with links built by hand, because a link the platform would refuse
- * cannot be produced by the dialog.
+ * The malformed/expired/unknown cases use links built by hand, because a link the
+ * platform would refuse cannot be produced by the Share dialog.
  */
 
 import { test, expect, unique } from '../fixtures';

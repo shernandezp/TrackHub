@@ -136,7 +136,7 @@ public sealed class DocumentWriter(IApplicationDbContext context, ICurrentPrinci
         RequireRowAccess(document.AccountId, nameof(Document), signature.DocumentId.ToString(), forWrite: true);
         await EnsureOwnerWriteAccessAsync(document.AccountId, document.OwnerEntityType, document.OwnerEntityId, cancellationToken);
 
-        // A supplied signature image must itself be a servable Signature-category document in the account (AC11).
+        // A supplied signature image must itself be a servable Signature-category document in the account.
         if (signature.SignatureImageDocumentId.HasValue)
         {
             var image = await Context.Documents.FirstOrDefaultAsync(x => x.DocumentId == signature.SignatureImageDocumentId.Value, cancellationToken)

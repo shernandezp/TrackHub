@@ -18,7 +18,7 @@ namespace TrackHub.TripManagement.Infrastructure.TripDB.Readers;
 /// <summary>
 /// Projects the anonymous tracking snapshot.
 /// <para>
-/// This reader IS the disclosure boundary (acceptance 23): the projection is driven by the share
+/// This reader IS the disclosure boundary: the projection is driven by the share
 /// field flags server-side and never filtered by the client. Toll and cost figures, staff contact
 /// data, internal notes, raw position history and document bytes have no path into
 /// <see cref="PublicTripVm"/> at all - they are not read here, not merely omitted downstream.
@@ -62,9 +62,8 @@ public sealed class TripShareReader(IApplicationDbContext context) : ITripShareR
                 .ToListAsync(cancellationToken)
             : [];
 
-        // Gated by IncludeRoute, not attached unconditionally: §7.8 exposes route geometry "per
-        // field flags", and a planned route is a disclosure — it draws the customer's competitors'
-        // drop sequence across the map.
+        // Gated by IncludeRoute, not attached unconditionally: a planned route is a disclosure — it
+        // draws the customer's competitors' drop sequence across the map.
         var plannedRoute = share.IncludeRoute
             ? await PlannedRouteAsync(trip.TripId, accountId, cancellationToken)
             : null;
@@ -74,7 +73,7 @@ public sealed class TripShareReader(IApplicationDbContext context) : ITripShareR
             && string.Equals(trip.Status, TripStatuses.InProgress, StringComparison.Ordinal);
 
         // Both resolved from the Manager-owned tables mapped read-only into this context
-        // (SVD-05 / the vw_visible_transporter rationale) — no per-request cross-service call, and
+        // (the vw_visible_transporter rationale) — no per-request cross-service call, and
         // neither projection can reach contact data: Staff maps Name only, Transporter maps Name
         // and type id only. Phone and document number are not in this DbContext at all.
         var vehicleLabel = share.IncludeVehicle
@@ -99,15 +98,13 @@ public sealed class TripShareReader(IApplicationDbContext context) : ITripShareR
             trip.PlannedEndAt,
             trip.ActualStartAt,
             trip.ActualEndAt,
-            // CustomerName is absent from PublicTripVm entirely — see the type's doc comment. It
-            // used to be a parameter hardcoded to null here, which held the line but left a
-            // null-shaped slot on the disclosure boundary that the next edit could fill in.
+            // CustomerName is absent from PublicTripVm entirely — see the type's doc comment.
             [.. stops.Select(s => new PublicTripStopVm(
                 s.Sequence,
                 s.Name,
-                // s.City, NEVER s.Address. §7.8 allows "city"; TripStop.Address is the ≤500-char
+                // s.City, NEVER s.Address. TripStop.Address is the ≤500-char
                 // reverse-geocoded street label ("Cra 7 #71-52, Bogota"), so passing it here
-                // disclosed every OTHER stop's exact delivery address to any link holder. The two
+                // would disclose every OTHER stop's exact delivery address to any link holder. The two
                 // are separate columns precisely because they carry different disclosure levels.
                 s.City,
                 s.Status,
@@ -126,7 +123,7 @@ public sealed class TripShareReader(IApplicationDbContext context) : ITripShareR
 
     /// <summary>
     /// The staff's GIVEN NAME only — the first whitespace-delimited token of the stored display
-    /// name (§7.8 says "staff <b>given name only</b>"). Returning the full name would hand a link
+    /// name. Returning the full name would hand a link
     /// holder a first-and-last-name identification of a specific employee, which is one public
     /// records search away from an address; the given name is enough for "your staff is Carlos".
     /// Truncation happens HERE, at the disclosure boundary, so no caller can forget it.

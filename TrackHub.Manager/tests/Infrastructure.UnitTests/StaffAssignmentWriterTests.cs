@@ -68,7 +68,7 @@ public class StaffAssignmentWriterTests
         var writer = new StaffAssignmentWriter(context, Principal(accountId));
         await writer.AssignStaffToTransporterAsync(staff.StaffId, transporter.TransporterId, DateTimeOffset.UtcNow, StaffAssignmentTypes.Regular, CancellationToken.None);
 
-        // One OPEN assignment per (staff, transporter) pair → 409 (AC3).
+        // One OPEN assignment per (staff, transporter) pair → 409.
         await Assert.ThrowsAsync<ConflictException>(() => writer.AssignStaffToTransporterAsync(
             staff.StaffId, transporter.TransporterId, DateTimeOffset.UtcNow, StaffAssignmentTypes.Temporary, CancellationToken.None));
     }
@@ -138,7 +138,7 @@ public class StaffAssignmentWriterTests
                 staff.StaffId, transporter.TransporterId, DateTimeOffset.UtcNow, StaffAssignmentTypes.Regular, CancellationToken.None));
         }
 
-        // Enforcement ON: the same data is rejected with a clear validation error (AC5).
+        // Enforcement ON: the same data is rejected with a clear validation error.
         using (var context = NewContext(nameof(Assign_ExpiredLicense_BlockedOnlyWhenAccountOptsIn) + "-on"))
         {
             var (staff, transporter) = Seed(context, accountId);
@@ -164,7 +164,7 @@ public class StaffAssignmentWriterTests
         EnableWorkforce(context, accountId, """{"blockAssignmentOnExpiredLicense":true}""");
         var today = DateOnly.FromDateTime(DateTimeOffset.UtcNow.UtcDateTime);
         context.StaffQualifications.AddRange(
-            // The superseded record is kept deliberately — §6 is a history model.
+            // The superseded record is kept deliberately — qualifications are a history model.
             new StaffQualification(accountId, staff.StaffId, StaffQualificationTypes.License, null, "old", null, today.AddYears(-2), null, StaffQualificationStatuses.Valid, null, null),
             new StaffQualification(accountId, staff.StaffId, StaffQualificationTypes.License, null, "current", null, today.AddYears(3), null, StaffQualificationStatuses.Valid, null, null));
         context.SaveChanges();
@@ -189,7 +189,7 @@ public class StaffAssignmentWriterTests
             staff.StaffId, transporter.TransporterId, DateTimeOffset.UtcNow, StaffAssignmentTypes.Regular, CancellationToken.None));
     }
 
-    // §6 defines an active assignment as "EndsAt null / future", so scheduling a future close must not
+    // An active assignment is one whose EndsAt is null or in the future, so scheduling a future close must not
     // retire the assignment — and revoke the staff's transporter/document access — today.
     [Test]
     public async Task End_WithAFutureDate_SchedulesTheCloseWithoutRetiringItNow()
@@ -251,7 +251,7 @@ public class StaffAssignmentWriterTests
             Assert.That(stored.EndsAt, Is.Not.Null);
         });
 
-        // Ended assignments are immutable (AC3).
+        // Ended assignments are immutable.
         await Assert.ThrowsAsync<ConflictException>(() =>
             writer.EndStaffAssignmentAsync(created.StaffTransporterAssignmentId, null, CancellationToken.None));
     }
@@ -309,9 +309,9 @@ public class StaffAssignmentWriterTests
         Assert.That(context.StaffTransporterAssignments.Count(), Is.EqualTo(2));
     }
 
-    // Regression: the overlap check originally compared the existing EndsAt against *now* and only
-    // looked at Active rows, so a BACKDATED assignment could silently overlap a closed one for the
-    // same pair — corrupting the history that hour-producing modules will later join against (§18.7).
+    // An overlap check that compares the existing EndsAt against *now*, or only looks at Active rows,
+    // lets a BACKDATED assignment silently overlap a closed one for the same pair — corrupting the
+    // history that hour-producing modules join against.
     [Test]
     public async Task Assign_BackdatedIntoAClosedAssignment_Conflicts()
     {

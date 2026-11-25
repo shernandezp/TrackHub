@@ -77,7 +77,6 @@ function ManageDeviceAssignments() {
   const [selectedDevice, setSelectedDevice] = useState<SearchOption | null>(null);
   const [accountId, setAccountId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // End-assignment dialog: the row being ended (null = closed) and the typed reason.
   const [endTarget, setEndTarget] = useState<TransporterAssignmentWithAudit | null>(null);
   const [endReason, setEndReason] = useState('');
   const loaded = useRef(false);
@@ -132,8 +131,6 @@ function ManageDeviceAssignments() {
   }, [expanded]);
 
   const toggleActiveOnly = () => {
-    // Re-keys the assignments query, which refetches automatically. The result
-    // set changes size, so restart from the first page.
     setPage(0);
     setActiveOnly((prev) => !prev);
   };
@@ -152,7 +149,6 @@ function ManageDeviceAssignments() {
         reason: endReason.trim() || 'portal',
       });
       setEndTarget(null);
-      // Assignments refetch via query invalidation; refresh the device lists too.
       await loadDevices();
     } catch {
       // Failure is surfaced by the global toast; keep the dialog open for a retry.
@@ -172,7 +168,6 @@ function ManageDeviceAssignments() {
         assignmentReason: 'portal'
       });
       setSelectedDevice(null);
-      // Assignments refetch via query invalidation; refresh the device lists too.
       await loadDevices();
     } catch {
       // Failure is surfaced by the global toast.

@@ -24,7 +24,7 @@ public interface ITripWriter
 
     /// <summary>
     /// Permitted only for a <c>Created</c> trip with no <c>TripEvent</c> rows; anything else is a
-    /// conflict and the caller is told to cancel instead (spec 11 §5, acceptance 16).
+    /// conflict and the caller is told to cancel instead.
     /// </summary>
     Task DeleteTripAsync(Guid tripId, Guid accountId, CancellationToken cancellationToken);
 
@@ -37,13 +37,13 @@ public interface ITripWriter
     /// <paramref name="idempotencyKey"/>: nothing is written and the caller must skip its side
     /// effects (alert emission). Auto-start and manual Start share a key on purpose, so the two can
     /// race and exactly one wins — which only works because the status change and the event insert
-    /// commit together (spec 11a §12.1).
+    /// commit together.
     /// </para>
     /// <para>
     /// <paramref name="measuredAt"/> is the instant the transition actually happened as the FIELD
     /// saw it — a position's <c>DeviceDateTime</c> on the detection path. Manual overrides pass
     /// null and get the command time. It is what <c>ActualStartAt</c>/<c>ActualEndAt</c> are
-    /// stamped with, so a measured lifecycle never carries a server clock (§12.3).
+    /// stamped with, so a measured lifecycle never carries a server clock.
     /// </para>
     /// </summary>
     Task<bool> TransitionTripAsync(
@@ -62,7 +62,7 @@ public interface ITripWriter
     /// <summary>
     /// ARMS a trip: snapshots <c>OriginGeom</c> and every stop's <c>ArrivalGeom</c> and stamps
     /// <c>ArmedAt</c>. Idempotent, and it deliberately writes NO <c>TripEvent</c> — an armed trip
-    /// that never ran must stay deletable (acceptance 16, spec 11a §6.2).
+    /// that never ran must stay deletable.
     /// <para>
     /// Snapshotting HERE rather than at Start is what makes auto-start possible at all: origin
     /// arrival is the trigger, so the geometry it is judged against has to exist first. The immunity
@@ -73,7 +73,7 @@ public interface ITripWriter
     Task<bool> ArmTripAsync(Guid tripId, Guid accountId, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Replays a recorded origin visit onto a late-created trip (spec 11a §5.4). These are
+    /// Replays a recorded origin visit onto a late-created trip. These are
     /// MEASUREMENTS, not declarations, so they are written before the trip transitions and the
     /// transition then stamps <c>ActualStartAt</c> from them.
     /// </summary>

@@ -20,19 +20,10 @@ using TrackHub.Manager.Infrastructure.Interfaces;
 
 namespace TrackHub.Manager.Infrastructure.ManagerDB.Writers;
 
-// This class represents a writer for credentials in the infrastructure layer.
 public sealed class CredentialWriter(IApplicationDbContext context, ICurrentPrincipal principal)
     : AccountScopedDataAccess(context, principal), ICredentialWriter
 {
 
-    /// <summary>
-    /// Creates a new credential asynchronously.
-    /// </summary>
-    /// <param name="credentialDto"></param>
-    /// <param name="salt"></param>
-    /// <param name="key"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>The created credential view model</returns>
     public async Task<CredentialVm> CreateCredentialAsync(CredentialDto credentialDto, byte[] salt, string key, CancellationToken cancellationToken)
     {
         var accountId = await RequireOperatorAccessAsync(credentialDto.OperatorId, cancellationToken);
@@ -60,14 +51,6 @@ public sealed class CredentialWriter(IApplicationDbContext context, ICurrentPrin
             credential.Key2);
     }
 
-    /// <summary>
-    /// Updates an existing credential asynchronously.
-    /// </summary>
-    /// <param name="credentialDto"></param>
-    /// <param name="salt"></param>
-    /// <param name="key"></param>
-    /// <param name="cancellationToken"></param>
-    /// <exception cref="NotFoundException"></exception>
     public async Task UpdateCredentialAsync(UpdateCredentialDto credentialDto, byte[] salt, string key, CancellationToken cancellationToken)
     {
         var credential = await Context.Credentials
@@ -91,8 +74,6 @@ public sealed class CredentialWriter(IApplicationDbContext context, ICurrentPrin
         credential.RotatedAt = DateTimeOffset.UtcNow;
         credential.RotatedByPrincipalType = Principal.PrincipalType.ToString();
         credential.RotatedByPrincipalId = ResolveActorId();
-        // No health-rollup reset needed: operator health is derived from the latest health
-        // check, so the next check after rotation reflects reality on its own.
 
         AddAuditEvent(credential.Operator.AccountId, "RotateCredential", "Credential", $"{credential.CredentialId}",
             $$"""{"uri":{{AuditJson.Quote(previousUri)}},"credentialVersion":{{credential.CredentialVersion - 1}}}""",
@@ -100,13 +81,6 @@ public sealed class CredentialWriter(IApplicationDbContext context, ICurrentPrin
         await Context.SaveChangesAsync(cancellationToken);
     }
 
-    /// <summary>
-    /// Updates the token of an existing credential asynchronously.
-    /// </summary>
-    /// <param name="credentialDto"></param>
-    /// <param name="key"></param>
-    /// <param name="cancellationToken"></param>
-    /// <exception cref="NotFoundException"></exception>
     public async Task UpdateTokenAsync(UpdateTokenDto credentialDto, string key, CancellationToken cancellationToken)
     {
         var credential = await Context.Credentials
@@ -126,12 +100,6 @@ public sealed class CredentialWriter(IApplicationDbContext context, ICurrentPrin
         await Context.SaveChangesAsync(cancellationToken);
     }
 
-    /// <summary>
-    /// Deletes a credential asynchronously.
-    /// </summary>
-    /// <param name="credentialId"></param>
-    /// <param name="cancellationToken"></param>
-    /// <exception cref="NotFoundException"></exception>
     public async Task DeleteCredentialAsync(Guid credentialId, CancellationToken cancellationToken)
     {
         var credential = await Context.Credentials

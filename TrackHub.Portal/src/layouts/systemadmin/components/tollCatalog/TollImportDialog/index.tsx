@@ -35,10 +35,8 @@ interface TollImportDialogProps {
 }
 
 /**
- * CSV import with a row-level error report. The backend never batch-fails: valid
- * rows land and each rejected row comes back with its number and reason, which
- * is exactly what this dialog renders — the operator fixes those rows and
- * re-imports rather than guessing which of a thousand lines was wrong.
+ * The backend never batch-fails: valid rows land and each rejected row comes back with its number
+ * and reason, which this dialog renders.
  */
 function TollImportDialog({ open, setOpen }: TollImportDialogProps) {
   const { t } = useTranslation();

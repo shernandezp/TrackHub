@@ -20,7 +20,7 @@ using TrackHub.Manager.Web.Endpoints;
 
 namespace Web.UnitTests;
 
-// The TripManagement precedent, applied here (TT-03). That service shipped a Program.cs missing
+// A sibling service once shipped a Program.cs missing
 // AddInfrastructureServices: it STARTED, it answered /health, and the failure only appeared on the
 // first request that touched a cross-service client. Nothing else in a suite can catch that — the
 // application tests mock these interfaces and the contract tests build the schema over mocks. This

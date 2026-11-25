@@ -55,7 +55,6 @@ public static class DependencyInjection
                 _.SetEndSessionEndpointUris("logout");
                 _.RegisterScopes(scopes.Split(','));
 
-                // Make token lifetimes explicit (OpenIddict defaults, pinned as configuration intent).
                 _.SetAccessTokenLifetime(TimeSpan.FromHours(1));
                 _.SetRefreshTokenLifetime(TimeSpan.FromDays(14));
 
@@ -92,7 +91,6 @@ public static class DependencyInjection
                     //TODO: Separate certificates for signing and encryption
 #endif
 
-                //disable access token payload encryption
                 _.DisableAccessTokenEncryption();
                 _.UseAspNetCore()
                     .EnableTokenEndpointPassthrough()

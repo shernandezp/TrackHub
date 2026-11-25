@@ -43,12 +43,8 @@ public class GetStaffAssignmentHistoryQueryValidator : AbstractValidator<GetStaf
     }
 }
 
-/// <summary>
-/// Staff self-service (spec 09 §7.3). Core surface — deliberately NOT gated by the <c>workforce</c>
-/// feature, so a staff app keeps working on accounts that never bought the workforce module (the
-/// qualification/assignment collections simply come back empty). The handler pins the staff id from
-/// the authenticated principal, so a staff token can never read another staff's data (AC2).
-/// </summary>
+// Deliberately NOT gated by the workforce feature, so a staff app keeps working on accounts without
+// that module. The staff id is pinned from the principal, so a token can never read another staff's data.
 [Authorize(Resource = Resources.Staff, Action = Actions.Read, PrincipalTypes = "Staff")]
 public readonly record struct GetMyStaffProfileQuery : IRequest<MyStaffProfileVm>;
 public class GetMyStaffProfileQueryHandler(IStaffMemberReader reader, ICurrentPrincipal principal) : IRequestHandler<GetMyStaffProfileQuery, MyStaffProfileVm>

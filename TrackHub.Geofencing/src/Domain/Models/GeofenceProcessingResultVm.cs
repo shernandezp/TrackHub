@@ -16,9 +16,6 @@
 namespace TrackHub.Geofencing.Domain.Models;
 
 
-/// <summary>
-/// Result of processing positions for geofence events.
-/// </summary>
 public readonly record struct GeofenceProcessingResultVm(
     int ProcessedCount,
     int EventsCreated,

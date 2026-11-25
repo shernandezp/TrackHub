@@ -1,10 +1,6 @@
 /**
- * Reports: the catalog, the catalog-driven filter form, the on-screen preview
- * and the Excel/PDF exports.
- *
  * A preview returns rows only when the account has data for that report, so the
- * assertion is "the preview answered" — rows or the explicit no-rows message —
- * never a row count.
+ * assertion is "the preview answered", never a row count.
  */
 
 import fs from 'node:fs';

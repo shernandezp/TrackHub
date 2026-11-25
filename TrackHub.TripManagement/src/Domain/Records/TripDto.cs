@@ -17,9 +17,9 @@ namespace TrackHub.TripManagement.Domain.Records;
 
 /// <summary>
 /// Trip write contract. <c>AccountId</c> is deliberately absent — it is resolved from the caller's
-/// identity, never accepted from the wire (spec 11 acceptance 1).
+/// identity, never accepted from the wire.
 /// <para>
-/// The "already in transit" declaration (spec 11a §5.4) deliberately does NOT live here. Backfill
+/// The "already in transit" declaration deliberately does NOT live here. Backfill
 /// has to read the trip's ROUTE to replay stop visits, and the route does not exist yet at create
 /// time — it is a separate finalizing step (<c>DeclareTripInTransitCommand</c>) that every planning
 /// input calls once its stops have landed.
@@ -53,7 +53,7 @@ public readonly record struct TripDto(
 /// <paramref name="Address"/> and <paramref name="City"/> are deliberately two fields with two
 /// disclosure levels. <c>Address</c> is the full reverse-geocoded street label ("Cra 7 #71-52,
 /// Bogota") and is internal/dispatcher-only. <c>City</c> is the coarse locality and is the ONLY one
-/// §7.8 allows into a public snapshot — conflating them is what leaked every other stop's exact
+/// allowed into a public snapshot, so conflating them would leak every stop's exact
 /// delivery address to any link holder. The portal fills both from the same Router reverse-geocode
 /// response (<c>AddressVm</c> already carries a distinct city alongside the full address).
 /// </para>
@@ -87,8 +87,7 @@ public readonly record struct DeliveryDto(
 
 /// <summary>
 /// POD capture. <paramref name="ClientEventId"/> makes the write idempotent by design rather than
-/// by caller discipline — this is what lets spec 10 layer an offline outbox on top without
-/// reopening the handler (spec 11 §7.3, §9).
+/// by caller discipline, so an offline outbox can retry it safely.
 /// </summary>
 public readonly record struct ProofOfDeliveryDto(
     Guid TripStopId,
@@ -106,9 +105,8 @@ public readonly record struct ProofOfDeliveryDto(
 /// Field-level disclosure configuration for a public share.
 /// <para>
 /// Every member is a DISCLOSURE flag and therefore fails closed: an omitted or default-constructed
-/// value must expose less, never more. <paramref name="IncludeRoute"/> exists because §7.8 lists
-/// the planned route geometry as flag-gated ("per field flags") while §6.1's field list forgot it —
-/// §7.8 is the disclosure contract, so a share created with every flag off must not hand out the
+/// value must expose less, never more, which is why the planned route geometry has its own
+/// <paramref name="IncludeRoute"/> flag: a share created with every flag off must not hand out the
 /// full planned route.
 /// </para>
 /// </summary>
@@ -132,11 +130,10 @@ public readonly record struct TransporterPositionDto(
 
 /// <summary>
 /// Partner/TMS import row. Idempotent on <paramref name="ExternalReference"/>, which is unique
-/// per account — a re-sent batch updates rather than duplicating (spec 11 §7.9).
+/// per account — a re-sent batch updates rather than duplicating.
 /// <para>
-/// Re-sending a still-<c>Created</c> trip REPLACES its stops (spec 11a §9.2). The stops payload used
-/// to be silently dropped on the update path, so a partner's weekly re-upload could revise a trip's
-/// header and never its route — the one thing a re-plan usually changes.
+/// Re-sending a still-<c>Created</c> trip REPLACES its stops, so a partner's weekly re-upload can
+/// revise the route, the one thing a re-plan usually changes.
 /// </para>
 /// </summary>
 public readonly record struct TripImportDto(

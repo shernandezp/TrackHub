@@ -5,9 +5,9 @@ using TrackHub.Telemetry.Infrastructure.TelemetryDB.Interfaces;
 namespace TrackHub.Telemetry.Infrastructure.TelemetryDB.Readers;
 
 /// <summary>
-/// Derives SyncWorker liveness from data recency (spec 28 ST-04). The worker is single-instance, so
+/// Derives SyncWorker liveness from data recency. The worker is single-instance, so
 /// any recent row proves the process is alive. Intentionally unscoped: it takes no principal and does
-/// not derive from <c>AccountScopedDataAccess</c> — the caller is Administrator-only by authorization.
+/// not derive from <c>AccountScopedDataAccess</c>.
 /// </summary>
 public sealed class PlatformSyncActivityReader(IApplicationDbContext context) : IPlatformSyncActivityReader
 {
@@ -30,8 +30,8 @@ public sealed class PlatformSyncActivityReader(IApplicationDbContext context) : 
             .CountAsync(x => x.StartedAt >= since, cancellationToken);
 
         // "Is there anything to sync at all?" Telemetry sees account-level feature enablement only
-        // (per-operator Enabled lives in Manager, and spec 28 forbids adding an inter-service call
-        // for it). An account with gps.integration on AND at least one operator is the honest
+        // (per-operator Enabled lives in Manager and is deliberately not fetched across services).
+        // An account with gps.integration on AND at least one operator is the honest
         // Telemetry-side answer.
         var now = DateTimeOffset.UtcNow;
         var enabledAccountIds = context.AccountFeatures

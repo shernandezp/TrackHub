@@ -14,19 +14,13 @@
 *  limitations under the License.
 */
 
-/**
- * Converts a string to camel case. '-', '_' and '.' act as word separators
- * (dotted feature keys like 'notifications.email' map to i18n label keys).
- */
+/** '-', '_' and '.' act as word separators (dotted feature keys map to i18n label keys). */
 export function toCamelCase(str: string): string {
     return str.replace(/([-_.][a-z])/gi, ($1) => {
         return $1.toUpperCase().replace('-', '').replace('_', '').replace('.', '');
     }).replace(/(^[A-Z])/g, $1 => $1.toLowerCase());
 }
 
-/**
- * Removes all non-alphanumeric characters from a string.
- */
 export function cleanString(str: string): string {
     return str.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
 }

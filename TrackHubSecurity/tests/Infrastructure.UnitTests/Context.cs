@@ -18,7 +18,6 @@ using TrackHub.Security.Infrastructure.Entities;
 namespace Infrastructure.UnitTests;
 internal abstract class Context
 {
-    // Helper method to generate a mock user for testing purposes
     public static User GetUser() 
         => new("username", "password", "email@mail.com", "firstName", "secondName", "lastName", "secondSurname", null, true, 0, Guid.NewGuid());
 

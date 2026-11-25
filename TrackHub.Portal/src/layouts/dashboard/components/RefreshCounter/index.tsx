@@ -41,8 +41,7 @@ function RefreshCounter({ settings, fetchPositions, calculateReference, refreshi
     }, []);
 
     // The callbacks are new identities on every parent render, so the tick reads them from refs
-    // instead of closing over the ones from the render that last changed the counter — which is how
-    // a refreshed settings document used to leave the countdown running on the old interval.
+    // instead of closing over stale ones, which would keep the countdown on an old interval.
     const fetchPositionsRef = useRef(fetchPositions);
     const calculateReferenceRef = useRef(calculateReference);
     fetchPositionsRef.current = fetchPositions;

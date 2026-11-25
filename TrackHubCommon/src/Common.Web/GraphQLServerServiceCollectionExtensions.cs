@@ -21,16 +21,10 @@ namespace Microsoft.Extensions.DependencyInjection;
 public static class GraphQLServerServiceCollectionExtensions
 {
     /// <summary>
-    /// Registers a GraphQL server with the shared TrackHub hardening: authorization,
-    /// max execution depth, the common error filter, and exception-detail exposure.
-    /// This is the single source of truth for the server configuration every service uses;
-    /// per-service deviations (extra error filters, etc.) are applied on the returned builder.
+    /// Registers a GraphQL server with the shared hardening (authorization, max depth, the common error filter).
+    /// Per-service deviations go on the returned builder.
     /// </summary>
-    /// <typeparam name="TQuery">The service's root query type.</typeparam>
-    /// <typeparam name="TMutation">The service's root mutation type.</typeparam>
-    /// <param name="services">The service collection.</param>
     /// <param name="isDevelopment">True in development: exposes exception details and introspection.</param>
-    /// <returns>The request executor builder, for per-service additions.</returns>
     public static IRequestExecutorBuilder AddTrackHubGraphQLServer<TQuery, TMutation>(
         this IServiceCollection services, bool isDevelopment)
         where TQuery : class

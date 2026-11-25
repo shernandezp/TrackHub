@@ -4,9 +4,8 @@ public interface IDocumentWriter
 {
 
     /// <summary>
-    /// Registers a document whose bytes have just been streamed to storage under a server-generated key
-    ///. Creates the Document (Status = Uploaded, ScanStatus = Quarantined) plus
-    /// version 1, using the caller-supplied <paramref name="documentId"/> that names the storage key.
+    /// Creates the Document (Uploaded, Quarantined) and version 1 for bytes already stored under the
+    /// key that <paramref name="documentId"/> names.
     /// </summary>
     Task<DocumentVm> RegisterUploadedDocumentAsync(Guid documentId, DocumentDto document, CancellationToken cancellationToken);
 

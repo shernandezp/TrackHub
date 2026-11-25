@@ -18,7 +18,7 @@ using TrackHub.TripManagement.Application.Tolls.Services;
 namespace TrackHub.TripManagement.Application.UnitTests;
 
 /// <summary>
-/// Acceptance 21 — the status trichotomy. The <c>PartialNoTariff</c> case is the important one:
+/// The status trichotomy. The <c>PartialNoTariff</c> case is the important one:
 /// an estimate that quietly understates cost is worse than no estimate.
 /// </summary>
 [TestFixture]
@@ -87,7 +87,7 @@ public class TollEstimationServiceTests
     }
 
     /// <summary>
-    /// <b>Documents current behaviour, which I believe is a genuine defect.</b>
+    /// <b>Documents current behaviour, which is a known defect.</b>
     /// <para>
     /// The service sums <c>Amount</c> across every priced match and labels the total with
     /// <c>currency ??= match.Currency</c> — the FIRST currency it saw. On a cross-border route
@@ -95,14 +95,7 @@ public class TollEstimationServiceTests
     /// carry COP and VES/USD, and the operator is shown one number, in one currency, that is the
     /// arithmetic sum of two. 12 500 COP + 3.50 USD is reported as "12 503.50 COP".
     /// </para>
-    /// <para>
-    /// This is the same class of lie the <c>PartialNoTariff</c> status exists to prevent — the
-    /// service already refuses to net an unpriced station to zero because an estimate that
-    /// misstates cost is worse than no estimate. A mixed-currency sum misstates it far more
-    /// severely, and silently. The honest answer is a third status (or a per-currency breakdown),
-    /// but that is a contract change affecting the GraphQL schema and the portal, so it is REPORTED
-    /// here rather than changed under cover of a test.
-    /// </para>
+    /// Fixing it is a contract change (a third status or a per-currency breakdown in the GraphQL schema and portal).
     /// </summary>
     [Test]
     public async Task MixedCurrencies_RefuseATotalInsteadOfSummingAcrossThem()

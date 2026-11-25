@@ -20,18 +20,12 @@ using TrackHub.Router.Domain.Extensions;
 
 namespace TrackHub.Router.Infrastructure.Navixy;
 
-/// <summary>
-/// Reader for retrieving device (tracker) information from Navixy API.
-/// </summary>
 public sealed class DeviceReader(
     ICredentialHttpClientFactory httpClientFactory,
     IHttpClientService httpClientService,
     IProviderSessionStore sessionStore)
     : NavixyReaderBase(httpClientFactory, httpClientService, sessionStore), IExternalDeviceReader
 {
-    /// <summary>
-    /// Retrieves a single device asynchronously based on the provided device DTO.
-    /// </summary>
     public async Task<DeviceVm> GetDeviceAsync(DeviceTransporterVm deviceDto, CancellationToken cancellationToken)
     {
         var result = await PostNavixyAsync<TrackerListResponse>(
@@ -43,9 +37,6 @@ public sealed class DeviceReader(
             : DeviceMapper.Instance.Map(tracker.Value, deviceDto);
     }
 
-    /// <summary>
-    /// Retrieves multiple devices asynchronously based on the provided device DTOs.
-    /// </summary>
     public async Task<IEnumerable<DeviceVm>> GetDevicesAsync(IEnumerable<DeviceTransporterVm> devices, CancellationToken cancellationToken)
     {
         var result = await PostNavixyAsync<TrackerListResponse>(
@@ -60,9 +51,6 @@ public sealed class DeviceReader(
         return DeviceMapper.Instance.Map(result.List, devicesDictionary);
     }
 
-    /// <summary>
-    /// Retrieves all devices asynchronously.
-    /// </summary>
     public async Task<IEnumerable<DeviceVm>> GetDevicesAsync(CancellationToken cancellationToken)
     {
         var result = await PostNavixyAsync<TrackerListResponse>(

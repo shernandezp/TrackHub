@@ -24,13 +24,13 @@ namespace TrackHub.TripManagement.Application.Tolls.Commands.SetTransporterTollC
 /// <para>
 /// Unlike the catalog itself, this IS account-scoped and IS feature-gated: fleet composition is
 /// tenant business data, so it lives under <see cref="Resources.Trips"/>/<c>Edit</c> rather than
-/// under the platform's <see cref="Resources.TollCatalog"/> (spec 11 §5, §7.6).
+/// under the platform's <see cref="Resources.TollCatalog"/>.
 /// </para>
 /// </summary>
 [Authorize(Resource = Resources.Trips, Action = Actions.Edit)]
 [RequireFeature(FeatureKeys.TripManagement)]
 // Enforcement: the handler derives the caller's own account and passes it to the reader/writer,
-// which filters every row on it (TripVisibility is the single visibility resolver - spec 11).
+// which filters every row on it (TripVisibility is the single visibility resolver).
 [AccountScopeEnforcedInHandler]
 public readonly record struct SetTransporterTollClassCommand(
     short? TransporterTypeId,
@@ -50,9 +50,8 @@ public sealed class SetTransporterTollClassCommandHandler(
         var caller = await userReader.GetUserAsync(UserId, cancellationToken);
 
         // A row-level override names a transporter, which is a cross-account reference and must be
-        // validated against the trip's account like every other parent (spec 11 §5, acceptance 2).
-        // Unvalidated, the mapping was written happily and then simply never applied — the estimate
-        // silently fell back to the type-level default with nothing to show the operator why.
+        // validated against the trip's account like every other parent; unvalidated, it would be
+        // written and then never applied, the estimate silently falling back to the type-level default.
         if (request.TransporterId is { } transporterId)
         {
             await TripVisibility.EnsureTransporterVisibleAsync(
@@ -71,8 +70,7 @@ public sealed class SetTransporterTollClassValidator : AbstractValidator<SetTran
         RuleFor(v => v.TollVehicleClassCode).NotEmpty().MaximumLength(20);
 
         // EXACTLY one, mirroring the table's CHECK ((transportertypeid IS NULL) <> (transporterid
-        // IS NULL)). The old "at least one" rule let a request carrying both through to Postgres,
-        // where the CHECK raised 23514 as an unhandled 500 instead of the 400 a caller can act on.
+        // IS NULL)), so a request carrying both gets a 400 rather than an unhandled 23514 from Postgres.
         // A validator that is weaker than its constraint just relocates the error.
         RuleFor(v => v)
             .Must(v => v.TransporterTypeId.HasValue ^ v.TransporterId.HasValue)

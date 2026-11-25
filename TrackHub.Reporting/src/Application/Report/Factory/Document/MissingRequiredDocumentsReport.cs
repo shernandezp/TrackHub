@@ -23,7 +23,7 @@ namespace TrackHub.Reporting.Application.Report.Factory.Document;
 // Missing-required-documents report. For each group-visible transporter, lists the
 // required document types (enabled + required) that lack an Active document. Three Manager calls total:
 // the feature gate, the document types, and one batched compliance read (owner visibility enforced
-// server-side — previously one documentsForOwner call per transporter).
+// server-side).
 public sealed class MissingRequiredDocumentsReport(IDocumentReportReader reader) : IReport
 {
     private const string OwnerTypeTransporter = "Transporter";

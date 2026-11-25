@@ -15,24 +15,18 @@
 */
 
 /**
- * Builds the rows of the "Active Assignments" table.
+ * The active set comes from `staffAssignments(staffId)`, which is unpaged and decides "active"
+ * server-side. Its VM carries no assignment row id (`resourceId` is the transporter id), so the
+ * staff's own history, paged to exhaustion, supplies the id "End Assignment" needs.
  *
- * The active set comes from `staffAssignments(staffId)` (spec 09 §7.2), which
- * is unpaged and decides "active" server-side. That VM carries no assignment row
- * id — its `resourceId` is the transporter id — so the staff's own history
- * (paged to exhaustion, and bounded because it is filtered to one staff)
- * supplies the id the "End Assignment" action needs.
- *
- * Never rebuild this from a page of history: that query is ordered
- * `StartsAt DESC`, so a long-lived assignment falls below the page boundary and
- * silently disappears from the active list.
+ * Never rebuild this from a page of history: that query is ordered `StartsAt DESC`, so a long-lived
+ * assignment falls below the page boundary and silently disappears from the active list.
  */
 
 import type { StaffActiveAssignment, StaffTransporterAssignment } from 'api/manager/staff';
 
 export interface ActiveAssignmentRow {
   key: string;
-  /** null for the synthesized default-transporter entry — there is no row to end. */
   assignmentId: string | null;
   staffName: string;
   transporterName: string;
@@ -45,9 +39,7 @@ export interface ActiveAssignmentRow {
 
 export interface ActiveAssignmentContext {
   staffName: string;
-  /** The staff's complete assignment history, used only to resolve row ids. */
   historyRows: StaffTransporterAssignment[];
-  /** Account transporters, for naming a default-transporter entry. */
   transporterNames: Map<string, string>;
 }
 
@@ -88,7 +80,7 @@ export function buildActiveAssignmentRows(
       assignmentType: assignment.assignmentType ?? null,
       createdByPrincipal: row?.createdByPrincipal ?? null,
       // No underlying row and no start instant: the synthesized
-      // default-transporter entry (spec 09 §7.2), not an assignment record.
+      // default-transporter entry, not an assignment record.
       isDefault: !row && !assignment.startsAt,
     };
   });

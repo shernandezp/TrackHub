@@ -20,18 +20,11 @@ namespace TrackHub.Security.Infrastructure.Readers;
 public sealed class PolicyReader(IApplicationDbContext context) : IPolicyReader
 {
 
-    // Get all policies
-    // param cancellationToken: A CancellationToken to observe while waiting for the task to complete.
-    // returns: A Task that represents the asynchronous operation.
     public async Task<IReadOnlyCollection<PolicyVm>> GetPoliciesAsync(CancellationToken cancellationToken)
         => await context.Policies
             .Select(p => new PolicyVm(p.PolicyId, p.Name))
             .ToListAsync(cancellationToken);
 
-    // Get all resources for a policy
-    // param policyId: The policy identifier.
-    // param cancellationToken: A CancellationToken to observe while waiting for the task to complete.
-    // returns: List of resources ans their actions for a policy.
     public async Task<PolicyResourceVm> GetResourcesAsync(int policyId, CancellationToken cancellationToken)
         => await context.Policies
             .Where(p => p.PolicyId == policyId)

@@ -15,16 +15,10 @@
 */
 
 /**
- * Edition extension point — distributions built on this codebase register
- * additional backend endpoints here; these objects stay empty in this
- * repository. Entries merge into the core endpoint maps in
- * api/core/endpoints.ts, and every key in `editionHealthEndpoints` becomes a
- * status-page tile (probed after the core services; its plain-language name and
- * description come from `edition/locales` under
- * `platformStatus.services.<key>.name` / `.description`).
- *
- * Like the core maps: eager values for GraphQL/REST endpoints, lazy getters
- * for health URLs.
+ * Edition extension point: entries merge into the core endpoint maps in api/core/endpoints.ts,
+ * and every key in `editionHealthEndpoints` becomes a status-page tile (name and description from
+ * `edition/locales` under `platformStatus.services.<key>.name` / `.description`). Eager values for
+ * GraphQL/REST endpoints, lazy getters for health URLs.
  */
 
 export const editionGraphQLEndpoints = {} as const;

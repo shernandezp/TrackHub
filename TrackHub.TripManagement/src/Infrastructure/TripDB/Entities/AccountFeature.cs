@@ -16,7 +16,7 @@
 namespace TrackHub.TripManagement.Infrastructure.TripDB.Entities;
 
 // Read-only projection of the Manager-owned app.account_features table backing this service's
-// fail-closed IFeatureFlagService (spec 11 section 15, acceptance 10).
+// fail-closed IFeatureFlagService.
 public sealed class AccountFeature
 {
     public Guid AccountFeatureId { get; set; }

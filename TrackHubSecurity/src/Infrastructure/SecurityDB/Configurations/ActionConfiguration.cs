@@ -23,10 +23,8 @@ public class ActionConfiguration : IEntityTypeConfiguration<Action>
 {
     public void Configure(EntityTypeBuilder<Action> builder)
     {
-        //Table name
         builder.ToTable(name: TableMetadata.Action, schema: SchemaMetadata.Security);
 
-        //Column names
         builder.Property(x => x.ActionId).HasColumnName("id");
         builder.Property(x => x.ActionName).HasColumnName("name");
         builder.Property(x => x.Description).HasColumnName("description");

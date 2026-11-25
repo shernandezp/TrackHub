@@ -23,17 +23,14 @@ namespace TrackHub.TripManagement.Application.Deliveries.Commands.UpdateOutcome;
 /// <summary>
 /// Records what actually happened to a delivery (delivered / partially delivered / rejected).
 /// Idempotent on <c>trip-delivery-outcome:{deliveryId:N}:{clientEventId:N}</c>: a duplicate
-/// submission returns success and writes no second row (acceptance 15) — the guarantee spec 10's
+/// submission returns success and writes no second row — the guarantee the mobile app's
 /// offline outbox depends on, which is why the key is built server-side from the caller's event id
 /// rather than trusted from the caller.
-/// <para>
-/// No <c>PrincipalTypes = "Staff"</c> here (acceptance 6); spec 10 widens the attribute additively.
-/// </para>
 /// </summary>
 [Authorize(Resource = Resources.Trips, Action = Actions.Edit)]
 [RequireFeature(FeatureKeys.TripManagement)]
 // Enforcement: the handler derives the caller's own account and passes it to the reader/writer,
-// which filters every row on it (TripVisibility is the single visibility resolver - spec 11).
+// which filters every row on it (TripVisibility is the single visibility resolver).
 [AccountScopeEnforcedInHandler]
 public readonly record struct UpdateDeliveryOutcomeCommand(
     Guid TripId,
@@ -71,7 +68,7 @@ public sealed class UpdateDeliveryOutcomeCommandHandler(
 
         var idempotencyKey = $"trip-delivery-outcome:{request.DeliveryId:N}:{request.ClientEventId:N}";
 
-        // Idempotency BEFORE the terminal guard (acceptance 15), for the same reason as POD and stop
+        // Idempotency BEFORE the terminal guard, for the same reason as POD and stop
         // progress: the trip closes behind the outcome, and a replay of an outcome the server already
         // recorded must be a success the device can retire — not a permanent error it retries forever.
         // A genuinely new outcome on a closed trip is still refused.

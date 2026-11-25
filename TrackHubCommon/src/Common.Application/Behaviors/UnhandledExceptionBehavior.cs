@@ -20,13 +20,11 @@ using Microsoft.Extensions.Logging;
 
 namespace Common.Application.Behaviors;
 
-// This class is a pipeline behavior that handles unhandled exceptions in the application.
 public class UnhandledExceptionBehavior<TRequest, TResponse>(
     ILogger<TRequest> logger,
     ICurrentPrincipal? principal = null,
     IEnumerable<IExpectedOutcomeClassifier>? classifiers = null) : IPipelineBehavior<TRequest, TResponse> where TRequest : notnull
 {
-    // This method handles the request by invoking the next behavior in the pipeline and catching any unhandled exceptions.
     public async Task<TResponse> HandleAsync(TRequest request, Func<Task<TResponse>> next, CancellationToken cancellationToken)
     {
         try

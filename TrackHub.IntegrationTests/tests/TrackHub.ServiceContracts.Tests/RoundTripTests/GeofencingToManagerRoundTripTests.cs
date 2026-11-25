@@ -32,7 +32,7 @@ namespace TrackHub.ServiceContracts.Tests.RoundTripTests;
 // The Geofencing service's REAL AlertEmitter/BackgroundJobRunRecorder push their mutations
 // through Manager's REAL resolvers. The event-type/severity/status literals travel in GraphQL
 // variables and are invisible to Layer A document validation — this round-trip asserts they
-// arrive intact in the real Manager commands (rules.md, inter-service client rules).
+// arrive intact in the real Manager commands.
 [TestFixture]
 public class GeofencingToManagerRoundTripTests
 {

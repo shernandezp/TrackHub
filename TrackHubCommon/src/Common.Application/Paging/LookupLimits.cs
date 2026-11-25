@@ -18,24 +18,18 @@ using FluentValidation.Results;
 namespace Common.Application.Paging;
 
 /// <summary>
-/// The ceiling every picker lookup shares. Lookups are deliberately unpaged — a select control that
-/// silently drops options is the defect this whole surface exists to avoid — so the reader fetches
-/// <see cref="Ceiling"/> + 1 rows and the handler raises here when the extra row comes back. A
-/// lookup that quietly capped would reintroduce exactly the silent truncation it replaced.
+/// The ceiling every picker lookup shares. Lookups are deliberately unpaged, since a select that silently
+/// drops options is a defect, so readers fetch <see cref="Ceiling"/> + 1 rows and the handler raises on overflow.
 /// </summary>
 public static class LookupLimits
 {
     /// <summary>Largest lookup a picker may bind. Fleet sizes reach ~3000, so this leaves headroom.</summary>
     public const int Ceiling = 5000;
 
-    /// <summary>Rows to request: one past the ceiling, so an over-ceiling set is detectable.</summary>
     public const int FetchSize = Ceiling + 1;
 
     public const string LimitExceededCode = "LOOKUP_LIMIT_EXCEEDED";
 
-    /// <summary>
-    /// Returns <paramref name="rows"/> unchanged when it fits the ceiling; raises otherwise.
-    /// </summary>
     public static IReadOnlyCollection<T> EnsureWithinCeiling<T>(IReadOnlyCollection<T> rows, string lookupName)
         => rows.Count <= Ceiling
             ? rows

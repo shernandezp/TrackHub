@@ -1,8 +1,3 @@
-/**
- * The signed-in shell: sidenav, navbar (help, notification bell, account menu,
- * mini toggle), the configurator drawer and the announcement banner.
- */
-
 import { expect } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import type { Translator } from '../fixtures/i18n';
@@ -23,7 +18,6 @@ export const NAV_KEYS = [
 
 export type NavKey = (typeof NAV_KEYS)[number];
 
-/** The path each sidenav entry navigates to (`routes.tsx`). */
 export const NAV_ROUTES: Record<NavKey, string> = {
   dashboard: '/dashboard',
   systemAdmin: '/systemAdmin',
@@ -59,22 +53,16 @@ export class Shell {
     return present;
   }
 
-  /** Navigates through the sidenav (a click, not a URL), then waits for the URL. */
   async navigateTo(key: NavKey): Promise<void> {
     await this.nav(key).click();
     await this.page.waitForURL(`**${NAV_ROUTES[key]}`);
   }
 
   /**
-   * Opens a screen the way a signed-in user reaches it.
-   *
-   * A URL is deliberately NOT enough. The portal holds its access token in
-   * memory only, so every document load re-runs the OAuth round trip against
-   * the stored AuthorityServer cookie — and the callback page navigates to
-   * `/dashboard` unconditionally, dropping whatever route was asked for
-   * (`layouts/authentication/callback`). Typing a deep link therefore always
-   * lands on the dashboard; the sidenav click that follows is a client-side
-   * navigation, which keeps the token and actually arrives.
+   * A URL is not enough: the token lives in memory, so every document load re-runs
+   * the OAuth round trip and the callback navigates to `/dashboard`
+   * unconditionally. The sidenav click is a client-side navigation that keeps the
+   * token and actually arrives.
    */
   async open(key: NavKey): Promise<void> {
     await this.enter();
@@ -85,11 +73,8 @@ export class Shell {
   }
 
   /**
-   * Establishes the session on the dashboard.
-   *
-   * The rendered shell is not proof of a session — `App` mounts the Sidenav
-   * before the effect that redirects an unauthenticated visitor runs, so it
-   * flashes on the way to the login page. The token exchange is the signal.
+   * The rendered shell is not proof of a session: `App` mounts the Sidenav before
+   * the redirect effect runs. The token exchange is the signal.
    */
   async enter(): Promise<void> {
     // `/status`, `/track`, `/error` and the auth interstitials render their own
@@ -116,11 +101,7 @@ export class Shell {
     this.established = true;
   }
 
-  /**
-   * Reloads and comes back to the same screen — the "did the backend really keep
-   * it?" check. The reload drops the in-memory token, so the return trip goes
-   * through the dashboard, exactly as it does for a user who refreshes.
-   */
+  /** The reload drops the in-memory token, so the return trip goes through the dashboard. */
   async reloadTo(key: NavKey): Promise<void> {
     this.established = false;
     const exchanged = tokenExchange(this.page).catch(() => null);
@@ -132,7 +113,6 @@ export class Shell {
     await this.open(key);
   }
 
-  /** The shell has painted and the sidenav is present. */
   async ready(): Promise<void> {
     await expect(this.nav('dashboard')).toBeVisible({ timeout: 60_000 });
   }
@@ -157,7 +137,7 @@ export class Shell {
     return this.page.getByRole('menuitem', { name: this.t('navbar.signOff'), exact: true });
   }
 
-  /** The floating settings button — rendered for managers only (`App.tsx`). */
+  /** Rendered for managers only. */
   get configuratorButton(): Locator {
     return this.page.getByTestId('configurator-toggle');
   }

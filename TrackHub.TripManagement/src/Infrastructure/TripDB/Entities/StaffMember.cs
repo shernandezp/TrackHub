@@ -17,7 +17,7 @@ namespace TrackHub.TripManagement.Infrastructure.TripDB.Entities;
 
 // Read-only projection of the Manager-owned app.staff_members table. Name only: the report feeds need a
 // display label, and a staff's phone or document number is deliberately NOT mapped here so it
-// cannot leak into an export or a public snapshot (spec 11 section 4, acceptance 23).
+// cannot leak into an export or a public snapshot.
 public sealed class StaffMember
 {
     public Guid StaffId { get; set; }

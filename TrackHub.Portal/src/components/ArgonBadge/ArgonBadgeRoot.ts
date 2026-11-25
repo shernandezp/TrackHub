@@ -31,7 +31,6 @@ Coded by www.creative-tim.com
 
 import type { ReactNode } from "react";
 
-// @mui material components
 import Badge from "@mui/material/Badge";
 import { styled } from "@mui/material/styles";
 
@@ -55,7 +54,6 @@ export default styled(Badge)<{ ownerState: ArgonBadgeOwnerState }>(({ theme, own
   const { borderRadius, borderWidth } = borders;
   const { pxToRem, linearGradient } = functions;
 
-  // padding values
   const paddings: Record<string, string> = {
     xs: "0.4em 0.75em",
     sm: "0.45em 0.85em",
@@ -63,13 +61,10 @@ export default styled(Badge)<{ ownerState: ArgonBadgeOwnerState }>(({ theme, own
     lg: "0.85em 1.375em",
   };
 
-  // fontSize value
   const fontSizeValue = fontSize.xs;
 
-  // border value
   const borderValue = border ? `${borderWidth[3]} solid ${white.main}` : "none";
 
-  // borderRadius value
   const borderRadiusValue = borderRadius.section;
 
   // styles for the badge with indicator={true}

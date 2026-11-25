@@ -3,11 +3,8 @@ using Common.Application.Testing;
 
 namespace TrackHub.Security.Application.UnitTests;
 
-// Tenant-scope coverage (TS-06), delegated to the shared engine in Common.Application.Testing so
-// every service enforces the identical gate (including keys WRAPPED inside request DTOs): a
-// request that resolves no AccountId but carries a wire entity key must declare
-// how its scope is enforced — [AccountScopeEnforcedInHandler] / [PlatformScoped] /
-// [AllowCrossAccount].
+// Delegated to the shared engine in Common.Application.Testing so every service enforces the
+// identical gate, including keys wrapped inside request DTOs.
 [TestFixture]
 public class AccountScopeCoverageTests
 {

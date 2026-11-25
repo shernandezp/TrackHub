@@ -1,10 +1,7 @@
 /**
- * Safety net for rows a crashed run left behind.
- *
- * Per-test cleanup is the primary mechanism (see `CleanupRegistry`); this sweep
- * is what keeps a killed run from poisoning the next one. It only ever touches
- * rows whose visible name carries the `e2e-<runId>-<n>` marker, and by default
- * only those older than an hour — a run in flight is never disturbed.
+ * Safety net for rows a crashed run left behind. Touches only rows carrying the
+ * `e2e-<runId>-<n>` marker, by default older than an hour, so a run in flight is
+ * never disturbed.
  */
 
 import { ApiClient } from './api';
@@ -42,7 +39,7 @@ export async function sweep(
 
   /* Trips first: a `Created` trip holds its unit's arming slot, and a trip that
      acquired history can be retired only by CANCEL — abort is refused from
-     `Created`, and delete is refused once events exist (spec 11b). */
+     `Created`, and delete is refused once events exist. */
   const trips = await api.tryGql<{ trips: { items: Named[] } }>(
     'tripManagement',
     'query($take: Int) { trips(query: { take: $take }) { items { tripId code status } } }',
@@ -249,9 +246,8 @@ export async function sweep(
     );
   }
 
-  // Toll stations are PLATFORM reference data (SVD-12), so a leaked one is
-  // worse than a leaked account row: it shows up in every account's catalog and
-  // is priced into every route estimate. Swept by name like everything else.
+  // Toll stations are platform reference data: a leaked one shows up in every
+  // account's catalog and is priced into every route estimate.
   const tollStations = await api.tryGql<{ tollStations: { items: Named[] } }>(
     'tripManagement',
     'query { tollStations(query: { take: 500 }) { items { tollStationId name active } } }'

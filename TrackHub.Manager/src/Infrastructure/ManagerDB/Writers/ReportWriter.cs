@@ -21,13 +21,6 @@ namespace TrackHub.Manager.Infrastructure.ManagerDB.Writers;
 
 public sealed class ReportWriter(IApplicationDbContext context, ICurrentPrincipal principal) : IReportWriter
 {
-    /// <summary>
-    /// Updates an existing report in the database with the provided data.
-    /// </summary>
-    /// <param name="reportDto">The data transfer object containing the updated report information.</param>
-    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
-    /// <returns>A task that represents the asynchronous operation.</returns>
-    /// <exception cref="NotFoundException">Thrown when the report with the specified ID is not found.</exception>
     public async Task UpdateReportAsync(UpdateReportDto reportDto, CancellationToken cancellationToken)
     {
         var report = await context.Reports.FindAsync(reportDto.ReportId, cancellationToken)

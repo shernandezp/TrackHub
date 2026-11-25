@@ -7,11 +7,8 @@ using Moq;
 namespace Common.Infrastructure.Tests;
 
 /// <summary>
-/// Pins that the named client REGISTRATION is what authenticates an inter-service call. The token
-/// used to be pushed onto the HttpClient by the factory, so any container holding a bare HttpClient
-/// still authenticated; it now comes from the registered handler, and a host that skips the
-/// registration sends every call unauthenticated — with no compile error and no local test failure.
-/// A host that builds its own container is the case to watch.
+/// Pins that the named client registration is what authenticates an inter-service call: a host that
+/// skips it sends every call unauthenticated, with no compile error and no local test failure.
 /// </summary>
 public class GraphQLServiceClientAuthTests
 {
@@ -69,11 +66,9 @@ public class GraphQLServiceClientAuthTests
     }
 
     /// <summary>
-    /// A propagating client carries the CALLER's token, so the host identity must not be attached —
-    /// doing so would silently widen a user-scoped call to a service-scoped one. Propagation itself
-    /// needs a live HTTP request, so the inert-handler half is pinned on the handler directly in
-    /// <see cref="ClientCredentialsTokenHandlerTests"/>; what this asserts is that registering a
-    /// propagating client wires propagation rather than the host identity.
+    /// A propagating client carries the caller's token, so the host identity must not be attached. The
+    /// inert-handler half is pinned in <see cref="ClientCredentialsTokenHandlerTests"/>; this asserts that
+    /// registering a propagating client wires propagation rather than the host identity.
     /// </summary>
     [Fact]
     public async Task APropagatingClientDoesNotFallBackToTheHostIdentity()

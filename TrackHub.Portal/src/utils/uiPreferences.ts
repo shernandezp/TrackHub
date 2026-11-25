@@ -15,32 +15,23 @@
 */
 
 /**
- * Last-known shell preferences (theme, sidenav, language), mirrored into localStorage.
+ * The authoritative copy lives in Manager (`userSettings`), but that read lands after the shell
+ * paints; seeding the controller from this mirror avoids a light shell flipping to dark.
  *
- * The authoritative copy lives in the Manager backend (`userSettings`), but that read
- * only lands a second or more after the shell has already painted. Seeding the Argon
- * controller from this mirror lets the first frame use the theme the user actually
- * chose, instead of showing a light shell that flips to dark once the query resolves.
- *
- * The mirror is deliberately not cleared on sign-out: on a shared browser the next
- * user briefly sees the previous user's theme before their own settings land, which is
- * exactly what every user sees today anyway, whereas clearing it would bring the flash
- * back for the far more common sign-out/sign-in-again case.
- *
- * `index.html` reads the same key inline, before the bundle loads — keep the key and
- * the `darkMode` field name in sync with that snippet.
+ * Deliberately not cleared on sign-out: clearing would bring the flash back for the common
+ * sign-out/sign-in-again case. `theme-preload.js` reads the same key before the bundle loads, so
+ * keep the key and the `darkMode` field name in sync with it.
  */
 
 const STORAGE_KEY = 'trackhub.ui-preferences';
 
-/** Shape persisted under {@link STORAGE_KEY}. */
 export interface UiPreferences {
   darkMode: boolean;
   miniSidenav: boolean;
   language?: string;
 }
 
-/** Subset of `UserSettings` the shell reads; kept loose so callers can pass partials. */
+/** Kept loose so callers can pass partials. */
 interface UserStyleSettings {
   style?: string | null;
   navbar?: string | null;
@@ -61,10 +52,7 @@ export function toUiPreferences(settings: UserStyleSettings): UiPreferences {
   };
 }
 
-/**
- * Returns the mirrored preferences, or null when nothing usable is stored — callers
- * then fall back to the light defaults rather than guessing.
- */
+/** Null when nothing usable is stored; callers fall back to the light defaults. */
 export function readUiPreferences(): UiPreferences | null {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);

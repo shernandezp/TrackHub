@@ -35,7 +35,6 @@ import type { ButtonProps } from "@mui/material/Button";
 
 type MuiButtonSize = ButtonProps["size"];
 
-// Custom styles for ArgonButton
 import ArgonButtonRoot from "components/ArgonButton/ArgonButtonRoot";
 
 export interface ArgonButtonProps extends Omit<ButtonProps, "color" | "variant" | "size"> {
@@ -51,10 +50,7 @@ export interface ArgonButtonProps extends Omit<ButtonProps, "color" | "variant" 
     | "dark";
   variant?: "text" | "contained" | "outlined" | "gradient";
   size?: "xsmall" | "small" | "medium" | "large";
-  /**
-   * react-router target, valid when `component` is a router `Link`. Declared on
-   * the control (rather than cast at each call site) per the portal's rule 13.
-   */
+  /** Valid when `component` is a router `Link`. */
   to?: string;
   circular?: boolean;
   iconOnly?: boolean;

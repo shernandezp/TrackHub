@@ -173,7 +173,7 @@ services:
       - DocumentStorage__AzureBlob__ContainerName=${DOCUMENT_AZURE_CONTAINER_NAME:-}
       - DocumentStorage__AzureBlob__ConnectionString=${DOCUMENT_AZURE_CONNECTION_STRING:-}
       - DocumentStorage__AzureBlob__SasExpiryMinutes=${DOCUMENT_AZURE_SAS_EXPIRY_MINUTES:-}
-      # Notifications (spec 05). Portal link in channel messages + delivery retention.
+      # Notifications. Portal link in channel messages + delivery retention.
       # DOMAIN is the API host in this split profile, so set PORTAL_BASE_URL explicitly to the
       # frontend origin - otherwise the {link} token points at the backend.
       - AppSettings__PortalBaseUrl=${PORTAL_BASE_URL:-https://${DOMAIN}}

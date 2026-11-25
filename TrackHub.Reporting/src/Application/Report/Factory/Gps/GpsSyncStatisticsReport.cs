@@ -34,8 +34,7 @@ public sealed class GpsSyncStatisticsReport(
             .GroupBy(r => new { Date = calendar.StartOf(calendar.DateOf(r.StartedAt)), r.OperatorId })
             .Select(g =>
             {
-                // Telemetry's OperatorSyncResult enum travels as SUCCEEDED / PARTIALLY_SUCCEEDED on the wire;
-                // the old "SUCCESS" literal matched nothing, so every run was counted as a failure.
+                // Telemetry's OperatorSyncResult enum travels as SUCCEEDED / PARTIALLY_SUCCEEDED on the wire.
                 var successes = g.Count(x =>
                     string.Equals(x.Result, "SUCCEEDED", StringComparison.OrdinalIgnoreCase)
                     || string.Equals(x.Result, "PARTIALLY_SUCCEEDED", StringComparison.OrdinalIgnoreCase));

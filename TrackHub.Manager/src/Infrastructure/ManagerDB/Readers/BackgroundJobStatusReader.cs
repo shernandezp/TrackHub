@@ -10,17 +10,10 @@ public sealed class BackgroundJobStatusReader(IApplicationDbContext context) : I
 {
     public async Task<IReadOnlyCollection<BackgroundJobStatusVm>> GetBackgroundJobStatusAsync(CancellationToken cancellationToken)
     {
-        // Deliberately two round trips instead of one grouped query.
-        //
-        // The natural single-query form — GroupBy(JobKey).Select(g => g.OrderByDescending(...).First())
-        // — is NOT reliably translatable by EF Core, and the EF InMemory provider used by the unit
-        // tests happily evaluates it client-side, so a translation failure would only ever surface
-        // against real PostgreSQL in production (the same trap rules.md documents for json columns).
-        // The key set is tiny and bounded (one row per BackgroundJobKeys entry, ~9 today), and this
-        // is an Administrator-only, uncached screen, so the extra round trips are irrelevant.
-        //
-        // Distinct() here is over a scalar string projection, not an entity, so the Postgres
-        // json-equality restriction does not apply.
+        // Deliberately two round trips instead of one grouped query: the single-query form,
+        // GroupBy(JobKey).Select(g => g.OrderByDescending(...).First()), is not reliably translatable
+        // by EF Core, and the InMemory provider used by unit tests evaluates it client-side, hiding
+        // the failure until real PostgreSQL. The key set is tiny and bounded.
         var jobKeys = await context.BackgroundJobRuns
             .Select(x => x.JobKey)
             .Distinct()

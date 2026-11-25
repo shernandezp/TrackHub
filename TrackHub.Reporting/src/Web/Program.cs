@@ -32,7 +32,6 @@ builder.Services.AddSingleton(
     builder.Configuration.GetSection("AppSettings:Reporting").Get<ReportingLimitsOptions>()
     ?? new ReportingLimitsOptions());
 
-// Add services to the container.
 builder.Services.AddApplicationServices();
 builder.Services.AddReportsContext(builder.Configuration);
 builder.Services.AddInfrastructureServices(builder.Configuration);
@@ -46,7 +45,6 @@ builder.Services.AddCors(options => options
                     .AllowAnyHeader()
                     .AllowCredentials()));
 
-// Configure HSTS
 builder.Services.AddHsts(options =>
 {
     options.MaxAge = TimeSpan.FromDays(365 * 2);
@@ -55,7 +53,6 @@ builder.Services.AddHsts(options =>
 });
 builder.Services.AddControllers();
 
-// Add HealthChecks
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();
@@ -64,10 +61,8 @@ app.UseExceptionHandler(options => { });
 
 app.UseHeaderPropagation();
 
-// Enable CORS
 app.UseCors("AllowFrontend");
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseHsts();

@@ -20,11 +20,8 @@ namespace TrackHub.Security.Application.Policies.GetAll;
 [Authorize(Resource = Resources.Permissions, Action = Actions.Read)]
 public readonly record struct GetPoliciesQuery() : IRequest<IReadOnlyCollection<PolicyVm>>;
 
-// The GetPoliciesQueryHandler is a class that implements the IRequestHandler interface to handle the GetPoliciesQuery.
 public class GetPoliciesQueryHandler(IPolicyReader reader) : IRequestHandler<GetPoliciesQuery, IReadOnlyCollection<PolicyVm>>
 {
-    // The Handle method is responsible for handling the GetPoliciesQuery and returning the result.
-    // It asynchronously calls the GetPoliciesAsync method of the IPolicyReader dependency to retrieve all policies.
     public async Task<IReadOnlyCollection<PolicyVm>> Handle(GetPoliciesQuery request, CancellationToken cancellationToken)
         => SeededCatalogLimits.EnsureWithinCeiling(await reader.GetPoliciesAsync(cancellationToken), "policies");
 

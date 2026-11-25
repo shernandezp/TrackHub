@@ -20,14 +20,12 @@ using TrackHub.TripManagement.Domain.Exceptions;
 namespace TrackHub.TripManagement.Application.UnitTests;
 
 /// <summary>
-/// Acceptance 17's second half: ETA carries <c>EtaSource = Ors</c> only while positions are fresh,
+/// ETA carries <c>EtaSource = Ors</c> only while positions are fresh,
 /// and falls back to <c>Planned</c>/<c>Unavailable</c> otherwise.
 /// <para>
-/// The gap these tests close is the dishonest one (spec 11 §18.11): before the fix, a trip whose
-/// tracker went dark was filtered out of the candidate set entirely, so its last ORS-derived
-/// <c>EtaAt</c> and <c>EtaSource = Ors</c> simply stayed on the stop. The UI had no way to know it
-/// was showing a two-hour-old guess as a live estimate. A stale candidate must therefore be
-/// asserted to MOVE to a fallback source, not merely to be left alone.
+/// A trip whose tracker went dark must not keep its last ORS-derived <c>EtaAt</c> and
+/// <c>EtaSource = Ors</c>: the UI would show a two-hour-old guess as a live estimate. A stale
+/// candidate must therefore be asserted to MOVE to a fallback source, not merely to be left alone.
 /// </para>
 /// </summary>
 [TestFixture]
@@ -48,7 +46,7 @@ public class TripEtaServiceTests
             StopId, TestFactory.AccountId, It.IsAny<DateTimeOffset?>(), EtaSources.Ors, It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    // The acceptance-17 gap. A stale position must never leave an Ors-labelled ETA standing.
+    // A stale position must never leave an Ors-labelled ETA standing.
     [Test]
     public async Task StalePosition_DowngradesTheEtaToThePlannedSchedule()
     {
@@ -109,7 +107,7 @@ public class TripEtaServiceTests
             StopId, TestFactory.AccountId, plannedTo, EtaSources.Planned, It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    // SVD-11: a stale trip stays stale for hours. Once downgraded, every later cycle must be a
+    // A stale trip stays stale for hours. Once downgraded, every later cycle must be a
     // genuine no-op, or the on-work-only recorder writes a BackgroundJobRun row every 5 minutes.
     [Test]
     public async Task AlreadyDowngradedStop_IsANoOpAndCountsNoWork()
@@ -147,8 +145,8 @@ public class TripEtaServiceTests
             StopId, TestFactory.AccountId, plannedTo, EtaSources.Planned, It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    // Defect 5: the travel time is spent starting NOW, not starting when the last fix arrived.
-    // Anchoring to a 14-minute-old position made every ETA up to 14 minutes optimistic.
+    // The travel time is spent starting NOW, not starting when the last fix arrived.
+    // Anchoring to a 14-minute-old position would make every ETA up to 14 minutes optimistic.
     [Test]
     public async Task Eta_IsAnchoredToNowNotToThePositionTimestamp()
     {
@@ -171,7 +169,7 @@ public class TripEtaServiceTests
         Assert.That(written!.Value, Is.GreaterThan(positionAt.AddSeconds(600).AddMinutes(10)));
     }
 
-    // Defect 4: without a lower bound, the first cycle after a deployment reminds about every
+    // Without a lower bound, the first cycle after a deployment reminds about every
     // historical trip that was created and never started.
     [Test]
     public async Task ScheduleReminder_QueriesABoundedWindowAroundNow()
@@ -193,7 +191,6 @@ public class TripEtaServiceTests
         Assert.That(dueBefore - dueAfter, Is.LessThan(TimeSpan.FromHours(3)));
     }
 
-    // ----- TripDelayed: once per stop, stamped only after a successful emission -----------------
 
     [Test]
     public async Task Delay_IsRaisedAndStampedWhenTheEtaPassesTheThreshold()
@@ -265,8 +262,6 @@ public class TripEtaServiceTests
             TripEventTypes.TripDelayed, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<TripAlertDto>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
-    // ----- DelayThresholdMinutes: both sides of the boundary -------------------------------------
-    //
     // The harness mocks a 600s ORS duration, so the computed ETA is always "now + 10 minutes".
     // With a threshold of T minutes the alert fires exactly when planned + T < now + 10, which lets
     // each case sit one minute either side of the line instead of hours away from it. Far-from-the-
@@ -363,7 +358,6 @@ public class TripEtaServiceTests
             TripEventTypes.TripDelayed, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<TripAlertDto>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
-    // ----- TripStartDue: check the key, emit, THEN append ---------------------------------------
 
     [Test]
     public async Task StartReminder_IsRaisedOnceAndRecordedInTheEventLog()
@@ -385,7 +379,7 @@ public class TripEtaServiceTests
     [Test]
     public async Task StartReminder_NeverChangesTheTripStatus()
     {
-        // Spec 11 §10, spelled out because it is the tempting shortcut: auto-starting a trip nobody
+        // Spelled out because it is the tempting shortcut: auto-starting a trip nobody
         // began would stamp an ActualStartAt and a distance baseline for a vehicle that has not
         // moved, and every report downstream inherits the fiction. A reminder is a nudge to a
         // human. The service touches ONLY the alert channel and the event log.
@@ -421,9 +415,9 @@ public class TripEtaServiceTests
     [Test]
     public async Task StartReminder_WhenTheEmitterFails_TheKeyIsNotBurnedSoTheNextCycleRetries()
     {
-        // The ordering fix, verbatim: CHECK the key, EMIT, then APPEND. Appending first burned the
-        // key before the emission was known to have succeeded, so a transient Manager failure meant
-        // the reminder was never retried and the account got it ZERO times rather than once.
+        // CHECK the key, EMIT, then APPEND. Appending first would burn the
+        // key before the emission was known to have succeeded, so a transient Manager failure would mean
+        // the reminder is never retried and the account gets it ZERO times rather than once.
         var harness = new EtaHarness();
         harness.WithTripDueToStart(TestFactory.Trip(TripStatuses.Created));
         harness.AlertEmitter

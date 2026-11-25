@@ -14,12 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Operator health / sync-run API (Telemetry backend): plain typed async
- * functions. Failures THROW ApiError — fallbacks and toasts belong to the
- * caller layer (src/queries).
- */
-
 import { executeGraphQL } from 'api/core/graphqlClient';
 import type { RequestOptions } from 'api/core/errors';
 import type {

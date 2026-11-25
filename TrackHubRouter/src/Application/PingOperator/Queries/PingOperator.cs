@@ -34,7 +34,6 @@ namespace TrackHub.Router.Application.PingOperator.Queries;
 [AccountScopeEnforcedInHandler]
 public readonly record struct PingOperatorQuery(Guid OperatorId) : IRequest<bool>;
 
-// This class handles the PingOperatorQuery and implements the IRequestHandler interface
 public class PingOperatorQueryHandler(
     IConfiguration configuration,
     IOperatorReader operatorReader,
@@ -45,10 +44,8 @@ public class PingOperatorQueryHandler(
     ILogger<PingOperatorQueryHandler> logger)
     : IRequestHandler<PingOperatorQuery, bool>
 {
-    // This property retrieves the EncryptionKey from the configuration
     private string? EncryptionKey { get; } = configuration["AppSettings:EncryptionKey"];
 
-    // This method handles the PingOperatorQuery and returns a boolean indicating the success of the operation
     public async Task<bool> Handle(PingOperatorQuery request, CancellationToken cancellationToken)
     {
         // Resolve under the caller's identity first: Manager applies the caller's account scope and
@@ -64,7 +61,6 @@ public class PingOperatorQueryHandler(
         return await PingAsync(@operator, cancellationToken);
     }
 
-    // This method pings the operator by testing the connectivity
     private async Task<bool> PingAsync(
         OperatorVm @operator,
         CancellationToken cancellationToken)
@@ -73,9 +69,7 @@ public class PingOperatorQueryHandler(
         // fail with the client-facing provider-limitation error before touching the registry.
         capabilityCatalog.EnsureSupports((ProtocolType)@operator.ProtocolTypeId, ProviderCapability.ConnectivityPing);
 
-        // Get the connectivity tester based on the protocol type of the operator
         var reader = connectivityRegistry.GetTester((ProtocolType)@operator.ProtocolTypeId);
-        // Test the connectivity asynchronously
         return await TestConnectivityAsync(reader, @operator, cancellationToken);
     }
 
@@ -88,7 +82,6 @@ public class PingOperatorQueryHandler(
         OperatorVm @operator,
         CancellationToken cancellationToken)
     {
-        // Ensure that the EncryptionKey is not null, otherwise throw an exception
         Guard.Against.Null(EncryptionKey, message: "Credential key not found.");
         if (@operator.Credential is null)
         {

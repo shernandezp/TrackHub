@@ -28,7 +28,6 @@ interface DeliveryOutcomeDialogProps {
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
   handleSubmit: () => void | Promise<void>;
-  /** Delivery being closed out — client + reference, for confirmation. */
   deliveryLabel: string;
   status: DeliveryStatus;
   onStatusChange: (status: DeliveryStatus) => void;
@@ -37,9 +36,8 @@ interface DeliveryOutcomeDialogProps {
 }
 
 /**
- * Delivery outcome. The command is idempotent on a `clientEventId` the caller
- * holds for the whole attempt, so pressing save again after a failure updates
- * the same record instead of recording a second outcome (spec 11 §7.3, §9).
+ * Idempotent on a `clientEventId` held for the whole attempt, so saving again after a failure
+ * updates the same record instead of recording a second outcome.
  */
 function DeliveryOutcomeDialog({
   open,

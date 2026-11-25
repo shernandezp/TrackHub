@@ -20,41 +20,27 @@ using System.Resources;
 namespace Common.Domain.Localization;
 
 /// <summary>
-/// Shared server-side localization primitive over .resx resources (localized strings never live
-/// in code or the database — they belong in resources).
-///
-/// Two lookup modes:
-/// <list type="bullet">
-/// <item><see cref="GetString(string)"/> — ambient <see cref="CultureInfo.CurrentCulture"/>, for
-/// request-scoped surfaces where <c>UseRequestLocalization</c> has set the culture (e.g. the
-/// AuthorityServer login/validation messages).</item>
-/// <item><see cref="GetString(string, string?)"/> — explicit locale per call, for per-recipient
-/// rendering and background jobs that have no ambient request culture (e.g. notification
-/// dispatch).</item>
-/// </list>
-/// Both fall back to the neutral resource and finally to an empty string, never throwing for a
-/// missing translation.
+/// Shared server-side localization over .resx resources. Both lookups fall back to the neutral resource
+/// and finally to an empty string, never throwing for a missing translation.
 /// </summary>
 public sealed class ResourceLocalizer(string baseName, Assembly assembly)
 {
     private readonly ResourceManager _resources = new(baseName, assembly);
 
-    /// <summary>Resolves <paramref name="key"/> for the ambient request culture.</summary>
     public string GetString(string key)
         => _resources.GetString(key, CultureInfo.CurrentCulture)
             ?? _resources.GetString(key, CultureInfo.InvariantCulture)
             ?? string.Empty;
 
-    /// <summary>Resolves <paramref name="key"/> for an explicit locale (e.g. the recipient's).</summary>
+    /// <summary>For an explicit locale, e.g. a recipient's, where there is no ambient request culture.</summary>
     public string GetString(string key, string? locale)
         => _resources.GetString(key, ResolveCulture(locale))
             ?? _resources.GetString(key, CultureInfo.InvariantCulture)
             ?? string.Empty;
 
     /// <summary>
-    /// Normalizes a stored language preference ("es", "es-CO", "EN_us", …) to its two-letter
-    /// lowercase code; null when empty or unusable. Callers validate the result against their own
-    /// supported set.
+    /// Normalizes a stored language preference ("es", "es-CO", "EN_us") to its two-letter lowercase code;
+    /// null when empty or unusable.
     /// </summary>
     public static string? NormalizeLanguage(string? language)
     {

@@ -40,7 +40,7 @@ public sealed class DocumentRetentionStore(IApplicationDbContext context) : IDoc
             .Take(batchSize)
             .ToListAsync(cancellationToken);
 
-    // Placeholder for spec 24's legal-hold model; no holds exist yet, so nothing is withheld.
+    // No legal-hold model exists yet, so nothing is withheld.
     public Task<bool> HasLegalHoldAsync(Guid documentId, CancellationToken cancellationToken)
         => Task.FromResult(false);
 

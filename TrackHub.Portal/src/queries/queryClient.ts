@@ -17,11 +17,7 @@
 import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query';
 import { isTransportFailure, notifyApiError } from 'api/core/errors';
 
-/**
- * Shared query client. Errors thrown by the api layer surface here and are
- * routed to the global notification toast — components read loading/error
- * state from the hooks instead of wrapping calls in try/catch.
- */
+/** Api-layer errors surface here and are routed to the global toast. */
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     // `meta: { silent: true }` opts a query out of the global toast. Used by surfaces that

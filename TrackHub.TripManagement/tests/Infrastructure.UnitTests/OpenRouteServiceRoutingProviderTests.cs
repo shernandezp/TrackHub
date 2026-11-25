@@ -32,10 +32,9 @@ namespace Infrastructure.UnitTests;
 /// <b>Why this fixture exists:</b> <c>PlanTripRouteCommandHandler</c> catches ONLY
 /// <see cref="RoutingUnavailableException"/>. Every other exception escapes to the GraphQL layer as
 /// an unhandled 500 and the trip is left with no route plan at all instead of a <c>Failed</c> one,
-/// which is precisely what acceptance 18 forbids. "Nothing else escapes the adapter" was therefore
-/// the entire basis of that acceptance and was asserted nowhere: a raw <see cref="JsonException"/>
+/// so nothing else may escape the adapter: a raw <see cref="JsonException"/>
 /// from a truncated body, a socket failure or a <see cref="TaskCanceledException"/> from the client
-/// timeout would each have shipped as a 500.
+/// timeout would each ship as a 500.
 /// </para>
 /// <para>
 /// The other half is the wire contract. ORS speaks <b>lon,lat</b> and everything above this adapter
@@ -74,7 +73,6 @@ public class OpenRouteServiceRoutingProviderTests
     }
     """;
 
-    // ----- The wire contract -------------------------------------------------------------------
 
     [Test]
     public async Task GetRoute_ParsesTheGeoJsonAndFlipsOrsLonLatBackToLatLng()
@@ -169,7 +167,6 @@ public class OpenRouteServiceRoutingProviderTests
         });
     }
 
-    // ----- Configuration -----------------------------------------------------------------------
 
     [Test]
     public async Task GetRoute_WithoutAnApiKey_FailsWithRoutingNotConfiguredBeforeAnyCall()
@@ -213,7 +210,6 @@ public class OpenRouteServiceRoutingProviderTests
         });
     }
 
-    // ----- Waypoint bounds ---------------------------------------------------------------------
 
     [Test]
     public async Task GetRoute_AboveMaxWaypoints_IsRejectedBeforeAnyCallGoesOut()
@@ -261,7 +257,6 @@ public class OpenRouteServiceRoutingProviderTests
         });
     }
 
-    // ----- Failure containment: acceptance 18 --------------------------------------------------
 
     [Test]
     public async Task GetRoute_OnAClientTimeout_SurfacesRoutingUnavailableRatherThanTaskCanceled()
@@ -323,7 +318,6 @@ public class OpenRouteServiceRoutingProviderTests
         Assert.That(ex!.ErrorCode, Is.EqualTo(TripErrorCodes.RoutingUnavailable));
     }
 
-    // ----- The bounded retry -------------------------------------------------------------------
 
     [Test]
     public async Task GetRoute_RetriesARateLimitAndSucceedsOnALaterAttempt()
@@ -378,7 +372,6 @@ public class OpenRouteServiceRoutingProviderTests
         Assert.That(stub.CallCount, Is.EqualTo(1));
     }
 
-    // ----- Malformed and unusable payloads -----------------------------------------------------
 
     [Test]
     public async Task GetRoute_OnAMalformedBody_DoesNotLeakARawJsonException()
@@ -467,7 +460,6 @@ public class OpenRouteServiceRoutingProviderTests
         });
     }
 
-    // ----- Fixture plumbing --------------------------------------------------------------------
 
     private static HttpResponseMessage Ok(string body)
         => new(HttpStatusCode.OK) { Content = new StringContent(body, Encoding.UTF8, "application/json") };

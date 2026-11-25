@@ -66,8 +66,8 @@ const TableBody = ({
       {sortedRows
         .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
         .map((row, rowIndex) => {
-          // Stable keys: a fresh uuid per render made React unmount and rebuild every cell on every
-          // refresh, destroying focus, selection and hover in the process.
+          // Stable keys: a fresh key per render makes React rebuild every cell on every refresh, destroying
+          // focus, selection and hover.
           const rowKey = row.id ?? `row-${page * rowsPerPage + rowIndex}`;
           const selectedValue = extractValue(row[selectedField]);
 

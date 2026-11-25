@@ -4,8 +4,7 @@ namespace TrackHub.Telemetry.Domain.Interfaces;
 
 /// <summary>
 /// Deliberately platform-scoped (unscoped) read — it does NOT go through
-/// <c>AccountScopedDataAccess</c>. Access is gated upstream by
-/// <c>[Authorize(Administrative, Read)]</c>, which only the Administrator role holds.
+/// <c>AccountScopedDataAccess</c>; access is gated upstream by <c>[Authorize(OperatorSyncRuns, Read)]</c>.
 /// </summary>
 public interface IPlatformSyncActivityReader
 {

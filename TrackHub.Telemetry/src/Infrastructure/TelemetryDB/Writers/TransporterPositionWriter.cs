@@ -23,12 +23,6 @@ public sealed class TransporterPositionWriter(IApplicationDbContext context, ICu
     : AccountScopedDataAccess(context, principal), ITransporterPositionWriter
 {
 
-    /// <summary>
-    /// Bulk insert transporter positions
-    /// </summary>
-    /// <param name="positionsDto"></param>
-    /// <param name="cancellationToken">Task</param>
-    /// <returns></returns>
     public async Task BulkTransporterPositionAsync(IEnumerable<TransporterPositionDto> positionsDto, CancellationToken cancellationToken)
     {
         var incoming = positionsDto.ToList();
@@ -96,13 +90,6 @@ public sealed class TransporterPositionWriter(IApplicationDbContext context, ICu
         await Context.SaveChangesAsync(cancellationToken);
     }
 
-    /// <summary>
-    /// UpdateTransporterPositionAsync method is used to update the existing TransporterPosition in the database
-    /// </summary>
-    /// <param name="positionDto"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>Task</returns>
-    /// <exception cref="NotFoundException">if the transporter position is not found</exception>
     public async Task UpdateTransporterPositionAsync(TransporterPositionDto positionDto, CancellationToken cancellationToken)
     {
         var position = await Context.TransporterPositions
@@ -160,12 +147,6 @@ public sealed class TransporterPositionWriter(IApplicationDbContext context, ICu
             attributes.Value.Temperature,
             attributes.Value.Extra);
 
-    /// <summary>
-    /// This method will delete an existing TransporterPosition in the database
-    /// </summary>
-    /// <param name="transporterId">The TransporterPosition identifier</param>
-    /// <param name="cancellationToken">The cancellation token</param>
-    /// <returns></returns>
     public async Task DeleteTransporterPositionAsync(Guid transporterId, CancellationToken cancellationToken)
     {
         var position = await Context.TransporterPositions

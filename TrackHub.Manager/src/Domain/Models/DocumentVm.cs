@@ -1,7 +1,7 @@
 namespace TrackHub.Manager.Domain.Models;
 
-// StorageProvider is dropped from the general VM (redaction); StorageKey is
-// never exposed. DownloadUrl is populated only after authorization + ScanStatus == Clean, else null.
+// StorageProvider and StorageKey are never exposed. DownloadUrl is populated only after
+// authorization + ScanStatus == Clean, else null.
 public readonly record struct DocumentVm(
     Guid DocumentId,
     Guid AccountId,

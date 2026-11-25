@@ -21,17 +21,11 @@ using TrackHub.Router.Domain.Helpers;
 
 namespace TrackHub.Router.Infrastructure.Samsara;
 
-/// <summary>
-/// Reader for retrieving position information from Samsara API.
-/// </summary>
 public sealed class PositionReader(
     ICredentialHttpClientFactory httpClientFactory,
     IHttpClientService httpClientService)
     : SamsaraReaderBase(httpClientFactory, httpClientService), IPositionReader
 {
-    /// <summary>
-    /// Retrieves the last position of a single device asynchronously.
-    /// </summary>
     public async Task<PositionVm> GetDevicePositionAsync(DeviceTransporterVm deviceDto, CancellationToken cancellationToken)
     {
         var url = $"fleet/vehicles/stats?vehicleIds={deviceDto.Serial}&types=gps";
@@ -43,9 +37,6 @@ public sealed class PositionReader(
             : vehicle.Value.MapToPositionVm(deviceDto);
     }
 
-    /// <summary>
-    /// Retrieves the last positions of multiple devices asynchronously.
-    /// </summary>
     public async Task<IEnumerable<PositionVm>> GetDevicePositionAsync(IEnumerable<DeviceTransporterVm> devices, CancellationToken cancellationToken)
     {
         var devicesDictionary = devices.ToDeviceLookup(device => device.Serial);
@@ -60,7 +51,6 @@ public sealed class PositionReader(
     }
 
     /// <summary>
-    /// Retrieves the positions of a device within a specified time range asynchronously.
     /// Uses /fleet/vehicles/stats/history endpoint.
     /// </summary>
     public async Task<IEnumerable<PositionVm>> GetPositionAsync(DateTimeOffset from, DateTimeOffset to, DeviceTransporterVm deviceDto, CancellationToken cancellationToken)

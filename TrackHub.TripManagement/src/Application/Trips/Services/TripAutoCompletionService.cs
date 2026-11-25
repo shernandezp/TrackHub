@@ -20,9 +20,9 @@ using TrackHub.TripManagement.Application.Trips.Services.Interfaces;
 namespace TrackHub.TripManagement.Application.Trips.Services;
 
 /// <summary>
-/// Auto-completion (spec 11a §5.2). It goes through the SAME writer funnel and the SAME idempotency
+/// Auto-completion. It goes through the SAME writer funnel and the SAME idempotency
 /// key as a dispatcher's Complete, so the two can race and exactly one closes the trip — automation
-/// gets no private back door into the transition matrix (acceptance 11).
+/// gets no private back door into the transition matrix.
 /// </summary>
 public sealed class TripAutoCompletionService(
     IAccountFeatureReader accountFeatureReader,
@@ -182,11 +182,9 @@ public sealed class TripAutoCompletionService(
         // the departure back. This branch's whole claim — "it parked here and will never depart" —
         // is contradicted by evidence we are holding in this very fix, so the departure wins.
         //
-        // Without this the two rules RACE, and the dwell rule wins every time the dwell outruns
-        // `finalStopCompletionMinutes` — which an ordinary 45-minute unload does. The trip closed
-        // mid-unload, stamped ActualEndAt with the ARRIVAL instant, and then dropped out of the
-        // working set, so the real departure was never recorded at all: every such trip lost its
-        // entire final dwell and under-reported its own duration.
+        // Otherwise the two rules RACE, and the dwell rule wins whenever the dwell outruns
+        // `finalStopCompletionMinutes` (an ordinary 45-minute unload): the trip would close mid-unload
+        // with the ARRIVAL instant and the real departure would never be recorded.
         if (final.OutsideSinceAt is not null)
         {
             return (null, false);

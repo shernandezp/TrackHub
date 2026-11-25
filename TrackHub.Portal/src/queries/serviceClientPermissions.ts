@@ -14,13 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Service-client-permission query/mutation hooks (Security backend).
- * Components consume these — not the api layer directly. Loading/error state
- * comes from the hooks; failures also surface in the global toast via the
- * query client's error handlers.
- */
-
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from 'api/security/serviceClientPermissions';
 import type { ServiceClientPermissionDtoInput } from 'api/security/serviceClientPermissions';

@@ -1,7 +1,5 @@
 namespace TrackHub.Manager.Application.AccountSupportGrants.Commands;
 
-// Write twin of the already-cross-account AccountSupportGrantQueries. The account is nested in
-// AccountSupportGrantDto, so this side went unpoliced until TrackHubCommon 1.0.7.
 [Authorize(Resource = Resources.SupportGrants, Action = Actions.Write)]
 [AllowCrossAccount("Platform support administration console (portal systemadmin): a support grant authorises a platform operator to enter a CUSTOMER's account, so the target account is by definition not the grantor's own. Gated by the SupportGrants/Write platform permission.")]
 public readonly record struct CreateAccountSupportGrantCommand(AccountSupportGrantDto AccountSupportGrant) : IRequest<AccountSupportGrantVm>;

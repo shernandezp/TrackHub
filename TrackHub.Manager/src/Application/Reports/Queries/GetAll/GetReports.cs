@@ -19,7 +19,6 @@ public readonly record struct GetReportsQuery() : IRequest<IReadOnlyCollection<R
 
 public class GetReportsQueryHandler(IReportReader reader) : IRequestHandler<GetReportsQuery, IReadOnlyCollection<ReportVm>>
 {
-    // This method handles the GetReportsQuery by retrieving the reports from the reader asynchronously
     public async Task<IReadOnlyCollection<ReportVm>> Handle(GetReportsQuery request, CancellationToken cancellationToken)
         => await reader.GetReportsAsync(cancellationToken);
 

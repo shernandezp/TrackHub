@@ -15,13 +15,13 @@
 */
 
 const TRIP_COLORS = [
-    '#1f77b4', // Blue
-    '#ff7f0e', // Orange
-    '#2ca02c', // Green
-    '#9467bd', // Purple
-    '#8c564b', // Brown
-    '#e377c2', // Pink
-    '#17becf'  // Cyan
+    '#1f77b4',
+    '#ff7f0e',
+    '#2ca02c',
+    '#9467bd',
+    '#8c564b',
+    '#e377c2',
+    '#17becf'
 ];
 
 /**

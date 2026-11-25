@@ -17,7 +17,7 @@ namespace TrackHub.TripManagement.Domain.Interfaces;
 
 /// <summary>
 /// Records job runs through Manager under <c>trip_client</c>. Both trip jobs are
-/// <b>on-work-only</b> recorders (SVD-11): they write a row when they actually refreshed an ETA
+/// <b>on-work-only</b> recorders: they write a row when they actually refreshed an ETA
 /// or raised a reminder, never once per cycle. An old row for these keys is the healthy steady
 /// state and <c>/status</c> must render it neutrally.
 /// </summary>

@@ -19,17 +19,9 @@ using Common.Application.Interfaces;
 namespace Common.Infrastructure;
 
 /// <summary>
-/// Attaches the host's client-credentials token to an outbound inter-service request.
-/// <para>
-/// It runs PER REQUEST rather than per client. Attaching the token when the client was built meant
-/// blocking network I/O inside a constructor — so resolving a reader from the container performed an
-/// HTTP call, and any client held longer than one token lifetime went on presenting an expired one.
-/// </para>
-/// <para>
-/// An <c>Authorization</c> header already on the request is never replaced: on a header-propagating
-/// client that header is the CALLER's token, and overwriting it would silently turn a user-scoped
-/// call into a service-scoped one.
-/// </para>
+/// Attaches the host's client-credentials token per request, never at client construction. An existing
+/// <c>Authorization</c> header is the caller's token and is never replaced, or a user-scoped call would
+/// silently become service-scoped.
 /// </summary>
 public sealed class ClientCredentialsTokenHandler(
     IClientCredentialsTokenProvider tokens,

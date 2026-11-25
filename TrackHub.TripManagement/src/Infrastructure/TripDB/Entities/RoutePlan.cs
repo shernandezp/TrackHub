@@ -21,7 +21,7 @@ namespace TrackHub.TripManagement.Infrastructure.TripDB.Entities;
 /// <summary>
 /// A planned route plus the toll estimate computed over it. A provider failure is stored as a
 /// Failed plan carrying an error code - geometry is therefore nullable, because a failed plan has
-/// none and the trip must stay fully usable regardless (spec 11 section 7.3, acceptance 18).
+/// none and the trip must stay fully usable regardless.
 /// </summary>
 public sealed class RoutePlan : BaseAuditableEntity
 {

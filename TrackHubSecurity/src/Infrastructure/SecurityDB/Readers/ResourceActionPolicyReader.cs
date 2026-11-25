@@ -17,10 +17,8 @@ using TrackHub.Security.Infrastructure.Interfaces;
 
 namespace TrackHub.Security.Infrastructure.Readers;
 
-// This class represents a reader for resource action policies in the security database.
 public sealed class ResourceActionPolicyReader(IApplicationDbContext context) : IResourceActionPolicyReader
 {
-    // Retrieves the names of policies associated with a specific resource and action.
     public async Task<IReadOnlyCollection<string>> GetResourceActionPoliciesAsync(string resource, string action, CancellationToken cancellationToken)
         => await context.ResourceActionPolicy
         .Include(rap => rap.Policy)
@@ -32,7 +30,6 @@ public sealed class ResourceActionPolicyReader(IApplicationDbContext context) : 
         .Select(rap => rap.Policy.Name)
         .ToListAsync(cancellationToken);
 
-    // Retrieves the authorized actions for a collection of policies.
     public async Task<IReadOnlyCollection<ResourceActionVm>> GetPolicyAuthorizedActionsAsync(IReadOnlyCollection<int> policies, CancellationToken cancellationToken)
         => await context.ResourceActionPolicy
             .Include(rap => rap.ResourceAction)

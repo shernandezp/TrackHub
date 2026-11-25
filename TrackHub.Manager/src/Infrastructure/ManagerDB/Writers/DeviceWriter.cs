@@ -9,15 +9,9 @@ namespace TrackHub.Manager.Infrastructure.ManagerDB.Writers;
 public sealed class DeviceWriter(IApplicationDbContext context, ICurrentPrincipal principal, IOperatorCatalogGate catalogGate)
     : AccountScopedDataAccess(context, principal), IDeviceWriter
 {
-    /// <summary>
-    /// Upserts a whole provider catalog in ONE unit of work: the operator is validated once, the
-    /// operator's devices are loaded once, every row is mutated in memory, and a single summary
-    /// audit event is written. Per-device it issued an operator lookup, a device lookup, an audit
-    /// row and its own SaveChangesAsync — roughly 3 000 round trips and 2 000 audit rows for a
-    /// 1 000-device operator, with no rollback if it failed half way.
-    /// </summary>
-    // One save for the whole catalog: upserts, revivals, and retirements of devices the provider no
-    // longer lists (their active assignments end here, so the transporter keeps its id and history).
+    // One unit of work and one summary audit event for the whole catalog: upserts, revivals, and
+    // retirements of devices the provider no longer lists (their active assignments end here, so the
+    // transporter keeps its id and history).
     public Task<DeviceReconciliationVm> ReconcileSynchronizedDevicesAsync(
         Guid operatorId, IReadOnlyCollection<DeviceDto> devices, bool resetDeviceCatalog, CancellationToken cancellationToken)
         => catalogGate.RunAsync(operatorId, () => ReconcileAsync(operatorId, devices, resetDeviceCatalog, cancellationToken), cancellationToken);

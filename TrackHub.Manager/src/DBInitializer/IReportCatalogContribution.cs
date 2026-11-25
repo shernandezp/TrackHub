@@ -16,18 +16,12 @@
 namespace DBInitializer;
 
 /// <summary>
-/// One module's slice of the governed report catalog. The initializer discovers every
-/// implementation in this assembly and upserts the aggregate (per-code, idempotent), so a
-/// feature module ships its report rows from its own file instead of growing a central
-/// array. Implementations must have a public parameterless constructor.
+/// One module's slice of the report catalog, discovered by reflection: implementations must have a
+/// public parameterless constructor.
 /// </summary>
 internal interface IReportCatalogContribution
 {
-    /// <summary>
-    /// Report rows with their governance metadata: category grouping, RequiredFeatureKey
-    /// gating (null = global), ManagerOnly role gating, SupportsPdf format support and the
-    /// report's filter definitions (seeded as JSON; drives the portal's filter form).
-    /// </summary>
+    /// <summary>A null RequiredFeatureKey means the report is global.</summary>
     IReadOnlyList<(string Code, string Description, string Category, string? RequiredFeatureKey, bool ManagerOnly, bool SupportsPdf, int SortOrder, IReadOnlyList<ReportFilterDefinition> Filters)> Reports { get; }
 
     /// <summary>

@@ -19,11 +19,8 @@ using Microsoft.Extensions.DependencyInjection;
 namespace Common.Application.Interfaces;
 
 /// <summary>
-/// A self-registering feature module. Implementations bundle every registration a feature
-/// area needs (readers/writers, hosted services, clients, contexts) so composition roots
-/// stay untouched as modules are added: <c>AddDiscoveredModules</c> finds all
-/// implementations in an assembly and invokes them. Implementations must have a public
-/// parameterless constructor.
+/// A self-registering feature module found by <c>AddDiscoveredModules</c>, so composition roots stay
+/// untouched as modules are added. Implementations need a public parameterless constructor.
 /// </summary>
 public interface IServiceModule
 {

@@ -21,10 +21,9 @@ using TrackHub.Manager.Domain.Interfaces;
 namespace Application.UnitTests.PublicLinks;
 
 /// <summary>
-/// Handler/validator/authorization contract for the shared public-link resolution command
-/// (spec 11 §7.8/§18.10). The resolution semantics themselves — access counting and the single
-/// <c>PublicLinkAccessed</c> audit row — are pinned in <c>Infrastructure.UnitTests</c>, where a real
-/// DbContext can observe them.
+/// Handler/validator/authorization contract for the shared public-link resolution command.
+/// The resolution semantics themselves — access counting and the single <c>PublicLinkAccessed</c>
+/// audit row — are pinned in <c>Infrastructure.UnitTests</c>, where a real DbContext can observe them.
 /// </summary>
 [TestFixture]
 public class ResolvePublicLinkGrantTests

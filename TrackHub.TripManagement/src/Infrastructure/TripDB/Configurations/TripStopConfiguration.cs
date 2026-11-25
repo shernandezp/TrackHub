@@ -33,7 +33,7 @@ public sealed class TripStopConfiguration : IEntityTypeConfiguration<TripStop>
         builder.Property(x => x.Address).HasColumnName("address").HasMaxLength(ColumnMetadata.DefaultDescriptionLength);
 
         // Deliberately a separate, shorter column from `address`: this is the only locality label
-        // the public snapshot may expose (§7.8), so it must not be able to hold a street address.
+        // the public snapshot may expose, so it must not be able to hold a street address.
         builder.Property(x => x.City).HasColumnName("city").HasMaxLength(ColumnMetadata.DefaultNameLength);
         builder.Property(x => x.Point).HasColumnName("point").HasColumnType("geometry (Point, 4326)").IsRequired();
         builder.Property(x => x.GeofenceId).HasColumnName("geofenceid");

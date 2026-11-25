@@ -14,12 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Group GraphQL documents (Manager backend). Codegen validates these against
- * schemas/manager.graphql and emits typed document nodes — values always travel
- * as variables, never string interpolation.
- */
-
 import { graphql } from './generated';
 
 export const GroupItemFragment = graphql(`
@@ -44,7 +38,7 @@ export const GetGroupsDocument = graphql(`
   }
 `);
 
-/** Id + display name only: the picker/name-map projection, unpaged by design. */
+/** Unpaged by design: the picker/name-map projection. */
 export const GetGroupLookupDocument = graphql(`
   query GetGroupLookup {
     groupLookup {

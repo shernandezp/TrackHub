@@ -46,9 +46,9 @@ public class UpdateTransporterCommandHandler(IAccountReader reader,
             return true;
         }
 
-        // Accounts are processed concurrently (no head-of-line blocking — one slow account no longer
-        // stalls the rest), but every operator fan-out draws from a single shared gate so the total
-        // in-flight provider syncs stay bounded fleet-wide (router-audit A-11).
+        // Accounts are processed concurrently so one slow account cannot stall the rest, but every
+        // operator fan-out draws from a single shared gate so the total in-flight provider syncs stay
+        // bounded fleet-wide.
         using var gate = new SemaphoreSlim(_maxConcurrentOperatorSyncs);
         await Task.WhenAll(dueAccounts.Select(account => ProcessAccountAsync(account, gate, cancellationToken)));
         return true;
@@ -98,7 +98,7 @@ public class UpdateTransporterCommandHandler(IAccountReader reader,
                 {
                     // Isolate per-operator failures: one operator (e.g. bad credentials, an
                     // unregistered protocol) must not abort the account's fan-out nor skip the
-                    // interval update below (router-audit A-05).
+                    // interval update below.
                     logger.LogError(ex, "Position sync failed for operator {OperatorId} (account {AccountId}).",
                         @operator.OperatorId, account.AccountId);
                 }

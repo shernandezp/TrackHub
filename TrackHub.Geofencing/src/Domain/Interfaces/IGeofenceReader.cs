@@ -50,10 +50,8 @@ public interface IGeofenceReader
         CancellationToken cancellationToken);
 
     /// <summary>
-    /// Containment for a WHOLE batch of points, as a map from the point's index in the input to the
-    /// geofences containing it. One round trip for the batch: asking per point issued a ST_Contains
-    /// query each, so a 10 000-position sync cycle became 10 000 round trips and stalled the Router
-    /// behind geofencing.
+    /// Containment for a WHOLE batch of points in one round trip, as a map from the point's index
+    /// in the input to the geofences containing it.
     /// </summary>
     Task<IReadOnlyDictionary<int, IReadOnlyCollection<Guid>>> GetGeofenceIdsContainingPointsAsync(
         Guid accountId,

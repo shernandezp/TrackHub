@@ -16,18 +16,9 @@
 namespace TrackHub.TripManagement.Application.Common;
 
 /// <summary>
-/// The default <see cref="IServiceOrderValidator"/>: accepts any reference, because spec 12 owns
-/// service orders and there is no store in this module to consult. Inventing a cross-service call
-/// here was rejected — spec 12 has not defined the contract, and TripManagement must not grow a
-/// dependency on a module that does not exist yet.
-/// <para>
-/// <b>This is a deliberate, bounded permissiveness, not an oversight.</b> It is safe only because
-/// the call sites are already correct: <c>CreateTripCommand</c> and <c>UpdateTripCommand</c> ask
-/// this port on every write, so the day spec 12 registers a real implementation the reference is
-/// enforced everywhere at once, with no handler reopened and nothing to remember. Registration is a
-/// plain <c>AddScoped</c> in the Application layer; spec 12's implementation registers in the
-/// Infrastructure layer, which runs afterwards and therefore wins.
-/// </para>
+/// The default <see cref="IServiceOrderValidator"/>: accepts any reference, because this module holds no
+/// service-order store. Create and update ask this port on every write, so a real implementation
+/// registered in the Infrastructure layer (which runs afterwards and therefore wins) is enforced everywhere.
 /// </summary>
 public sealed class PermissiveServiceOrderValidator : IServiceOrderValidator
 {

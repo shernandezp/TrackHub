@@ -50,18 +50,15 @@ public class ReportingToManagerContractTests
         // Governed-catalog metadata lookup for the execution pipeline.
         yield return new TestCaseData("ReportCatalogReader.ReportByCode", ReportCatalogReader.ReportByCodeQuery);
 
-        // Account branding lookup for PDF export headers — reuses Manager's existing
-        // accountBranding query, so no Manager schema change.
+        // Account branding lookup for PDF export headers.
         yield return new TestCaseData("ReportBrandingReader.AccountBranding", ReportBrandingReader.AccountBrandingQuery);
 
-        // Document report readers.
         yield return new TestCaseData("DocumentReportReader.ExpiringDocuments", DocumentReportReader.ExpiringDocumentsQuery);
         yield return new TestCaseData("DocumentReportReader.DocumentTypes", DocumentReportReader.DocumentTypesQuery);
         yield return new TestCaseData("DocumentReportReader.TransporterDocumentCompliance", DocumentReportReader.TransporterDocumentComplianceQuery);
         yield return new TestCaseData("DocumentReportReader.SharesByAccount", DocumentReportReader.SharesByAccountQuery);
         yield return new TestCaseData("DocumentReportReader.SearchDocuments", DocumentReportReader.SearchDocumentsQuery);
 
-        // Workforce report readers (spec 09 §13).
         yield return new TestCaseData("WorkforceReportReader.StaffMembersByAccount", WorkforceReportReader.StaffMembersByAccountQuery);
         yield return new TestCaseData("WorkforceReportReader.StaffQualifications", WorkforceReportReader.StaffQualificationsQuery);
         yield return new TestCaseData("WorkforceReportReader.StaffAssignmentHistory", WorkforceReportReader.StaffAssignmentHistoryQuery);

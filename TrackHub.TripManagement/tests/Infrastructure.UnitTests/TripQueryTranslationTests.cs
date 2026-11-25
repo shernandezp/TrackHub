@@ -26,12 +26,11 @@ using TrackHub.TripManagement.Infrastructure.TripDB.Writers;
 namespace Infrastructure.UnitTests;
 
 /// <summary>
-/// Guards against LINQ the real PostgreSQL provider cannot translate (spec 11 §16).
+/// Guards against LINQ the real PostgreSQL provider cannot translate.
 /// <para>
 /// The Application unit tests run on EF InMemory, which evaluates ANY expression client-side and
-/// therefore can never fail on an untranslatable query. That blind spot shipped a real bug in spec
-/// 09: the workforce readers ordered the PROJECTED record struct
-/// (<c>Project(query).OrderBy(x =&gt; x.StartsAt)</c>), which Npgsql rejects with "could not be
+/// therefore can never fail on an untranslatable query. Ordering a PROJECTED record struct
+/// (<c>Project(query).OrderBy(x =&gt; x.StartsAt)</c>), for example, Npgsql rejects with "could not be
 /// translated" — green unit tests, "Unexpected Execution Error" against a real deployment. This
 /// module's readers are paged, projected and spatial, so they are exposed to exactly that trap.
 /// </para>
@@ -80,8 +79,8 @@ public class TripQueryTranslationTests
         }
         catch (Exception ex)
         {
-            // A guard clause, an ArgumentException or an EF wording change used to land in a bare
-            // `catch (Exception) { }` and score a free pass, so the test asserted nothing at all.
+            // A guard clause, an ArgumentException or an EF wording change must not land in a bare
+            // `catch (Exception) { }` and score a free pass.
             Assert.Fail(
                 $"The query failed before it reached the database, so nothing was translated: " +
                 $"{ex.GetType().FullName}: {ex.Message}");
@@ -188,7 +187,7 @@ public class TripQueryTranslationTests
             TripId, AccountId, UserId, cursor, 50, CancellationToken.None));
     }
 
-    // The four Reporting export feeds (spec 11 §13). These are drained at 500/page by another
+    // The four Reporting export feeds. These are drained at 500/page by another
     // service, so an untranslatable query here breaks report execution, not a screen.
     [Test]
     public async Task GetTripReportRows_TranslatesToSql()
@@ -297,8 +296,8 @@ public class TripQueryTranslationTests
     }
 
     /// <summary>
-    /// The armable-trip half of the working set: the NOT EXISTS that expresses the per-vehicle queue
-    /// (spec 11a §7). It is a DIFFERENT query shape from the InProgress half, and passing null for
+    /// The armable-trip half of the working set: the NOT EXISTS that expresses the per-vehicle queue.
+    /// It is a DIFFERENT query shape from the InProgress half, and passing null for
     /// the window skips it entirely — so it needs its own guard with the window open.
     /// </summary>
     [Test]
@@ -329,8 +328,8 @@ public class TripQueryTranslationTests
         await AssertTranslatesAsync(() => reader.GetCompletionStateAsync(AccountId, TripId, CancellationToken.None));
     }
 
-    // Geofencing's visit history, read across the shared database (SVD-05) to rebuild a late-created
-    // trip from measurements (spec 11a §5.4).
+    // Geofencing's visit history, read across the shared database to rebuild a late-created
+    // trip from measurements.
     [Test]
     public async Task GetGeofenceVisits_TranslatesToSql()
     {
@@ -341,7 +340,7 @@ public class TripQueryTranslationTests
             AccountId, Guid.NewGuid(), [Guid.NewGuid()], DateTimeOffset.UtcNow.AddHours(-24), CancellationToken.None));
     }
 
-    // The account's named places, resolved by a bulk upload (spec 11a §9.1). It reads a
+    // The account's named places, resolved by a bulk upload. It reads a
     // Manager-owned table and a Geofencing-owned one in the same pass.
     [Test]
     public async Task GetPlaces_TranslatesToSql()
@@ -392,8 +391,8 @@ public class TripQueryTranslationTests
             AccountId, DateTimeOffset.UtcNow.AddMinutes(-15), CancellationToken.None));
     }
 
-    // The same query now also returns trips whose position is stale or absent (the freshness filter
-    // moved out of the WHERE clause and into a projected flag, so the fallback path is reachable).
+    // The same query also returns trips whose position is stale or absent (freshness is a
+    // projected flag rather than a WHERE filter, so the fallback path is reachable).
     // A cutoff in the future makes every candidate stale, exercising that shape.
     [Test]
     public async Task GetEtaCandidates_WithEveryPositionStale_TranslatesToSql()

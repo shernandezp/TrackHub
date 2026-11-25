@@ -3,7 +3,7 @@ using Common.Infrastructure;
 namespace TrackHub.Manager.Infrastructure.Entities;
 
 /// <summary>
-/// The single entity covering licenses and every other credentialed qualification (spec 09 §18.1) —
+/// The single entity covering licenses and every other credentialed qualification —
 /// one model, one expiration pipeline, one document-link pattern. <c>Staff.LicenseNumber</c>/
 /// <c>Staff.LicenseExpiresAt</c> remain as the primary-license summary shown in staff lists.
 /// </summary>

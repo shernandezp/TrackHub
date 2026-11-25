@@ -32,13 +32,11 @@ Coded by www.creative-tim.com
 import { useState, useEffect, useContext } from "react";
 import type { FormChangeEvent } from 'controls/Dialogs/useForm';
 
-// @mui material components
 import Card from "@mui/material/Card";
 import Switch from "@mui/material/Switch";
 import ArgonButton from "components/ArgonButton";
 import Icon from "@mui/material/Icon";
 
-// Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
 import ArgonTypography from "components/ArgonTypography";
 import { useTranslation } from 'react-i18next';
@@ -95,8 +93,6 @@ function PlatformSettings() {
   async function onSaveSettings() {
     setLoading(true);
     try {
-      // userId is populated once settings load; the assertion/cast keep the exact
-      // runtime call the JS made while satisfying the typed api signature.
       await updateUserSettings(
         userSettings.userId!,
         userSettings as Omit<UserSettingsDtoInput, 'userId'>

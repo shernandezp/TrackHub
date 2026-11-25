@@ -25,7 +25,6 @@ import type { PointOfInterestLookup } from 'api/manager/pointsOfInterest';
 import { MAP_CONTAINER_CLASS } from 'controls/Maps/core/mapConfig';
 import 'controls/Maps/css/map.css';
 
-/** A trail point (client-side ring buffer entry) for the selected unit. */
 export interface TrailPoint { lat: number; lng: number; dateTime: string; }
 
 interface GeneralMapProps {
@@ -80,7 +79,6 @@ function GeneralMap({
                     name: item.deviceName,
                     dateTime: item.deviceDateTime,
                     speed: item.speed,
-                    // Additional attributes
                     attributes: item.attributes || {},
                     address: item.address,
                     altitude: item.altitude,

@@ -15,20 +15,13 @@
 
 namespace Common.Domain.Constants;
 
-/// <summary>
-/// Well-known group metadata shared across services.
-/// </summary>
 public static class GroupMetadata
 {
     /// <summary>
-    /// Name of the account's default group. Auto-provisioned transporters created by the
-    /// device sync are placed here so plain (group-scoped) users can see them on the live map.
-    /// Resolved by name and created on first use.
+    /// The account's default group, resolved by name and created on first use. Auto-provisioned
+    /// transporters land here so group-scoped users can see them on the live map.
     /// </summary>
     public const string DefaultGroupName = "General";
 
-    /// <summary>
-    /// Description applied to the default group when the sync creates it on first use.
-    /// </summary>
     public const string DefaultGroupDescription = "Auto-provisioned units";
 }

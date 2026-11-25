@@ -29,7 +29,7 @@ namespace TrackHub.TripManagement.Infrastructure.TripDB.Writers;
 /// </para>
 /// <para>
 /// The selection rules for the working set live here and nowhere else — this is the single
-/// definition of "which trips is detection watching this cycle" (spec 11a §6.1, §7).
+/// definition of "which trips is detection watching this cycle".
 /// </para>
 /// </summary>
 public sealed class TripDetectionUnitOfWork(
@@ -64,7 +64,7 @@ public sealed class TripDetectionUnitOfWork(
         var ids = transporterIds.ToList();
 
         // InProgress AND Paused, because they answer two different questions. Only the InProgress
-        // ones are processed — a paused trip is explicitly out of automation's hands (§5.2) — but
+        // ones are processed — a paused trip is explicitly out of automation's hands — but
         // BOTH occupy their vehicle, so both have to be visible here or the queue jumps the moment a
         // dispatcher pauses something.
         var occupied = await context.Trips
@@ -88,7 +88,7 @@ public sealed class TripDetectionUnitOfWork(
 
             if (idle.Count > 0)
             {
-                // The per-vehicle queue (§7) is enforced TWICE, and both are deliberate.
+                // The per-vehicle queue is enforced TWICE, and both are deliberate.
                 //
                 // The NOT EXISTS keeps the materialized set small: a Created trip qualifies only when
                 // no EARLIER-planned Created trip exists for the same transporter, so a fleet with a
@@ -131,7 +131,7 @@ public sealed class TripDetectionUnitOfWork(
 
         // EVERY stop, not only the open ones. Auto-completion has to tell "all stops closed" from
         // "this trip has no stops", and it has to find the FINAL stop by sequence — neither question
-        // is answerable from a list that silently omits the closed ones (§5.2).
+        // is answerable from a list that silently omits the closed ones.
         var stops = await context.TripStops
             .AsTracking()
             .Where(s => tripIds.Contains(s.TripId))
@@ -353,7 +353,7 @@ public sealed class TripDetectionUnitOfWork(
     /// <summary>
     /// The origin zone: the linked geofence's real shape, or the origin point buffered by
     /// <c>OriginRadiusMeters</c>. Read ONCE, which is what makes a watched trip immune to a geofence
-    /// edited between arming and the vehicle's arrival (spec 11a §2).
+    /// edited between arming and the vehicle's arrival.
     /// </summary>
     private async Task<NetTopologySuite.Geometries.Polygon> ResolveOriginGeomAsync(Trip trip, CancellationToken cancellationToken)
     {

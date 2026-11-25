@@ -31,8 +31,7 @@ public sealed class OperatorHealthCheckWriter(IApplicationDbContext context, ICu
 
         await Context.OperatorHealthChecks.AddAsync(entity, cancellationToken);
 
-        // Telemetry has read-only access to the operator master row and no
-        // longer writes the denormalized operator health-summary columns. The operator health/sync
+        // Telemetry has read-only access to the operator master row; the operator health/sync
         // summary is derived from the telemetry tables at read time (GetLatestHealthAsync).
         await Context.SaveChangesAsync(cancellationToken);
         return new OperatorHealthCheckVm(entity.OperatorHealthCheckId, entity.AccountId, entity.OperatorId,

@@ -14,12 +14,7 @@
 *  limitations under the License.
 */
 
-/**
- * Policy API (Security backend): plain typed async functions. Failures THROW
- * ApiError — fallbacks and toasts belong to the caller layer. The resource /
- * action assignment mutations are intentionally silent in the caller (the old
- * usePolicyService swallowed them without a toast).
- */
+/** The resource/action assignment mutations are intentionally silent in the caller. */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
 import type { RequestOptions } from 'api/core/errors';
@@ -91,7 +86,6 @@ export async function createUserPolicy(
   return data.createUserPolicy;
 }
 
-/** Returns the id of the user whose policy link was removed (schema: `deleteUserPolicy: UUID!`). */
 export async function deleteUserPolicy(userId: string, policyId: number): Promise<string> {
   const data = await executeGraphQL('security', DeleteUserPolicyDocument, { userId, policyId });
   return data.deleteUserPolicy;

@@ -18,8 +18,8 @@ public interface IOperatorHealthCheckSystemWriter : IOperatorHealthCheckWriter;
 
 public interface IDeviceSyncWriter
 {
-    // Returns the device-sync counts so the Router can record exactly one sync run
-    // per attempt; Manager no longer records the run itself.
+    // Manager does not record the run: the Router records exactly one sync run per attempt from
+    // these counts.
     Task<DeviceSyncCountsVm> SynchronizeAsync(Guid accountId, Guid operatorId, IEnumerable<SynchronizedDeviceDto> devices, string correlationId, string triggerType, bool autoAssignNewDevices, bool resetDeviceCatalog, CancellationToken cancellationToken);
 }
 

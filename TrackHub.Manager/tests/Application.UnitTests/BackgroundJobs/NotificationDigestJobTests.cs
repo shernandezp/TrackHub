@@ -23,7 +23,6 @@ using Common.Domain.Time;
 
 namespace Application.UnitTests.BackgroundJobs;
 
-// Digest folding had no unit-test surface while it lived in the Web layer against a raw DbContext.
 [TestFixture]
 public class NotificationDigestJobTests
 {

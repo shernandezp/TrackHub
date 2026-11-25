@@ -1,8 +1,3 @@
-/**
- * Account Management → Fleet & Tracking: devices, units, staff, groups and
- * points of interest.
- */
-
 import { test, expect, unique, uniqueName } from '../fixtures';
 import { CrudFlow } from '../pages/crud';
 import { ConfirmDialog, FormDialog } from '../pages/dialogs';
@@ -11,13 +6,7 @@ import type { CleanupRegistry } from '../fixtures/data';
 import type { Translator } from '../fixtures/i18n';
 import type { Locator, Page } from '@playwright/test';
 
-/**
- * Registers a staff and arranges for it to be deactivated afterwards.
- *
- * Seeded rather than clicked: the staff record is the PRECONDITION for the
- * credential, qualification and assignment work being measured, and creating
- * one through the UI has its own test.
- */
+/** Seeded: the staff record is only the precondition, and creating one through the UI has its own test. */
 async function seedStaff(api: ApiClient, cleanup: CleanupRegistry): Promise<string> {
   const name = uniqueName('staff');
   const staffId = await api.createStaffMember(name);
@@ -25,7 +14,6 @@ async function seedStaff(api: ApiClient, cleanup: CleanupRegistry): Promise<stri
   return name;
 }
 
-/** Chooses a named option in a picker mounted in a section body, not a dialog. */
 async function selectFirstMatching(
   page: Page,
   scope: Locator,
@@ -36,7 +24,6 @@ async function selectFirstMatching(
   await page.getByRole('option', { name: optionLabel, exact: true }).click();
 }
 
-/** Opens the staff's detail dialog, which lands on the credentials (app access) panel. */
 async function openStaffAccess(page: Page, t: Translator, staffName: string): Promise<Locator> {
   const staff = new CrudFlow(page, 'staff_members', t).section;
   await staff.expand();
@@ -326,7 +313,7 @@ test.describe('account management — fleet & tracking', () => {
     await form.saveAndClose();
 
     // A credential that has never been used reads "Pending Activation" — saying
-    // "Revoked" for one that was simply never activated was a lie (spec 09 AC7).
+    // "Revoked" for one that was simply never activated would be wrong.
     const row = () => dialog.locator('[data-testid^="row-"]').filter({ hasText: login }).first();
     await expect(row()).toContainText(t('workforce.credentials.statusPending'), { timeout: 45_000 });
 

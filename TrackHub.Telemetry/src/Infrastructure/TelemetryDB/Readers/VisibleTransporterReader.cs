@@ -18,9 +18,6 @@ using TrackHub.Telemetry.Infrastructure.TelemetryDB.Interfaces;
 
 namespace TrackHub.Telemetry.Infrastructure.TelemetryDB.Readers;
 
-/// <summary>
-/// The single transporter-visibility primitive.
-/// </summary>
 public sealed class VisibleTransporterReader(IApplicationDbContext context, ICurrentPrincipal principal)
     : AccountScopedDataAccess(context, principal), IVisibleTransporterReader
 {
@@ -30,7 +27,7 @@ public sealed class VisibleTransporterReader(IApplicationDbContext context, ICur
 
         // Administrators, Managers, and global service clients read account-wide; plain users are
         // narrowed to the transporters in the groups they belong to. Same privileged-bypass rule as
-        // the POI reads (GetPointsOfInterestByAccount) and the module-07 replay group check.
+        // the POI reads (GetPointsOfInterestByAccount) and the replay group check.
         var query = IsPrivileged
             ? Context.Transporters
                 .Where(t => t.AccountId == scopedAccountId)

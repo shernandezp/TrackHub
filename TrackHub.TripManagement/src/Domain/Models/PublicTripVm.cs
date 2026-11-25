@@ -19,12 +19,12 @@ namespace TrackHub.TripManagement.Domain.Models;
 /// The anonymous tracking snapshot. This type is the disclosure boundary: it is projected from
 /// the <c>TripShare</c> field flags server-side, never filtered client-side. It deliberately
 /// carries no ids beyond the trip's, no internal notes, no toll or cost figures, no staff
-/// contact data, no raw position history and no document bytes (spec 11 §7.8, acceptance 23).
+/// contact data, no raw position history and no document bytes.
 /// <para>
 /// <b>There is deliberately no <c>CustomerName</c>.</b> On a multi-drop trip the consignee is not
 /// the same party as every link holder, and no <c>TripShare</c> flag gates it — so carrying it here
-/// disclosed the shipper's customer unconditionally to every recipient of every link on that trip
-/// (spec 11 §7.8). Do not re-add it; a per-recipient consignee would have to be scoped to the
+/// would disclose the shipper's customer unconditionally to every recipient of every link on that trip.
+/// Do not re-add it; a per-recipient consignee would have to be scoped to the
 /// share, not to the trip.
 /// </para>
 /// </summary>

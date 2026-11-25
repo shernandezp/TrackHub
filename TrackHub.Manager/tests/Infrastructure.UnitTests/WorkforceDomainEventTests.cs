@@ -13,9 +13,9 @@ using TrackHub.Manager.Infrastructure.ManagerDB.Writers;
 namespace Infrastructure.UnitTests;
 
 /// <summary>
-/// Spec 09 §10 commits to five workforce domain events. Nothing subscribes to them yet, so these
-/// tests are the only thing standing between "declared in the spec" and "actually dispatched" —
-/// without them a silently-dropped event would go unnoticed until the first consumer is written.
+/// Nothing subscribes to the workforce domain events yet, so these tests are the only thing standing
+/// between "declared" and "actually dispatched" — without them a silently-dropped event would go
+/// unnoticed until the first consumer is written.
 /// They run the REAL <see cref="DispatchDomainEventsInterceptor"/> against a capturing publisher.
 /// </summary>
 [TestFixture]

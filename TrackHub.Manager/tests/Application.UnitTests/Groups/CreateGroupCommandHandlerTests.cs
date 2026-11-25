@@ -38,7 +38,6 @@ public class CreateGroupCommandHandlerTests
     [Test]
     public async Task Handle_ValidCommand_LooksUpUserAndCreatesGroup()
     {
-        // Arrange
         var userId = Guid.NewGuid();
         var accountId = Guid.NewGuid();
         var groupDto = new GroupDto("Fleet A", "Main fleet", true);
@@ -52,10 +51,8 @@ public class CreateGroupCommandHandlerTests
 
         var handler = new CreateGroupCommandHandler(_writerMock.Object, _userReaderMock.Object, _userMock.Object);
 
-        // Act
         var result = await handler.Handle(new CreateGroupCommand(groupDto), CancellationToken.None);
 
-        // Assert
         Assert.That(result, Is.EqualTo(expectedVm));
         _writerMock.Verify(w => w.CreateGroupAsync(groupDto, accountId, It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -72,7 +69,6 @@ public class CreateGroupCommandHandlerTests
     [Test]
     public async Task Handle_DifferentUsers_GetDifferentAccountIds()
     {
-        // Arrange — verify account scoping works per-user
         var userId = Guid.NewGuid();
         var accountId = Guid.NewGuid();
         var groupDto = new GroupDto("Group", "Desc", true);
@@ -85,10 +81,8 @@ public class CreateGroupCommandHandlerTests
 
         var handler = new CreateGroupCommandHandler(_writerMock.Object, _userReaderMock.Object, _userMock.Object);
 
-        // Act
         await handler.Handle(new CreateGroupCommand(groupDto), CancellationToken.None);
 
-        // Assert — writer must be called with the user's account, not another
         var wrongAccountId = Guid.NewGuid();
         _writerMock.Verify(w => w.CreateGroupAsync(groupDto, wrongAccountId, It.IsAny<CancellationToken>()), Times.Never);
     }

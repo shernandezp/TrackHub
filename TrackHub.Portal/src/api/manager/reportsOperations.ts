@@ -14,12 +14,7 @@
 *  limitations under the License.
 */
 
-/**
- * Report-catalog GraphQL documents (Manager backend). Codegen validates these
- * against schemas/manager.graphql — values always travel as variables. The
- * generated .xlsx itself is produced by the Reporting REST service (see
- * api/reporting/reports.ts); this file only manages the report catalog.
- */
+/** Only the report catalog; the .xlsx itself is produced by the Reporting REST service. */
 
 import { graphql } from './generated';
 

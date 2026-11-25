@@ -30,7 +30,6 @@ public class CreateCredentialTests
     [Test]
     public async Task Handle_WhenValidRequest_ReturnsCredentialVm()
     {
-        // Arrange
         var command = new CreateCredentialCommand(new CredentialDto("https://example.com/", "user", "pass", null, null, Guid.NewGuid()));
 
         var key = "encryptionKey";
@@ -40,10 +39,8 @@ public class CreateCredentialTests
         _mockCredentialWriter.Setup(w => w.CreateCredentialAsync(command.Credential, salt, key, CancellationToken.None))
             .ReturnsAsync(new CredentialVm(Guid.NewGuid(), command.Credential.Uri, command.Credential.Username, command.Credential.Password, null, null));
 
-        // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
-        // Assert
         Assert.That(result, Is.Default);
         Assert.That(result, Is.InstanceOf<CredentialVm>());
     }

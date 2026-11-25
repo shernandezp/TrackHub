@@ -17,29 +17,14 @@ using TrackHub.Security.Infrastructure.Interfaces;
 
 namespace TrackHub.Security.Infrastructure.Readers;
 
-/// <summary>
-/// This class represents a reader for retrieving client information from the database
-/// </summary>
-/// <param name="context"></param>
 public sealed class ClientReader(IApplicationDbContext context) : IClientReader
 {
 
-    /// <summary>
-    /// Validates if the specified client exists in the database
-    /// </summary>
-    /// <param name="client"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>A boolean indicating whether the client exists or not</returns>
     public async Task<bool> IsValidClientAsync(string client, CancellationToken cancellationToken)
         => await context.Clients
             .Where(c => c.Name.Equals(client))
             .AnyAsync(cancellationToken);
 
-    /// <summary>
-    /// Retrieves a collection of clients from the database
-    /// </summary>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     public async Task<IReadOnlyCollection<ClientVm>> GetClientsAsync(string key, int skip, int take, CancellationToken cancellationToken)
         => await context.Clients
             .OrderBy(c => c.Name).ThenBy(c => c.ClientId)

@@ -15,9 +15,6 @@
 
 namespace TrackHub.Geofencing.Domain.Records;
 
-/// <summary>
-/// DTO for transporter position data for geofence detection.
-/// </summary>
 public readonly record struct TransporterPositionDto(
     Guid TransporterId,
     double Latitude,

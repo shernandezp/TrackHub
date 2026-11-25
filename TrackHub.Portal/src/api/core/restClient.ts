@@ -22,11 +22,7 @@ import { REQUEST_TIMEOUT_MS } from './graphqlClient';
 /** Longer budget for file transfer endpoints (uploads/downloads). */
 export const FILE_TIMEOUT_MS = 60000;
 
-/**
- * Authenticated REST request against a TrackHub backend (documents, excel
- * reports). Shares the token acquisition path — and therefore the refresh
- * mutex — with the GraphQL client.
- */
+/** Shares the token acquisition path, and therefore the refresh mutex, with the GraphQL client. */
 export async function restRequest<T>(config: AxiosRequestConfig): Promise<T> {
   try {
     return await sendRest<T>(config, await tokenStore.acquireValidAccessToken());
@@ -74,11 +70,7 @@ async function sendRest<T>(config: AxiosRequestConfig, token: string): Promise<T
   }
 }
 
-/**
- * Downloads a response as a file through a transient anchor element. Defaults
- * to POST (report generation posts a request body); pass `method: 'GET'` for
- * plain byte streams (e.g. document downloads), in which case no body is sent.
- */
+/** Defaults to POST (report generation posts a body); `method: 'GET'` sends no body. */
 export async function downloadFile(
   url: string,
   body: unknown,

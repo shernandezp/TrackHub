@@ -17,8 +17,6 @@ using TrackHub.Router.Infrastructure.Common;
 
 namespace TrackHub.Router.Infrastructure.Tests;
 
-// Guards router-audit A-25: the manual-sync and background-sync paths must not run concurrently
-// for the same operator.
 [TestFixture]
 public class OperatorSyncLockTests
 {

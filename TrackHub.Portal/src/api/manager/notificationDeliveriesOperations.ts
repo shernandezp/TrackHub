@@ -14,13 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Notification-delivery GraphQL documents (Manager backend): delivery history,
- * delivery health, the current user's in-app notification feed, retry and test
- * sends. Codegen validates these against schemas/manager.graphql — values
- * always travel as variables.
- */
-
 import { graphql } from './generated';
 
 export const NotificationDeliveryItemFragment = graphql(`

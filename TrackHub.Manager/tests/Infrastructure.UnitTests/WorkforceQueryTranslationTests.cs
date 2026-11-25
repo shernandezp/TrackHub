@@ -65,16 +65,12 @@ public class WorkforceQueryTranslationTests
         }
         catch (Exception ex)
         {
-            // A guard clause, an ArgumentException or an EF wording change used to land in a bare
-            // `catch (Exception) { }` and score a free pass, so the test asserted nothing at all.
             Assert.Fail(
                 $"The query failed before it reached the database, so nothing was translated: " +
                 $"{ex.GetType().FullName}: {ex.Message}");
             return;
         }
 
-        // Returning normally means the reader never opened a connection — an early return or a null
-        // guard short-circuited it, and no SQL was ever generated.
         Assert.Fail("The query completed without attempting a connection, so no SQL was translated.");
     }
 

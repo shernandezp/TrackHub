@@ -40,7 +40,7 @@ public class DocumentReportReader(IGraphQLClientFactory graphQLClient, IUser use
                 }";
 
     // Batched compliance read: every group-visible transporter with its Active document
-    // categories in one call (replaces groups → transporters-per-group → documents-per-owner).
+    // categories in one call.
     internal const string TransporterDocumentComplianceQuery = @"
                 query($accountId: UUID!) {
                     transporterDocumentCompliance(query: { accountId: $accountId }) {

@@ -14,16 +14,10 @@
 *  limitations under the License.
 */
 
-/**
- * Operator GraphQL documents (Manager backend). Codegen validates these
- * against schemas/manager.graphql and emits typed document nodes — values
- * always travel as variables, never string interpolation. Operator health /
- * sync-run reads live on the Telemetry backend (see operatorHealthOperations).
- */
+/** Operator health / sync-run reads live on the Telemetry backend (operatorHealthOperations). */
 
 import { graphql } from './generated';
 
-/** Full operator record used by the operators table (edit/list/create). */
 export const OperatorDetailFragment = graphql(`
   fragment OperatorDetail on OperatorVm {
     operatorId
@@ -49,7 +43,6 @@ export const OperatorDetailFragment = graphql(`
   }
 `);
 
-/** Operator record for the GPS-integration lists (name map + sync metadata). */
 export const OperatorGpsFragment = graphql(`
   fragment OperatorGps on OperatorVm {
     operatorId
@@ -74,7 +67,6 @@ export const GetOperatorsByCurrentAccountDocument = graphql(`
   }
 `);
 
-/** Id + display name only: the picker/filter projection, unpaged by design. */
 export const GetOperatorLookupDocument = graphql(`
   query GetOperatorLookup {
     operatorLookup {

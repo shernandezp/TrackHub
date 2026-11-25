@@ -15,10 +15,7 @@
 
 namespace TrackHub.Router.Infrastructure.Flespi.Models;
 
-/// <summary>
-/// Flespi message (contains GPS position data)
-/// Timestamp = Unix timestamp in seconds
-/// </summary>
+/// <summary>Timestamp is Unix seconds.</summary>
 internal readonly record struct Message(
     long? Ident,
     long? Device_id,

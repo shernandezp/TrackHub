@@ -73,7 +73,6 @@ public partial class ApplicationDbContext(DbContextOptions<ApplicationDbContext>
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
-        // Normalize every DateTimeOffset to UTC on write (workspace UTC-timestamp policy).
         configurationBuilder.UseUtcTimestamps();
         base.ConfigureConventions(configurationBuilder);
     }

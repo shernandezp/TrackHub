@@ -14,12 +14,7 @@
 *  limitations under the License.
 */
 
-/**
- * Role API (Security backend): plain typed async functions. Failures THROW
- * ApiError — fallbacks and toasts belong to the caller layer. The resource /
- * action assignment mutations are intentionally silent in the caller (the old
- * useRoleService swallowed them without a toast).
- */
+/** The resource/action assignment mutations are intentionally silent in the caller. */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
 import type { RequestOptions } from 'api/core/errors';
@@ -91,7 +86,6 @@ export async function createUserRole(
   return data.createUserRole;
 }
 
-/** Returns the id of the user whose role link was removed (schema: `deleteUserRole: UUID!`). */
 export async function deleteUserRole(userId: string, roleId: number): Promise<string> {
   const data = await executeGraphQL('security', DeleteUserRoleDocument, { userId, roleId });
   return data.deleteUserRole;

@@ -16,7 +16,6 @@
 namespace TrackHub.Router.Infrastructure.Wialon.Models;
 
 /// <summary>
-/// Wialon position data model
 /// T = timestamp (unix), X = longitude, Y = latitude, Z = altitude, S = speed, C = course, Sc = satellites
 /// </summary>
 internal readonly record struct Position(

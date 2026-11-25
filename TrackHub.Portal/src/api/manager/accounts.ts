@@ -14,13 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Account API (Manager backend): plain typed async functions. Failures THROW
- * ApiError — fallbacks and toasts belong to the caller layer (src/queries for
- * components). The former `accountContext` service is folded in here as
- * getAccountContext (the single-account bootstrap read).
- */
-
 import { executeGraphQL } from 'api/core/graphqlClient';
 import type { RequestOptions } from 'api/core/errors';
 import type { ListParams, Page } from 'api/core/paging';
@@ -96,10 +89,6 @@ export async function updateAccount(
   return data.updateAccount;
 }
 
-/**
- * Platform-side account edit for the systemadmin console: the only account write
- * that may target an account other than the caller's own.
- */
 export async function updateAccountMaster(
   accountId: string,
   account: Omit<UpdateAccountDtoInput, 'accountId'>
@@ -132,11 +121,7 @@ export async function changeAccountStatus(
   return data.changeAccountStatus;
 }
 
-/**
- * Bootstrap read (status + branding + features) for the current principal's
- * account. Allowed on non-operational accounts so the shell can render a
- * suspension state without issuing operational queries.
- */
+/** Allowed on non-operational accounts so the shell can render a suspension state. */
 export async function getAccountContext(): Promise<AccountContext> {
   const data = await executeGraphQL('manager', GetAccountContextDocument);
   return data.accountContext;

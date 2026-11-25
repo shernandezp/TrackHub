@@ -25,14 +25,9 @@ using Microsoft.Extensions.Logging;
 namespace Common.Application.Behaviors;
 
 /// <summary>
-/// Fail-closed pipeline behavior that blocks account-scoped operations whose resolved account is
-/// non-operational (<see cref="AccountStatus.Suspended"/>/<see cref="AccountStatus.Cancelled"/>/
-/// <see cref="AccountStatus.Archived"/>), throwing <see cref="AccountSuspendedException"/>
-/// (GraphQL <c>ACCOUNT_SUSPENDED</c>). Enforcement is opt-out: a request marked
-/// <see cref="AllowSuspendedAccountAttribute"/> (billing/support/read-own-status/lifecycle) is always
-/// allowed. The evaluated account is, in order: the request's <c>AccountId</c> property (if a
-/// non-empty Guid), else the current principal's account. When no account can be resolved the check
-/// is skipped (platform-level operations). Mirrors <see cref="FeatureFlagBehavior{TRequest, TResponse}"/>.
+/// Fail-closed guard throwing <see cref="AccountSuspendedException"/> for a non-operational account, unless the
+/// request is marked <see cref="AllowSuspendedAccountAttribute"/>. The account is the request's <c>AccountId</c>,
+/// else the principal's; with neither (platform-level operations) the check is skipped.
 /// </summary>
 public sealed class AccountStatusBehavior<TRequest, TResponse>(
     IAccountOperationalStatusService statusService,

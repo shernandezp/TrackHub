@@ -15,9 +15,6 @@
 
 namespace TrackHub.Router.Infrastructure.Protrack.Models;
 
-/// <summary>
-/// Protrack device record (device basic information)
-/// </summary>
 internal readonly record struct DeviceRecord(
     string Imei,
     string Devicename,

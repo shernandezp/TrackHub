@@ -23,7 +23,6 @@ interface CustomReadOnlyProps {
   value?: ReactNode;
 }
 
-// Displays a labeled, non-editable value. Use for settings the current user may view but not change.
 const CustomReadOnly = ({ label, value }: CustomReadOnlyProps) => (
   <ArgonBox display="flex" flexDirection="column">
     <ArgonTypography variant="caption" color="secondary" fontWeight="bold" textTransform="uppercase">

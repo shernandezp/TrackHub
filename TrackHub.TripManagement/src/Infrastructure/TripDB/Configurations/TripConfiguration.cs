@@ -58,7 +58,7 @@ public sealed class TripConfiguration : IEntityTypeConfiguration<Trip>
         builder.Property(x => x.ConsecutiveOutsideFixes).HasColumnName("consecutiveoutsidefixes").HasDefaultValue(0);
         builder.Property(x => x.CancellationReason).HasColumnName("cancellationreason").HasMaxLength(ColumnMetadata.DefaultDescriptionLength);
 
-        // Dispatch board, transporter board and staff board (spec 11 section 6 "Indexes (trips)").
+        // Dispatch board, transporter board and staff board.
         builder.HasIndex(x => new { x.AccountId, x.Status, x.PlannedStartAt })
             .HasDatabaseName("ix_trips_accountid_status_plannedstartat");
         builder.HasIndex(x => new { x.AccountId, x.TransporterId, x.PlannedStartAt })
@@ -71,20 +71,20 @@ public sealed class TripConfiguration : IEntityTypeConfiguration<Trip>
             .IsUnique();
 
         // Partner/TMS import is idempotent on ExternalReference, which is unique per account
-        // only where it is supplied (spec 11 section 7.9).
+        // only where it is supplied.
         builder.HasIndex(x => new { x.AccountId, x.ExternalReference })
             .HasDatabaseName("ux_trips_accountid_externalreference")
             .IsUnique()
             .HasFilter("externalreference IS NOT NULL");
 
-        // One physical unit runs one trip at a time (spec 11a §4.1). This is what keeps the
+        // One physical unit runs one trip at a time. This is what keeps the
         // per-vehicle queue honest: arming considers a transporter only while nothing occupies it,
         // and the index makes that a database fact rather than a read-then-write assumption.
         //
         // PAUSED COUNTS AS OCCUPIED. Pause is the dispatcher taking control of a trip that is still
-        // under way (§5.2) — the truck has not been released. Filtering on InProgress alone let the
-        // queue jump: pausing trip N made its vehicle look idle, so trip N+1 armed and auto-started
-        // on a unit already committed, and the two ran on one truck at once.
+        // under way — the truck has not been released. Filtering on InProgress alone would let the
+        // queue jump: pausing trip N would make its vehicle look idle and trip N+1 could arm and
+        // auto-start on a unit already committed.
         builder.HasIndex(x => x.TransporterId)
             .HasDatabaseName("ux_trips_transporterid_inprogress")
             .IsUnique()
@@ -96,8 +96,8 @@ public sealed class TripConfiguration : IEntityTypeConfiguration<Trip>
             .HasMethod("gist");
 
         // Concurrency token over PostgreSQL's own row version. A manual Start racing an auto-start
-        // is a real two-writer scenario now that automation transitions trips, and without this the
-        // matrix check and the write are a read-modify-write with a gap between them (§14.2).
+        // is a real two-writer scenario, and without this the
+        // matrix check and the write are a read-modify-write with a gap between them.
         //
         // A shadow uint named `xmin` is how Npgsql maps the system column; it costs no schema change,
         // which is why the migration adds nothing for it.

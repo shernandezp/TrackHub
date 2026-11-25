@@ -24,11 +24,10 @@ namespace TrackHub.TripManagement.Web.BackgroundServices;
 /// <para>
 /// <b>It never changes trip status.</b> Auto-starting a trip nobody began would stamp an
 /// <c>ActualStartAt</c> and a distance baseline for a vehicle that has not moved, and every report
-/// downstream would inherit the fiction. A reminder is a nudge to a human, not a state transition
-/// (spec 11 §10).
+/// downstream would inherit the fiction. A reminder is a nudge to a human, not a state transition.
 /// </para>
 /// <para>
-/// <b>On-work-only recorder (SVD-11):</b> a row is written ONLY when a reminder was actually
+/// <b>On-work-only recorder:</b> a row is written ONLY when a reminder was actually
 /// raised, so an old <c>trip-schedule-reminder</c> timestamp is the healthy steady state and must
 /// render neutrally on <c>/status</c>.
 /// </para>

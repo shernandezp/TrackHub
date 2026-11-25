@@ -25,7 +25,6 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
     public void Configure(EntityTypeBuilder<Account> builder)
     {
         builder.Property(x => x.Version).HasColumnName("editversion").HasConversion<long>().IsConcurrencyToken();
-        //Table name
         builder.ToTable(
             name: TableMetadata.Account,
             schema: SchemaMetadata.Application,
@@ -35,7 +34,6 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
                 t.HasCheckConstraint("ck_accounts_status", EnumColumn.Check<AccountStatus>("status"));
             });
 
-        //Column names
         builder.Property(x => x.AccountId).HasColumnName("id");
         builder.Property(x => x.Name).HasColumnName("name");
         builder.Property(x => x.Description).HasColumnName("description");
@@ -55,12 +53,9 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
             .HasMaxLength(ColumnMetadata.DefaultNameLength)
             .IsRequired();
 
-        // Description is nullable end to end (entity, DTO, GraphQL input); IsRequired() here
-        // only made the column NOT NULL, so a blank form field became a 23502 at SaveChanges.
         builder.Property(t => t.Description)
             .HasMaxLength(ColumnMetadata.DefaultDescriptionLength);
 
-        // Lifecycle reports/filtering and the DM-05 secondary-index gap.
         builder.HasIndex(x => x.Status);
         builder.HasIndex(x => x.Name);
 

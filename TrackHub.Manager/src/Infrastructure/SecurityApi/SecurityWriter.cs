@@ -52,7 +52,6 @@ public class SecurityWriter(IGraphQLClientFactory graphQLClient)
                         }
                     }";
 
-    // Creates a new user asynchronously.
     public async Task<UserVm> CreateUserAsync(CreateUserDto user, CancellationToken token)
     {
         var request = new GraphQLRequest

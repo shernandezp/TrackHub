@@ -87,7 +87,7 @@ public class RouterToTelemetryRoundTripTests
             Assert.That(position.Attributes!.Value.Hourmeter, Is.EqualTo(220.5));
             Assert.That(position.Attributes!.Value.Temperature, Is.EqualTo(21.5));
             // Open attribute bag round-trips as a JSON string through Telemetry's `extra: String`
-            // output and the Router's read query subselection (router-audit A-03).
+            // output and the Router's read query subselection.
             Assert.That(position.Attributes!.Value.Extra, Is.EqualTo(FakeData.ExtraJson));
         }
 
@@ -179,8 +179,8 @@ public class RouterToTelemetryRoundTripTests
 
     // Every checkType literal the Router actually SENDS must be a valid Telemetry enum value.
     // Enum values travel in GraphQL variables, so the Layer A document validation cannot catch
-    // an invalid literal — this round trip does (regression: "SYNC" was rejected at coercion,
-    // silently killing the sync-recorded health observation).
+    // an invalid literal; one is rejected at coercion and silently kills the sync-recorded health
+    // observation.
     [TestCase("PING", OperatorHealthCheckType.Ping)]
     [TestCase("DEVICE_SYNC", OperatorHealthCheckType.DeviceSync)]
     [TestCase("POSITION_SYNC", OperatorHealthCheckType.PositionSync)]
@@ -350,7 +350,7 @@ public class RouterToTelemetryRoundTripTests
             Assert.That(rows[0].Attributes, Is.Not.Null);
             Assert.That(rows[0].Attributes!.Value.Satellites, Is.EqualTo(12));
             // The open attribute bag is accepted by Telemetry's AttributesDtoInput.extra and
-            // coerces into the producer command (router-audit A-03).
+            // coerces into the producer command.
             Assert.That(rows[0].Attributes!.Value.Extra, Is.EqualTo(FakeData.ExtraJson));
         }
     }

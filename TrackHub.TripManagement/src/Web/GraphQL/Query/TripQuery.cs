@@ -51,7 +51,7 @@ public partial class Query
     public async Task<RouteReplayVm> GetTripRouteReplay([Service] ISender sender, [AsParameters] GetTripRouteReplayQuery query, CancellationToken cancellationToken)
         => await sender.Send(query, cancellationToken);
 
-    // The four Reporting export feeds (spec 11 §13). Trip-, stop-, station- and POD-level, because
+    // The four Reporting export feeds. Trip-, stop-, station- and POD-level, because
     // the six catalogued reports live at four different grains.
     public async Task<TripReportPageVm> GetTripReportData([Service] ISender sender, [AsParameters] GetTripReportDataQuery query, CancellationToken cancellationToken)
         => await sender.Send(query, cancellationToken);

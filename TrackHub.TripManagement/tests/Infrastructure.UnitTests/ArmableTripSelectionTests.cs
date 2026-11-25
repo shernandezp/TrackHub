@@ -20,7 +20,7 @@ using TrackHub.TripManagement.Infrastructure.TripDB.Writers;
 namespace Infrastructure.UnitTests;
 
 /// <summary>
-/// The per-vehicle queue (spec 11a §7): which <c>Created</c> trip, if any, joins the detection
+/// The per-vehicle queue: which <c>Created</c> trip, if any, joins the detection
 /// working set. Strictly one per vehicle, strictly in planned order, and only inside the activation
 /// window.
 /// <para>
@@ -68,7 +68,7 @@ public class ArmableTripSelectionTests
     public async Task OnlyTheEarliestPlannedCreatedTripPerVehicleArms()
     {
         // A week planned for one truck. Exactly one row joins the working set — the set grows by one
-        // per vehicle, never by the backlog (§6.1).
+        // per vehicle, never by the backlog.
         using var context = await SeededAsync(
             (TruckA, "MON", TripStatuses.Created, Now.AddMinutes(30)),
             (TruckA, "TUE", TripStatuses.Created, Now.AddMinutes(40)),
@@ -99,10 +99,10 @@ public class ArmableTripSelectionTests
 
     /// <summary>
     /// A PAUSED trip still holds its vehicle. Pause is the dispatcher taking control of a trip that
-    /// is still under way (§5.2) — the load is on the truck and the truck is out there.
+    /// is still under way — the load is on the truck and the truck is out there.
     /// <para>
-    /// Keying "busy" on <c>InProgress</c> alone made pausing look like releasing: trip N+1 armed and
-    /// auto-started on a unit already committed, so one truck ran two trips at once, both measuring
+    /// Keying "busy" on <c>InProgress</c> alone would make pausing look like releasing: trip N+1 would arm and
+    /// auto-start on a unit already committed, so one truck would run two trips at once, both measuring
     /// the same positions. The unique index carries the same filter for the same reason.
     /// </para>
     /// <para>
@@ -123,7 +123,7 @@ public class ArmableTripSelectionTests
     /// <summary>
     /// The queue-blocking rule stated as behaviour: an overdue trip nobody cancelled keeps its
     /// place. Running Thursday's trip before anyone noticed Monday's never left is a dispatcher's
-    /// decision, not the system's (§7).
+    /// decision, not the system's.
     /// </summary>
     [Test]
     public async Task AnOverdueTripStillBlocksTheOnesBehindIt()
@@ -147,8 +147,8 @@ public class ArmableTripSelectionTests
     }
 
     /// <summary>
-    /// The account kill switch reaching the reader: with no window, the working set is exactly what
-    /// it was before zero-touch — <c>InProgress</c> only (§8).
+    /// The account kill switch reaching the reader: with no window, the working set is
+    /// <c>InProgress</c> only.
     /// </summary>
     [Test]
     public async Task WithNoArmingWindowOnlyRunningTripsAreWatched()
@@ -168,7 +168,7 @@ public class ArmableTripSelectionTests
             (TruckB, "PAUSED", TripStatuses.Paused, Now.AddHours(-1)));
 
         // Paused is deliberately absent too: pause is the dispatcher's "I am taking control"
-        // switch, and it removes the trip from detection entirely (§5.2).
+        // switch, and it removes the trip from detection entirely.
         Assert.That(await WatchedCodesAsync(context, OneHourOut), Is.Empty);
     }
 }

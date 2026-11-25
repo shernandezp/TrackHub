@@ -30,7 +30,6 @@ import { toCamelCase } from 'utils/stringUtils';
 const TEMPLATE_TOKENS =
   '{eventType} {severity} {resourceType} {resourceId} {occurredAt} {link} {count} {eventTypes}';
 
-/** Dialog/form state for an account-override notification template. */
 export interface NotificationTemplateFormValues {
   notificationTemplateId?: string;
   templateKey?: string;

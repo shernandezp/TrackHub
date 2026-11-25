@@ -25,7 +25,6 @@ public readonly record struct GetAccountsQuery(
 
 public class GetAccountsQueryHandler(IAccountReader reader) : IRequestHandler<GetAccountsQuery, AccountsPageVm>
 {
-    // This method handles the GetAccountsQuery by retrieving a page of accounts from the reader asynchronously
     public async Task<AccountsPageVm> Handle(GetAccountsQuery request, CancellationToken cancellationToken)
     {
         var (skip, take) = PageRequest.Clamp(request.Skip, request.Take);

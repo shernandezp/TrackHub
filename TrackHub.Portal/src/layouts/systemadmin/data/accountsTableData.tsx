@@ -42,12 +42,6 @@ import {
 import type { AccountStatusId } from "data/accountStatuses";
 import type { ListParams } from 'api/core/paging';
 
-/**
- * Dialog/form state for an account. Merges an API {@link Account} (when editing)
- * with the create-only user fields collected by the dialog; all fields are
- * optional and the `name`/`typeId` requirement is enforced by the dialog's
- * validate() gate before save.
- */
 export interface AccountFormValues {
   accountId?: string;
   name?: string;
@@ -55,7 +49,6 @@ export interface AccountFormValues {
   typeId?: number;
   statusId?: number;
   active?: boolean;
-  // Create-only user fields.
   password?: string;
   firstName?: string;
   lastName?: string;
@@ -65,7 +58,6 @@ export interface AccountFormValues {
   version?: number;
 }
 
-/** Dialog/form state for the "add manager" flow (loose until the validate() gate). */
 export interface AccountUserFormValues {
   accountId?: string;
   active?: boolean;
@@ -80,7 +72,6 @@ export interface AccountUserFormValues {
   integrationUser?: boolean;
 }
 
-/** Dialog/form state for the account lifecycle (status change) dialog. */
 export interface AccountStatusFormValues {
   accountId?: string;
   statusId?: number;
@@ -88,7 +79,6 @@ export interface AccountStatusFormValues {
   reason?: string | null;
 }
 
-/** A column descriptor / rendered row for the vendored accounts `Table`. */
 export interface AccountTableColumn { name: string; title?: string; align?: "left" | "right" | "center"; }
 export type AccountTableRow = Record<string, ReactNode>;
 export interface AccountTableData { columns: AccountTableColumn[]; rows: AccountTableRow[]; }
@@ -114,7 +104,6 @@ function useAccountsTableData(
   const changeAccountStatus = useChangeAccountStatus();
   const createManager = useCreateManager();
 
-  // Keep the global spinner UX for the initial load / invalidation refetch.
   useEffect(() => {
     setLoading(accountsQuery.isFetching);
   }, [accountsQuery.isFetching, setLoading]);
@@ -122,8 +111,6 @@ function useAccountsTableData(
   const onSave = async (account: AccountFormValues) => {
     setLoading(true);
     try {
-      // validate(['name','typeId']) gates this call; assert the required create/
-      // update input fields at the boundary.
       if (account.accountId) {
         await updateAccountMaster.mutateAsync({
           accountId: account.accountId,

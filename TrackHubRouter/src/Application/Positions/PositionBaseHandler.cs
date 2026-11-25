@@ -62,12 +62,6 @@ public abstract class PositionBaseHandler
         }
     }
 
-    /// <summary>
-    /// Retrieves the device positions asynchronously
-    /// </summary>
-    /// <param name="operator"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>returns the collection of PositionVm</returns>
     protected async Task<IEnumerable<PositionVm>> GetDevicePositionAsync(
         IProviderCapabilityCatalog capabilityCatalog,
         IPositionRegistry positionRegistry,

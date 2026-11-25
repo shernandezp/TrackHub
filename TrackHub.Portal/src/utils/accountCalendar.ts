@@ -70,7 +70,6 @@ function offsetAt(zone: string, instantMs: number): number {
   return asUtc - (instantMs - (instantMs % 1000));
 }
 
-/** The calendar date of an instant in the zone. */
 export function dateInZone(zone: string | null | undefined, at: Date = new Date()): LocalDate {
   const wall = wallClockIn(validZone(zone), at);
   return `${wall.year}-${pad(wall.month)}-${pad(wall.day)}`;
@@ -98,7 +97,6 @@ const split = (date: LocalDate): [number, number, number] => {
 const fromUtcParts = (year: number, monthIndex: number, day: number): LocalDate =>
   new Date(Date.UTC(year, monthIndex, day)).toISOString().slice(0, 10);
 
-/** A calendar date shifted by whole days, without passing through any zone. */
 export function addDays(date: LocalDate, days: number): LocalDate {
   const [year, month, day] = split(date);
   return fromUtcParts(year, month - 1, day + days);

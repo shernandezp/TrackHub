@@ -15,15 +15,9 @@
  */
 
 /**
- * The trip-scoped panels on the dispatch board seed their `useState` ONCE, at
- * mount. The board looked like it unmounted them between trips — they sit
- * inside a `{!detail ? … }` ternary — but TanStack serves an already-visited
- * trip's detail from cache synchronously, so `detail` never goes undefined on
- * the way back and the panels survive the switch holding the previous trip's
- * values. Assign then posted trip A's staff against trip B.
- *
- * The fix is `key={detail.trip.tripId}`, which is exactly what this test pins:
- * remounting on a trip change is load-bearing behaviour, not a React detail.
+ * The trip-scoped panels seed their `useState` once, at mount, and TanStack serves a visited trip's
+ * detail from cache synchronously, so the surrounding ternary never unmounts them. Without
+ * `key={detail.trip.tripId}` Assign posts trip A's staff against trip B; this pins the remount.
  */
 
 import { render, screen, fireEvent } from '@testing-library/react';

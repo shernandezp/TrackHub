@@ -53,7 +53,7 @@ public sealed class TripShareWriter(IApplicationDbContext context) : ITripShareW
         await context.SaveChangesAsync(cancellationToken);
 
         // The plaintext token belongs to Manager's grant response and is returned to the caller
-        // exactly once, by the command - never re-read from this row (acceptance 23).
+        // exactly once, by the command - never re-read from this row.
         return TripMapper.ToVm(entity);
     }
 
@@ -73,7 +73,7 @@ public sealed class TripShareWriter(IApplicationDbContext context) : ITripShareW
 
         // The Manager grant id, NOT the local TripShareId: the caller feeds this straight into
         // Manager's revoke. Returning the local id would leave the public link live after a
-        // successful-looking revoke (acceptance 24).
+        // successful-looking revoke.
         return entity.PublicLinkGrantId;
     }
 }

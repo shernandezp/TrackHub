@@ -23,7 +23,6 @@ using TrackHub.Router.Domain.Helpers;
 namespace TrackHub.Router.Infrastructure.Protrack;
 
 /// <summary>
-/// Reader for retrieving device information from Protrack API.
 /// Uses /api/device/list for all devices and /api/device/detail for specific IMEIs.
 /// </summary>
 public sealed class DeviceReader(
@@ -34,7 +33,6 @@ public sealed class DeviceReader(
     : ProtrackReaderBase(httpClientFactory, httpClientService, credentialWriter, sessionStore), IExternalDeviceReader
 {
     /// <summary>
-    /// Retrieves a single device asynchronously based on the provided device DTO.
     /// Uses /api/device/detail with the device's IMEI (Serial).
     /// </summary>
     public async Task<DeviceVm> GetDeviceAsync(DeviceTransporterVm deviceDto, CancellationToken cancellationToken)
@@ -52,7 +50,6 @@ public sealed class DeviceReader(
     }
 
     /// <summary>
-    /// Retrieves multiple devices asynchronously based on the provided device DTOs.
     /// Uses /api/device/detail with comma-separated IMEIs (max 100).
     /// </summary>
     public async Task<IEnumerable<DeviceVm>> GetDevicesAsync(IEnumerable<DeviceTransporterVm> devices, CancellationToken cancellationToken)
@@ -75,10 +72,6 @@ public sealed class DeviceReader(
         return results;
     }
 
-    /// <summary>
-    /// Retrieves all devices asynchronously.
-    /// Uses /api/device/list to get all devices for the account.
-    /// </summary>
     public async Task<IEnumerable<DeviceVm>> GetDevicesAsync(CancellationToken cancellationToken)
     {
         var result = await WithReauthenticationAsync(

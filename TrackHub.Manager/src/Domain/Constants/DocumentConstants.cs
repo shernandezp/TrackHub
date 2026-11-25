@@ -15,7 +15,6 @@
 
 namespace TrackHub.Manager.Domain.Constants;
 
-/// <summary>Document lifecycle status values. Stored as strings.</summary>
 public static class DocumentStatuses
 {
     public const string Pending = nameof(Pending);
@@ -34,7 +33,6 @@ public static class DocumentStatuses
     public static bool IsValid(string? value) => value != null && All.Contains(value);
 }
 
-/// <summary>Virus/malware scan status values. Stored as strings.</summary>
 public static class DocumentScanStatuses
 {
     public const string Pending = nameof(Pending);
@@ -52,13 +50,11 @@ public static class DocumentScanStatuses
     public static bool IsServable(string? value) => Common.Domain.Evidence.DocumentScan.IsServable(value);
 }
 
-/// <summary>Who may see a document beyond its owner's audience. Only the owner scope is implemented.</summary>
 public static class DocumentVisibilityScopes
 {
     public const string Owner = nameof(Owner);
 }
 
-/// <summary>Sensitivity classification values. Stored as strings.</summary>
 public static class DocumentClassifications
 {
     public const string Public = nameof(Public);
@@ -74,28 +70,18 @@ public static class DocumentClassifications
 
     public static bool IsValid(string? value) => value != null && All.Contains(value);
 
-    /// <summary>
-    /// Confidential/Legal require an explicit clearance beyond plain Documents/Read.
-    /// </summary>
+    /// <summary>Confidential/Legal require an explicit clearance beyond plain Documents/Read.</summary>
     public static bool IsSensitive(string? classification)
         => string.Equals(classification, Confidential, StringComparison.OrdinalIgnoreCase)
            || string.Equals(classification, Legal, StringComparison.OrdinalIgnoreCase);
 }
 
 /// <summary>
-/// Owner entity types with a registered visibility resolver. Owner types not listed
-/// here are deny-by-default until their module ships a resolver.
+/// Owner entity types with a registered visibility resolver; unlisted types are deny-by-default.
 /// <para>
-/// DESIGN NOTE — there is deliberately NO <c>"Trip"</c> owner type (spec 11 §11/§18.6). Trip
-/// documents (manifests, bills of lading, POD signatures and photos) are created with
-/// <c>OwnerEntityType = Transporter</c> and <c>OwnerEntityId = trip.TransporterId</c>, and
-/// TripManagement keeps its own <c>TripDocument</c> link row. Registering a <c>"Trip"</c> owner type
-/// would force <c>DocumentAccessPolicy</c> to call TripManagement to resolve visibility, inverting
-/// the dependency direction (Manager must not depend on the services that depend on it). The
-/// transporter resolver already yields exactly the right audience — group visibility for portal
-/// users and <c>validateStaffAssignment</c> for staff. Accepted consequence: trip documents also
-/// appear in the transporter's document list, filterable by <c>Category</c>. Do not "complete" this
-/// list with a Trip entry.
+/// There is deliberately no <c>"Trip"</c> owner type: trip documents are owned by the trip's
+/// transporter, and resolving a Trip owner would make Manager depend on TripManagement, inverting
+/// the dependency direction. Do not add one.
 /// </para>
 /// </summary>
 public static class DocumentOwnerTypes
@@ -103,13 +89,11 @@ public static class DocumentOwnerTypes
     public const string Transporter = nameof(Transporter);
     public const string Staff = nameof(Staff);
 
-    /// <summary>Owner types with a registered visibility resolver (MVP: Transporter, Staff).</summary>
     public static bool IsRegistered(string? ownerEntityType)
         => string.Equals(ownerEntityType, Transporter, StringComparison.OrdinalIgnoreCase)
            || string.Equals(ownerEntityType, Staff, StringComparison.OrdinalIgnoreCase);
 }
 
-/// <summary>Document sharing constants — reuses PublicLinkGrant.</summary>
 public static class DocumentSharing
 {
     public const string ResourceType = "Document";
@@ -122,6 +106,5 @@ public static class DocumentLimits
     public const long DefaultMaxBytes = 25L * 1024 * 1024;          // 25 MB per photo/document
     public const long ImportExportMaxBytes = 100L * 1024 * 1024;    // 100 MB import/export/generated
 
-    /// <summary>Expiration alert thresholds in days.</summary>
     public static readonly IReadOnlyCollection<int> ExpirationThresholdsDays = [30, 15, 7];
 }

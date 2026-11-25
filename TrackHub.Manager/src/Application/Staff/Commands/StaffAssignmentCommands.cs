@@ -3,7 +3,7 @@ using TrackHub.Manager.Domain.Constants;
 namespace TrackHub.Manager.Application.Staff.Commands;
 
 // Overlapping open assignments for the same (staff, transporter) pair are rejected with 409 by the
-// writer; cross-account transporters surface as 404 (spec 09 §7.4).
+// writer; cross-account transporters surface as 404.
 [Authorize(Resource = Resources.StaffOperations, Action = Actions.Write)]
 [RequireFeature(FeatureKeys.Workforce)]
 // Enforcement: the reader/writer this handler delegates to extends AccountScopedDataAccess and
@@ -26,7 +26,7 @@ public class AssignStaffToTransporterCommandValidator : AbstractValidator<Assign
     }
 }
 
-// Defaults to now; the writer rejects re-ending an already-closed assignment (immutability, AC3).
+// Defaults to now; the writer rejects re-ending an already-closed assignment.
 [Authorize(Resource = Resources.StaffOperations, Action = Actions.Edit)]
 [RequireFeature(FeatureKeys.Workforce)]
 // Enforcement: the reader/writer this handler delegates to extends AccountScopedDataAccess and

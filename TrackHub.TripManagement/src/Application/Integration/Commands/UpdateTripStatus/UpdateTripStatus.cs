@@ -20,7 +20,7 @@ namespace TrackHub.TripManagement.Application.Integration.Commands.UpdateTripSta
 
 /// <summary>
 /// Partner/TMS status push, addressed by <c>ExternalReference</c> so the caller never needs to
-/// learn TrackHub's ids. Per-item results, never a batch failure (spec 11 §7.9), and the same
+/// learn TrackHub's ids. Per-item results, never a batch failure, and the same
 /// transition matrix as the portal path — an integration cannot drive a trip through a state
 /// change a dispatcher would be refused.
 /// </summary>
@@ -32,7 +32,6 @@ public readonly record struct UpdateTripStatusCommand(
     Guid AccountId,
     IReadOnlyCollection<TripStatusUpdateItem> Updates) : IRequest<IReadOnlyCollection<TripImportResultVm>>;
 
-/// <summary>One external status push.</summary>
 public readonly record struct TripStatusUpdateItem(string ExternalReference, string Status, string? Reason);
 
 public sealed class UpdateTripStatusCommandHandler(
@@ -70,8 +69,7 @@ public sealed class UpdateTripStatusCommandHandler(
             return new TripImportResultVm(update.ExternalReference, false, current.TripId, TripErrorCodes.InvalidTransition, $"{current.Status} cannot transition to {update.Status}.");
 
         // One funnel call: the status change and its timeline event commit together, and the event
-        // type is derived from the transition rather than string-built — `Trip{Status}` produced
-        // "TripInProgress", a type no catalog on either side of the wire has ever known.
+        // type is derived from the transition rather than string-built.
         await writer.TransitionTripAsync(
             current.TripId,
             accountId,

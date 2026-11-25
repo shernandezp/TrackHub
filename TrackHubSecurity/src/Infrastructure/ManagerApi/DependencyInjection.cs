@@ -25,8 +25,6 @@ public static class DependencyInjection
         // User-mirror writer carries mutations — no retry.
         services.AddGraphQLClient(Clients.Manager);
 
-        // As-service client for security audit forwarding: authenticates with the security_client
-        // credentials (no user-token propagation). The factory attaches the bearer token itself.
         services.AddGraphQLServiceClient(Clients.Manager);
 
         services.AddScoped<IManagerWriter, ManagerWriter>();

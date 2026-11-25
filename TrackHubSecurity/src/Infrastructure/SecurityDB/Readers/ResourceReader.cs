@@ -20,7 +20,6 @@ namespace TrackHub.Security.Infrastructure.Readers;
 public sealed class ResourceReader(IApplicationDbContext context) : IResourceReader
 {
 
-    // Get all resources
     public async Task<IReadOnlyCollection<ResourceVm>> GetResourcesAsync(CancellationToken cancellationToken)
         => await context.Resources
             .Select(r => new ResourceVm(r.ResourceId, r.ResourceName, null))

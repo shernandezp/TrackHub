@@ -21,16 +21,13 @@ namespace TrackHub.TripManagement.Application.Tolls.Queries.GetTransporterTollCl
 /// <summary>
 /// The account's transporter-type → toll-class mappings.
 /// <para>
-/// Account-scoped and feature-gated, unlike the platform toll catalog (§5): the catalog describes
+/// Account-scoped and feature-gated, unlike the platform toll catalog: the catalog describes
 /// public road infrastructure and carries no <c>AccountId</c>, but fleet composition IS tenant
 /// data, which is why this pair lives under <c>Resources.Trips</c> rather than
 /// <c>Resources.TollCatalog</c>.
 /// </para>
 /// <para>
-/// Read counterpart of <c>SetTransporterTollClassCommand</c>. The store has always implemented
-/// <c>GetMappingsAsync</c>, but nothing exposed it — so an operator could write a mapping and
-/// never read back what was already configured, leaving the portal unable to show more than what
-/// the current session happened to set.
+/// Read counterpart of <c>SetTransporterTollClassCommand</c>.
 /// </para>
 /// </summary>
 [Authorize(Resource = Resources.Trips, Action = Actions.Read)]
@@ -48,7 +45,7 @@ public sealed class GetTransporterTollClassesQueryHandler(
         GetTransporterTollClassesQuery request,
         CancellationToken cancellationToken)
     {
-        // The account comes from the caller, never the wire (acceptance 1).
+        // The account comes from the caller, never the wire.
         var caller = await userReader.GetUserAsync(UserId, cancellationToken);
         return await store.GetMappingsAsync(caller.AccountId, cancellationToken);
     }

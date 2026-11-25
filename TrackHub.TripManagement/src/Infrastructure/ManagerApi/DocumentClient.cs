@@ -20,7 +20,7 @@ namespace TrackHub.TripManagement.Infrastructure.ManagerApi;
 /// <summary>
 /// Reads document metadata from Manager's <c>document</c> query under <c>trip_client</c> to
 /// validate POD attachments. This module owns no storage surface: PODs are ordinary Manager
-/// <c>Document</c> records linked by id (spec 11 §11). Manager answers a missing or
+/// <c>Document</c> records linked by id. Manager answers a missing or
 /// non-readable document with a GraphQL error, which maps to a null state here — the caller
 /// then rejects the attachment rather than trusting it.
 /// </summary>

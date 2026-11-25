@@ -19,7 +19,7 @@ using TrackHub.TripManagement.Application.Trips.Commands.Delete;
 namespace TrackHub.TripManagement.Application.UnitTests;
 
 /// <summary>
-/// Acceptance 16: a trip with recorded events cannot be deleted (409). Trip history is permanent —
+/// A trip with recorded events cannot be deleted (409). Trip history is permanent —
 /// the answer to "this trip should go away" is cancellation, which preserves stops, events, POD and
 /// documents rather than orphaning them.
 /// </summary>

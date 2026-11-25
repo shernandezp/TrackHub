@@ -20,7 +20,7 @@ namespace TrackHub.TripManagement.Infrastructure.TelemetryApi;
 /// <c>trip_client</c> identity. Telemetry validates a 31-day window and a 10 000-point cap and
 /// rejects anything beyond them, so this client clamps to those limits before calling and reports
 /// the clamp back as <see cref="RouteReplayVm.Truncated"/>: truncation is always explicit, never
-/// a silently shortened route (spec 11 §7.5, acceptance 22).
+/// a silently shortened route.
 /// </summary>
 public class PositionHistoryClient(IGraphQLClientFactory graphQLClient)
     : GraphQLService(graphQLClient.CreateClient(Clients.Telemetry, asService: true)), IPositionHistoryClient

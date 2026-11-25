@@ -26,15 +26,9 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from 'AuthContext';
 
 /**
- * The report filter form is CATALOG-DRIVEN: each catalog row carries its filter
- * definitions as JSON (Manager `reports.filters`, seeded from the backend catalog
- * contributions), so adding a report or a filter is a backend-only change. A
- * definition names the value key the Reporting request sends back
- * (`filters.values[name]`), its datatype, the portal picker list feeding it
- * (absent = free input by type) and its i18n label key.
- *
- * Every filter is optional by contract: pickers render a selectable "All" empty
- * option and an empty value means "no filter" server-side.
+ * The filter form is catalog-driven: each catalog row carries its filter definitions as JSON, so
+ * adding a report or a filter is a backend-only change. Every filter is optional by contract: an
+ * empty value means "no filter" server-side.
  */
 export type FilterDataType = 'text' | 'guid' | 'datetime' | 'number';
 export type FilterPickerSource = 'transporters' | 'operators' | 'geofences' | 'accountStatus';
@@ -55,10 +49,8 @@ const PICKER_SOURCES: readonly FilterPickerSource[] = [
 ];
 
 /**
- * Parses a catalog row's `filters` JSON defensively: a malformed document yields an
- * empty filter set (the report still runs, unfiltered), a malformed entry is dropped,
- * an unknown datatype falls back to free text and an unknown picker source falls back
- * to a free input — a newer backend must never break the form.
+ * Parses defensively: a malformed document yields no filters, a malformed entry is dropped, and an
+ * unknown datatype or picker source falls back to free input, so a newer backend never breaks the form.
  */
 export function parseFilterDefinitions(json: string | null | undefined): ReportFilterDefinition[] {
   if (!json) return [];
@@ -101,16 +93,11 @@ export function isSearchPickerSource(source: FilterPickerSource): source is Sear
   return source in SEARCH_PICKER_SOURCES;
 }
 
-/** The resolved form model: definitions plus the option list behind each list picker source. */
 export interface ReportFiltersModel {
   definitions: ReportFilterDefinition[];
   optionsBySource: Record<ListPickerSource, SelectListItem[]>;
 }
 
-/**
- * Resolves the filter form model for the selected catalog row: parses its filter
- * definitions and loads exactly the picker lists those definitions reference.
- */
 function useFiltersData(filtersJson: string | null | undefined): ReportFiltersModel {
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
@@ -124,7 +111,6 @@ function useFiltersData(filtersJson: string | null | undefined): ReportFiltersMo
     enabled: isAuthenticated && needs('geofences'),
   });
 
-  // Keep the global spinner UX while the picker lists load.
   useEffect(() => {
     setLoading(operatorsQuery.isFetching || geofencesQuery.isFetching);
   }, [

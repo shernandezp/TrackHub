@@ -24,13 +24,10 @@ public class GeofenceEventConfiguration : IEntityTypeConfiguration<GeofenceEvent
 
     public void Configure(EntityTypeBuilder<GeofenceEvent> builder)
     {
-        // Table name - using geofencing schema
         builder.ToTable(name: TableMetadata.GeofenceEvent, schema: SchemaMetadata.Geofencing);
 
-        // Primary key
         builder.HasKey(x => x.GeofenceEventId);
 
-        // Column names
         builder.Property(x => x.GeofenceEventId).HasColumnName("id");
         builder.Property(x => x.TransporterId).HasColumnName("transporterid");
         builder.Property(x => x.GeofenceId).HasColumnName("geofenceid");
@@ -44,7 +41,6 @@ public class GeofenceEventConfiguration : IEntityTypeConfiguration<GeofenceEvent
         builder.Property(x => x.OutsideSinceAt).HasColumnName("outsidesinceat");
         builder.Property(x => x.EntryAlertedAt).HasColumnName("entryalertedat");
         builder.Property(x => x.ExitAlertedAt).HasColumnName("exitalertedat");
-        // Indexes
         builder.HasIndex(x => x.TransporterId).HasDatabaseName("ix_geofenceevent_transporterid");
         builder.HasIndex(x => x.GeofenceId).HasDatabaseName("ix_geofenceevent_geofenceid");
         builder.HasIndex(x => new { x.AccountId, x.EventDateTime })
@@ -56,7 +52,6 @@ public class GeofenceEventConfiguration : IEntityTypeConfiguration<GeofenceEvent
             .IsUnique()
             .HasFilter("departuretimestamp IS NULL");
 
-        // Relationships
         builder.HasOne(x => x.Geofence)
             .WithMany()
             .HasForeignKey(x => x.GeofenceId)

@@ -17,10 +17,8 @@ using Common.Application.Interfaces;
 
 namespace TrackHub.Security.Application.Users.Queries.GetPermission;
 
-// Profile, not Users: the query takes no subject and answers only about the CALLER (the handler
-// reads the token's own user id). Users/Read is the user-administration grant, which the User role
-// deliberately does not hold — so every ordinary user's shell bootstrap fired a guaranteed FORBIDDEN
-// here and relied on the caller swallowing it. Asking "what am I" is a Profile read.
+// Profile, not Users: the query answers only about the CALLER, and the User role deliberately does
+// not hold the Users/Read administration grant.
 [Authorize(Resource = Resources.Profile, Action = Actions.Read)]
 [AllowSuspendedAccount]
 public readonly record struct UserIsAdminQuery() : IRequest<bool>;
@@ -29,13 +27,6 @@ public class UserIsAdminQueryHandler(IUserReader reader, IUser user) : IRequestH
 {
     private Guid UserId { get; } = Guid.TryParse(user.Id, out var userId) ? userId : throw new UnauthorizedAccessException();
 
-    /// <summary>
-    /// Handles the UserIsAdminQuery request by checking if the user is an admin.
-    /// It uses the IUserReader service to perform the check.
-    /// </summary>
-    /// <param name="request"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>Returns a boolean value indicating whether the user is an admin or not.</returns>
     public async Task<bool> Handle(UserIsAdminQuery request, CancellationToken cancellationToken)
         => await reader.IsAdminAsync(UserId, cancellationToken);
 

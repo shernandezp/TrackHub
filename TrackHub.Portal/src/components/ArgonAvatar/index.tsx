@@ -32,7 +32,6 @@ Coded by www.creative-tim.com
 import { forwardRef } from "react";
 import type { AvatarProps } from "@mui/material/Avatar";
 
-// Custom styles for ArgonAvatar
 import ArgonAvatarRoot from "components/ArgonAvatar/ArgonAvatarRoot";
 
 export interface ArgonAvatarProps extends AvatarProps {

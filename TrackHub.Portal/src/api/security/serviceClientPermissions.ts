@@ -14,12 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Service-client-permission API (Security backend): plain typed async
- * functions. Failures THROW ApiError — fallbacks and toasts belong to the
- * caller layer.
- */
-
 import { executeGraphQL } from 'api/core/graphqlClient';
 import type { RequestOptions } from 'api/core/errors';
 import type {
@@ -72,7 +66,6 @@ export async function updateServiceClientPermission(
   return data.updateServiceClientPermission;
 }
 
-/** Returns the id of the deleted permission (schema: `deleteServiceClientPermission: UUID!`). */
 export async function deleteServiceClientPermission(
   serviceClientPermissionId: string
 ): Promise<string> {

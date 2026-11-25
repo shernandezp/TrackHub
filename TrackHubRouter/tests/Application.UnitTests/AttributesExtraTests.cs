@@ -17,7 +17,6 @@ using TrackHub.Router.Domain.Helpers;
 
 namespace TrackHub.Router.Application.UnitTests.Domain;
 
-// Guards the open attribute bag plumbing (router-audit A-03).
 [TestFixture]
 public class AttributesExtraTests
 {

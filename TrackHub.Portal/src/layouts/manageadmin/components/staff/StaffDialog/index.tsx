@@ -27,12 +27,6 @@ import { useAccountTransporterOptions } from 'edition/pickerOptions';
 import { useTransporterNames } from 'queries/transporters';
 import { DEFAULT_STAFF_TYPE, STAFF_TYPES, staffTypeLabelKey } from 'layouts/manageadmin/components/staff/staffTypes';
 
-/**
- * Dialog/form state for a staff. Merges an API {@link Staff} (when editing)
- * with the fresh-add shape (`{ accountId, active }`); all fields are optional
- * and the `name` requirement (plus a resolved accountId) is enforced by the
- * screen's validate() gate before save.
- */
 export interface StaffFormValues {
   version?: number;
   staffId?: string;

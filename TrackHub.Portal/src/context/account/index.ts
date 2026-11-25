@@ -19,14 +19,13 @@ import { createContext, useContext, useMemo } from 'react';
 import { accountCalendar, type AccountCalendar } from 'utils/accountCalendar';
 
 export interface CurrentAccountValue {
-  /** IANA zone from the account-context bootstrap read; null until it resolves (UTC calendar). */
+  /** Null until the bootstrap read resolves (UTC calendar meanwhile). */
   timeZoneId: string | null;
   isManager?: boolean;
 }
 
 export const CurrentAccountContext = createContext<CurrentAccountValue>({ timeZoneId: null });
 
-/** The account's calendar: `const calendar = useAccountCalendar(); calendar.today()`. */
 export function useAccountCalendar(): AccountCalendar {
   const { timeZoneId } = useContext(CurrentAccountContext);
   return useMemo(() => accountCalendar(timeZoneId), [timeZoneId]);

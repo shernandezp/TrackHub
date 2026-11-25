@@ -23,25 +23,16 @@ using TrackHub.AuthorityServer.Web.Endpoints;
 
 namespace Web.UnitTests;
 
-// The TripManagement precedent, applied here (TT-03). That service shipped a Program.cs missing
-// AddInfrastructureServices: it STARTED, it answered /health, and the failure only appeared on the
-// first request that touched a cross-service client. Nothing else in a suite can catch that — the
-// application tests mock these interfaces and the contract tests build the schema over mocks. This
-// is the only place the real container is ever constructed.
+// A missing registration lets the service start and answer /health, failing only on the first
+// request that needs it. The other suites mock these interfaces; this is the only place the real
+// container is ever constructed.
 [TestFixture]
 public sealed class ContainerValidationTests
 {
-    // A Release build takes the file-loading branch of AddOpenIdDictServices, and appsettings.json
-    // points OpenIddict:Path at an operator-provisioned path that exists on no build agent. The
-    // certificate is a deployment input, so the fixture supplies a throwaway one rather than the
-    // suite asserting a machine layout — which also means the file-loading branch itself is
-    // exercised instead of the DEBUG development-certificate shortcut.
-    //
-    // It has to arrive as environment variables. Program.cs reads the certificate while REGISTERING
-    // services, so a WebApplicationFactory configuration callback lands too late: the deferred host
-    // builder applies those when the host is built, by which point AddOpenIdDictServices has already
-    // run and thrown. Environment variables are part of WebApplication.CreateBuilder's default
-    // sources and outrank appsettings.json, so they are in place before Program.cs starts.
+    // A Release build loads the certificate from OpenIddict:Path, which exists on no build agent, so
+    // the fixture supplies a throwaway one. It has to arrive as environment variables: Program.cs
+    // reads the certificate while registering services, before a WebApplicationFactory
+    // configuration callback would apply.
     private const string CertificatePassword = "container-validation";
     private static string _certificatePath = string.Empty;
 
@@ -87,10 +78,8 @@ public sealed class ContainerValidationTests
         protected override IHost CreateHost(IHostBuilder builder)
         {
 
-            // ValidateOnBuild walks every registered descriptor and fails if any constructor
-            // dependency is unregistered. ValidateScopes catches a singleton capturing a scoped
-            // service — here that would mean an OpenIddict store holding one request's DbContext
-            // for the lifetime of the process.
+            // ValidateScopes catches a singleton capturing a scoped service, e.g. an OpenIddict store
+            // holding one request's DbContext for the lifetime of the process.
             builder.UseDefaultServiceProvider(options =>
             {
                 options.ValidateOnBuild = true;
@@ -110,9 +99,8 @@ public sealed class ContainerValidationTests
         Assert.DoesNotThrow(() => _ = factory.Services);
     }
 
-    // The two handlers the minimal-API endpoints resolve out of the request scope. An unregistered
-    // handler here fails at /authorize or /token, not at startup — the whole class of defect this
-    // fixture exists for.
+    // Resolved by the minimal-API endpoints out of the request scope, so an unregistered one fails at
+    // /authorize or /token, not at startup.
     [TestCase(typeof(AuthorizationHandler))]
     [TestCase(typeof(TokenHandler))]
     public void CriticalRequestScopedHandlers_AreResolvable(Type contract)

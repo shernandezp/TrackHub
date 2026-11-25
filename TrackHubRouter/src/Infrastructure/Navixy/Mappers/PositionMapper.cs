@@ -31,9 +31,6 @@ internal static class PositionMapper
     public static string FormatNavixyDate(DateTimeOffset instant, TimeZoneInfo zone)
         => TimeZoneInfo.ConvertTime(instant, zone).ToString(NavixyDateFormat, CultureInfo.InvariantCulture);
 
-    /// <summary>
-    /// Maps a Tracker with last_update to a PositionVm object.
-    /// </summary>
     public static PositionVm MapToPositionVm(this Tracker tracker, DeviceTransporterVm deviceDto, TimeZoneInfo zone)
     {
         var lastUpdate = tracker.Last_update;
@@ -57,9 +54,6 @@ internal static class PositionMapper
         );
     }
 
-    /// <summary>
-    /// Maps a TrackPoint to a PositionVm object.
-    /// </summary>
     public static PositionVm MapToPositionVm(this TrackPoint point, DeviceTransporterVm deviceDto, TimeZoneInfo zone)
         => new(
             deviceDto.TransporterId,
@@ -80,9 +74,6 @@ internal static class PositionMapper
             null
         );
 
-    /// <summary>
-    /// Maps a collection of Tracker objects to PositionVm objects using a dictionary of DeviceTransporterVm.
-    /// </summary>
     public static IEnumerable<PositionVm> MapToPositionVm(this IEnumerable<Tracker> trackers, IDictionary<int, DeviceTransporterVm> devicesDictionary, TimeZoneInfo zone)
     {
         foreach (var tracker in trackers)
@@ -94,9 +85,6 @@ internal static class PositionMapper
         }
     }
 
-    /// <summary>
-    /// Maps a collection of TrackPoint objects to PositionVm objects.
-    /// </summary>
     public static IEnumerable<PositionVm> MapToPositionVm(this IEnumerable<TrackPoint> points, DeviceTransporterVm deviceDto, TimeZoneInfo zone)
     {
         foreach (var point in points)

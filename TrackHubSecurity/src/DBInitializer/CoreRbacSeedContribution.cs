@@ -66,13 +66,9 @@ internal sealed class CoreRbacSeedContribution : IRbacSeedContribution
         Common.Domain.Constants.Resources.Users,
     ];
 
-    // Resources.Trips needs Custom because planTripRoute, shareTrip and
-    // revokeTripShare are user-facing Custom operations. Without a ResourceAction row here
-    // there is no ResourceActionRole to grant, so IdentityService resolves no roles and
-    // AuthorizationBehavior returns FORBIDDEN for EVERY user including Administrator —
-    // route planning and the whole public-sharing surface would be dead on a fresh deploy.
-    // (TripTracking/Custom is deliberately NOT here: only service clients call it, and they
-    // authorize through the separate service_client_permissions table.)
+    // Without a Custom ResourceAction row there is no ResourceActionRole to grant, so the Custom
+    // operations answer FORBIDDEN for EVERY user including Administrator. TripTracking/Custom is
+    // deliberately absent: only service clients call it, through service_client_permissions.
     public IReadOnlyList<string> CustomActionResources { get; } =
     [
         Common.Domain.Constants.Resources.Users,
@@ -83,38 +79,10 @@ internal sealed class CoreRbacSeedContribution : IRbacSeedContribution
         Common.Domain.Constants.Resources.Operators,
     ];
 
-    // Data-driven default role matrix for the non-admin roles. Each entry is the full set of
-    // resource -> actions a role is granted; the initializer's role-grant seeding is idempotent
-    // and silently skips any resource/action pair that isn't in the ResourceAction catalog, so
-    // resources not listed for a role receive no grant. Administrator is intentionally absent
-    // here — it receives grant-all over the whole catalog.
-    //
-    // Rationale anchors: Geofences full CRUD for User (portal Geofence Manager route is
-    // USER-gated); Positions is Read-only for both roles (Positions/Custom is a service-identity
-    // write from the Router feed, with no portal or mobile caller); Operators/Custom is ping and
-    // manual sync, held by Manager and User; Users/Custom is SELF-SERVICE password change only
-    // (UpdatePasswordCommand re-checks that the subject is the caller);
-    // Credentials (viewing decrypted credential material) and Staff are Manager-only;
-    // Notifications/Custom (SendTest) is Manager-only;
-    // Reports/Edit, SupportGrants, ServiceClients, Administrative, *Master and GeocodingProviders
-    // stay Administrator-only.
-    //
-    // Trip Management: Manager gets Trips R/W/E/D/Export/Custom + TollCatalog/Read;
-    // User gets Trips R/W/E/Export/Custom + TollCatalog/Read. TollCatalog Write/Edit/Delete
-    // is deliberately NOT granted to Manager or User — the toll catalog is platform reference
-    // data, so a non-administrator can read stations/tariffs/vehicle classes but can never
-    // create, edit or delete one.
-    //
-    // TripTracking carries NO role grant at all. called for Manager → TripTracking/Read,
-    // but the resource has exactly one operation — processTripPositions, which is
-    // TripTracking/Custom — so a Read grant authorized nothing while standing as a live
-    // permission row that would silently pre-authorize any TripTracking read added later.
-    // TripTracking/Custom is a service-identity grant only and is seeded via
-    // ServiceClientGrants below.
-    //
-    // NOTE: role-grant seeding only ADDS missing rows, it never removes. A deployment
-    // already seeded with the earlier matrix keeps its inert Manager → TripTracking/Read row;
-    // delete it manually if you want the permission table to match this list exactly.
+    // Administrator is absent: it receives grant-all over the whole catalog. TollCatalog stays
+    // read-only for every other role because it is platform reference data. TripTracking carries
+    // NO role grant: its only operation is a service-identity Custom, so a Read grant would only
+    // pre-authorize any TripTracking read added later.
     public IReadOnlyDictionary<string, (string Resource, string[] Actions)[]> RoleGrants { get; } =
         new Dictionary<string, (string Resource, string[] Actions)[]>
         {
@@ -122,7 +90,7 @@ internal sealed class CoreRbacSeedContribution : IRbacSeedContribution
             [
                 (Common.Domain.Constants.Resources.Accounts, [Actions.Read, Actions.Edit]),
                 // Read only: entitlement provisioning is the platform operator's, through the
-                // AccountFeaturesMaster surface. Write here let a tenant Manager enable any paid
+                // AccountFeaturesMaster surface. Write here would let a tenant Manager enable any paid
                 // module for their own account and raise their own API quota through ConfigurationJson.
                 (Common.Domain.Constants.Resources.AccountFeatures, [Actions.Read]),
                 (Common.Domain.Constants.Resources.Alerts, [Actions.Read, Actions.Edit]),
@@ -157,12 +125,8 @@ internal sealed class CoreRbacSeedContribution : IRbacSeedContribution
                 (Common.Domain.Constants.Resources.TollCatalog, [Actions.Read]),
                 (Common.Domain.Constants.Resources.Transporters, [Actions.Read, Actions.Write, Actions.Edit, Actions.Delete]),
                 (Common.Domain.Constants.Resources.TransporterType, [Actions.Read]),
-                // Custom is planTripRoute / shareTrip / revokeTripShare. Adding Trips to the
-                // Actions.Custom resource list only makes the pair GRANTABLE — authorization reads
-                // ResourceActionRole, and role inheritance does not fill the gap
-                // (ResourceActionRoleReader matches role names exactly, no ParentRoleId walk).
-                // Without it an account administrator could create a trip but not plan its route
-                // or share it, and only the platform Administrator's grant-all covered it.
+                // Custom is planTripRoute / shareTrip / revokeTripShare. Role inheritance does not
+                // fill the gap: ResourceActionRoleReader matches role names exactly, no ParentRoleId walk.
                 (Common.Domain.Constants.Resources.Trips, [Actions.Read, Actions.Write, Actions.Edit, Actions.Delete, Actions.Export, Actions.Custom]),
                 (Common.Domain.Constants.Resources.Users, [Actions.Read, Actions.Write, Actions.Edit, Actions.Delete, Actions.Custom]),
             ],
@@ -187,12 +151,8 @@ internal sealed class CoreRbacSeedContribution : IRbacSeedContribution
                 (Common.Domain.Constants.Resources.TollCatalog, [Actions.Read]),
                 (Common.Domain.Constants.Resources.Transporters, [Actions.Read]),
                 (Common.Domain.Constants.Resources.TransporterType, [Actions.Read]),
-                // Custom = plan route / share / revoke. The dispatcher is the primary actor
-                // for exactly these three operations, so withholding it left the primary user of
-                // the module unable to plan a route on a trip they had just created.
-                // Export = the six trip-* report feeds, including the POD register. Without it the
-                // dispatcher-facing catalog reports were visible in the picker but failed closed for
-                // the role that owns them.
+                // Custom = plan route / share / revoke; Export = the trip-* report feeds. The
+                // dispatcher is the primary actor for both.
                 (Common.Domain.Constants.Resources.Trips, [Actions.Read, Actions.Write, Actions.Edit, Actions.Export, Actions.Custom]),
                 // Custom on Users gates exactly one command: UpdatePasswordCommand, whose handler
                 // requires the subject to be the caller (or a verified manager of the subject). This
@@ -206,9 +166,6 @@ internal sealed class CoreRbacSeedContribution : IRbacSeedContribution
 
     public IReadOnlyList<(string[] Clients, (string Resource, string Action)[] Grants)> ServiceClientGrants { get; } =
     [
-        // Service-client allowlist for the TrackHub.Telemetry surface. The token audience is the
-        // shared trackhub_api, so that is the audience these grants match at enforcement time.
-        // Removing a row blocks the corresponding operation with FORBIDDEN.
         (["router_client", "syncworker_client"],
         [
             (Common.Domain.Constants.Resources.Positions, Actions.Custom),
@@ -217,10 +174,6 @@ internal sealed class CoreRbacSeedContribution : IRbacSeedContribution
             (Common.Domain.Constants.Resources.OperatorHealth, Actions.Write),
             (Common.Domain.Constants.Resources.OperatorSyncRuns, Actions.Write),
         ]),
-        // Manager master-data surface the Router/SyncWorker call with their SERVICE identity
-        // (client credentials): account/operator/device-sync reads, device synchronization writes,
-        // credential token refresh, alert recording, and the ServiceClient-only geocoding provider
-        // read. Sourced from the [Authorize] attributes on the corresponding Manager handlers.
         (["router_client", "syncworker_client"],
         [
             (Common.Domain.Constants.Resources.Accounts, Actions.Read),
@@ -237,9 +190,6 @@ internal sealed class CoreRbacSeedContribution : IRbacSeedContribution
             (Common.Domain.Constants.Resources.Alerts, Actions.Write),
             (Common.Domain.Constants.Resources.GeocodingProviders, Actions.Read),
         ]),
-        // The security_client posts security audit events to Manager's central AuditEvent store and
-        // probes feature flags and account status for its own gating, and checks a staff's account
-        // before writing its credentials (validateStaffAccount).
         (["security_client"],
         [
             (Common.Domain.Constants.Resources.Audit, Actions.Write),
@@ -247,25 +197,15 @@ internal sealed class CoreRbacSeedContribution : IRbacSeedContribution
             (Common.Domain.Constants.Resources.Accounts, Actions.Read),
             (Common.Domain.Constants.Resources.Staff, Actions.Read),
         ]),
-        // The geofence_client records geofence alert events (recordAlertEvent) and its dwell
-        // evaluator's job runs (createBackgroundJobRun) in Manager — exactly two grants.
         (["geofence_client"],
         [
             (Common.Domain.Constants.Resources.Alerts, Actions.Write),
             (Common.Domain.Constants.Resources.BackgroundJobs, Actions.Write),
         ]),
-        // The Router/SyncWorker side additionally needs Geofencing/Custom to feed the real-time
-        // detection pipeline (processPositions) — without it every batch is denied and no geofence
-        // events or alerts can ever be produced.
         (["router_client", "syncworker_client"],
         [
             (Common.Domain.Constants.Resources.Geofencing, Actions.Custom),
         ]),
-        // The trip_client calls Manager (alert events, job runs, staff/transporter/group master
-        // data, trip document metadata, public tracking links) and Telemetry (route replay position
-        // history) with its SERVICE identity. Sourced from the [Authorize] attributes on the
-        // corresponding producer handlers — this is the complete allowlist; removing a row blocks
-        // that operation with FORBIDDEN.
         (["trip_client"],
         [
             (Common.Domain.Constants.Resources.Alerts, Actions.Write),
@@ -280,11 +220,6 @@ internal sealed class CoreRbacSeedContribution : IRbacSeedContribution
             (Common.Domain.Constants.Resources.PositionHistory, Actions.Read),
             (Common.Domain.Constants.Resources.AccountFeatures, Actions.Read),
         ]),
-        // The Router/SyncWorker side gets TripTracking/Custom and NOTHING else in this module, so
-        // those two identities can call processTripPositions only.
-        // NOTE: db-init MUST be re-run on existing deployments after a change here, or the affected
-        // calls return FORBIDDEN — the resource catalog, role grants and service-client permission
-        // rows are what the authorization pipeline consults at enforcement time.
         (["router_client", "syncworker_client"],
         [
             (Common.Domain.Constants.Resources.TripTracking, Actions.Custom),

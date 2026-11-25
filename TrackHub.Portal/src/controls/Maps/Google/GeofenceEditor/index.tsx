@@ -134,9 +134,7 @@ const GoogleGeofenceEditor = ({
   // refetch/re-render never yanks the map back off the area the user panned to.
   const didFitRef = useRef(false);
   const mapRef = useRef<google.maps.Map | null>(null);
-  // The pending (just-drawn, not yet saved) shape.
   const pendingRef = useRef<EditorShape | null>(null);
-  // Editing an existing shape.
   const editedIdRef = useRef<string | null>(null);
   const editedShapeRef = useRef<GeofenceShape | null>(null);
   const editedCoordinatesRef = useRef<MapPoint[] | null>(null);

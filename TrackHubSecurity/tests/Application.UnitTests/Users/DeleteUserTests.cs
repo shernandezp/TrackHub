@@ -31,7 +31,6 @@ internal class DeleteUserTests
     [SetUp]
     public void Setup()
     {
-        // Initialize the mock and the object under test before each test
         _writerMock = new Mock<IUserWriter>();
         _publisherMock = new Mock<IPublisher>();
         _mockUser = new Mock<IUser>();
@@ -40,51 +39,41 @@ internal class DeleteUserTests
     [Test]
     public async Task Handle_ValidCommand_DeleteUserAndPublishesNotification()
     {
-        // Arrange
         var userId = Guid.NewGuid();
         var cancellationToken = new CancellationToken();
 
         _writerMock.Setup(m => m.DeleteUserAsync(userId, cancellationToken))
-                  .Returns(Task.CompletedTask); // DeleteUserAsync returns a completed task
+                  .Returns(Task.CompletedTask);
         _mockUser.Setup(x => x.Id).Returns(Guid.NewGuid().ToString());
 
         var handler = new DeleteUserCommandHandler(_writerMock.Object, _mockUser.Object, _publisherMock.Object, _mockUser.Object);
         var command = new DeleteUserCommand(userId);
 
-        // Act
         await handler.Handle(command, cancellationToken);
 
-        // Assert
-        // Verify that DeleteUserAsync was called with the correct arguments
         _writerMock.Verify(m => m.DeleteUserAsync(userId, cancellationToken), Times.Once);
 
-        // Verify that Publish was called with the correct arguments
         _publisherMock.Verify(m => m.Publish(It.IsAny<UserDeleted.Notification>(), cancellationToken), Times.Once);
     }
 
     [Test]
     public async Task Handle_InvalidCommand_ThrowsUnauthorizedAccessException()
     {
-        // Arrange
         var userId = Guid.NewGuid();
         var cancellationToken = new CancellationToken();
 
         _writerMock.Setup(m => m.DeleteUserAsync(userId, cancellationToken))
-                  .Returns(Task.CompletedTask); // DeleteUserAsync returns a completed task
+                  .Returns(Task.CompletedTask);
         _mockUser.Setup(x => x.Id).Returns(userId.ToString());
 
         var handler = new DeleteUserCommandHandler(_writerMock.Object, _mockUser.Object, _publisherMock.Object, _mockUser.Object);
         var command = new DeleteUserCommand(userId);
 
-        // Act & Assert
         await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
             await handler.Handle(command, CancellationToken.None));
 
-        // Assert
-        // Verify that DeleteUserAsync was called with the correct arguments
         _writerMock.Verify(m => m.DeleteUserAsync(userId, cancellationToken), Times.Never);
 
-        // Verify that Publish was called with the correct arguments
         _publisherMock.Verify(m => m.Publish(It.IsAny<UserDeleted.Notification>(), cancellationToken), Times.Never);
     }
 }

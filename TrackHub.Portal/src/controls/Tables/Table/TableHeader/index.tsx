@@ -26,8 +26,7 @@ export interface TableHeaderProps {
   orderBy: string;
   order: string;
   handleSort: (name: string) => void;
-  /** Whether the header offers click-to-sort. Server-paged tables pass `false`:
-   *  the sort only ever reordered the loaded page, which reads as a full sort. */
+  /** Server-paged tables pass `false`: the sort would only reorder the loaded page. */
   sortable?: boolean;
   compact?: boolean;
 }

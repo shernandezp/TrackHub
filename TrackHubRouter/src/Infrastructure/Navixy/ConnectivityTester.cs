@@ -17,10 +17,6 @@ using TrackHub.Router.Domain.Interfaces;
 
 namespace TrackHub.Router.Infrastructure.Navixy;
 
-/// <summary>
-/// Connectivity tester for Navixy API.
-/// Tests connection by authenticating and fetching tracker list.
-/// </summary>
 public sealed class ConnectivityTester(
     ICredentialHttpClientFactory httpClientFactory,
     IHttpClientService httpClientService,

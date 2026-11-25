@@ -17,7 +17,7 @@ using TrackHub.Reporting.Domain.Models;
 
 namespace TrackHub.Reporting.Domain.Interfaces.Manager;
 
-// Reads the Manager workforce data the spec 09 §13 reports project. Each call runs under the caller's
+// Reads the Manager workforce data the workforce reports project. Each call runs under the caller's
 // propagated token; Manager enforces account scoping and the `workforce` feature gate. All list reads
 // page transparently up to the 100k report row limit.
 public interface IWorkforceReportReader

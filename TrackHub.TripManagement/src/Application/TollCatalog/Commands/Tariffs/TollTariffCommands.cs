@@ -15,12 +15,12 @@
 
 namespace TrackHub.TripManagement.Application.TollCatalog.Commands.Tariffs;
 
-// NOT feature-flagged — platform reference data (spec 11 §3, §5). Administrator-only.
+// NOT feature-flagged — platform reference data. Administrator-only.
 
 /// <summary>
 /// Inserts a tariff and CLOSES the currently open row for the same <c>(station, class)</c> pair.
 /// Prices are append-only: overwriting one would silently rewrite every historical trip's estimate,
-/// so a change is a new effective-dated row and the old figure stays reproducible (acceptance 21).
+/// so a change is a new effective-dated row and the old figure stays reproducible.
 /// An overlapping window for the same pair is a conflict (409), not a merge.
 /// </summary>
 [Authorize(Resource = Resources.TollCatalog, Action = Actions.Write)]
@@ -32,11 +32,9 @@ public sealed class CreateTollTariffCommandHandler(ITollCatalogWriter writer)
 {
     public async Task<TollTariffVm> Handle(CreateTollTariffCommand request, CancellationToken cancellationToken)
         // No overlap pre-check here. Creating a tariff for a pair that already has an OPEN row is
-        // how a price change is expressed (spec 11 §7.6): the writer closes the open row at
-        // EffectiveFrom - 1 day and inserts the new one. A pre-check with excludeTariffId: null
-        // counted that open row as an overlap and made every price change a 409 — i.e. prices
-        // could never be changed through the API at all. The writer owns overlap semantics
-        // because it is the only place that knows which row it is about to close.
+        // how a price change is expressed: the writer closes the open row at
+        // EffectiveFrom - 1 day and inserts the new one, so a pre-check would make every price change a 409.
+        // The writer owns overlap semantics because it is the only place that knows which row it is about to close.
         => await writer.CreateTariffAsync(request.Tariff, cancellationToken);
 }
 

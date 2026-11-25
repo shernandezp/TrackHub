@@ -1,16 +1,10 @@
 /**
- * Module augmentation for the two Leaflet plugins the Maps stack uses that ship
- * no types: `leaflet-editable` (interactive polygon drawing/editing in the
- * geofence editors) and `leaflet-fullscreen` (the OSM fullscreen control).
- *
- * This file imports `leaflet`, making it a module, so `declare module 'leaflet'`
- * *merges* with @types/leaflet rather than replacing it. Only the members the
- * Maps controls actually call are declared.
+ * `leaflet-editable` and `leaflet-fullscreen` ship no types. Importing `leaflet` makes this a
+ * module, so `declare module 'leaflet'` merges with @types/leaflet. Only called members are declared.
  */
 import 'leaflet';
 
 declare module 'leaflet' {
-  // --- leaflet-editable ---
   class Editable {
     constructor(map: Map, options?: unknown);
     startPolygon(latlng?: LatLng): Polygon;
@@ -34,7 +28,6 @@ declare module 'leaflet' {
     editEnabled(): boolean;
   }
 
-  // --- leaflet-fullscreen ---
   namespace Control {
     interface FullscreenOptions extends ControlOptions {
       title?: string | { false: string; true: string };

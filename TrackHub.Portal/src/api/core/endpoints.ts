@@ -15,9 +15,8 @@
 */
 
 /**
- * Single source of truth for backend endpoints. All env access for API URLs
- * lives here or in the edition extension file (src/edition/endpoints.ts, empty
- * in this repository) — nothing else in src/api reads process.env.
+ * Single source of truth for backend endpoints: nothing else in src/api reads
+ * process.env except the edition extension file (src/edition/endpoints.ts).
  */
 
 import {
@@ -38,10 +37,7 @@ export const GRAPHQL_ENDPOINTS = {
 
 export type GraphQLBackend = keyof typeof GRAPHQL_ENDPOINTS;
 
-/**
- * Manager REST base (document upload/download live outside GraphQL). The
- * fallback only matters under Vitest, where env vars are absent at load time.
- */
+/** The fallback only matters under Vitest, where env vars are absent at load time. */
 const managerRestBase = (GRAPHQL_ENDPOINTS.manager ?? '').replace(/graphql\/?$/, '');
 
 /** TripManagement REST base — the anonymous public tracking snapshot lives outside GraphQL. */
@@ -52,35 +48,22 @@ export const REST_ENDPOINTS = {
   reportingBasicReports: `${process.env.REACT_APP_REPORTING_ENDPOINT}api/BasicReports`,
   /** On-screen report preview — JSON dataset (Reporting service, REST). */
   reportingBasicReportsPreview: `${process.env.REACT_APP_REPORTING_ENDPOINT}api/BasicReports/preview`,
-  /**
-   * Manager document REST base, e.g. `${managerDocuments}/upload`. The Manager
-   * document endpoints are mapped at `~/documents/...` (no `api/` segment) —
-   * see TrackHub.Manager Web/Endpoints/Documents.cs.
-   */
+  /** Mapped at `~/documents/...` (no `api/` segment). */
   managerDocuments: `${managerRestBase}documents`,
-  /**
-   * Anonymous platform announcements (Manager service, REST). Deliberately
-   * unauthenticated — the status page must show a maintenance banner to a
-   * visitor who cannot sign in. See TrackHub.Manager Web/Endpoints/PlatformStatus.cs.
-   */
+  /** Unauthenticated: the status page must show a maintenance banner to a visitor who cannot sign in. */
   managerPlatformAnnouncements: `${managerRestBase}api/PlatformStatus/announcements`,
   /**
-   * Anonymous customer trip tracking (TripManagement service, REST). Mapped at
-   * `~/public/trips/{publicLinkGrantId}` (no `api/` segment) — see
-   * TrackHub.TripManagement Web/Endpoints/PublicTrips.cs. Deliberately
-   * unauthenticated: the recipient of a shared link is not a platform principal.
+   * Mapped at `~/public/trips/{publicLinkGrantId}` (no `api/` segment). Unauthenticated:
+   * the recipient of a shared link is not a platform principal.
    */
   tripManagementPublicTrips: `${tripManagementRestBase}public/trips`,
   ...editionRestEndpoints,
 } as const;
 
 /**
- * Anonymous `/health` probe URLs, one per backend, for the public status page.
- *
- * Lazy getters (like OAUTH_ENDPOINTS): production builds inline the process.env
- * expressions, while tests can assign REACT_APP_* at runtime. A getter returns
- * `undefined` when its backend is not configured, which the status page renders
- * as "unknown" rather than "down".
+ * Lazy getters: production builds inline the process.env expressions, while tests
+ * assign REACT_APP_* at runtime. An unconfigured backend yields `undefined`, which
+ * the status page renders as "unknown" rather than "down".
  */
 const toHealthUrl = (base: string | undefined): string | undefined =>
   base ? `${base.replace(/graphql\/?$/, '').replace(/\/+$/, '')}/health` : undefined;

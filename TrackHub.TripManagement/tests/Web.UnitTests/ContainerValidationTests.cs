@@ -21,16 +21,10 @@ using TrackHub.TripManagement.Web.Endpoints;
 
 namespace Web.UnitTests;
 
-// Spec 11 §16, second guard: "A DI container-validation test (ValidateOnBuild/ValidateScopes over
-// the real Web registrations)."
-//
-// This exists because of a real production outage. Program.cs was missing
-// AddInfrastructureServices, so IGraphQLClientFactory was never registered and every Manager and
-// Telemetry client was unresolvable. The service still STARTED and still answered /health — the
-// failure only appeared on the first request that touched AlertEmitter, and surfaced as an opaque
-// "Unexpected Execution Error".
-//
-// Nothing else in the suite could have caught it: the application tests mock these interfaces, and
+// DI container validation (ValidateOnBuild/ValidateScopes) over the real Web registrations.
+// A missing registration does not stop the service starting or answering /health; it surfaces
+// only on the first request that needs it, as an opaque "Unexpected Execution Error".
+// Nothing else in the suite can catch it: the application tests mock these interfaces, and
 // the contract tests build the GraphQL schema over Mock.Of<ISender>(). This is the only place the
 // real container is ever constructed.
 [TestFixture]
@@ -43,8 +37,7 @@ public sealed class ContainerValidationTests
         protected override IHost CreateHost(IHostBuilder builder)
         {
             // ValidateOnBuild walks every registered descriptor and fails if any constructor
-            // dependency is unregistered — this is the assertion that would have caught the
-            // missing IGraphQLClientFactory. ValidateScopes catches a singleton capturing a scoped
+            // dependency is unregistered. ValidateScopes catches a singleton capturing a scoped
             // service, which in this module would silently share a request-scoped DbContext
             // between the two hosted jobs.
             builder.UseDefaultServiceProvider(options =>

@@ -1,6 +1,6 @@
 namespace TrackHub.Manager.Application.Documents.Queries;
 
-// Per-owner document panel (ungated — gated by the owning module's feature). Now applies owner group
+// Per-owner document panel (ungated — gated by the owning module's feature). Applies owner group
 // visibility + classification filtering, not tenant scope alone.
 [Authorize(Resource = Resources.Documents, Action = Actions.Read)]
 // Enforcement: the writer or reader checks every referenced id against the request's account.
@@ -88,8 +88,7 @@ public class GetDocumentTypesQueryHandler(IDocumentReader reader) : IRequestHand
 }
 
 // Batched compliance read for the missing-required-documents report: every group-visible
-// transporter with its Active document categories in one call (replaces one documentsForOwner
-// call per transporter).
+// transporter with its Active document categories in one call.
 [Authorize(Resource = Resources.Documents, Action = Actions.Read)]
 [RequireFeature(FeatureKeys.Documents)]
 public readonly record struct GetTransporterDocumentComplianceQuery(Guid AccountId) : IRequest<IReadOnlyCollection<TransporterDocumentComplianceVm>>;

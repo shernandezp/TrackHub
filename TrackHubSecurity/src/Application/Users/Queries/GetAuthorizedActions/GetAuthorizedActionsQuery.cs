@@ -29,33 +29,21 @@ public class GetAuthorizedActionsQueryHandler(
     IResourceActionRoleReader resourceActionRoleReader,
     IResourceActionPolicyReader resourceActionPolicyReader) : IRequestHandler<GetAuthorizedActionsQuery, IReadOnlyCollection<ResourceActionVm>>
 {
-    /// <summary>
-    /// Handle method to process the GetAuthorizedActionsQuery request
-    /// </summary>
-    /// <param name="request"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>a list of ResourceActionVm objects</returns>
     public async Task<IReadOnlyCollection<ResourceActionVm>> Handle(GetAuthorizedActionsQuery request, CancellationToken cancellationToken)
     {
         // Tenant guard: resolving the target user enforces caller access to its owning account.
         _ = await userReader.GetUserAsync(request.UserId, cancellationToken);
 
-        // Get the user roles for the specified user ID
         var userRoles = await userRoleReader.GetUserRolesIdsAsync(request.UserId, cancellationToken);
 
-        // Get the user policies for the specified user ID
         var userPolicies = await userPolicyReader.GetUserPolicyIdsAsync(request.UserId, cancellationToken);
 
-        // Get the role authorized actions based on the user roles
         var roleAuthorizedActions = await resourceActionRoleReader.GetRoleAuthorizedActionsAsync(userRoles, cancellationToken);
 
-        // Get the policy authorized actions based on the user policies
         var policyAuthorizedActions = await resourceActionPolicyReader.GetPolicyAuthorizedActionsAsync(userPolicies, cancellationToken);
 
-        // Combine the role authorized actions and policy authorized actions, remove duplicates, and convert to a list
         var allAuthorizedActions = roleAuthorizedActions.Union(policyAuthorizedActions).Distinct().ToList();
 
-        // Return the list of all authorized actions
         return allAuthorizedActions;
     }
 

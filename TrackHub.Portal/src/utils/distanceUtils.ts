@@ -14,30 +14,18 @@
 *  limitations under the License.
 */
 
-/**
- * Formats a distance value into a human-readable format.
- * Returns the formatted distance string (e.g., "123.45 km") or an empty
- * string if the input is not a number.
- */
 export function formatDistance(value: unknown): string {
     if (typeof value !== 'number') return '';
     return `${value.toFixed(2)} km`;
 }
 
-/**
- * Calculates the total distance from a list of objects and formats it.
- */
 export function calculateTotalDistance(list: Array<Record<string, unknown>>, key: string): string {
     let total = list.reduce((acc, item) => acc + (Number(item[key]) || 0), 0);
     return formatDistance(total);
 }
 
-/**
- * Calculate distance between two points using Haversine formula.
- * Returns the distance in meters.
- */
 export function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
-    const R = 6371000; // Earth's radius in meters
+    const R = 6371000;
     const dLat = toRadians(lat2 - lat1);
     const dLng = toRadians(lng2 - lng1);
 

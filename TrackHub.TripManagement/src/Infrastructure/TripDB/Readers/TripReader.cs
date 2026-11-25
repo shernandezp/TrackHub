@@ -21,7 +21,7 @@ namespace TrackHub.TripManagement.Infrastructure.TripDB.Readers;
 /// <summary>
 /// Read side of the trip aggregate.
 /// <para>
-/// Visibility rule (acceptance 4): a non-null <c>userId</c> filters every query through
+/// Visibility rule: a non-null <c>userId</c> filters every query through
 /// <c>trip.vw_visible_transporter</c> with an EXISTS predicate; a null <c>userId</c> means the
 /// principal sees the whole account (Administrator/Manager roles and account-scoped service
 /// clients). The view is the single source of group visibility - no handler re-implements it, and
@@ -34,7 +34,7 @@ public sealed class TripReader(IApplicationDbContext context, IAccountFeatureRea
     /// The phase every list and detail read is computed against. It needs one number from the
     /// account's configuration (how long past a planned start counts as overdue) and the stops'
     /// current state — both fetched once per read, alongside the stop counts the page already
-    /// gathered (spec 11a §10).
+    /// gathered.
     /// </summary>
     private async Task<(int OverdueGraceMinutes, Dictionary<Guid, List<PhaseStopVm>> StopsByTrip)> PhaseContextAsync(
         Guid accountId, IReadOnlyCollection<Guid> tripIds, CancellationToken cancellationToken)
@@ -278,7 +278,7 @@ public sealed class TripReader(IApplicationDbContext context, IAccountFeatureRea
     {
         // Visible(), not a bare account predicate: this is the lookup every write path uses, so a
         // group-scoped dispatcher must not be able to act on another group's trip by id. NotFound
-        // rather than Forbidden - non-disclosure (spec 11 section 7.10).
+        // rather than Forbidden - non-disclosure.
         var trip = await Visible(accountId, userId)
             .FirstOrDefaultAsync(t => t.TripId == tripId, cancellationToken)
             ?? throw new NotFoundException($"{tripId}", nameof(Trip));
@@ -352,7 +352,7 @@ public sealed class TripReader(IApplicationDbContext context, IAccountFeatureRea
         var query = context.Transporters.Where(t => t.AccountId == accountId);
 
         // The same EXISTS predicate the trip queries use, against the same view: bulk planning is
-        // subject to group visibility exactly as the create dialog is (acceptance 4).
+        // subject to group visibility exactly as the create dialog is.
         if (userId is { } actingUserId)
         {
             query = query.Where(t => context.VisibleTransporters.Any(v =>
@@ -428,7 +428,7 @@ public sealed class TripReader(IApplicationDbContext context, IAccountFeatureRea
 
         // Ordering on entity columns, inside the query expression and BEFORE the projection -
         // Npgsql cannot translate an ordering over a constructor-built record struct member, and
-        // EF InMemory would not catch it (rules.md, Forbidden patterns).
+        // EF InMemory would not catch it.
         var rows = await query
             .OrderBy(t => t.PlannedStartAt)
             .ThenBy(t => t.Code)
@@ -587,7 +587,7 @@ public sealed class TripReader(IApplicationDbContext context, IAccountFeatureRea
         // The per-station breakdown is stored as the plan's TollStationsJson, so paging happens on
         // PLANS and each plan expands to its station rows after materialization. Paging on the
         // expanded rows would need the json exploded in SQL, which Postgres cannot index or
-        // de-duplicate cheaply (rules.md: never Distinct over a json-bearing projection).
+        // de-duplicate cheaply.
         var query = from plan in context.RoutePlans
                     join trip in trips on plan.TripId equals trip.TripId
                     where plan.Status == RoutePlanStatuses.Ready
@@ -633,9 +633,9 @@ public sealed class TripReader(IApplicationDbContext context, IAccountFeatureRea
                     station.HasTariff)))],
             totalCount,
             // Both in PLANS — the unit this feed pages in. The returned row count is the expanded
-            // station count and is deliberately NOT used here: advancing by it skipped roughly three
-            // plans for every one consumed, and comparing it against a plan totalCount ended the
-            // drain after the first page, dropping trips from a financial report with no error.
+            // station count and is deliberately NOT used here: advancing by it would skip plans, and
+            // comparing it against a plan totalCount would end the drain early, dropping trips from a
+            // financial report with no error.
             skip + rows.Count,
             skip + rows.Count < totalCount);
     }
@@ -673,7 +673,7 @@ public sealed class TripReader(IApplicationDbContext context, IAccountFeatureRea
                 x.Trip.TripId,
                 x.Trip.Code,
                 // A COUNT, never the documents: the register may name the evidence, but the bytes
-                // stay behind Manager's access policy (spec 11 section 13, SC-06).
+                // stay behind Manager's access policy.
                 DocumentCount = context.TripDocuments.Count(d => d.ProofOfDeliveryId == x.Pod.ProofOfDeliveryId),
             })
             .ToListAsync(cancellationToken);
@@ -705,7 +705,7 @@ public sealed class TripReader(IApplicationDbContext context, IAccountFeatureRea
 
     /// <summary>
     /// Time actually spent moving: from the origin departure to the last measured arrival, less the
-    /// dwell at every stop in between (spec 11a §4.3).
+    /// dwell at every stop in between.
     /// <para>
     /// Subtracting the intermediate dwells is what makes the number mean "driving". A five-stop
     /// delivery run that spent three hours on the road and two at docks would otherwise report five
@@ -763,7 +763,7 @@ public sealed class TripReader(IApplicationDbContext context, IAccountFeatureRea
 
     /// <summary>
     /// The shared scope for all four report feeds: the same account boundary, the same group
-    /// visibility and the same filters as the list and detail paths (acceptance 3).
+    /// visibility and the same filters as the list and detail paths.
     /// </summary>
     private IQueryable<Trip> ReportScope(
         Guid accountId,

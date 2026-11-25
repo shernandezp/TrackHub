@@ -27,7 +27,6 @@ interface ReportPreviewPanelProps {
   preview: ReportPreview;
 }
 
-/** Renders a report preview dataset as a client-paginated table. */
 function ReportPreviewPanel({ preview }: ReportPreviewPanelProps) {
   const { t } = useTranslation();
 

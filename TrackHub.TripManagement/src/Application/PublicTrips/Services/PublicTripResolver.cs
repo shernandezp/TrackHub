@@ -24,7 +24,7 @@ namespace TrackHub.TripManagement.Application.PublicTrips.Services;
 /// The feature re-check is <b>non-disclosure, not authorization</b>: an account that lost
 /// <c>trip-management</c> returns 404 rather than <c>FEATURE_DISABLED</c>, because telling an
 /// anonymous caller "this link is real but the account is downgraded" leaks the existence of the
-/// trip and a fact about the customer's billing (acceptance 9).
+/// trip and a fact about the customer's billing.
 /// </para>
 /// </summary>
 public sealed class PublicTripResolver(
@@ -40,7 +40,7 @@ public sealed class PublicTripResolver(
         CancellationToken cancellationToken)
     {
         // Manager owns hashing, access counting and the PublicLinkAccessed audit event, in one
-        // implementation shared with its own anonymous REST endpoint (spec 11 §18.10).
+        // implementation shared with its own anonymous REST endpoint.
         var resolution = await publicLinkGrantClient.ResolveAsync(
             publicLinkGrantId, accountId, TripSharing.ResourceType, resourceId, TripSharing.TrackScope, token, cancellationToken);
 

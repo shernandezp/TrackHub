@@ -15,16 +15,10 @@
 */
 
 /**
- * Browser-side service health probes for the public platform status page.
- *
- * SANCTIONED DIRECT-FETCH EXCEPTION to the api-layering rule: every backend maps
- * an anonymous `UseHealthChecks("/health")` BEFORE authentication, and CORS runs
- * before it, so the portal origin can probe each service with no token at all.
- * That is precisely the property the status page needs — it must work when the
- * visitor cannot sign in, or when the sign-in service itself is down. Using the
- * GraphQL/REST clients here would defeat the purpose (they acquire a token).
- *
- * URLs are derived ONLY from `endpoints.ts` bases; nothing here reads env vars.
+ * Sanctioned direct-fetch exception to the api layering: every backend maps an
+ * anonymous `/health` before authentication (CORS runs first), so the status page
+ * works when the visitor cannot sign in or the sign-in service is down. The
+ * token-acquiring clients would defeat that.
  */
 
 import { HEALTH_ENDPOINTS } from './endpoints';
@@ -33,27 +27,19 @@ import { editionHealthEndpoints } from 'edition/endpoints';
 /** Probe budget. A service that has not answered in this long is treated as Down. */
 export const HEALTH_TIMEOUT_MS = 6000;
 
-/** Coarse, non-technical service state. `unknown` means "not probed yet". */
 export type ServiceState = 'up' | 'down' | 'unknown';
 
 export interface HealthProbeResult {
   state: ServiceState;
-  /**
-   * Machine-readable reason, mapped to a localized detail line by the UI. Never
-   * shown raw. `unhealthy` means the service answered but reported a failing
-   * dependency (typically its database).
-   */
+  /** Mapped to a localized detail line, never shown raw. `unhealthy`: answered with a failing dependency. */
   reason?: 'timeout' | 'unreachable' | 'unhealthy' | 'httpError';
   /** HTTP status when one was received — detail line only, never the primary UI. */
   status?: number;
 }
 
 /**
- * The services shown as tiles, in display order. `id` is both the i18n key
- * suffix and the React key. Plain-language names live in i18n (ST-08) — this
- * module deliberately carries no display strings. Backends registered through
- * the edition extension point (src/edition/endpoints.ts) get their tiles
- * appended after the core services.
+ * `id` is both the i18n key suffix and the React key; this module carries no
+ * display strings. Edition backends (src/edition/endpoints.ts) are appended.
  */
 const CORE_PROBED_SERVICES = [
   'authority',
@@ -75,16 +61,14 @@ export type ProbedService =
   | (typeof CORE_PROBED_SERVICES)[number]
   | keyof typeof editionHealthEndpoints;
 
-/** Health URL per probed service, or undefined when that backend is not configured. */
 export function healthUrlFor(service: ProbedService): string | undefined {
   return HEALTH_ENDPOINTS[service];
 }
 
 /**
- * Probes one service. Never throws — a status page must degrade per tile, never
- * blank the page. A 200 whose body does not say `Healthy` is still treated as up
- * (Router/Reporting are liveness-only), while an explicit `Unhealthy` body or a
- * 503 is down-with-detail ("reachable, but its database is not").
+ * Never throws: a status page must degrade per tile. A 200 without `Healthy` is
+ * still up (Router/Reporting are liveness-only); an `Unhealthy` body or a 503 is
+ * down-with-detail.
  */
 export async function probeService(
   service: ProbedService,
@@ -131,7 +115,6 @@ export async function probeService(
   }
 }
 
-/** Probes every configured service concurrently. Always resolves. */
 export async function probeAllServices(
   timeoutMs: number = HEALTH_TIMEOUT_MS,
   signal?: AbortSignal

@@ -14,12 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Trip / toll-catalog query and mutation hooks. Components consume these — not
- * the api layer directly. Loading and error state come from the hooks; failures
- * also surface in the global toast via the query client's error handlers.
- */
-
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from 'api/tripManagement/trips';
 import * as publicApi from 'api/tripManagement/publicTrips';
@@ -56,19 +50,11 @@ export const tripKeys = {
     ['publicTrip', params?.publicLinkGrantId ?? '', params?.resourceId ?? ''] as const,
 };
 
-/* ------------------------------------------------------------------ trips */
-
 /** Server-paged dispatch board. Every filter travels to the server — nothing is filtered client-side. */
 /**
- * How often the dispatch board re-reads itself.
- *
- * Polling is not a nicety here, it is a requirement of zero-touch: trips now start,
- * advance and complete without any mutation of this dispatcher's making, so nothing
- * invalidates the cache on their behalf. Without it the board would show a truck as
- * "scheduled" for as long as the tab stayed open (spec 11a §10).
- *
- * 30 s rather than the status page's 60 s — this is an operational screen someone
- * watches while making decisions, not a health dashboard.
+ * Polling is required: trips start, advance and complete without any mutation from this
+ * dispatcher, so nothing invalidates the cache on their behalf. 30 s rather than the status page's
+ * 60 s because this is an operational screen someone watches while deciding.
  */
 export const TRIP_BOARD_POLL_MS = 30_000;
 
@@ -168,9 +154,8 @@ export function useAssignTrip() {
 }
 
 /**
- * Requests a route plan. A routing failure resolves with `status: 'Failed'`
- * rather than rejecting, so `onSuccess` still invalidates and the screen reads
- * the returned plan's status to decide what to show.
+ * A routing failure resolves with `status: 'Failed'` rather than rejecting, so `onSuccess` still
+ * invalidates and the screen reads the plan's status.
  */
 export function usePlanTripRoute() {
   const queryClient = useQueryClient();
@@ -223,8 +208,6 @@ export function useTripLifecycle() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: tripKeys.all }),
   });
 }
-
-/* ------------------------------------------------------------------ stops */
 
 export function useAddTripStop() {
   const queryClient = useQueryClient();
@@ -295,8 +278,6 @@ export function useStopProgress() {
   });
 }
 
-/* ------------------------------------------------------------- deliveries */
-
 export function useCreateDelivery() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -315,11 +296,7 @@ export function useUpdateDelivery() {
   });
 }
 
-/**
- * Records a delivery outcome. The caller owns `clientEventId` precisely so a
- * retry after a failure can reuse it — minting a fresh id per attempt would
- * defeat the server's idempotency (spec 11 §7.3).
- */
+/** The caller owns `clientEventId` so a retry after a failure can reuse it; a fresh id per attempt defeats the server's idempotency. */
 export function useUpdateDeliveryOutcome() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -348,12 +325,9 @@ export function useDeleteDelivery() {
   });
 }
 
-/* -------------------------------------------------------------------- POD */
-
 /**
- * Captures proof of delivery. Invalidates the whole trip namespace: a POD also
- * flips the stop's deliveries to `Delivered` and appends a timeline event, so
- * the detail, the timeline and the board all go stale at once.
+ * Invalidates the whole trip namespace: a POD also flips the stop's deliveries to `Delivered` and
+ * appends a timeline event.
  */
 export function useRecordProofOfDelivery() {
   const queryClient = useQueryClient();
@@ -369,13 +343,7 @@ export function useRecordProofOfDelivery() {
   });
 }
 
-/* ---------------------------------------------- transporter → toll class  */
-
-/**
- * Account-scoped transporter-type / transporter → toll-class mapping. It feeds
- * `Trip.TollVehicleClass` defaulting at trip creation, so both the trip
- * namespace and the toll namespace go stale.
- */
+/** Feeds `Trip.TollVehicleClass` defaulting at trip creation, so both the trip and toll namespaces go stale. */
 export function useSetTransporterTollClass() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -399,8 +367,6 @@ export function useSetTransporterTollClass() {
     },
   });
 }
-
-/* ------------------------------------------------------------------ share */
 
 export function useShareTrip() {
   const queryClient = useQueryClient();
@@ -429,8 +395,6 @@ export function useRevokeTripShare() {
   });
 }
 
-/* ---------------------------------------------------------- toll catalog  */
-
 export function useTollVehicleClasses(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: tripKeys.vehicleClasses(),
@@ -450,7 +414,7 @@ export function useTollStations(
   });
 }
 
-/** Station plus its full tariff history — superseded rows stay visible (acceptance 21). */
+/** Superseded tariff rows stay visible. */
 export function useTollStationDetail(tollStationId: string | null | undefined) {
   return useQuery({
     queryKey: tripKeys.stationDetail(tollStationId ?? ''),
@@ -581,7 +545,7 @@ export function useImportTollCatalog() {
   });
 }
 
-/** Bulk trip planning (spec 11a §9.1). Row-level failures come back in the result, never as a throw. */
+/** Row-level failures come back in the result, never as a throw. */
 export function useImportTripsCsv() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -590,7 +554,6 @@ export function useImportTripsCsv() {
   });
 }
 
-/** "This trip is already under way" (spec 11a §5.4). */
 export function useDeclareTripInTransit() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -600,12 +563,7 @@ export function useDeclareTripInTransit() {
   });
 }
 
-/* --------------------------------------------------------- public tracking */
-
-/**
- * Anonymous tracking snapshot. `retry: false` because 404/410 are final answers,
- * not transient failures worth hammering an anonymous rate-limited endpoint over.
- */
+/** `retry: false`: 404/410 are final answers, not worth hammering an anonymous rate-limited endpoint over. */
 export function usePublicTrip(params: PublicTripLinkParams | null) {
   return useQuery({
     queryKey: tripKeys.publicTrip(params),

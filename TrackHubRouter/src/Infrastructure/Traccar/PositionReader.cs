@@ -21,17 +21,10 @@ using TrackHub.Router.Domain.Helpers;
 
 namespace TrackHub.Router.Infrastructure.Traccar;
 
-// This class represents a reader for retrieving position information from Traccar.
 public sealed class PositionReader(
     ICredentialHttpClientFactory httpClientFactory,
     IHttpClientService httpClientService) : TraccarReaderBase(httpClientFactory, httpClientService), IPositionReader
 {
-    /// <summary>
-    /// Retrieves the position of a single device asynchronously.
-    /// </summary>
-    /// <param name="deviceDto"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>The position view model of the device.</returns>
     public async Task<PositionVm> GetDevicePositionAsync(DeviceTransporterVm deviceDto, CancellationToken cancellationToken)
     {
         var url = $"api/positions?id={deviceDto.Identifier}";
@@ -39,12 +32,6 @@ public sealed class PositionReader(
         return position.MapToPositionVm(deviceDto);
     }
 
-    /// <summary>
-    /// Retrieves the positions of multiple devices asynchronously.
-    /// </summary>
-    /// <param name="devices"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>The collection of position view models of the devices.</returns>
     public async Task<IEnumerable<PositionVm>> GetDevicePositionAsync(IEnumerable<DeviceTransporterVm> devices, CancellationToken cancellationToken)
     {
         //Traccar does not have a method to retrieve the last position of multiple devices at once
@@ -74,14 +61,6 @@ public sealed class PositionReader(
         return results.Distinct();
     }
 
-    /// <summary>
-    /// Retrieves the positions of a device within a specified time range asynchronously.
-    /// </summary>
-    /// <param name="from"></param>
-    /// <param name="to"></param>
-    /// <param name="deviceDto"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>The collection of position view models of the device within the specified time range.</returns>
     public async Task<IEnumerable<PositionVm>> GetPositionAsync(DateTimeOffset from, DateTimeOffset to, DeviceTransporterVm deviceDto, CancellationToken cancellationToken)
     {
         var url = $"api/positions?deviceId={deviceDto.Identifier}&from={from.ToIso8601String()}&to={to.ToIso8601String()}";

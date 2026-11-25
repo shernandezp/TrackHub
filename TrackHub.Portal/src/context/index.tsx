@@ -29,17 +29,11 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
-/**
-  This file is used for controlling the global states of the components,
-  you can customize the states for the different components here.
-*/
-
 import { createContext, useContext, useReducer, useMemo } from "react";
 import type { Dispatch, ReactNode } from "react";
 
 import { readUiPreferences } from "utils/uiPreferences";
 
-// Global UI state controlled by the Argon dashboard shell.
 export interface ArgonControllerState {
   miniSidenav: boolean;
   darkSidenav: boolean;
@@ -49,7 +43,6 @@ export interface ArgonControllerState {
   darkMode: boolean;
 }
 
-// Reducer actions — one per settable field.
 export type ArgonControllerAction =
   | { type: "MINI_SIDENAV"; value: boolean }
   | { type: "DARK_SIDENAV"; value: boolean }
@@ -60,16 +53,12 @@ export type ArgonControllerAction =
 
 export type ArgonControllerDispatch = Dispatch<ArgonControllerAction>;
 
-// Tuple exposed by the context / useArgonController hook.
 export type ArgonControllerValue = [ArgonControllerState, ArgonControllerDispatch];
 
-// The Argon Dashboard 2 MUI main context
 const Argon = createContext<ArgonControllerValue | null>(null);
 
-// Setting custom name for the context which is visible on react dev tools
 Argon.displayName = "ArgonContext";
 
-// Argon Dashboard 2 MUI reducer
 function reducer(state: ArgonControllerState, action: ArgonControllerAction): ArgonControllerState {
   switch (action.type) {
     case "MINI_SIDENAV": {
@@ -118,7 +107,6 @@ function initialState(): ArgonControllerState {
   };
 }
 
-// Argon Dashboard 2 MUI context provider
 function ArgonControllerProvider({ children }: ArgonControllerProviderProps) {
   const [controller, dispatch] = useReducer(reducer, undefined, initialState);
 
@@ -130,7 +118,6 @@ function ArgonControllerProvider({ children }: ArgonControllerProviderProps) {
   return <Argon.Provider value={value}>{children}</Argon.Provider>;
 }
 
-// Argon Dashboard 2 MUI custom hook for using context
 function useArgonController(): ArgonControllerValue {
   const context = useContext(Argon);
 
@@ -141,7 +128,6 @@ function useArgonController(): ArgonControllerValue {
   return context;
 }
 
-// Context module functions
 const setMiniSidenav = (dispatch: ArgonControllerDispatch, value: boolean) =>
   dispatch({ type: "MINI_SIDENAV", value });
 const setDarkSidenav = (dispatch: ArgonControllerDispatch, value: boolean) =>

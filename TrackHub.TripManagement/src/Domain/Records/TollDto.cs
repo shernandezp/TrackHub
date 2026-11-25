@@ -36,7 +36,7 @@ public readonly record struct TollStationDto(
 /// <summary>
 /// A tariff write. Creating one CLOSES the currently open row for the same
 /// <c>(station, class)</c> pair rather than overwriting it — price history is append-only so a
-/// historical trip's estimate stays reproducible (spec 11 §5, §7.6).
+/// historical trip's estimate stays reproducible.
 /// </summary>
 public readonly record struct TollTariffDto(
     Guid TollStationId,

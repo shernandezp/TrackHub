@@ -25,7 +25,6 @@ function closePolygon(latlngs: LatLngPoint[]): LatLngPoint[] {
     }
     const firstPoint = latlngs[0];
     const lastPoint = latlngs[latlngs.length - 1];
-    // Check if the first and last points are the same
     if (firstPoint.lat !== lastPoint.lat || firstPoint.lng !== lastPoint.lng) {
         latlngs.push(firstPoint);
     }
@@ -35,11 +34,8 @@ function closePolygon(latlngs: LatLngPoint[]): LatLngPoint[] {
 const EARTH_RADIUS_M = 6378137;
 
 /**
- * SW/NE corners (`[[south, west], [north, east]]`) of the lat/lng box that
- * encloses a circle of `radiusMeters` around (lat, lng). Provider-agnostic and
- * map-instance-free (equirectangular degree offset), so both the Leaflet and
- * Google geofence editors can extend their native bounds with a circle shape
- * when fitting the viewport to an account's geofences.
+ * Provider- and map-instance-free (equirectangular degree offset), so both geofence editors can
+ * extend their native bounds with a circle when fitting the viewport.
  */
 function circleBoundsCorners(
     lat: number,

@@ -29,8 +29,7 @@ public interface ITripStopWriter
     Task RemoveStopAsync(Guid tripStopId, Guid accountId, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Replaces a trip's whole route in one go — the re-plan a partner's weekly re-upload performs
-    /// (spec 11a §9.2).
+    /// Replaces a trip's whole route in one go — the re-plan a partner's weekly re-upload performs.
     /// <para>
     /// Permitted only while the trip is still <c>Created</c>. A running trip's stops carry
     /// measurements and deliveries, so replacing them would erase recorded history; the caller must
@@ -49,16 +48,16 @@ public interface ITripStopWriter
     /// Records arrival/departure/skip. Idempotent on the caller's
     /// <c>TripEvent.IdempotencyKey</c>: a duplicate submission returns the same result and writes
     /// no second row. Timestamps once written are never overwritten by a later detection or
-    /// manual override (acceptance 12, 15).
+    /// manual override.
     /// <para>
     /// <paramref name="tripId"/> is REQUIRED and verified against the stop: resolving a stop by id
-    /// and account alone let a caller pass trip X's active-status check and then write against a
+    /// and account alone would let a caller pass trip X's active-status check and then write against a
     /// stop belonging to trip Y. A stop that does not belong to the named trip is a
     /// <c>NotFoundException</c>.
     /// </para>
     /// <para>
-    /// The order <c>Pending → Arrived → Departed</c> (or <c>Pending → Skipped</c>) is enforced here
-    /// (acceptance 12): departing a stop that never arrived is
+    /// The order <c>Pending → Arrived → Departed</c> (or <c>Pending → Skipped</c>) is enforced here:
+    /// departing a stop that never arrived is
     /// <see cref="TripErrorCodes.StopNotArrived"/>, not a silently stamped departure timestamp.
     /// Re-submitting the status a stop already holds stays permitted — that is the idempotent
     /// retry path, resolved by the unique idempotency index rather than by a conflict.
@@ -82,8 +81,8 @@ public interface ITripStopWriter
     /// outside its <c>ArrivalGeom</c>, or <c>null</c> to clear it on re-entry.
     /// <para>
     /// This is state, not a timestamp of record. It has to be persisted because Router pushes one
-    /// position per transporter per call — a debounce measured against a per-request field can
-    /// never elapse, which is exactly why departure detection never fired (spec 11 section 7.4).
+    /// position per transporter per call, so a debounce measured against a per-request field could
+    /// never elapse.
     /// </para>
     /// </summary>
     Task SetStopOutsideSinceAsync(Guid tripStopId, Guid accountId, DateTimeOffset? outsideSinceAt, CancellationToken cancellationToken);

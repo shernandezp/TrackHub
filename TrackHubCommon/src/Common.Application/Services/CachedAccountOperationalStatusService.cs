@@ -20,11 +20,8 @@ using Microsoft.Extensions.Caching.Memory;
 namespace Common.Application.Services;
 
 /// <summary>
-/// Shared cache over a per-service <see cref="IAccountOperationalStatusReader"/>, mirroring the
-/// 30-second TTL of the Manager feature-flag service. Enforcing services register this as their
-/// <see cref="IAccountOperationalStatusService"/> and only need to supply the reader. Requires
-/// <c>services.AddMemoryCache()</c> in the service's DI (the enforcing services' status wire-up
-/// registers it).
+/// Shared 30-second cache over a per-service <see cref="IAccountOperationalStatusReader"/>, registered as the
+/// <see cref="IAccountOperationalStatusService"/>. Requires <c>services.AddMemoryCache()</c>.
 /// </summary>
 public sealed class CachedAccountOperationalStatusService(
     IAccountOperationalStatusReader reader,

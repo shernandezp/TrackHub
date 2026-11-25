@@ -1,7 +1,4 @@
 /**
- * GPS Integration: the provider dashboard, operator administration, the
- * synchronized-device inventory and the assignment table.
- *
  * A real synchronisation needs real provider credentials, so the sync trigger
  * only runs when `E2E_GPS_OPERATOR_ID` names an operator to run it against.
  */

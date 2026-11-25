@@ -16,11 +16,9 @@
 namespace TrackHub.Manager.Domain.Interfaces;
 
 /// <summary>
-/// The single transporter-visibility primitive. Returns the set of transporter
-/// ids a user may see within an account: account-wide for Administrator/Manager roles (and global
-/// service clients), narrowed to the user's group membership otherwise. The live map, its stored
-/// fallback, and the replay group check are all reimplemented on top of this so they can never
-/// diverge (resolves K1).
+/// The single transporter-visibility primitive: account-wide for Administrator/Manager roles (and
+/// global service clients), narrowed to the user's group membership otherwise. Every visibility
+/// check builds on this so they can never diverge.
 /// </summary>
 public interface IVisibleTransporterReader
 {

@@ -125,10 +125,9 @@ internal static class TestFactory
     // lastLatitude/lastLongitude are the PERSISTED Trip.LastPoint the detection reader projects.
     // They are what makes the odometer accumulate across calls: Router delivers one fix per call,
     // so the previous point can only come from the row, never from per-request memory.
-    // The status/origin arguments are what widened with zero-touch: a watched trip may be a Created
-    // one waiting at the gate or an InProgress one on the road, and every automatic step is gated on
-    // which. Defaults describe a running trip that has already left its origin, so the tests written
-    // before zero-touch keep describing exactly the scenario they always did.
+    // A watched trip may be a Created one waiting at the gate or an InProgress one on the road, and
+    // every automatic step is gated on which. Defaults describe a running trip that has already
+    // left its origin.
     public static OpenTripVm OpenTrip(
         IReadOnlyCollection<OpenTripStopVm> stops,
         bool hasReadyPlan = false,

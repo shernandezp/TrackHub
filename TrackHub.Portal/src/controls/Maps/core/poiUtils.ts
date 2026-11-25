@@ -38,23 +38,14 @@ const COLOR_LABEL_HEX: Record<string, string> = {
 
 const DEFAULT_POI_COLOR = '#1e88e5';
 
-/**
- * Maps a POI color value (data/colors.js convention) to a hex color.
- */
 export const getPoiColorHex = (colorValue: number): string =>
   COLOR_LABEL_HEX[getColor(colorValue)] || DEFAULT_POI_COLOR;
 
-/**
- * Returns the i18n key suffix for a POI type value (e.g. 1 -> 'clientSite').
- */
 export const getPoiTypeKey = (typeValue: number): string => {
   const label = getPoiType(typeValue);
   return label ? label.charAt(0).toLowerCase() + label.slice(1) : '';
 };
 
-/**
- * Creates the SVG pin used for POI markers.
- */
 export const createPoiPinSvg = (colorHex: string, format: SvgIconFormat = 'svg'): string => {
   const svg = `<svg width="28" height="36" viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg">
         <path d="M12 1C6 1 1.5 5.5 1.5 11.5c0 8 10.5 19 10.5 19s10.5-11 10.5-19C22.5 5.5 18 1 12 1z" fill="${colorHex}" stroke="#ffffff" stroke-width="1.5"/>
@@ -66,9 +57,6 @@ export const createPoiPinSvg = (colorHex: string, format: SvgIconFormat = 'svg')
   return svg;
 };
 
-/**
- * Builds the shared HTML content for a POI popup/info window.
- */
 export const buildPoiPopupHtml = (poi: MapPoi, t: TFunction): string => {
   const typeKey = getPoiTypeKey(poi.type);
   const typeLabel = typeKey ? t(`poi.types.${typeKey}` as 'poi.types.clientSite') : '';

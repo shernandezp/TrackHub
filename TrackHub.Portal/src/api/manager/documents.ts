@@ -15,12 +15,8 @@
 */
 
 /**
- * Document API (Manager backend). Metadata flows through GraphQL; file bytes
- * (upload/version/download) flow through the Manager REST surface under
- * `REST_ENDPOINTS.managerDocuments`. Both paths share the token acquisition
- * mutex via api/core. Failures THROW ApiError — the .jsx consumers own the
- * try/catch + toast. The public-share URL is anonymous (token in the query
- * string) and is built as a plain string — no request, no auth.
+ * Metadata flows through GraphQL; file bytes flow through the Manager REST surface. The
+ * public-share URL is anonymous (token in the query string) and built as a plain string.
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
@@ -61,7 +57,6 @@ export type { DocumentSearchFilterInput, DocumentSignatureDtoInput, DocumentType
 /** Fields accepted by the multipart upload endpoints (all optional except the file). */
 export type DocumentUploadFields = Record<string, string | number | boolean | null | undefined>;
 
-// ---- GraphQL: reads ----
 export async function getDocumentsForOwner(
   accountId: string,
   ownerEntityType: string,
@@ -131,7 +126,6 @@ export async function getDocumentTypes(
   return data.documentTypes;
 }
 
-// ---- GraphQL: mutations ----
 export async function voidDocument(documentId: string, reason: string): Promise<boolean> {
   const data = await executeGraphQL('manager', VoidDocumentDocument, { documentId, reason });
   return data.voidDocument;
@@ -166,7 +160,6 @@ export async function disableDocumentType(documentTypeId: string): Promise<strin
   return data.disableDocumentType;
 }
 
-// ---- REST: file bytes ----
 function toFormData(file: File, fields: DocumentUploadFields): FormData {
   const form = new FormData();
   form.append('file', file);
@@ -178,11 +171,6 @@ function toFormData(file: File, fields: DocumentUploadFields): FormData {
   return form;
 }
 
-/**
- * Uploads a new document (multipart). fields: accountId, ownerEntityType,
- * ownerEntityId, category, classification, visibilityScope, title, description,
- * expiresAt, captured* watermark fields. Returns the redacted document VM.
- */
 export async function uploadDocument(
   file: File,
   fields: DocumentUploadFields = {}
@@ -194,7 +182,6 @@ export async function uploadDocument(
   });
 }
 
-/** Uploads a replacement version for an existing document (multipart). */
 export async function uploadDocumentVersion(
   documentId: string,
   file: File,
@@ -207,10 +194,7 @@ export async function uploadDocumentVersion(
   });
 }
 
-/**
- * Downloads a Clean document; follows the S3 presigned redirect or streams the
- * local file. Saves it through a transient anchor element.
- */
+/** Follows the S3 presigned redirect or streams the local file. */
 export async function downloadDocument(documentId: string, fileName = 'document'): Promise<void> {
   await downloadFile(
     `${REST_ENDPOINTS.managerDocuments}/${documentId}/download`,
@@ -220,11 +204,7 @@ export async function downloadDocument(documentId: string, fileName = 'document'
   );
 }
 
-/**
- * Builds the anonymous public-share download URL (token shown once at share
- * creation). No request is issued here and no auth is attached — the returned
- * URL is opened anonymously by the recipient; the backend validates the token.
- */
+/** No request is issued and no auth attached: the recipient opens it anonymously and the backend validates the token. */
 export function publicDownloadUrl(
   publicLinkGrantId: string,
   accountId: string,

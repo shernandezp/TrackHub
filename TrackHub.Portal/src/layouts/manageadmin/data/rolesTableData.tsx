@@ -26,7 +26,6 @@ import { LoadingContext } from 'LoadingContext';
 import { toCamelCase } from 'utils/stringUtils';
 import { useAuth } from "AuthContext";
 
-/** A column descriptor / rendered row for the vendored roles `Table`. */
 export interface RoleTableColumn { name: string; title?: string; align?: "left" | "right" | "center"; }
 export type RoleTableRow = Record<string, ReactNode>;
 export interface RoleTableData { columns: RoleTableColumn[]; rows: RoleTableRow[]; }
@@ -63,7 +62,6 @@ function useRoleTableData(fetchData: boolean, handleOpenClick: (roleId: number) 
     })),
   });
 
-  // Keep the global spinner UX for the initial load / invalidation refetch.
   useEffect(() => {
     setLoading(rolesQuery.isFetching);
   }, [rolesQuery.isFetching, setLoading]);

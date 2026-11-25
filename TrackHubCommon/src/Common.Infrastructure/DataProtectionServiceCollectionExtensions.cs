@@ -25,8 +25,7 @@ namespace Microsoft.Extensions.DependencyInjection;
 public static class DataProtectionServiceCollectionExtensions
 {
     /// <summary>
-    /// Key ring in the TrackHub database (the <c>Logging</c> connection every service has), encrypted at
-    /// rest with the OpenIddict certificate, isolated per service by application name.
+    /// Encrypted at rest with the OpenIddict certificate and isolated per service by application name.
     /// </summary>
     public static TBuilder AddTrackHubDataProtection<TBuilder>(this TBuilder builder)
         where TBuilder : IHostApplicationBuilder

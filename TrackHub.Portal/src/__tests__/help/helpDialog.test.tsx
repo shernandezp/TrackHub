@@ -14,9 +14,6 @@
 *  limitations under the License.
 */
 
-// End-to-end behavior of the help modal: route→primary-topic resolution,
-// topic: link navigation with back, language selection, and F1.
-
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
@@ -154,7 +151,6 @@ describe('HelpDialog', () => {
     renderShell('/profile');
 
     fireEvent.click(screen.getByText('open-help'));
-    // Index view: search box plus the topic list.
     expect(await screen.findByPlaceholderText('Search help topics...')).toBeInTheDocument();
     expect(screen.getByText('Live map')).toBeInTheDocument();
   });

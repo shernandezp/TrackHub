@@ -29,12 +29,10 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
-// Argon Dashboard 2 MUI Base Styles
 import colors from "assets/theme-dark/base/colors";
 import typography from "assets/theme-dark/base/typography";
 import boxShadows from "assets/theme-dark/base/boxShadows";
 
-// Argon Dashboard 2 MUI Helper Functions
 import pxToRem from "assets/theme-dark/functions/pxToRem";
 
 const { white, text, info, secondary } = colors;

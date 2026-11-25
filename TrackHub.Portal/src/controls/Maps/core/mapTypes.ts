@@ -14,14 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Provider-agnostic view models rendered by the dual (OSM/Google) map stack.
- * These are the shapes the map controls read from; the layout consumers build
- * them from api-layer types ({@link Position}, {@link Geofence}, …) and pass
- * them across the vendored-component boundary.
- */
-
-/** Attribute bag carried on a live position, surfaced in marker popups. */
 export interface MarkerAttributes {
   mileage?: number | null;
   temperature?: number | null;
@@ -30,7 +22,6 @@ export interface MarkerAttributes {
   satellites?: number | null;
 }
 
-/** A rendered unit marker (derived from a live position). */
 export interface MapMarker {
   id?: string;
   name: string;
@@ -61,19 +52,16 @@ export interface MapGeofence {
   circleRadiusMeters?: number | null;
 }
 
-/** A trip rendered as a polyline (or single marker when `type === 1`). */
 /** Segment kinds of a replayed position history (Router `TripTypeEnum`). */
 export const TRIP_TYPE = { stop: 1, moving: 2, noData: 3 } as const;
 
 export interface MapTrip {
   id: string;
-  /** Ordered `[lat, lng]` coordinate pairs. */
   coordinates: [number, number][];
   color?: string;
   type?: number;
 }
 
-/** A point of interest rendered with a colored pin, tooltip and popup. */
 export interface MapPoi {
   name: string;
   latitude: number;
@@ -85,29 +73,23 @@ export interface MapPoi {
   active?: boolean;
 }
 
-/** A `{ lat, lng }` point in the short live-trail polyline. */
 export interface TrailPoint {
   lat: number;
   lng: number;
 }
 
-/** The imperatively-positioned playback marker location. */
 export interface PlaybackPosition {
   lat: number;
   lng: number;
   course?: number;
 }
 
-/** A `{ lat, lng }` vertex of a planned route polyline or corridor ring. */
 export interface RoutePoint {
   lat: number;
   lng: number;
 }
 
-/**
- * A trip stop rendered as a numbered marker. `status` drives the pin colour so a
- * dispatcher reads progress off the map (pending / arrived / departed / skipped).
- */
+/** `status` drives the pin colour so a dispatcher reads progress off the map. */
 export interface RouteStop {
   id?: string;
   sequence: number;
@@ -120,9 +102,8 @@ export interface RouteStop {
 }
 
 /**
- * A toll station matched to the planned route. `hasTariff: false` means the
- * station is on the route but is NOT priced for the trip's vehicle class — the
- * marker must show that gap rather than imply a zero cost (spec 11 §18.9).
+ * `hasTariff: false` means the station is on the route but NOT priced for the trip's vehicle
+ * class; the marker must show that gap rather than imply a zero cost.
  */
 export interface RouteTollStation {
   id?: string;

@@ -14,12 +14,7 @@
 *  limitations under the License.
 */
 
-/**
- * Report catalog + execution hooks. The catalog is a Manager GraphQL read
- * (server-filtered to the caller's visible reports); generation/preview are
- * Reporting REST calls. Components consume these — not the api layer directly.
- * Failures surface in the global toast via the query client's error handlers.
- */
+/** The catalog is a Manager GraphQL read; generation/preview are Reporting REST calls. */
 
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { getReports } from 'api/manager/reports';
@@ -36,7 +31,6 @@ export const reportKeys = {
   catalog: () => [...reportKeys.all, 'catalog'] as const,
 };
 
-/** Server-filtered report catalog for the current user (feature/role scoped). */
 export function useReportCatalog(options: { enabled?: boolean } = {}) {
   return useQuery<Report[]>({
     queryKey: reportKeys.catalog(),
@@ -45,14 +39,12 @@ export function useReportCatalog(options: { enabled?: boolean } = {}) {
   });
 }
 
-/** Arguments shared by the preview and download mutations. */
 export interface ReportRunArgs {
   reportCode: string;
   reportName: string;
   filters: ReportFilterValues;
 }
 
-/** Fires the on-screen preview (POST /preview) for the selected report. */
 export function useReportPreview() {
   return useMutation<ReportPreview, unknown, ReportRunArgs>({
     mutationFn: ({ reportCode, reportName, filters }) =>
@@ -60,7 +52,6 @@ export function useReportPreview() {
   });
 }
 
-/** Streams the generated xlsx/pdf file for the selected report. */
 export function useDownloadReport() {
   return useMutation<void, unknown, ReportRunArgs & { format: ReportFormat }>({
     mutationFn: ({ reportCode, reportName, filters, format }) =>

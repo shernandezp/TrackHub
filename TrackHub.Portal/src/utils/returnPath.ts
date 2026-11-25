@@ -36,7 +36,6 @@ export function rememberReturnPath(path: string): void {
   }
 }
 
-/** Reads and clears the remembered path; null when there is nothing to return to. */
 export function takeReturnPath(): string | null {
   try {
     const path = sessionStorage.getItem(RETURN_PATH_KEY);

@@ -28,11 +28,6 @@ import { LoadingContext } from 'LoadingContext';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from "AuthContext";
 
-/**
- * Dialog/form state for an account. Merges an API {@link Account} (when editing)
- * with the partial dialog shape; all fields are optional and the `name`
- * requirement is enforced by the dialog's validate() gate before save.
- */
 export interface AccountFormValues {
   accountId?: string;
   name?: string;
@@ -45,7 +40,6 @@ export interface AccountFormValues {
   version?: number;
 }
 
-/** A column descriptor / rendered row for the vendored accounts `Table`. */
 export interface AccountTableColumn { name: string; title?: string; align?: "left" | "right" | "center"; }
 export type AccountTableRow = Record<string, ReactNode>;
 export interface AccountTableData { columns: AccountTableColumn[]; rows: AccountTableRow[]; }
@@ -60,7 +54,6 @@ function useAccountTableData(fetchData: boolean, handleEditClick: (account: Acco
   const accounts = accountQuery.data ? [accountQuery.data] : [];
   const updateAccount = useUpdateAccount();
 
-  // Keep the global spinner UX for the initial load / invalidation refetch.
   useEffect(() => {
     setLoading(accountQuery.isFetching);
   }, [accountQuery.isFetching, setLoading]);
@@ -68,8 +61,6 @@ function useAccountTableData(fetchData: boolean, handleEditClick: (account: Acco
   const onSave = async (account: AccountFormValues) => {
     setLoading(true);
     try {
-      // validate(['name']) gates this call; assert the required update-input
-      // fields at the boundary (the row supplies the rest when editing).
       await updateAccount.mutateAsync({
         accountId: account.accountId,
         name: account.name,

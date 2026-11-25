@@ -16,33 +16,12 @@
 namespace Common.Application.Attributes;
 
 /// <summary>
-/// Declares that the decorated request carries a wire identifier for a tenant-owned entity (a by-id
-/// key, a by-key lookup, or a collection of them) and that its tenant scope is enforced INSIDE THE
-/// HANDLER: the handler or its reader loads the referenced entity, resolves its owning account, and
-/// enforces caller access — either through the
-/// <c>AccountScopedDataAccess.RequireAccountAccess</c> reader guard, or by filtering the query on the
-/// caller's account, or by an explicit <c>AccountId</c> comparison that throws
-/// <see cref="Common.Application.Exceptions.ForbiddenAccessException"/> on a mismatch.
-/// <para>
-/// <see cref="Common.Application.Behaviors.AccountScopeBehavior{TRequest, TResponse}"/> runs BEFORE
-/// the handler and cannot load the entity, so it cannot police such a request itself — the request
-/// names no account, and the account is only knowable once the keyed row is read. This attribute is
-/// the explicit, greppable record that the enforcement has been placed and verified in the handler.
-/// </para>
-/// <para>
-/// The cited enforcement point is LOAD-BEARING: removing it (or adding a new keyed request without
-/// it) reopens the exact by-id cross-tenant surface this finding exists to close. A keyed request
-/// that lacks the marker is denied the benefit of review and must not silently rely on the behavior.
-/// Do not use this attribute to wave a request through: apply it only after confirming the handler
-/// enforces caller access to the referenced entity, and keep that enforcement in place.
-/// </para>
-/// <para>
-/// This marker does NOT admit account-less principals. The handler's ownership check needs a caller
-/// account to check AGAINST, so the behavior still requires the principal to carry an account scope
-/// and denies a global service identity exactly as it would an unmarked request. A service identity
-/// that legitimately needs a keyed lookup must use a dedicated request marked
-/// <see cref="AllowCrossAccountAttribute"/> — never this attribute.
-/// </para>
+/// Declares that the request carries a key for a tenant-owned entity and that tenant scope is enforced
+/// inside the handler, which loads the entity and checks caller access (reader guard, account filter or
+/// explicit <c>AccountId</c> comparison). <see cref="Common.Application.Behaviors.AccountScopeBehavior{TRequest, TResponse}"/>
+/// runs before the handler and cannot know the account, so that enforcement point is load-bearing.
+/// It does not admit account-less principals; a service identity needing a keyed lookup uses a
+/// dedicated request marked <see cref="AllowCrossAccountAttribute"/>.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = true)]
 public sealed class AccountScopeEnforcedInHandlerAttribute : Attribute;

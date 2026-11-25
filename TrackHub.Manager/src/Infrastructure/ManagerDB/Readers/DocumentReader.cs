@@ -20,7 +20,6 @@ public sealed class DocumentReader(IApplicationDbContext context, ICurrentPrinci
     {
         var scopedAccountId = RequireAccountAccess(accountId);
 
-        // Owner group/assignment visibility — a change from the previous tenant-only behavior.
         if (!await accessPolicy.CanAccessOwnerAsync(scopedAccountId, ownerEntityType, ownerEntityId, forWrite: false, cancellationToken))
         {
             throw new ForbiddenAccessException("Insufficient permissions to read documents for this owner.");

@@ -19,7 +19,7 @@ using TrackHub.TripManagement.Application.Trips.Commands.Lifecycle;
 namespace TrackHub.TripManagement.Application.UnitTests;
 
 /// <summary>
-/// Acceptance 11: the transition matrix is enforced and an illegal transition changes NOTHING.
+/// The transition matrix is enforced and an illegal transition changes NOTHING.
 /// The negative cases matter more than the positive ones — a lifecycle that silently accepts
 /// <c>Completed → InProgress</c> would let a closed trip be reopened and re-billed.
 /// </summary>
@@ -36,7 +36,7 @@ public class TripLifecycleTests
     [TestCase(TripStatuses.Paused, TripStatuses.Cancelled)]
     [TestCase(TripStatuses.Paused, TripStatuses.Aborted)]
 
-    // Added by spec 11a §5.1. Without it a dispatcher who had paused a finished trip had to Resume
+    // Without it a dispatcher who had paused a finished trip would have to Resume
     // it — briefly handing it back to automation — purely so they could close it.
     [TestCase(TripStatuses.Paused, TripStatuses.Completed)]
     public void CanTransition_AllowsTheMatrix(string from, string to)
@@ -59,10 +59,9 @@ public class TripLifecycleTests
         => Assert.That(TripStatuses.IsTerminal(status), Is.True);
 
     /// <summary>
-    /// The source is PARAMETERIZED now (spec 11a §15): a manual Start is <c>Portal</c>, an
+    /// The source is parameterized: a manual Start is <c>Portal</c>, an
     /// auto-start is <c>Detection</c>, and both mint the same idempotency key so exactly one of a
-    /// racing pair ever lands. Pinning <c>Portal</c> into the assertion was what made the old test
-    /// pass while the writer hardcoded it.
+    /// racing pair ever lands.
     /// </summary>
     [Test]
     public async Task StartTrip_TransitionsAndRecordsExactlyOnePortalSourcedEvent()
@@ -76,7 +75,7 @@ public class TripLifecycleTests
         await handler.Handle(new StartTripCommand(TestFactory.TripId), CancellationToken.None);
 
         // One call, carrying the event type, source and key: status and timeline commit together
-        // now, so there is no second write to verify (§12.1).
+        // in one write, so there is no second write to verify.
         harness.Writer.Verify(w => w.TransitionTripAsync(
             TestFactory.TripId, TestFactory.AccountId, TripStatuses.InProgress,
             TripEventTypes.TripStarted, TripEventSources.Portal, $"trip-start:{TestFactory.TripId:N}",
@@ -84,9 +83,9 @@ public class TripLifecycleTests
     }
 
     /// <summary>
-    /// A duplicate or a lost race writes nothing, so it must emit nothing. The writer answering
-    /// <c>false</c> used to be discarded, which is how a manual Start racing an auto-start produced
-    /// two <c>TripStarted</c> alerts for one trip (spec 11a §12.1).
+    /// A duplicate or a lost race writes nothing, so it must emit nothing. Otherwise a manual
+    /// Start racing an auto-start produces
+    /// two <c>TripStarted</c> alerts for one trip.
     /// </summary>
     [Test]
     public async Task StartTrip_WhenTheTransitionWasAlreadyRecorded_EmitsNoAlert()

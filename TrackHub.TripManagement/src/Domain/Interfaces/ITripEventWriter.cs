@@ -18,7 +18,7 @@ namespace TrackHub.TripManagement.Domain.Interfaces;
 /// <summary>
 /// The single idempotent event log. Manual overrides and automatic detections both land here,
 /// discriminated by <c>Source</c> — field reality (weak GPS, indoor docks, devices off) means
-/// detection is an assist, not the record of truth (spec 11 §18.13).
+/// detection is an assist, not the record of truth.
 /// </summary>
 public interface ITripEventWriter
 {
@@ -45,8 +45,7 @@ public interface ITripEventWriter
     /// <para>
     /// For the once-only side effects that must be emitted BEFORE the event is written. Appending
     /// first burns the key even when the emission then fails, so the alert is never retried and the
-    /// event is raised zero times instead of once — the ordering the delay and deviation paths
-    /// already get right by stamping their marker only after a successful emission.
+    /// event is raised zero times instead of once.
     /// </para>
     /// </summary>
     Task<bool> HasEventAsync(Guid accountId, string idempotencyKey, CancellationToken cancellationToken);

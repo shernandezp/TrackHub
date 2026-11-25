@@ -38,7 +38,7 @@ public sealed class TripEventConfiguration : IEntityTypeConfiguration<TripEvent>
         builder.HasIndex(x => new { x.AccountId, x.TripId, x.OccurredAt })
             .HasDatabaseName("ix_trip_events_accountid_tripid_occurredat");
 
-        // THE idempotency guarantee (acceptance 15). Writers catch the unique violation and
+        // THE idempotency guarantee. Writers catch the unique violation and
         // report a duplicate rather than throwing.
         builder.HasIndex(x => x.IdempotencyKey)
             .HasDatabaseName("ux_trip_events_idempotencykey")

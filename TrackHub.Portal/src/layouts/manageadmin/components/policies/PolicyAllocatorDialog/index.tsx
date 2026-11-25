@@ -49,7 +49,6 @@ function PolicyAllocatorDialog({ open, setOpen, policyId }: PolicyAllocatorDialo
     { field: 'username', headerName: t('user.username') }
   ];
 
-  // Keep the global spinner UX while the lists load/refresh.
   useEffect(() => {
     setLoading(assignedQuery.isFetching);
   }, [assignedQuery.isFetching, setLoading]);

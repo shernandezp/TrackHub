@@ -25,9 +25,8 @@ public class DeleteOperatorCommandHandler(IOperatorWriter writer, ICredentialWri
 {
     public async Task Handle(DeleteOperatorCommand request, CancellationToken cancellationToken)
     {
-        // Delete-if-exists by operator id, never via the operator VM: the VM redacts the
-        // credential for callers without Credentials/Custom, so gating on it left the FK row
-        // behind and the operator delete failed with 23503 for exactly those callers.
+        // By operator id, never via the operator VM: the VM redacts the credential for callers
+        // without Credentials/Custom, which would leave the FK row behind.
         await credentialWriter.DeleteCredentialByOperatorAsync(request.Id, cancellationToken);
 
         await writer.DeleteOperatorAsync(request.Id, cancellationToken);

@@ -35,7 +35,6 @@ public class SchemaSdlExport
         ("geofencing.graphql", ProducerSchema.BuildGeofenceSchemaAsync),
         ("router.graphql", ProducerSchema.BuildRouterSchemaAsync),
         ("telemetry.graphql", ProducerSchema.BuildTelemetrySchemaAsync),
-        // File name must equal the frontend's GRAPHQL_ENDPOINTS key (`tripManagement`), spec 11 §8.
         ("tripManagement.graphql", ProducerSchema.BuildTripManagementSchemaAsync),
     ];
 
@@ -57,7 +56,6 @@ public class SchemaSdlExport
             Is.True);
     }
 
-    /// <summary>Walks up from the test binary to the monorepo root (the one holding the root solution).</summary>
     private static string FindRepositoryRoot()
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);

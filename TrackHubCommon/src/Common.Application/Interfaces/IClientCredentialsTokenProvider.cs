@@ -16,10 +16,8 @@
 namespace Common.Application.Interfaces;
 
 /// <summary>
-/// The host's own client-credentials access token, acquired once per token lifetime and shared
-/// process-wide. Separate from <see cref="IGraphQLClientFactory"/> because acquiring the token and
-/// building a GraphQL client are different concerns: the token travels on a request, not on a
-/// client, so the outbound pipeline needs it without constructing anything.
+/// The host's own client-credentials token, shared process-wide. Separate from <see cref="IGraphQLClientFactory"/>
+/// because the token travels on a request, not on a client.
 /// </summary>
 public interface IClientCredentialsTokenProvider
 {

@@ -32,26 +32,20 @@ Coded by www.creative-tim.com
 import { useEffect } from "react";
 import type { MouseEventHandler, ReactNode } from "react";
 
-// react-router components
 import { useLocation, NavLink } from "react-router";
 
-// @mui material components
 import List from "@mui/material/List";
 import Link from "@mui/material/Link";
 import Icon from "@mui/material/Icon";
 
-// Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
 import ArgonTypography from "components/ArgonTypography";
 
-// Argon Dashboard 2 MUI example components
 import SidenavItem from "controls/Sidenav/SidenavItem";
 
-// Custom styles for the Sidenav
 import SidenavRoot from "controls/Sidenav/SidenavRoot";
 import sidenavLogoLabel from "controls/Sidenav/styles/sidenav";
 
-// Argon Dashboard 2 MUI context
 import { useArgonController, setMiniSidenav } from "context";
 import { activateOnKeyboard } from 'utils/keyboard';
 import { useTranslation } from "react-i18next";
@@ -93,15 +87,10 @@ function Sidenav({
     function handleMiniSidenav() {
       if (window.innerWidth < 1200) setMiniSidenav(dispatch, true);
     }
-    /**
-     The event listener that's calling the handleMiniSidenav function when resizing the window.
-    */
     window.addEventListener("resize", handleMiniSidenav);
 
-    // Call the handleMiniSidenav function to set the state with the initial value.
     handleMiniSidenav();
 
-    // Remove event listener on cleanup
     return () => window.removeEventListener("resize", handleMiniSidenav);
   }, [dispatch, location]);
 

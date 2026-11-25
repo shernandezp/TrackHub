@@ -18,7 +18,7 @@ using TrackHub.Router.Infrastructure.Wialon.Models;
 
 namespace TrackHub.Router.Infrastructure.Wialon.Tests;
 
-// Value-correctness tests for the Wialon mapper (TT-01). Wialon transposes the coordinate pair
+// Wialon transposes the coordinate pair
 // (X = longitude, Y = latitude), so a swap here would silently mirror every reported position.
 [TestFixture]
 public class PositionMapperTests

@@ -26,16 +26,12 @@ public class CreateUserCommandHandler(IUserWriter writer, IUserReader reader, IU
 {
     private Guid UserId { get; } = Guid.TryParse(user.Id, out var userId) ? userId : throw new UnauthorizedAccessException();
 
-    // Handle the Create User command
     public async Task<UserVm> Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
         // User can be created only within the same account
         var currentUser = await reader.GetUserAsync(UserId, cancellationToken);
-        // Create the user using the writer
         var user = await writer.CreateUserAsync(request.User, currentUser.AccountId, cancellationToken);
-        // Create a shrank user DTO
         var shrankUser = new UserShrankDto(user.UserId, user.Username, currentUser.AccountId, user.Active);
-        // Publish a UserCreated notification
         await publisher.Publish(new UserCreated.Notification(shrankUser), cancellationToken);
         await publisher.Publish(SecurityAudit.Event(principal, "CreateUser", "User", user.UserId.ToString(), currentUser.AccountId, null, user.Username), cancellationToken);
         return user;

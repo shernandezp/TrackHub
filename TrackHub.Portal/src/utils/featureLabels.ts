@@ -18,13 +18,8 @@ import type { TFunction } from 'i18next';
 import { toCamelCase } from "utils/stringUtils";
 
 /**
- * Localized display names for the `AccountFeature` columns. Shared by the
- * SuperAdministrator editor (`systemadmin`) and the Manager read-only view
- * (`manageadmin`) so both render the same wording.
- *
- * Tier and source are free-text billing hooks on the backend (spec 22 owns the
- * eventual catalog), so every lookup falls back to the stored string instead of
- * showing a missing-key placeholder for a value we do not have a label for yet.
+ * Tier and source are free-text billing hooks on the backend, so every lookup falls back to the
+ * stored string instead of showing a missing-key placeholder.
  */
 
 /**
@@ -35,13 +30,11 @@ export function featureLabel(t: TFunction, featureKey: string): string {
   return t(`resources.${toCamelCase(featureKey || '')}` as 'resources.geofencing', { defaultValue: featureKey });
 }
 
-/** Subscription tier -> label (`accountFeatures.tiers.*`). */
 export function tierLabel(t: TFunction, tier?: string | null): string {
   if (!tier) return '';
   return t(`accountFeatures.tiers.${toCamelCase(tier)}` as 'accountFeatures.tiers.default', { defaultValue: tier });
 }
 
-/** Entitlement origin -> label (`accountFeatures.sources.*`). */
 export function sourceLabel(t: TFunction, source?: string | null): string {
   if (!source) return '';
   return t(`accountFeatures.sources.${toCamelCase(source)}` as 'accountFeatures.sources.superadmin', { defaultValue: source });

@@ -19,12 +19,11 @@ namespace TrackHub.TripManagement.Infrastructure.TripDB.Entities;
 
 /// <summary>
 /// Link row to a Manager-owned Document. No storage surface is introduced here: trip documents
-/// are created through the existing spec 04 upload with OwnerEntityType = "Transporter"
-/// (spec 11 section 11, 18.6).
+/// are created through the existing Manager upload with OwnerEntityType = "Transporter".
 /// <para>
-/// <b>Deliberately <see cref="BaseEntity"/>, not BaseAuditableEntity</b> (spec 11 section 6.1):
+/// <b>Deliberately <see cref="BaseEntity"/>, not BaseAuditableEntity</b>:
 /// the row is a system-written association whose audit trail belongs to the document itself and
-/// to the POD/trip event that produced it - the same AW-02 deviation reasoning as
+/// to the POD/trip event that produced it - the same reasoning as
 /// <see cref="TripEvent"/>.
 /// </para>
 /// </summary>

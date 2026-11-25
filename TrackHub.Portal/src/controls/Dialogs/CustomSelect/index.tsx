@@ -68,7 +68,6 @@ export interface CustomSelectProps {
      * means "no filter" and the user must be able to return to it.
      */
     allowEmpty?: boolean;
-    /** Validation message for this field; mirrors CustomTextField's `errorMsg`. */
     errorMsg?: string;
 }
 

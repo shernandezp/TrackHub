@@ -23,7 +23,7 @@ namespace TrackHub.TripManagement.Infrastructure.TripDB.Writers;
 /// Proof-of-delivery capture.
 /// <para>
 /// Document ids are validated by the caller against the account and <c>ScanStatus = Clean</c>
-/// BEFORE this is reached - this store LINKS, it does not authorize (spec 11 section 7.3).
+/// BEFORE this is reached - this store LINKS, it does not authorize.
 /// </para>
 /// </summary>
 public sealed class ProofOfDeliveryWriter(IApplicationDbContext context) : IProofOfDeliveryWriter
@@ -89,13 +89,12 @@ public sealed class ProofOfDeliveryWriter(IApplicationDbContext context) : IProo
         catch (DbUpdateException exception) when (UniqueViolation.Matches(exception))
         {
             // Retried offline submission: return the POD that already exists rather than
-            // throwing (acceptance 15). The unique (TripStopId, ClientEventId) index - not a
+            // throwing. The unique (TripStopId, ClientEventId) index - not a
             // pre-flight read - is what makes this race-safe.
             //
             // The failed inserts MUST leave the change tracker first. The context is scoped to the
-            // request, so a still-Added POD replays on the next SaveChangesAsync - which is both
-            // how a duplicate submission surfaced as a 500 and how later genuine writes in the same
-            // request were lost (contrast TripEventWriter, which detaches).
+            // request, so a still-Added POD would replay on the next SaveChangesAsync, surfacing a duplicate
+            // submission as a 500 and losing later genuine writes in the same request.
             context.ProofsOfDelivery.Entry(entity).State = EntityState.Detached;
             foreach (var document in documents)
             {

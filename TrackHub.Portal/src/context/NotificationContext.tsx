@@ -23,7 +23,6 @@ import type { SnackbarCloseReason } from "@mui/material/Snackbar";
 import { useTranslation } from "react-i18next";
 import type { AppErrorDetail } from "utils/errorHandler";
 
-// Public API exposed to consumers via the useNotification hook.
 export interface NotificationContextValue {
   showError: (message: string) => void;
   showSuccess: (message: string) => void;

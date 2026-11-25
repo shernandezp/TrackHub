@@ -24,7 +24,6 @@ import type { Geofence } from 'api/geofencing/geofencing';
 import type { PlaybackPosition } from 'layouts/dashboard/utils/playback';
 import 'controls/Maps/css/map.css';
 
-/** A trip rendered as a polyline on the map. */
 interface TripPolygon {
   id: string;
   type: number;

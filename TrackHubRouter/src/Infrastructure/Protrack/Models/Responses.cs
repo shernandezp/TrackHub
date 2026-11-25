@@ -15,25 +15,16 @@
 
 namespace TrackHub.Router.Infrastructure.Protrack.Models;
 
-/// <summary>
-/// Protrack authorization response
-/// </summary>
 internal sealed record AuthorizationResponse(
     int Code,
     AuthorizationRecord? Record
 );
 
-/// <summary>
-/// Authorization record containing the access token
-/// </summary>
 internal sealed record AuthorizationRecord(
     string Access_token,
     long Expires_in
 );
 
-/// <summary>
-/// Protrack track response (current positions)
-/// </summary>
 internal sealed record TrackResponse(
     int Code,
     IEnumerable<TrackRecord>? Record
@@ -47,9 +38,6 @@ internal sealed record PlaybackResponse(
     string? Record
 );
 
-/// <summary>
-/// Protrack device list response
-/// </summary>
 internal sealed record DeviceListResponse(
     int Code,
     IEnumerable<DeviceRecord>? Record

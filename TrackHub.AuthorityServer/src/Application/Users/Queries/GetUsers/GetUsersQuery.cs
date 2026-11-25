@@ -22,7 +22,6 @@ using Microsoft.Extensions.Logging;
 namespace TrackHub.AuthorityServer.Application.Users.Queries.GetUsers;
 public readonly record struct GetUsersQuery(string EmailAddress, string Password) : IRequest<UserVm>;
 
-// Handles the GetUsersQuery and returns a UserVm.
 // Login lockout mirrors the staff credential model (see AuthenticateStaffQuery): a rolling
 // failed-attempt counter that trips a timed lock and resets on a successful login.
 public class GetUsersQueryHandler(IUserReader reader, IUserWriter writer, ILogger<GetUsersQueryHandler> logger) : IRequestHandler<GetUsersQuery, UserVm>
@@ -38,7 +37,6 @@ public class GetUsersQueryHandler(IUserReader reader, IUserWriter writer, ILogge
     // the missing hash is a timing oracle that survives unifying the messages.
     private static readonly string DummyHash = "unused-placeholder".HashPassword();
 
-    // Handles the GetUsersQuery and returns a UserVm
     public async Task<UserVm> Handle(GetUsersQuery request, CancellationToken cancellationToken)
     {
         var user = await reader.GetUserAsync(new Domain.Records.UserLoginDto(request.EmailAddress, request.Password), cancellationToken);
@@ -85,8 +83,8 @@ public class GetUsersQueryHandler(IUserReader reader, IUserWriter writer, ILogge
         return user;
     }
 
-    // An expired lock resets the counter: it used to survive, so after the first lockout a single
-    // wrong password re-locked the account for another window, indefinitely.
+    // An expired lock resets the counter; otherwise, after the first lockout, a single wrong
+    // password would re-lock the account for another window, indefinitely.
     private async Task RecordFailureAsync(UserVm user, DateTimeOffset now, CancellationToken cancellationToken)
     {
         var lockExpired = user.LockedUntil.HasValue && user.LockedUntil.Value <= now;

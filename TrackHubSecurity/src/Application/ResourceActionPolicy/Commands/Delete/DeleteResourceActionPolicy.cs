@@ -27,8 +27,6 @@ public class DeleteResourceActionPolicyCommandHandler(IResourceActionPolicyWrite
 {
     private Guid UserId { get; } = Guid.TryParse(user.Id, out var userId) ? userId : throw new UnauthorizedAccessException();
 
-    // This method handles the DeleteResourceActionPolicyCommand by deleting the resource action policy
-    // with the specified ID using the provided writer.
     public async Task Handle(DeleteResourceActionPolicyCommand request, CancellationToken cancellationToken)
     {
         var isAdmin = await userReader.IsAdminAsync(UserId, cancellationToken);

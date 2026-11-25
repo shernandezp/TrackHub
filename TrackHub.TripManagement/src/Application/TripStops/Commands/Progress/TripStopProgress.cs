@@ -24,12 +24,12 @@ namespace TrackHub.TripManagement.Application.TripStops.Commands.Progress;
 /// <para>
 /// <b>Idempotency is server-side by design, not by caller discipline.</b> Every call builds
 /// <c>TripEvent.IdempotencyKey = trip-{verb}:{tripStopId:N}:{clientEventId:N}</c>; a duplicate
-/// submission returns success and writes no second row (acceptance 15). This is precisely what
-/// makes spec 10's offline outbox safe to layer on later without reopening these handlers — the
+/// submission returns success and writes no second row. This is precisely what
+/// makes an offline outbox safe to layer on without reopening these handlers — the
 /// server never assumes a client will refrain from retrying.
 /// </para>
 /// <para>
-/// Manual override always beats automatic detection (spec 11 §18.13): both land in the same event
+/// Manual override always beats automatic detection: both land in the same event
 /// log, discriminated only by <c>Source</c>. Timestamps once written are never overwritten.
 /// </para>
 /// </summary>
@@ -61,19 +61,18 @@ public static class TripStopProgress
 
         // IDEMPOTENCY BEFORE THE TRIP-STATUS GUARD, for exactly the reason RecordStopProgressAsync
         // checks it before the STOP-status guard: a state guard must never fire on an event the
-        // server has already accepted (acceptance 15).
+        // server has already accepted.
         //
-        // The trip moves on. It auto-completes the moment its last stop closes (§5.2), and a
+        // The trip moves on. It auto-completes the moment its last stop closes, and a
         // dispatcher can complete or abort it at any time. A device replaying an arrival the server
-        // already recorded — spec 10's offline outbox doing precisely what it is designed to do —
-        // then met TRIP_NOT_ACTIVE, a hard error it can only surface as a permanent failure and
-        // retry forever. The event exists; the answer is yes.
+        // already recorded must not meet TRIP_NOT_ACTIVE, a hard error it can only surface as a
+        // permanent failure and retry forever. The event exists; the answer is yes.
         if (await tripEventWriter.HasEventAsync(accountId, idempotencyKey, cancellationToken))
             return true;
 
         // InProgress OR Paused. Pause is the dispatcher's "I am taking control" switch — it removes
-        // the trip from detection — so rejecting manual progress on a paused trip closed the manual
-        // hatch at exactly the moment it is the only way to record anything (spec 11a §5.5).
+        // the trip from detection — so manual progress on a paused trip must stay open: it is the
+        // only way to record anything at that moment.
         if (!TripStatuses.HasStarted(trip.Status))
             throw TripValidationFailure.Create(nameof(TripVm.Status), TripErrorCodes.TripNotActive);
 
@@ -96,9 +95,8 @@ public static class TripStopProgress
         //
         // `recorded` is the WRITER's contract ("did this insert"), which the detection service needs
         // so it can count arrivals and skip a second alert. It is NOT this mutation's contract.
-        // Returning it verbatim answered `false` to a duplicate, which a client cannot tell from a
-        // failure — spec 10's offline outbox would keep the event queued and retry it forever.
-        // Acceptance 15 says a duplicate submission RETURNS SUCCESS, so the caller can drop it.
+        // A duplicate must RETURN SUCCESS so the caller can drop it: `false` is indistinguishable
+        // from a failure, and the offline outbox would retry it forever.
         if (!recorded)
             return true;
 
@@ -126,10 +124,9 @@ public static class TripStopProgress
     }
 
     /// <summary>
-    /// Closing the LAST open stop closes the trip, whoever closed it (spec 11a §5.2 lists the
-    /// all-stops-closed rule as a trigger, not as a detection-only one).
+    /// Closing the LAST open stop closes the trip, whoever closed it.
     /// <para>
-    /// Without this, a dispatcher who departs the final stop by hand watched the trip sit
+    /// Otherwise a dispatcher who departs the final stop by hand would watch the trip sit
     /// <c>InProgress</c> until the next position fix or the five-minute sweep caught up — which on a
     /// route whose tracker is dead, the exact case the manual override exists for, means five
     /// minutes of a board that contradicts what the dispatcher just recorded.

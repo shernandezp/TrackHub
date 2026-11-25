@@ -20,7 +20,7 @@ using TrackHub.Reporting.Domain.Records;
 namespace TrackHub.Reporting.Domain.Models;
 
 // One column of a report dataset. PropertyName is the resx key used to resolve the localized
-// header at format time (ExcelHelper / PdfReportBuilder), matching the pre-refactor behavior.
+// header at format time (ExcelHelper / PdfReportBuilder).
 public readonly record struct ReportColumn(string PropertyName, Type PropertyType, string? Vocabulary = null);
 
 // The format-agnostic tabular result of running a report. Produced once per report
@@ -71,8 +71,8 @@ public sealed class ReportDataset
 
     // Generic factory: reflects T's public instance properties (declaration order) into Columns and
     // flattens each row into an object?[] in the same order. Title/date range/applied-filters are
-    // derived from the FilterDto. This is the single reflection step both Excel and PDF share, so the
-    // column order stays identical to the pre-refactor ClosedXML InsertTable output.
+    // derived from the FilterDto. This is the single reflection step both Excel and PDF share, so
+    // the column order is identical in both.
     public static ReportDataset Create<T>(
         FilterDto filters,
         IEnumerable<T> rows,

@@ -16,9 +16,6 @@
 
 import type { Credential, CredentialFormInput } from 'api/manager/credential';
 
-// The service functions are passed in as parameters (the api-layer functions in
-// api/manager/credential and api/router). Type them precisely against those
-// signatures so this stays a thin, runtime-identical dispatcher.
 type CreateCredentialFn = (credential: CredentialFormInput) => Promise<Credential>;
 type UpdateCredentialFn = (credentialId: string, credential: CredentialFormInput) => Promise<boolean>;
 type TestConnectivityFn = (operatorId: string) => Promise<boolean>;

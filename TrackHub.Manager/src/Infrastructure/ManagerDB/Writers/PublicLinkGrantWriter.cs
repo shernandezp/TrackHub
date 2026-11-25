@@ -76,9 +76,7 @@ public sealed class PublicLinkGrantWriter(IApplicationDbContext context, ICurren
         await Context.SaveChangesAsync(cancellationToken);
     }
 
-    // RecordPublicLinkAccessAsync removed — see PublicLinkGrantResolver, which is now the only place
-    // that increments AccessCount, stamps LastAccessedAt and writes the `PublicLinkAccessed` audit
-    // event (spec 11 §7.8/§18.10).
+    // Access counting and the `PublicLinkAccessed` audit event live only in PublicLinkGrantResolver.
 
     private static PublicLinkGrantVm ToVm(PublicLinkGrant x, string? token = null) 
         => new(x.PublicLinkGrantId, x.AccountId, x.ResourceType, x.ResourceId, x.Scopes, x.Purpose, x.ExpiresAt, x.RevokedAt, x.RevokedBy, x.CreatedByPrincipalId, x.AccessCount, x.LastAccessedAt, x.LastModified, token);

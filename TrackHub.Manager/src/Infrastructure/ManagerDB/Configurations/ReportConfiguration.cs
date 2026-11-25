@@ -24,13 +24,11 @@ public class ReportConfiguration : IEntityTypeConfiguration<Report>
 {
     public void Configure(EntityTypeBuilder<Report> builder)
     {
-        //Table name
         builder.ToTable(
             name: TableMetadata.Report,
             schema: SchemaMetadata.Application,
             t => t.HasCheckConstraint("ck_reports_type", EnumColumn.Check<ReportType>("type")));
 
-        //Column names
         builder.Property(x => x.ReportId).HasColumnName("id");
         builder.Property(x => x.Code).HasColumnName("code");
         builder.Property(x => x.Description).HasColumnName("description");

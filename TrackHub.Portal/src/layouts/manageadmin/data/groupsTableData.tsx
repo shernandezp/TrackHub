@@ -26,11 +26,6 @@ import type { Group, GroupDtoInput, UpdateGroupDtoInput } from 'api/manager/grou
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
 
-/**
- * Dialog/form state for a group. Merges an API {@link Group} (when editing) with
- * the fresh-add shape; all fields are optional and the `name`/`description`
- * requirement is enforced by the dialog's validate() gate before save.
- */
 export interface GroupFormValues {
   version?: number;
   groupId?: number;
@@ -39,7 +34,6 @@ export interface GroupFormValues {
   active?: boolean;
 }
 
-/** A column descriptor / rendered row for the vendored groups `Table`. */
 export interface GroupColumn { name: string; title?: string; align?: "left" | "right" | "center"; }
 export interface GroupRow {
   [key: string]: ReactNode;
@@ -75,7 +69,6 @@ function useGroupTableData(
   const updateGroup = useUpdateGroup();
   const deleteGroup = useDeleteGroup();
 
-  // Keep the global spinner UX for the initial load / invalidation refetch.
   useEffect(() => {
     setLoading(groupsQuery.isFetching);
   }, [groupsQuery.isFetching, setLoading]);
@@ -83,8 +76,6 @@ function useGroupTableData(
   const onSave = async (group: GroupFormValues) => {
     setLoading(true);
     try {
-      // validate(['name','description']) gates this call, so the required
-      // create/update input fields are present — assert them at the boundary.
       if (group.groupId) {
         await updateGroup.mutateAsync({
           groupId: group.groupId,

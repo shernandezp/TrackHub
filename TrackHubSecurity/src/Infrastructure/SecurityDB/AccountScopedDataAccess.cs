@@ -24,8 +24,7 @@ namespace TrackHub.Security.Infrastructure;
 /// Base for readers/writers that touch tenant-owned rows by key. Requests marked
 /// <c>[AccountScopeEnforcedInHandler]</c> cite a <see cref="RequireAccountAccess"/> call in a
 /// subclass as their load-bearing enforcement point: the row is loaded first, then its owning
-/// account is checked against the caller before any data is returned or mutated. Same pattern as
-/// the Manager/Telemetry <c>AccountScopedDataAccess</c> bases.
+/// account is checked against the caller before any data is returned or mutated.
 /// </summary>
 public abstract class AccountScopedDataAccess(IApplicationDbContext context, ICurrentPrincipal principal)
 {
@@ -40,11 +39,6 @@ public abstract class AccountScopedDataAccess(IApplicationDbContext context, ICu
         (Principal.PrincipalType == PrincipalType.ServiceClient && !Principal.AccountId.HasValue)
         || string.Equals(Principal.Role, Roles.Administrator, StringComparison.OrdinalIgnoreCase);
 
-    /// <summary>
-    /// Asynchronous throughout: the membership fallback is a database round trip, and every caller
-    /// is already async. Blocking on it held a request thread for every guard evaluation the
-    /// principal check did not short-circuit.
-    /// </summary>
     protected async Task<Guid> RequireAccountAccessAsync(Guid accountId, CancellationToken cancellationToken)
     {
         if (accountId == Guid.Empty)

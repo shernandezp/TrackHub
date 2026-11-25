@@ -16,18 +16,13 @@
 using Common.Domain.Time;
 namespace TrackHub.Manager.Application.Accounts.Commands.UpdateMaster;
 
-// Platform-side account edit, used by the systemadmin console to maintain ANY account. The
-// account-scoped twin (Accounts/Edit UpdateAccountCommand) stays guarded so an account
-// administrator can only edit its own account; the cross-tenant reach lives here alone, behind the
-// Administrator-only AccountsMaster resource — the same split AccountFeatures/AccountFeaturesMaster
-// and Accounts/AccountsMaster already use on the read side.
+// The cross-tenant twin of UpdateAccountCommand, which stays guarded to the caller's own account.
 [Authorize(Resource = Resources.AccountsMaster, Action = Actions.Edit)]
 [AllowCrossAccount("Platform account administration: the systemadmin console maintains accounts other than the operator's own. Gated by the Administrator-only AccountsMaster/Edit permission.")]
 public readonly record struct UpdateAccountMasterCommand(UpdateAccountDto Account) : IRequest;
 
 public class UpdateAccountMasterCommandHandler(IAccountWriter writer) : IRequestHandler<UpdateAccountMasterCommand>
 {
-    // Handles the platform-side update account command
     public async Task Handle(UpdateAccountMasterCommand request, CancellationToken cancellationToken)
         => await writer.UpdateAccountAsync(request.Account, cancellationToken);
 }

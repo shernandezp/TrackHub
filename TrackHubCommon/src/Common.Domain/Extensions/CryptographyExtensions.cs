@@ -19,7 +19,6 @@ using System.Text;
 
 namespace Common.Domain.Extensions;
 
-// Contains extension methods for cryptographic operations.
 public static class CryptographyExtensions
 {
     // Ciphertext written by this class is tagged so the reader can tell the authenticated
@@ -32,15 +31,12 @@ public static class CryptographyExtensions
 
     private static readonly ConcurrentDictionary<string, byte[]> DerivedKeys = new();
 
-    // Hashes a password using BCrypt hashing algorithm.
     public static string HashPassword(this string value)
         => BCrypt.Net.BCrypt.HashPassword(value);
 
-    // Verifies a hashed password against a plain text password.
     public static bool VerifyHashedPassword(this string hashedPassword, string password)
         => BCrypt.Net.BCrypt.Verify(password, hashedPassword);
 
-    // Generates a random AES key of the specified key size.
     public static byte[] GenerateAesKey(int keySizeBits)
     {
         if (keySizeBits != 128 && keySizeBits != 192 && keySizeBits != 256)
@@ -51,7 +47,6 @@ public static class CryptographyExtensions
         return key;
     }
 
-    // Derives a key from a passphrase and salt using the Rfc2898DeriveBytes algorithm.
     public static byte[] DeriveKey(string passphrase, byte[] salt, int keySize = 256, int iterations = 100000)
     {
         return Rfc2898DeriveBytes.Pbkdf2(
@@ -64,8 +59,7 @@ public static class CryptographyExtensions
     }
 
     /// <summary>
-    /// Encrypts the given data with AES-GCM, which authenticates the ciphertext so tampering is
-    /// detected on read instead of surfacing as a padding error.
+    /// AES-GCM authenticates the ciphertext, so tampering is detected on read instead of surfacing as a padding error.
     /// </summary>
     public static string EncryptData(this string dataToEncrypt, string passphrase, byte[] salt)
     {
@@ -89,9 +83,8 @@ public static class CryptographyExtensions
     }
 
     /// <summary>
-    /// Decrypts a value produced by <see cref="EncryptData"/>. Values stored before the move to
-    /// AES-GCM carry no marker and are read with the legacy AES-CBC format, so existing
-    /// credential rows keep working until they are next written.
+    /// Values without the GCM marker are read as legacy AES-CBC, so existing credential rows keep working
+    /// until they are next written.
     /// </summary>
     public static string DecryptData(this string encryptedData, string passphrase, byte[] salt)
     {

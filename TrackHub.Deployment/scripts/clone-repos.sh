@@ -3,7 +3,7 @@
 # TrackHub Source Checkout
 # =============================================================================
 # The whole product is one repository, and these scripts live inside it — so by
-# the time you can run this, the source is already checked out. This script now
+# the time you can run this, the source is already checked out. This script
 # fast-forwards that checkout (and still clones it outright in the unusual case
 # of being run from outside one), then verifies every directory the image builds
 # need is present.

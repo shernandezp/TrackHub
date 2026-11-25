@@ -22,7 +22,7 @@ namespace TrackHub.TripManagement.Infrastructure.TripDB.Services;
 /// TripManagement's own <see cref="IFeatureFlagService"/>, backed by the Manager-owned
 /// app.account_features table.
 /// <para>
-/// <b>This registration is load-bearing</b> (spec 11 section 15, acceptance 10): without it the
+/// <b>This registration is load-bearing</b>: without it the
 /// host refuses to start (PipelineDependencyCheck).
 /// </para>
 /// <para>

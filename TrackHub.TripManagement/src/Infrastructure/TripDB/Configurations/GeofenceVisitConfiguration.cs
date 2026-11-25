@@ -23,7 +23,7 @@ public sealed class GeofenceVisitConfiguration : IEntityTypeConfiguration<Geofen
     public void Configure(EntityTypeBuilder<GeofenceVisit> builder)
     {
         // Geofencing-owned table: read-only here, never part of this repo's migrations. Read only by
-        // the late-created-trip backfill (spec 11a §5.4).
+        // the late-created-trip backfill.
         builder.ToTable(name: TableMetadata.GeofenceEvent, schema: SchemaMetadata.Geofencing, t => t.ExcludeFromMigrations());
         builder.HasKey(x => x.GeofenceVisitId);
 

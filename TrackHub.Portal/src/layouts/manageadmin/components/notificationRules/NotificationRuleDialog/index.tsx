@@ -31,21 +31,14 @@ import { ALERT_EVENT_TYPES, NOTIFICATION_CHANNELS, DIGEST_MODES } from 'utils/no
 import { toCamelCase } from 'utils/stringUtils';
 import { parseJson } from 'utils/jsonUtils';
 
-/** One ad-hoc contact row of the recipient selector. */
 export interface RuleContact {
   channel: 'Email' | 'WhatsApp';
   address: string;
 }
 
-/** Roles selectable as rule recipients. */
 const RECIPIENT_ROLES = ['Administrator', 'Manager'] as const;
 
-/**
- * Dialog/form state for a notification rule. The JSON columns of the record
- * (recipientSelector, channelsJson, throttlingJson, configurationJson) are
- * expanded into structured fields; {@link ruleToFormValues} /
- * {@link formValuesToRuleInput} convert between the two shapes.
- */
+/** The record's JSON columns expanded into structured fields; see ruleToFormValues / formValuesToRuleInput. */
 export interface NotificationRuleFormValues {
   notificationRuleId?: string;
   version?: number;
@@ -80,7 +73,6 @@ interface Throttling {
   maxPerHour?: number;
 }
 
-/** Expands a stored rule into structured dialog values ('' channelsJson → none). */
 export function ruleToFormValues(rule: NotificationRule): NotificationRuleFormValues {
   const channels = parseJson<string[]>(rule.channelsJson, []);
   const recipients = parseJson<RecipientSelector>(rule.recipientSelector, {});
@@ -110,7 +102,6 @@ export function ruleToFormValues(rule: NotificationRule): NotificationRuleFormVa
   };
 }
 
-/** Serializes the structured dialog values back into the rule's JSON columns. */
 export function formValuesToRuleInput(
   values: NotificationRuleFormValues,
   accountId: string
@@ -139,7 +130,6 @@ export function formValuesToRuleInput(
     if (values.webhookSecret) configuration.webhookSecret = values.webhookSecret;
   }
 
-  // validate() gates the required fields; assert the mutation input at the boundary.
   return {
     accountId,
     ruleKey: values.ruleKey,

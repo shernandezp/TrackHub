@@ -14,11 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Geocoding-provider API (Manager backend): plain typed async functions. Failures
- * THROW ApiError — fallbacks and toasts belong to the caller layer (src/queries).
- */
-
 import { executeGraphQL } from 'api/core/graphqlClient';
 import type { RequestOptions } from 'api/core/errors';
 import type {
@@ -80,7 +75,6 @@ export async function updateGeocodingProvider(
   return data.updateGeocodingProvider;
 }
 
-/** Returns the id of the deleted provider (schema: `deleteGeocodingProvider: UUID!`). */
 export async function deleteGeocodingProvider(geocodingProviderId: string): Promise<string> {
   const data = await executeGraphQL('manager', DeleteGeocodingProviderDocument, {
     id: geocodingProviderId,

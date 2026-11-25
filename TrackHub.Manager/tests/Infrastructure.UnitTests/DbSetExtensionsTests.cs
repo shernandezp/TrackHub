@@ -24,7 +24,6 @@ public class DbSetExtensionsTests
     [Test]
     public async Task BulkAddOrUpdateAsync_AddsNewEntities_WhenNoneExist()
     {
-        // Arrange
         var dbName = nameof(BulkAddOrUpdateAsync_AddsNewEntities_WhenNoneExist);
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(dbName).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
@@ -41,7 +40,6 @@ public class DbSetExtensionsTests
             CreatePosition(transporterId2, 30.0, 40.0)
         };
 
-        // Act
         await context.TransporterPositions.BulkAddOrUpdateAsync(
             positions,
             p => p.TransporterId,
@@ -49,7 +47,6 @@ public class DbSetExtensionsTests
             CancellationToken.None);
         await context.SaveChangesAsync(CancellationToken.None);
 
-        // Assert
         var result = await context.TransporterPositions.ToListAsync();
         Assert.That(result, Has.Count.EqualTo(2));
         using (Assert.EnterMultipleScope())
@@ -62,7 +59,6 @@ public class DbSetExtensionsTests
     [Test]
     public async Task BulkAddOrUpdateAsync_UpdatesExistingEntities_WhenTheyExist()
     {
-        // Arrange
         var dbName = nameof(BulkAddOrUpdateAsync_UpdatesExistingEntities_WhenTheyExist);
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(dbName).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
@@ -72,18 +68,15 @@ public class DbSetExtensionsTests
 
         await using var context = new ApplicationDbContext(options);
 
-        // Add existing position
         var existingPosition = CreatePosition(transporterId, 10.0, 20.0);
         await context.TransporterPositions.AddAsync(existingPosition);
         await context.SaveChangesAsync(CancellationToken.None);
 
-        // Create updated position
         var updatedPositions = new List<TransporterPosition>
         {
             CreatePosition(transporterId, 50.0, 60.0, speed: 100.0)
         };
 
-        // Act
         await context.TransporterPositions.BulkAddOrUpdateAsync(
             updatedPositions,
             p => p.TransporterId,
@@ -91,7 +84,6 @@ public class DbSetExtensionsTests
             CancellationToken.None);
         await context.SaveChangesAsync(CancellationToken.None);
 
-        // Assert
         var result = await context.TransporterPositions.ToListAsync();
         Assert.That(result, Has.Count.EqualTo(1));
         using (Assert.EnterMultipleScope())
@@ -105,7 +97,6 @@ public class DbSetExtensionsTests
     [Test]
     public async Task BulkAddOrUpdateAsync_MixedAddAndUpdate_HandlesCorrectly()
     {
-        // Arrange
         var dbName = nameof(BulkAddOrUpdateAsync_MixedAddAndUpdate_HandlesCorrectly);
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(dbName).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
@@ -116,19 +107,16 @@ public class DbSetExtensionsTests
 
         await using var context = new ApplicationDbContext(options);
 
-        // Add existing position
         var existingPosition = CreatePosition(existingTransporterId, 10.0, 20.0);
         await context.TransporterPositions.AddAsync(existingPosition);
         await context.SaveChangesAsync(CancellationToken.None);
 
-        // Create batch with one update and one new
         var positions = new List<TransporterPosition>
         {
-            CreatePosition(existingTransporterId, 99.0, 99.0), // Update
-            CreatePosition(newTransporterId, 11.0, 22.0)       // New
+            CreatePosition(existingTransporterId, 99.0, 99.0),
+            CreatePosition(newTransporterId, 11.0, 22.0)
         };
 
-        // Act
         await context.TransporterPositions.BulkAddOrUpdateAsync(
             positions,
             p => p.TransporterId,
@@ -136,7 +124,6 @@ public class DbSetExtensionsTests
             CancellationToken.None);
         await context.SaveChangesAsync(CancellationToken.None);
 
-        // Assert
         var result = await context.TransporterPositions.ToListAsync();
         Assert.That(result, Has.Count.EqualTo(2));
 
@@ -150,7 +137,6 @@ public class DbSetExtensionsTests
     [Test]
     public async Task BulkAddOrUpdateAsync_ExcludesSpecifiedProperties_FromUpdate()
     {
-        // Arrange
         var dbName = nameof(BulkAddOrUpdateAsync_ExcludesSpecifiedProperties_FromUpdate);
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(dbName).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
@@ -161,37 +147,32 @@ public class DbSetExtensionsTests
 
         await using var context = new ApplicationDbContext(options);
 
-        // Add existing position with a specific TransporterPositionId
         var existingPosition = CreatePosition(transporterId, 10.0, 20.0);
         existingPosition.TransporterPositionId = originalPositionId;
         await context.TransporterPositions.AddAsync(existingPosition);
         await context.SaveChangesAsync(CancellationToken.None);
 
-        // Create updated position with different TransporterPositionId
         var updatedPosition = CreatePosition(transporterId, 50.0, 60.0);
-        updatedPosition.TransporterPositionId = Guid.NewGuid(); // Different ID
+        updatedPosition.TransporterPositionId = Guid.NewGuid();
 
-        // Act
         await context.TransporterPositions.BulkAddOrUpdateAsync(
             [updatedPosition],
             p => p.TransporterId,
-            ["TransporterPositionId"], // Exclude this property
+            ["TransporterPositionId"],
             CancellationToken.None);
         await context.SaveChangesAsync(CancellationToken.None);
 
-        // Assert
         var result = await context.TransporterPositions.FirstAsync();
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(result.TransporterPositionId, Is.EqualTo(originalPositionId)); // Should not change
-            Assert.That(result.Latitude, Is.EqualTo(50.0)); // Should change
+            Assert.That(result.TransporterPositionId, Is.EqualTo(originalPositionId));
+            Assert.That(result.Latitude, Is.EqualTo(50.0));
         }
     }
 
     [Test]
     public async Task BulkAddOrUpdateAsync_HandlesDuplicateKeys_KeepsLastOccurrence()
     {
-        // Arrange
         var dbName = nameof(BulkAddOrUpdateAsync_HandlesDuplicateKeys_KeepsLastOccurrence);
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(dbName).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
@@ -201,15 +182,13 @@ public class DbSetExtensionsTests
 
         await using var context = new ApplicationDbContext(options);
 
-        // Create multiple positions for the same transporter
         var positions = new List<TransporterPosition>
         {
-            CreatePosition(transporterId, 10.0, 20.0, speed: 50.0),   // First
-            CreatePosition(transporterId, 30.0, 40.0, speed: 75.0),   // Second
-            CreatePosition(transporterId, 50.0, 60.0, speed: 100.0)   // Last - should be kept
+            CreatePosition(transporterId, 10.0, 20.0, speed: 50.0),
+            CreatePosition(transporterId, 30.0, 40.0, speed: 75.0),
+            CreatePosition(transporterId, 50.0, 60.0, speed: 100.0)
         };
 
-        // Act
         await context.TransporterPositions.BulkAddOrUpdateAsync(
             positions,
             p => p.TransporterId,
@@ -217,7 +196,6 @@ public class DbSetExtensionsTests
             CancellationToken.None);
         await context.SaveChangesAsync(CancellationToken.None);
 
-        // Assert
         var result = await context.TransporterPositions.ToListAsync();
         Assert.That(result, Has.Count.EqualTo(1));
         using (Assert.EnterMultipleScope())
@@ -230,7 +208,6 @@ public class DbSetExtensionsTests
     [Test]
     public async Task BulkAddOrUpdateAsync_HandlesDuplicateKeys_UpdatesWithLastOccurrence()
     {
-        // Arrange
         var dbName = nameof(BulkAddOrUpdateAsync_HandlesDuplicateKeys_UpdatesWithLastOccurrence);
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(dbName).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
@@ -240,20 +217,17 @@ public class DbSetExtensionsTests
 
         await using var context = new ApplicationDbContext(options);
 
-        // Add existing position
         var existingPosition = CreatePosition(transporterId, 1.0, 2.0, speed: 10.0);
         await context.TransporterPositions.AddAsync(existingPosition);
         await context.SaveChangesAsync(CancellationToken.None);
 
-        // Create multiple positions for the same transporter
         var positions = new List<TransporterPosition>
         {
-            CreatePosition(transporterId, 10.0, 20.0, speed: 50.0),   // First update
-            CreatePosition(transporterId, 30.0, 40.0, speed: 75.0),   // Second update
-            CreatePosition(transporterId, 99.0, 99.0, speed: 999.0)   // Last - should be used for update
+            CreatePosition(transporterId, 10.0, 20.0, speed: 50.0),
+            CreatePosition(transporterId, 30.0, 40.0, speed: 75.0),
+            CreatePosition(transporterId, 99.0, 99.0, speed: 999.0)
         };
 
-        // Act
         await context.TransporterPositions.BulkAddOrUpdateAsync(
             positions,
             p => p.TransporterId,
@@ -261,7 +235,6 @@ public class DbSetExtensionsTests
             CancellationToken.None);
         await context.SaveChangesAsync(CancellationToken.None);
 
-        // Assert
         var result = await context.TransporterPositions.ToListAsync();
         Assert.That(result, Has.Count.EqualTo(1));
         using (Assert.EnterMultipleScope())
@@ -274,7 +247,6 @@ public class DbSetExtensionsTests
     [Test]
     public async Task BulkAddOrUpdateAsync_EmptyCollection_DoesNothing()
     {
-        // Arrange
         var dbName = nameof(BulkAddOrUpdateAsync_EmptyCollection_DoesNothing);
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(dbName).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
@@ -282,7 +254,6 @@ public class DbSetExtensionsTests
 
         await using var context = new ApplicationDbContext(options);
 
-        // Act
         await context.TransporterPositions.BulkAddOrUpdateAsync(
             [],
             p => p.TransporterId,
@@ -290,7 +261,6 @@ public class DbSetExtensionsTests
             CancellationToken.None);
         await context.SaveChangesAsync(CancellationToken.None);
 
-        // Assert
         var result = await context.TransporterPositions.ToListAsync();
         Assert.That(result, Is.Empty);
     }
@@ -298,7 +268,6 @@ public class DbSetExtensionsTests
     [Test]
     public async Task BulkAddOrUpdateAsync_OnlyUpdatesChangedProperties()
     {
-        // Arrange
         var dbName = nameof(BulkAddOrUpdateAsync_OnlyUpdatesChangedProperties);
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(dbName).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
@@ -308,15 +277,12 @@ public class DbSetExtensionsTests
 
         await using var context = new ApplicationDbContext(options);
 
-        // Add existing position
         var existingPosition = CreatePosition(transporterId, 10.0, 20.0, speed: 50.0, city: "OldCity");
         await context.TransporterPositions.AddAsync(existingPosition);
         await context.SaveChangesAsync(CancellationToken.None);
 
-        // Create position with same latitude but different city
         var updatedPosition = CreatePosition(transporterId, 10.0, 20.0, speed: 50.0, city: "NewCity");
 
-        // Act
         await context.TransporterPositions.BulkAddOrUpdateAsync(
             [updatedPosition],
             p => p.TransporterId,
@@ -324,19 +290,17 @@ public class DbSetExtensionsTests
             CancellationToken.None);
         await context.SaveChangesAsync(CancellationToken.None);
 
-        // Assert
         var result = await context.TransporterPositions.FirstAsync();
         using (Assert.EnterMultipleScope())
         {
             Assert.That(result.City, Is.EqualTo("NewCity"));
-            Assert.That(result.Latitude, Is.EqualTo(10.0)); // Unchanged
+            Assert.That(result.Latitude, Is.EqualTo(10.0));
         }
     }
 
     [Test]
     public async Task BulkAddOrUpdateAsync_HandlesAttributes_Correctly()
     {
-        // Arrange
         var dbName = nameof(BulkAddOrUpdateAsync_HandlesAttributes_Correctly);
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(dbName).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
@@ -346,17 +310,14 @@ public class DbSetExtensionsTests
 
         await using var context = new ApplicationDbContext(options);
 
-        // Add existing position with attributes
         var existingPosition = CreatePosition(transporterId, 10.0, 20.0);
         existingPosition.Attributes = new AttributesVm(true, 10, 1000.0, 500.0, 25.0);
         await context.TransporterPositions.AddAsync(existingPosition);
         await context.SaveChangesAsync(CancellationToken.None);
 
-        // Create updated position with different attributes
         var updatedPosition = CreatePosition(transporterId, 10.0, 20.0);
         updatedPosition.Attributes = new AttributesVm(false, 15, 2000.0, 600.0, 30.0);
 
-        // Act
         await context.TransporterPositions.BulkAddOrUpdateAsync(
             [updatedPosition],
             p => p.TransporterId,
@@ -364,7 +325,6 @@ public class DbSetExtensionsTests
             CancellationToken.None);
         await context.SaveChangesAsync(CancellationToken.None);
 
-        // Assert
         var result = await context.TransporterPositions.FirstAsync();
         Assert.That(result.Attributes, Is.Not.Null);
         using (Assert.EnterMultipleScope())
@@ -378,7 +338,6 @@ public class DbSetExtensionsTests
     [Test]
     public async Task BulkAddOrUpdateAsync_MultipleDifferentTransporters_WithDuplicates_HandlesCorrectly()
     {
-        // Arrange
         var dbName = nameof(BulkAddOrUpdateAsync_MultipleDifferentTransporters_WithDuplicates_HandlesCorrectly);
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(dbName).UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking)
@@ -389,16 +348,14 @@ public class DbSetExtensionsTests
 
         await using var context = new ApplicationDbContext(options);
 
-        // Create positions with duplicates for each transporter
         var positions = new List<TransporterPosition>
         {
-            CreatePosition(transporterId1, 10.0, 20.0),  // T1 first
-            CreatePosition(transporterId2, 30.0, 40.0),  // T2 first
-            CreatePosition(transporterId1, 50.0, 60.0),  // T1 last - should be kept
-            CreatePosition(transporterId2, 70.0, 80.0)   // T2 last - should be kept
+            CreatePosition(transporterId1, 10.0, 20.0),
+            CreatePosition(transporterId2, 30.0, 40.0),
+            CreatePosition(transporterId1, 50.0, 60.0),
+            CreatePosition(transporterId2, 70.0, 80.0)
         };
 
-        // Act
         await context.TransporterPositions.BulkAddOrUpdateAsync(
             positions,
             p => p.TransporterId,
@@ -406,7 +363,6 @@ public class DbSetExtensionsTests
             CancellationToken.None);
         await context.SaveChangesAsync(CancellationToken.None);
 
-        // Assert
         var result = await context.TransporterPositions.ToListAsync();
         Assert.That(result, Has.Count.EqualTo(2));
 

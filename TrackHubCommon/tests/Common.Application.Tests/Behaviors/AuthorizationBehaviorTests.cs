@@ -132,7 +132,7 @@ public class AuthorizationBehaviorTests
     [Fact]
     public async Task Handle_Staff_Allowed_WithClaims_SkipsRolePolicyChecks()
     {
-        // AC 3: a valid Staff token is accepted without consulting user role/policy tables.
+        // A valid Staff token is accepted without consulting user role/policy tables.
         _userMock.Setup(u => u.Id).Returns(Guid.NewGuid().ToString());
         _userMock.Setup(u => u.PrincipalType).Returns(PrincipalType.Staff);
         _userMock.Setup(u => u.StaffId).Returns(Guid.NewGuid());
@@ -150,7 +150,7 @@ public class AuthorizationBehaviorTests
     [Fact]
     public async Task Handle_Staff_Allowed_MissingStaffId_ThrowsForbidden()
     {
-        // AC 2: a Staff-allowed request rejects a token lacking staff_id/account_id.
+        // A Staff-allowed request rejects a token lacking staff_id/account_id.
         _userMock.Setup(u => u.Id).Returns(Guid.NewGuid().ToString());
         _userMock.Setup(u => u.PrincipalType).Returns(PrincipalType.Staff);
         _userMock.Setup(u => u.StaffId).Returns((Guid?)null);
@@ -164,7 +164,7 @@ public class AuthorizationBehaviorTests
     [Fact]
     public async Task Handle_Staff_Allowed_MissingAccountIdOnly_ThrowsForbidden()
     {
-        // AC 2: staff_id present but account_id missing must still be rejected (guards the `||` clause).
+        // staff_id present but account_id missing must still be rejected (guards the `||` clause).
         _userMock.Setup(u => u.Id).Returns(Guid.NewGuid().ToString());
         _userMock.Setup(u => u.PrincipalType).Returns(PrincipalType.Staff);
         _userMock.Setup(u => u.StaffId).Returns(Guid.NewGuid());
@@ -178,7 +178,7 @@ public class AuthorizationBehaviorTests
     [Fact]
     public async Task Handle_Staff_Allowed_EmptyGuidClaims_ThrowsForbidden()
     {
-        // AC 2: Guid.Empty claims are treated as absent (guards the `== Guid.Empty` checks).
+        // Guid.Empty claims are treated as absent (guards the `== Guid.Empty` checks).
         _userMock.Setup(u => u.Id).Returns(Guid.NewGuid().ToString());
         _userMock.Setup(u => u.PrincipalType).Returns(PrincipalType.Staff);
         _userMock.Setup(u => u.StaffId).Returns(Guid.Empty);
@@ -192,7 +192,7 @@ public class AuthorizationBehaviorTests
     [Fact]
     public async Task Handle_PublicLink_AlwaysThrowsForbidden()
     {
-        // AC 5: a PublicLink principal is rejected even when the request allow-lists PublicLink.
+        // A PublicLink principal is rejected even when the request allow-lists PublicLink.
         _userMock.Setup(u => u.Id).Returns(Guid.NewGuid().ToString());
         _userMock.Setup(u => u.PrincipalType).Returns(PrincipalType.PublicLink);
         _userMock.Setup(u => u.PublicLinkGrantId).Returns(Guid.NewGuid());

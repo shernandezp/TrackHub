@@ -23,11 +23,6 @@ export interface PoiLayerProps {
   pois?: MapPoi[];
 }
 
-/**
- * Provider-agnostic point-of-interest layer. Renders POI markers with a
- * colored pin, a name tooltip and a small popup (name/description/address/type).
- * Dispatches to the adapter of the hosting map provider.
- */
 const PoiLayer = ({ pois = [] }: PoiLayerProps) => {
   const { provider } = useMapProvider();
   return provider === MAP_PROVIDERS.GOOGLE

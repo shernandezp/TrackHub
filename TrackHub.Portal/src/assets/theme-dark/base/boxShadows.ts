@@ -29,16 +29,8 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
-/**
- * The base box-shadow styles for the Argon Dashboard 2 MUI.
- * You can add new box-shadow using this file.
- * You can customized the box-shadow for the entire Argon Dashboard 2 MUI using thie file.
- */
-
-// Argon Dashboard 2 MUI Base Styles
 import colors from "assets/theme-dark/base/colors";
 
-// Argon Dashboard 2 MUI Helper Functions
 import boxShadow from "assets/theme-dark/functions/boxShadow";
 
 const { black, info } = colors;

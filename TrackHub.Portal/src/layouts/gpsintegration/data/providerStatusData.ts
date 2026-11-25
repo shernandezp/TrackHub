@@ -16,14 +16,9 @@
 
 import type { GpsIntegrationDashboard } from 'api/manager/gpsDashboard';
 
-/** A single (operator, detectedStatus, count) tuple from the dashboard. */
 export type ProviderStatusItem = GpsIntegrationDashboard['deviceCountsByProviderStatus'][number];
 
-/**
- * One pivoted row per operator. NEW and AVAILABLE both mean "no active
- * assignment" (mirrors the Manager reader derivation and the
- * `gpsIntegration.status.*` labels, which map both to "Unassigned").
- */
+/** NEW and AVAILABLE both mean "no active assignment", mirroring the Manager reader derivation. */
 export interface ProviderStatusRow {
   operatorId: string;
   operatorName: string;
@@ -34,11 +29,7 @@ export interface ProviderStatusRow {
   total: number;
 }
 
-/**
- * Pivots the per-(operator, status) tuples into one row per operator with a
- * column per status bucket, sorted by device total (desc) then name — the
- * biggest fleets stay visible even with a hundred providers.
- */
+/** Sorted by device total (desc) then name, so the biggest fleets stay visible with many providers. */
 export function pivotProviderStatus(items: ProviderStatusItem[] = []): ProviderStatusRow[] {
   const map = new Map<string, ProviderStatusRow>();
   items.forEach((item) => {

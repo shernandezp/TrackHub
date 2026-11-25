@@ -15,7 +15,6 @@
 
 namespace TrackHub.Manager.Domain.Interfaces;
 
-/// <summary>A transporter whose last reported position is older than its account's threshold.</summary>
 public readonly record struct StaleTransporterVm(Guid TransporterId, string Name, DateTimeOffset LastPositionAt);
 
 /// <summary>
@@ -38,7 +37,6 @@ public interface IAlertEvaluationStore
 
     Task<bool> JobRunSucceededAsync(string jobKey, string idempotencyKey, CancellationToken cancellationToken);
 
-    /// <summary>Dedup rule: (AccountId, DeduplicationKey, Status != Resolved) coalesces into the open event; null when it only touched one.</summary>
     Task<IReadOnlyCollection<string>> RecordedKeysAsync(Guid accountId, IReadOnlyCollection<string> deduplicationKeys, CancellationToken cancellationToken);
     Task<IReadOnlyCollection<AlertEventVm>> GetOpenAlertsAsync(IReadOnlyCollection<Guid> accountIds, string eventType, CancellationToken cancellationToken);
 

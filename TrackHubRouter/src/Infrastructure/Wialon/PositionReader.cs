@@ -20,9 +20,6 @@ using TrackHub.Router.Domain.Extensions;
 
 namespace TrackHub.Router.Infrastructure.Wialon;
 
-/// <summary>
-/// Reader for retrieving position information from Wialon API.
-/// </summary>
 public sealed class PositionReader(
     ICredentialHttpClientFactory httpClientFactory,
     IHttpClientService httpClientService,
@@ -38,9 +35,6 @@ public sealed class PositionReader(
     private const int MessageFlagPosition = 1;      // Messages with position
     private const int MessageFlagMask = 65281;      // Filter mask for position messages
 
-    /// <summary>
-    /// Retrieves the last position of a single device asynchronously.
-    /// </summary>
     public async Task<PositionVm> GetDevicePositionAsync(DeviceTransporterVm deviceDto, CancellationToken cancellationToken)
     {
         var parameters = new
@@ -55,9 +49,6 @@ public sealed class PositionReader(
             : result.Item.Value.MapToPositionVm(deviceDto);
     }
 
-    /// <summary>
-    /// Retrieves the last positions of multiple devices asynchronously.
-    /// </summary>
     public async Task<IEnumerable<PositionVm>> GetDevicePositionAsync(IEnumerable<DeviceTransporterVm> devices, CancellationToken cancellationToken)
     {
         var parameters = new
@@ -86,7 +77,6 @@ public sealed class PositionReader(
     }
 
     /// <summary>
-    /// Retrieves the positions of a device within a specified time range asynchronously.
     /// Uses messages/load_interval to get historical position data.
     /// </summary>
     public async Task<IEnumerable<PositionVm>> GetPositionAsync(DateTimeOffset from, DateTimeOffset to, DeviceTransporterVm deviceDto, CancellationToken cancellationToken)

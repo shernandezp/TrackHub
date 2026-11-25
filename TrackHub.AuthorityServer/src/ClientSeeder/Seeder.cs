@@ -58,7 +58,7 @@ internal class Seeder(IServiceProvider serviceProvider)
         }
     }
 
-    // Earlier images seeded these into every installation; only a local overlay may list them now.
+    // Removed from installations unless a local overlay lists them.
     internal static readonly string[] DevelopmentOnlyClientIds = ["postman_client"];
 
     private static async ValueTask RemoveDevelopmentClientsAsync(IServiceScope scope, Clients clients, CancellationToken cancellationToken)
@@ -76,16 +76,8 @@ internal class Seeder(IServiceProvider serviceProvider)
         }
     }
 
-    /// <summary>
-    /// Verifies the OpenIddict schema exists before seeding, and fails with an actionable message if
-    /// it does not.
-    /// </summary>
-    /// <remarks>
-    /// Seeding is a pure data operation over the OpenIddict tables: it never creates tables, and it
-    /// stops with a diagnostic rather than failing later on a missing relation. What matters is that
-    /// the tables exist — not how they were created (EF migrations in development, hand-run SQL in
-    /// production, or the old EnsureCreated call) — so this probes the schema itself.
-    /// </remarks>
+    // Seeding never creates tables; the schema may come from EF migrations or hand-run SQL, so this
+    // probes the tables themselves and stops with a diagnostic instead of failing on a missing relation.
     private static async Task EnsureSchemaPresentAsync(AuthorityDbContext context, CancellationToken cancellationToken)
     {
         var connection = context.Database.GetDbConnection();

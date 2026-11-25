@@ -40,18 +40,15 @@ public sealed class TollTariffConfiguration : IEntityTypeConfiguration<TollTarif
             .HasDatabaseName("ix_toll_tariffs_tollstationid_classcode");
 
         // At most ONE open row per (station, class): a price change closes the current row and
-        // inserts a new one, so a historical trip estimate stays reproducible (acceptance 21).
+        // inserts a new one, so a historical trip estimate stays reproducible.
         builder.HasIndex(x => new { x.TollStationId, x.TollVehicleClassCode }, "toll_tariffs_open")
             .HasDatabaseName("ux_toll_tariffs_station_class_open")
             .IsUnique()
             .HasFilter("effectiveto is null");
 
-        // The class code was a dangling varchar(20) validated for length only: a typo'd code was
-        // accepted, then matched no tariff, contributed 0 and reported PartialNoTariff — a
-        // data-entry error disguised as a legitimate catalog gap (§6.2 forbids exactly that silent
-        // understatement). Restrict, not Cascade: a vehicle class must not be deletable out from
-        // under priced history, because tariffs are temporal so historical estimates stay
-        // reproducible (acceptance 21).
+        // An FK, so a typo'd class code cannot be accepted and then match no tariff, reporting
+        // PartialNoTariff for what is really a data-entry error. Restrict, not Cascade: a vehicle
+        // class must not be deletable out from under priced history.
         builder.HasIndex(x => x.TollVehicleClassCode, "toll_tariffs_classcode_fk")
             .HasDatabaseName("ix_toll_tariffs_tollvehicleclasscode");
 

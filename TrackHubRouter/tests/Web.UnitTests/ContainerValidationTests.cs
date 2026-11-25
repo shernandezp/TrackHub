@@ -20,11 +20,9 @@ using TrackHub.Router.Web.Endpoints;
 
 namespace Web.UnitTests;
 
-// The TripManagement precedent, applied here (TT-03). That service shipped a Program.cs missing
-// AddInfrastructureServices: it STARTED, it answered /health, and the failure only appeared on the
-// first request that touched a cross-service client. Nothing else in a suite can catch that — the
-// application tests mock these interfaces and the contract tests build the schema over mocks. This
-// is the only place the real container is ever constructed.
+// A Program.cs missing a registration still starts and answers /health; the failure only appears on
+// the first request that touches the dependency. The application tests mock these interfaces and the
+// contract tests build the schema over mocks, so this is the only place the real container is built.
 [TestFixture]
 public sealed class ContainerValidationTests
 {

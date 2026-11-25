@@ -2,13 +2,11 @@
 # =============================================================================
 # Source checkout configuration
 # =============================================================================
-# The whole product lives in ONE repository. This file used to list the sibling
-# repositories to clone; it now describes that single repository plus the
-# top-level directories the image builds expect to find inside it.
+# The whole product lives in ONE repository. This file describes that repository
+# plus the top-level directories the image builds expect to find inside it.
 #
-# Layout contract — deliberately UNCHANGED from the polyrepo layout. This is why
-# the compose files and every Dockerfile needed no edits: the build context
-# (`context: ..`) is still a directory containing TrackHub/, TrackHubCommon/,
+# Layout contract: the build context
+# (`context: ..`) is a directory containing TrackHub/, TrackHubCommon/,
 # TrackHub.Manager/ and friends as siblings of TrackHub.Deployment/.
 #
 #   <workspace>/                 <- monorepo checkout == docker build context
@@ -26,9 +24,8 @@
 #         "${TRACKHUB_REPOS[@]}"        -> source directories the image builds require
 # =============================================================================
 
-# Top-level directories that must be present for the images to build. These keep
-# the old variable name (and the old values) because they are still exactly the
-# paths the Dockerfiles COPY from — only their provenance changed.
+# Top-level directories that must be present for the images to build: exactly the
+# paths the Dockerfiles COPY from.
 TRACKHUB_REPOS=(
     "TrackHub.Portal"
     "TrackHub.AuthorityServer"
@@ -106,7 +103,7 @@ monorepo_clone_or_update() {
     if [ -d "$target/.git" ]; then
         # Refuse to pull one branch into a checkout sitting on another. With a single
         # repository that would fast-forward the deployed branch onto an unrelated
-        # one; under the old layout each repo had its own clone so it could not happen.
+        # one.
         local current
         current="$(git -C "$target" rev-parse --abbrev-ref HEAD 2>/dev/null)"
         if [ "$current" != "$branch" ]; then

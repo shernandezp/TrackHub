@@ -16,33 +16,9 @@
 namespace Common.Domain.Constants;
 
 /// <summary>
-/// The canonical <c>BackgroundJobRun.JobKey</c> catalog. Manager owns the table, but Geofencing also
-/// records runs through Manager's <c>createBackgroundJobRun</c> mutation, so these literals are
-/// shared contract rather than one service's private constants.
-/// <para>
-/// Audited 2026-07-19 (spec 28 §4.2). Each producer was read and classified by whether it writes a
-/// row on EVERY cycle or ONLY when work was actually performed. Consumers may assert staleness
-/// ("this job looks stuck") ONLY for keys in <see cref="RecordsEveryCycle"/>; for every other key an
-/// absent or old row is the normal, healthy state and must be presented neutrally.
-/// </para>
-/// <list type="table">
-///   <item><term>alert-evaluation</term><description>Manager AlertEvaluationJob — once per DAY unconditionally (credential-expiry scan), plus on-work rows for communication loss.</description></item>
-///   <item><term>notification-dispatch</term><description>Manager NotificationDispatchJob — only when it processed something.</description></item>
-///   <item><term>notification-digest</term><description>Manager NotificationDigestJob — only when it folded something.</description></item>
-///   <item><term>document-scan</term><description>Manager DocumentScanJob — only per scanned document (plus a Failed row on error).</description></item>
-///   <item><term>document-expiration</term><description>Manager DocumentExpirationJob — only per expiring document.</description></item>
-///   <item><term>document-retention-cleanup</term><description>Manager DocumentRetentionCleanupJob — only per purged version.</description></item>
-///   <item><term>trial-expiration</term><description>Manager TrialExpirationJob — only per transitioned account (plus a Failed row on error).</description></item>
-///   <item><term>geofence-dwell-evaluation</term><description>Geofencing DwellEvaluationService — only when it raised a dwell alert.</description></item>
-///   <item><term>workforce-expiration-scan</term><description>Manager WorkforceExpirationJob — only per raised qualification-expiration alert.</description></item>
-///   <item><term>trip-eta-refresh</term><description>TripManagement TripEtaRefreshService — only when it refreshed an ETA for at least one in-progress trip, OR auto-completed a trip whose tracker went quiet; the cycle carries both because the auto-completion sweep is a fallback on this schedule rather than one of its own (spec 11a §5.2), and the recorded payload is <c>refreshed/completed</c>.</description></item>
-///   <item><term>trip-schedule-reminder</term><description>TripManagement TripScheduleReminderService — only when it raised a start-due reminder.</description></item>
-///   <item><term>router-sync-worker</term><description>Router SyncWorker — a heartbeat on EVERY cycle (5 min); the process has no other liveness surface.</description></item>
-/// </list>
-/// <para>
-/// Net result: <c>alert-evaluation</c> is the ONLY key with a guaranteed recording floor, and that
-/// floor is daily — not per-cycle.
-/// </para>
+/// The canonical <c>BackgroundJobRun.JobKey</c> catalog, shared because Geofencing also records runs
+/// through Manager. Consumers may flag staleness only for keys in <see cref="RecordsEveryCycle"/>; for any
+/// other key an absent or old row is the healthy state and must be presented neutrally.
 /// </summary>
 public static partial class BackgroundJobKeys
 {
@@ -59,16 +35,14 @@ public static partial class BackgroundJobKeys
     public const string TripScheduleReminder = "trip-schedule-reminder";
 
     /// <summary>
-    /// Router SyncWorker liveness. The worker is a separate process with no HTTP surface, so a
-    /// missing recent row is the only evidence that it died — which is why, unlike the jobs above,
-    /// it IS in <see cref="RecordsEveryCycle"/>.
+    /// Router SyncWorker liveness. The worker has no HTTP surface, so a missing recent row is the only
+    /// evidence that it died; hence it is in <see cref="RecordsEveryCycle"/>.
     /// </summary>
     public const string RouterSyncWorkerHeartbeat = "router-sync-worker";
 
     /// <summary>
-    /// Keys whose producer writes a row on a guaranteed schedule, so a missing recent row is a real
-    /// signal. <c>alert-evaluation</c> records unconditionally once per day; its staleness threshold
-    /// is therefore measured in days, never in minutes.
+    /// Keys whose producer writes a row on a guaranteed schedule. <c>alert-evaluation</c> records once per
+    /// day, so its staleness threshold is measured in days, never minutes.
     /// </summary>
     public static readonly IReadOnlySet<string> RecordsEveryCycle = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {

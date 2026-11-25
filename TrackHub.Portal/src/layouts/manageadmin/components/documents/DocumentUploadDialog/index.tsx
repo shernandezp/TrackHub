@@ -25,7 +25,6 @@ import ArgonBox from "components/ArgonBox";
 import ArgonTypography from "components/ArgonTypography";
 import type { DocumentTypeVm } from "api/manager/documents";
 
-/** The payload emitted by {@link DocumentUploadDialog} on save (file + metadata). */
 export interface UploadPayload {
   file: File;
   category?: string;
@@ -36,7 +35,6 @@ export interface UploadPayload {
   reason?: string;
 }
 
-// Internal dialog/form state.
 interface UploadFormValues {
   category?: string;
   classification?: string;
@@ -57,8 +55,6 @@ interface DocumentUploadDialogProps {
   replaceMode?: boolean;
 }
 
-// Upload a new document or a replacement version. Collects the file plus category/
-// classification metadata; the drop area accepts drag-and-drop or click-to-select.
 function DocumentUploadDialog({ open, setOpen, onUpload, categories = [], replaceMode = false }: DocumentUploadDialogProps) {
   const { t } = useTranslation();
   const [values, handleChange, setValues, setErrors, validate, errors] = useForm<UploadFormValues>({ classification: 'Internal' });

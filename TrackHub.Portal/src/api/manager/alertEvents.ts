@@ -14,11 +14,7 @@
 *  limitations under the License.
 */
 
-/**
- * Alert-event API (Manager backend): plain typed async functions. Failures
- * THROW ApiError — the caller decides fallback/toast. These reads are consumed
- * imperatively (load-on-expand admin screens), so callers own the try/catch.
- */
+/** Consumed imperatively (load-on-expand admin screens), so callers own the try/catch. */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
 import type { RequestOptions } from 'api/core/errors';

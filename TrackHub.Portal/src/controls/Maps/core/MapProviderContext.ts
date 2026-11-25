@@ -23,7 +23,6 @@ export const MAP_PROVIDERS = {
 
 export type MapProvider = (typeof MAP_PROVIDERS)[keyof typeof MAP_PROVIDERS];
 
-/** Value carried by {@link MapProviderContext}. */
 export interface MapProviderValue {
   provider: MapProvider;
 }
@@ -32,11 +31,7 @@ export interface MapProviderValue {
 export const OSM_PROVIDER: MapProviderValue = { provider: MAP_PROVIDERS.OSM };
 export const GOOGLE_PROVIDER: MapProviderValue = { provider: MAP_PROVIDERS.GOOGLE };
 
-/**
- * Provider-agnostic map context. Map host components (OSM/Leaflet or Google)
- * wrap their children with this context so feature layers written against the
- * core contract can dispatch to the right adapter implementation.
- */
+/** Lets feature layers written against the core contract dispatch to the hosting provider's adapter. */
 const MapProviderContext = createContext<MapProviderValue>(OSM_PROVIDER);
 
 export const useMapProvider = () => useContext(MapProviderContext);

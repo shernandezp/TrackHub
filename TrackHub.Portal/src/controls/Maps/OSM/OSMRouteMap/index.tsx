@@ -29,11 +29,7 @@ import { OSM_LIGHT_TILE, OSM_DARK_TILE } from 'controls/Maps/utils/darkMapStyles
 import 'leaflet/dist/leaflet.css';
 import type { RouteMapProps } from 'controls/Maps/RouteMap/routeMapProps';
 
-/**
- * Leaflet host for the trip route planner and trip detail map. Wraps its
- * children in the OSM provider context so the core layers (RouteLayer,
- * TrailLayer, PlaybackMarker, PoiLayer) dispatch to their Leaflet adapters.
- */
+/** Wraps its children in the OSM provider context so the core layers dispatch to their Leaflet adapters. */
 const OSMRouteMap = ({
   route = [],
   corridor = [],

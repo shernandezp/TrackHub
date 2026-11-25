@@ -16,7 +16,6 @@ public class GeofenceDetectionServiceTests
     [SetUp]
     public void SetUp()
     {
-        // Create fresh mocks per test to ensure isolation
         _geofenceReaderMock = new Mock<IGeofenceReader>();
         _geofenceEventReaderMock = new Mock<IGeofenceEventReader>();
         _geofenceEventWriterMock = new Mock<IGeofenceEventWriter>();
@@ -449,7 +448,7 @@ public class GeofenceDetectionServiceTests
         // Act
         var result = await service.ProcessPositionsAsync([posEntry, posExit], accountId, CancellationToken.None);
 
-        // Assert: nothing created, nothing closed, nothing emitted (AC 3).
+        // Assert: nothing created, nothing closed, nothing emitted.
         using (Assert.EnterMultipleScope())
         {
             Assert.That(result.EventsCreated, Is.Zero);

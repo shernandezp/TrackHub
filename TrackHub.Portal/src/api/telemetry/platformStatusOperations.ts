@@ -14,11 +14,7 @@
 *  limitations under the License.
 */
 
-/**
- * SyncWorker liveness document (Telemetry backend), administrator tier only.
- * The worker has no HTTP listener, so its state is derived from the recency of
- * the rows it writes. Codegen validates this against schemas/telemetry.graphql.
- */
+/** The worker has no HTTP listener, so its state is derived from the recency of the rows it writes. */
 
 import { graphql } from './generated';
 

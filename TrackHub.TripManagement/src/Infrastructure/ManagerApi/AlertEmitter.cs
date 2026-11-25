@@ -20,8 +20,7 @@ namespace TrackHub.TripManagement.Infrastructure.ManagerApi;
 /// <summary>
 /// Emits trip alert events to Manager's <c>recordAlertEvent</c> under the service's own
 /// <c>trip_client</c> identity (never the caller's token). Event-type and severity literals are
-/// supplied by the caller and must match Manager's AlertEventTypes/AlertSeverities catalogs
-/// (spec 11 §12).
+/// supplied by the caller and must match Manager's AlertEventTypes/AlertSeverities catalogs.
 /// </summary>
 public class AlertEmitter(IGraphQLClientFactory graphQLClient)
     : GraphQLService(graphQLClient.CreateClient(Clients.Manager, asService: true)), IAlertEmitter

@@ -19,7 +19,7 @@ namespace TrackHub.TripManagement.Domain.Exceptions;
 /// Thrown by a routing adapter when the provider is unreachable, rate-limited past its retry
 /// budget, or returns an unusable response. It never escapes to a trip command's caller: the
 /// planning handler catches it and records a <c>Failed</c> route plan carrying
-/// <paramref name="errorCode"/>, leaving the trip fully usable (spec 11 §7.3, acceptance 18).
+/// <paramref name="errorCode"/>, leaving the trip fully usable.
 /// </summary>
 public sealed class RoutingUnavailableException(string errorCode, string message) : Exception(message)
 {

@@ -25,8 +25,6 @@ using Common.Domain.Constants;
 
 namespace Application.UnitTests.BackgroundJobs;
 
-// Trial-end resolution and the qualification bands had no unit-test surface while they lived in the
-// Web layer against a raw DbContext.
 [TestFixture]
 public class TrialAndWorkforceJobTests
 {

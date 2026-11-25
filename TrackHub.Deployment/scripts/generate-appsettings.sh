@@ -237,7 +237,7 @@ EOF
 # .NET configuration binder converts strings to bool/int, and treats an empty string as
 # "not set" (GetValue<bool?>/<int?> fall back to their defaults), so the unused provider's
 # section is harmless and the JSON stays valid when the variables are empty.
-# AppSettings:Smtp / AppSettings:WhatsApp power the spec-05 notification channels. They bind
+# AppSettings:Smtp / AppSettings:WhatsApp power the notification channels. They bind
 # through Configure<SmtpOptions>/<WhatsAppOptions>, whose Port/UseStartTls/From*/ApiBaseUrl/
 # TemplateName properties are NOT nullable - an empty string there fails to convert or wipes
 # the class default, so those keys carry the same defaults as docker-compose.yml. An empty

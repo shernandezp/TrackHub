@@ -23,7 +23,6 @@ public readonly record struct GetUserNameQuery(Guid UserId) : IRequest<string>;
 
 public class GetUsersQueryHandler(IIdentityService service, IUser user) : IRequestHandler<GetUserNameQuery, string>
 {
-    // Handles the GetUserNameQuery by retrieving the username from the identity service
     public async Task<string> Handle(GetUserNameQuery request, CancellationToken cancellationToken)
     {
         IdentityCallerGuard.EnsureCallerIsSubjectUserOrService(user, request.UserId, "UserName");

@@ -24,11 +24,9 @@ public class AccountSettingsConfiguration : IEntityTypeConfiguration<AccountSett
     public void Configure(EntityTypeBuilder<AccountSettings> builder)
     {
         builder.Property(x => x.Version).HasColumnName("editversion").HasConversion<long>().IsConcurrencyToken();
-        //Table name
         builder.ToTable(name: TableMetadata.AccountSettings, schema: SchemaMetadata.Application);
         builder.HasKey(x => x.AccountId);
 
-        //Column names
         builder.Property(x => x.AccountId).HasColumnName("id");
         builder.Property(x => x.Maps).HasColumnName("maps");
         builder.Property(x => x.MapsKey).HasColumnName("mapskey");

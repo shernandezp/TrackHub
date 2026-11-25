@@ -21,12 +21,12 @@ namespace TrackHub.TripManagement.Application.TollCatalog.Commands.Import;
 /// Bulk toll-catalog import from CSV: <c>stationCode, stationName, latitude, longitude, country,
 /// region, roadName, direction, vehicleClassCode, amount, currency, effectiveFrom</c>.
 /// <para>
-/// <b>No partial-failure rollback</b> (the spec 08 geofence-import contract): a bad row is reported
+/// <b>No partial-failure rollback</b>: a bad row is reported
 /// with its row number and skipped, and every good row still lands. Rolling back a 4 000-row file
 /// because row 3 121 has a malformed date would make the operator re-run the whole import to find
 /// out row 3 122 is also wrong — the row-level report is what makes the feature usable.
 /// </para>
-/// NOT feature-flagged — platform reference data (spec 11 §3).
+/// NOT feature-flagged — platform reference data.
 /// </summary>
 [Authorize(Resource = Resources.TollCatalog, Action = Actions.Write)]
 [PlatformScoped("SVD-12 toll catalog: stations, tariffs and vehicle classes are platform-owned reference data administered by the platform operator; no tenant owns a row.")]

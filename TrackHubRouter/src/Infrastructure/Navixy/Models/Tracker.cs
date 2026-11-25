@@ -16,7 +16,6 @@
 namespace TrackHub.Router.Infrastructure.Navixy.Models;
 
 /// <summary>
-/// Navixy tracker (device) model
 /// Tracker_id = device id, Imei = unique identifier, Label = device name
 /// </summary>
 internal readonly record struct Tracker(
@@ -26,9 +25,6 @@ internal readonly record struct Tracker(
     TrackerLastUpdate? Last_update
 );
 
-/// <summary>
-/// Last known state of the tracker
-/// </summary>
 internal readonly record struct TrackerLastUpdate(
     string? Time,
     double? Lat,

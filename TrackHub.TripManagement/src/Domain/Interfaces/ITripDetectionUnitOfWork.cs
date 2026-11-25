@@ -19,11 +19,9 @@ namespace TrackHub.TripManagement.Domain.Interfaces;
 /// The detection working set as a unit of work: loaded ONCE per position batch, mutated in memory,
 /// committed ONCE per fix.
 /// <para>
-/// It replaces six fine-grained writer calls that each re-read the trip row the request was already
-/// holding and then saved on their own. That shape cost five round trips and five transactions per
-/// fix and — worse — made a single fix <b>non-atomic</b>: the odometer committed, then the origin
-/// debounce clock committed separately, so a process that died between them left measured state
-/// contradicting itself with no way to tell which half had landed.
+/// One commit per fix keeps a fix <b>atomic</b>: separate saves would let a process that died between
+/// them leave the odometer and the debounce clocks contradicting each other, with no way to tell
+/// which half had landed.
 /// </para>
 /// <para>
 /// <b>The commit boundary is the idempotency boundary.</b> Everything here is trip STATE — clocks,
@@ -44,7 +42,7 @@ public interface ITripDetectionUnitOfWork
 {
     /// <summary>
     /// The account's <c>InProgress</c> trips for these transporters, plus at most one armable
-    /// <c>Created</c> trip per otherwise-idle transporter (spec 11a §6.1, §7). The rows stay loaded
+    /// <c>Created</c> trip per otherwise-idle transporter. The rows stay loaded
     /// and tracked for the life of the batch, so every mutation below lands on the instance this
     /// returned rather than on a re-read copy.
     /// </summary>
@@ -56,19 +54,16 @@ public interface ITripDetectionUnitOfWork
 
     /// <summary>
     /// Freezes the origin zone and every stop's arrival geometry and marks the trip watched.
-    /// Idempotent and event-free, so an armed-but-never-run trip stays deletable (acceptance 16).
+    /// Idempotent and event-free, so an armed-but-never-run trip stays deletable.
     /// </summary>
     Task<bool> ArmAsync(Guid tripId, CancellationToken cancellationToken);
 
     /// <summary>
     /// Whether the fix falls inside the trip's snapshotted origin zone.
     /// <para>
-    /// Answered IN MEMORY, against the polygon the load already materialized. It used to be a PostGIS
-    /// round trip per fix per trip, which bought nothing — the query filtered to a single row by
-    /// primary key, so no index was doing any work — and it broke outright once arming was buffered:
-    /// the geometry a trip is judged against is written by the same fix that tests it, and the
-    /// database had not seen it yet. Both problems are the same mistake, asking the database about a
-    /// value already in hand.
+    /// Answered IN MEMORY, against the polygon the load already materialized: arming is buffered, so the
+    /// geometry a trip is judged against may be written by the same fix that tests it and the database
+    /// has not seen it yet.
     /// </para>
     /// <para>
     /// Corridor containment deliberately stays in the database: those polygons buffer an entire route
@@ -84,7 +79,7 @@ public interface ITripDetectionUnitOfWork
     /// </summary>
     IReadOnlyCollection<Guid> StopsContainingPoint(Guid tripId, double latitude, double longitude);
 
-    /// <summary>First write wins: a replayed visit never overwrites a live measurement (acceptance 12).</summary>
+    /// <summary>First write wins: a replayed visit never overwrites a live measurement.</summary>
     void RecordOriginVisit(Guid tripId, DateTimeOffset? arrivedAt, DateTimeOffset? departedAt);
 
     /// <summary>The persisted origin exit-debounce clock; null restarts it.</summary>
@@ -102,7 +97,7 @@ public interface ITripDetectionUnitOfWork
 
     /// <summary>
     /// Deviation episode state. A plain assignment, never first-write-wins: an episode must be able
-    /// to CLOSE on re-entry so a later departure opens a new one (acceptance 14).
+    /// to CLOSE on re-entry so a later departure opens a new one.
     /// </summary>
     void SetDeviationState(Guid tripId, DateTimeOffset? deviationOpenedAt, int consecutiveOutsideFixes);
 

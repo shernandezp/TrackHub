@@ -40,9 +40,8 @@ public static class DependencyInjection
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
-                // Absent keys default to VALIDATING. GetValue<bool> returns false for a missing
-                // key, so one dropped environment variable silently turned a service into one that
-                // accepts any token from any issuer with any signature, with no startup error.
+                // Absent keys default to validating: GetValue<bool> returns false for a missing key, so one
+                // dropped environment variable would accept any token from any issuer.
                 var validateSigningKey = configuration.GetValue<bool?>("AuthorityServer:ValidateIssuerSigningKey") ?? true;
                 options.Authority = Guard.Against.NullOrWhiteSpace(
                     configuration.GetValue<string>("AuthorityServer:Authority"),
@@ -69,7 +68,6 @@ public static class DependencyInjection
 
         if (isGraphQLClient)
         {
-            // Identity client runs queries only — full resilience (incl. retry) is safe.
             services.AddGraphQLClient(Clients.Identity, resilience: GraphQLClientResilience.WithRetry);
             services.AddMemoryCache();
             // The calendar of the account a request serves, read from Manager and cached (Manager

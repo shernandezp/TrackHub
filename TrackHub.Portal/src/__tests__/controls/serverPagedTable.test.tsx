@@ -14,11 +14,10 @@
 *  limitations under the License.
 */
 
-// Finding AD-03, gotchas 1 and 2: the shared `Table` pages, searches and sorts
-// CLIENT-side. On a server-paged screen all three would silently operate within
-// the loaded page while looking like they applied to the whole result set, so
-// `serverPaged` must switch every one of them off — and `useServerList` must
-// push the search to the server and never strand the user on an emptied page.
+// The shared `Table` pages, searches and sorts CLIENT-side. On a server-paged screen all three
+// would silently operate within the loaded page, so `serverPaged` must switch every one of them
+// off, and `useServerList` must push the search to the server and never strand the user on an
+// emptied page.
 
 import type { ReactElement } from 'react';
 import { describe, expect, it, vi, beforeAll } from 'vitest';
@@ -47,7 +46,6 @@ const rows = Array.from({ length: 25 }, (_, index) => ({
   id: `id-${index}`,
 }));
 
-/** The Argon controls need the theme + controller providers to style themselves. */
 const renderInTheme = (ui: ReactElement) => render(<TestWrapper>{ui}</TestWrapper>);
 const rerenderInTheme = (
   rerender: (ui: ReactElement) => void,
@@ -122,7 +120,7 @@ describe('ServerPagination', () => {
   });
 
   it('caps the range end at the total on the last, short page', () => {
-    // Every paged query now reports the unpaged total, so the range is exact:
+    // Every paged query reports the unpaged total, so the range is exact:
     // page 1 of a 14-row set shows 11–14, not 11–20.
     renderInTheme(<ServerPagination page={1} pageSize={10} totalCount={14} pageLength={4} onPageChange={vi.fn()} />);
     expect(screen.getByText('Showing 11–14 of 14')).toBeInTheDocument();

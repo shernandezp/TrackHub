@@ -6,9 +6,9 @@ using TrackHub.ServiceContracts.Tests.Harness;
 
 namespace TrackHub.ServiceContracts.Tests.ContractTests;
 
-// Layer A: validates the new/changed Document Management GraphQL surface against the
-// Manager producer schema. These are portal-facing operations (no C# const in a client), so the
-// representative documents are declared here to guard the Manager schema shape.
+// Layer A: validates the Document Management GraphQL surface against the Manager producer
+// schema. These are portal-facing operations (no C# const in a client), so the representative
+// documents are declared here to guard the Manager schema shape.
 [TestFixture]
 public class DocumentContractTests
 {

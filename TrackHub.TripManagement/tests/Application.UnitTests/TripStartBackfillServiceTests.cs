@@ -18,7 +18,7 @@ using TrackHub.TripManagement.Application.Trips.Services;
 namespace TrackHub.TripManagement.Application.UnitTests;
 
 /// <summary>
-/// Spec 11a §5.4: a trip planned after its truck already left. Evidence beats declaration — when
+/// A trip planned after its truck already left. Evidence beats declaration — when
 /// Geofencing recorded the visit, those measurements are replayed and the declared time is ignored.
 /// </summary>
 [TestFixture]
@@ -49,7 +49,7 @@ public class TripStartBackfillServiceTests
         harness.Writer.Verify(w => w.SetOriginVisitAsync(
             TestFactory.TripId, TestFactory.AccountId, T0, T0.AddMinutes(45), It.IsAny<CancellationToken>()), Times.Once);
 
-        // Source Detection: these are measurements, replayed — not a dispatcher's assertion (§5.3).
+        // Source Detection: these are measurements, replayed — not a dispatcher's assertion.
         harness.Writer.Verify(w => w.TransitionTripAsync(
             TestFactory.TripId, TestFactory.AccountId, TripStatuses.InProgress,
             TripEventTypes.TripStarted, TripEventSources.Detection, $"trip-start:{TestFactory.TripId:N}",

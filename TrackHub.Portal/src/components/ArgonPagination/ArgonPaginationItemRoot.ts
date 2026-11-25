@@ -29,10 +29,8 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
-// @mui material components
 import { styled } from "@mui/material/styles";
 
-// Argon Dashboard 2 MUI components
 import ArgonButton from "components/ArgonButton";
 
 export interface ArgonPaginationItemOwnerState {
@@ -51,7 +49,6 @@ export default styled(ArgonButton)<{ ownerState: ArgonPaginationItemOwnerState }
     const { fontWeightRegular, size: fontSize } = typography;
     const { light } = palette;
 
-    // width, height, minWidth and minHeight values
     let sizeValue = pxToRem(36);
 
     if (paginationSize === "small") {

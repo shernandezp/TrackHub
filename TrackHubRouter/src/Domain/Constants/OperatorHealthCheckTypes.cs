@@ -22,12 +22,9 @@ namespace TrackHub.Router.Domain.Constants;
 /// <remarks>
 /// These are a CONTRACT with another service, not free text. HotChocolate coerces an enum-typed
 /// variable before the resolver runs, so an unknown literal fails the whole request — and the health
-/// write is best-effort (catch + log), which makes such a failure invisible to the caller.
-///
-/// Layer A contract tests validate the query DOCUMENT against the producer's schema and cannot see
-/// values that travel in variables (rules.md, *Inter-service GraphQL client rules*). Centralising the
-/// literals here lets the Layer B round-trip cases derive from <see cref="All"/> rather than being
-/// hand-maintained alongside it, so an unlisted literal cannot exist.
+/// write is best-effort (catch + log), which makes such a failure invisible to the caller. Schema
+/// validation of the query document cannot see values that travel in variables, so tests derive
+/// their cases from <see cref="All"/>.
 ///
 /// Keep in step with <c>TrackHub.Telemetry.Domain.Enums.OperatorHealthCheckType</c>.
 /// </remarks>

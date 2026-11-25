@@ -26,7 +26,7 @@ using TrackHub.TripManagement.Infrastructure.TripDB.Writers;
 namespace Infrastructure.UnitTests;
 
 /// <summary>
-/// Acceptance 21's temporal tariffs — <c>TollCatalogWriter.CreateTariffAsync</c>, which had no test.
+/// Temporal tariffs — <c>TollCatalogWriter.CreateTariffAsync</c>.
 /// <para>
 /// The whole reason tariffs carry an <c>EffectiveFrom</c>/<c>EffectiveTo</c> window instead of a
 /// single mutable price is REPRODUCIBILITY: a trip planned in January must still price out at
@@ -37,8 +37,8 @@ namespace Infrastructure.UnitTests;
 /// </para>
 /// <para>
 /// The second half is error attribution. <c>SaveUniqueAsync</c> takes the error code as an ARGUMENT
-/// because it used to be a constant: every duplicate in this writer was reported as
-/// <c>TOLL_OVERLAPPING_TARIFF</c>, so an administrator whose CSV had a repeated station name got a
+/// so each unique index reports its own code: a constant
+/// <c>TOLL_OVERLAPPING_TARIFF</c> would give an administrator whose CSV had a repeated station name a
 /// row-level error naming a completely different entity, which is unactionable.
 /// </para>
 /// </summary>
@@ -81,12 +81,11 @@ public class TollTariffTemporalTests
     private static TollTariffDto Tariff(decimal amount, DateOnly from, DateOnly? to = null, string currency = "COP")
         => new(StationId, ClassII, amount, currency, from, to);
 
-    // ----- The price change --------------------------------------------------------------------
 
     [Test]
     public async Task APriceChange_ClosesTheOpenRowTheDayBeforeInsteadOfOverwritingIt()
     {
-        // The single assertion acceptance 21 stands on. Overwriting would leave one row, the new
+        // The assertion reproducibility stands on. Overwriting would leave one row, the new
         // price, and no way to reprice a January trip.
         using var context = await SeededAsync();
         var writer = Writer(context);
@@ -158,7 +157,6 @@ public class TollTariffTemporalTests
         Assert.That(classII.EffectiveTo, Is.Null, "class II's window was closed by a class III price change");
     }
 
-    // ----- Rejections --------------------------------------------------------------------------
 
     [Test]
     public async Task AGenuinelyOverlappingWindow_IsAConflict()
@@ -168,8 +166,7 @@ public class TollTariffTemporalTests
         //
         // Note the deliberate absence of an OPEN row. With one present the backdate guard fires
         // first and the test would pass even with the overlap check disabled entirely — it would
-        // assert the right code for the wrong reason, which is how this whole module got to ~2000
-        // green tests while broken.
+        // assert the right code for the wrong reason.
         using var context = await SeededAsync();
         var writer = Writer(context);
 
@@ -237,12 +234,11 @@ public class TollTariffTemporalTests
         Assert.That(tariffs, Has.Count.EqualTo(2));
     }
 
-    // ----- Error attribution: the right code per index ------------------------------------------
 
     [Test]
     public async Task ADuplicateStation_IsReportedAsADuplicateStationNotAnOverlappingTariff()
     {
-        // The defect SaveUniqueAsync's code argument exists for. In the §7.6 row-level import
+        // The defect SaveUniqueAsync's code argument exists for. In the row-level import
         // report, "overlapping tariff" against a repeated station name sends the administrator
         // looking at the wrong column of the wrong entity.
         using var context = await SeededAsync();
@@ -298,7 +294,7 @@ public class TollTariffTemporalTests
     [Test]
     public async Task AfterADuplicate_TheSameContextIsStillUsable()
     {
-        // The same request-scoped-context trap the POD writer had: the failed Added entries must
+        // The request-scoped-context trap: the failed Added entries must
         // leave the change tracker, or the NEXT row of an import replays the dead insert and one
         // bad row cascades into failing the whole remainder of the batch.
         using var context = await SeededAsync();

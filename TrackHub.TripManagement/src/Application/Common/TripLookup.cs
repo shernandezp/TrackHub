@@ -17,11 +17,6 @@ namespace TrackHub.TripManagement.Application.Common;
 
 /// <summary>
 /// Uniqueness probes for <c>Code</c> and <c>ExternalReference</c>, both unique per account.
-/// <para>
-/// Each is one indexed single-row read. They used to walk up to 25 pages of the board with the
-/// value as a free-text <c>search</c> term, which made a 200-trip partner batch issue tens of
-/// thousands of un-indexed <c>ILIKE '%…%'</c> scans against the shared database.
-/// </para>
 /// </summary>
 public static class TripLookup
 {

@@ -8,7 +8,7 @@ namespace TrackHub.Manager.Infrastructure.ManagerDB.Notifications;
 /// <summary>
 /// Outbound webhook channel: POSTs a JSON envelope to the rule's URL with an
 /// HMAC-SHA256 signature header over the exact body, signed with the rule's shared secret.
-/// Delivery status is the HTTP response; there is no inbound callback in this slice.
+/// Delivery status is the HTTP response; there is no inbound callback.
 /// </summary>
 public sealed class WebhookNotificationProvider(IHttpClientFactory httpClientFactory) : INotificationChannelProvider
 {

@@ -17,9 +17,7 @@ namespace Common.Domain.Extensions;
 
 public static class DoubleExtensions
 {
-    /// <summary>
-    /// Converts Unix timestamp (seconds) to DateTimeOffset.
-    /// </summary>
+    /// <summary>Unix timestamp in seconds; null maps to <see cref="DateTimeOffset.MinValue"/>.</summary>
     public static DateTimeOffset FromUnixTimestamp(this double? value)
         => value.HasValue
             ? DateTimeOffset.FromUnixTimeSeconds((long)value.Value)

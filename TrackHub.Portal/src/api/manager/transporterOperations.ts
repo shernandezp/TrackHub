@@ -14,12 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Transporter GraphQL documents (Manager backend). Codegen validates these
- * against schemas/manager.graphql and emits typed document nodes — values
- * always travel as variables, never string interpolation.
- */
-
 import { graphql } from './generated';
 
 export const TransporterItemFragment = graphql(`

@@ -34,12 +34,6 @@ import type { ListParams } from "api/core/paging";
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
 
-/**
- * Dialog/form state for a user. Merges an API {@link AccountUser} (when editing)
- * with the loose fresh-add shape (`{ active: true }`) plus the create-only
- * `password` field; all fields are optional and the required-field requirement
- * is enforced by the dialog's validate() gate before save.
- */
 export interface UserFormValues {
   userId?: string;
   username?: string;
@@ -55,13 +49,11 @@ export interface UserFormValues {
   lockedUntil?: string | null;
 }
 
-/** Dialog/form state for a password update (userId carried from the row). */
 export interface PasswordFormValues {
   userId?: string;
   password?: string;
 }
 
-/** A column descriptor / rendered row for the vendored users `Table`. */
 export interface UserTableColumn { name: string; title?: string; align?: "left" | "right" | "center"; width?: string; }
 export type UserTableRow = Record<string, ReactNode>;
 export interface UserTableData { columns: UserTableColumn[]; rows: UserTableRow[]; }
@@ -91,7 +83,6 @@ function useUserTableData(
   const updatePassword = useUpdatePassword();
   const unlockUser = useUnlockUser();
 
-  // Keep the global spinner UX for the initial load / invalidation refetch.
   useEffect(() => {
     setLoading(usersQuery.isFetching);
   }, [usersQuery.isFetching, setLoading]);
@@ -112,8 +103,6 @@ function useUserTableData(
   const onSave = async (user: UserFormValues) => {
     setLoading(true);
     try {
-      // validate() gates this call, so the required create/update input fields
-      // are present — assert them at the boundary.
       if (user.userId) {
         await updateUser.mutateAsync(user as Omit<UpdateUserDtoInput, 'userId'> & { userId: string });
       } else {
@@ -121,8 +110,7 @@ function useUserTableData(
       }
       setOpen(false);
     } catch {
-      // Failure is surfaced by the global toast; keep the dialog open so the
-      // user can retry without re-entering the values.
+      // Failure is surfaced by the global toast; keep the dialog open.
     } finally {
       setLoading(false);
     }
@@ -143,7 +131,6 @@ function useUserTableData(
   const onSavePassword = async (user: PasswordFormValues) => {
     setLoading(true);
     try {
-      // validate(['password']) gates this; userId is carried on the loaded form.
       await updatePassword.mutateAsync({ userId: user.userId as string, password: user.password as string });
       setOpenPassword(false);
     } catch {

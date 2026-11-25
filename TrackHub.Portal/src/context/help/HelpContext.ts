@@ -31,22 +31,19 @@ export type HelpNavEntry =
 export interface HelpContextValue {
   open: boolean;
   entries: HelpNavEntry[];
-  /** Open help on a specific topic, or on the current screen's primary topic. */
   openHelp: (topicId?: string) => void;
   closeHelp: () => void;
   navigateToTopic: (id: string, anchor?: string) => void;
   openIndex: () => void;
   goBack: () => void;
-  /** Route key of the screen the user is on, or null outside known screens. */
   currentScreenKey: string | null;
-  /** Route keys the current principal can access (role + feature filtered). */
   allowedScreens: string[];
   isFeatureEnabled: (featureKey?: string | null) => boolean;
 }
 
 const noop = () => {};
 
-/** Default no-op value so components render harmlessly outside the provider (tests, auth pages). */
+/** No-op default so components render harmlessly outside the provider (tests, auth pages). */
 export const HelpContext = createContext<HelpContextValue>({
   open: false,
   entries: [],
@@ -60,7 +57,6 @@ export const HelpContext = createContext<HelpContextValue>({
   isFeatureEnabled: () => true,
 });
 
-/** Public API for components: `const { openHelp } = useHelp();`. */
 export function useHelp(): Pick<HelpContextValue, 'openHelp' | 'closeHelp'> {
   const { openHelp, closeHelp } = useContext(HelpContext);
   return { openHelp, closeHelp };
@@ -87,9 +83,8 @@ export function resolveScreenKey(pathname: string): string | null {
 }
 
 /**
- * Index/search visibility (UX filtering, not security — content is a public
- * static asset, CH-01): hide topics gated by a disabled account feature, and
- * topics whose only screens the principal cannot access. Index-only topics
+ * UX filtering, not security (content is a public static asset): hides topics gated by a disabled
+ * feature and topics whose only screens the principal cannot access. Index-only topics
  * (screens: []) are always visible.
  */
 export function isTopicVisible(

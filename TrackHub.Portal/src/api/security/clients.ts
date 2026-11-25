@@ -14,11 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Client API (Security backend): plain typed async functions. Failures THROW
- * ApiError — fallbacks and toasts belong to the caller layer.
- */
-
 import { executeGraphQL } from 'api/core/graphqlClient';
 import type { RequestOptions } from 'api/core/errors';
 import type {
@@ -65,7 +60,6 @@ export async function updateClient(
   return data.updateClient;
 }
 
-/** Returns the id of the deleted client (schema: `deleteClient: UUID!`). */
 export async function deleteClient(clientId: string): Promise<string> {
   const data = await executeGraphQL('security', DeleteClientDocument, { id: clientId });
   return data.deleteClient;

@@ -18,7 +18,7 @@ using TrackHub.Router.Infrastructure.Geotab.Mappers;
 
 namespace TrackHub.Router.Infrastructure.Geotab.Tests;
 
-// Value-correctness tests for the Geotab mapper (TT-01). The Geotab SDK hands back DateTime values
+// The Geotab SDK hands back DateTime values
 // with Kind=Unspecified; the mapper must stamp them UTC rather than let the local zone leak in.
 [TestFixture]
 public class PositionMapperTests

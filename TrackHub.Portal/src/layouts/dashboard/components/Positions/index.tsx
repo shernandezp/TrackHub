@@ -48,7 +48,6 @@ import type { Geofence } from 'api/geofencing/geofencing';
 
 const POSITION_HISTORY_FEATURE_KEY = 'gps.positionHistory';
 
-/** Replay filter values managed by the vendored useForm hook. */
 interface PositionsFormValues {
   selectedItem?: string;
   startDate?: string;
@@ -81,10 +80,8 @@ function Positions({ settings, showGeofence, geofences }: PositionsProps) {
   const { darkMode } = controller;
   const [trips, setTrips] = useState<Trip[]>([]);
   const [selectedTrip, setSelectedTrip] = useState<string | null>(null);
-  // Read from the shell's account-context bootstrap. Asking Manager for
-  // `accountFeatures` here would need AccountFeatures/Read — a grant the User
-  // role does not hold — so the replay tab failed closed for the very role it
-  // is built for. The context carries the same rows behind Accounts/Read.
+  // Read from the shell's account-context bootstrap: asking Manager for `accountFeatures` here
+  // would need AccountFeatures/Read, which the User role does not hold.
   const { isFeatureEnabled } = useFeatures();
   const historyEnabled = isFeatureEnabled(POSITION_HISTORY_FEATURE_KEY);
   const [source, setSource] = useState<PositionSourceType>('PROVIDER');
@@ -95,12 +92,10 @@ function Positions({ settings, showGeofence, geofences }: PositionsProps) {
   const firstTransporterQuery = useTransportersByUser({ skip: 0, take: 1 }, { enabled: isAuthenticated });
   const defaultSelectionSetRef = useRef(false);
 
-  // Keep the global spinner UX while the default unit loads.
   useEffect(() => {
     setLoading(firstTransporterQuery.isFetching);
   }, [firstTransporterQuery.isFetching, setLoading]);
 
-  // Default the filter to the first transporter, once, after it first loads.
   useEffect(() => {
     if (firstTransporterQuery.isSuccess && !defaultSelectionSetRef.current) {
       const first = firstTransporterQuery.data?.items[0];
@@ -162,9 +157,7 @@ function Positions({ settings, showGeofence, geofences }: PositionsProps) {
       t('replay.exportLongitude'),
       t('replay.exportSpeed')
     ];
-    // No Address column: the backend's TripPointVm carries no address (only live
-    // positions do), so the old column was always empty. Restore it if/when the
-    // Router service adds address to trip points.
+    // No Address column: the backend's TripPointVm carries no address (only live positions do).
     // Every segment starts on the point the previous one ended with, and a no-data
     // segment has no points of its own, so both are left out to list each position once.
     const rows = trips.flatMap((trip, index) => (trip.type === TRIP_TYPE.noData ? [] : (trip.points || []).slice(index > 0 && trips[index - 1].type !== TRIP_TYPE.noData ? 1 : 0)).map(point => [

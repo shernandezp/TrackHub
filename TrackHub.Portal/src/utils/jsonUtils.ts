@@ -14,9 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Safely parses a JSON string, returning a fallback when the input is empty or invalid.
- */
 export function parseJson<T = unknown>(json: string | null | undefined, fallback: T = {} as T): T {
   if (!json) return fallback;
   try {

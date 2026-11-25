@@ -14,14 +14,12 @@
 *  limitations under the License.
 */
 
-/** Raster tile-layer configuration for the OSM/Leaflet base map. */
 export interface OsmTileConfig {
     url: string;
     attribution: string;
     className: string;
 }
 
-// OSM raster tiles for light/dark portal themes.
 export const OSM_LIGHT_TILE: OsmTileConfig = {
     url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
     attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',

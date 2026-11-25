@@ -14,11 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Current-principal GraphQL document (Manager backend). Codegen validates this
- * against schemas/manager.graphql and emits typed document nodes.
- */
-
 import { graphql } from './generated';
 
 export const CurrentPrincipalItemFragment = graphql(`

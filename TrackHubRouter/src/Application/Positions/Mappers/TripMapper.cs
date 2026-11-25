@@ -112,9 +112,7 @@ public static class TripMapper
         return trip;
     }
 
-    /// <summary>
-    /// Haversine distance between two points, in kilometers.
-    /// </summary>
+    // Haversine distance, in kilometers.
     private static double CalculateDistance(TripPointVm p1, TripPointVm p2)
     {
         const double r = 6371e3;

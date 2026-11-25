@@ -22,26 +22,23 @@ using Polly;
 namespace Microsoft.Extensions.DependencyInjection;
 
 /// <summary>
-/// Resilience level for an inter-service GraphQL HttpClient. GraphQL always travels as POST,
-/// so HTTP-method-based idempotency detection cannot distinguish queries from mutations:
-/// clients that carry mutations must not retry.
+/// GraphQL always travels as POST, so method-based idempotency detection cannot tell queries from
+/// mutations: clients that carry mutations must not retry.
 /// </summary>
 public enum GraphQLClientResilience
 {
-    /// <summary>No resilience pipeline (bare named client with timeout).</summary>
     None,
 
-    /// <summary>Timeout + circuit breaker, retries disabled. Safe default for clients that carry mutations.</summary>
+    /// <summary>Timeout + circuit breaker, no retries; the safe default for clients that carry mutations.</summary>
     NoRetry,
 
-    /// <summary>Full standard pipeline including retries. Only for clients that exclusively run queries.</summary>
+    /// <summary>Full standard pipeline including retries; only for query-only clients.</summary>
     WithRetry
 }
 
 /// <summary>
-/// Single registration point for inter-service GraphQL HttpClients
-/// (consumed through <c>IGraphQLClientFactory.CreateClient</c>). Guarantees every client gets
-/// the same timeout, Authorization/x-correlation-id propagation, and an explicit resilience choice.
+/// Single registration point for inter-service GraphQL HttpClients: same timeout, Authorization and
+/// x-correlation-id propagation, and an explicit resilience choice.
 /// </summary>
 public static class GraphQLClientServiceCollectionExtensions
 {
@@ -55,9 +52,6 @@ public static class GraphQLClientServiceCollectionExtensions
 
     private sealed class GraphQLClientDefinitions : Dictionary<string, GraphQLClientDefinition>;
 
-    /// <summary>
-    /// Registers the named HttpClient for a user-token (header-propagating) GraphQL client.
-    /// </summary>
     public static IHttpClientBuilder AddGraphQLClient(
         this IServiceCollection services,
         string name,
@@ -90,10 +84,8 @@ public static class GraphQLClientServiceCollectionExtensions
             services.AddTrackHubHeaderPropagation();
         }
 
-        // Only load-bearing on the None path. AddStandardResilienceHandler replaces this with
-        // InfiniteTimeSpan so the pipeline is the single source of truth for timeouts — which is
-        // exactly why the pipeline has to be configured (ApplyTimeout) rather than left at its
-        // 10 s-per-attempt defaults.
+        // Only load-bearing on the None path: AddStandardResilienceHandler replaces it with InfiniteTimeSpan,
+        // which is why the pipeline timeouts must be configured (ApplyTimeout).
         var builder = services.AddHttpClient(name,
             client => client.Timeout = TimeSpan.FromSeconds(timeoutSeconds));
 
@@ -102,10 +94,8 @@ public static class GraphQLClientServiceCollectionExtensions
             builder.AddHeaderPropagation();
         }
 
-        // The host identity travels per request, not per client, and a client that does NOT propagate
-        // the caller's headers is exactly the one that has no caller to speak for: the {name}AsService
-        // twins and a worker host's clients (the SyncWorker registers with propagateHeaders: false).
-        // On a propagating client the handler is inert — the caller's token is already on the request.
+        // A client that does not propagate the caller's headers has no caller to speak for (the AsService
+        // twins, worker hosts), so it gets the host identity; on a propagating client the handler is inert.
         services.AddClientCredentialsTokenProvider();
         builder.AddHttpMessageHandler(sp => new ClientCredentialsTokenHandler(
             sp.GetRequiredService<IClientCredentialsTokenProvider>(),
@@ -129,19 +119,9 @@ public static class GraphQLClientServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Binds the resilience pipeline's timeouts to the caller's <paramref name="timeoutSeconds"/>.
-    /// <para>
-    /// WITHOUT this, <c>AddStandardResilienceHandler</c> keeps its defaults — a 10 s PER-ATTEMPT
-    /// timeout and a 30 s total — and those fire long before <c>HttpClient.Timeout</c> ever does,
-    /// because the pipeline sits inside it. A client registered with `timeoutSeconds: 120` was
-    /// therefore still cut off at 10 s, and the declared timeout was silently inert. That is what
-    /// killed Manager's sync dispatch to the Router (`Router-standard/Standard-AttemptTimeout`)
-    /// whenever the Router's app pool was cold, even though the provider answered in under a second.
-    /// </para>
-    /// <para>
-    /// The library validates these against each other, so they move together: the total must exceed
-    /// a single attempt, and the breaker's sampling window must cover at least two attempts.
-    /// </para>
+    /// Without this, the standard handler's 10 s per-attempt and 30 s total defaults fire before
+    /// <c>HttpClient.Timeout</c> and silently override the declared timeout. The library validates the
+    /// values against each other: total must exceed one attempt, and the breaker window must cover two.
     /// </summary>
     private static void ApplyTimeout(HttpStandardResilienceOptions options, int timeoutSeconds)
     {
@@ -152,15 +132,12 @@ public static class GraphQLClientServiceCollectionExtensions
     }
 
     /// <summary>
-    /// `timeoutSeconds` is the budget for ONE attempt. The total leaves room for the retry path's
-    /// extra attempts so a single knob configures both; the breaker's sampling window must cover at
-    /// least two attempts, which the library validates.
+    /// `timeoutSeconds` is the budget for one attempt; the total leaves room for the retry path's extra attempts.
     /// </summary>
     private static TimeSpan TotalFor(int timeoutSeconds) => TimeSpan.FromSeconds(timeoutSeconds * 3);
 
     /// <summary>
-    /// Registers the '{name}AsService' twin used by <c>IGraphQLClientFactory.CreateClient(name, asService: true)</c>:
-    /// no user-token propagation; the factory attaches the host's client-credentials identity.
+    /// The '{name}AsService' twin: no user-token propagation; the factory attaches the host's identity.
     /// </summary>
     public static IHttpClientBuilder AddGraphQLServiceClient(
         this IServiceCollection services,
@@ -182,8 +159,7 @@ public static class GraphQLClientServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Configures which inbound headers are propagated to outbound clients (Authorization and
-    /// x-correlation-id). Idempotent across the multiple Infrastructure registrations of a host.
+    /// Propagates Authorization and x-correlation-id; idempotent across a host's Infrastructure registrations.
     /// </summary>
     public static IServiceCollection AddTrackHubHeaderPropagation(this IServiceCollection services)
     {

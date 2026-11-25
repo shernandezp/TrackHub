@@ -33,7 +33,6 @@ public class ManagerWriter(IGraphQLClientFactory graphQLClient)
                       deleteUser(id: $id)
                     }";
 
-    // Creates a new user asynchronously.
     public async Task<UserShrankVm> CreateUserAsync(UserShrankDto user, CancellationToken token)
     {
         var request = new GraphQLRequest
@@ -42,8 +41,7 @@ public class ManagerWriter(IGraphQLClientFactory graphQLClient)
             Variables = new
             {
                 user.AccountId,
-                // Mirror the Security row's real state: hard-coding false left the app.users
-                // replica invisible to the vw_users views (WHERE active) until an update ran.
+                // The replica must carry the real state: the vw_users views filter on active.
                 active = user.Active,
                 user.UserId,
                 user.Username,
@@ -54,7 +52,6 @@ public class ManagerWriter(IGraphQLClientFactory graphQLClient)
         return result;
     }
 
-    // Updates an existing user asynchronously.
     public async Task<bool> UpdateUserAsync(Guid id, UpdateUserShrankDto user, CancellationToken token)
     {
         var request = new GraphQLRequest
@@ -74,7 +71,6 @@ public class ManagerWriter(IGraphQLClientFactory graphQLClient)
         return result;
     }
 
-    // Deletes a user asynchronously.
     public async Task<Guid> DeleteUserAsync(Guid id, CancellationToken token)
     {
         var request = new GraphQLRequest

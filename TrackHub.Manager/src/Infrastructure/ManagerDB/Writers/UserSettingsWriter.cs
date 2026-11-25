@@ -20,8 +20,7 @@ using TrackHub.Manager.Infrastructure.Interfaces;
 
 namespace TrackHub.Manager.Infrastructure.ManagerDB.Writers;
 
-// UserSettingsWriter class for handling user settings-related operations. UpdateUserSettingsAsync
-// is the [Authorize(Profile/Edit)] SELF surface: the row key is a UserId off the wire, so the
+// UpdateUserSettingsAsync is the [Authorize(Profile/Edit)] SELF surface: the row key is a UserId off the wire, so the
 // caller is bound to their own row here (the enforcement point UpdateUserSettingsCommand's
 // [AccountScopeEnforcedInHandler] marker cites). Create/Delete run inside the user provisioning
 // and deletion flows, which are guarded upstream by the user replica writer.
@@ -38,12 +37,6 @@ public sealed class UserSettingsWriter(IApplicationDbContext context, ICurrentPr
         throw new ForbiddenAccessException("Insufficient permissions. Settings may only be changed for the calling user.");
     }
 
-    /// <summary>
-    /// Creates a new user setting asynchronously
-    /// </summary>
-    /// <param name="userSettingsDto"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>The created user settings view model</returns>
     public async Task<UserSettingsVm> CreateUserSettingsAsync(Guid userId, CancellationToken cancellationToken)
     {
         var userSettings = new UserSettings(userId);
@@ -58,13 +51,6 @@ public sealed class UserSettingsWriter(IApplicationDbContext context, ICurrentPr
             userSettings.UserId);
     }
 
-    /// <summary>
-    /// Updates an existing user setting asynchronously
-    /// </summary>
-    /// <param name="userSettingsDto"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    /// <exception cref="NotFoundException"></exception>
     public async Task UpdateUserSettingsAsync(UserSettingsDto userSettingsDto, CancellationToken cancellationToken)
     {
         RequireSelf(userSettingsDto.UserId);
@@ -81,13 +67,6 @@ public sealed class UserSettingsWriter(IApplicationDbContext context, ICurrentPr
         await context.SaveChangesAsync(cancellationToken);
     }
 
-    /// <summary>
-    /// Deletes a user setting asynchronously
-    /// </summary>
-    /// <param name="userId"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    /// <exception cref="NotFoundException"></exception>
     public async Task DeleteUserSettingsAsync(Guid userId, CancellationToken cancellationToken)
     {
         var userSettings = await context.UserSettings.FindAsync([userId], cancellationToken)

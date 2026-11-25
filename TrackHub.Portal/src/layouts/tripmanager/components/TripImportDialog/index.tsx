@@ -36,10 +36,8 @@ interface TripImportDialogProps {
 }
 
 /**
- * The column contract, in the order the backend parses it. Places are named, never
- * coordinates: a dispatcher planning a week in a spreadsheet types "Plant 3", and
- * the server resolves that against the account's geofences and then its POIs
- * (spec 11a §9.1).
+ * The column contract, in the order the backend parses it. Places are named, never coordinates;
+ * the server resolves them against the account's geofences and then its POIs.
  */
 const TEMPLATE_COLUMNS = [
   'code',
@@ -75,16 +73,8 @@ const TEMPLATE_EXAMPLE = [
 ];
 
 /**
- * Bulk trip planning — the input side of zero-touch (spec 11a §9.1).
- *
- * A company that dispatches hundreds of trips a day plans a whole week per vehicle
- * at once; without this, a dispatcher who no longer clicks Start per trip would
- * still be creating three hundred of them one dialog at a time.
- *
- * Same contract as the toll-catalog upload: the backend never batch-fails, so valid
- * rows land and each rejected row comes back with its line number and reason — which
- * is exactly what this renders, so the operator fixes those lines and re-imports
- * instead of guessing which of three hundred was wrong.
+ * The backend never batch-fails: valid rows land and each rejected row comes back with its line
+ * number and reason, which is what this renders.
  */
 function TripImportDialog({ open, setOpen }: TripImportDialogProps) {
   const { t } = useTranslation();

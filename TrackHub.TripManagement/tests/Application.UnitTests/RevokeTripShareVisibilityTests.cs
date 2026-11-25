@@ -22,10 +22,9 @@ namespace TrackHub.TripManagement.Application.UnitTests;
 /// Group-visibility tests for share revocation.
 /// <para>
 /// Revoking is a destructive, customer-visible action: the link a dispatcher kills is the one an
-/// end customer is watching a delivery on. The handler used to resolve the share by id under
-/// ACCOUNT scope only, with no trip lookup at all, so a <c>User</c>-role dispatcher holding a
-/// borrowed or guessed <c>TripShareId</c> could take down another group's tracking link — a denial
-/// of service against data they were never entitled to see.
+/// end customer is watching a delivery on. Resolving the share by id under ACCOUNT scope alone
+/// would let a <c>User</c>-role dispatcher holding a borrowed or guessed <c>TripShareId</c>
+/// take down another group's tracking link.
 /// </para>
 /// </summary>
 [TestFixture]
@@ -53,7 +52,7 @@ public sealed class RevokeTripShareVisibilityTests
             .Setup(w => w.RevokeShareAsync(TripShareId, TestFactory.AccountId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(PublicLinkGrantId);
 
-        // The share exists in the account - the ONLY thing the old handler ever checked.
+        // The share exists in the account; only the trip's group visibility may refuse it.
         shareReader
             .Setup(r => r.FindTripIdByShareAsync(TripShareId, TestFactory.AccountId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(TestFactory.TripId);
@@ -70,7 +69,7 @@ public sealed class RevokeTripShareVisibilityTests
             user.Object);
 
     /// <summary>
-    /// The defect, asserted directly: a dispatcher outside the trip's groups gets
+    /// A dispatcher outside the trip's groups gets
     /// <c>NotFoundException</c> — never <c>ForbiddenAccessException</c>, which would confirm the
     /// share is real — and NOTHING is revoked, locally or in Manager.
     /// </summary>

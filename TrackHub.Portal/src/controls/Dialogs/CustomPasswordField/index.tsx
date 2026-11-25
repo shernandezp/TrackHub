@@ -70,7 +70,7 @@ const CustomPasswordField = ({
         sx={textFieldSx}
         slotProps={{
           // The rule the form validates this field against. Revealing the value flips the DOM type to
-          // "text", and inferring the rule from that type is what used to skip the complexity check.
+          // "text", so the rule cannot be inferred from the type.
           htmlInput: { 'data-validation': validationRule },
           input: {
             endAdornment: (

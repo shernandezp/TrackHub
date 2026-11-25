@@ -14,10 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Converts a boolean value to a string representation.
- * Returns "yes" if the value is truthy, otherwise returns "no".
- */
 export function getStringValue(value: unknown): string {
     return value ? "yes" : "no";
 }

@@ -15,9 +15,6 @@
 
 namespace TrackHub.Router.Infrastructure.Protrack.Models;
 
-/// <summary>
-/// Protrack track record (current position data for a device)
-/// </summary>
 internal readonly record struct TrackRecord(
     string Imei,
     long Servertime,

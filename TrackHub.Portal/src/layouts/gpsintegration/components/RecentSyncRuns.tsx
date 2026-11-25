@@ -59,8 +59,6 @@ function RecentSyncRuns() {
   const [error, setError] = useState<string | null>(null);
   const accountRequested = useRef(false);
 
-  // Reads run only once the accordion is expanded. The sync-run query also
-  // waits for the account id (resolved imperatively below).
   const operatorsQuery = useGpsOperators({ enabled: expanded });
   const syncRunsQuery = useOperatorSyncRuns(accountId, null, 20, { enabled: expanded });
   const operators = operatorsQuery.data ?? [];
@@ -87,9 +85,6 @@ function RecentSyncRuns() {
     })();
   }, [expanded, t]);
 
-  // The refresh bus now drives a cache invalidation; the sync-run query
-  // refetches when it is active (accordion expanded). A read failure is
-  // surfaced by the global toast.
   useEffect(() => {
     const handleRefresh = () =>
       queryClient.invalidateQueries({ queryKey: operatorTelemetryKeys.all });
@@ -103,8 +98,6 @@ function RecentSyncRuns() {
   }, {});
 
   const rows = runs.map(r => ({
-    // NOTE: the sync-run type carries no `operatorName`; the old `|| r.operatorName`
-    // fallback was always undefined (dead) and is dropped — render-identical.
     operator: <TextCell>{operatorNames[r.operatorId] || r.operatorId}</TextCell>,
     trigger: <TextCell>{r.triggerType}</TextCell>,
     result: (

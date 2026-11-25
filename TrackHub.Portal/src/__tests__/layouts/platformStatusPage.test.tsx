@@ -14,9 +14,8 @@
 *  limitations under the License.
 */
 
-// Rendering behaviour of the public status page and the signed-in shell banner:
-// the page must render with zero backends reachable, the admin tier must stay
-// invisible to non-administrators, and shell announcements must dismiss per session.
+// The page must render with zero backends reachable, the admin tier must stay invisible to
+// non-administrators, and shell announcements must dismiss per session.
 
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
@@ -30,10 +29,9 @@ import enTranslations from 'locales/en.json';
 import { PROBED_SERVICES } from 'api/core/healthProbe';
 import { TestWrapper } from '../components/testHelpers';
 
-// TT-07: this file runs a real i18n.init and eleven render-and-waitFor cases whose probes each go
-// through the health-probe timeout path. Under vitest's 5s default it passes in isolation and
-// fails intermittently on a loaded machine — a flake, not a regression. The work is genuinely
-// slow rather than hung, so the file gets its own budget instead of the suite-wide default.
+// Real i18n.init plus many render-and-waitFor cases through the health-probe timeout path: slow
+// rather than hung, and flaky under vitest's 5s default on a loaded machine, so the file gets its
+// own budget.
 vi.setConfig({ testTimeout: 30_000, hookTimeout: 30_000 });
 
 const mockIsAdmin = vi.fn();
@@ -186,8 +184,8 @@ describe('tier gating', () => {
   });
 
   it('shows a MANAGER the GPS synchronisation tile but not the administrator internals', async () => {
-    // Sergio, 2026-07-19: Managers see the sync tile (it pairs with the gpsIntegration dashboard
-    // they own); background jobs and announcement management stay SuperAdministrator-only.
+    // Managers see the sync tile (it pairs with the gpsIntegration dashboard they own); background
+    // jobs and announcement management stay SuperAdministrator-only.
     mockIsAuthenticated.mockReturnValue(true);
     mockIsAdmin.mockResolvedValue(false);
     mockIsManager.mockResolvedValue(true);

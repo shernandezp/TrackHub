@@ -21,23 +21,19 @@ import type { Trip } from 'api/router/router';
 // Duration of a full trip playback at 1x speed.
 const BASE_DURATION_MS = 60000;
 
-/** A single point of a trip (the shape playback interpolates over). */
 export type TripPoint = Trip['points'][number];
 
-/** Normalized playback timeline: sorted points + their 0..1 timestamps. */
 export interface Timeline {
   points: TripPoint[];
   stamps: number[];
 }
 
-/** Interpolated marker position emitted by the playback engine. */
 export interface PlaybackPosition {
   lat: number;
   lng: number;
   course: number;
 }
 
-/** Public API returned by {@link usePlayback}. */
 export interface UsePlaybackResult {
   playing: boolean;
   toggle: () => void;
@@ -49,12 +45,7 @@ export interface UsePlaybackResult {
   hasTimeline: boolean;
 }
 
-/**
- * Builds a normalized timeline from trip points: each point gets a 0..1
- * timestamp proportional to its deviceDateTime delta within the trip.
- * @param points - Trip points ({ latitude, longitude, course, deviceDateTime }).
- * @returns { points, stamps } or null when no usable points.
- */
+/** Each point gets a 0..1 timestamp proportional to its deviceDateTime delta within the trip. */
 export function buildTimeline(points: TripPoint[] | null | undefined): Timeline | null {
   if (!points || points.length === 0) return null;
   const sorted = points
@@ -74,13 +65,7 @@ const toPosition = (point: TripPoint): PlaybackPosition => ({
   course: point.course || 0
 });
 
-/**
- * Interpolates the playback position for a progress value (0..1), linearly
- * between the two surrounding points proportional to their time deltas.
- * @param timeline - Result of buildTimeline.
- * @param progress - Playback progress 0..1.
- * @returns { lat, lng, course } or null.
- */
+/** Linear between the two surrounding points, proportional to their time deltas. */
 export function interpolatePosition(timeline: Timeline | null, progress: number): PlaybackPosition | null {
   if (!timeline) return null;
   const { points, stamps } = timeline;
@@ -100,13 +85,6 @@ export function interpolatePosition(timeline: Timeline | null, progress: number)
   };
 }
 
-/**
- * Client-side trip playback state: play/pause, speed multiplier, timeline
- * progress and the interpolated marker position. Purely client-side over
- * already-fetched trip points.
- * @param points - Points of the selected trip.
- * @returns Playback API.
- */
 export function usePlayback(points: TripPoint[] | null | undefined): UsePlaybackResult {
   const timeline = useMemo(() => buildTimeline(points), [points]);
   const [playing, setPlaying] = useState(false);

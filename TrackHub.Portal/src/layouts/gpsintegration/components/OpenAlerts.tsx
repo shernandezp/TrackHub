@@ -49,7 +49,6 @@ function severityColor(severity: string): BadgeColor {
 
 const PAGE_SIZE = 20;
 
-// The GPS integration's own alert types; open ones are counted and paged by the server.
 const GPS_ALERT_EVENT_TYPES = [
   'GpsCredentialExpiring',
   'GpsOperatorPositionSyncFailed',

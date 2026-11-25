@@ -15,7 +15,7 @@
 
 namespace TrackHub.Reporting.Domain.Models;
 
-// Intermediate projections deserialized from Manager GraphQL for the workforce reports (spec 09 §13).
+// Intermediate projections deserialized from Manager GraphQL for the workforce reports.
 // Date-only fields stay DateOnly to match Manager's `Date` scalar; the row VMs widen them to a UTC
 // DateTimeOffset so Excel/PDF apply the shared date column format.
 
@@ -43,7 +43,7 @@ public readonly record struct StaffRegistryRowVm(
 public readonly record struct QualificationExpirationRowVm(
     // `LicenseCategory` (not `Category`) because the resx key `Category` is shared with the document
     // reports and resolves to "Type"/"Tipo" — next to `QualificationType` that produced two adjacent
-    // columns both headed "Type". This column carries the licence category (A1–C3 per spec 09 §6).
+    // columns both headed "Type". This column carries the licence category (A1–C3).
     string StaffName, [property: ReportValues("QualificationType")] string QualificationType, string LicenseCategory, string Number,
     string IssuingAuthority, DateOnly? IssuedAt, DateOnly? ExpiresAt,
     int? DaysRemaining, [property: ReportValues("QualificationStatus")] string Status);

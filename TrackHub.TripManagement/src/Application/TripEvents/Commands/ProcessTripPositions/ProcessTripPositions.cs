@@ -21,7 +21,7 @@ namespace TrackHub.TripManagement.Application.TripEvents.Commands.ProcessTripPos
 /// The service-pipeline surface: Router/SyncWorker pushes positions here, best-effort and isolated,
 /// right after the geofence feed. It sits on its own <see cref="Resources.TripTracking"/> resource
 /// rather than <see cref="Resources.Trips"/> so a compromised Router identity can never read or
-/// mutate trips (spec 11 §18.15).
+/// mutate trips.
 /// <para>
 /// <c>AccountId</c> is carried on the request because the caller is a service client, not a user —
 /// there is no user account to resolve from. Authorization is enforced by the resource/action pair

@@ -14,12 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Geofencing API (Geofencing backend): plain typed async functions. Failures
- * THROW ApiError — fallbacks and toasts belong to the caller layer
- * (src/queries handles both for components).
- */
-
 import { executeGraphQL } from 'api/core/graphqlClient';
 import type { RequestOptions } from 'api/core/errors';
 import type {
@@ -43,7 +37,6 @@ export type TransporterInGeofence =
   GetTransportersInGeofenceQuery['transportersInGeofence'][number];
 export type { GeofenceDtoInput };
 
-/** Server-side filters accepted by {@link getGeofencesByAccount}. */
 export interface GeofenceListFilters {
   skip?: number | null;
   take?: number | null;
@@ -71,18 +64,12 @@ export async function getGeofencesByAccount(
   return data.geofencesByAccount;
 }
 
-/** Server-side max page size the backend clamps `take` to. */
 const GEOFENCE_PAGE_SIZE = 500;
-/** Defensive upper bound on the drained item count (guards a runaway loop). */
 const GEOFENCE_DRAIN_CAP = 10_000;
 
 /**
- * Returns the account's *entire* geofence set by draining every server page
- * (the backend clamps `take` to 500). Loops {@link getGeofencesByAccount} at the
- * max page size, accumulating items until the running total reaches
- * `totalCount` — stopping early on an empty page and never exceeding the
- * defensive {@link GEOFENCE_DRAIN_CAP}. Full-set consumers (map editor, dashboard
- * overlay, event-history filter) use this instead of a single capped page.
+ * Drains every server page (the backend clamps `take` to 500) for full-set consumers such as the
+ * map editor, dashboard overlay and event-history filter.
  */
 export async function getAllGeofencesByAccount(
   filters: Omit<GeofenceListFilters, 'skip' | 'take'> = {},
@@ -135,7 +122,6 @@ export async function updateGeofence(
   return data.updateGeofence;
 }
 
-/** Returns the id of the deleted geofence (schema: `deleteGeofence: UUID!`). */
 export async function deleteGeofence(geofenceId: string): Promise<string> {
   const data = await executeGraphQL('geofencing', DeleteGeofenceDocument, { id: geofenceId });
   return data.deleteGeofence;

@@ -1,8 +1,3 @@
-/**
- * Account Management → Users & Access: user administration, the role allocator
- * and the policy allocator.
- */
-
 import { test, expect, unique, uniqueEmail } from '../fixtures';
 import { CrudFlow } from '../pages/crud';
 import { Section } from '../pages/tableAccordion';

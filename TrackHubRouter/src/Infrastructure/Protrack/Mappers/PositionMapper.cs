@@ -17,17 +17,11 @@ namespace TrackHub.Router.Infrastructure.Protrack.Mappers;
 
 internal static class PositionMapper
 {
-    /// <summary>
-    /// Converts a Unix timestamp (seconds) to DateTimeOffset.
-    /// </summary>
     private static DateTimeOffset FromUnixTime(long unixTime)
         => unixTime > 0
             ? DateTimeOffset.FromUnixTimeSeconds(unixTime)
             : DateTimeOffset.MinValue;
 
-    /// <summary>
-    /// Maps a TrackRecord (current position) to a PositionVm object.
-    /// </summary>
     public static PositionVm MapToPositionVm(this TrackRecord track, DeviceTransporterVm deviceDto)
         => new(
             deviceDto.TransporterId,
@@ -52,7 +46,6 @@ internal static class PositionMapper
         );
 
     /// <summary>
-    /// Maps a parsed playback point to a PositionVm object.
     /// Playback data format: longitude,latitude,gpstime,speed,course
     /// </summary>
     public static PositionVm MapPlaybackToPositionVm(
@@ -81,9 +74,6 @@ internal static class PositionMapper
             null
         );
 
-    /// <summary>
-    /// Maps a collection of TrackRecord objects to PositionVm objects using a dictionary of DeviceTransporterVm keyed by Serial (IMEI).
-    /// </summary>
     public static IEnumerable<PositionVm> MapToPositionVm(this IEnumerable<TrackRecord> tracks, IDictionary<string, DeviceTransporterVm> devicesDictionary)
     {
         foreach (var track in tracks)

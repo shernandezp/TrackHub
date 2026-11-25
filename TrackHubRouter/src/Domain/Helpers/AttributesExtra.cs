@@ -17,13 +17,10 @@ using System.Text.Json;
 
 namespace TrackHub.Router.Domain.Helpers;
 
-// Builds and reads the JSON-object string carried in AttributesVm.Extra. Provider mappers use
-// From(...) to project surplus provider signals into the open bag under canonical keys; consumers
-// use ToDictionary(...) to read them back (router-audit A-03).
+// Builds and reads the JSON-object string carried in AttributesVm.Extra.
 public static class AttributesExtra
 {
-    // Builds the Extra JSON string from key/value signals, dropping null/whitespace values.
-    // Returns null when nothing survives (so an empty bag never travels as "{}").
+    // Null when nothing survives, so an empty bag never travels as "{}".
     public static string? From(params (string Key, string? Value)[] signals)
         => From((IEnumerable<KeyValuePair<string, string?>>)signals
             .Select(s => new KeyValuePair<string, string?>(s.Key, s.Value)));
@@ -37,7 +34,7 @@ public static class AttributesExtra
         return kept.Count == 0 ? null : JsonSerializer.Serialize(kept);
     }
 
-    // Parses an Extra JSON string back into a dictionary; empty/invalid input yields an empty map.
+    // Empty or invalid input yields an empty map.
     public static IReadOnlyDictionary<string, string?> ToDictionary(string? extra)
     {
         if (string.IsNullOrWhiteSpace(extra))

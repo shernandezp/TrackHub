@@ -1,8 +1,4 @@
-/**
- * Module declarations for dependencies that ship no types and have no
- * published @types package. Revisit each when its usage is converted
- *; delete a shim if upstream gains types.
- */
+/** Module declarations for dependencies that ship no types and have no @types package. */
 
 // The Google Maps JS API attaches its namespace to `window.google` at
 // runtime once the loader script resolves. @types/google.maps declares the
@@ -13,7 +9,6 @@ interface Window {
 
 declare module 'leaflet-fullscreen' {
   // Side-effect plugin: augments L.Map with fullscreen control options.
-  // Typed minimally; consumers interact with it through the leaflet API.
   const plugin: unknown;
   export default plugin;
 }
@@ -21,8 +16,7 @@ declare module 'leaflet-fullscreen' {
 // Side-effect-only deep import of the plugin bundle (registers L.control.fullscreen).
 declare module 'leaflet-fullscreen/dist/Leaflet.fullscreen.js';
 
-// NOTE: the `leaflet` module augmentation for leaflet-editable / leaflet-fullscreen
-// lives in `leaflet-plugins.d.ts` (a module file) so it *merges* with @types/leaflet
-// instead of shadowing it — a `declare module 'leaflet'` inside this script file
-// would replace the package's own types.
+// The `leaflet` module augmentation lives in `leaflet-plugins.d.ts` (a module file) so it
+// *merges* with @types/leaflet: a `declare module 'leaflet'` in this script file would replace
+// the package's own types.
 

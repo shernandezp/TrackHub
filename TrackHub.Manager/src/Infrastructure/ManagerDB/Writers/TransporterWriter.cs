@@ -22,16 +22,9 @@ using TrackHub.Manager.Infrastructure.Events;
 using TransporterType = Common.Domain.Enums.TransporterType;
 
 namespace TrackHub.Manager.Infrastructure.ManagerDB.Writers;
-// This class represents a writer for the Transporter entity
 public sealed class TransporterWriter(IApplicationDbContext context, ICurrentPrincipal principal)
     : AccountScopedDataAccess(context, principal), ITransporterWriter
 {
-    // Creates a new transporter asynchronously
-    // Parameters:
-    // - transporterDto: The transporter data transfer object
-    // - cancellationToken: The cancellation token
-    // Returns:
-    // - The created transporter view model
     public async Task<TransporterVm> CreateTransporterAsync(TransporterDto transporterDto, CancellationToken cancellationToken)
     {
         var transporter = new Transporter(
@@ -50,10 +43,6 @@ public sealed class TransporterWriter(IApplicationDbContext context, ICurrentPri
             transporter.TransporterTypeId, transporter.Version);
     }
 
-    // Updates an existing transporter asynchronously
-    // Parameters:
-    // - transporterDto: The updated transporter data transfer object
-    // - cancellationToken: The cancellation token
     public async Task UpdateTransporterAsync(UpdateTransporterDto transporterDto, CancellationToken cancellationToken)
     {
         var transporter = await Context.Transporters.AsTracking().FirstOrDefaultAsync(t => t.TransporterId == transporterDto.TransporterId && t.RetiredAt == null, cancellationToken)

@@ -45,7 +45,6 @@ const CallbackPage = () => {
   const { setIsAuthenticated, setAccessToken, setRefreshToken, resetAuthError, setIsLoggingIn } = useAuth();
 
   useEffect(() => {
-    // Clear any previous auth errors at the start of callback processing
     sessionStorage.removeItem('auth_error');
     
     const searchParams = new URLSearchParams(location.search);
@@ -56,7 +55,7 @@ const CallbackPage = () => {
       if (process.env.NODE_ENV !== 'production') {
         console.error("Authentication error:", error, searchParams.get("error_description"));
       }
-      setIsLoggingIn(false); // Reset logging in state
+      setIsLoggingIn(false);
       sessionStorage.setItem('auth_error', error);
       navigate("/error", { replace: true });
       return;
@@ -91,13 +90,12 @@ const CallbackPage = () => {
     }
 
     if (authorizationCode) {
-      // Exchange authorization code for access token
       exchangeAuthorizationCode(authorizationCode).then((data: TokenResponse) => {
         setAccessToken(data.access_token);
         setRefreshToken(data.refresh_token);
         setIsAuthenticated(true);
-        setIsLoggingIn(false); // Reset logging in state
-        resetAuthError(); // Reset error state on successful auth
+        setIsLoggingIn(false);
+        resetAuthError();
         sessionStorage.removeItem('auth_error');
         sessionStorage.removeItem(RESTART_COUNT_KEY); // successful sign-in resets the stale-callback restart budget
         navigate(takeReturnPath() ?? "/dashboard", { replace: true });
@@ -106,7 +104,7 @@ const CallbackPage = () => {
         if (process.env.NODE_ENV !== 'production') {
           console.error("Error exchanging authorization code:", error);
         }
-        setIsLoggingIn(false); // Reset logging in state on error
+        setIsLoggingIn(false);
         sessionStorage.setItem('auth_error', 'token_exchange_failed');
         navigate("/error", { replace: true });
       });
@@ -114,7 +112,7 @@ const CallbackPage = () => {
       if (process.env.NODE_ENV !== 'production') {
         console.error("No authorization code received in callback");
       }
-      setIsLoggingIn(false); // Reset logging in state
+      setIsLoggingIn(false);
       sessionStorage.setItem('auth_error', 'no_code');
       navigate("/error", { replace: true });
     }

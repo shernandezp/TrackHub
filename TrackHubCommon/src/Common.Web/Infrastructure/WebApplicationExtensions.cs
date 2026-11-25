@@ -17,15 +17,8 @@ using System.Reflection;
 
 namespace Common.Web.Infrastructure;
 
-// Extension methods for the WebApplication class.
 public static class WebApplicationExtensions
 {
-    /// <summary>
-    /// Maps an endpoint group to the web application.
-    /// </summary>
-    /// <param name="app">The WebApplication instance.</param>
-    /// <param name="group">The EndpointGroupBase instance representing the endpoint group to be mapped.</param>
-    /// <returns>A RouteGroupBuilder instance for further configuration.</returns>
     public static RouteGroupBuilder MapGroup(this WebApplication app, EndpointGroupBase group)
     {
         var groupName = group.GetType().Name;
@@ -34,12 +27,6 @@ public static class WebApplicationExtensions
             .WithTags(groupName);
     }
 
-    /// <summary>
-    /// Maps all endpoint groups in the specified assembly to the web application.
-    /// </summary>
-    /// <param name="app">The WebApplication instance.</param>
-    /// <param name="assembly">The Assembly containing the endpoint group types.</param>
-    /// <returns>The modified WebApplication instance.</returns>
     public static WebApplication MapEndpoints(this WebApplication app, Assembly assembly)
     {
         var endpointGroupType = typeof(EndpointGroupBase);

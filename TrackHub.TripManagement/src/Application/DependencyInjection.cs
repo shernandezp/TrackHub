@@ -39,18 +39,16 @@ public static class DependencyInjection
         services.AddScoped<ITripEtaService, TripEtaService>();
 
         // Shared by the detection pipeline and the trip-eta-refresh sweep: one implementation of
-        // "is this trip finished?", so the two callers can never disagree (spec 11a §5.2).
+        // "is this trip finished?", so the two callers can never disagree.
         services.AddScoped<ITripAutoCompletionService, TripAutoCompletionService>();
         services.AddScoped<ITripStartBackfillService, TripStartBackfillService>();
 
         // Resolved directly by the anonymous public-tracking endpoint, which bypasses the mediator.
         services.AddScoped<IPublicTripResolver, PublicTripResolver>();
 
-        // Spec 12 owns service orders; until it ships there is nothing to ask, so the default
-        // implementation accepts any reference. The PORT is what matters: CreateTrip/UpdateTrip
-        // already call it on every write, so spec 12 enforces the reference by registering its own
-        // implementation in the Infrastructure layer (which runs after this and therefore wins) and
-        // reopens no handler. See IServiceOrderValidator for the full rationale.
+        // This module holds no service-order store, so the default implementation accepts any reference.
+        // CreateTrip/UpdateTrip call the port on every write; a real implementation registered in the
+        // Infrastructure layer (which runs after this and therefore wins) enforces it with no handler reopened.
         services.AddScoped<IServiceOrderValidator, PermissiveServiceOrderValidator>();
 
         return services;

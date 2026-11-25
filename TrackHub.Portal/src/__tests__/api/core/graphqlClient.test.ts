@@ -19,9 +19,7 @@ import { executeGraphQL } from 'api/core/graphqlClient';
 import { ApiError } from 'api/core/errors';
 import { tokenStore } from 'api/core/tokenStore';
 
-// Rewritten from the former services/apiService GraphQL suite: the partial-
-// success rule now lives in graphqlClient.hasUsableData, exercised here through
-// executeGraphQL. A response is a failure ONLY when it carries no usable data.
+// A response is a failure ONLY when it carries no usable data.
 vi.mock('axios');
 vi.mock('api/core/tokenStore', () => ({
   tokenStore: { acquireValidAccessToken: vi.fn() },

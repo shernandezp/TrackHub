@@ -43,8 +43,7 @@ public class AdminReportReader(IGraphQLClientFactory graphQLClient)
                 }";
 
     // The master feed is paged: it spans every tenant, so an unpaged read grows without bound.
-    // Batched master read: every account's features (the matrix report previously fanned out one
-    // accountFeaturesMaster call per account).
+    // Batched master read: every account's features in one call.
     internal const string AllAccountFeaturesMasterQuery = @"
                 query($skip: Int!, $take: Int!) {
                     allAccountFeaturesMaster(query: { skip: $skip, take: $take }) {

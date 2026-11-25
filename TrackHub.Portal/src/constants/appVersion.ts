@@ -15,35 +15,19 @@
 */
 
 /**
- * Portal build stamp — the only version the UI reports.
- *
- * The backend services are versioned by their Docker image tags, not by an API surface:
- * `rollback.sh list` / `docker compose ps` already answer "what is deployed" for them, and
- * exposing a version per service would mean touching eight repos for information an
- * operator can read from Docker. The portal is different — it is served as static files
- * from a volume, so the only way to see WHICH build a browser is actually running is for
- * that build to say so. Hence: this one stamp, rendered in the footer and on `/status`.
- *
- * `APP_VERSION` is `package.json` "version". `BUILD_TIME` is stamped at `vite build` and
- * is what distinguishes two builds of the same version — the practical case when verifying
- * a deployment or a rollback, since neither bumps `package.json`.
- *
- * Both are statically replaced by vite.config.ts `define`. The `typeof` guard covers a
- * consumer that evaluates this module outside a Vite pipeline, where the identifier would
- * otherwise throw a ReferenceError.
+ * The only version the UI reports: backend services are identified by their Docker image tags,
+ * but the portal is static files on a volume, so only the build itself can say which build a
+ * browser runs. `BUILD_TIME` distinguishes two builds of the same version (deployments and
+ * rollbacks do not bump `package.json`). Both are replaced by vite.config.ts `define`; the
+ * `typeof` guard covers evaluation outside a Vite pipeline, where the identifier would throw.
  */
 export const APP_VERSION: string = typeof __APP_VERSION__ === 'string' ? __APP_VERSION__ : '0.0.0';
 
 export const BUILD_TIME: string = typeof __BUILD_TIME__ === 'string' ? __BUILD_TIME__ : '';
 
-/** `v1.1.0` — the compact form for the footer. */
 export const versionLabel = (): string => `v${APP_VERSION}`;
 
-/**
- * `v1.1.0 · 2026-07-28 14:32 UTC` — the form used where the build has to be identified
- * precisely (the status page). Kept in UTC on purpose: the person reading it is comparing
- * it against a server-side deployment time, not against their own clock.
- */
+/** Kept in UTC on purpose: the reader compares it against a server-side deployment time. */
 export const buildLabel = (): string => {
   if (!BUILD_TIME) return versionLabel();
   const stamp = new Date(BUILD_TIME);

@@ -73,18 +73,14 @@ const emptyDraft = (): DraftState => ({
   active: true,
 });
 
-/**
- * `datetime-local` value ⇄ UTC ISO. Empty string means "unscheduled" (null).
- * Both directions come from `utils/dateUtils` so this dialog and the trip manager cannot drift apart.
- */
+/** Empty string means "unscheduled" (null). */
 const toIsoOrNull = (value: string): string | null => fromDateTimeLocalInput(value);
 
 const toLocalInput = (value: string | null | undefined): string => toDateTimeLocalInput(value);
 
 /**
- * Administrator-only announcement CRUD. Rendered only when the current principal
- * is an Administrator; the backend enforces the same restriction through the
- * `Administrative` resource, so hiding this is UX, not the security boundary.
+ * Administrator-only; the backend enforces the same restriction through the `Administrative`
+ * resource, so hiding this is UX, not the security boundary.
  */
 const AnnouncementManagerDialog = ({ open, setOpen, announcements }: AnnouncementManagerDialogProps) => {
   const { t } = useTranslation();

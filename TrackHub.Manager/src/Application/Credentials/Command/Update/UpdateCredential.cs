@@ -32,10 +32,8 @@ public class UpdateCredentialCommandHandler(ICredentialWriter writer, IConfigura
         var key = configuration["AppSettings:EncryptionKey"];
         Guard.Against.Null(key, message: "Credential key not found.");
 
-        // Generate a salt for encryption
         var salt = CryptographyExtensions.GenerateAesKey(256);
 
-        // Update the credential using the writer
         await writer.UpdateCredentialAsync(request.Credential, salt, key, cancellationToken);
     }
 }

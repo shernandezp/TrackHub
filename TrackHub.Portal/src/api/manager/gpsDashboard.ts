@@ -14,12 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * GPS-integration dashboard API (Manager backend): plain typed async function.
- * Failures THROW ApiError — fallbacks and toasts belong to the caller layer
- * (src/queries).
- */
-
 import { executeGraphQL } from 'api/core/graphqlClient';
 import type { RequestOptions } from 'api/core/errors';
 import type { GetGpsIntegrationDashboardQuery } from './generated/graphql';

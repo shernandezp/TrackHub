@@ -19,7 +19,7 @@ namespace TrackHub.TripManagement.Infrastructure.TripDB.Writers;
 
 /// <summary>
 /// The account-scoped half of toll configuration. Account-scoped precisely because fleet
-/// composition is tenant data, unlike the catalog itself (spec 11 section 5).
+/// composition is tenant data, unlike the catalog itself.
 /// </summary>
 public sealed class TransporterTollClassStore(IApplicationDbContext context) : ITransporterTollClassStore
 {

@@ -27,9 +27,6 @@ public class CreateResourceActionRoleCommandHandler(IResourceActionRoleWriter wr
 {
     private Guid UserId { get; } = Guid.TryParse(user.Id, out var userId) ? userId : throw new UnauthorizedAccessException();
 
-    // This method handles the CreateResourceActionRoleCommand by calling the writer's CreateResourceActionRoleAsync method.
-    // It returns a ResourceActionRoleVm object.
-    // It throws an UnauthorizedAccessException if the user is not an admin.
     public async Task<ResourceActionRoleVm> Handle(CreateResourceActionRoleCommand request, CancellationToken cancellationToken)
     {
         var isAdmin = await userReader.IsAdminAsync(UserId, cancellationToken);

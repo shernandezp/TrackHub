@@ -20,18 +20,11 @@ using TrackHub.Manager.Domain.Interfaces;
 namespace TrackHub.Manager.Web.Endpoints;
 
 /// <summary>
-/// Anonymous public-link resolution. The HTTP contract is fixed: same route, same query parameters,
-/// same 400/404/410/200 semantics and the same JSON body shape.
+/// Anonymous public-link resolution; the route, parameters, status codes and JSON body are a fixed contract.
 /// <para>
-/// This endpoint calls <see cref="IPublicLinkGrantResolver"/> DIRECTLY rather than sending
-/// <c>ResolvePublicLinkGrantCommand</c> through the mediator. That is the point of extracting the
-/// logic behind an interface instead of behind the command alone: the request is anonymous, so there
-/// is no principal for <c>AuthorizationBehavior</c> (or <c>AccountStatusBehavior</c>) to evaluate.
-/// Routing it through the pipeline would mean either widening the command's <c>PrincipalTypes</c> to
-/// admit unauthenticated callers — which would also expose it to real unauthenticated GraphQL
-/// traffic — or bolting a bypass onto the pipeline itself. Calling the shared service keeps the
-/// anonymity local to this one endpoint while still guaranteeing one implementation of hashing,
-/// scope checking, access counting and the `PublicLinkAccessed` audit event.
+/// Calls <see cref="IPublicLinkGrantResolver"/> directly rather than through the mediator: there is no
+/// principal for the pipeline's authorization behaviors, and admitting unauthenticated callers to the
+/// command would also expose it to unauthenticated GraphQL traffic.
 /// </para>
 /// </summary>
 public sealed class PublicLinks : EndpointGroupBase
@@ -74,7 +67,7 @@ public sealed class PublicLinks : EndpointGroupBase
             return Results.NotFound();
         }
 
-        // Body shape is the pre-existing contract; the grant's Token is never included here.
+        // The grant's Token is never included here.
         return Results.Ok(new
         {
             grant.PublicLinkGrantId,

@@ -27,12 +27,12 @@ namespace Infrastructure.UnitTests;
 /// Two writes to the SAME row inside ONE request, which is what every automatic path in this module
 /// actually is.
 /// <para>
-/// The context is registered <c>NoTracking</c>, so each writer call used to re-query its row, get a
-/// second instance of it, and <c>Attach</c> that — which throws once the change tracker already
-/// holds the row. Nothing caught it: the writer fixtures ran under <c>TrackAll</c>, where the query
+/// The context is registered <c>NoTracking</c>, so a writer that re-queries its row gets a
+/// second instance of it, and <c>Attach</c>ing that throws once the change tracker already
+/// holds the row. The writer fixtures run under <c>TrackAll</c>, where the query
 /// returns the tracked instance and the attach is a no-op, and the detection fixtures mock the
-/// writers outright. In production the whole zero-touch lifecycle failed on its second write, and
-/// Router's best-effort try/catch swallowed it, so it presented as "automation does nothing".
+/// writers outright, so only this fixture sees it. Router's best-effort try/catch would swallow
+/// it in production, presenting as "automation does nothing".
 /// </para>
 /// <para>
 /// Every case below is a real call sequence, named for the pipeline step that produces it. They are
@@ -270,24 +270,18 @@ public class MultiWriteRequestTests
             Assert.That(trip.Status, Is.EqualTo(TripStatuses.InProgress));
             Assert.That(trip.OriginDepartedAt, Is.EqualTo(Fix));
 
-            // No recorded arrival, so loading stays unmeasured rather than invented (§5.4).
+            // No recorded arrival, so loading stays unmeasured rather than invented.
             Assert.That(trip.OriginArrivedAt, Is.Null);
             Assert.That(trip.ActualStartAt, Is.EqualTo(Fix));
         });
     }
 
     /// <summary>
-    /// A start rejected because the unit is already running something else must leave the route's
-    /// arrival geometry untouched too — the transition snapshots it BEFORE it saves, so the rejected
-    /// attempt otherwise leaves every stop Modified in a request-scoped tracker and the next save in
-    /// the batch arms the stops of a trip that never started.
-    /// </summary>
-    /// <summary>
     /// A rejected transition must undo ITSELF and nothing else — the two halves of the same claim.
     /// <para>
     /// The trip row is shared: the unit of work has this fix's odometer buffered on it while the
-    /// transition is trying to start the trip. Undoing a losing start by DETACHING that row, which is
-    /// what the writer used to do, silently discarded a measurement that had nothing to do with the
+    /// transition is trying to start the trip. Undoing a losing start by DETACHING that row would
+    /// silently discard a measurement that had nothing to do with the
     /// start. Undoing too little is just as bad in the other direction: a start that never happened
     /// must not leave the route armed or the status moved.
     /// </para>

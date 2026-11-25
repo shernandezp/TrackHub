@@ -14,16 +14,11 @@
 *  limitations under the License.
 */
 
-/**
-* Formats an ISO 8601 duration string (e.g., "PT2H30M15S") into a human-readable format.
-* Returns the formatted duration string (e.g., "2 hr 30 min 15 s") or an empty string if the input is invalid.
-*/
 export function formatISODuration(value: string): string {
     // Router serialises a TimeSpan the .NET way: a trip of a day or more reads `P1DT2H`, and the
-    // seconds may carry a fraction (`PT5M3.25S`). Anchoring on the literal `PT` blanked every
-    // multi-day duration, so the day component and the fraction are parsed too.
+    // seconds may carry a fraction (`PT5M3.25S`), so both are parsed.
     const match = (value || '').match(/^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?)?$/);
-    if (!match || match[0] === 'P' || match[0] === 'PT') return ""; // Return empty if format is invalid
+    if (!match || match[0] === 'P' || match[0] === 'PT') return "";
 
     const parts: string[] = [];
     if (match[1]) parts.push(`${match[1]} d`);
@@ -34,10 +29,6 @@ export function formatISODuration(value: string): string {
     return parts.join(" ");
 }
 
-/**
-* Formats a timestamp into a time string in the format "HH:MM:SS".
-* The value can be a number (milliseconds since epoch), a string, or a Date object.
-*/
 export function formatTime(value: number | string | Date): string {
     const date = new Date(value);
     return `${(date.getHours()).toString().padStart(2, '0')}:${(date.getMinutes()).toString().padStart(2, '0')}:${(date.getSeconds()).toString().padStart(2, '0')}`;

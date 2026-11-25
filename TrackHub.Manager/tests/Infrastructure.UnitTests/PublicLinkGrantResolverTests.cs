@@ -23,10 +23,9 @@ using TrackHub.Manager.Infrastructure.ManagerDB.Writers;
 namespace Infrastructure.UnitTests;
 
 /// <summary>
-/// The single public-link resolution path (spec 11 §7.8/§18.10). These tests pin the discriminated
-/// outcomes AND the side effects that used to be duplicated across the REST endpoint and the removed
-/// <c>RecordPublicLinkAccess</c> writer method: the access count moves exactly once, and exactly one
-/// <c>PublicLinkAccessed</c> audit row is written per successful resolution.
+/// The single public-link resolution path. These tests pin the discriminated outcomes AND the side
+/// effects: the access count moves exactly once, and exactly one <c>PublicLinkAccessed</c> audit row
+/// is written per successful resolution.
 /// </summary>
 [TestFixture]
 public class PublicLinkGrantResolverTests
@@ -82,7 +81,7 @@ public class PublicLinkGrantResolverTests
         {
             Assert.That(stored.AccessCount, Is.EqualTo(1), "access must be counted exactly once per resolution");
             Assert.That(stored.LastAccessedAt, Is.Not.Null);
-            // The whole point of the extraction: one place counts, one place audits.
+            // One place counts, one place audits.
             Assert.That(AccessAuditCount(context), Is.EqualTo(1), "exactly one PublicLinkAccessed audit row per successful resolution");
         });
 

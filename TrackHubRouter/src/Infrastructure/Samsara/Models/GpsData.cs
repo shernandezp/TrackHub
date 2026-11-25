@@ -18,9 +18,6 @@ using Common.Domain.Json;
 
 namespace TrackHub.Router.Infrastructure.Samsara.Models;
 
-/// <summary>
-/// Samsara GPS data model
-/// </summary>
 internal readonly record struct GpsData(
     // Samsara sends RFC 3339 timestamps with an explicit offset ("Z"); honour it and normalize to UTC.
     [property: JsonConverter(typeof(UtcDateTimeOffsetJsonConverter))] DateTimeOffset Time,
@@ -32,9 +29,6 @@ internal readonly record struct GpsData(
     ReverseGeo? ReverseGeo
 );
 
-/// <summary>
-/// Reverse geocoding data
-/// </summary>
 internal readonly record struct ReverseGeo(
     string FormattedLocation
 );

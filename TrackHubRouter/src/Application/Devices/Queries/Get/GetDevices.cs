@@ -99,8 +99,7 @@ public class GetDevicesQueryHandler(
     {
         Guard.Against.Null(EncryptionKey, message: "Credential key not found.");
         // Several operators may share the same protocol (two providers of the same brand); each is
-        // queried in turn with its own credential and catalog. Previously only the first operator of
-        // the protocol was read, so the others' devices never reached the caller.
+        // queried in turn with its own credential and catalog.
         var allDevices = new List<DeviceVm>();
         foreach (var @operator in operators.Where(o => (ProtocolType)o.ProtocolTypeId == reader.Protocol))
         {

@@ -19,13 +19,8 @@ namespace TrackHub.Security.Application.Policies.GetResources;
 [PlatformScoped("Seeded RBAC catalog: roles, policies and their resource/action grants are platform definitions, Administrator-only to change.")]
 public readonly record struct GetResourcesByPolicyQuery(int PolicyId) : IRequest<PolicyResourceVm>;
 
-// The GetResourcesByPolicyQueryHandler class is responsible for handling the GetResourcesByPolicyQuery query.
-// It implements the IRequestHandler interface from the MediatR library.
 public class GetResourcesByPolicyQueryHandler(IPolicyReader reader) : IRequestHandler<GetResourcesByPolicyQuery, PolicyResourceVm>
 {
-
-    // The Handle method is called when the GetResourcesByPolicyQuery query is sent.
-    // It returns a PolicyResourceVm object with all the resources for a given policy and their respective actions.
     public async Task<PolicyResourceVm> Handle(GetResourcesByPolicyQuery request, CancellationToken cancellationToken)
         => await reader.GetResourcesAsync(request.PolicyId, cancellationToken);
 

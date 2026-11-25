@@ -15,7 +15,7 @@
 
 namespace TrackHub.Reporting.Domain.Models;
 
-// Intermediate projections deserialized from TripManagement GraphQL for the spec 11 §13 reports,
+// Intermediate projections deserialized from TripManagement GraphQL for the trip reports,
 // plus the page envelopes the paged feeds return. Names are denormalized producer-side (transporter,
 // staff, customer) because a report row is read by a human, not joined by a client.
 //
@@ -31,7 +31,7 @@ public readonly record struct ReportTripVm(
     DateTimeOffset PlannedStartAt, DateTimeOffset? PlannedEndAt,
     DateTimeOffset? ActualStartAt, DateTimeOffset? ActualEndAt,
 
-    // The measured origin visit and the three durations derived from it (spec 11a §13). Each is
+    // The measured origin visit and the three durations derived from it. Each is
     // null when the measurement behind it was never taken — a trip whose start was DECLARED has no
     // loading time, and reporting zero for it would invent a dock the truck never sat at.
     DateTimeOffset? OriginArrivedAt, DateTimeOffset? OriginDepartedAt,
@@ -49,7 +49,7 @@ public readonly record struct ReportTripStopVm(
     int DeliveryCount, int DeliveredCount, int FailedDeliveryCount, int PartialDeliveryCount);
 
 // One route-plan/station pair. `Amount` is null — never zero — when no tariff covers the trip's
-// vehicle class on the plan date; the row surfaces that as PartialNoTariff (spec 11 §7.7).
+// vehicle class on the plan date; the row surfaces that as PartialNoTariff.
 public readonly record struct ReportTripTollVm(
     Guid TripId, string TripCode, Guid? RoutePlanId, DateTimeOffset PlannedStartAt,
     string? TollVehicleClass,
@@ -64,12 +64,9 @@ public readonly record struct ReportTripPodVm(
     DateTimeOffset CapturedAt, double? Latitude, double? Longitude,
     int DocumentCount);
 
-// ---- Page envelopes ----
-//
 // NextSkip/HasMore are the producer's cursor and MUST be what the drain loop follows. TotalCount
 // is kept for reporting only: the toll feed counts and pages ROUTE PLANS while returning one row
-// per matched station, so comparing a collected row count against it ended the drain after one
-// page and silently truncated trip-toll-cost.
+// per matched station, so a collected row count cannot be compared against it.
 
 public readonly record struct TripReportDataPageVm(IEnumerable<ReportTripVm> Items, int TotalCount, int NextSkip, bool HasMore);
 

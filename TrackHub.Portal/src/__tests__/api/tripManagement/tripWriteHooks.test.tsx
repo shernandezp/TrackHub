@@ -15,10 +15,8 @@
  */
 
 /**
- * The spec 11 §7.3 write hooks own cache invalidation. A POD or a delivery
- * outcome also changes the stop's deliveries and the trip timeline, so the
- * whole trip namespace has to go stale — otherwise the detail a dispatcher is
- * looking at silently keeps showing the pre-write state.
+ * A POD or a delivery outcome also changes the stop's deliveries and the trip timeline, so the
+ * whole trip namespace has to go stale.
  */
 
 import type { ReactNode } from 'react';

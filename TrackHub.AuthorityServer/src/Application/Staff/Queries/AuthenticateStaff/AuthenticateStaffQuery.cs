@@ -60,8 +60,8 @@ public sealed class AuthenticateStaffQueryHandler(IStaffCredentialReader reader,
 
         if (!credential.PasswordHash.VerifyHashedPassword(request.Password))
         {
-            // An expired lock resets the counter: it used to survive, so after the first lockout a
-            // single wrong password re-locked the credential for another window, indefinitely.
+            // An expired lock resets the counter; otherwise, after the first lockout, a single wrong
+            // password would re-lock the credential for another window, indefinitely.
             var failedAttempts = (lockExpired ? 0 : credential.FailedAttempts) + 1;
             DateTimeOffset? lockedUntil = failedAttempts >= MaximumFailedAttempts ? now.Add(LockoutDuration) : null;
             await writer.RecordStaffCredentialLoginFailureAsync(credential.StaffCredentialId, failedAttempts, lockedUntil, cancellationToken);

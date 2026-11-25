@@ -20,7 +20,7 @@ using TrackHub.AuthorityServer.Infrastructure.Readers;
 namespace TrackHub.AuthorityServer.Infrastructure.UnitTests;
 
 // The account claim on a client-credentials token is derived from the client's effective grants on
-// the pre-existing security.service_client_permissions table (read-only bounded-context mapping).
+// the security.service_client_permissions table (read-only bounded-context mapping).
 [TestFixture]
 public class ServiceClientPermissionReaderTests
 {

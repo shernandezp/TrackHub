@@ -23,11 +23,7 @@ export interface PlaybackMarkerProps {
   position?: PlaybackPosition | null;
 }
 
-/**
- * Provider-agnostic playback marker. Positioned imperatively (no React
- * re-mount per tick) while a trip playback animation is running.
- * `position` is `{ lat, lng, course? }`.
- */
+/** Positioned imperatively (no React re-mount per tick) while playback runs. */
 const PlaybackMarker = ({ position }: PlaybackMarkerProps) => {
   const { provider } = useMapProvider();
   if (!position) return null;

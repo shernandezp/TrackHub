@@ -23,13 +23,11 @@ public sealed class GeocodingProviderConfiguration : IEntityTypeConfiguration<Ge
 {
     public void Configure(EntityTypeBuilder<GeocodingProvider> builder)
     {
-        //Table name
         builder.ToTable(
             name: TableMetadata.GeocodingProvider,
             schema: SchemaMetadata.Map,
             t => t.HasCheckConstraint("ck_geocoding_providers_type", EnumColumn.Check<GeocodingProviderType>("type")));
 
-        //Column names
         builder.Property(x => x.GeocodingProviderId).HasColumnName("id");
         builder.Property(x => x.Name).HasColumnName("name");
         builder.Property(x => x.Type).HasColumnName("type")

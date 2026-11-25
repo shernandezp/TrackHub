@@ -26,19 +26,15 @@ public class UpdatePasswordCommandHandler(IUserWriter writer, IUserReader reader
 {
     private Guid UserId { get; } = Guid.TryParse(user.Id, out var userId) ? userId : throw new UnauthorizedAccessException();
 
-    // Handle the UpdateUserCommand
-    // Update the user password if the user is the same user or the requesting user ia a manager
     public async Task Handle(UpdatePasswordCommand request, CancellationToken cancellationToken)
     {
         var isManager = false;
         if (request.User.UserId != UserId)
         {
-            // Check if the requesting user is a manager of the user to update
             isManager = await reader.IsManagerAsync(request.User.UserId, UserId, cancellationToken);
         }
         if (request.User.UserId == UserId || isManager)
         {
-            // Update the user asynchronously
             await writer.UpdatePasswordAsync(request.User, verifyCurrentPassword: !isManager, cancellationToken);
 
             await publisher.Publish(SecurityAudit.Event(principal, "UserPasswordChanged", "User", request.User.UserId.ToString(), principal.AccountId), cancellationToken);

@@ -23,7 +23,6 @@ public class GeofenceConfiguration : IEntityTypeConfiguration<Geofence>
     public void Configure(EntityTypeBuilder<Geofence> builder)
     {
         builder.Property(x => x.Version).HasColumnName("editversion").HasConversion<long>().IsConcurrencyToken();
-        //Table name
         builder.ToTable(
             name: TableMetadata.Geofence,
             schema: SchemaMetadata.Geofencing,
@@ -31,7 +30,6 @@ public class GeofenceConfiguration : IEntityTypeConfiguration<Geofence>
                 "ck_geofences_type",
                 EnumColumn.Check<GeofenceType>("type")));
 
-        //Column names
         builder.Property(x => x.GeofenceId).HasColumnName("id");
         builder.Property(x => x.AccountId).HasColumnName("accountid");
         builder.Property(e => e.Geom)

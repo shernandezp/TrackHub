@@ -20,7 +20,7 @@ using TrackHub.Reporting.Domain.Records;
 
 namespace TrackHub.Reporting.Application.Report.Factory.Workforce;
 
-// Staff↔transporter assignment history (spec 09 §13). Time-bounded assignment rows, most recent
+// Staff↔transporter assignment history. Time-bounded assignment rows, most recent
 // first. Filters: from/to = window, transporterId = optional unit (unparseable values are
 // ignored). Excel only.
 //

@@ -17,9 +17,6 @@ using TrackHub.Geofencing.Domain.Records;
 
 namespace TrackHub.Geofencing.Domain.Interfaces;
 
-/// <summary>
-/// Interface for writing geofence event data.
-/// </summary>
 public interface IGeofenceEventWriter
 {
     /// <summary>
@@ -31,9 +28,6 @@ public interface IGeofenceEventWriter
         GeofenceEventDto geofenceEvent,
         CancellationToken cancellationToken);
 
-    /// <summary>
-    /// Updates an event with departure information when a transporter exits a geofence.
-    /// </summary>
     /// <summary>Records the first instant this visit was observed outside the geofence.</summary>
     Task SetOutsideSinceAsync(Guid geofenceEventId, DateTimeOffset? outsideSinceAt, CancellationToken cancellationToken);
 

@@ -20,12 +20,8 @@ using Common.Domain.Http;
 namespace Common.Infrastructure.Http;
 
 /// <summary>
-/// Egress control for clients that dial a URL supplied by a tenant.
-/// <para>
-/// Validating the host when the URL is stored is not sufficient on its own: the name is resolved
-/// again when the request is dialled, so a host whose A record changes afterwards still reaches an
-/// internal address. This callback is the control a later DNS change cannot evade.
-/// </para>
+/// Egress control for clients that dial a tenant-supplied URL. The name is resolved again at dial time,
+/// so this callback catches a host whose DNS record changes after the URL was validated.
 /// </summary>
 public static class NonRoutableAddressGuard
 {

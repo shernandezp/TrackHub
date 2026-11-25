@@ -14,12 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Staff GraphQL documents (Manager backend). Codegen validates these against
- * schemas/manager.graphql and emits typed document nodes — values always travel
- * as variables, never string interpolation.
- */
-
 import { graphql } from './generated';
 
 export const StaffItemFragment = graphql(`
@@ -109,10 +103,8 @@ export const StaffTransporterAssignmentItemFragment = graphql(`
 `);
 
 /**
- * The authoritative "is this assignment active right now" projection (spec 09
- * §7.2): real active rows plus the synthesized default-transporter entry. It is
- * unpaged and time-aware (StartsAt <= now < EndsAt), which the paged history
- * query is not — `resourceId` carries the transporter id.
+ * Real active rows plus the synthesized default-transporter entry, unpaged and time-aware
+ * (StartsAt <= now < EndsAt). `resourceId` carries the transporter id.
  */
 export const StaffActiveAssignmentItemFragment = graphql(`
   fragment StaffActiveAssignmentItem on StaffAssignmentVm {

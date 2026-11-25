@@ -15,11 +15,8 @@
 */
 
 /**
- * Router query keys. The router reads are imperative (live-map polling and a
- * search-button trip lookup), so consumers drive them with
- * `queryClient.fetchQuery` rather than mount hooks — these keys keep those
- * cache entries consistent. Silent ops (pingOperator, reverseGeocode) are
- * called directly and intentionally have no cache entry.
+ * The router reads are imperative (live-map polling, a search-button trip lookup), so consumers use
+ * `queryClient.fetchQuery` with these keys. Silent ops are called directly and have no cache entry.
  */
 
 import { useQuery } from '@tanstack/react-query';
@@ -35,11 +32,7 @@ export const routerKeys = {
   providerCapabilities: () => [...routerKeys.all, 'providerCapabilities'] as const,
 };
 
-/**
- * The deployment's provider capability matrix (and provider list). Static per
- * deployment — the Router builds it at startup from its registered provider
- * assemblies — so it never goes stale within a session.
- */
+/** Static per deployment (built at Router startup), so it never goes stale within a session. */
 export function useProviderCapabilities(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: routerKeys.providerCapabilities(),

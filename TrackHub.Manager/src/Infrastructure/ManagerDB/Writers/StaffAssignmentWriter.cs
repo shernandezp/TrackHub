@@ -60,7 +60,7 @@ public sealed class StaffAssignmentWriter(IApplicationDbContext context, ICurren
 
         RequireRowAccess(entity.AccountId, nameof(StaffTransporterAssignment), staffTransporterAssignmentId.ToString(), forWrite: true);
 
-        // Ended assignments are immutable (spec 09 §7.1) — a correction is a new assignment, not an edit.
+        // Ended assignments are immutable — a correction is a new assignment, not an edit.
         if (entity.Status != StaffAssignmentStatuses.Active || entity.EndsAt <= DateTimeOffset.UtcNow)
         {
             throw new ConflictException($"Assignment {staffTransporterAssignmentId} has already ended and cannot be modified.");
@@ -74,10 +74,9 @@ public sealed class StaffAssignmentWriter(IApplicationDbContext context, ICurren
 
         var oldValues = AuditValues(entity);
         entity.EndsAt = effectiveEnd;
-        // A FUTURE end date schedules the close; it must not retire the assignment today. §6 defines an
-        // active assignment as "EndsAt null / future", and every active-assignment read already filters
-        // on `EndsAt > now` — so leaving Status Active keeps the staff's access alive until the date
-        // actually passes. Flipping it immediately would revoke transporter and document access early.
+        // A FUTURE end date schedules the close; it must not retire the assignment today. Every
+        // active-assignment read filters on `EndsAt > now`, so leaving Status Active keeps the staff's
+        // access alive until the date actually passes.
         if (effectiveEnd <= DateTimeOffset.UtcNow)
         {
             entity.Status = StaffAssignmentStatuses.Ended;
@@ -88,14 +87,13 @@ public sealed class StaffAssignmentWriter(IApplicationDbContext context, ICurren
     }
 
     /// <summary>
-    /// No two assignments for the same (staff, transporter) pair may overlap in time (spec 09 §6).
+    /// No two assignments for the same (staff, transporter) pair may overlap in time.
     /// <para>
     /// A new assignment is always open-ended, so it occupies <c>[startsAt, ∞)</c> and overlaps an
     /// existing <c>[StartsAt, EndsAt ?? ∞)</c> exactly when that one has not already finished by
     /// <paramref name="startsAt"/>. The comparison is against <paramref name="startsAt"/> and NOT
     /// against "now": a BACKDATED assignment must still be rejected when it reaches back into a
-    /// period the pair was already covered for. Assignment history is the join key future
-    /// hour-producing modules will aggregate against (§18.7), so an overlap here would double-count.
+    /// period the pair was already covered for.
     /// </para>
     /// <para>
     /// Cancelled assignments never happened and therefore never block; Ended ones did happen and do.
@@ -116,7 +114,7 @@ public sealed class StaffAssignmentWriter(IApplicationDbContext context, ICurren
     }
 
     /// <summary>
-    /// Per-account opt-in (spec 09 §18.6): only when the account's <c>workforce</c> feature row carries
+    /// Per-account opt-in: only when the account's <c>workforce</c> feature row carries
     /// <c>blockAssignmentOnExpiredLicense: true</c> does an expired License qualification block the
     /// assignment. Accounts that never set it are unaffected.
     /// </summary>
@@ -141,7 +139,7 @@ public sealed class StaffAssignmentWriter(IApplicationDbContext context, ICurren
             return;
         }
 
-        // Superseded licences are kept deliberately (§6 is a history model), so the question is whether
+        // Superseded licences are kept deliberately (history model), so the question is whether
         // a VALID one exists — not whether an expired one does. Asking the latter would permanently
         // block any staff who has ever renewed a licence.
         var hasValidLicense = await licenses.AnyAsync(x =>

@@ -36,11 +36,6 @@ public class GeofenceReader(IGraphQLClientFactory graphQLClient)
                     }
                 }";
 
-    /// <summary>
-    /// Retrieves the device positions asynchronously
-    /// </summary>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     public async Task<IEnumerable<TransporterInGeofenceVm>> GetTransportersInGeofenceAsync(CancellationToken cancellationToken)
     {
         var request = new GraphQLRequest

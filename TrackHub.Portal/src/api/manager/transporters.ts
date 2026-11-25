@@ -14,12 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Transporter API (Manager backend): plain typed async functions. Failures
- * THROW ApiError — fallbacks and toasts belong to the caller layer
- * (src/queries handles both for components).
- */
-
 import { executeGraphQL } from 'api/core/graphqlClient';
 import type { RequestOptions } from 'api/core/errors';
 import { fetchAllPages } from 'api/core/paging';
@@ -76,7 +70,6 @@ export async function getTransportersByAccount(
   return data.transportersByAccount;
 }
 
-/** One server page of the transporters the signed-in user may track. */
 export async function getTransportersByUser(params: ListParams = {}, options?: RequestOptions): Promise<TransportersPage> {
   const data = await executeGraphQL('manager', GetTransportersByUserDocument, {
     skip: params.skip ?? null,
@@ -114,7 +107,7 @@ export async function getTransportersByGroup(
   return data.transportersByGroup;
 }
 
-/** The transporters the signed-in user may track, as id + name. Unpaged by design. */
+/** Unpaged by design. */
 export async function getTransporterLookupByUser(options?: RequestOptions): Promise<TransporterLookup[]> {
   const data = await executeGraphQL('manager', GetTransporterLookupByUserDocument, undefined, options);
   return data.transporterLookupByUser;

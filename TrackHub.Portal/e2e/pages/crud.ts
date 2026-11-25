@@ -1,11 +1,3 @@
-/**
- * The create/edit/delete shape almost every administrative section shares.
- *
- * The screens differ only in which fields a dialog carries, so the steps live
- * here and each test states its own requirement: what it creates, what it
- * changes, and what must still be true after a reload.
- */
-
 import { expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { Section } from './tableAccordion';
@@ -14,9 +6,7 @@ import type { Translator } from '../fixtures/i18n';
 import type { Shell, NavKey } from './shell';
 
 export interface DialogValues {
-  /** Plain fields, keyed by the `id` the control renders. */
   fields?: Record<string, string>;
-  /** `CustomSelect` choices, keyed by field id, valued by visible option label. */
   selects?: Record<string, string | RegExp>;
   /** Pickers whose options are data: take whatever the first real choice is. */
   selectFirst?: string[];
@@ -53,7 +43,6 @@ export class CrudFlow {
     }
   }
 
-  /** Opens Add, refuses an empty save, then fills and saves. Returns the row. */
   async create(values: DialogValues, rowText: string, requiredField?: string) {
     await this.section.clickAdd();
     await this.form.waitOpen();
@@ -70,7 +59,6 @@ export class CrudFlow {
     return this.section.findRow(rowText);
   }
 
-  /** Opens the row's Edit, applies the changes and saves. */
   async edit(rowText: string, values: DialogValues): Promise<void> {
     await this.section.rowAction(rowText, this.t('generic.edit'));
     await this.form.waitOpen();
@@ -78,7 +66,6 @@ export class CrudFlow {
     await this.form.saveAndClose();
   }
 
-  /** Re-opens the row's dialog and asserts the stored values. */
   async assertStored(rowText: string, values: DialogValues): Promise<void> {
     await this.section.rowAction(rowText, this.t('generic.edit'));
     await this.form.waitOpen();
@@ -92,9 +79,8 @@ export class CrudFlow {
   }
 
   /**
-   * The row's delete affordance. Most screens label it "Delete"; a few render an
-   * icon-only button with no accessible name, and there the last action button
-   * in the row is the destructive one.
+   * A few screens render an icon-only delete with no accessible name; there the
+   * last action button in the row is the destructive one.
    */
   private deleteButton(row: import('@playwright/test').Locator) {
     const labelled = row.getByRole('button', { name: this.t('generic.delete') });
@@ -117,7 +103,6 @@ export class CrudFlow {
     await expect(this.confirm.root).toBeVisible();
   }
 
-  /** Deletes the row through its confirm dialog and waits for it to disappear. */
   async remove(rowText: string): Promise<void> {
     const row = await this.section.findRow(rowText);
     await this.clickDelete(row);
@@ -125,7 +110,6 @@ export class CrudFlow {
     await expect(this.section.row(rowText)).toHaveCount(0, { timeout: 45_000 });
   }
 
-  /** Deletes the row if it is still there — for a cleanup step. */
   async removeIfPresent(rowText: string): Promise<void> {
     if (!(await this.section.isExpanded().catch(() => false))) {
       await this.section.expand().catch(() => null);
@@ -139,7 +123,6 @@ export class CrudFlow {
     await this.confirm.confirm();
   }
 
-  /** Reloads the screen and returns to this section, expanded. */
   async reload(shell: Shell, screen: NavKey): Promise<Section> {
     await shell.reloadTo(screen);
     return this.section.expand();

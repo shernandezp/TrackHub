@@ -18,8 +18,8 @@ namespace TrackHub.TripManagement.Domain.Interfaces;
 /// <summary>
 /// The detection working set. Unlike Geofencing — which must consider an account's whole zone
 /// catalog — trip detection looks at a small, bounded set: the account's <c>InProgress</c> trips
-/// plus at most one armable <c>Created</c> trip per transporter (spec 11a §6.1). That is what makes
-/// arrival belong here rather than to the general-purpose zone engine (spec 11 §18.4).
+/// plus at most one armable <c>Created</c> trip per transporter. That is what makes
+/// arrival belong here rather than to the general-purpose zone engine.
 /// </summary>
 public interface ITripDetectionReader
 {
@@ -40,10 +40,9 @@ public interface ITripDetectionReader
     /// True inside the plan's corridor polygon, false outside — and <b>null when the question
     /// cannot be answered</b>, because the plan row is gone or carries no <c>CorridorGeom</c>.
     /// <para>
-    /// The three-way result is deliberate. Collapsing "unevaluable" into false made a missing
-    /// corridor indistinguishable from a vehicle off route, so three fixes on a plan with no
-    /// corridor raised a <c>TripRouteDeviation</c> that re-entry could never clear (spec 11 §7.4,
-    /// acceptance 14). Callers must skip deviation detection on null rather than counting it.
+    /// The three-way result is deliberate: collapsing "unevaluable" into false would make a missing
+    /// corridor indistinguishable from a vehicle off route and raise a <c>TripRouteDeviation</c> that
+    /// re-entry could never clear. Callers must skip deviation detection on null rather than counting it.
     /// </para>
     /// </summary>
     Task<bool?> IsInsideCorridorAsync(Guid accountId, Guid routePlanId, double latitude, double longitude, CancellationToken cancellationToken);
@@ -52,11 +51,9 @@ public interface ITripDetectionReader
     /// In-progress trips due an ETA refresh, with the next pending stop resolved.
     /// <para>
     /// <b>Trips with a stale or absent position are returned too</b>, flagged by
-    /// <see cref="EtaCandidateVm.HasFreshPosition"/>. Filtering them out here was a real defect:
-    /// the fallback to <c>Planned</c>/<c>Unavailable</c> lives in the ETA service, so a tracker
-    /// going dark left the stop's last ORS-derived <c>EtaAt</c> in place with
-    /// <c>EtaSource = Ors</c> — the UI then presented a hours-old guess as a live estimate, which
-    /// is exactly the dishonesty the source field exists to prevent (spec 11 §10, §18.11).
+    /// <see cref="EtaCandidateVm.HasFreshPosition"/>, because the fallback to <c>Planned</c>/<c>Unavailable</c>
+    /// lives in the ETA service; filtering them out would leave a dark tracker's last ORS-derived
+    /// <c>EtaAt</c> presented as a live estimate.
     /// Staleness is derived from <paramref name="positionFreshnessCutoff"/>; no column stores it.
     /// </para>
     /// </summary>
@@ -65,19 +62,19 @@ public interface ITripDetectionReader
     /// <summary>
     /// <c>Created</c> trips whose planned start falls inside the account's lead window
     /// <c>[dueAfter, dueBefore]</c>. The lower bound is not optional: without it the first run
-    /// after a deployment reminds about every historical trip that was never started (spec 11 §10).
+    /// after a deployment reminds about every historical trip that was never started.
     /// </summary>
     Task<IReadOnlyCollection<TripVm>> GetTripsDueToStartAsync(Guid accountId, DateTimeOffset dueAfter, DateTimeOffset dueBefore, CancellationToken cancellationToken);
 }
 
 /// <summary>
-/// A watched trip plus its stops. "Watched" now spans two statuses — a <c>Created</c> trip that is
+/// A watched trip plus its stops. "Watched" spans two statuses — a <c>Created</c> trip that is
 /// armable and an <c>InProgress</c> one — so <see cref="Status"/> is carried and every automatic
 /// step is gated on it.
 /// </summary>
 /// <param name="HasOriginGeom">
 /// Whether the origin snapshot exists. Without it there is nothing to auto-start from — which is
-/// exactly how trips created before zero-touch stay inert (§14).
+/// exactly how trips created before zero-touch stay inert.
 /// </param>
 /// <param name="OriginOutsideSinceAt">The persisted origin exit-debounce clock; null while inside.</param>
 public readonly record struct OpenTripVm(
@@ -149,7 +146,7 @@ public readonly record struct CompletionStopVm(
 /// can tell "here is where the vehicle is" from "here is where it was two hours ago" instead of
 /// treating both as live evidence. <see cref="CurrentEtaAt"/>/<see cref="CurrentEtaSource"/> carry
 /// what is already persisted, so a cycle that would write the identical value can skip the write
-/// and stay a no-op — which is what keeps the job an on-work-only recorder (SVD-11).
+/// and stay a no-op — which is what keeps the job an on-work-only recorder.
 /// </para>
 /// </summary>
 public readonly record struct EtaCandidateVm(

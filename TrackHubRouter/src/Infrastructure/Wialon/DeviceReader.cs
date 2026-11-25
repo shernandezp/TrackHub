@@ -20,9 +20,6 @@ using TrackHub.Router.Domain.Extensions;
 
 namespace TrackHub.Router.Infrastructure.Wialon;
 
-/// <summary>
-/// Reader for retrieving device information from Wialon API.
-/// </summary>
 public sealed class DeviceReader(
     ICredentialHttpClientFactory httpClientFactory,
     IHttpClientService httpClientService,
@@ -32,9 +29,6 @@ public sealed class DeviceReader(
     // Wialon search flags
     private const int FlagBasicInfo = 1;       // Basic unit info (id, name)
 
-    /// <summary>
-    /// Retrieves a single device asynchronously based on the provided device DTO.
-    /// </summary>
     public async Task<DeviceVm> GetDeviceAsync(DeviceTransporterVm deviceDto, CancellationToken cancellationToken)
     {
         var parameters = new
@@ -49,9 +43,6 @@ public sealed class DeviceReader(
             : DeviceMapper.Instance.Map(result.Item.Value, deviceDto);
     }
 
-    /// <summary>
-    /// Retrieves multiple devices asynchronously based on the provided device DTOs.
-    /// </summary>
     public async Task<IEnumerable<DeviceVm>> GetDevicesAsync(IEnumerable<DeviceTransporterVm> devices, CancellationToken cancellationToken)
     {
         var parameters = new
@@ -79,9 +70,6 @@ public sealed class DeviceReader(
         return DeviceMapper.Instance.Map(result.Items, devicesDictionary);
     }
 
-    /// <summary>
-    /// Retrieves all devices asynchronously.
-    /// </summary>
     public async Task<IEnumerable<DeviceVm>> GetDevicesAsync(CancellationToken cancellationToken)
     {
         var parameters = new

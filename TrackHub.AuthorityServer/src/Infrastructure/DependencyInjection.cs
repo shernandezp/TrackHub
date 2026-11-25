@@ -42,8 +42,6 @@ public static class DependencyInjection
         services.AddScoped<IStaffCredentialReader, StaffCredentialReader>();
         services.AddScoped<IStaffCredentialWriter, StaffCredentialWriter>();
 
-        // Module discovery seam: registers any IServiceModule implementations shipped in
-        // this assembly (none in this repository).
         services.AddDiscoveredModules(typeof(SecurityDbContext).Assembly, configuration);
 
         return services;
