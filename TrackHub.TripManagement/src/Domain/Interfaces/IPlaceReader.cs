@@ -16,7 +16,7 @@
 namespace TrackHub.TripManagement.Domain.Interfaces;
 
 /// <summary>
-/// Resolves the account's named places for bulk planning (spec 11a §9.1).
+/// Resolves the account's named places for bulk planning.
 /// <para>
 /// A dispatcher planning a week in a spreadsheet types "Plant 3" — never a uuid, and pointedly never
 /// a coordinate. Geofences are tried first because a geofence has a real SHAPE, and a trip measured

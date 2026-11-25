@@ -1,8 +1,3 @@
-/**
- * Account Management → Documents & Sharing: the document library, the expiration
- * dashboard, document-type configuration and public links.
- */
-
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';

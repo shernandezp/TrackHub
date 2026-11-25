@@ -87,7 +87,6 @@ public class AccountBrandingWriterTests
         var documentId = Guid.NewGuid();
         var doc = new Document(accountId, AccountBrandingReader.BrandingDocumentOwnerType, accountId.ToString(),
             "User", "u", "local", "key", "image/png", 10, "hash", "internal", "Pending", null, "account", "clean");
-        // Force the generated DocumentId to the known value via reflection-free path: query by owner instead.
         await context.Documents.AddAsync(doc);
         await context.SaveChangesAsync(CancellationToken.None);
         var reader = new AccountBrandingReader(context, Principal(accountId));

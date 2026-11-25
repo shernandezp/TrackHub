@@ -11,7 +11,7 @@
 # recompilation, shipping OLD binaries. Likewise, a host node_modules/ would
 # clobber the container's fresh npm install. Keeping these out of the context
 # also lets Docker layer caching correctly detect real source changes, so
-# `--no-cache` is no longer needed.
+# `--no-cache` is not needed.
 # =============================================================================
 
 # .NET build artifacts

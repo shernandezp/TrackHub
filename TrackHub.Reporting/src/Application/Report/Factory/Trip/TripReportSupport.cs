@@ -17,7 +17,7 @@ using TrackHub.Reporting.Domain.Models;
 
 namespace TrackHub.Reporting.Application.Report.Factory.Trip;
 
-// Shared punctuality/dwell math for the six spec 11 §13 trip reports.
+// Shared punctuality/dwell math for the trip reports.
 internal static class TripReportSupport
 {
     public static string OrEmpty(this string? value) => value ?? string.Empty;

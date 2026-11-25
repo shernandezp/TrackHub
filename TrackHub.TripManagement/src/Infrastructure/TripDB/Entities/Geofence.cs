@@ -19,11 +19,11 @@ namespace TrackHub.TripManagement.Infrastructure.TripDB.Entities;
 
 // Read-only projection of the Geofencing-owned geofencing.geofences table, mapped with
 // ExcludeFromMigrations. The geometry is read exactly ONCE per trip - at ARMING, to snapshot the
-// origin zone and every stop's ArrivalGeom (spec 11a section 6.2). A geofence edited afterwards
+// origin zone and every stop's ArrivalGeom. A geofence edited afterwards
 // therefore cannot move a watched trip's detection geometry.
 //
 // Name and CircleCenter serve a second, separate purpose: bulk planning resolves places BY NAME
-// (spec 11a section 9.1), because a dispatcher building a week of trips in a spreadsheet types
+// because a dispatcher building a week of trips in a spreadsheet types
 // "Plant 3", not a uuid and never a coordinate.
 public sealed class Geofence
 {

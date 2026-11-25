@@ -23,11 +23,9 @@ using TrackHub.Router.Domain.Interfaces.Operator;
 namespace TrackHub.Router.Infrastructure.Common.Helpers;
 
 // Registers each provider's reader/tester types KEYED by their ProtocolType, so the registries
-// resolve exactly one implementation per protocol from the caller's own scope — no O(N)
-// resolve-all-and-filter, no disposed-scope hand-off (router-audit A-07). All providers register
-// through one uniform path (the fake-async adapters were removed — provider Init is a real Task,
-// router-audit A-18). Each provider assembly is self-describing: its ProviderDescriptor declares
-// protocol, display name and capabilities, so adding a provider touches no central registry here.
+// resolve exactly one implementation per protocol from the caller's own scope. Each provider
+// assembly is self-describing: its ProviderDescriptor declares protocol, display name and
+// capabilities, so adding a provider touches no central registry here.
 public static class ProtocolRegistrationExtensions
 {
     public static IProviderDescriptor RegisterProtocol(
@@ -45,9 +43,8 @@ public static class ProtocolRegistrationExtensions
         if (protocolAssembly is null)
         {
             // Fail fast: a configured protocol whose provider assembly cannot be found is a
-            // deployment/config error, not something to skip silently (a silent skip left the
-            // protocol with no reader and produced a masked "Unexpected Execution Error" at the
-            // first sync — the class of bug that hid Geotab, see router-audit A-01/A-06).
+            // deployment/config error; a silent skip would leave the protocol with no reader and
+            // surface only as a masked "Unexpected Execution Error" at the first sync.
             throw new InvalidOperationException(
                 $"Configured protocol '{protocolName}' (AppSettings:Protocols) has no provider "
                 + $"assembly 'TrackHub.Router.Infrastructure.{protocolName}'. Build the provider "

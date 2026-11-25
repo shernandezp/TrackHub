@@ -16,13 +16,13 @@
 namespace TrackHub.TripManagement.Infrastructure.TripDB.Entities;
 
 /// <summary>
-/// Read-only projection of the Geofencing-owned <c>geofencing.geofenceevents</c> table (the SVD-05
+/// Read-only projection of the Geofencing-owned <c>geofencing.geofenceevents</c> table (the
 /// shared-database pattern this module already uses for <see cref="Geofence"/>), mapped with
 /// <c>ExcludeFromMigrations</c>.
 /// <para>
 /// One row is one VISIT: an entry instant and, once the vehicle leaves, a departure. It is read for
 /// exactly one purpose — replaying what a late-created trip's vehicle already did, so a trip created
-/// after its truck left carries measurements rather than a dispatcher's estimate (spec 11a §5.4).
+/// after its truck left carries measurements rather than a dispatcher's estimate.
 /// Nothing here is ever written.
 /// </para>
 /// </summary>

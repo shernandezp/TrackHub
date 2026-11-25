@@ -19,10 +19,10 @@ namespace TrackHub.TripManagement.Infrastructure.TripDB.Entities;
 
 /// <summary>
 /// The single idempotent trip event log. Manual overrides and automatic detections both land
-/// here, discriminated by <see cref="Source"/> (spec 11 section 18.13).
+/// here, discriminated by <see cref="Source"/>.
 /// <para>
-/// <b>Deliberately <see cref="BaseEntity"/>, not BaseAuditableEntity</b> - spec 11 section 6.1 /
-/// 18.14. This is the accepted AW-02 deviation already established for GeofenceEvent: the row is
+/// <b>Deliberately <see cref="BaseEntity"/>, not BaseAuditableEntity</b>, the same deviation
+/// already established for GeofenceEvent: the row is
 /// system-generated and never user-edited, <see cref="OccurredAt"/> IS its creation record, and a
 /// Created/CreatedBy/LastModified quartet on a high-volume append-only log would duplicate that
 /// timestamp while claiming an actor that, for detection rows, does not exist. Do not "fix" this
@@ -42,7 +42,7 @@ public sealed class TripEvent : BaseEntity
 
     /// <summary>
     /// Unique. Idempotency is enforced by the database index, never by caller discipline - a
-    /// retried submission hits the constraint and is reported as a duplicate (acceptance 15).
+    /// retried submission hits the constraint and is reported as a duplicate.
     /// </summary>
     public string IdempotencyKey { get; set; } = string.Empty;
 

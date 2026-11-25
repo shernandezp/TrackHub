@@ -18,16 +18,9 @@ using Common.Mediator;
 
 namespace Common.Application.Behaviors;
 
-// The GraphQLValidationBehavior class is a pipeline behavior that performs validation on GraphQL requests.
-// It checks if there are any validators registered and if so, it executes them to validate the request.
-// If any validation failures occur, it throws a ValidationException (VALIDATION_ERROR with per-field messages).
 public class GraphQLValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TRequest>> validators) : IPipelineBehavior<TRequest, TResponse>
     where TRequest : notnull
 {
-    // This method handles the request by executing the validation logic.
-    // It checks if there are any validators registered and if so, it executes them to validate the request.
-    // If any validation failures occur, it throws a ValidationException (VALIDATION_ERROR with per-field messages).
-    // Otherwise, it passes the request to the next handler in the pipeline.
     public async Task<TResponse> HandleAsync(TRequest request, Func<Task<TResponse>> next, CancellationToken cancellationToken)
     {
         if (validators.Any())

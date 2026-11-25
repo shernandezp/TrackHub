@@ -20,9 +20,6 @@ namespace TrackHub.Router.Infrastructure.Flespi.Mappers;
 internal static class PositionMapper
 {
 
-    /// <summary>
-    /// Maps a Message to a PositionVm object.
-    /// </summary>
     public static PositionVm MapToPositionVm(this Message message, DeviceTransporterVm deviceDto)
         => new(
             deviceDto.TransporterId,
@@ -46,9 +43,6 @@ internal static class PositionMapper
             }
         );
 
-    /// <summary>
-    /// Maps a collection of Message objects to PositionVm objects.
-    /// </summary>
     public static IEnumerable<PositionVm> MapToPositionVm(this IEnumerable<Message> messages, DeviceTransporterVm deviceDto)
     {
         foreach (var message in messages)

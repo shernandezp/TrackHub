@@ -30,8 +30,8 @@ public static class DependencyInjection
         // Authorization header, so the factory applies the Router's own service identity.
         services.AddGraphQLServiceClient(Clients.Manager);
 
-        // Master-data / provider-support readers and writers stay on Manager. The positions/history/
-        // health/sync-run surface moved to TelemetryApi.
+        // Master-data and provider-support readers and writers; positions, history, health and sync
+        // runs live in TelemetryApi.
         services.AddScoped<IAccountReader, AccountReader>();
 
         services.AddMemoryCache();

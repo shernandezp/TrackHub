@@ -16,10 +16,8 @@
 namespace TrackHub.Security.Domain.Models;
 
 /// <summary>
-/// Minimal user projection for the role/policy allocator dialogs. Those dialogs derive the
-/// "available" side of the picker as a SET DIFFERENCE against the already-assigned members, so this
-/// read must be complete: a short list would present an assigned member as available and the
-/// operator would try to assign a duplicate. It is therefore unpaged and ceiling-checked.
+/// Minimal user projection for the role/policy allocator dialogs, which compute "available" as a set
+/// difference against assigned members; the read must be complete, so it is unpaged and ceiling-checked.
 /// </summary>
 public readonly record struct UserLookupVm(
     Guid UserId,

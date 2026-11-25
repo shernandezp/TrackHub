@@ -21,7 +21,7 @@ using TrackHub.Reporting.Domain.Records;
 
 namespace TrackHub.Reporting.Application.Report.Factory.Workforce;
 
-// Staff registry export (spec 09 §13). Every staff on the account with identity, license summary and
+// Staff registry export. Every staff on the account with identity, license summary and
 // default transporter. No filters — the account scope comes from the caller's token. Excel only.
 // Carries staff personal data; the account scope is enforced by the Manager query.
 public sealed class StaffRegistryReport(IWorkforceReportReader reader, IReportNameReader names) : IReport

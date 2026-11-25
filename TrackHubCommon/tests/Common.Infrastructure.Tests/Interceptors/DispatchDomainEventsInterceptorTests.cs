@@ -58,8 +58,8 @@ public class DispatchDomainEventsInterceptorTests
         entity.DomainEvents.Should().BeEmpty();
     }
 
-    // Regression: events were previously collected AFTER the save, by which point EF had detached
-    // removed entries — so every domain event raised on a deleted entity was silently dropped.
+    // Events must be collected before the save: EF detaches removed entries during it, which would
+    // silently drop every domain event raised on a deleted entity.
     [Fact]
     public async Task SaveChanges_DeletedEntity_StillPublishesItsDomainEvents()
     {

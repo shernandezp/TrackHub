@@ -15,18 +15,12 @@
 */
 
 /**
- * Time-bounded staff↔unit assignments: the selected staff's active list plus
- * the account-wide filterable history, with assign/end actions. Gated by the
- * `workforce` feature — cosmetically only; the backend carries the authoritative
- * gate (and returns 409 on overlapping same-pair assignments).
+ * Gated by the `workforce` feature cosmetically only; the backend carries the authoritative gate
+ * (and returns 409 on overlapping same-pair assignments).
  *
- * The active list comes from `staffAssignments(staffId)` (spec 09 §7.2), which
- * is unpaged and evaluates "active" server-side (Status = Active AND
- * StartsAt <= now < EndsAt). It is NOT a client-side filter over the history
- * query: that one is paged and ordered `StartsAt DESC`, so a staff assigned two
- * years ago and still active sorts below the page boundary, silently vanishes
- * from the active table, loses its "End Assignment" button, and makes any
- * reassignment of that pair fail with an unexplained 409.
+ * The active list comes from `staffAssignments(staffId)` (unpaged, "active" evaluated server-side),
+ * NOT a client-side filter over the history query: that one is paged and ordered `StartsAt DESC`,
+ * so a long-running assignment would sort below the page boundary and vanish from the active table.
  */
 
 import { useContext, useEffect, useMemo, useState } from 'react';
@@ -86,7 +80,6 @@ interface ConfirmState {
   id: string | null;
 }
 
-/** Pending filter form state (applied to the history query on "search"). */
 interface FilterState {
   staff: SearchOption | null;
   transporter: SearchOption | null;
@@ -121,8 +114,6 @@ function ManageStaffAssignments() {
   const accountQuery = useAccountByUser({ enabled: expanded });
   const accountId = accountQuery.data?.accountId;
 
-  // Active list: the server-side, unpaged, time-aware projection for the staff
-  // currently selected in the assign form.
   const activeQuery = useStaffActiveAssignments(assignStaffId, {
     enabled: expanded && !!assignStaffId,
   });
@@ -188,7 +179,6 @@ function ManageStaffAssignments() {
       setAssignTransporter(null);
     } catch {
       // Failure (including the 409 on an overlapping same-pair assignment) is
-      // surfaced by the global toast.
     } finally {
       setLoading(false);
     }
@@ -290,7 +280,6 @@ function ManageStaffAssignments() {
         expanded={expanded}
         setExpanded={setExpanded}
       >
-        {/* Assign form */}
         <ArgonBox mb={2}>
           <Grid container spacing={1} sx={{ alignItems: "center" }}>
             <Grid size={{ xs: 12, md: 4 }}>
@@ -343,7 +332,6 @@ function ManageStaffAssignments() {
           </Grid>
         </ArgonBox>
 
-        {/* Active assignments */}
         <ArgonBox mb={1}>
           <ArgonTypography variant="button" fontWeight="bold" textTransform="uppercase" color="text">
             {t('workforce.assignments.active')}
@@ -365,7 +353,6 @@ function ManageStaffAssignments() {
           />
         )}
 
-        {/* History + filters */}
         <ArgonBox mt={3} mb={1}>
           <ArgonTypography variant="button" fontWeight="bold" textTransform="uppercase" color="text">
             {t('workforce.assignments.history')}

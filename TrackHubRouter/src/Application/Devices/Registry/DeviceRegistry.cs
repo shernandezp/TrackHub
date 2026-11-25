@@ -18,7 +18,7 @@ using TrackHub.Router.Domain.Exceptions;
 namespace TrackHub.Router.Application.Devices.Registry;
 
 // Scoped registry resolving the keyed device reader from the caller's own request scope — one
-// reader per lookup, no resolve-all-and-filter, no disposed-scope hand-off (router-audit A-07).
+// reader per lookup, no resolve-all-and-filter, no disposed-scope hand-off.
 public class DeviceRegistry(IServiceProvider serviceProvider) : IDeviceRegistry
 {
     public IEnumerable<IExternalDeviceReader> GetReaders(IEnumerable<ProtocolType> types)

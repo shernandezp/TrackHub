@@ -15,10 +15,8 @@
 */
 
 /**
- * Credential API (Manager backend): plain typed async functions. Failures THROW
- * ApiError. The reads here back a "silent" flow (the credential dialog opens with
- * an empty form when the operator has no credential yet), so the caller swallows
- * read failures instead of toasting; create/update failures ARE surfaced.
+ * The reads back a "silent" flow (the dialog opens empty when the operator has no credential
+ * yet), so the caller swallows read failures; create/update failures are surfaced.
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';

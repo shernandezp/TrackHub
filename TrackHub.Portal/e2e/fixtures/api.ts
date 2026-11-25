@@ -17,11 +17,9 @@ import type { APIRequestContext } from '@playwright/test';
 import { config, tokenPath } from './env';
 import type { RoleName } from './env';
 
-/** What the setup project captures from the browser's token exchange. */
 export interface CapturedTokens {
   access_token: string;
   refresh_token?: string;
-  /** Epoch ms when the access token was issued. */
   obtained_at: number;
   expires_in?: number;
 }
@@ -56,7 +54,6 @@ export class ApiClient {
     this.context = null;
   }
 
-  /** True when a browser sign-in for this role has been recorded. */
   get available(): boolean {
     return fs.existsSync(tokenPath(this.role));
   }
@@ -72,9 +69,8 @@ export class ApiClient {
   }
 
   /**
-   * A valid access token. Refreshes through the OAuth refresh grant when the
-   * captured one is close to expiry; OpenIddict rotates refresh tokens, so the
-   * new pair is written back or the next refresh would present a spent token.
+   * OpenIddict rotates refresh tokens, so the new pair is written back or the
+   * next refresh would present a spent token.
    */
   async accessToken(): Promise<string> {
     const tokens = this.load();
@@ -103,7 +99,6 @@ export class ApiClient {
     return this.tokens.access_token;
   }
 
-  /** Executes a GraphQL document against one of the portal's configured backends. */
   async gql<T = Record<string, unknown>>(
     backend: Backend,
     query: string,
@@ -127,7 +122,6 @@ export class ApiClient {
     return payload.data as T;
   }
 
-  /** Same as {@link gql}, but a failure resolves to `null` — for best-effort cleanup. */
   async tryGql<T = Record<string, unknown>>(
     backend: Backend,
     query: string,
@@ -140,7 +134,6 @@ export class ApiClient {
     }
   }
 
-  /** Authenticated REST call (documents, reports). Returns the raw response. */
   async rest(method: 'get' | 'post' | 'delete', url: string, data?: unknown) {
     const http = await this.http();
     return http.fetch(url, {
@@ -150,13 +143,10 @@ export class ApiClient {
     });
   }
 
-  /** Unauthenticated REST call — the public tracking and announcement surfaces. */
   async anonymous(url: string) {
     const http = await this.http();
     return http.get(url);
   }
-
-  /* ------------------------------------------------------------ lookups */
 
   async accountId(): Promise<string> {
     const data = await this.gql<{ accountByUser: { accountId: string } }>(
@@ -166,12 +156,7 @@ export class ApiClient {
     return data.accountByUser.accountId;
   }
 
-  /**
-   * Creates a unit for a test that needs one.
-   *
-   * Deliberately not through the UI: Account Management renders no "Add" for
-   * units (reported as a finding), so the browser has no way to make one.
-   */
+  // Seeded, not clicked: Account Management renders no "Add" for units.
   async createTransporter(name: string, transporterTypeId = 1): Promise<string> {
     const data = await this.gql<{ createTransporter: { transporterId: string } }>(
       'manager',
@@ -181,14 +166,7 @@ export class ApiClient {
     return data.createTransporter.transporterId;
   }
 
-  /**
-   * Registers a staff for a test that needs one.
-   *
-   * Seeded rather than clicked because the staff record is the PRECONDITION
-   * here — what the test measures is the credential, qualification and
-   * assignment work that hangs off it, and creating the staff through the UI
-   * is already covered by its own test.
-   */
+  // Seeded because the staff record is only the precondition; creating staff through the UI has its own test.
   async createStaffMember(name: string, defaultTransporterId?: string): Promise<string> {
     const data = await this.gql<{ createStaffMember: { staffId: string } }>(
       'manager',
@@ -206,7 +184,6 @@ export class ApiClient {
     return data.createStaffMember.staffId;
   }
 
-  /** Staff are deactivated, never deleted — that is the record's whole point. */
   async deactivateStaffMember(staffId: string): Promise<void> {
     await this.tryGql(
       'manager',
@@ -221,13 +198,7 @@ export class ApiClient {
     });
   }
 
-  /**
-   * Creates a polygon geofence.
-   *
-   * Polygons are drawn with map clicks in `leaflet-editable`, which a browser
-   * test can start but not finish reliably; the shape is seeded here so the
-   * screen's edit/toggle/delete/filter behaviour is what the test measures.
-   */
+  // Seeded: polygons drawn with leaflet-editable clicks cannot be finished reliably by a browser test.
   async createPolygonGeofence(name: string, centre = { lat: 4.62, lng: -74.06 }): Promise<string> {
     const size = 0.01;
     const corners = [
@@ -265,13 +236,9 @@ export class ApiClient {
   }
 
   /**
-   * Retires a trip, whatever state it is in.
-   *
-   * A `Created` trip holds its unit's arming slot (spec 11b), and the three
-   * verbs are not interchangeable: delete is refused once the trip has history,
-   * abort is refused from `Created`, and cancel is the only one that retires a
-   * queued trip that already acquired events. Trying all three in order is what
-   * makes the release actually succeed.
+   * Delete is refused once the trip has history, abort is refused from `Created`,
+   * and cancel is the only one that retires a queued trip that already acquired
+   * events, so all three are tried in order.
    */
   async releaseTrip(tripId: string): Promise<void> {
     // A customer tracking link outlives the trip it points at, so revoke first:
@@ -314,14 +281,7 @@ export class ApiClient {
     });
   }
 
-  /** The account's units, for a test that needs one it did not create. */
-  /**
-   * Ensures the account has an enabled document type.
-   *
-   * The upload dialog's category picker is fed by the account's document types,
-   * and an account with none (or whose only types were disabled) can store no
-   * document at all — so this is a precondition, not the thing under test.
-   */
+  // Precondition: an account with no enabled document type can store no document.
   async ensureDocumentType(category: string): Promise<string> {
     const data = await this.gql<{ configureDocumentType: { documentTypeId: string } }>(
       'manager',
@@ -347,11 +307,7 @@ export class ApiClient {
     );
   }
 
-  /**
-   * The units the SIGNED-IN user can see, which is what every picker on the
-   * trip screen is fed from. Not the same as the account's units: visibility is
-   * group-scoped, so a unit seeded without group membership is invisible here.
-   */
+  /** Visibility is group-scoped, so a unit seeded without group membership is invisible here. */
   async visibleTransporters(): Promise<{ transporterId: string; name: string }[]> {
     const data = await this.gql<{
       transporterLookupByUser: { transporterId: string; name: string }[];

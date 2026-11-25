@@ -1,10 +1,7 @@
 /**
- * The Trips screen: the dispatch board, the new-trip dialog and the planner's
- * stop list.
- *
- * The lifecycle is automatic (spec 11a) — a trip starts when its unit reaches
- * the origin zone and completes at its last stop — so what a browser can drive
- * is planning and the exception verbs, not the transitions themselves.
+ * The lifecycle is automatic (a trip starts when its unit reaches the origin zone
+ * and completes at its last stop), so a browser can drive only planning and the
+ * exception verbs.
  */
 
 import { expect } from '@playwright/test';
@@ -14,24 +11,18 @@ import type { Translator } from '../fixtures/i18n';
 import type { ApiClient } from '../fixtures/api';
 import type { CleanupRegistry } from '../fixtures/data';
 
-/** A row of the dispatch board, found by the trip code a human reads. */
 export const boardRow = (page: Page, code: string): Locator =>
   page.locator('[data-testid^="row-"]').filter({ hasText: code }).first();
 
-/** A row of the planner's stop list, addressed by its visit order. */
 export const plannerStop = (page: Page, sequence: number): Locator =>
   page.getByTestId(`stop-${sequence}`);
 
-/** Every planner stop row, for finding one by the name it was given. */
 export const plannerStopNamed = (page: Page, name: string): Locator =>
   page.getByTestId(/^stop-/).filter({ hasText: name });
 
 /**
- * Plans a trip the way a dispatcher does: a code, a unit, a planned start, an
- * origin picked from a geofence and one destination picked from a geofence.
- *
- * Returns with the workspace already open on the new trip — `saveTrip` selects
- * what it created, so clicking the board row would toggle it shut again.
+ * Returns with the workspace already open on the new trip: `saveTrip` selects what
+ * it created, so clicking the board row would toggle it shut again.
  */
 export async function planTrip(
   page: Page,
@@ -67,12 +58,8 @@ export async function planTrip(
 }
 
 /**
- * Registers the release of a trip created through the UI.
- *
- * A `Created` trip holds its unit's arming slot, so a leftover silently absorbs
- * the automatic start of every trip planned after it (spec 11b). `releaseTrip`
- * walks delete → abort → cancel, because a trip that has picked up any history
- * can no longer be deleted.
+ * A `Created` trip holds its unit's arming slot, so a leftover silently absorbs the
+ * automatic start of every trip planned after it.
  */
 export function releaseAfterwards(
   api: ApiClient,

@@ -1,11 +1,6 @@
 /**
- * The shared section control (`controls/Accordions/TableAccordion` + `Table` +
- * `ServerSearch` + `ServerPagination`).
- *
- * Nearly every administrative screen is a stack of these, so one page object
- * covers System Admin, Account Management and GPS Integration alike. Sections
- * are addressed by the language-independent `sectionKey` the control renders as
- * `data-testid="section-<key>"`.
+ * Sections are addressed by the language-independent `sectionKey` the control
+ * renders as `data-testid="section-<key>"`.
  */
 
 import { expect } from '@playwright/test';
@@ -36,7 +31,6 @@ export class Section {
     return this.root.getByRole('textbox', { name: this.t('filters.search') });
   }
 
-  /** Every rendered row of the section's table. */
   get rows(): Locator {
     return this.root.locator('[data-testid^="row-"]');
   }
@@ -49,7 +43,6 @@ export class Section {
     return this.root.getByTestId(`row-${id}`);
   }
 
-  /** "Showing x–y of z" — the server-paged footer. */
   get rangeLabel(): Locator {
     return this.root.getByText(/\d+\s*[–-]\s*\d+/).first();
   }
@@ -69,11 +62,8 @@ export class Section {
   }
 
   /**
-   * Expands the section and waits for the accordion to actually open.
-   *
-   * The click is retried once: expanding a section above this one reflows the
-   * page, and a header that moves out from under the pointer mid-click swallows
-   * the toggle.
+   * Retried once: expanding a section above this one reflows the page, and a
+   * header that moves out from under the pointer mid-click swallows the toggle.
    */
   async expand(): Promise<this> {
     await expect(this.header).toBeVisible({ timeout: 60_000 });
@@ -91,7 +81,7 @@ export class Section {
     return this;
   }
 
-  /** Collapses the section, retried for the same reflow reason as `expand`. */
+  /** Retried for the same reflow reason as `expand`. */
   async collapse(): Promise<void> {
     for (let attempt = 0; attempt < 3; attempt += 1) {
       if (!(await this.isExpanded())) return;
@@ -107,11 +97,10 @@ export class Section {
   }
 
   /**
-   * Types into the section's server-side search box. The draft is debounced
-   * (350 ms) before it reaches the query, so callers assert on the ROW, never on
-   * a timer. The query's response is awaited too: a row already on screen from
-   * the unfiltered page passes the visibility check before the debounced fetch
-   * raises the loading overlay, and the next click would land on the overlay.
+   * The draft is debounced (350 ms), so callers assert on the row, never on a
+   * timer. The response is awaited too: a row already on screen passes the
+   * visibility check before the debounced fetch raises the loading overlay, and
+   * the next click would land on the overlay.
    */
   async search(text: string): Promise<void> {
     if ((await this.searchBox.inputValue()) === text) return;
@@ -124,7 +113,6 @@ export class Section {
     await applied;
   }
 
-  /** Finds one row by a search term, proving the server-side search works. */
   async findRow(text: string): Promise<Locator> {
     if (await this.searchBox.isVisible().catch(() => false)) {
       await this.search(text);
@@ -136,13 +124,9 @@ export class Section {
   }
 
   /**
-   * Finds a row in a CLIENT-paged section, walking the pages if needed.
-   *
-   * Sections without a server-side search render the shared `Table`, which pages
-   * ten rows at a time in the browser — a freshly created row is frequently not
-   * on the first page, and asserting only there would fail for the wrong reason.
-   * The pager is MUI's own; its button labels are English regardless of the
-   * portal's language because the app installs no MUI locale.
+   * The shared `Table` pages ten rows at a time in the browser, so a fresh row is
+   * often not on the first page. MUI's pager labels are English regardless of the
+   * portal language because the app installs no MUI locale.
    */
   async findRowAnyPage(
     text: string | RegExp,
@@ -168,7 +152,6 @@ export class Section {
         if ((await next.count()) === 0 || (await next.isDisabled().catch(() => true))) break;
         await next.click();
       }
-      // Rewind for the next sweep.
       for (let page = 0; page < 50; page += 1) {
         if ((await previous.count()) === 0 || (await previous.isDisabled().catch(() => true))) break;
         await previous.click();
@@ -183,7 +166,6 @@ export class Section {
     return row;
   }
 
-  /** Clicks a row-level action button (Edit, Delete, Assign, …). */
   async rowAction(rowText: string, actionLabel: string): Promise<void> {
     const row = await this.findRow(rowText);
     await row.getByRole('button', { name: actionLabel }).first().click();

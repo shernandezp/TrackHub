@@ -21,10 +21,8 @@ using TrackHub.Security.Infrastructure.Readers;
 
 namespace Infrastructure.UnitTests;
 
-// Pins the account-matching semantics of a service-client grant. A NULL accountid used to be an
-// implicit wildcard — it matched a token for ANY tenant, so "global" and "unscoped" were
-// indistinguishable and every service client had unbounded tenant reach. Cross-account reach is
-// now an explicit declaration (allowcrossaccount).
+// Pins the account-matching semantics of a service-client grant: a NULL accountid is NOT a
+// wildcard; cross-account reach is an explicit declaration (allowcrossaccount).
 [TestFixture]
 public class ServiceClientPermissionReaderTests
 {

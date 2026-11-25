@@ -22,7 +22,7 @@ namespace TrackHub.TripManagement.Application.Trips.Commands.Lifecycle;
 /// <summary>
 /// "This trip is already under way." The planning step for a trip whose vehicle left before anyone
 /// wrote the trip down — bulk uploads on Monday for trucks that rolled on Sunday, and the ordinary
-/// case of a dispatcher recording something in progress (spec 11a §5.4).
+/// case of a dispatcher recording something in progress.
 /// <para>
 /// It is a separate verb rather than a flag on create because backfill replays the ROUTE, and the
 /// route only exists once the stops have been added. Every planning input calls it last:
@@ -39,7 +39,7 @@ namespace TrackHub.TripManagement.Application.Trips.Commands.Lifecycle;
 [Authorize(Resource = Resources.Trips, Action = Actions.Edit)]
 [RequireFeature(FeatureKeys.TripManagement)]
 // Enforcement: the handler derives the caller's own account and passes it to the reader/writer,
-// which filters every row on it (TripVisibility is the single visibility resolver - spec 11).
+// which filters every row on it (TripVisibility is the single visibility resolver).
 [AccountScopeEnforcedInHandler]
 public readonly record struct DeclareTripInTransitCommand(Guid TripId, DateTimeOffset? StartedAt)
     : IRequest<TripStartBackfillResultVm>;

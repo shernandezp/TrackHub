@@ -46,14 +46,8 @@ public class GetPositionsRecordQueryHandler(
 {
     private string? EncryptionKey { get; } = configuration["AppSettings:EncryptionKey"];
 
-    /// <summary>
-    /// Retrieves the operator, and device positions asynchronously.
-    /// PROVIDER (default) reads the GPS operator API on demand; STORED reads
-    /// TrackHub-stored history from Telemetry and requires gps.positionHistory.
-    /// </summary>
-    /// <param name="request"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>Returns the collection of PositionVm</returns>
+    // PROVIDER (default) reads the GPS operator API on demand; STORED reads TrackHub-stored history
+    // from Telemetry and requires gps.positionHistory.
     public async Task<IEnumerable<PositionVm>> Handle(GetPositionsRecordQuery request, CancellationToken cancellationToken)
     {
         Guard.Against.Null(EncryptionKey, message: "Credential key not found.");

@@ -14,11 +14,7 @@
 *  limitations under the License.
 */
 
-/**
- * Staff credential/device hooks (Security backend). Components consume these —
- * not the api layer directly. Credential and device administration is CORE
- * platform surface: it is never gated behind an account feature.
- */
+/** Credential and device administration is core platform surface: never gated behind an account feature. */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from 'api/security/staffIdentity';

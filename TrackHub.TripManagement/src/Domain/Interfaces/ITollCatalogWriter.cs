@@ -17,7 +17,7 @@ namespace TrackHub.TripManagement.Domain.Interfaces;
 
 /// <summary>
 /// Administrator-only toll administration. Every write is audited — station and tariff
-/// changes move money on estimates (spec 11 §7.6).
+/// changes move money on estimates.
 /// </summary>
 public interface ITollCatalogWriter
 {
@@ -38,7 +38,7 @@ public interface ITollCatalogWriter
     /// <summary>
     /// Inserts a tariff and CLOSES the currently open row for the same
     /// <c>(station, class)</c> pair by stamping its <c>EffectiveTo</c>. Prices are never
-    /// overwritten, so a historical trip's estimate stays reproducible (acceptance 21).
+    /// overwritten, so a historical trip's estimate stays reproducible.
     /// </summary>
     Task<TollTariffVm> CreateTariffAsync(TollTariffDto tariff, CancellationToken cancellationToken);
 
@@ -48,7 +48,7 @@ public interface ITollCatalogWriter
 
     /// <summary>
     /// Upserts a parsed CSV batch. A bad row is reported and skipped — there is no
-    /// partial-failure rollback (the spec 08 geofence-import contract).
+    /// partial-failure rollback.
     /// </summary>
     Task<TollCatalogImportResultVm> ImportAsync(IReadOnlyCollection<TollCatalogImportRowDto> rows, CancellationToken cancellationToken);
 }

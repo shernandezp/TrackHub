@@ -1,13 +1,8 @@
 /**
- * Real sign-in against the deployed AuthorityServer.
- *
- * The portal keeps its access token in memory and its refresh token in React
- * state, so a saved storage state restores NO session by itself. What it does
- * restore is the AuthorityServer's own cookie on `trackhub.local`, and that is
- * enough: the portal's `/authorize` round trip then completes without a login
- * form, and the callback mints a fresh token pair. The suite therefore signs in
- * with credentials exactly once per role (the `setup` project) and reuses the
- * cookie afterwards.
+ * The portal keeps its tokens in memory, so a saved storage state restores no
+ * session by itself. It does restore the AuthorityServer cookie, which lets the
+ * `/authorize` round trip complete without a login form; the suite signs in
+ * with credentials once per role and reuses the cookie afterwards.
  */
 
 import fs from 'node:fs';
@@ -55,7 +50,6 @@ export function captureTokens(page: Page): () => CapturedTokens | null {
   return () => captured;
 }
 
-/** The AuthorityServer login form, addressed by its stable element ids. */
 export const loginForm = (page: Page) => ({
   email: page.locator('#email'),
   password: page.locator('#password'),
@@ -64,16 +58,13 @@ export const loginForm = (page: Page) => ({
 });
 
 export interface SignInResult {
-  /** The shell rendered — the session is live. */
   ok: boolean;
-  /** The AuthorityServer's own rejection text, when it refused the credentials. */
   error?: string;
 }
 
 /**
- * Drives the credential form when it appears, and reports the AuthorityServer's
- * rejection rather than timing out on it — "wrong password" and "account not
- * verified" are different answers and a test needs to tell them apart.
+ * Reports the AuthorityServer's rejection rather than timing out on it: "wrong
+ * password" and "account not verified" are different answers.
  */
 export async function signIn(page: Page, credentials: Credentials): Promise<SignInResult> {
   const form = loginForm(page);
@@ -119,7 +110,6 @@ export async function signIn(page: Page, credentials: Credentials): Promise<Sign
   return { ok: false, error: 'the sign-in neither completed nor reported an error' };
 }
 
-/** Resolves when the portal completes an OAuth token exchange on this page. */
 export function tokenExchange(page: Page, timeout = 60_000): Promise<unknown> {
   return page.waitForResponse(
     (response) => response.url() === config.tokenEndpoint && response.ok(),
@@ -127,7 +117,6 @@ export function tokenExchange(page: Page, timeout = 60_000): Promise<unknown> {
   );
 }
 
-/** Resolves once the bootstrap read that opens the role-gated shell has answered. */
 export function principalLoaded(page: Page, timeout = 60_000): Promise<unknown> {
   return page
     .waitForResponse(
@@ -137,7 +126,6 @@ export function principalLoaded(page: Page, timeout = 60_000): Promise<unknown> 
     .catch(() => null);
 }
 
-/** Persists the browser state and the captured tokens for one role. */
 export function persistRole(role: RoleName, tokens: CapturedTokens | null): void {
   fs.mkdirSync(AUTH_DIR, { recursive: true });
   if (tokens) {
@@ -147,13 +135,11 @@ export function persistRole(role: RoleName, tokens: CapturedTokens | null): void
 
 export const authFiles = {
   dir: AUTH_DIR,
-  /** Roles whose storage state exists. */
   hasRole: (role: RoleName): boolean => fs.existsSync(storageStatePath(role)),
   createdFile: path.join(AUTH_DIR, 'created.json'),
   refusalsFile: path.join(AUTH_DIR, 'refusals.json'),
 };
 
-/** Why a role has no session: the platform refused it, naming the reason. */
 export type Refusals = Partial<Record<RoleName, string>>;
 
 export function readRefusals(): Refusals {
@@ -166,7 +152,6 @@ export function writeRefusals(refusals: Refusals): void {
   fs.writeFileSync(authFiles.refusalsFile, JSON.stringify(refusals, null, 2));
 }
 
-/** Users the setup project created itself, recorded so teardown can delete them. */
 export interface CreatedPrincipal {
   role: RoleName;
   userId: string;

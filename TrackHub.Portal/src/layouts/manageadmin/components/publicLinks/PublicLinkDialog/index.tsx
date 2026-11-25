@@ -21,12 +21,10 @@ import CustomTextField from 'controls/Dialogs/CustomTextField';
 import ArgonBox from "components/ArgonBox";
 import ArgonTypography from "components/ArgonTypography";
 
-// Change event shape emitted by the vendored dialog controls.
 type FormChangeHandler = (
   event: { target: { name: string; value: string; type?: string; checked?: boolean } }
 ) => void;
 
-/** Dialog/form state for minting a public-link grant. */
 export interface PublicLinkFormValues {
   resourceType?: string;
   resourceId?: string;

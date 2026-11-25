@@ -27,7 +27,7 @@ public class ExecutionIntervalManager : IExecutionIntervalManager
     {
         if (!_lastExecutionTimes.TryGetValue(account.AccountId, out var lastExecutionTime))
         {
-            return true; // If there's no record of the last execution, execute the task
+            return true;
         }
 
         var interval = TimeSpan.FromSeconds(account.StoringInterval);

@@ -27,7 +27,7 @@ public interface IRoutingProvider
     /// <summary>
     /// False when no API key / base URL is configured. Callers turn this into a
     /// <c>Failed</c> plan carrying <c>ROUTING_NOT_CONFIGURED</c> — absence of configuration is a
-    /// deployment error, but it must still leave the trip fully usable (spec 11 §14).
+    /// deployment error, but it must still leave the trip fully usable.
     /// </summary>
     bool IsConfigured { get; }
 

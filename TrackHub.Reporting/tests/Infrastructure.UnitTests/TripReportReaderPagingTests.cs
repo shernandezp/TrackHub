@@ -223,19 +223,11 @@ public class TripReportReaderPagingTests
     }
 
     /// <summary>
-    /// The regression this whole cursor contract exists for.
-    /// <para>
     /// The toll feed pages ROUTE PLANS and expands each into one row per matched station, so its row
-    /// count and its paging unit differ. The old loop skipped by rows collected and stopped once
-    /// that count reached <c>totalCount</c> — with 700 plans averaging three stations, page one
-    /// returned 1500 rows against a totalCount of 700, so it stopped after ONE request and dropped
-    /// 200 trips from a financial report with no error raised anywhere.
-    /// </para>
-    /// <para>
+    /// count and its paging unit differ.
     /// Scripted here at 1:3 expansion: two pages of 500 plans then a final 200, all with a plan-unit
     /// cursor. A loop that reverts to counting rows fetches one page and returns 1500 instead of
     /// 2100, and this test fails.
-    /// </para>
     /// </summary>
     [Test]
     public async Task TollFeedExpandingRowsPerPage_PagesByPlansAndReturnsEveryRow()

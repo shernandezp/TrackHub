@@ -24,7 +24,7 @@ public interface IDeliveryWriter
 
     /// <summary>
     /// Records the outcome (delivered / partially delivered / rejected). Idempotent on the
-    /// caller's event id so spec 10's offline outbox can retry safely.
+    /// caller's event id so the offline outbox can retry safely.
     /// </summary>
     Task<bool> UpdateDeliveryOutcomeAsync(
         Guid deliveryId,

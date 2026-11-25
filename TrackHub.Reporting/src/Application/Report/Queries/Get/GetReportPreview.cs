@@ -66,7 +66,7 @@ public class GetReportPreviewQueryHandler(
             .ToArray();
 
         // The preview runs the same report as the export, so it must answer to the same governed
-        // ceiling; without this, asking for a preview was a way around MaxExportRows entirely.
+        // ceiling; otherwise a preview would be a way around MaxExportRows entirely.
         if (total > limits.MaxExportRows)
         {
             throw new ReportLimitExceededException(limits.MaxExportRows);

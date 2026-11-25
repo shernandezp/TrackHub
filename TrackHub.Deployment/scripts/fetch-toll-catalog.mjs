@@ -5,7 +5,7 @@
  *
  * WHY A SCRIPT AND NOT SEED DATA
  * ------------------------------
- * Spec 11 §7.7 ships ZERO toll rows on purpose: tariffs are set by resolution and
+ * The platform ships ZERO toll rows on purpose: tariffs are set by resolution and
  * change at least annually (INVÍAS raised them 5.10% by IPC in January 2026), so
  * anything baked into a migration is wrong the moment it ships. This fetches the
  * current published figures instead.
@@ -70,7 +70,7 @@ const TARIFF_COLUMNS = [
   ['categoria_vii', 'VII'],
 ];
 
-/** Column limits, from the entity configuration (spec 11 §6.2). */
+/** Column limits, from the entity configuration. */
 const MAX = { code: 40, name: 200, roadName: 200, direction: 50, operator: 200, notes: 1000 };
 
 function arg(flag, fallback) {

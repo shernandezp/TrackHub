@@ -51,16 +51,9 @@ interface TollClassDialogProps {
 }
 
 /**
- * Account-scoped transporter → toll-class mapping.
- *
- * This is NOT part of the SuperAdministrator toll catalog: the catalog is
- * platform reference data, while fleet composition is tenant data, so spec 11
- * §4/§7.6 put this write under `Resources.Trips`/`Edit` for the Account
- * Administrator.
- *
- * Without a mapping, `CreateTripCommand` has nothing to default
- * `Trip.TollVehicleClass` from, so every route plan is priced with no class and
- * toll estimation silently never engages.
+ * Account-scoped transporter → toll-class mapping, tenant data under `Resources.Trips`/`Edit` (not
+ * the SuperAdministrator toll catalog). Without a mapping `CreateTripCommand` has nothing to default
+ * `Trip.TollVehicleClass` from, so toll estimation silently never engages.
  */
 function TollClassDialog({
   open,

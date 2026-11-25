@@ -32,17 +32,15 @@ const flatten = (obj: Record<string, unknown>, prefix = ''): string[] =>
       : [`${prefix}${key}`]
   );
 
-/** Namespaces spec 11 §8 adds; each must keep exact EN/ES key parity. */
+/** Each namespace must keep exact EN/ES key parity. */
 const TRIP_NAMESPACES = ['trips', 'tripStops', 'tripShare', 'pod', 'tolls', 'tripTracking'];
 
 /** Route labels — a missing one leaves an untranslated Sidenav entry. */
 const SCREEN_KEYS = ['screen.tripManager', 'screen.tripTracking'];
 
 /**
- * Enum-ish keys the screens build dynamically from server strings. These are
- * cast at the key expression, so the compiler cannot catch a missing member —
- * only this test can. The literals mirror TripManagement's
- * Domain/Constants/TripConstants.cs.
+ * Cast at the key expression, so only this test can catch a missing member. The literals mirror
+ * TripManagement's Domain/Constants/TripConstants.cs.
  */
 const TRIP_STATUSES = ['Created', 'InProgress', 'Paused', 'Completed', 'Cancelled', 'Aborted'];
 const STOP_STATUSES = ['Pending', 'Arrived', 'Departed', 'Skipped'];
@@ -58,24 +56,14 @@ const SCAN_STATUSES = ['Pending', 'Clean', 'Infected', 'Failed', 'Quarantined'];
 const TOLL_CLASS_TARGETS = ['transporterType', 'transporter'];
 
 /**
- * Every i18n key the real ERROR_CODE_I18N map points at — DERIVED from the map,
- * never re-typed. A hand-copied list silently stops covering a code the moment
- * one is added, which is how four TripManagement codes
- * (ROUTING_INVALID_GEOMETRY, TOLL_DUPLICATE_STATION, TOLL_DUPLICATE_VEHICLE_CLASS,
- * UNKNOWN_VEHICLE_CLASS) went untranslated. An unmapped code falls back to raw
- * server text, so every mapping needs a string in both bundles.
+ * DERIVED from the real map, never re-typed: a hand-copied list silently stops covering a code the
+ * moment one is added. An unmapped code falls back to raw server text.
  */
 const TRIP_ERROR_KEYS = Object.values(ERROR_CODE_I18N);
 
 /**
- * The backend codes this map is expected to carry, mirroring
- * TrackHub.TripManagement Domain/Constants/TripConstants.cs → TripErrorCodes.
- * Listed here so a code the backend adds and the portal forgets fails loudly
- * rather than silently degrading to English server text.
- *
- * Long-term this list should be generated alongside the SDLs rather than
- * maintained by hand; until then this test is the only thing holding the two
- * sides together.
+ * Mirrors TrackHub.TripManagement Domain/Constants/TripConstants.cs → TripErrorCodes, so a code the
+ * backend adds and the portal forgets fails loudly.
  */
 const BACKEND_TRIP_ERROR_CODES = [
   'TRIP_NOT_ACTIVE',
@@ -103,7 +91,7 @@ const BACKEND_TRIP_ERROR_CODES = [
   'TRIP_SHARE_REVOKED',
 ];
 
-/** The six spec 11 §13 reports, owned by the reporting workstream — verified, not duplicated. */
+/** Reports owned by the reporting workstream: verified, not duplicated. */
 const TRIP_REPORT_CODES = [
   'tripSummary',
   'tripDetail',

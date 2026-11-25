@@ -15,8 +15,7 @@
 */
 
 /**
- * Qualification/assignment constant sets. These mirror the backend's string
- * constant sets (spec 09 §6); they travel as GraphQL variables, so the exact
+ * These mirror the backend's string constant sets; they travel as GraphQL variables, so the exact
  * casing here is the contract.
  */
 

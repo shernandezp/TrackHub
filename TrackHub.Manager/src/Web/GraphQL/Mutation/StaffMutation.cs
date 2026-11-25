@@ -12,7 +12,6 @@ public partial class Mutation
 
     public async Task<StaffQualificationVm> CreateStaffQualification([Service] ISender sender, CreateStaffQualificationCommand command, CancellationToken cancellationToken) => await sender.Send(command, cancellationToken);
     public async Task<bool> UpdateStaffQualification([Service] ISender sender, UpdateStaffQualificationCommand command, CancellationToken cancellationToken) { await sender.Send(command, cancellationToken); return true; }
-    // Delete mutations return the deleted entity's identifier, not a boolean (rules.md "Naming").
     public async Task<Guid> DeleteStaffQualification([Service] ISender sender, DeleteStaffQualificationCommand command, CancellationToken cancellationToken) { await sender.Send(command, cancellationToken); return command.StaffQualificationId; }
 
     public async Task<StaffTransporterAssignmentVm> AssignStaffToTransporter([Service] ISender sender, AssignStaffToTransporterCommand command, CancellationToken cancellationToken) => await sender.Send(command, cancellationToken);

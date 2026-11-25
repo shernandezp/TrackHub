@@ -19,7 +19,7 @@ public class WorkforceHandlerTests
         return principal;
     }
 
-    // AC2: the profile query must return the CALLER's data. The staff id comes from the principal and
+    // The profile query must return the CALLER's data. The staff id comes from the principal and
     // is never accepted from the request, so a staff cannot ask for someone else's profile.
     [Test]
     public async Task GetMyStaffProfile_PinsStaffIdFromThePrincipal()
@@ -78,7 +78,7 @@ public class WorkforceHandlerTests
     }
 
     /// <summary>
-    /// AC2: "every admin operation rejects staff principals". Authorization is enforced by
+    /// Every admin operation rejects staff principals. Authorization is enforced by
     /// <c>AuthorizationBehavior</c> reading <c>AuthorizeAttribute.PrincipalTypes</c>, whose DEFAULT is
     /// <c>"User,ServiceClient"</c> — a Staff principal is therefore rejected unless a surface opts in.
     /// This test pins that default across every workforce surface, so a future edit that adds

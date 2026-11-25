@@ -122,7 +122,6 @@ public class GetUsersQueryHandlerTests
     [Test]
     public async Task ExpiredLock_AllowsLoginAgain_AndResetsOnSuccess()
     {
-        // A lock in the past no longer blocks — the correct password succeeds and resets the counter.
         var user = ActiveUser(loginAttempts: 5, lockedUntil: DateTimeOffset.UtcNow.AddMinutes(-1));
         SetupReader(user);
 

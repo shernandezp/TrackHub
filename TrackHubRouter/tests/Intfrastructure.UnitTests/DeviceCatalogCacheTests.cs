@@ -20,7 +20,6 @@ using TrackHub.Router.Infrastructure.Common;
 
 namespace TrackHub.Router.Infrastructure.Tests;
 
-// Guards the device-catalog cache (router-audit A-12).
 [TestFixture]
 public class DeviceCatalogCacheTests
 {

@@ -15,9 +15,6 @@
 
 namespace TrackHub.Geofencing.Domain.Models;
 
-/// <summary>
-/// View model for geofence event report data.
-/// </summary>
 public readonly record struct GeofenceEventReportVm(
     Guid GeofenceEventId,
     Guid TransporterId,

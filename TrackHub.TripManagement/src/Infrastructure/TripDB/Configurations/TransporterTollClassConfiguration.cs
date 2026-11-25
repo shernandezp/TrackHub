@@ -39,13 +39,10 @@ public sealed class TransporterTollClassConfiguration : IEntityTypeConfiguration
         builder.Property(x => x.TransporterId).HasColumnName("transporterid");
         builder.Property(x => x.TollVehicleClassCode).HasColumnName("tollvehicleclasscode").HasMaxLength(20).IsRequired();
 
-        // A single unique index over (accountid, transportertypeid, transporterid) constrained
-        // NOTHING for the two shapes actually stored: PostgreSQL treats NULLs as distinct, so every
-        // type-level mapping (transporterid IS NULL) and every row-level override
-        // (transportertypeid IS NULL) escaped it entirely, and the store's read-then-write upsert
-        // had no DB backstop — two concurrent SetMapping calls both inserted and toll-class
-        // resolution became non-deterministic. Two PARTIAL unique indexes, one per shape, are real
-        // constraints over columns that are non-null in the rows they cover.
+        // One PARTIAL unique index per shape: PostgreSQL treats NULLs as distinct, so a single index over
+        // (accountid, transportertypeid, transporterid) would constrain neither the type-level mappings
+        // nor the row-level overrides, leaving the store's read-then-write upsert with no DB backstop
+        // against concurrent SetMapping calls.
         builder.HasIndex(x => new { x.AccountId, x.TransporterTypeId }, "transporter_toll_classes_type")
             .HasDatabaseName("ux_transporter_toll_classes_acct_type")
             .IsUnique()
@@ -56,10 +53,9 @@ public sealed class TransporterTollClassConfiguration : IEntityTypeConfiguration
             .IsUnique()
             .HasFilter("transportertypeid is null");
 
-        // A dangling class code matched no tariff, contributed 0 and reported PartialNoTariff — a
-        // typo disguised as a legitimate catalog gap, which is exactly the silent understatement
-        // §6.2 forbids. Restrict, not Cascade: deleting a vehicle class must not silently unmap a
-        // tenant's fleet.
+        // An FK, so a typo'd class code cannot match no tariff and report PartialNoTariff as if it were
+        // a legitimate catalog gap. Restrict, not Cascade: deleting a vehicle class must not silently
+        // unmap a tenant's fleet.
         builder.HasIndex(x => x.TollVehicleClassCode, "transporter_toll_classes_classcode_fk")
             .HasDatabaseName("ix_transporter_toll_classes_tollvehicleclasscode");
 

@@ -31,7 +31,6 @@ builder.AddTrackHubDataProtection();
 var allowedCORSOrigins = builder.Configuration.GetAllowedCorsOrigins();
 Guard.Against.NullOrEmpty(allowedCORSOrigins, message: $"Allowed Origins configuration for CORS not loaded");
 
-// Add services to the container.
 builder.Services.AddApplicationServices();
 builder.Services.AddAppManagerContext();
 builder.Services.AddAppTelemetryContext();
@@ -58,7 +57,6 @@ builder.Services.AddCors(options => options
                     .AllowAnyHeader()
                     .AllowCredentials()));
 
-// Configure HSTS
 builder.Services.AddHsts(options =>
 {
     options.MaxAge = TimeSpan.FromDays(365 * 2);
@@ -82,10 +80,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHeaderPropagation();
 
-// Enable CORS
 app.UseCors("AllowFrontend");
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseHsts();

@@ -84,7 +84,6 @@ public sealed class GeofenceReader(IApplicationDbContext context) : IGeofenceRea
         double longitude,
         CancellationToken cancellationToken)
     {
-        // Create a point geometry using NetTopologySuite
         var geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
         var point = geometryFactory.CreatePoint(new Coordinate(longitude, latitude));
 

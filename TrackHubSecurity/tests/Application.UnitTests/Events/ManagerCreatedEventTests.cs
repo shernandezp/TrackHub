@@ -34,7 +34,6 @@ public class ManagerCreatedEventTests
     [Test]
     public async Task Handle_ValidNotification_GetsManagerRoleAndCreatesUserRole()
     {
-        // Arrange
         var userId = Guid.NewGuid();
         var roleId = 42;
         var managerRole = new RoleVm(roleId, Roles.Manager);
@@ -44,10 +43,8 @@ public class ManagerCreatedEventTests
 
         var handler = new ManagerCreated.Notification.EventHandler(_userRoleWriterMock.Object, _roleReaderMock.Object);
 
-        // Act
         await handler.Handle(new ManagerCreated.Notification(userId), CancellationToken.None);
 
-        // Assert — must look up Manager role and create the assignment
         _roleReaderMock.Verify(r => r.GetRoleAsync(Roles.Manager, It.IsAny<CancellationToken>()), Times.Once);
         _userRoleWriterMock.Verify(w => w.CreateUserRoleAsync(
             It.Is<UserRoleDto>(dto => dto.UserId == userId && dto.RoleId == roleId),
@@ -57,7 +54,6 @@ public class ManagerCreatedEventTests
     [Test]
     public async Task Handle_UsesRoleIdFromReader_NotHardcoded()
     {
-        // Arrange — roleId from DB differs from any hardcoded value
         var userId = Guid.NewGuid();
         var dynamicRoleId = 99;
 
@@ -66,10 +62,8 @@ public class ManagerCreatedEventTests
 
         var handler = new ManagerCreated.Notification.EventHandler(_userRoleWriterMock.Object, _roleReaderMock.Object);
 
-        // Act
         await handler.Handle(new ManagerCreated.Notification(userId), CancellationToken.None);
 
-        // Assert
         _userRoleWriterMock.Verify(w => w.CreateUserRoleAsync(
             It.Is<UserRoleDto>(dto => dto.RoleId == dynamicRoleId),
             It.IsAny<CancellationToken>()), Times.Once);

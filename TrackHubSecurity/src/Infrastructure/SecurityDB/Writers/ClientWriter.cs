@@ -22,14 +22,6 @@ namespace TrackHub.Security.Infrastructure.Writers;
 
 public sealed class ClientWriter(IApplicationDbContext context) : IClientWriter
 {
-    /// <summary>
-    /// Creates a new client asynchronously
-    /// </summary>
-    /// <param name="clientDto"></param>
-    /// <param name="salt"></param>
-    /// <param name="key"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>The created client view model</returns>
     public async Task<ClientVm> CreateClientAsync(ClientDto clientDto, byte[] salt, string key, CancellationToken cancellationToken)
     {
         // Client name is the identity used by IsValidClientAsync / service permissions; a duplicate is a
@@ -61,13 +53,6 @@ public sealed class ClientWriter(IApplicationDbContext context) : IClientWriter
             client.LastModified);
     }
 
-    /// <summary>
-    /// Updates a client asynchronously
-    /// </summary>
-    /// <param name="clientUserDto"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>The task result</returns>
-    /// <exception cref="NotFoundException">If the client does not exist</exception>
     public async Task UpdateClientAsync(ClientUserDto clientUserDto, CancellationToken cancellationToken)
     {
         var client = await context.Clients.FindAsync([clientUserDto.ClientId], cancellationToken)
@@ -79,13 +64,6 @@ public sealed class ClientWriter(IApplicationDbContext context) : IClientWriter
         await context.SaveChangesAsync(cancellationToken);
     }
 
-    /// <summary>
-    /// Deletes a client asynchronously
-    /// </summary>
-    /// <param name="clientId"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>The task result</returns>
-    /// <exception cref="NotFoundException">If the client does not exist</exception>
     public async Task DeleteClientAsync(Guid clientId, CancellationToken cancellationToken)
     {
         var client = await context.Clients.FindAsync([clientId], cancellationToken)

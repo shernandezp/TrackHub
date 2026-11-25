@@ -15,7 +15,6 @@
 
 namespace TrackHub.Reporting.Application.Report.Factory.Workforce;
 
-// Shared projection helpers for the workforce reports.
 internal static class WorkforceReportSupport
 {
     // Whole days between the account's today and the expiry date; negative once expired.

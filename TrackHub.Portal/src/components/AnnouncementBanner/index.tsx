@@ -15,12 +15,9 @@
 */
 
 /**
- * Platform announcement bar for the signed-in shell (ST-10).
- *
- * Mounted once, above the content, on every screen and for every role — a
- * message "everyone can see" must not require visiting the status page.
- * Dismissal is per announcement, per browser session (sessionStorage), so a
- * still-active notice returns on the next sign-in.
+ * Mounted once above the content on every screen: a message "everyone can see" must not require
+ * visiting the status page. Dismissal is per announcement, per browser session (sessionStorage),
+ * so a still-active notice returns on the next sign-in.
  */
 
 import { useCallback, useEffect, useState } from 'react';

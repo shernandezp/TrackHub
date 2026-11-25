@@ -20,10 +20,6 @@ using TrackHub.Router.Infrastructure.Samsara.Models;
 
 namespace TrackHub.Router.Infrastructure.Samsara;
 
-/// <summary>
-/// Base class for Samsara readers providing common functionality for API communication.
-/// Samsara uses Bearer token authentication.
-/// </summary>
 public class SamsaraReaderBase
 {
     private readonly ICredentialHttpClientFactory _httpClientFactory;
@@ -38,10 +34,6 @@ public class SamsaraReaderBase
         _httpClientFactory = httpClientFactory;
     }
 
-    /// <summary>
-    /// Initializes the Samsara reader with the provided credential.
-    /// Sets up Bearer token authentication.
-    /// </summary>
     public virtual Task Init(CredentialTokenDto credential, CancellationToken cancellationToken = default)
     {
         var httpClient = _httpClientFactory.CreateClientAsync(credential, cancellationToken);

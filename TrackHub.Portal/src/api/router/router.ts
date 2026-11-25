@@ -15,10 +15,8 @@
 */
 
 /**
- * Router API (Router backend): plain typed async functions. Failures THROW
- * ApiError — fallbacks and toasts belong to the caller layer. `pingOperator`
- * and `reverseGeocode` are the silent operations: their callers swallow the
- * error (no toast) rather than routing it through the query-cache handler.
+ * `pingOperator` and `reverseGeocode` are silent: their callers swallow the error rather than
+ * routing it through the query-cache handler.
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
@@ -45,17 +43,13 @@ export type Address = AddressFieldsType;
 export type ProviderCapabilities = GetProviderCapabilitiesQuery['providerCapabilities'][number];
 export type { PositionSourceType };
 
-/**
- * The deployment's provider capability matrix, declared by the Router's registered
- * provider assemblies. Doubles as the provider list for operator screens — the portal
- * carries no local protocol table.
- */
+/** Doubles as the provider list for operator screens: the portal carries no local protocol table. */
 export async function getProviderCapabilities(options?: RequestOptions): Promise<ProviderCapabilities[]> {
   const data = await executeGraphQL('router', GetProviderCapabilitiesDocument, undefined, options);
   return data.providerCapabilities;
 }
 
-/** Silent op: tests connectivity with an operator. Throws on transport failure. */
+/** Silent op: throws on transport failure. */
 export async function pingOperator(operatorId: string): Promise<boolean> {
   const data = await executeGraphQL('router', PingOperatorDocument, { operatorId });
   return data.pingOperator;
@@ -92,10 +86,8 @@ export async function getTripsByTransporter(
 }
 
 /**
- * Silent op: resolves a human-readable address for a coordinate on demand.
- * When a transporterId is provided the backend also persists the resolved
- * address onto the transporter's latest-position row. Throws on failure — the
- * map callers swallow it and keep their local reverse-geocode cache untouched.
+ * Silent op. With a transporterId the backend also persists the address onto the transporter's
+ * latest-position row. Map callers swallow failures and keep their local cache untouched.
  */
 export async function reverseGeocode(
   latitude: number,

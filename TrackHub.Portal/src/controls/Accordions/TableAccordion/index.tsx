@@ -57,10 +57,8 @@ const summarySx = {
 export interface TableAccordionProps {
   title: string;
   /**
-   * Stable, language-independent identifier for the section, rendered as
-   * `data-testid="section-<key>"`. Screens stack many structurally identical
-   * sections, so an end-to-end test needs a handle that does not move with the
-   * locale or the section order.
+   * Language-independent handle rendered as `data-testid="section-<key>"`: screens stack many
+   * structurally identical sections, so e2e tests need one that does not move with locale or order.
    */
   sectionKey?: string;
   expanded: boolean;

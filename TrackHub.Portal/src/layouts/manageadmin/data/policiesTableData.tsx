@@ -26,7 +26,6 @@ import { LoadingContext } from 'LoadingContext';
 import { toCamelCase } from 'utils/stringUtils';
 import { useAuth } from "AuthContext";
 
-/** A column descriptor / rendered row for the vendored policies `Table`. */
 export interface PolicyTableColumn { name: string; title?: string; align?: "left" | "right" | "center"; }
 export type PolicyTableRow = Record<string, ReactNode>;
 export interface PolicyTableData { columns: PolicyTableColumn[]; rows: PolicyTableRow[]; }
@@ -63,7 +62,6 @@ function usePolicyTableData(fetchData: boolean, handleOpenClick: (policyId: numb
     })),
   });
 
-  // Keep the global spinner UX for the initial load / invalidation refetch.
   useEffect(() => {
     setLoading(policiesQuery.isFetching);
   }, [policiesQuery.isFetching, setLoading]);

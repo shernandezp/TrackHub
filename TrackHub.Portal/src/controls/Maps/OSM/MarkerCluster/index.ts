@@ -119,7 +119,6 @@ const MarkerCluster = ({ markers, selectedMarker, handleSelected, viewportThresh
         entry.animationFrame = requestAnimationFrame(step);
     }, [refreshClusterMembership]);
 
-    // Create the cluster group once per map instance.
     useEffect(() => {
         const markerGroup = L.markerClusterGroup({
             chunkedLoading: true,
@@ -156,7 +155,6 @@ const MarkerCluster = ({ markers, selectedMarker, handleSelected, viewportThresh
         const animate = list.length <= MAX_ANIMATED_MARKERS;
         const nextIds = new Set(list.map(markerId));
 
-        // Remove markers that left the data set (or the viewport window).
         entriesRef.current.forEach((entry, id) => {
             if (!nextIds.has(id)) {
                 if (entry.animationFrame) cancelAnimationFrame(entry.animationFrame);

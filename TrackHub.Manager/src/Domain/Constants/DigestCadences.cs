@@ -15,7 +15,6 @@
 
 namespace TrackHub.Manager.Domain.Constants;
 
-/// <summary>Digest cadence values in ThrottlingJson.</summary>
 public static class DigestCadences
 {
     public const string None = nameof(None);

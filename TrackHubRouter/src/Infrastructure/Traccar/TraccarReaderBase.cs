@@ -18,7 +18,6 @@ using TrackHub.Router.Domain.Helpers;
 using TrackHub.Router.Domain.Interfaces;
 namespace TrackHub.Router.Infrastructure.Traccar;
 
-// This class represents the base class for Traccar readers.
 public abstract class TraccarReaderBase(
     ICredentialHttpClientFactory httpClientFactory, 
     IHttpClientService httpClientService)
@@ -27,9 +26,7 @@ public abstract class TraccarReaderBase(
 
     public ProtocolType Protocol => ProtocolType.Traccar;
 
-    // Initializes the Traccar reader with the provided credential. Traccar auth is header-only
-    // (no login round-trip), so this completes synchronously and returns a completed task — the
-    // reader implements the async port directly, no thread-pool-hopping adapter needed.
+    // Traccar auth is header-only (no login round-trip), so Init completes synchronously.
     public virtual Task Init(CredentialTokenDto credential, CancellationToken cancellationToken = default)
     {
         var httpClient = httpClientFactory.CreateClientAsync(credential, cancellationToken);

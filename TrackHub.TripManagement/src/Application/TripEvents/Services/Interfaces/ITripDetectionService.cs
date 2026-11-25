@@ -18,7 +18,7 @@ namespace TrackHub.TripManagement.Application.TripEvents.Services.Interfaces;
 /// <summary>
 /// Turns the raw position feed into trip business events: arrival, departure and route deviation.
 /// Operates only on the account's <c>InProgress</c> trips — a small working set, unlike the
-/// account-wide geofence catalog (spec 11 §7.4).
+/// account-wide geofence catalog.
 /// </summary>
 public interface ITripDetectionService
 {

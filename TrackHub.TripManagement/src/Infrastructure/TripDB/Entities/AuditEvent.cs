@@ -15,7 +15,7 @@
 
 namespace TrackHub.TripManagement.Infrastructure.TripDB.Entities;
 
-// Manager-owned central audit store (spec 24). TripManagement appends rows to it but never
+// Manager-owned central audit store. TripManagement appends rows to it but never
 // migrates it.
 public sealed class AuditEvent(
     Guid accountId,

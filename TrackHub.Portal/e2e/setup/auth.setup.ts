@@ -1,14 +1,8 @@
 /**
- * `setup` project: signs every role in ONCE and leaves behind the storage states
- * the rest of the suite reuses.
- *
- * The portal throttles sign-in (3 attempts / 30 s in `AuthContext.login`), so
- * credentials are typed here and nowhere else.
- *
- * Manager and User roles come from `.env.e2e` when the environment provides
- * them. When it does not, they are CREATED through the real Account Management
- * screens — the same clicks a human would make — and recorded in
- * `e2e/.auth/created.json` for the global teardown to remove.
+ * Signs every role in once. The portal throttles sign-in (3 attempts / 30 s in
+ * `AuthContext.login`), so credentials are typed here and nowhere else. Manager
+ * and User roles missing from `.env.e2e` are created through the Account
+ * Management screens and recorded in `e2e/.auth/created.json` for teardown.
  */
 
 import fs from 'node:fs';
@@ -27,9 +21,8 @@ const t = (key: string, vars?: Record<string, string | number>) => translate(key
 setup.describe.configure({ mode: 'serial' });
 
 /**
- * Signs a role in inside its own browser context and saves state + tokens.
- * Returns the AuthorityServer's rejection text instead of throwing, so a
- * principal that cannot sign in is recorded with its reason rather than crashing setup.
+ * Returns the AuthorityServer's rejection text instead of throwing, so a principal
+ * that cannot sign in is recorded with its reason rather than crashing setup.
  */
 async function establish(
   browser: Browser,
@@ -57,12 +50,8 @@ async function establish(
 }
 
 /**
- * Opens a screen in an already-cookie-authenticated context.
- *
- * A deep link cannot be typed: the token lives in memory, so a document load
- * always re-signs in, and the callback page navigates to `/dashboard`
- * regardless of what was asked for. The sidenav click is a client-side
- * navigation and keeps the freshly minted token.
+ * A deep link cannot be typed: the token lives in memory and the callback page
+ * navigates to `/dashboard` regardless. The sidenav click keeps the token.
  */
 async function openScreen(page: Page, navKey: string, path: string): Promise<void> {
   await page.goto('/dashboard');
@@ -71,7 +60,6 @@ async function openScreen(page: Page, navKey: string, path: string): Promise<voi
   await page.waitForURL(`**${path}`);
 }
 
-/** Opens Account Management and expands one section by its stable test id. */
 async function openSection(page: Page, key: string): Promise<void> {
   // Retried: expanding a section above this one reflows the page, and a header
   // that moves out from under the pointer mid-click swallows the toggle.
@@ -89,7 +77,6 @@ async function openSection(page: Page, key: string): Promise<void> {
   await expect(header).toHaveAttribute('aria-expanded', 'true');
 }
 
-/** Creates one account user through the UI and grants it a role. Returns its id. */
 async function createUser(
   page: Page,
   email: string,
@@ -110,7 +97,6 @@ async function createUser(
   await dialog.getByRole('button', { name: t('generic.save') }).click();
   await expect(dialog).toBeHidden();
 
-  // Find the row the create produced, and read its id from the row test id.
   await page.getByTestId('section-users').getByRole('textbox').first().fill(email);
   const row = page.locator('[data-testid^="row-"]').filter({ hasText: email }).first();
   await expect(row).toBeVisible({ timeout: 20_000 });
@@ -188,7 +174,7 @@ setup('manager and user roles exist and sign in', async ({ browser }) => {
   writeRefusals(refusals);
 
   // Recorded, not thrown: failing here would take the whole suite's setup dependency with it and
-  // skip all 145 tests that do not need these roles. The specs that DO need them fail instead.
+  // skip every test that does not need these roles. The specs that DO need them fail instead.
   for (const [role, refusal] of Object.entries(refusals)) {
     console.log(`[setup] the ${role} principal exists but cannot sign in: ${refusal}`);
   }

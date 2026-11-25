@@ -18,9 +18,6 @@ using TrackHub.Geofencing.Application.GeofenceEvents.Services.Interfaces;
 
 namespace TrackHub.Geofencing.Application.GeofenceEvents.Services;
 
-/// <summary>
-/// Service that processes transporter positions to detect geofence entry/exit events.
-/// </summary>
 public class GeofenceDetectionService(
     IGeofenceReader geofenceReader,
     IGeofenceEventReader geofenceEventReader,
@@ -58,9 +55,8 @@ public class GeofenceDetectionService(
             return new GeofenceProcessingResultVm(0, 0, 0);
 
 
-        // Pre-load open events for all transporters, and resolve containment for the WHOLE batch.
-        // Both used to run per transporter and per position, so one sync cycle became thousands of
-        // round trips with a ST_Contains each.
+        // Open events and containment are resolved for the WHOLE batch up front: per-transporter,
+        // per-position lookups turned one sync cycle into thousands of ST_Contains round trips.
         var transporterIds = positionsList.Select(p => p.TransporterId).Distinct().ToList();
         var openEvents = await geofenceEventReader.GetOpenEventsForTransportersAsync(transporterIds, accountId, cancellationToken);
         var openEventsByTransporter = transporterIds.ToDictionary(
@@ -78,7 +74,6 @@ public class GeofenceDetectionService(
                 Containing: containmentByIndex.TryGetValue(index, out var hits) ? hits.ToHashSet() : []))
             .ToList();
 
-        // Process positions and accumulate results
         var eventsCreated = 0;
         var eventsUpdated = 0;
         var entries = new List<GeofenceEventVm>();

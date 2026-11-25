@@ -46,9 +46,6 @@ interface AccountFeatureDialogProps {
   configFields: Record<string, ConfigFieldDef[]>;
 }
 
-// SuperAdministrator editor for a single account feature. In "add" mode the account and feature
-// are chosen; in "edit" mode they are fixed. Feature enablement, tier and the storage/cost
-// configuration are billing-owned and only editable here.
 function AccountFeatureDialog({ open, setOpen, handleSubmit, values, handleChange, errors, isAdd, onAccountChange, featureOptions, configFields }: AccountFeatureDialogProps) {
   const { t } = useTranslation();
   const fields = configFields[values.featureKey ?? ''] ?? [];

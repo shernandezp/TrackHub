@@ -15,12 +15,8 @@
  */
 
 /**
- * Finding AD-03: the Manager list queries became paginated (`{ items,
- * totalCount }` behind a non-null input) and a set of unpaged lookups was added
- * for the pickers. The assertions here are about the CONTRACT — that every
- * paged reader forwards skip/take/search and returns the page whole, that the
- * `getAll*` drains really exhaust the server, and above all that a PICKER never
- * binds a single page (the truncation this finding exists to kill).
+ * Every paged reader forwards skip/take/search and returns the page whole, the `getAll*` drains
+ * really exhaust the server, and a PICKER never binds a single page.
  */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
@@ -45,7 +41,6 @@ vi.mock('api/core/graphqlClient', () => ({ executeGraphQL: vi.fn() }));
 const mockExecute = vi.mocked(executeGraphQL);
 const ACCOUNT_ID = '11111111-1111-1111-1111-111111111111';
 
-/** The variables the mocked client saw on call `index`. */
 const varsOf = (index = 0) => mockExecute.mock.calls[index][2] as Record<string, unknown>;
 
 beforeEach(() => {
@@ -112,8 +107,7 @@ describe('paged list readers', () => {
       recentOnly: true,
     });
 
-    // The recently-added and unassigned toggles are SERVER arguments now — the
-    // whole point of restoring them honestly on a server-paged list.
+    // The recently-added and unassigned toggles are SERVER arguments.
     expect(varsOf()).toMatchObject({ unassignedOnly: true, recentOnly: true });
   });
 });
@@ -129,8 +123,7 @@ describe('picker lookups', () => {
 
   // The lookups exist so a picker fetches a narrow projection instead of draining
   // full pages. These assert each widened lookup carries EXACTLY the columns its
-  // consumer renders — the drain helpers were deleted, so a missing column would
-  // strand the consumer with no fallback.
+  // consumer renders: a missing column would strand the consumer with no fallback.
   test('the POI lookup carries the map projection and stays unpaged', async () => {
     mockExecute.mockResolvedValue({
       pointOfInterestLookup: [
@@ -151,8 +144,7 @@ describe('picker lookups', () => {
     const rows = await getPointOfInterestLookup();
 
     expect(mockExecute.mock.calls[0][2]).toBeUndefined();
-    // The overlay reads every one of these; the dashboard used to drain full
-    // pages precisely because the lookup lacked them.
+    // The overlay reads every one of these.
     expect(rows[0]).toMatchObject({ color: 3, type: 1, description: 'd', address: 'a', active: true });
   });
 

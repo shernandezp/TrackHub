@@ -26,13 +26,6 @@ public class UserIsManagerQueryHandler(IUserReader reader, IUser user) : IReques
 {
     private Guid UserId { get; } = Guid.TryParse(user.Id, out var userId) ? userId : throw new UnauthorizedAccessException();
 
-    /// <summary>
-    /// Handles the UserIsManagerQuery request by checking if the user is a manager.
-    /// It uses the IUserReader service to perform the check.
-    /// </summary>
-    /// <param name="request"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>Returns a boolean value indicating whether the user is a manager or not.</returns>
     public async Task<bool> Handle(UserIsManagerQuery request, CancellationToken cancellationToken)
         => await reader.IsManagerAsync(UserId, cancellationToken);
 

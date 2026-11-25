@@ -15,11 +15,9 @@
  */
 
 /**
- * A trip stop's `city` is a separate disclosure level from its `address`: the
- * anonymous customer snapshot may carry the locality but never the full street
- * label. The city therefore has to come from the reverse geocoder's OWN city
- * field — deriving it from the address string would be the same leak in a new
- * form (spec 11 §7.8).
+ * The anonymous customer snapshot may carry the locality but never the street label, so the city
+ * must come from the reverse geocoder's OWN city field; deriving it from the address would be the
+ * same leak in a new form.
  */
 
 import React from 'react';
@@ -85,10 +83,8 @@ test('fills city from the geocoder city field, not from the address string', asy
 });
 
 test('re-resolves the city for a stop that already has an address but no city', async () => {
-  // The stop's city is now selected and seeded from the stored value, so this
-  // is the remaining real case: a stop created before the locality was captured
-  // has an address but no city. The resolve has to run anyway, or editing it
-  // for any other reason saves the gap back permanently.
+  // A stop created before the locality was captured has an address but no city. The resolve has to
+  // run anyway, or editing it for any other reason saves the gap back permanently.
   vi.mocked(reverseGeocode).mockResolvedValue({
     address: 'Cra 7 #71-52, Bogotá',
     city: 'Bogotá',

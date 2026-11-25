@@ -18,7 +18,7 @@ namespace TrackHub.TripManagement.Domain.Interfaces;
 /// <summary>
 /// Route replay, served by Telemetry's <c>positionHistoryRange</c> under <c>trip_client</c>.
 /// Telemetry owns the 31-day window and the 10 000-point cap; this module clamps to them and
-/// reports truncation explicitly rather than silently shortening a route (acceptance 22).
+/// reports truncation explicitly rather than silently shortening a route.
 /// </summary>
 public interface IPositionHistoryClient
 {

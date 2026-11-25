@@ -33,15 +33,13 @@ namespace TrackHub.TripManagement.Application.UnitTests;
 /// configured exactly as the service registers it.
 /// <para>
 /// Every other detection fixture mocks <c>ITripWriter</c>/<c>ITripStopWriter</c>, and the writer
-/// fixtures call the writers directly. Nothing joined the two — and the seam between them is
-/// precisely where the defect lived that made all of this inert in production: the second write to
-/// a trip inside one request threw, Router swallowed it, and no test could see it. A suite that
-/// only ever exercises each side alone cannot answer "does zero-touch work".
+/// fixtures call the writers directly. The seam between them — a second write to a trip inside
+/// one request — is only exercised here.
 /// </para>
 /// <para>
 /// <b>One position per call, always.</b> Router pushes one deduped fix per transporter per tick, so
 /// a scenario driven through a single call proves nothing about the deployed behaviour — the
-/// debounce clocks and the deviation run length only mature across calls (spec 11 §7.4).
+/// debounce clocks and the deviation run length only mature across calls.
 /// </para>
 /// <para>
 /// Containment runs in-process here: the InMemory provider evaluates
@@ -211,7 +209,7 @@ public class ZeroTouchEndToEndTests
             Assert.That(afterStart.Status, Is.EqualTo(TripStatuses.InProgress), "the trip never auto-started");
             Assert.That(afterStart.OriginArrivedAt, Is.EqualTo(Start));
 
-            // The MEASURED start — the fix's own DeviceDateTime, never the server clock (§12.3).
+            // The MEASURED start — the fix's own DeviceDateTime, never the server clock.
             Assert.That(afterStart.ActualStartAt, Is.EqualTo(Start));
         });
 
@@ -257,7 +255,7 @@ public class ZeroTouchEndToEndTests
     }
 
     /// <summary>
-    /// The measurements the reports are built on (§4.3): loading is origin arrival → origin
+    /// The measurements the reports are built on: loading is origin arrival → origin
     /// departure, and the odometer accumulates from the fixes rather than from the plan.
     /// </summary>
     [Test]
@@ -283,7 +281,7 @@ public class ZeroTouchEndToEndTests
 
     /// <summary>
     /// A trip that only exists because a dispatcher planned it must not start on a vehicle that
-    /// happens to be parked somewhere else. Positional evidence is the trigger, not the clock (§2).
+    /// happens to be parked somewhere else. Positional evidence is the trigger, not the clock.
     /// </summary>
     [Test]
     public async Task AnArmedTripWhoseVehicleIsElsewhere_ArmsButDoesNotStart()
@@ -299,15 +297,15 @@ public class ZeroTouchEndToEndTests
             Assert.That(trip.Status, Is.EqualTo(TripStatuses.Created), "a trip started on a clock, not on evidence");
             Assert.That(trip.ActualStartAt, Is.Null);
 
-            // Nothing accrues before the measured start — the hazard spec 11 §10 refused to accept.
+            // Nothing accrues before the measured start.
             Assert.That(trip.LastPositionAt, Is.Null, "the odometer ran before the trip started");
             Assert.That(trip.ActualDistanceMeters, Is.Zero);
         });
     }
 
     /// <summary>
-    /// The account-level kill switch: with <c>autoLifecycle</c> off the working set is exactly what
-    /// it was before zero-touch, so a fleet without reliable GPS runs the manual flow untouched (§8).
+    /// The account-level kill switch: with <c>autoLifecycle</c> off the working set is
+    /// <c>InProgress</c> only, so a fleet without reliable GPS runs the manual flow untouched.
     /// </summary>
     [Test]
     public async Task WithAutoLifecycleOff_AVehicleAtItsOriginStartsNothing()
@@ -328,7 +326,7 @@ public class ZeroTouchEndToEndTests
     }
 
     /// <summary>
-    /// One fix, one transaction (§6). The unit of work buffers everything a fix measures and commits
+    /// One fix, one transaction. The unit of work buffers everything a fix measures and commits
     /// it together, so a partially-applied fix is not a state the database can be left in.
     /// <para>
     /// This is asserted by counting saves rather than by inspecting rows, because the failure it
@@ -426,7 +424,7 @@ public class ZeroTouchEndToEndTests
     }
 
     /// <summary>
-    /// Replaying a batch changes nothing (acceptance 13). Router retries, and the WithRetry policy
+    /// Replaying a batch changes nothing. Router retries, and the WithRetry policy
     /// can redeliver a call that already committed.
     /// </summary>
     [Test]

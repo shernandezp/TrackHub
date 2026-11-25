@@ -19,18 +19,11 @@ using TrackHub.Router.Domain.Helpers;
 
 namespace TrackHub.Router.Infrastructure.Flespi;
 
-/// <summary>
-/// Reader for retrieving position information from Flespi API.
-/// </summary>
 public sealed class PositionReader(
     ICredentialHttpClientFactory httpClientFactory,
     IHttpClientService httpClientService)
     : FlespiReaderBase(httpClientFactory, httpClientService), IPositionReader
 {
-    /// <summary>
-    /// Retrieves the last position of a single device asynchronously.
-    /// Uses /gw/devices/{id}/messages with reverse=true and count=1 to get the latest message.
-    /// </summary>
     public async Task<PositionVm> GetDevicePositionAsync(DeviceTransporterVm deviceDto, CancellationToken cancellationToken)
     {
         var position = await ReadLatestAsync(deviceDto, cancellationToken);
@@ -39,9 +32,6 @@ public sealed class PositionReader(
             : position;
     }
 
-    /// <summary>
-    /// Retrieves the last positions of multiple devices asynchronously.
-    /// </summary>
     public async Task<IEnumerable<PositionVm>> GetDevicePositionAsync(IEnumerable<DeviceTransporterVm> devices, CancellationToken cancellationToken)
         => await ProviderConcurrency.ReadEachDeviceAsync(devices, ReadLatestAsync, cancellationToken);
 
@@ -54,10 +44,6 @@ public sealed class PositionReader(
     }
 
 
-    /// <summary>
-    /// Retrieves the positions of a device within a specified time range asynchronously.
-    /// Uses /gw/devices/{id}/messages with time filters (Unix seconds).
-    /// </summary>
     public async Task<IEnumerable<PositionVm>> GetPositionAsync(DateTimeOffset from, DateTimeOffset to, DeviceTransporterVm deviceDto, CancellationToken cancellationToken)
     {
         var fromSeconds = from.ToUnixTimeSeconds();

@@ -47,14 +47,12 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     }
 });
 
-// Add services to the container.
 builder.Services.AddApplicationServices();
 builder.Services.AddApplicationDbContext(builder.Configuration);
 builder.Services.AddAppManagerContext();
 builder.Services.AddInfrastructureServices(builder.Configuration, false);
 builder.Services.AddWebServices();
 
-// Add HealthChecks
 builder.Services.AddHealthChecks()
             .AddDbContextCheck<ApplicationDbContext>()
             .AddCheck<TrackHub.Security.Web.Infrastructure.OutboxHealthCheck>("outbox");
@@ -69,7 +67,6 @@ builder.Services.AddCors(options => options
                     .AllowAnyHeader()
                     .AllowCredentials()));
 
-// Configure HSTS
 builder.Services.AddHsts(options =>
 {
     options.MaxAge = TimeSpan.FromDays(365 * 2);
@@ -86,10 +83,8 @@ app.UseExceptionHandler(options => { });
 
 app.UseHeaderPropagation();
 
-// Enable CORS
 app.UseCors("AllowFrontend");
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseHsts();

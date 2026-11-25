@@ -23,7 +23,6 @@ import { formatDateTime } from "utils/dateUtils";
 import { useTheme } from '@mui/material/styles';
 import type { Trip } from "api/router/router";
 
-/** The (partial) replay filter values consumed for the date-range header. */
 interface TripListFilters {
   startDate?: string;
   endDate?: string;

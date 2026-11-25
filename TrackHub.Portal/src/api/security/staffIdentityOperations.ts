@@ -15,15 +15,8 @@
 */
 
 /**
- * Staff identity GraphQL documents (Security backend) — staff credentials and
- * device registrations. Codegen validates these against schemas/security.graphql;
- * values always travel as variables.
- *
- * Device registration itself (registerStaffDevice / updateStaffDevicePushToken)
- * belongs to the staff session (spec 10) and is deliberately NOT exposed here:
- * the portal only lists and revokes devices. The VMs are already redacted
- * server-side (no password hash, push token masked to its last 6 characters,
- * refresh-token family id absent from the VM entirely).
+ * Device registration itself belongs to the staff session and is deliberately not exposed: the
+ * portal only lists and revokes devices. The VMs are redacted server-side.
  */
 
 import { graphql } from './generated';

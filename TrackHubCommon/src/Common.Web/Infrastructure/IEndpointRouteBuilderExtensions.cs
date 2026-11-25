@@ -15,16 +15,9 @@
 
 namespace Common.Web.Infrastructure;
 
-// Contains extension methods for the IEndpointRouteBuilder interface.
 public static class IEndpointRouteBuilderExtensions
 {
 
-    // Maps a GET request to the specified handler method.
-    // - builder: The IEndpointRouteBuilder instance.
-    // - handler: The handler method to be executed for the GET request.
-    // - pattern: The URL pattern to match for the GET request. (optional)
-    // Returns:
-    // The updated IEndpointRouteBuilder instance.
     public static IEndpointRouteBuilder MapGet(this IEndpointRouteBuilder builder, Delegate handler, string pattern = "")
     {
         Guard.Against.AnonymousMethod(handler);
@@ -35,13 +28,6 @@ public static class IEndpointRouteBuilderExtensions
         return builder;
     }
 
-    // Maps a POST request to the specified handler method.
-    // Parameters:
-    // - builder: The IEndpointRouteBuilder instance.
-    // - handler: The handler method to be executed for the POST request.
-    // - pattern: The URL pattern to match for the POST request. (optional)
-    // Returns:
-    // The updated IEndpointRouteBuilder instance.
     public static IEndpointRouteBuilder MapPost(this IEndpointRouteBuilder builder, Delegate handler, string pattern = "")
     {
         Guard.Against.AnonymousMethod(handler);
@@ -52,13 +38,6 @@ public static class IEndpointRouteBuilderExtensions
         return builder;
     }
 
-    // Maps a PUT request to the specified handler method.
-    // Parameters:
-    // - builder: The IEndpointRouteBuilder instance.
-    // - handler: The handler method to be executed for the PUT request.
-    // - pattern: The URL pattern to match for the PUT request.
-    // Returns:
-    // The updated IEndpointRouteBuilder instance.
     public static IEndpointRouteBuilder MapPut(this IEndpointRouteBuilder builder, Delegate handler, string pattern)
     {
         Guard.Against.AnonymousMethod(handler);
@@ -69,13 +48,6 @@ public static class IEndpointRouteBuilderExtensions
         return builder;
     }
 
-    // Maps a DELETE request to the specified handler method.
-    // Parameters:
-    // - builder: The IEndpointRouteBuilder instance.
-    // - handler: The handler method to be executed for the DELETE request.
-    // - pattern: The URL pattern to match for the DELETE request.
-    // Returns:
-    // The updated IEndpointRouteBuilder instance.
     public static IEndpointRouteBuilder MapDelete(this IEndpointRouteBuilder builder, Delegate handler, string pattern)
     {
         Guard.Against.AnonymousMethod(handler);

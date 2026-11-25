@@ -35,7 +35,6 @@ builder.AddTrackHubDataProtection();
 var allowedCORSOrigins = builder.Configuration.GetAllowedCorsOrigins();
 Guard.Against.NullOrEmpty(allowedCORSOrigins, message: $"Allowed Origins configuration for CORS not loaded");
 
-// Add services to the container.
 builder.Services.AddApplicationServices();
 builder.Services.AddApplicationDbContext(builder.Configuration);
 builder.Services.AddInfrastructureServices(builder.Configuration);
@@ -57,22 +56,18 @@ builder.Services.AddScheduledJob<NotificationDispatchJob>();
 builder.Services.AddScheduledJob<AlertEvaluationJob>();
 builder.Services.AddScheduledJob<NotificationDigestJob>();
 
-// Add HealthChecks
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<ApplicationDbContext>();
 
 builder.Services.AddTrackHubGraphQLServer<Query, Mutation>(builder.Environment.IsDevelopment());
 
-// Anonymous platform-status announcements endpoint (spec 28 ST-09): named policies, applied per
-// endpoint so nothing else in the pipeline changes behavior.
+// Named policies, applied per endpoint so nothing else in the pipeline changes behavior.
 builder.Services.AddOutputCache(options =>
     options.AddPolicy(PlatformStatus.CachePolicy, policy => policy.Expire(TimeSpan.FromSeconds(60))));
 
-// Partitioned PER CLIENT IP, not a single global bucket: one shared 60/minute budget across every
-// caller means the endpoint starts rejecting once a few dozen portal sessions poll it — i.e. it
-// would fail hardest during the incident it exists to report. The partitioning lives in Common.Web
-// so this and TripManagement's public trip links cannot drift apart; it also requires
-// UseForwardedHeaders (below) to see the real client rather than nginx.
+// Partitioned per client IP: one global bucket would start rejecting once a few dozen portal sessions
+// poll it, failing hardest during the incident it exists to report. Requires UseForwardedHeaders
+// (below) to see the real client rather than nginx.
 builder.Services.AddAnonymousEndpointRateLimiter(
     PlatformStatus.RateLimitPolicy, permitLimit: 60, window: TimeSpan.FromMinutes(1));
 
@@ -84,7 +79,6 @@ builder.Services.AddCors(options => options
                     .AllowAnyHeader()
                     .AllowCredentials()));
 
-// Configure HSTS
 builder.Services.AddHsts(options =>
 {
     options.MaxAge = TimeSpan.FromDays(365 * 2);
@@ -103,10 +97,8 @@ app.UseExceptionHandler(options => { });
 
 app.UseHeaderPropagation();
 
-// Enable CORS
 app.UseCors("AllowFrontend");
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseHsts();

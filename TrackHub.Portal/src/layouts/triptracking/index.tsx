@@ -43,7 +43,6 @@ const Fact = ({ label, value }: { label: string; value: string }) => (
   </ArgonBox>
 );
 
-/** Full-page localized outcome for a link that cannot be resolved. */
 const LinkState = ({ code }: { code: PublicTripErrorCode }) => {
   const { t } = useTranslation();
   const titles: Record<PublicTripErrorCode, string> = {
@@ -82,16 +81,10 @@ const LinkState = ({ code }: { code: PublicTripErrorCode }) => {
 };
 
 /**
- * Anonymous customer trip tracking.
- *
- * DISCLOSURE RULE: this page renders exactly what the server sent and nothing
- * else. The snapshot is already projected from the trip's share flags, so a
- * field the customer was not granted is simply ABSENT from the payload — every
- * optional value is therefore tested for presence and omitted when missing.
- * There is no client-side filtering standing in for the server's projection,
- * and no placeholder is shown for a withheld field: a blank "Staff: —" row
- * would itself leak that a staff exists. Toll and cost figures never appear at
- * all; the backend does not send them.
+ * DISCLOSURE RULE: render exactly what the server sent. The snapshot is already projected from
+ * the share flags, so every optional value is tested for presence and omitted when missing; no
+ * placeholder is shown for a withheld field (a blank "Staff: —" row would itself leak that a
+ * staff exists).
  */
 function TripTracking() {
   const { t } = useTranslation();
@@ -133,21 +126,10 @@ function TripTracking() {
   }));
 
   // NO STOP PINS ON THIS MAP — deliberately, do not add them back.
-  //
-  // The snapshot carries no stop coordinates, and it must not: §7.8 lists what
-  // an anonymous link may disclose about a stop (sequence, name, city, status,
-  // window, arrival, ETA) and coordinates are not on it. Adding them would be a
-  // disclosure change needing a spec amendment, not a UI tweak.
-  //
-  // This page previously drew numbered pins at evenly spaced indices along the
-  // planned-route polyline. Those positions were arithmetic, not data: a stop
-  // pin sat wherever its ordinal fell on the line, which is nowhere near the
-  // real address unless the stops happen to be equidistant. A customer reads a
-  // numbered pin as "this is where my delivery is", so a fabricated pin is
-  // worse than no pin — it is a confident wrong answer about someone's parcel.
-  //
-  // The stop timeline beside the map already conveys the sequence, the ETA and
-  // the status honestly, using only values the server actually sent.
+  // The snapshot carries no stop coordinates, and an anonymous link must not disclose them. Pins
+  // placed along the polyline would be arithmetic, not data: a customer reads a numbered pin as
+  // "this is where my delivery is", so a fabricated pin is worse than none. The stop timeline
+  // conveys sequence, ETA and status from values the server actually sent.
   const showMap = plannedRoute.length > 1 || hasLivePosition;
 
   return (
@@ -167,9 +149,8 @@ function TripTracking() {
           }
           size="sm"
           container
-          // A customer reads "Created" as a system noise word; what they are being told is
-          // that their delivery is SCHEDULED (spec 11a §10). The status itself is unchanged
-          // — only the word this page shows for it.
+          // A customer reads "Created" as system noise; what they are being told is that their delivery
+          // is SCHEDULED. Only the displayed word changes, not the status.
           badgeContent={
             trip.status === 'Created'
               ? t('tripTracking.scheduled')
@@ -188,10 +169,8 @@ function TripTracking() {
       </ArgonBox>
 
       <ArgonBox display="flex" flexWrap="wrap" mt={2}>
-        {/* No customer name: `PublicTripVm` deliberately does not carry one. On a
-            multi-drop trip the consignee is not the same party as every link
-            holder, so naming a customer would tell one recipient who another
-            recipient is (spec 11 §7.8). */}
+        {/* No customer name: on a multi-drop trip the consignee is not the same party as
+            every link holder, so naming one would tell a recipient who another is. */}
         <Fact label={t('tripTracking.plannedStart')} value={formatDateTime(trip.plannedStartAt)} />
         {trip.plannedEndAt && (
           <Fact label={t('tripTracking.plannedEnd')} value={formatDateTime(trip.plannedEndAt)} />

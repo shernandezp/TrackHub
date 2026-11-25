@@ -21,10 +21,8 @@ public sealed class VmTransporterPositionConfiguration : IEntityTypeConfiguratio
 {
     public void Configure(EntityTypeBuilder<VwTransporterPosition> builder)
     {
-        //Table name
         builder.ToView(name: ViewMetadata.VwTransporterPosition, schema: SchemaMetadata.Geofencing);
 
-        //Column names
         builder.Property(x => x.TransporterId).HasColumnName("id");
         builder.Property(x => x.Name).HasColumnName("name");
         builder.Property(e => e.Geom)
@@ -32,7 +30,6 @@ public sealed class VmTransporterPositionConfiguration : IEntityTypeConfiguratio
             .HasColumnType("geometry(Point, 4326)");
         builder.Property(x => x.AccountId).HasColumnName("accountid");
 
-        //Indexes
         builder.HasKey(e => e.TransporterId);
     }
 }

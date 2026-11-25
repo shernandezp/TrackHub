@@ -36,12 +36,10 @@ export interface AuthContextValue {
   resetAuthError: () => void;
 }
 
-/** Public, no-auth route that must never be interrupted by the login flow (see routes.tsx). */
 const PUBLIC_STATUS_ROUTE = '/status';
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-// Custom hook to consume the authentication context
 export const useAuth = (): AuthContextValue => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -60,7 +58,6 @@ interface LoginAttempts {
   lastAttempt: number | null;
 }
 
-// Authentication provider component
 export const AuthProvider = ({ children, navigate }: AuthProviderProps) => {
   const [accessToken, setAccessTokenState] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
@@ -80,7 +77,6 @@ export const AuthProvider = ({ children, navigate }: AuthProviderProps) => {
   };
 
   const login = (): void => {
-    // Check if we're in cooldown period
     const now = Date.now();
     if (loginAttemptsRef.current.lastAttempt) {
       const timeSinceLastAttempt = now - loginAttemptsRef.current.lastAttempt;
@@ -94,7 +90,6 @@ export const AuthProvider = ({ children, navigate }: AuthProviderProps) => {
         setAuthError(true);
         return;
       }
-      // Reset counter if cooldown period has passed
       if (timeSinceLastAttempt >= COOLDOWN_PERIOD) {
         loginAttemptsRef.current.count = 0;
       }
@@ -113,8 +108,7 @@ export const AuthProvider = ({ children, navigate }: AuthProviderProps) => {
       const codeChallenge = generateCodeChallenge(codeVerifierRef.current);
       const responseType = 'code';
       const scope = 'web_scope offline_access';
-      // CSRF protection: random state, verified by the callback page. (Was a
-      // constant '123' that the callback never checked.)
+      // CSRF protection: random state, verified by the callback page.
       const state = crypto.randomUUID();
       sessionStorage.setItem('oauth_state', state);
 
@@ -135,7 +129,6 @@ export const AuthProvider = ({ children, navigate }: AuthProviderProps) => {
   const logoff = async (): Promise<void> => {
     await revokeAccessToken(accessToken);
 
-    // Clear any stored tokens or user information
     setAccessToken('');
     setRefreshToken('');
 
@@ -149,7 +142,6 @@ export const AuthProvider = ({ children, navigate }: AuthProviderProps) => {
       setRefreshToken(data.refresh_token);
       return data.access_token;
     } catch (refreshError) {
-      // Refresh token is also expired or invalid, redirect to login page
       if (process.env.NODE_ENV !== 'production') {
         console.error('Token refresh failed:', refreshError);
       }

@@ -44,7 +44,6 @@ const FullscreenControl = ({ mapRef, position = 'TOP_RIGHT' }: FullscreenControl
 
         const map = mapRef.current;
 
-        // Create fullscreen button
         const fullscreenButton = document.createElement('button');
         fullscreenButton.textContent = '⛶';
         fullscreenButton.title = t('utilsmap.toogleFullScreen');

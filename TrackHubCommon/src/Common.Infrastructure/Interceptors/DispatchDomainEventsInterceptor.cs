@@ -21,15 +21,8 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 namespace Common.Infrastructure.Interceptors;
 
 /// <summary>
-/// Dispatches domain events after a successful save.
-/// <para>
-/// Events are COLLECTED before the save and PUBLISHED after it. Collecting afterwards (the original
-/// behaviour) silently dropped every event raised on a DELETED entity: EF detaches removed entries
-/// during <c>SaveChanges</c>, so by the time <c>SavedChanges</c> ran, the change tracker no longer
-/// held them. Nothing in the platform raised domain events at the time, so the defect was latent
-/// until spec 09 added the first producers — including a <c>StaffQualificationDeleted</c> event that
-/// never fired. Do not move collection back into the post-save hook.
-/// </para>
+/// Events are collected before the save and published after it: EF detaches deleted entries during
+/// <c>SaveChanges</c>, so collecting afterwards would silently drop every event raised on a deleted entity.
 /// </summary>
 public class DispatchDomainEventsInterceptor(IPublisher publisher) : SaveChangesInterceptor
 {
@@ -66,7 +59,6 @@ public class DispatchDomainEventsInterceptor(IPublisher publisher) : SaveChanges
         return base.SavedChanges(eventData, result);
     }
 
-    // Dispatches domain events after the database save completes successfully (asynchronous path).
     public override async ValueTask<int> SavedChangesAsync(SaveChangesCompletedEventData eventData, int result, CancellationToken cancellationToken = default)
     {
         await PublishPendingAsync();
@@ -88,10 +80,7 @@ public class DispatchDomainEventsInterceptor(IPublisher publisher) : SaveChanges
         return base.SaveChangesFailedAsync(eventData, cancellationToken);
     }
 
-    /// <summary>
-    /// Snapshots pending domain events off the tracked entities (including Deleted ones, which are
-    /// still tracked at this point) and clears them so a subsequent save cannot re-publish them.
-    /// </summary>
+    /// <summary>Includes Deleted entities, still tracked at this point, and clears them so a later save cannot re-publish.</summary>
     public void CollectDomainEvents(DbContext? context)
     {
         if (context == null) return;
@@ -106,7 +95,6 @@ public class DispatchDomainEventsInterceptor(IPublisher publisher) : SaveChanges
         entities.ForEach(e => e.ClearDomainEvents());
     }
 
-    /// <summary>Publishes and drains everything collected for the save that just committed.</summary>
     public async Task PublishPendingAsync()
     {
         if (_pending.Count == 0) return;

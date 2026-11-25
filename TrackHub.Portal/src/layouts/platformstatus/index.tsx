@@ -15,12 +15,9 @@
 */
 
 /**
- * Public platform status page (`/status`).
- *
- * Renders WITHOUT authentication and outside the signed-in shell: the scenario
- * it exists for is "nobody can log in — is it us or the platform?". Every data
- * source degrades independently; a failed probe or a Manager outage must never
- * blank the page.
+ * Renders without authentication and outside the signed-in shell: it exists for "nobody can log
+ * in — is it us or the platform?". Every data source degrades independently; a failed probe or a
+ * Manager outage must never blank the page.
  */
 
 import { useState, useEffect } from 'react';
@@ -81,14 +78,11 @@ const PlatformStatus = () => {
   });
 
   /**
-   * Two distinct tiers above the public one — these gate UX only; the backend enforces the same
-   * split through the authorization resources.
+   * These gate UX only; the backend enforces the same split through the authorization resources.
    *
-   * - syncTier (SuperAdministrator OR Manager): the GPS synchronisation tile. It pairs with the
-   *   gpsIntegration dashboard Managers already own, and its query returns timestamps only.
-   *   Guarded server-side by `OperatorSyncRuns/Read`.
-   * - adminTier (SuperAdministrator only): background jobs and announcement management —
-   *   operational internals spanning every account. Guarded by `Administrative/Read|Write`.
+   * - syncTier (SuperAdministrator OR Manager): the GPS sync tile, guarded by `OperatorSyncRuns/Read`.
+   * - adminTier (SuperAdministrator only): background jobs and announcements, guarded by
+   *   `Administrative/Read|Write`.
    */
   const adminTier = isAuthenticated && adminCheck.data === true;
   const syncTier = isAuthenticated && (adminCheck.data === true || managerCheck.data === true);
@@ -124,7 +118,6 @@ const PlatformStatus = () => {
   return (
     <ArgonBox minHeight="100vh" py={5} sx={{ backgroundColor: ({ palette }) => palette.background.default }}>
       <Container maxWidth="lg">
-        {/* Announcements first: a maintenance notice outranks the tiles. */}
         <AnnouncementList announcements={announcements.data ?? []} language={i18n.language} />
 
         <Card sx={{ mb: 3 }}>
@@ -180,11 +173,9 @@ const PlatformStatus = () => {
                   {t('platformStatus.backToPortal')}
                 </ArgonButton>
               ) : (
-                // Sessions are in-memory only, so opening /status directly (a bookmark, a reload)
-                // means no session even for an administrator — and this page deliberately never
-                // auto-redirects to login. Offer it as an explicit choice instead, otherwise the
-                // administrator tier is silently unreachable from the very entry point the help
-                // topic recommends.
+                // Sessions are in-memory only and this page never auto-redirects to login, so opening /status
+                // directly means no session even for an administrator. Offer login as an explicit choice,
+                // otherwise the administrator tier is unreachable from this entry point.
                 <ArgonButton variant="outlined" color="dark" size="small" onClick={() => login()}>
                   {t('platformStatus.signIn')}
                 </ArgonButton>

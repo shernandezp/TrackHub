@@ -28,8 +28,8 @@ namespace TrackHub.ServiceContracts.Tests.RoundTripTests;
 
 // The Router's REAL TripPositionWriter pushes a position batch through TripManagement's REAL
 // resolvers — the hot-path feed behind stop arrival/departure detection and corridor deviation.
-// Mandatory per spec 11 §16: the batch payload travels entirely in GraphQL variables, which
-// Layer A document validation cannot see.
+// The batch payload travels entirely in GraphQL variables, which Layer A document validation
+// cannot see.
 [TestFixture]
 public class RouterToTripManagementRoundTripTests
 {

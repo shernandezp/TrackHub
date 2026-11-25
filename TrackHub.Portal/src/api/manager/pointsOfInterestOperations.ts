@@ -14,12 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Point-of-interest GraphQL documents (Manager backend). Codegen validates these
- * against schemas/manager.graphql and emits typed document nodes — values always
- * travel as variables, never string interpolation.
- */
-
 import { graphql } from './generated';
 
 export const PointOfInterestItemFragment = graphql(`
@@ -50,11 +44,8 @@ export const GetPointsOfInterestByAccountDocument = graphql(`
 `);
 
 /**
- * The map projection, unpaged by design (the server raises past its ceiling
- * rather than truncating). Carries what the overlays draw — coordinates place
- * the pin, colour paints it, type/description/address fill the popup — so the
- * dashboard and route planner render from this instead of draining full pages.
- * accountId/groupId stay off it because nothing renders them.
+ * Unpaged by design (the server raises past its ceiling rather than truncating). Carries exactly
+ * what the overlays draw, so the dashboard and route planner need not drain full pages.
  */
 export const GetPointOfInterestLookupDocument = graphql(`
   query GetPointOfInterestLookup {

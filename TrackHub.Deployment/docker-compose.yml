@@ -226,7 +226,7 @@ services:
       - DocumentStorage__AzureBlob__ContainerName=${DOCUMENT_AZURE_CONTAINER_NAME:-}
       - DocumentStorage__AzureBlob__ConnectionString=${DOCUMENT_AZURE_CONNECTION_STRING:-}
       - DocumentStorage__AzureBlob__SasExpiryMinutes=${DOCUMENT_AZURE_SAS_EXPIRY_MINUTES:-}
-      # Notifications (spec 05). Portal link in channel messages + delivery retention.
+      # Notifications. Portal link in channel messages + delivery retention.
       - AppSettings__PortalBaseUrl=${PORTAL_BASE_URL:-https://${DOMAIN}}
       # A delivery stuck in Sending (crashed dispatch cycle) is returned to Pending after this.
       - AppSettings__NotificationSendingReclaimMinutes=${NOTIFICATION_SENDING_RECLAIM_MINUTES:-10}

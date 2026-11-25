@@ -20,11 +20,8 @@ namespace TrackHub.Security.Application.ResourceQueries.GetAll;
 [Authorize(Resource = Resources.Permissions, Action = Actions.Read)]
 public readonly record struct GetResourcesQuery() : IRequest<IReadOnlyCollection<ResourceVm>>;
 
-// The GetResourcesQueryHandler is a class that implements the IRequestHandler interface to handle the GetResourcesQuery.
 public class GetResourcesQueryHandler(IResourceReader reader) : IRequestHandler<GetResourcesQuery, IReadOnlyCollection<ResourceVm>>
 {
-    // The Handle method is responsible for handling the GetResourcesQuery and returning the result.
-    // It asynchronously calls the GetResourcesAsync method of the IResourceReader dependency to retrieve all resources.
     public async Task<IReadOnlyCollection<ResourceVm>> Handle(GetResourcesQuery request, CancellationToken cancellationToken)
         => SeededCatalogLimits.EnsureWithinCeiling(await reader.GetResourcesAsync(cancellationToken), "resources");
 

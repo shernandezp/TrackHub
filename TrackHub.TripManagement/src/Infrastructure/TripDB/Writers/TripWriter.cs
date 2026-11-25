@@ -29,8 +29,7 @@ namespace TrackHub.TripManagement.Infrastructure.TripDB.Writers;
 /// FRESH instance each time; attaching a second instance of a row the change tracker already holds
 /// throws. That is not a rare race — it is the shape of every multi-write request this module has:
 /// detection arms a trip and then starts it, the odometer runs and then the deviation state moves,
-/// the backfill arms and then replays, both importers create and then declare. Each of those failed
-/// on its second write, and Router swallows the exception, so zero-touch simply never happened.
+/// the backfill arms and then replays, both importers create and then declare.
 /// <c>AsTracking()</c> resolves identity instead: an already-tracked row comes back as the SAME
 /// instance carrying the writes this request has already made, and a fresh one starts being tracked.
 /// </para>
@@ -95,7 +94,7 @@ public sealed class TripWriter(IApplicationDbContext context, IUser user) : ITri
         await GuardUniqueCodeAsync(accountId, trip.Code, tripId, cancellationToken);
         await GuardUniqueExternalReferenceAsync(accountId, trip.ExternalReference, tripId, cancellationToken);
 
-        // What detection is measuring against must not move underneath it (spec 11a §12.4). Which
+        // What detection is measuring against must not move underneath it. Which
         // unit runs the trip and where its origin zone is are the two inputs to the arm/auto-start
         // decision, so once execution has begun they are frozen: re-pointing a running trip would
         // silently change the meaning of measurements already taken.
@@ -154,7 +153,7 @@ public sealed class TripWriter(IApplicationDbContext context, IUser user) : ITri
     {
         var entity = await FindAsync(tripId, accountId, cancellationToken);
 
-        // Trip history is permanent (spec 11 section 5, acceptance 16): only a Created trip that
+        // Trip history is permanent: only a Created trip that
         // never produced an event may be deleted. Anything else must be cancelled instead, so
         // stops, events, POD and documents are never orphaned.
         //
@@ -177,10 +176,10 @@ public sealed class TripWriter(IApplicationDbContext context, IUser user) : ITri
 
     /// <summary>
     /// The single lifecycle funnel. Status change, timestamps and the timeline event are ONE save:
-    /// automation and a dispatcher can now transition the same trip at the same instant, and the
+    /// automation and a dispatcher can transition the same trip at the same instant, and the
     /// unique idempotency index is what makes exactly one of them win. Split across two saves, a
-    /// duplicate transition wrote the status change and only then discovered the event was already
-    /// there — leaving a trip started twice with one event to show for it (spec 11a §12.1).
+    /// duplicate transition would write the status change and only then discover the event was
+    /// already there — leaving a trip started twice with one event to show for it.
     /// </summary>
     public async Task<bool> TransitionTripAsync(
         Guid tripId,
@@ -429,7 +428,7 @@ public sealed class TripWriter(IApplicationDbContext context, IUser user) : ITri
     }
 
     /// <summary>
-    /// Freezes each stop's arrival geometry (spec 11 §18.4): the linked geofence's polygon when
+    /// Freezes each stop's arrival geometry: the linked geofence's polygon when
     /// <c>GeofenceId</c> is set, otherwise the stop point buffered by its radius. Reading the
     /// geofence ONCE is exactly what makes a running trip immune to a geofence edited mid-execution.
     /// <para>
@@ -528,9 +527,9 @@ public sealed class TripWriter(IApplicationDbContext context, IUser user) : ITri
     /// the database refused. The rows it MUTATED are reverted field-by-field instead.
     /// </para>
     /// <para>
-    /// That distinction is the whole point. Detaching the trip was simpler and wrong: the same row
+    /// That distinction is the whole point: the same row
     /// carries the odometer, the debounce clocks and the deviation counter that the detection pass
-    /// buffered for this very fix, so undoing a losing transition by detaching silently discarded
+    /// buffered for this very fix, so undoing a losing transition by detaching would silently discard
     /// measurements that had nothing to do with it. Reverting only <see cref="TripTransitionRevert"/>
     /// leaves those pending, and the next save commits them as it should.
     /// </para>

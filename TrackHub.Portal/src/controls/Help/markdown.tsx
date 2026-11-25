@@ -30,7 +30,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Typography from '@mui/material/Typography';
 
-/** GitHub-style heading anchor slugs (also what authors target in topic:id#anchor links). */
+/** GitHub-style slugs, which authors target in topic:id#anchor links. */
 export function slugify(text: string): string {
   return text
     .toLowerCase()
@@ -65,9 +65,8 @@ export function parseTopicHref(href: string): { id: string; anchor?: string } | 
 }
 
 /**
- * Maps rendered Markdown onto MUI so topics inherit the app theme. The body
- * H1 duplicates the dialog header title, so it is not rendered. Raw HTML never
- * reaches these components (skipHtml + build-time ban).
+ * The body H1 duplicates the dialog header title, so it is not rendered. Raw HTML never reaches
+ * these components (skipHtml + build-time ban).
  */
 export function buildMarkdownComponents(
   onTopicLink: (id: string, anchor?: string) => void

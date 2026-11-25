@@ -18,7 +18,7 @@ using TrackHub.Router.Infrastructure.Navixy.Models;
 
 namespace TrackHub.Router.Infrastructure.Navixy.Tests;
 
-// Value-correctness tests for the Navixy mapper (TT-01). Navixy timestamps are naive strings that
+// Navixy timestamps are naive strings that
 // the mapper must read as UTC - a regression there shifts every position by the server offset.
 [TestFixture]
 public class PositionMapperTests

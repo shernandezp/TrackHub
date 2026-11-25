@@ -20,8 +20,7 @@ namespace TrackHub.TripManagement.Infrastructure.TripDB.Entities;
 /// <summary>
 /// The local half of a public share. The grant itself lives in Manager; this row records exactly
 /// which field groups the public snapshot may expose, because public projection is
-/// field-configured server-side and never filtered by the client (spec 11 section 5,
-/// acceptance 23).
+/// field-configured server-side and never filtered by the client.
 /// </summary>
 public sealed class TripShare : BaseAuditableEntity
 {
@@ -36,8 +35,7 @@ public sealed class TripShare : BaseAuditableEntity
     public bool IncludePodSummary { get; set; }
 
     /// <summary>
-    /// Gates the planned route geometry. Spec §7.8 lists the route as exposed "per field flags" but
-    /// §6.1's field list omits the flag; §7.8 is the disclosure contract, so the flag exists here.
+    /// Gates the planned route geometry.
     /// Defaults to <c>false</c> — a disclosure flag fails closed, and a share created with every
     /// box unticked must not hand out the trip's full planned route.
     /// </summary>
@@ -45,9 +43,8 @@ public sealed class TripShare : BaseAuditableEntity
     public string CreatedByPrincipalId { get; set; } = string.Empty;
 
     /// <summary>
-    /// Mirror of the Manager grant expiry. Not in the spec 6.1 field list, but required by the
-    /// frozen ITripShareWriter.CreateShareAsync / TripShareVm.ExpiresAt contract - the share list
-    /// must render expiry without a cross-service call per row.
+    /// Mirror of the Manager grant expiry, so the share list
+    /// can render expiry without a cross-service call per row.
     /// </summary>
     public DateTimeOffset ExpiresAt { get; set; }
     public DateTimeOffset? RevokedAt { get; set; }

@@ -60,8 +60,6 @@ internal class ApplicationDbContextInitializer(ILogger<ApplicationDbContextIniti
 
     public async Task TrySeedAsync()
     {
-        // Default data
-        // Seed, if necessary
         foreach (var resourceName in Contributions.SelectMany(c => c.Resources).Distinct())
         {
             if (!await context.Resources.AnyAsync(x => x.ResourceName == resourceName))
@@ -137,10 +135,6 @@ internal class ApplicationDbContextInitializer(ILogger<ApplicationDbContextIniti
         // Administrator keeps grant-all (every catalogued resource/action pair).
         await SeedAdministratorResourceActionsAsync();
 
-        // Role matrices from every contribution. SeedRoleResourceActionsAsync is idempotent and
-        // silently skips any resource/action pair that isn't in the ResourceAction catalog, so
-        // resources not listed for a role receive no grant. Administrator is intentionally absent
-        // from the matrices — it is handled by SeedAdministratorResourceActionsAsync above.
         foreach (var contribution in Contributions)
         {
             foreach (var (roleName, grants) in contribution.RoleGrants)
@@ -259,10 +253,9 @@ internal class ApplicationDbContextInitializer(ILogger<ApplicationDbContextIniti
 
     // Every identity seeded here is a PLATFORM-INTERNAL service client: it runs with no account
     // claim and legitimately operates across every tenant (Router/SyncWorker feed positions for all
-    // accounts; geofence/trip/security clients emit events and job runs for all accounts). That
-    // reach used to be implicit — a NULL accountid silently matched any account. It is now
-    // declared: allowCrossAccount = true. A PARTNER/tenant-bound client must be seeded WITHOUT this
-    // flag and WITH an accountid, so its grant only matches a token carrying that same account.
+    // accounts; geofence/trip/security clients emit events and job runs for all accounts). A
+    // PARTNER/tenant-bound client must be seeded WITHOUT allowCrossAccount and WITH an accountid,
+    // so its grant only matches a token carrying that same account.
     private async Task SeedServiceClientPermissionsAsync(
         string[] clients,
         (string Resource, string Action)[] grants,
@@ -275,12 +268,8 @@ internal class ApplicationDbContextInitializer(ILogger<ApplicationDbContextIniti
         {
             foreach (var (resource, action) in grants)
             {
-                // AsTracking is load-bearing. This context is registered with
-                // QueryTrackingBehavior.NoTracking globally, so without it the row below comes back
-                // DETACHED: the upgrade-path assignment is accepted, SaveChangesAsync writes nothing
-                // and reports no error. The effect was that a permission seeded before
-                // AllowCrossAccount existed kept the default `false` however often db-init was
-                // re-run, and the only symptom is a cross-account call refused for no visible reason.
+                // AsTracking is load-bearing: the context is NoTracking globally, so without it the
+                // upgrade-path assignment below is silently not persisted.
                 var existing = await context.ServiceClientPermissions.AsTracking().FirstOrDefaultAsync(p =>
                         p.ClientId == clientId
                         && p.Resource == resource

@@ -31,9 +31,7 @@ public class GetOperatorsCurrentAccountQueryHandler(IOperatorReader reader, IUse
 
     public async Task<OperatorsPageVm> Handle(GetOperatorByCurrentAccountQuery request, CancellationToken cancellationToken)
     {
-        // Get the account associated with the current user
         var user = await userReader.GetUserAsync(UserId, cancellationToken);
-        // Get the operators associated with the account
         var filters = new Filters(new Dictionary<string, object> {{ "AccountId", user.AccountId }});
         var (skip, take) = PageRequest.Clamp(request.Skip, request.Take);
         return await reader.GetOperatorsPageAsync(filters, skip, take, request.Search, cancellationToken);

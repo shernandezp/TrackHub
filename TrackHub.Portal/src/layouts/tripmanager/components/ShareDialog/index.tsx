@@ -38,9 +38,9 @@ interface ShareDialogProps {
 }
 
 /**
- * Exported so the test suite can pin it against the generated backend types:
- * a flag added to `TripShareFieldFlagsDtoInput` server-side must not be able to
- * land silently, because an unrendered flag is an undisclosed disclosure.
+ * Exported so the tests can pin it against the generated backend types: a flag added to
+ * `TripShareFieldFlagsDtoInput` must not land silently, because an unrendered flag is an
+ * undisclosed disclosure.
  */
 export type FieldFlagName =
   | 'includeStaffName'
@@ -60,10 +60,8 @@ export const FIELD_FLAGS: FieldFlagName[] = [
 ];
 
 /**
- * Every flag is a DISCLOSURE decision and therefore fails closed. `includeRoute`
- * in particular defaults to false, matching the backend: the planned route used
- * to be handed out unconditionally, so leaving it unticked is now the safe
- * default and ticking it is a deliberate act (spec 11 §7.8).
+ * Every flag is a DISCLOSURE decision and fails closed; `includeRoute` defaults to false,
+ * matching the backend, so ticking it is a deliberate act.
  */
 export const DEFAULT_FLAGS: Record<FieldFlagName, boolean> = {
   includeStaffName: false,
@@ -75,11 +73,8 @@ export const DEFAULT_FLAGS: Record<FieldFlagName, boolean> = {
 };
 
 /**
- * Creates and revokes customer tracking links.
- *
- * The plaintext token comes back exactly ONCE, at creation — the backend never
- * returns it again — so the freshly built URL is shown with a warning to copy
- * it now, and existing links are listed without any token at all.
+ * The plaintext token comes back exactly ONCE, at creation, so the new URL is shown with a
+ * warning to copy it now and existing links are listed without any token.
  */
 function ShareDialog({ open, setOpen, detail }: ShareDialogProps) {
   const { t } = useTranslation();
@@ -242,7 +237,7 @@ function ShareDialog({ open, setOpen, detail }: ShareDialogProps) {
                   // stored share rather than from DEFAULT_FLAGS. A link outlives
                   // the dialog that made it and the defaults it was made under,
                   // so "revoke the ones that show the route" is only answerable
-                  // if the list states each link's flags (spec 11 §7.8).
+                  // if the list states each link's flags.
                   // Indexing the share by `FieldFlagName` also means dropping a
                   // flag from the GraphQL fragment stops compiling.
                   const granted = FIELD_FLAGS.filter((flag) => share[flag]);

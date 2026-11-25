@@ -16,13 +16,8 @@
 namespace Common.Domain.Constants;
 
 /// <summary>
-/// The identities the Security and Manager seeders must agree on.
-/// <para>
-/// Each seeder used to mint its own <c>Guid.NewGuid()</c>, so on a fresh environment the bootstrap
-/// administrator's token carried an <c>account_id</c> that existed in no Manager row and a subject
-/// matching no <c>app.users</c> replica — every Manager surface that resolves the caller through
-/// the replica then denied or faulted.
-/// </para>
+/// The fixed identities the Security and Manager seeders must agree on, so the bootstrap administrator's
+/// token carries an <c>account_id</c> and subject that exist in Manager.
 /// </summary>
 public static class PlatformBootstrap
 {

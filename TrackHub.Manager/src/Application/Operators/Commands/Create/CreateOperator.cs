@@ -24,7 +24,6 @@ public class CreateOperatorCommandHandler(IOperatorWriter writer, IUserReader us
 {
     private Guid UserId { get; } = Guid.TryParse(user.Id, out var userId) ? userId : throw new UnauthorizedAccessException();
 
-    // This method handles the CreateOperatorCommand and creates an operator.
     public async Task<OperatorVm> Handle(CreateOperatorCommand request, CancellationToken cancellationToken)
     {
         var user = await userReader.GetUserAsync(UserId, cancellationToken);

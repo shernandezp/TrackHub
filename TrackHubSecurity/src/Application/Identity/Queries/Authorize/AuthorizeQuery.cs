@@ -23,7 +23,6 @@ public readonly record struct AuthorizeQuery(Guid UserId, string Resource, strin
 
 public class GetUsersQueryHandler(IIdentityService service, IUser user) : IRequestHandler<AuthorizeQuery, bool>
 {
-    // Handles the authorization query by calling the IIdentityService's AuthorizeAsync method.
     public async Task<bool> Handle(AuthorizeQuery request, CancellationToken cancellationToken)
     {
         IdentityCallerGuard.EnsureCallerIsSubjectUserOrService(user, request.UserId, "Authorize");

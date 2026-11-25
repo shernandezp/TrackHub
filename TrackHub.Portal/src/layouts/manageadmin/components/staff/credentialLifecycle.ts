@@ -15,12 +15,9 @@
 */
 
 /**
- * Staff credential state machine (spec 09 AC7 — the lifecycle must be runnable
- * end to end from the portal). Pure and presentation-free so it can be asserted
- * directly; the screen only maps the result onto labels, colours and buttons.
+ * Staff credential state machine, pure and presentation-free so it can be asserted directly.
  */
 
-/** The three fields the Security backend actually maintains for a credential. */
 export interface CredentialLifecycleInput {
   active: boolean;
   verifiedAt?: string | null;
@@ -30,8 +27,7 @@ export interface CredentialLifecycleInput {
 export type CredentialState = 'pending' | 'revoked' | 'locked' | 'active';
 
 export interface CredentialActions {
-  /** `activateStaffCredential` sets Active = true and clears lock/reset — the
-   *  recovery path out of EVERY state, including a never-activated or revoked one. */
+  /** Activation clears lock/reset: the recovery path out of every state, including a never-activated or revoked one. */
   activate: boolean;
   lock: boolean;
   reset: boolean;
@@ -39,10 +35,7 @@ export interface CredentialActions {
 }
 
 /**
- * Resolves the credential's real state:
- *
- * - `pending`  — never activated (`verifiedAt` null), whether or not it was
- *   created with Active ticked. Reporting these as "Revoked" was a lie.
+ * - `pending`  — never activated (`verifiedAt` null), whether or not it was created with Active ticked.
  * - `revoked`  — was verified, then had Active cleared.
  * - `locked`   — active and verified with `lockedUntil` still in the future.
  * - `active`   — everything else.
@@ -58,10 +51,7 @@ export function credentialState(
 }
 
 /**
- * The actions that are legal from the credential's current state. Lock, reset
- * and revoke only apply while the credential is active (locking or resetting a
- * revoked credential leaves it revoked; re-revoking is a no-op), while activate
- * is always offered so no state is ever a dead end.
+ * Lock, reset and revoke only apply while active; activate is always offered so no state is a dead end.
  */
 export function credentialActions(credential: CredentialLifecycleInput): CredentialActions {
   return {

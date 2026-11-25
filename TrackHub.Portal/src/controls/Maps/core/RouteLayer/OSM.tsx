@@ -36,7 +36,6 @@ interface OSMRouteLayerProps {
   onStopClick?: (stopId: string) => void;
 }
 
-/** Registers the map click handler only while the planner wants one. */
 const MapClickHandler = ({ onMapClick }: { onMapClick: (point: RoutePoint) => void }) => {
   const map = useMapEvents({
     click: (event) => onMapClick({ lat: event.latlng.lat, lng: event.latlng.lng }),

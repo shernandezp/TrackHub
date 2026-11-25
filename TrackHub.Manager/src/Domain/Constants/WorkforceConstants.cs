@@ -15,7 +15,6 @@
 
 namespace TrackHub.Manager.Domain.Constants;
 
-/// <summary>Staff qualification kinds. Stored as strings (spec 09 §6).</summary>
 public static class StaffQualificationTypes
 {
     public const string License = nameof(License);
@@ -46,7 +45,6 @@ public static class StaffQualificationStatuses
     public static bool IsValid(string? value) => value != null && All.Contains(value);
 }
 
-/// <summary>Staff↔transporter assignment kinds. Stored as strings.</summary>
 public static class StaffAssignmentTypes
 {
     public const string Regular = nameof(Regular);
@@ -57,7 +55,6 @@ public static class StaffAssignmentTypes
     public static bool IsValid(string? value) => value != null && All.Contains(value);
 }
 
-/// <summary>Staff↔transporter assignment lifecycle status. Stored as strings.</summary>
 public static class StaffAssignmentStatuses
 {
     public const string Active = nameof(Active);
@@ -69,7 +66,6 @@ public static class StaffAssignmentStatuses
     public static bool IsValid(string? value) => value != null && All.Contains(value);
 }
 
-/// <summary>Workforce module limits and configuration keys.</summary>
 public static class WorkforceLimits
 {
     /// <summary>
@@ -78,19 +74,15 @@ public static class WorkforceLimits
     /// </summary>
     public static readonly IReadOnlyCollection<int> ExpirationThresholdsDays = [30, 15, 7, 0];
 
-    /// <summary>Default window for the portal's account-wide expirations view.</summary>
     public const int DefaultExpiringWithinDays = 30;
 
     /// <summary>
-    /// Per-account opt-in flag inside the <c>workforce</c> feature row's <c>ConfigurationJson</c>.
-    /// When true, assigning a staff whose <c>License</c> qualification is expired is rejected.
-    /// Absent/false (the default) leaves assignment unaffected — accounts differ on strictness
-    /// (spec 09 §18.6).
+    /// Opt-in flag in the <c>workforce</c> feature row's <c>ConfigurationJson</c>: when true, assigning
+    /// a staff whose <c>License</c> qualification is expired is rejected.
     /// </summary>
     public const string BlockAssignmentOnExpiredLicenseKey = "blockAssignmentOnExpiredLicense";
 }
 
-/// <summary>Resource-type literals accepted by <c>ValidateStaffAssignment</c>.</summary>
 public static class StaffAssignmentResourceTypes
 {
     public const string Transporter = nameof(Transporter);

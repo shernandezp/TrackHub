@@ -19,17 +19,8 @@ using TrackHub.Manager.Infrastructure.Interfaces;
 
 namespace TrackHub.Manager.Infrastructure.ManagerDB.Writers;
 
-/// <summary>
-/// Writer class for managing groups.
-/// </summary>
 public sealed class GroupWriter(IApplicationDbContext context, ICurrentPrincipal principal) : AccountScopedDataAccess(context, principal), IGroupWriter
 {
-    /// <summary>
-    /// Creates a new group.
-    /// </summary>
-    /// <param name="groupDto">The group data transfer object.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>The created group view model.</returns>
     public async Task<GroupVm> CreateGroupAsync(GroupDto groupDto, Guid accountId, CancellationToken cancellationToken)
     {
         RequireAccountWriteAccess(accountId);
@@ -51,11 +42,6 @@ public sealed class GroupWriter(IApplicationDbContext context, ICurrentPrincipal
             group.AccountId, group.Version);
     }
 
-    /// <summary>
-    /// Updates an existing group.
-    /// </summary>
-    /// <param name="groupDto">The updated group data transfer object.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
     public async Task UpdateGroupAsync(UpdateGroupDto groupDto, CancellationToken cancellationToken)
     {
         var group = await Context.Groups.FindAsync([groupDto.GroupId], cancellationToken)
@@ -74,11 +60,6 @@ public sealed class GroupWriter(IApplicationDbContext context, ICurrentPrincipal
         await Context.SaveChangesAsync(cancellationToken);
     }
 
-    /// <summary>
-    /// Deletes a group.
-    /// </summary>
-    /// <param name="groupId">The ID of the group to delete.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
     public async Task DeleteGroupAsync(long groupId, CancellationToken cancellationToken)
     {
         var group = await Context.Groups.FindAsync([groupId], cancellationToken)

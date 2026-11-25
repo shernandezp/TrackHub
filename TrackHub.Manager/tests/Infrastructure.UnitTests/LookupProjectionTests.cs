@@ -23,10 +23,10 @@ namespace Infrastructure.UnitTests;
 
 /// <summary>
 /// The picker lookups exist so a consumer fetches a narrow projection instead of draining full
-/// pages. Two of them were widened to what their consumers actually render — the POI lookup to the
-/// map overlay's colour/type/description/address/active, the transporter lookup to the type the
-/// toll-class dialog derives. These tests pin those columns: without them the portal falls back to
-/// the full-page drains that were deleted, so a dropped column is a broken screen.
+/// pages. Two of them carry what their consumers actually render — the POI lookup the map overlay's
+/// colour/type/description/address/active, the transporter lookup the type the toll-class dialog
+/// derives. These tests pin those columns: the portal has no full-page fallback, so a dropped column
+/// is a broken screen.
 /// </summary>
 [TestFixture]
 public class LookupProjectionTests

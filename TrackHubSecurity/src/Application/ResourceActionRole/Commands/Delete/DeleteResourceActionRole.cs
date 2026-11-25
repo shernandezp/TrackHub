@@ -26,9 +26,6 @@ public class DeleteResourceActionRoleCommandHandler(IResourceActionRoleWriter wr
 {
     private Guid UserId { get; } = Guid.TryParse(user.Id, out var userId) ? userId : throw new UnauthorizedAccessException();
 
-    // This method handles the DeleteResourceActionRoleCommand by deleting the resource action role.
-    // It calls the DeleteResourceActionRoleAsync method of the writer.
-    // It throws an UnauthorizedAccessException if the user is not an admin.
     public async Task Handle(DeleteResourceActionRoleCommand request, CancellationToken cancellationToken)
     {
         var isAdmin = await userReader.IsAdminAsync(UserId, cancellationToken);

@@ -14,13 +14,7 @@
 *  limitations under the License.
 */
 
-/**
- * Document GraphQL documents (Manager backend). Codegen validates these
- * against schemas/manager.graphql and emits typed document nodes — values
- * always travel as variables, never string interpolation. The redacted
- * DocumentVm never exposes storage keys; downloadUrl is only populated after
- * a Clean scan. File bytes (upload/download) live over REST — see documents.ts.
- */
+/** DocumentVm never exposes storage keys; downloadUrl is only populated after a Clean scan. */
 
 import { graphql } from './generated';
 
@@ -99,7 +93,6 @@ export const DocumentSignatureFieldsFragment = graphql(`
   }
 `);
 
-// ---- Queries ----
 export const GetDocumentsForOwnerDocument = graphql(`
   query GetDocumentsForOwner(
     $accountId: UUID!
@@ -163,7 +156,6 @@ export const GetDocumentTypesDocument = graphql(`
   }
 `);
 
-// ---- Mutations ----
 export const VoidDocumentDocument = graphql(`
   mutation VoidDocument($documentId: UUID!, $reason: String!) {
     voidDocument(command: { documentId: $documentId, reason: $reason })

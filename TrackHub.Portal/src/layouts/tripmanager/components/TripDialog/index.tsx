@@ -44,10 +44,10 @@ import {
 } from '../../tripWriteForms';
 import type { StopActivity, TripDestinationDraft, TripType } from '../../tripWriteForms';
 
-/** Dialog/form state for a trip. Strings throughout — the caller coerces on save. */
+/** Strings throughout; the caller coerces on save. */
 export interface TripFormValues {
   tripId?: string;
-  /** The instant of the trip row the dialog loaded; the save is refused if it moved since. */
+  /** The save is refused if the loaded row's instant moved since. */
   lastModified?: string | null;
   code?: string;
   transporterId?: string;
@@ -56,14 +56,12 @@ export interface TripFormValues {
   externalReference?: string | null;
   customerName?: string | null;
   originName?: string;
-  /** Set by the origin place pickers, never typed (spec 11 §8's placement rule). */
+  /** Set by the origin place pickers, never typed. */
   originLatitude?: number | string;
   originLongitude?: number | string;
   /**
-   * The account geofence the origin was picked from. It IS a Trip column now: the
-   * origin zone is what auto-start is measured against, so its real shape has to
-   * survive to the server rather than degrading to a radius circle (spec 11a §4.1).
-   * A round trip's auto-appended return stop reuses it too.
+   * The origin zone is what auto-start is measured against, so its real shape has to reach the
+   * server rather than degrading to a radius circle. A round trip's return stop reuses it.
    */
   originGeofenceId?: string | null;
   /** Form-only: which POI the origin came from, so the picker shows it. */
@@ -91,12 +89,10 @@ interface TripDialogProps {
   /** Destinations queued for creation; stops are added right after the trip header. */
   destinations: TripDestinationDraft[];
   setDestinations: Dispatch<SetStateAction<TripDestinationDraft[]>>;
-  /** Recent trips offered as reusable routes (create mode only). */
   copySources: Trip[];
   onCopyFrom: (tripId: string) => void;
 }
 
-/** Section header inside the dialog — the form is grouped, not a wall of fields. */
 function SectionTitle({ title, hint }: { title: string; hint?: string }) {
   return (
     <Grid size={{ xs: 12 }}>
@@ -114,16 +110,9 @@ function SectionTitle({ title, hint }: { title: string; hint?: string }) {
 }
 
 /**
- * Trip editor, place-based by design: the origin and every destination are an
- * existing named place — an account geofence (arrival detection then uses its
- * real shape) or a point of interest (point + default arrival radius). There
- * are NO coordinate fields and NO free map pin here; ad-hoc points and stop
- * fine-tuning (arrival windows, POD flags, reordering) belong to the route
- * planner, which has the map.
- *
- * Creation also queues the trip's destination(s), a trip-type selector
- * (single/round/multi) and a "reuse a previous route" shortcut, so a
- * dispatcher never builds the same route twice.
+ * Place-based by design: the origin and every destination are an existing geofence (arrival
+ * detection uses its real shape) or a point of interest. There are no coordinate fields or free
+ * pins here; ad-hoc points and stop fine-tuning belong to the route planner, which has the map.
  */
 function TripDialog({
   open,
@@ -145,10 +134,8 @@ function TripDialog({
   const { t } = useTranslation();
 
   /**
-   * What the next destination picked will be FOR. It is a picker-adjacent control,
-   * not a per-row editor: a dispatcher queueing a delivery run sets Unload once and
-   * adds five clients. Fine-tuning a single stop's activity belongs to the planner,
-   * which edits a stop that already exists.
+   * Picker-adjacent, not per-row: a dispatcher queueing a delivery run sets Unload once and adds
+   * five clients. Fine-tuning a single stop belongs to the planner.
    */
   const [destinationActivity, setDestinationActivity] = useState<StopActivity>(DEFAULT_STOP_ACTIVITY);
 
@@ -188,7 +175,6 @@ function TripDialog({
     value: activity,
     label: t(`tripStops.activity.${activity}` as 'tripStops.activity.Unload'),
   }));
-  // Only trips that actually have a route are worth copying.
   const copyOptions = copySources
     .filter((trip) => trip.stopCount > 0)
     .map((trip) => ({
@@ -278,7 +264,6 @@ function TripDialog({
     >
       <form>
         <Grid container spacing={2}>
-          {/* ----------------------------------------------------- details */}
           <Grid size={{ xs: 12, sm: 6 }}>
             <CustomTextField
               autoFocus
@@ -355,7 +340,6 @@ function TripDialog({
             />
           </Grid>
 
-          {/* ------------------------------------------------------- route */}
           <SectionTitle title={t('trips.route.title')} hint={t('trips.route.hint')} />
           {creating && copyOptions.length > 0 && (
             <Grid size={{ xs: 12 }}>
@@ -435,7 +419,6 @@ function TripDialog({
             </ArgonBox>
           </Grid>
 
-          {/* ------------------------------------------------ destinations */}
           {creating && (
             <>
               <SectionTitle
@@ -527,7 +510,6 @@ function TripDialog({
             </>
           )}
 
-          {/* ------------------------------------------------------ extras */}
           <SectionTitle title={t('trips.extras.title')} />
           <Grid size={{ xs: 12, sm: 6 }}>
             <CustomTextField

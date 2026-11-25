@@ -37,7 +37,6 @@ import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
 import type { MapPoint, MapPolygon, GeofenceShape } from 'layouts/geofencemanager/components/GeofenceEditor';
 
-/** Server-side filters + paging state for the geofence list. */
 export interface GeofenceListParams {
   skip: number;
   take: number;
@@ -46,12 +45,7 @@ export interface GeofenceListParams {
   search?: string | null;
 }
 
-/**
- * Dialog/form state for a geofence. Merges an API {@link Geofence} with UI-only
- * fields the editor adds (`new`, `coordinates`, `shape`) before submit.
- * `type`/`color` may arrive as strings from the select controls, hence the
- * widened unions.
- */
+/** `type`/`color` may arrive as strings from the select controls, hence the widened unions. */
 export interface GeofenceFormValues {
   geofenceId?: string;
   name?: string;
@@ -60,7 +54,6 @@ export interface GeofenceFormValues {
   color?: number | string;
   active?: boolean;
   new?: boolean;
-  /** Whether the shape being saved is a polygon or a center+radius circle. */
   shape?: GeofenceShape;
   /** Points drawn on the map ({lat,lng}) for the non-new save path. */
   coordinates?: MapPoint[];
@@ -73,15 +66,12 @@ export interface GeofenceFormValues {
   version?: number;
 }
 
-/** A column descriptor consumed by the `Table` control. */
 export interface GeofenceColumn { name: string; title?: string; align?: "left" | "right" | "center"; width?: string; hideTitle?: boolean; }
 
 /**
- * Name cell for the geofence list: regular weight (only the header is bold) and
- * truncated with an ellipsis inside its fixed-width column so a long name never
- * overlaps the adjacent columns in the narrow side panel. The full name shows on
- * hover via the native title tooltip. Exposes `name` so the `Table` still reads
- * the selected value for row click-to-select/zoom.
+ * Truncated with an ellipsis inside its fixed-width column so a long name never overlaps the
+ * adjacent columns in the narrow side panel; the full name shows via the native title tooltip.
+ * Exposes `name` so the `Table` still reads the value for click-to-select.
  */
 function GeofenceNameCell({ name }: { name: string }) {
   return (
@@ -103,11 +93,7 @@ function GeofenceNameCell({ name }: { name: string }) {
   );
 }
 
-/**
- * Secondary text cell for the geofence list (type/color columns): mirrors the
- * shared `Table` control's default cell rendering (button variant, regular
- * weight, secondary color) so the grid reads like the dashboard's tables.
- */
+/** Mirrors the shared `Table` control's default cell rendering so the grid reads like the dashboard's tables. */
 function GeofenceTextCell({ children }: { children: ReactNode }) {
   return (
     <ArgonTypography variant="button" fontWeight="regular" color="secondary">
@@ -115,7 +101,6 @@ function GeofenceTextCell({ children }: { children: ReactNode }) {
     </ArgonTypography>
   );
 }
-/** A rendered table row for the geofence list. */
 export interface GeofenceRow {
   [key: string]: unknown;
   name: ReactNode;
@@ -132,7 +117,6 @@ export interface GeofenceTableData {
 
 export interface UseGeofencesTableData {
   data: GeofenceTableData;
-  /** Total number of geofences matching the current list filters (server count). */
   totalCount: number;
   open: boolean;
   confirmOpen: boolean;
@@ -143,8 +127,6 @@ export interface UseGeofencesTableData {
   setConfirmOpen: Dispatch<SetStateAction<boolean>>;
 }
 
-// Map an API geofence to the shape the map editor renders (true circle when the
-// circle fields are set, polygon ring otherwise).
 function toMapPolygon(item: Geofence): MapPolygon {
   const latlngs = item.geom.coordinates.map((coord): [number, number] => [coord.latitude, coord.longitude]);
   if (item.circleCenter && item.circleRadiusMeters) {
@@ -161,9 +143,7 @@ function toMapPolygon(item: Geofence): MapPolygon {
   return { id: item.geofenceId, name: item.name, latlngs, shape: 'polygon', color: item.color };
 }
 
-// Builds a clean GeofenceDtoInput from the dialog values, dropping the UI-only
-// fields (new, coordinates, accountId, ...) the schema does not accept. Sends
-// EITHER geom (polygon) OR circleCenter+circleRadiusMeters (circle), never both.
+// Sends EITHER geom (polygon) OR circleCenter+circleRadiusMeters (circle), never both.
 function toGeofenceInput(geofence: GeofenceFormValues): GeofenceDtoInput {
   const dwell =
     geofence.dwellThresholdMinutes === '' || geofence.dwellThresholdMinutes == null
@@ -214,12 +194,9 @@ function useGeofencesTableData(
   const { setLoading } = useContext(LoadingContext);
   const { isAuthenticated } = useAuth();
 
-  // Full list feeds the map editor: all shapes stay visible/selectable while the
-  // table pages independently. Drains every server page so accounts with >500
-  // geofences are not silently truncated on the map.
+  // Drains every server page so accounts with >500 geofences are not silently truncated on the map.
   const allGeofencesQuery = useAllGeofences({}, { enabled: isAuthenticated });
   const allGeofences = allGeofencesQuery.data ?? [];
-  // Server-paged, filtered list feeds the table.
   const pagedQuery = useGeofencesByAccount(listParams, { enabled: isAuthenticated });
   const pageItems = pagedQuery.data?.items ?? [];
   const totalCount = pagedQuery.data?.totalCount ?? 0;
@@ -227,7 +204,6 @@ function useGeofencesTableData(
   const updateGeofence = useUpdateGeofence();
   const deleteGeofence = useDeleteGeofence();
 
-  // Keep the global spinner UX for the initial load / invalidation refetch.
   useEffect(() => {
     setLoading(allGeofencesQuery.isFetching || pagedQuery.isFetching);
   }, [allGeofencesQuery.isFetching, pagedQuery.isFetching, setLoading]);
@@ -273,8 +249,7 @@ function useGeofencesTableData(
     setConfirmOpen(true);
   };
 
-  // Imperative single-geofence read for the map editor. Throws on failure
-  // (surfaced by the global toast) — the caller decides what to do next.
+  // Throws on failure (surfaced by the global toast); the caller decides what to do next.
   const onGet = async (geofenceId: string): Promise<Geofence> => getGeofence(geofenceId);
 
   const buildTableData = (mapSource: Geofence[], rowSource: Geofence[]): GeofenceTableData => ({

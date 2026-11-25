@@ -17,7 +17,6 @@
 import axios from 'axios';
 import { OAUTH_ENDPOINTS } from 'api/core/endpoints';
 
-/** OAuth token endpoint response (OpenIddict). */
 export interface TokenResponse {
   access_token: string;
   refresh_token: string;
@@ -26,11 +25,7 @@ export interface TokenResponse {
   scope?: string;
 }
 
-/**
- * Exchanges the authorization code for an access token (PKCE: the
- * code_verifier persisted by AuthContext.login is read from sessionStorage).
- * @throws If the exchange fails.
- */
+/** PKCE: the code_verifier persisted by AuthContext.login is read from sessionStorage. */
 export const exchangeAuthorizationCode = async (
   authorizationCode: string
 ): Promise<TokenResponse> => {
@@ -72,10 +67,6 @@ export const exchangeAuthorizationCode = async (
   }
 };
 
-/**
- * Refreshes the access token using the refresh token.
- * @throws If the refresh fails.
- */
 export async function refreshAccessToken(refreshToken: string | null): Promise<TokenResponse> {
   try {
     const response = await axios.post<TokenResponse>(
@@ -98,10 +89,7 @@ export async function refreshAccessToken(refreshToken: string | null): Promise<T
   }
 }
 
-/**
- * Revokes the access token. Failures are logged (non-production) and
- * swallowed — revocation is best-effort during logoff.
- */
+/** Failures are logged (non-production) and swallowed: revocation is best-effort during logoff. */
 export async function revokeAccessToken(accessToken: string | null): Promise<void> {
   const revokeBody = new URLSearchParams({
     token: accessToken ?? '',
@@ -122,11 +110,8 @@ export async function revokeAccessToken(accessToken: string | null): Promise<voi
 }
 
 /**
- * Ends the AuthorityServer session (RP-initiated logout) by navigating the
- * browser to the end-session endpoint.
- *
- * It has to be a navigation: the session cookie is `SameSite=Lax` and does not
- * travel with a cross-site background request.
+ * It has to be a navigation: the session cookie is `SameSite=Lax` and does not travel with a
+ * cross-site background request.
  */
 export function logout(): void {
   const params = new URLSearchParams({

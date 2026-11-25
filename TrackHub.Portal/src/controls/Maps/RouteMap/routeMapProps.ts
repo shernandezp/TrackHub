@@ -23,29 +23,19 @@ import type {
   MapPoi,
 } from 'controls/Maps/core/mapTypes';
 
-/**
- * The single prop contract both route-map hosts implement. Declared once so the
- * OSM and Google hosts cannot drift apart — the provider-agnostic rule applies
- * to the host as much as to the layers it renders.
- */
+/** Declared once so the OSM and Google hosts cannot drift apart. */
 export interface RouteMapProps {
-  /** Planned-route polyline. */
   route?: RoutePoint[];
-  /** Corridor ring around the planned route. */
   corridor?: RoutePoint[];
-  /** Numbered trip stops. */
   stops?: RouteStop[];
-  /** Toll stations matched to the route. */
   tollStations?: RouteTollStation[];
   /** Recorded positions for replay, drawn as a trail. */
   trail?: TrailPoint[];
   /** Account points of interest, offered as stop-placement targets. */
   pois?: MapPoi[];
-  /** Imperatively-positioned replay marker. */
   playbackPosition?: PlaybackPosition | null;
   /** Stop-placement gesture: fires with the clicked coordinate. */
   onMapClick?: (point: RoutePoint) => void;
-  /** Fires with a stop's id when its pin is clicked. */
   onStopClick?: (stopId: string) => void;
   darkMode?: boolean;
   height?: string;

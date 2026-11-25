@@ -19,12 +19,7 @@ import { useEffect, useState } from 'react';
 /** Milliseconds of quiet before a search draft is pushed to the server query. */
 export const SEARCH_DEBOUNCE_MS = 350;
 
-/**
- * The value once it has stopped changing for `delayMs`.
- *
- * A search box wired straight to a server query issues one request per keystroke — a new query key
- * per character, each pulling a full page.
- */
+/** A search box wired straight to a server query would issue a full-page request per keystroke. */
 export function useDebouncedValue<T>(value: T, delayMs: number = SEARCH_DEBOUNCE_MS): T {
   const [settled, setSettled] = useState(value);
 

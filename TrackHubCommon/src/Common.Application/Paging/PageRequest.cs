@@ -15,21 +15,15 @@
 
 namespace Common.Application.Paging;
 
-/// <summary>
-/// The one page-size policy every paged query shares. Handlers used to carry private
-/// <c>DefaultPageSize</c>/<c>MaxPageSize</c> consts, which drifted the moment one was edited in
-/// isolation; the clamp lives here so a caller can neither request an unbounded page nor a
-/// non-positive one.
-/// </summary>
+/// <summary>The one page-size policy every paged query shares, so no caller gets an unbounded or non-positive page.</summary>
 public static class PageRequest
 {
     public const int DefaultPageSize = 50;
     public const int MaxPageSize = 500;
 
     /// <summary>
-    /// Normalizes a caller-supplied page window: a missing or negative <paramref name="skip"/>
-    /// becomes 0, and a missing <paramref name="take"/> becomes <see cref="DefaultPageSize"/>,
-    /// clamped to [1, <see cref="MaxPageSize"/>].
+    /// Missing or negative <paramref name="skip"/> becomes 0; <paramref name="take"/> defaults to
+    /// <see cref="DefaultPageSize"/> and is clamped to [1, <see cref="MaxPageSize"/>].
     /// </summary>
     public static (int Skip, int Take) Clamp(int? skip, int? take)
         => (Math.Max(skip ?? 0, 0), Math.Clamp(take ?? DefaultPageSize, 1, MaxPageSize));

@@ -17,12 +17,8 @@ namespace TrackHub.Router.Infrastructure.Samsara.Mappers;
 
 internal static class PositionMapper
 {
-    // Conversion factor from miles per hour to km/h
     private const double MphToKmh = 1.60934;
 
-    /// <summary>
-    /// Maps a VehicleStats with GPS data to a PositionVm object.
-    /// </summary>
     public static PositionVm MapToPositionVm(this VehicleStats vehicle, DeviceTransporterVm deviceDto)
     {
         var gps = vehicle.Gps;
@@ -46,9 +42,6 @@ internal static class PositionMapper
         );
     }
 
-    /// <summary>
-    /// Maps a GpsData to a PositionVm object.
-    /// </summary>
     public static PositionVm MapToPositionVm(this GpsData gps, DeviceTransporterVm deviceDto)
         => new(
             deviceDto.TransporterId,
@@ -69,9 +62,6 @@ internal static class PositionMapper
             null
         );
 
-    /// <summary>
-    /// Maps a collection of VehicleStats objects to PositionVm objects using a dictionary of DeviceTransporterVm.
-    /// </summary>
     public static IEnumerable<PositionVm> MapToPositionVm(this IEnumerable<VehicleStats> vehicles, IDictionary<string, DeviceTransporterVm> devicesDictionary)
     {
         foreach (var vehicle in vehicles)
@@ -83,9 +73,6 @@ internal static class PositionMapper
         }
     }
 
-    /// <summary>
-    /// Maps a VehicleHistory to a collection of PositionVm objects.
-    /// </summary>
     public static IEnumerable<PositionVm> MapToPositionVm(this VehicleHistory vehicle, DeviceTransporterVm deviceDto)
     {
         if (vehicle.Gps is null)

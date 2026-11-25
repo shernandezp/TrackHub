@@ -15,10 +15,8 @@
  */
 
 /**
- * The map overlay pill (`.mapcontrol`, top-right of the dashboard map — the refresh
- * countdown) hardcodes a white background. Its text colour must be pinned too: left to
- * inherit, it follows the page and renders near-white on white under the dark theme,
- * which is how the countdown became invisible. Same failure as the marker-cluster count.
+ * The map overlay pill (`.mapcontrol`) hardcodes a white background, so its text colour must be
+ * pinned too: left to inherit, it renders near-white on white under the dark theme.
  */
 
 import { render } from '@testing-library/react';

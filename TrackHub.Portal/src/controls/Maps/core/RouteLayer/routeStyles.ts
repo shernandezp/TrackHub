@@ -14,17 +14,11 @@
 *  limitations under the License.
 */
 
-/**
- * Shared, provider-neutral styling for the route layer. Both the OSM and Google
- * adapters read these so the two renderings stay identical — the whole point of
- * the core contract is that a layer is authored once, not twice.
- */
+/** Read by both the OSM and Google adapters so the two renderings stay identical. */
 
-/** Planned-route polyline colour. */
 export const ROUTE_COLOR = '#2D5BFF';
 /** Corridor polygon colour (the tolerance band deviation is measured against). */
 export const CORRIDOR_COLOR = '#8A9BFF';
-/** A toll station on the route WITH a tariff for the vehicle class. */
 export const TOLL_PRICED_COLOR = '#2E7D32';
 /** A matched toll station with NO tariff — the estimate is incomplete, and says so. */
 export const TOLL_UNPRICED_COLOR = '#ED6C02';
@@ -40,10 +34,7 @@ export const STOP_STATUS_COLORS: Record<string, string> = {
 export const stopColor = (status?: string): string =>
   (status && STOP_STATUS_COLORS[status]) || STOP_STATUS_COLORS.Pending;
 
-/**
- * Numbered stop pin as an inline SVG string. Returned raw for Leaflet's
- * `divIcon` and as a `data:` URL for Google's `Icon.url`.
- */
+/** Returned raw for Leaflet's `divIcon` and as a `data:` URL for Google's `Icon.url`. */
 export function createStopPinSvg(
   sequence: number,
   color: string,

@@ -19,7 +19,6 @@ using TrackHub.Router.Domain.Records;
 
 namespace TrackHub.Router.Infrastructure.Geotab;
 
-// This class represents a connectivity tester for TrackHub Router infrastructure.
 public class ConnectivityTester(IProviderSessionStore sessionStore)
     : GeotabReaderBase(sessionStore), IConnectivityTester
 {

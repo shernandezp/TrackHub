@@ -14,11 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Policy GraphQL documents (Security backend). Codegen validates these against
- * schemas/security.graphql; values always travel as variables.
- */
-
 import { graphql } from './generated';
 
 export const PolicyItemFragment = graphql(`
@@ -60,7 +55,7 @@ export const GetResourcesByPolicyDocument = graphql(`
   }
 `);
 
-/** Id + username only: the allocator dialog's "assigned" operand, unpaged by design. */
+/** Unpaged by design. */
 export const GetUserLookupByPolicyDocument = graphql(`
   query GetUserLookupByPolicy($policyId: Int!) {
     userLookupByPolicy(query: { policyId: $policyId }) {

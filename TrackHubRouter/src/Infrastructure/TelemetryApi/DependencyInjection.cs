@@ -17,8 +17,8 @@ using TrackHub.Router.Infrastructure.TelemetryApi;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
-// Positions / history / health / sync-run readers and writers re-pointed to the TrackHub.Telemetry
-// service. Device/operator/account/geocoding readers stay on ManagerApi.
+// Positions, history, health and sync-run readers and writers target the Telemetry service;
+// device, operator, account and geocoding readers stay on ManagerApi.
 public static class TelemetryApiDependencyInjection
 {
     public static IServiceCollection AddAppTelemetryContext(this IServiceCollection services, bool headerPropagation = true)

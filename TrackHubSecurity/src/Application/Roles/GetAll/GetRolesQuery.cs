@@ -21,12 +21,10 @@ namespace TrackHub.Security.Application.Roles.GetAll;
 [Authorize(Resource = Resources.Permissions, Action = Actions.Read)]
 public readonly record struct GetRolesQuery() : IRequest<IReadOnlyCollection<RoleVm>>;
 
-// The GetRolesQueryHandler is a class that implements the IRequestHandler interface to handle the GetRolesQuery.
 public class GetRolesQueryHandler(IRoleReader reader, IUserReader userReader, IUser user) : IRequestHandler<GetRolesQuery, IReadOnlyCollection<RoleVm>>
 {
     private Guid UserId { get; } = Guid.TryParse(user.Id, out var userId) ? userId : throw new UnauthorizedAccessException();
 
-    // The Handle method is responsible for handling the GetRolesQuery and returning the result.
     // Whether the admin role belongs in the result is decided here and pushed into the query, so the
     // reader never materializes a row that is then thrown away.
     public async Task<IReadOnlyCollection<RoleVm>> Handle(GetRolesQuery request, CancellationToken cancellationToken)

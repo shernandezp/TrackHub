@@ -14,11 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Role GraphQL documents (Security backend). Codegen validates these against
- * schemas/security.graphql; values always travel as variables.
- */
-
 import { graphql } from './generated';
 
 export const RoleItemFragment = graphql(`
@@ -60,7 +55,7 @@ export const GetResourcesByRoleDocument = graphql(`
   }
 `);
 
-/** Id + username only: the allocator dialog's "assigned" operand, unpaged by design. */
+/** Unpaged by design. */
 export const GetUserLookupByRoleDocument = graphql(`
   query GetUserLookupByRole($roleId: Int!) {
     userLookupByRole(query: { roleId: $roleId }) {

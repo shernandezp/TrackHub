@@ -18,7 +18,7 @@ namespace TrackHub.TripManagement.Domain.Interfaces;
 /// <summary>
 /// Reads document metadata from Manager to validate POD attachments. This module introduces no
 /// storage surface of its own — POD signatures and photos are ordinary Manager <c>Document</c>
-/// records created through the existing REST upload and linked here by id (spec 11 §11).
+/// records created through the existing REST upload and linked here by id.
 /// </summary>
 public interface IDocumentClient
 {

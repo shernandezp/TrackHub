@@ -45,7 +45,6 @@ interface RoutePlannerProps {
   mapType?: MapProvider;
   mapKey?: string | null;
   darkMode?: boolean;
-  /** True while the dispatcher is choosing a point for a new stop. */
   placing: boolean;
   onMapClick: (point: RoutePoint) => void;
   onAddStop: () => void;
@@ -54,19 +53,10 @@ interface RoutePlannerProps {
   onReorder: (orderedStopIds: string[]) => void;
   onPlanRoute: (corridorMeters: number) => void;
   planning: boolean;
-  /** Read-only once the trip has left the planning stage. */
   editable: boolean;
 }
 
-/**
- * Map route planner: the trip's stops on the map, the planned route and its
- * corridor, drag-reorderable stop list, and the ORS plan trigger with a
- * corridor-width control.
- *
- * The map is provider-agnostic throughout — it renders `RouteMap`, which
- * dispatches to the OSM or Google host, and every overlay comes from
- * `controls/Maps/core/RouteLayer`.
- */
+/** Provider-agnostic: renders `RouteMap`, and every overlay comes from `controls/Maps/core/RouteLayer`. */
 function RoutePlanner({
   stops,
   routePlan,
@@ -161,7 +151,6 @@ function RoutePlanner({
     [pois]
   );
 
-  /** Commits a new order to the server as an explicit id sequence. */
   const move = (from: number, to: number) => {
     if (to < 0 || to >= ordered.length || from === to) return;
     const next = [...ordered];

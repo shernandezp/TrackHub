@@ -18,11 +18,9 @@ import { createContext, useContext } from 'react';
 import type { AuthorizedAction } from 'api/security/permissions';
 
 export interface PermissionsContextValue {
-  /** The caller's effective resource/actions (empty until the bootstrap read resolves). */
   actions: AuthorizedAction[];
-  /** Whether the caller may perform `action` on `resource`. */
   can: (resource: string, action: string) => boolean;
-  /** False until the permission set has actually loaded — see the note on `can`. */
+  /** False until the permission set has loaded. */
   loaded: boolean;
 }
 
@@ -33,11 +31,9 @@ export function buildPermissionIndex(actions: AuthorizedAction[]): Set<string> {
 }
 
 /**
- * Default ALLOWS everything, deliberately. This mirrors {@link FeaturesContext}: a
- * component rendered outside the provider (tests, auth pages) must stay harmless,
- * and — more importantly — UI gating is UX only. The backend re-checks every call,
- * so a permissive default can never widen access; a restrictive one would blank
- * working screens for the seconds before the bootstrap read resolves.
+ * Default ALLOWS everything, deliberately: UI gating is UX only and the backend re-checks every
+ * call, so a permissive default can never widen access, while a restrictive one would blank
+ * working screens until the bootstrap read resolves.
  */
 export const PermissionsContext = createContext<PermissionsContextValue>({
   actions: [],
@@ -45,7 +41,6 @@ export const PermissionsContext = createContext<PermissionsContextValue>({
   loaded: false,
 });
 
-/** Public API for components: `const { can } = usePermissions();`. */
 export function usePermissions(): PermissionsContextValue {
   return useContext(PermissionsContext);
 }

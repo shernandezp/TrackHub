@@ -59,8 +59,6 @@ public class RecordOperatorHealthCommandHandlerTests : TestsContext
         AllCapabilities(),
         Mock.Of<ILogger<RecordOperatorHealthCommandHandler>>());
 
-    // Reports every capability supported, so these tests exercise the handler exactly as
-    // before the partial-provider guard was introduced.
     private static IProviderCapabilityCatalog AllCapabilities()
     {
         var catalog = new Mock<IProviderCapabilityCatalog>();

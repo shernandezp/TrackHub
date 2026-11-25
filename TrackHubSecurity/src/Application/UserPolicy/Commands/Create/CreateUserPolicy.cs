@@ -27,7 +27,6 @@ public readonly record struct CreateUserPolicyCommand(UserPolicyDto UserPolicy) 
 
 public class CreateUserPolicyCommandHandler(IUserPolicyWriter writer, IPublisher publisher, ICurrentPrincipal principal) : IRequestHandler<CreateUserPolicyCommand, UserPolicyVm>
 {
-    // This method handles the execution of the CreateUserPolicyCommand.
     public async Task<UserPolicyVm> Handle(CreateUserPolicyCommand request, CancellationToken cancellationToken)
     {
         var vm = await writer.CreateUserPolicyAsync(request.UserPolicy, cancellationToken);

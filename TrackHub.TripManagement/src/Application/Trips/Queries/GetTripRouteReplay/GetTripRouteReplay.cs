@@ -21,7 +21,7 @@ namespace TrackHub.TripManagement.Application.Trips.Queries.GetTripRouteReplay;
 /// <summary>
 /// Replays the trip's real track from Telemetry. Telemetry owns the 31-day window and the
 /// 10 000-point cap; this clamps to them and reports truncation EXPLICITLY — a silently shortened
-/// route would read as a vehicle that stopped moving (acceptance 22).
+/// route would read as a vehicle that stopped moving.
 /// <para>
 /// Doubly gated: the module's own key plus Telemetry's <c>gps.positionHistory</c>, because position
 /// history is a separately licensed capability.
@@ -31,7 +31,7 @@ namespace TrackHub.TripManagement.Application.Trips.Queries.GetTripRouteReplay;
 [RequireFeature(FeatureKeys.TripManagement)]
 [RequireFeature(FeatureKeys.GpsPositionHistory)]
 // Enforcement: the handler derives the caller's own account and passes it to the reader/writer,
-// which filters every row on it (TripVisibility is the single visibility resolver - spec 11).
+// which filters every row on it (TripVisibility is the single visibility resolver).
 [AccountScopeEnforcedInHandler]
 public readonly record struct GetTripRouteReplayQuery(Guid TripId, int? MaxPoints) : IRequest<RouteReplayVm>;
 
@@ -59,10 +59,9 @@ public sealed class GetTripRouteReplayQueryHandler(
         var from = trip.ActualStartAt ?? trip.PlannedStartAt;
 
         // The full window is passed through DELIBERATELY. PositionHistoryClient owns the 31-day
-        // clamp and is the only thing that can report it, via the `truncated` flag. Pre-clamping
-        // here made `windowClamped` permanently unreachable, so a 45-day trip silently lost its
-        // first 14 days and still answered truncated = false — precisely the silent cut §7.5 and
-        // acceptance 22 forbid. Do not re-add a clamp on this side.
+        // clamp and is the only thing that can report it, via the `truncated` flag; pre-clamping
+        // here would make `windowClamped` unreachable and silently cut a long trip's first days.
+        // Do not re-add a clamp on this side.
         var maxPoints = Math.Clamp(request.MaxPoints ?? DefaultMaxPoints, 1, TelemetryMaxPoints);
 
         return await positionHistoryClient.GetRangeAsync(

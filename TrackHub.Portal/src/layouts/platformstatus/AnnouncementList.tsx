@@ -25,10 +25,7 @@ export interface AnnouncementListProps {
   language: string;
 }
 
-/**
- * Announcement banners for the status page. The text is author-written content,
- * rendered as PLAIN TEXT — never markdown or HTML (ST-09).
- */
+/** Author-written content, rendered as PLAIN TEXT, never markdown or HTML. */
 const AnnouncementList = ({ announcements, language }: AnnouncementListProps) => {
   if (announcements.length === 0) return null;
 

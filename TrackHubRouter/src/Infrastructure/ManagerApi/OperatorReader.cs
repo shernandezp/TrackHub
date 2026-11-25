@@ -17,9 +17,6 @@ namespace ManagerApi;
 
 using GraphQL.Client.Abstractions;
 
-// This class represents the implementation of the IOperatorReader interface
-// It is responsible for reading operator data from the GraphQL service.
-//
 // Resolves operators under the CALLER's identity, so Manager applies that caller's account and
 // group visibility. Credential material is redacted for callers without Credentials/Custom; use
 // IOperatorSystemReader when the decrypted credential is required to reach a provider.
@@ -156,11 +153,6 @@ public class OperatorReader : GraphQLService, IOperatorReader
                     }
             }";
 
-    /// <summary>
-    /// Retrieves a list of operators associated with the current user 
-    /// </summary>
-    /// <param name="cancellationToken">A cancellation token to cancel the operation if needed</param>
-    /// <returns>A collection of OperatorVm objects representing the operators</returns>
     public async Task<IEnumerable<OperatorVm>> GetOperatorsAsync(CancellationToken cancellationToken)
     {
         var request = new GraphQLRequest

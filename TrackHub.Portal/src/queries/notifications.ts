@@ -14,12 +14,7 @@
 *  limitations under the License.
 */
 
-/**
- * In-app notification hooks for the navbar bell. The feed polls every minute;
- * marking a notification read invalidates the feed so the unread badge updates.
- * Failures surface through the query client's global error toast — the bell
- * renders an empty feed on error instead of breaking.
- */
+/** The bell renders an empty feed on error instead of breaking. */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from 'api/manager/notificationDeliveries';

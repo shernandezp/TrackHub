@@ -42,14 +42,11 @@ public class TriggerOperatorSyncCommandHandler(
 {
     public async Task<bool> Handle(TriggerOperatorSyncCommand request, CancellationToken cancellationToken)
     {
-        // The manual-sync throttle lives at the single point of entry — Manager's
-        // ManualSyncMinIntervalSeconds, which throws TooManyRequestsException
-        // The Router's former hardcoded 5-minute cooldown is removed so a trigger accepted by
-        // Manager can never be silently dropped here. The Router still validates operator/account/
-        // enabled and returns typed errors instead of a silent false. One Manager read suffices:
-        // Manager already validated the account (authorization + account-status gate) before
-        // dispatching, and the operator row binds the account id. The caller is manager_client,
-        // which holds no Operators grant, so the read runs under the Router's own service identity.
+        // The manual-sync throttle lives only in Manager (ManualSyncMinIntervalSeconds), so a trigger
+        // Manager accepted is never silently dropped here. One Manager read suffices: Manager already
+        // validated the account before dispatching, and the operator row binds the account id. The
+        // caller is manager_client, which holds no Operators grant, so the read runs under the
+        // Router's own service identity.
         var op = await operatorSystemReader.GetOperatorAsync(request.OperatorId, cancellationToken);
         if (op.AccountId != request.AccountId)
         {

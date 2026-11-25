@@ -14,14 +14,7 @@
 *  limitations under the License.
 */
 
-/**
- * Trip management GraphQL documents (TripManagement backend). Codegen validates
- * these against schemas/tripManagement.graphql; values always travel as
- * variables — never string interpolation.
- *
- * The anonymous public tracking snapshot is NOT here: it is an unauthenticated
- * REST endpoint (see api/tripManagement/publicTrips.ts).
- */
+/** The anonymous public tracking snapshot is an unauthenticated REST endpoint (publicTrips.ts). */
 
 import { graphql } from './generated';
 
@@ -276,8 +269,6 @@ export const TollVehicleClassFieldsFragment = graphql(`
   }
 `);
 
-/* ---------------------------------------------------------------- queries */
-
 export const GetTripsDocument = graphql(`
   query GetTrips(
     $statuses: [String!]
@@ -431,8 +422,6 @@ export const EstimateTollsDocument = graphql(`
     }
   }
 `);
-
-/* -------------------------------------------------------------- mutations */
 
 export const CreateTripDocument = graphql(`
   mutation CreateTrip($trip: TripDtoInput!) {
@@ -627,8 +616,6 @@ export const SkipStopDocument = graphql(`
   }
 `);
 
-/* ------------------------------------------------------ delivery mutations */
-
 export const CreateDeliveryDocument = graphql(`
   mutation CreateDelivery($tripStopId: UUID!, $delivery: DeliveryDtoInput!) {
     createDelivery(command: { tripStopId: $tripStopId, delivery: $delivery }) {
@@ -643,10 +630,7 @@ export const UpdateDeliveryDocument = graphql(`
   }
 `);
 
-/**
- * Records the outcome of one delivery. `clientEventId` is the server-side
- * idempotency key — a retry of the SAME attempt must reuse it (spec 11 §7.3).
- */
+/** `clientEventId` is the server-side idempotency key: a retry of the SAME attempt must reuse it. */
 export const UpdateDeliveryOutcomeDocument = graphql(`
   mutation UpdateDeliveryOutcome(
     $tripId: UUID!
@@ -673,13 +657,10 @@ export const DeleteDeliveryDocument = graphql(`
   }
 `);
 
-/* ----------------------------------------------------------- POD mutation */
-
 /**
- * Captures proof of delivery. Documents are ordinary spec 04 Manager documents
- * uploaded through the existing REST surface and referenced here by id — the
- * backend rejects any that is not `ScanStatus = Clean` with
- * `POD_DOCUMENT_NOT_CLEAN`. Idempotent on `(tripStopId, clientEventId)`.
+ * Documents are ordinary Manager documents uploaded through the REST surface; the backend rejects
+ * any not `ScanStatus = Clean` with `POD_DOCUMENT_NOT_CLEAN`. Idempotent on
+ * `(tripStopId, clientEventId)`.
  */
 export const RecordProofOfDeliveryDocument = graphql(`
   mutation RecordProofOfDelivery($tripId: UUID!, $proofOfDelivery: ProofOfDeliveryDtoInput!) {
@@ -689,13 +670,9 @@ export const RecordProofOfDeliveryDocument = graphql(`
   }
 `);
 
-/* ------------------------------------------------- toll catalog mutations */
-
 /**
- * Account-scoped transporter-type (or single-transporter) → toll-class mapping.
- * NOT part of the platform toll catalog: it runs under `Resources.Trips`/`Edit`
- * and is what lets `Trip.TollVehicleClass` be defaulted at trip creation
- * (spec 11 §4, §7.6).
+ * NOT part of the platform toll catalog: it runs under `Resources.Trips`/`Edit` and is what lets
+ * `Trip.TollVehicleClass` be defaulted at trip creation.
  */
 export const SetTransporterTollClassDocument = graphql(`
   mutation SetTransporterTollClass(
@@ -792,11 +769,7 @@ export const DeleteTollTariffDocument = graphql(`
   }
 `);
 
-/**
- * Bulk trip planning from a spreadsheet (spec 11a §9.1). Per-row results: one bad
- * row never fails the batch, and the dialog renders the rejected rows so the
- * operator fixes those lines rather than guessing which of three hundred was wrong.
- */
+/** Per-row results: one bad row never fails the batch, and the dialog lists the rejected rows. */
 export const ImportTripsCsvDocument = graphql(`
   mutation ImportTripsCsv($csv: String!) {
     importTripsCsv(command: { csv: $csv }) {
@@ -812,9 +785,8 @@ export const ImportTripsCsvDocument = graphql(`
 `);
 
 /**
- * "This trip is already under way" (spec 11a §5.4). `startedAt` is the FALLBACK,
- * not the input: when Geofencing recorded the vehicle leaving the origin zone,
- * those measurements win and `backfilled` comes back true.
+ * `startedAt` is the FALLBACK: when Geofencing recorded the vehicle leaving the origin zone, those
+ * measurements win and `backfilled` comes back true.
  */
 export const DeclareTripInTransitDocument = graphql(`
   mutation DeclareTripInTransit($tripId: UUID!, $startedAt: DateTime) {

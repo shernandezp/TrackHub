@@ -27,11 +27,7 @@ import { GoogleFullscreenControl } from 'controls/Maps/shared/FullscreenControl'
 import { GOOGLE_NIGHT_STYLES } from 'controls/Maps/utils/darkMapStyles';
 import type { RouteMapProps } from 'controls/Maps/RouteMap/routeMapProps';
 
-/**
- * Google host for the trip route planner and trip detail map. Same prop
- * contract and same core layers as {@link OSMRouteMap} — only the base map and
- * the provider context value differ.
- */
+/** Same prop contract and core layers as {@link OSMRouteMap}; only the base map and provider context differ. */
 const GoogleRouteMap = ({
   route = [],
   corridor = [],

@@ -14,12 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Device API (Manager backend): plain typed async functions. Failures THROW
- * ApiError — fallbacks and toasts belong to the caller layer (src/queries for
- * components; the GPS-integration screens call these imperatively).
- */
-
 import { executeGraphQL } from 'api/core/graphqlClient';
 import type { RequestOptions } from 'api/core/errors';
 import type { ListParams, Page } from 'api/core/paging';
@@ -43,7 +37,6 @@ export type DevicesPage = Page<Device>;
 export type SynchronizedDevice = SynchronizedDeviceType;
 export type SynchronizedDevicesPage = Page<SynchronizedDevice>;
 
-/** Server-side filters accepted by {@link getSynchronizedDevices}. */
 export interface SynchronizedDeviceFilters extends ListParams {
   detectedStatus?: DetectedStatus | null;
   operatorId?: string | null;
@@ -67,7 +60,6 @@ export async function getDeviceName(deviceId: string, options?: RequestOptions):
   return data.device;
 }
 
-/** Returns the id of the deleted device (schema: `deleteDevice: UUID!`). */
 export async function deleteDevice(deviceId: string): Promise<string> {
   const data = await executeGraphQL('manager', DeleteDeviceDocument, { deviceId });
   return data.deleteDevice;
@@ -115,7 +107,6 @@ export async function setSynchronizedDeviceIgnored(
   return data.setSynchronizedDeviceIgnored;
 }
 
-/** Fields the operator supplies when registering a device by hand. */
 export interface ManualDeviceInput {
   accountId: string;
   operatorId: string;
@@ -129,9 +120,8 @@ export interface ManualDeviceInput {
 }
 
 /**
- * Manual registration for providers without a device-catalog API (Prosegur).
- * With autoAssign (default) the server also creates/adopts a transporter named
- * after the device and assigns it, so positions flow without further setup.
+ * For providers without a device-catalog API. With autoAssign (default) the server also
+ * creates/adopts a transporter named after the device and assigns it, so positions flow.
  */
 export async function registerManualDevice(
   input: ManualDeviceInput,

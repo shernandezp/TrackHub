@@ -17,11 +17,10 @@ namespace TrackHub.Router.Domain.Interfaces;
 
 // Serializes device synchronization per operator within a process so a user's manual sync and the
 // background sync loop (or two manual triggers) cannot run concurrently for the same operator —
-// which would race the device-catalog reset/rebuild and duplicate work (router-audit A-25). This
-// is an in-process guard consistent with the single-instance SyncWorker deployment; a
-// cross-instance claim (advisory lock / SKIP LOCKED) would be required to scale the worker out.
+// which would race the device-catalog reset/rebuild. In-process only, matching the single-instance
+// SyncWorker; scaling the worker out needs a cross-instance claim (advisory lock / SKIP LOCKED).
 public interface IOperatorSyncLock
 {
-    // Acquires the per-operator gate; dispose the returned handle to release it.
+    // Dispose the returned handle to release the gate.
     Task<IDisposable> AcquireAsync(Guid operatorId, CancellationToken cancellationToken);
 }

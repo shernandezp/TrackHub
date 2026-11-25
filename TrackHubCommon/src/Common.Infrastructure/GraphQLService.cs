@@ -22,21 +22,9 @@ using HotChocolate;
 
 namespace Common.Infrastructure;
 
-// This abstract class provides a base implementation for making GraphQL queries and mutations.
-// It takes an IGraphQLClient instance as a dependency to send the GraphQL requests.
 public abstract class GraphQLService(IGraphQLClient graphQLClient)
 {
 
-    /// <summary>
-    /// This method sends a GraphQL query request and returns the deserialized response.
-    /// It throws an exception if there is an error in the GraphQL query execution or if the data string is null or empty.
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="request">GraphQLRequest object</param>
-    /// <param name="token">CancellationToken</param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
-    /// <exception cref="GraphQLException"></exception>
     public async Task<T> QueryAsync<T>(GraphQLRequest request, CancellationToken token)
     {
         var response = await graphQLClient.SendQueryAsync<object>(request, token)
@@ -53,16 +41,6 @@ public abstract class GraphQLService(IGraphQLClient graphQLClient)
             : ExtractFirstPropertyValue<T>(dataString);
     }
 
-    /// <summary>
-    /// This method sends a GraphQL mutation request and returns the deserialized response.
-    /// It throws an exception if there is an error in the GraphQL mutation execution or if the data string is null or empty.
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="request">GraphQLRequest object</param>
-    /// <param name="token">CancellationToken</param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
-    /// <exception cref="GraphQLException"></exception>
     public async Task<T> MutationAsync<T>(GraphQLRequest request, CancellationToken token)
     {
         var response = await graphQLClient.SendMutationAsync<object>(request, token)
@@ -79,13 +57,6 @@ public abstract class GraphQLService(IGraphQLClient graphQLClient)
             : ExtractFirstPropertyValue<T>(dataString);
     }
 
-    /// <summary>
-    /// This private method extracts the first property value from a JSON string.
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="json">string parameter representing the JSON string</param>
-    /// <returns>It returns the deserialized value of the first property</returns>
-    /// <exception cref="Exception">It throws an exception if the response is null or empty</exception>
     private static T ExtractFirstPropertyValue<T>(string json)
     {
         var dataObject = JsonDocument.Parse(json);
@@ -98,17 +69,9 @@ public abstract class GraphQLService(IGraphQLClient graphQLClient)
                 return propertyValue;
         }
 
-        // A Nullable<T> return type means the caller declared null a VALID answer for this field —
-        // e.g. `activeGeocodingProvider` returning null when no provider is configured. Throwing
-        // here made every such null-handling branch unreachable (ReverseGeocodingService's
-        // `provider is null` check could never fire) and masked the real condition behind a bare
-        // Exception that no error filter maps, surfacing as "Unexpected Execution Error".
-        //
-        // Deliberately Nullable<T> ONLY, not `default(T) is null`: nullable reference annotations
-        // are erased at runtime, so `string` and `string?` are indistinguishable here and widening
-        // to all reference types would turn a genuine "field came back empty" bug into a silent
-        // null. Every cross-service Vm in this platform is a record struct, so the nullable ones
-        // are Nullable<T> and detectable.
+        // A Nullable<T> return type means the caller declared null a valid answer for this field. Only
+        // Nullable<T>, not every reference type: nullable reference annotations are erased at runtime, so
+        // widening would turn a genuinely empty field into a silent null. Cross-service Vms are record structs.
         if (Nullable.GetUnderlyingType(typeof(T)) is not null)
             return default!;
 

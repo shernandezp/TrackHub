@@ -23,23 +23,22 @@ namespace TrackHub.TripManagement.Application.ProofsOfDelivery.Commands.Record;
 /// <summary>
 /// Captures proof of delivery. Documents are ordinary Manager <c>Document</c> records uploaded
 /// through the existing REST surface and linked here by id — this module introduces no storage
-/// surface of its own (spec 11 §11).
+/// surface of its own.
 /// <para>
 /// Every referenced document is validated to belong to the trip's account AND to be
 /// servable (<c>Clean</c>, or <c>NotScanned</c> where no scanner runs) before anything is written.
 /// Linking a quarantined or pending file to a delivery record would put unverified bytes into an
 /// auditable evidence trail, so the rejection is <see cref="TripErrorCodes.PodDocumentNotClean"/>
-/// rather than a silent skip (acceptance 25).
+/// rather than a silent skip.
 /// </para>
 /// <para>
-/// Idempotent on the unique <c>(TripStopId, ClientEventId)</c> index (acceptance 15). No
-/// <c>PrincipalTypes = "Staff"</c> here (acceptance 6) — spec 10 widens it additively.
+/// Idempotent on the unique <c>(TripStopId, ClientEventId)</c> index.
 /// </para>
 /// </summary>
 [Authorize(Resource = Resources.Trips, Action = Actions.Write)]
 [RequireFeature(FeatureKeys.TripManagement)]
 // Enforcement: the handler derives the caller's own account and passes it to the reader/writer,
-// which filters every row on it (TripVisibility is the single visibility resolver - spec 11).
+// which filters every row on it (TripVisibility is the single visibility resolver).
 [AccountScopeEnforcedInHandler]
 public readonly record struct RecordProofOfDeliveryCommand(Guid TripId, ProofOfDeliveryDto ProofOfDelivery) : IRequest<ProofOfDeliveryVm>;
 
@@ -65,9 +64,9 @@ public sealed class RecordProofOfDeliveryCommandHandler(
         var scopeUserId = TripVisibility.ResolveScopeUserId(user, UserId);
         var trip = await reader.GetTripAsync(request.TripId, caller.AccountId, scopeUserId, cancellationToken);
 
-        // Idempotency BEFORE the terminal guard (acceptance 15). A POD is the last thing recorded at
+        // Idempotency BEFORE the terminal guard. A POD is the last thing recorded at
         // a stop and the trip closes right behind it — auto-completion fires the moment that stop
-        // closes (§5.2) — so by the time an offline device re-sends, the trip is routinely terminal.
+        // closes — so by the time an offline device re-sends, the trip is routinely terminal.
         // Answering TRIP_ALREADY_TERMINAL to a submission the server already stored is a permanent
         // failure the outbox can only retry forever.
         //
@@ -98,9 +97,9 @@ public sealed class RecordProofOfDeliveryCommandHandler(
 
         // A REPLAY stops here. The row was already there, so re-applying the side effects below
         // would undo work done since the original submission: the operator records a genuine
-        // Rejected outcome, spec 10's offline outbox then re-sends the original POD, and the stop's
+        // Rejected outcome, the offline outbox then re-sends the original POD, and the stop's
         // deliveries flip back to Delivered. One row was never the whole of idempotency
-        // (acceptance 15) — the side effects have to be once-only too.
+        // — the side effects have to be once-only too.
         if (!created)
         {
             return pod;

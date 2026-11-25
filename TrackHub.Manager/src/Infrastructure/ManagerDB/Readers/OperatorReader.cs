@@ -14,9 +14,8 @@ public sealed class OperatorReader(
     : AccountScopedDataAccess(context, principal), IOperatorReader
 {
     // The operator health/failure/position-sync summary is DERIVED from the telemetry tables at read
-    // time: after the extraction those rows are written by the Router into the
-    // telemetry-owned operator_health_checks / operator_sync_runs, and the denormalized operator
-    // columns are no longer maintained. The device-sync and manual-sync timestamps
+    // time: the Router writes those rows into the telemetry-owned operator_health_checks /
+    // operator_sync_runs. The device-sync and manual-sync timestamps
     // (LastSuccessfulSyncAt, LastDeviceSyncAt, LastManualSyncAt) remain Manager-owned bookkeeping.
     private readonly record struct DerivedSummary(
         OperatorHealthStatus HealthStatus,
@@ -189,9 +188,8 @@ public sealed class OperatorReader(
         return Map(op, includeCredentials, summary);
     }
 
-    // Resolves the operator that owns the transporter's device. Restored for the Router's
-    // position read/replay flows (operatorByTransporter); delegates to GetOperatorAsync so
-    // credential gating and the derived telemetry summary behave exactly like the by-id read.
+    // Delegates to GetOperatorAsync so credential gating and the derived telemetry summary behave
+    // exactly like the by-id read.
     public async Task<OperatorVm> GetOperatorByTransporterAsync(Guid transporterId, CancellationToken cancellationToken)
     {
         var operatorId = await Context.TransporterDeviceAssignments

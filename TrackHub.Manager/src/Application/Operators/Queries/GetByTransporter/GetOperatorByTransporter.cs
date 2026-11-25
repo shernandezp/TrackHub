@@ -15,9 +15,8 @@
 
 namespace TrackHub.Manager.Application.Operators.Queries.GetByTransporter;
 
-// Restored: the Router resolves the owning operator (with credential) for a transporter in its
-// position read/replay flows (operatorByTransporter). Removed by mistake in the telemetry
-// refactor; the ServiceContracts Layer A tests now guard this call.
+// The Router resolves the owning operator (with credential) for a transporter in its position
+// read/replay flows (operatorByTransporter); the ServiceContracts tests guard this call.
 [Authorize(Resource = Resources.Operators, Action = Actions.Read)]
 // Enforcement: the reader/writer this handler delegates to extends AccountScopedDataAccess and
 // checks the loaded row's owning account (RequireAccountAccess) or filters on the caller's scope.

@@ -26,7 +26,6 @@ public sealed class ResourceActionRole
     public int ActionId { get; set; }
     public int RoleId { get; set; }
 
-    // Navigation properties
     public Resource Resource
     {
         get => _resource ?? throw new InvalidOperationException("Resource is not loaded");

@@ -18,7 +18,7 @@ namespace TrackHub.TripManagement.Domain.Interfaces;
 /// <summary>
 /// Public-link lifecycle, delegated to Manager. A parallel link mechanism is forbidden — Manager
 /// owns token hashing, access counting and the <c>PublicLinkAccessed</c> audit event, in exactly
-/// one implementation shared with its own anonymous REST endpoint (spec 11 §18.10).
+/// one implementation shared with its own anonymous REST endpoint.
 /// </summary>
 public interface IPublicLinkGrantClient
 {

@@ -19,7 +19,7 @@ using NetTopologySuite.Geometries;
 namespace TrackHub.TripManagement.Infrastructure.TripDB.Entities;
 
 /// <summary>
-/// The dispatch aggregate root (spec 11 section 6.1, 18.3). A dispatch code is a field on this
+/// The dispatch aggregate root. A dispatch code is a field on this
 /// entity, not a parent aggregate.
 /// </summary>
 public sealed class Trip : BaseAuditableEntity
@@ -47,7 +47,7 @@ public sealed class Trip : BaseAuditableEntity
     public int OriginRadiusMeters { get; set; } = TripGeometryDefaults.ArrivalRadiusMeters;
 
     /// <summary>
-    /// SNAPSHOT taken when the trip is ARMED (spec 11a §6.1), not when it starts: origin arrival is
+    /// SNAPSHOT taken when the trip is ARMED, not when it starts: origin arrival is
     /// what CAUSES the start, so the geometry has to be frozen before execution begins. Geofence
     /// polygon when <see cref="OriginGeofenceId"/> is set, otherwise <see cref="OriginPoint"/>
     /// buffered by <see cref="OriginRadiusMeters"/>.
@@ -56,7 +56,7 @@ public sealed class Trip : BaseAuditableEntity
 
     /// <summary>
     /// When the trip entered the detection working set. Stamped once, and deliberately writes NO
-    /// <c>TripEvent</c>: a trip that was armed and never ran must stay deletable (acceptance 16).
+    /// <c>TripEvent</c>: a trip that was armed and never ran must stay deletable.
     /// </summary>
     public DateTimeOffset? ArmedAt { get; set; }
 
@@ -88,27 +88,22 @@ public sealed class Trip : BaseAuditableEntity
 
     /// <summary>
     /// Stamped only after a TripRouteDeviation alert was successfully emitted, so a failed
-    /// emission is retried on the next cycle rather than silently swallowed (spec 11 section 7.4).
+    /// emission is retried on the next cycle rather than silently swallowed.
     /// </summary>
     public DateTimeOffset? DeviationOpenedAt { get; set; }
 
     /// <summary>
     /// Run length of consecutive out-of-corridor fixes, PERSISTED because Router pushes exactly one
     /// position per transporter per call: an in-memory counter rebuilt per request could never reach
-    /// the three-fix threshold, which is why corridor deviation never fired (spec 11 section 7.4).
-    /// Reset to 0 by any fix inside the corridor.
+    /// the three-fix threshold. Reset to 0 by any fix inside the corridor.
     /// </summary>
     public int ConsecutiveOutsideFixes { get; set; }
     public string? CancellationReason { get; set; }
 
-    // ---------------------------------------------------------------- behaviour
-    //
     // The state transitions live HERE rather than as field assignments spread across the writers,
     // and that is what lets two very different callers share one set of rules: the command writers,
     // which load-mutate-save one row per request, and the detection unit of work, which loads a
-    // batch once and commits per fix. Every rule below — first-write-wins on a measurement, the
-    // out-of-order guard, "an episode must be able to close" — used to exist only as a convention
-    // inside whichever writer happened to touch the column.
+    // batch once and commits per fix.
     //
     // Each mutator answers whether it CHANGED anything, so a caller batching writes can tell an
     // idle fix (a truck parked inside its origin zone moves nothing at all) from a real one and
@@ -116,7 +111,7 @@ public sealed class Trip : BaseAuditableEntity
 
     /// <summary>
     /// Freezes the origin zone and marks the trip watched. Idempotent, and deliberately writes no
-    /// event: an armed-but-never-run trip must stay deletable (acceptance 16).
+    /// event: an armed-but-never-run trip must stay deletable.
     /// </summary>
     public bool Arm(Polygon originGeom, DateTimeOffset armedAt)
     {
@@ -131,7 +126,7 @@ public sealed class Trip : BaseAuditableEntity
     }
 
     /// <summary>
-    /// The measured origin visit. <b>First write wins</b> (acceptance 12): a visit replayed from
+    /// The measured origin visit. <b>First write wins</b>: a visit replayed from
     /// Geofencing's history must never overwrite what the live pipeline already measured.
     /// </summary>
     public bool RecordOriginVisit(DateTimeOffset? arrivedAt, DateTimeOffset? departedAt)
@@ -198,7 +193,7 @@ public sealed class Trip : BaseAuditableEntity
 
     /// <summary>
     /// Deviation episode state. A plain assignment, never first-write-wins: an episode has to be able
-    /// to CLOSE on re-entry so that a later departure opens a new one with a new key (acceptance 14).
+    /// to CLOSE on re-entry so that a later departure opens a new one with a new key.
     /// </summary>
     public bool SetDeviationState(DateTimeOffset? deviationOpenedAt, int consecutiveOutsideFixes)
     {
@@ -217,9 +212,8 @@ public sealed class Trip : BaseAuditableEntity
     /// <para>
     /// The caller owns the matrix check and the persistence; this owns which fields move. The revert
     /// token exists because the unique idempotency index can still refuse the save, and the trip row
-    /// may be carrying OTHER pending changes from the same fix — the odometer, a debounce clock.
-    /// Detaching the row to undo a rejected transition, which is what the writer used to do, threw
-    /// those away silently.
+    /// may be carrying OTHER pending changes from the same fix — the odometer, a debounce clock —
+    /// which detaching the row to undo a rejected transition would throw away silently.
     /// </para>
     /// </summary>
     public TripTransitionRevert ApplyTransition(string toStatus, DateTimeOffset? measuredAt, string? reason)
@@ -230,7 +224,7 @@ public sealed class Trip : BaseAuditableEntity
             && string.Equals(Status, TripStatuses.Created, StringComparison.Ordinal))
         {
             // The MEASURED start when there is one: OriginArrivedAt on the detection path, the
-            // replayed visit on the backfill path. First write wins (acceptance 12).
+            // replayed visit on the backfill path. First write wins.
             ActualStartAt ??= OriginArrivedAt ?? measuredAt ?? DateTimeOffset.UtcNow;
         }
 
@@ -241,8 +235,7 @@ public sealed class Trip : BaseAuditableEntity
 
         // The reason reaches the audit row and the timeline event for EVERY transition, but it only
         // becomes a CANCELLATION reason when the trip is actually cancelled or aborted. A forced
-        // completion passes a reason too, and stamping it here labelled a completed trip with a
-        // cancellation it never had.
+        // completion passes a reason too, and must not be labelled with a cancellation it never had.
         if (!string.IsNullOrWhiteSpace(reason)
             && (string.Equals(toStatus, TripStatuses.Cancelled, StringComparison.Ordinal)
                 || string.Equals(toStatus, TripStatuses.Aborted, StringComparison.Ordinal)))

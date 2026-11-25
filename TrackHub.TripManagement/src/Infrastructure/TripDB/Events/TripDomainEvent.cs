@@ -20,7 +20,7 @@ namespace TrackHub.TripManagement.Infrastructure.TripDB.Events;
 /// <summary>
 /// A trip domain event, dispatched by the shared DispatchDomainEventsInterceptor after a
 /// successful save. <see cref="EventType"/> carries one of the
-/// <see cref="TripEventTypes"/> literals listed in spec 11 section 10, which are the same
+/// <see cref="TripEventTypes"/> literals, which are the same
 /// literals Manager AlertEventTypes mirrors - keep both catalogs aligned.
 /// <para>
 /// One event class rather than twenty-four near-identical ones: every trip event has the same

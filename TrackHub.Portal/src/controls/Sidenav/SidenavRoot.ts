@@ -29,7 +29,6 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
-// @mui material components
 import Drawer from "@mui/material/Drawer";
 import { styled } from "@mui/material/styles";
 
@@ -60,7 +59,6 @@ export default styled(Drawer)<{ ownerState: SidenavRootOwnerState }>(({ theme, o
     bgColor = white.main;
   }
 
-  // styles for the sidenav when miniSidenav={false}
   const drawerOpenStyles = () => ({
     transform: "translateX(0)",
     transition: transitions.create("transform", {
@@ -82,7 +80,6 @@ export default styled(Drawer)<{ ownerState: SidenavRootOwnerState }>(({ theme, o
     },
   });
 
-  // styles for the sidenav when miniSidenav={true}
   const drawerCloseStyles = () => ({
     transform: `translateX(${pxToRem(-320)})`,
     transition: transitions.create("transform", {

@@ -14,12 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * User query/mutation hooks (Security backend). Components consume these — not
- * the api layer directly. Loading/error state comes from the hooks; failures
- * also surface in the global toast via the query client's error handlers.
- */
-
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from 'api/security/users';
 import type {
@@ -45,11 +39,7 @@ export function useCurrentUser(options: { enabled?: boolean } = {}) {
   });
 }
 
-/**
- * One server page of the account's users (`{ items, totalCount }`). Security's
- * `usersByAccount` now carries the unpaged total and a server-side `search`, so
- * the caller renders an exact range and a real search box.
- */
+/** `usersByAccount` carries the unpaged total and a server-side `search`. */
 export function useUsersByAccount(params: ListParams = {}, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: userKeys.byAccount(params),

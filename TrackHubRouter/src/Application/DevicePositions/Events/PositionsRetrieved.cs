@@ -83,10 +83,10 @@ public sealed class PositionsRetrieved
                 {
                     if (validPositions.Length > 0)
                     {
-                        // Phase 1 — freshness-critical: store the latest projection and run geofence
+                        // Freshness-critical first: store the latest projection and run geofence
                         // detection with the addresses the provider already supplied. Reverse-
-                        // geocoding (with its fleet-wide throttle) is deferred to phase 2 so it can
-                        // never delay position storage or detection (router-audit A-10).
+                        // geocoding (with its fleet-wide throttle) is deferred to the enrichment step
+                        // below so it can never delay position storage or detection.
                         var writeSucceeded = await positionWriter.AddOrUpdatePositionAsync(validPositions, cancellationToken);
                         if (!writeSucceeded)
                         {
@@ -100,7 +100,7 @@ public sealed class PositionsRetrieved
                         {
                             // Best-effort, isolated from the sync-run classification: a Geofencing
                             // outage must not flip an already-stored position batch to FAILED nor
-                            // raise a false position-sync-failed alert (router-audit A-09).
+                            // raise a false position-sync-failed alert.
                             try
                             {
                                 await geofenceWriter.ProcessPositionsAsync(validPositions, notification.Settings.AccountId, cancellationToken);
@@ -127,7 +127,7 @@ public sealed class PositionsRetrieved
                             }
                         }
 
-                        // Phase 2 — best-effort enrichment off the freshness path: fill blank
+                        // Best-effort enrichment off the freshness path: fill blank
                         // addresses, re-upsert ONLY the fixes enrichment actually resolved, and
                         // append the enriched history.
                         if (writeSucceeded)

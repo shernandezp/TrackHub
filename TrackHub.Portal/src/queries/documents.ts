@@ -14,11 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Document query hooks (spec 04 documents, Manager backend). Components consume
- * these rather than the api layer directly.
- */
-
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from 'api/manager/documents';
 import type { DocumentUploadFields } from 'api/manager/documents';
@@ -33,9 +28,8 @@ export const documentKeys = {
 };
 
 /**
- * The account's configured document types. Every surface that files a document
- * reads them from here, so a type the account configured — and its Required /
- * Tracks Expiration flags — governs the upload wherever it happens.
+ * Every surface that files a document reads types from here, so the account's Required / Tracks
+ * Expiration flags govern the upload wherever it happens.
  */
 export function useDocumentTypes(
   accountId: string | null | undefined,
@@ -49,10 +43,7 @@ export function useDocumentTypes(
   });
 }
 
-/**
- * Documents owned by one entity (spec 04 owner scoping — `Staff` is the owner
- * type spec 09 §11 uses for qualification evidence).
- */
+/** `Staff` is the owner type used for qualification evidence. */
 export function useDocumentsForOwner(
   accountId: string | undefined,
   ownerEntityType: string,
@@ -67,11 +58,7 @@ export function useDocumentsForOwner(
   });
 }
 
-/**
- * Uploads a file through the spec 04 multipart REST surface. There is no second
- * upload endpoint anywhere in the platform — POD attachments reuse this one and
- * are linked to the trip by document id (spec 11 §9, §11).
- */
+/** The platform's only upload endpoint; POD attachments reuse it and are linked by document id. */
 export function useUploadDocument() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -82,9 +69,8 @@ export function useUploadDocument() {
 }
 
 /**
- * Re-reads one document's metadata. Uploads land as `Pending` until the scanner
- * finishes, and only a `Clean` document may be attached to a POD — this is how a
- * screen refreshes that verdict without polling.
+ * Uploads land as `Pending` until the scanner finishes, and only a `Clean` document may be
+ * attached to a POD; this refreshes that verdict without polling.
  */
 export function useRefreshDocument() {
   return useMutation({

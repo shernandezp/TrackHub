@@ -19,7 +19,7 @@ namespace TrackHub.Router.Application.DevicePositions.Registry;
 
 // Scoped: resolves the keyed reader from the caller's own request scope (the reader and its scoped
 // dependencies share that live scope) — exactly one reader constructed per lookup, no
-// resolve-all-and-filter, no disposed-scope hand-off (router-audit A-07).
+// resolve-all-and-filter, no disposed-scope hand-off.
 public class PositionRegistry(IServiceProvider serviceProvider) : IPositionRegistry
 {
     public IEnumerable<IPositionReader> GetReaders(IEnumerable<ProtocolType> types)

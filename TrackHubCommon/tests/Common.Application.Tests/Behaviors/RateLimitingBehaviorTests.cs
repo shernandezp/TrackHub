@@ -68,15 +68,13 @@ public class RateLimitingBehaviorTests
         var user = new Mock<IUser>();
         user.Setup(u => u.Id).Returns(userId);
 
-        // Use a unique request type to avoid cross-test interference - use client partition
+        // A unique client id keeps the client partition free of cross-test interference.
         user.Setup(u => u.Client).Returns($"unique-client-{Guid.NewGuid()}");
         var behavior = new RateLimitingBehavior<ClientRateLimitedRequest, string>(user.Object, NullLogger<RateLimitingBehavior<ClientRateLimitedRequest, string>>.Instance);
 
-        // First 2 should pass
         await behavior.HandleAsync(new ClientRateLimitedRequest(), () => Task.FromResult("OK"), CancellationToken.None);
         await behavior.HandleAsync(new ClientRateLimitedRequest(), () => Task.FromResult("OK"), CancellationToken.None);
 
-        // 3rd should throw
         var act = () => behavior.HandleAsync(new ClientRateLimitedRequest(), () => Task.FromResult("OK"), CancellationToken.None);
         var ex = await act.Should().ThrowAsync<TooManyRequestsException>();
         ex.Which.RetryAfterSeconds.Should().BeGreaterThan(0);

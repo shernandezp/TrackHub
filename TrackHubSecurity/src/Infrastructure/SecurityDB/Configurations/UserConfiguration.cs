@@ -22,10 +22,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 {
     public void Configure(EntityTypeBuilder<User> builder)
     {
-        //Table name
         builder.ToTable(name: TableMetadata.User, schema: SchemaMetadata.Security);
 
-        //Column names
         builder.Property(x => x.UserId).HasColumnName("id");
         builder.Property(x => x.Username).HasColumnName("username");
         builder.Property(x => x.Password).HasColumnName("password");
@@ -55,11 +53,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasMaxLength(ColumnMetadata.DefaultEmailLength)
             .IsRequired();
 
-        // Authentication resolves a user by emailaddress on every login (AuthorityServer
-        // UserReader.GetUserAsync) with SingleOrDefault, and both username and emailaddress are
-        // validated for GLOBAL uniqueness by the create/update command validators — so the unique
-        // indexes both serve those lookups and close the gap where CreateUser never checked the
-        // username at all. AccountId carries the per-tenant user listings.
+        // Login resolves a user by emailaddress with SingleOrDefault, and username and emailaddress
+        // are GLOBALLY unique; AccountId carries the per-tenant user listings.
         builder.HasIndex(x => x.Username)
             .IsUnique()
             .HasDatabaseName("ix_users_username");
@@ -71,7 +66,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasIndex(x => x.AccountId)
             .HasDatabaseName("ix_users_accountid");
 
-        //Constraints
         builder
             .HasMany(e => e.Roles)
             .WithMany(e => e.Users)

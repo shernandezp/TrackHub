@@ -22,18 +22,14 @@ public class ResourceActionConfiguration : IEntityTypeConfiguration<ResourceActi
 {
     public void Configure(EntityTypeBuilder<ResourceAction> builder)
     {
-        //Table name
         builder.ToTable(name: TableMetadata.ResourceAction, schema: SchemaMetadata.Security);
 
-        //Column names
         builder.Property(x => x.ResourceId).HasColumnName("resourceid");
         builder.Property(x => x.ActionId).HasColumnName("actionid");
 
-        //Constraints
         builder
             .HasKey(ra => new { ra.ResourceId, ra.ActionId });
 
-        // Configure relationships
         builder
             .HasOne(ra => ra.Resource)
             .WithMany(r => r.ResourceActions)

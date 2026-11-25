@@ -16,7 +16,7 @@
 namespace TrackHub.TripManagement.Application.Trips.Services.Interfaces;
 
 /// <summary>
-/// Puts a late-created trip into the state its vehicle is already in (spec 11a §5.4).
+/// Puts a late-created trip into the state its vehicle is already in.
 /// <para>
 /// Real operations plan after the fact: a bulk upload lands on Monday for trucks that left on
 /// Sunday, and a dispatcher opening the single-trip dialog is often recording something already

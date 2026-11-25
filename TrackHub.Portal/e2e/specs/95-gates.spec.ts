@@ -1,10 +1,7 @@
 /**
- * Role gates, feature gates and the error paths the UI is designed to show.
- *
- * The role-scoped halves need a second, non-administrator principal. The setup project creates one
- * through the real Account Management screens; if the platform then refuses it, these tests FAIL
- * naming that refusal, because a principal the product cannot sign in is a defect, not a missing
- * fixture.
+ * The role-scoped halves need a non-administrator principal created by the setup
+ * project; if the platform refuses it these tests FAIL, because a principal the
+ * product cannot sign in is a defect, not a missing fixture.
  */
 
 import { test, expect, flag } from '../fixtures';

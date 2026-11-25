@@ -27,14 +27,12 @@ internal class GetUserTests
     [SetUp]
     public void Setup()
     {
-        // Initialize the mock and the object under test before each test
         _readerMock = new Mock<IUserReader>();
     }
 
     [Test]
     public async Task Handle_ValidQuery_ReturnsUserVm()
     {
-        // Arrange
         var userId = Guid.NewGuid();
         var cancellationToken = new CancellationToken();
 
@@ -45,14 +43,11 @@ internal class GetUserTests
         var handler = new GetUserQueryHandler(_readerMock.Object);
         var query = new GetUserQuery { Id = userId };
 
-        // Act
         var result = await handler.Handle(query, cancellationToken);
 
-        // Assert
         Assert.That(result, Is.Not.Default);
         Assert.That(result, Is.EqualTo(userVm));
 
-        // Verify that GetUserAsync was called with the correct arguments
         _readerMock.Verify(m => m.GetUserAsync(userId, cancellationToken), Times.Once);
     }
 }

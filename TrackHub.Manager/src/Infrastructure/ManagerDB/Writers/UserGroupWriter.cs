@@ -19,7 +19,6 @@ using TrackHub.Manager.Infrastructure.Interfaces;
 
 namespace TrackHub.Manager.Infrastructure.ManagerDB.Writers;
 
-// This class represents a writer for UserGroup entities in the infrastructure layer.
 public sealed class UserGroupWriter(IApplicationDbContext context, ICurrentPrincipal principal) : AccountScopedDataAccess(context, principal), IUserGroupWriter
 {
     // Both sides of a membership must be rows of one account the caller may write; anything else is
@@ -38,12 +37,6 @@ public sealed class UserGroupWriter(IApplicationDbContext context, ICurrentPrinc
         return accountId;
     }
 
-    // Creates a new UserGroup asynchronously.
-    // Parameters:
-    //   userGroupDto: The UserGroupDto object containing the data for the new UserGroup.
-    //   cancellationToken: The cancellation token.
-    // Returns:
-    //   A Task that represents the asynchronous operation. The task result contains the created UserGroupVm.
     public async Task<UserGroupVm> CreateUserGroupAsync(UserGroupDto userGroupDto, CancellationToken cancellationToken)
     {
         var userGroup = new UserGroup
@@ -63,13 +56,6 @@ public sealed class UserGroupWriter(IApplicationDbContext context, ICurrentPrinc
             userGroup.GroupId);
     }
 
-    // Deletes a UserGroup asynchronously.
-    // Parameters:
-    //   userId: The ID of the user associated with the UserGroup.
-    //   groupId: The ID of the group associated with the UserGroup.
-    //   cancellationToken: The cancellation token.
-    // Throws:
-    //   NotFoundException: If the UserGroup with the specified userId and groupId is not found.
     public async Task DeleteUserGroupAsync(Guid userId, long groupId, CancellationToken cancellationToken)
     {
         var userGroup = await Context.UsersGroup.FindAsync([groupId, userId], cancellationToken)

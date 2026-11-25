@@ -27,7 +27,6 @@ export interface FilterNavbarProps {
   handleChange: FormChangeHandler;
   errors: Record<string, string | undefined>;
   handleSearch: () => void;
-  /** Extra controls placed after the Search button, on the same row. */
   children?: ReactNode;
 }
 

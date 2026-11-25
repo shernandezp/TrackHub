@@ -17,17 +17,13 @@ using TrackHub.Router.Domain.Records;
 
 namespace TrackHub.Router.Infrastructure.Common;
 
-// This class represents a factory for creating HttpClient instances with credentials.
 public sealed class CredentialHttpClientFactory(IHttpClientFactory httpClientFactory) : ICredentialHttpClientFactory
 {
     // The provider clients share one hardened named client (registered in AddCommonContext) whose
     // primary handler disables auto-redirect, so an operator-controlled base URL cannot 302-redirect
-    // the Router to an internal endpoint (router-audit A-20). The base URL is applied per instance.
+    // the Router to an internal endpoint. The base URL is applied per instance.
     public const string ProviderHttpClientName = "ProviderCredentialClient";
 
-    // Creates a new HttpClient instance with the specified credential and cancellation token.
-    // If the credential has a valid URI, sets the BaseAddress and Timeout properties of the HttpClient.
-    // Otherwise, throws an InvalidOperationException.
     public HttpClient CreateClientAsync(CredentialTokenDto credential, CancellationToken cancellationToken)
     {
         var httpClient = httpClientFactory.CreateClient(ProviderHttpClientName);

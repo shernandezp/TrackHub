@@ -25,7 +25,6 @@ namespace Infrastructure.UnitTests;
 [TestFixture]
 internal class UserWriterTests : Context
 {
-    // Declare necessary fields
     private Mock<IApplicationDbContext> _dbContextMock;
     private Mock<ICurrentPrincipal> _principalMock;
     private UserWriter _userWriter;
@@ -33,7 +32,6 @@ internal class UserWriterTests : Context
     [SetUp]
     public void Setup()
     {
-        // Initialize the mock and the object under test before each test
         _dbContextMock = new Mock<IApplicationDbContext>();
         // A global service identity: account-transparent, so these round-trip tests exercise the
         // write paths while the account guard is pinned separately by the foreign-deny tests.
@@ -46,24 +44,20 @@ internal class UserWriterTests : Context
     [Test]
     public async Task CreateUserAsync_ValidUserDto_ReturnsUserVm()
     {
-        // Arrange
         var userDto = new CreateUserDto
         {
             Password = "password",
             EmailAddress = "user@example.com"
         };
 
-        // Setup mock behavior for adding user and saving changes
         _dbContextMock.Setup(m => m.Users.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
                       .Returns((User model, CancellationToken token) => new ValueTask<EntityEntry<User>>());
         _dbContextMock.Setup(m => m.SaveChangesAsync(It.IsAny<CancellationToken>()))
                       .ReturnsAsync(1);
 
-        // Act
         var result = await _userWriter.CreateUserAsync(userDto, Guid.NewGuid(), new CancellationToken());
 
-        // Assert
-        Assert.That(result, Is.Not.Default); // Ensure that a non-null result is returned
+        Assert.That(result, Is.Not.Default);
     }
 
     [Test]
@@ -89,49 +83,37 @@ internal class UserWriterTests : Context
     [Test]
     public async Task UpdateUserAsync_ValidUserDto_UpdatesUser()
     {
-        // Arrange
         var userDto = new UpdateUserDto
         {
             EmailAddress = "user@example.com"
         };
         var cancellationToken = new CancellationToken();
 
-        // Setup mock behavior for finding user and saving changes
         _dbContextMock.Setup(m => m.Users.FindAsync(It.IsAny<object[]>(), cancellationToken))
-                      .ReturnsAsync(GetUser()); // Return a mock user for testing
+                      .ReturnsAsync(GetUser());
 
         _dbContextMock.Setup(m => m.SaveChangesAsync(cancellationToken))
-                      .ReturnsAsync(1); // Return a completed task
+                      .ReturnsAsync(1);
 
-        // Act
         await _userWriter.UpdateUserAsync(userDto, cancellationToken);
-
-        // Assert
-        // Add assertions to check if the user is updated properly
     }
 
     [Test]
     public async Task UpdatePasswordAsync_ValidUserPasswordDto_UpdatesPassword()
     {
-        // Arrange
         var userPasswordDto = new UserPasswordDto
         {
             Password = "newPassword"
         };
         var cancellationToken = new CancellationToken();
 
-        // Setup mock behavior for finding user and saving changes
         _dbContextMock.Setup(m => m.Users.FindAsync(It.IsAny<object[]>(), cancellationToken))
-                      .ReturnsAsync(GetUser()); // Return a mock user for testing
+                      .ReturnsAsync(GetUser());
 
         _dbContextMock.Setup(m => m.SaveChangesAsync(cancellationToken))
-                      .ReturnsAsync(1); // Return a completed task
+                      .ReturnsAsync(1);
 
-        // Act
         await _userWriter.UpdatePasswordAsync(userPasswordDto, verifyCurrentPassword: false, cancellationToken);
-
-        // Assert
-        // Add assertions to check if the password is updated properly
     }
 
     [Test]
@@ -166,21 +148,15 @@ internal class UserWriterTests : Context
     [Test]
     public async Task DeleteUserAsync_ValidUserId_DeletesUser()
     {
-        // Arrange
         var userId = Guid.NewGuid();
         var cancellationToken = new CancellationToken();
 
-        // Setup mock behavior for finding user and saving changes
         _dbContextMock.Setup(m => m.Users.FindAsync(It.IsAny<object[]>(), cancellationToken))
-                      .ReturnsAsync(GetUser()); // Return a mock user for testing
+                      .ReturnsAsync(GetUser());
 
         _dbContextMock.Setup(m => m.SaveChangesAsync(cancellationToken))
-                      .ReturnsAsync(1); // Return a completed task
+                      .ReturnsAsync(1);
 
-        // Act
         await _userWriter.DeleteUserAsync(userId, cancellationToken);
-
-        // Assert
-        // Add assertions to check if the user is deleted properly
     }
 }

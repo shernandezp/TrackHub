@@ -19,13 +19,8 @@ namespace TrackHub.Security.Application.Roles.GetResources;
 [PlatformScoped("Seeded RBAC catalog: roles, policies and their resource/action grants are platform definitions, Administrator-only to change.")]
 public readonly record struct GetResourcesByRoleQuery(int RoleId) : IRequest<RoleResourceVm>;
 
-// The GetResourcesByRoleQueryHandler class is responsible for handling the GetResourcesByRoleQuery query.
-// It implements the IRequestHandler interface from the MediatR library.
 public class GetResourcesByRoleQueryHandler(IRoleReader reader) : IRequestHandler<GetResourcesByRoleQuery, RoleResourceVm>
 {
-
-    // The Handle method is called when the GetResourcesByRoleQuery query is sent.
-    // It returns a RoleResourceVm object with all the resources for a given role and their respective actions.
     public async Task<RoleResourceVm> Handle(GetResourcesByRoleQuery request, CancellationToken cancellationToken)
         => await reader.GetResourcesAsync(request.RoleId, cancellationToken);
 

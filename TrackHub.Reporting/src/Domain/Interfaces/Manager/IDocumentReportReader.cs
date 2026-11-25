@@ -30,7 +30,7 @@ public interface IDocumentReportReader
     Task<IReadOnlyCollection<ReportDocumentTypeVm>> GetDocumentTypesAsync(CancellationToken cancellationToken);
 
     // Every group-visible transporter with its Active document categories in ONE Manager call;
-    // owner visibility is enforced server-side (AC13 — non-visible owners never appear).
+    // owner visibility is enforced server-side, so non-visible owners never appear.
     Task<IReadOnlyCollection<TransporterDocumentComplianceVm>> GetTransporterDocumentComplianceAsync(CancellationToken cancellationToken);
     Task<IReadOnlyCollection<ReportShareVm>> GetDocumentSharesByAccountAsync(CancellationToken cancellationToken);
     Task<IReadOnlyCollection<ReportDocumentVm>> SearchDocumentsAsync(DateTimeOffset? from, DateTimeOffset? to, CancellationToken cancellationToken);

@@ -23,7 +23,7 @@ namespace TrackHub.TripManagement.Web.GraphQL.Mutation;
 /// Service-client surface: the Router/SyncWorker position feed and the partner import/status API.
 /// Kept apart from the user-facing trip mutations because the position feed lives on its own
 /// <c>TripTracking</c> resource — a compromised Router identity must not be able to read or mutate
-/// trips (spec 11 §18.15).
+/// trips.
 /// </summary>
 public partial class Mutation
 {

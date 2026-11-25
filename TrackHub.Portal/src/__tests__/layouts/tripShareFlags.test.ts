@@ -15,18 +15,10 @@
  */
 
 /**
- * Share field flags are disclosure decisions, so their DEFAULTS are part of the
- * contract, not a cosmetic detail. `includeRoute` in particular exists because
- * the planned route used to be handed out unconditionally — if it ever defaults
- * back to true, every link silently discloses the route again (spec 11 §7.8).
- *
- * Comparing the dialog against itself is not enough, and that gap is how
- * `includeRoute` came to be missing from the `TripShareFields` fragment while
- * every dialog-internal check stayed green: `FIELD_FLAGS` matched
- * `DEFAULT_FLAGS`, and neither knew the backend had a sixth flag. So the suite
- * is anchored to the two GENERATED artefacts instead — the schema-derived input
- * type and the fragment document actually sent — which makes a seventh flag
- * added server-side a failure here rather than an invisible disclosure.
+ * Share field flags are disclosure decisions, so their DEFAULTS are contract: if `includeRoute`
+ * ever defaults to true, every link silently discloses the route. The suite is anchored to the two
+ * GENERATED artefacts (the schema-derived input type and the fragment document actually sent), so a
+ * flag added server-side fails here rather than becoming an invisible disclosure.
  */
 
 import { Kind } from 'graphql';
@@ -42,15 +34,12 @@ import type {
 /** Every `include*` member of a generated type — i.e. every disclosure flag. */
 type FlagKeys<T> = Extract<keyof T, `include${string}`>;
 
-/** `true` only when the two unions are mutually assignable, i.e. identical. */
 type Identical<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
 
 /**
- * COMPILE-TIME gate (`tsc --noEmit` is a build step, so this is enforced even
- * though the assignment looks inert at runtime): the flags the dialog offers
- * must be exactly the flags the backend accepts. Adding `includeXyz` to the
- * schema and regenerating turns these into type errors until the dialog offers
- * it, gives it a default, and the fragment reads it back.
+ * COMPILE-TIME gate (`tsc --noEmit` is a build step): the flags the dialog offers must be exactly
+ * the flags the backend accepts, so a new schema flag is a type error until the dialog offers it,
+ * defaults it, and the fragment reads it back.
  */
 const dialogMatchesCommandInput: Identical<
   FlagKeys<TripShareFieldFlagsDtoInput>,
@@ -99,7 +88,7 @@ describe('trip share field flags', () => {
   test('the fragment reads back every flag the dialog can set', () => {
     // A flag the dialog SENDS but never SELECTS is invisible after creation:
     // the "Existing links" list cannot say what a live link discloses, so it
-    // cannot be revoked for the right reason. That was the includeRoute bug.
+    // cannot be revoked for the right reason.
     expect(fragmentFlagFields().sort()).toEqual([...FIELD_FLAGS].sort());
   });
 });

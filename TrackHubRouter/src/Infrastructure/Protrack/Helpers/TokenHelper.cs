@@ -22,7 +22,6 @@ using TrackHub.Router.Domain.Interfaces.Manager;
 namespace TrackHub.Router.Infrastructure.Protrack.Helpers;
 
 /// <summary>
-/// Helper class for managing Protrack access tokens.
 /// Protrack uses MD5-based signature authentication:
 /// signature = md5(md5(password) + time)
 /// The durable token copy lives on the Manager credential (UpdateTokenAsync); the in-process
@@ -82,9 +81,6 @@ internal class TokenHelper(ICredentialWriter credentialWriter, IProviderSessionS
         return ComputeMd5Hash(passwordMd5 + time);
     }
 
-    /// <summary>
-    /// Computes the MD5 hash of a string, returning 32 lower-case hex characters.
-    /// </summary>
     internal static string ComputeMd5Hash(string input)
     {
         var inputBytes = Encoding.UTF8.GetBytes(input);

@@ -62,27 +62,23 @@ public static class DependencyInjection
         // The detection working set as a unit of work: loaded once per batch, committed once per fix.
         services.AddScoped<ITripDetectionUnitOfWork, TripDetectionUnitOfWork>();
 
-        // Geofencing's visit history, read-only (SVD-05): the evidence a late-created trip is
-        // rebuilt from (spec 11a §5.4).
+        // Geofencing's visit history, read-only: the evidence a late-created trip is
+        // rebuilt from.
         services.AddScoped<IGeofenceVisitReader, GeofenceVisitReader>();
 
-        // The account's named places (geofences, then POIs), for bulk planning by name (§9.1).
+        // The account's named places (geofences, then POIs), for bulk planning by name.
         services.AddScoped<IPlaceReader, PlaceReader>();
 
-        // Route planning.
         services.AddScoped<IRoutePlanReader, RoutePlanReader>();
         services.AddScoped<IRoutePlanWriter, RoutePlanWriter>();
 
-        // Public sharing.
         services.AddScoped<ITripShareReader, TripShareReader>();
         services.AddScoped<ITripShareWriter, TripShareWriter>();
 
-        // Toll catalog (platform reference data) and its account-scoped mapping.
         services.AddScoped<ITollCatalogReader, TollCatalogReader>();
         services.AddScoped<ITollCatalogWriter, TollCatalogWriter>();
         services.AddScoped<ITransporterTollClassStore, TransporterTollClassStore>();
 
-        // Local identity/feature reads.
         services.AddScoped<IUserReader, UserReader>();
         services.AddScoped<IAccountFeatureReader, AccountFeatureReader>();
 
@@ -92,7 +88,7 @@ public static class DependencyInjection
         services.AddScoped<Common.Application.Interfaces.IAccountOperationalStatusReader, AccountOperationalStatusReader>();
         services.AddScoped<Common.Application.Interfaces.IAccountOperationalStatusService, Common.Application.Services.CachedAccountOperationalStatusService>();
 
-        // Fail-closed feature gate (spec 11 section 15, acceptance 10); without it the host refuses to
+        // Fail-closed feature gate; without it the host refuses to
         // start (PipelineDependencyCheck).
         services.AddScoped<Common.Application.Interfaces.IFeatureFlagService, FeatureFlagService>();
 

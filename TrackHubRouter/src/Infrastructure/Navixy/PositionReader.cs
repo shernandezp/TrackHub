@@ -20,9 +20,6 @@ using TrackHub.Router.Domain.Extensions;
 
 namespace TrackHub.Router.Infrastructure.Navixy;
 
-/// <summary>
-/// Reader for retrieving position information from Navixy API.
-/// </summary>
 public sealed class PositionReader(
     ICredentialHttpClientFactory httpClientFactory,
     IHttpClientService httpClientService,
@@ -30,7 +27,6 @@ public sealed class PositionReader(
     : NavixyReaderBase(httpClientFactory, httpClientService, sessionStore), IPositionReader
 {
     /// <summary>
-    /// Retrieves the last position of a single device asynchronously.
     /// Uses tracker/list which includes last_update with current position.
     /// </summary>
     public async Task<PositionVm> GetDevicePositionAsync(DeviceTransporterVm deviceDto, CancellationToken cancellationToken)
@@ -44,9 +40,6 @@ public sealed class PositionReader(
             : tracker.Value.MapToPositionVm(deviceDto, UserTimeZone);
     }
 
-    /// <summary>
-    /// Retrieves the last positions of multiple devices asynchronously.
-    /// </summary>
     public async Task<IEnumerable<PositionVm>> GetDevicePositionAsync(IEnumerable<DeviceTransporterVm> devices, CancellationToken cancellationToken)
     {
         var result = await PostNavixyAsync<TrackerListResponse>(
@@ -65,7 +58,6 @@ public sealed class PositionReader(
     }
 
     /// <summary>
-    /// Retrieves the positions of a device within a specified time range asynchronously.
     /// Uses track/read endpoint to get historical position data.
     /// </summary>
     public async Task<IEnumerable<PositionVm>> GetPositionAsync(DateTimeOffset from, DateTimeOffset to, DeviceTransporterVm deviceDto, CancellationToken cancellationToken)

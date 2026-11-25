@@ -29,30 +29,9 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
-/** 
-  All of the routes for the Soft UI Dashboard React are added here,
-  You can add a new route, customize the routes and delete the routes here.
-  Once you add a new route on this file it will be visible automatically on
-  the Sidenav.
-  For adding a new route you can follow the existing routes in the routes array.
-  1. The `type` key with the `collapse` value is used for a route.
-  2. The `type` key with the `title` value is used for a title inside the Sidenav. 
-  3. The `type` key with the `divider` value is used for a divider between Sidenav items.
-  4. The `name` key is used for the name of the route on the Sidenav.
-  5. The `key` key is used for the key of the route (It will help you with the key prop inside a loop).
-  6. The `icon` key is used for the icon of the route on the Sidenav, you have to add a node.
-  7. The `collapse` key is used for making a collapsible item on the Sidenav that has other routes
-  inside (nested routes), you need to pass the nested routes inside an array as a value for the `collapse` key.
-  8. The `route` key is used to store the route location which is used for the react router.
-  9. The `href` key is used to store the external links location.
-  10. The `title` key is only for the item with the type of `title` and its used for the title text on the Sidenav.
-  10. The `component` key is used to store the component of its route.
-*/
-
 import { lazy } from "react";
 import type { ReactNode } from "react";
 
-// Argon Dashboard 2 MUI layouts
 const Dashboard = lazy(() => import("layouts/dashboard"));
 const ManageAdmin = lazy(() => import("layouts/manageadmin"));
 const SystemAdmin = lazy(() => import("layouts/systemadmin"));
@@ -70,44 +49,27 @@ import type { PrincipalType } from "constants/principalTypes";
 import { editionRoutes } from "edition/routes";
 
 /**
- * A single entry in the Sidenav route table. Consumed by `App` (route
- * rendering + role/feature-flag filtering) and `controls/Sidenav`.
- *
- * - `route` entries render a `<Route>` and a Sidenav link.
- * - `title` entries render a Sidenav section header (uses `title`).
- * - `divider` entries render a Sidenav divider.
- * - `hidden` entries render a `<Route>` but no Sidenav link (auth callbacks).
- * - `collapse` entries hold nested routes in `collapse`.
+ * Consumed by `App` (route rendering + role/feature-flag filtering) and `controls/Sidenav`.
+ * `hidden` entries render a `<Route>` but no Sidenav link (auth callbacks).
  */
 export interface RouteDefinition {
-  /** Discriminator driving how the entry is rendered. */
   type: "route" | "title" | "divider" | "collapse" | "hidden";
-  /** i18n key of the Sidenav label (also the display name for hidden routes);
-   *  absent on `title`/`divider` entries. */
+  /** i18n key of the Sidenav label (also the display name for hidden routes). */
   name?: string;
-  /** Stable React key / role-gate identifier. */
   key: string;
-  /** react-router path (route/hidden entries). */
   route?: string;
-  /** Sidenav icon node. */
   icon?: ReactNode;
-  /** Element rendered for the route. */
   component?: ReactNode;
-  /** Nested routes for a collapsible Sidenav group. */
   collapse?: RouteDefinition[];
-  /** External link target (route entries with an outbound href). */
   href?: string;
-  /** i18n key of the section header (title entries). */
   title?: string;
-  /** Principal types allowed to see/access this route (defaults to [User]). */
+  /** Defaults to [User]. */
   principalTypes?: PrincipalType[];
   /**
-   * Reachable by anyone, including signed-out visitors and non-User principals.
-   * Bypasses the role and principal-type gates entirely — without this, omitting
-   * `principalTypes` would silently DEFAULT to [User] rather than mean "public".
+   * Bypasses the role and principal-type gates entirely; without it, omitting `principalTypes`
+   * would DEFAULT to [User] rather than mean "public".
    */
   public?: boolean;
-  /** Account feature flag gating this route's visibility. */
   featureKey?: string;
 }
 
@@ -125,7 +87,7 @@ const routes: RouteDefinition[] = [
   {
     // Dispatcher-level: no hardcoded role branch in App.tsx. Visibility is the
     // `trip-management` feature flag alone — an account without it never sees
-    // the entry, and the backend answers FEATURE_DISABLED anyway (acceptance 9).
+    // the entry, and the backend answers FEATURE_DISABLED anyway.
     type: "route",
     name: "screen.tripManager",
     key: "tripManager",

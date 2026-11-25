@@ -22,10 +22,8 @@ public class ResourceActionPolicyConfiguration : IEntityTypeConfiguration<Resour
 {
     public void Configure(EntityTypeBuilder<ResourceActionPolicy> builder)
     {
-        //Table name
         builder.ToTable(name: TableMetadata.ResourceActionPolicy, schema: SchemaMetadata.Security);
 
-        //Column names
         builder.Property(x => x.ResourceActionPolicyId).HasColumnName("id");
         builder.Property(x => x.ResourceId).HasColumnName("resourceid");
         builder.Property(x => x.ActionId).HasColumnName("actionid");

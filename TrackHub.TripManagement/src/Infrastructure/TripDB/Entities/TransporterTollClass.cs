@@ -19,9 +19,8 @@ namespace TrackHub.TripManagement.Infrastructure.TripDB.Entities;
 
 /// <summary>
 /// The account-scoped half of toll configuration: which vehicle class a transporter is priced as.
-/// Account-scoped precisely because fleet composition IS tenant data, unlike the platform catalog
-/// (spec 11 section 5). A row-level <see cref="TransporterId"/> override wins over the type
-/// mapping.
+/// Account-scoped precisely because fleet composition IS tenant data, unlike the platform catalog.
+/// A row-level <see cref="TransporterId"/> override wins over the type mapping.
 /// </summary>
 public sealed class TransporterTollClass : BaseAuditableEntity
 {

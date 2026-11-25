@@ -20,13 +20,6 @@ using Microsoft.Extensions.Logging;
 
 namespace Common.Application.Behaviors;
 
-/// <summary>
-/// Pipeline behavior that logs the full lifecycle of every MediatR request at Debug level.
-/// Captures request start, completion (with elapsed time), and failure — so all transactions
-/// are visible when Debug logging is enabled, without requiring try-catch in business logic.
-/// </summary>
-/// <typeparam name="TRequest">The type of the request.</typeparam>
-/// <typeparam name="TResponse">The type of the response.</typeparam>
 public class LoggingBehavior<TRequest, TResponse>(
     ILogger<TRequest> logger,
     IUser user,
@@ -43,9 +36,8 @@ public class LoggingBehavior<TRequest, TResponse>(
         var userId = user.Id ?? string.Empty;
         string? userName = string.Empty;
 
-        // Resolve the display name only when Debug logging is on (it costs an identity round-trip)
-        // and only for user principals: service-client tokens carry a non-Guid subject (the client
-        // id), which must not fail the request pipeline.
+        // Resolve the display name only at Debug (it costs an identity round-trip) and only for user
+        // principals: service-client tokens carry a non-Guid subject.
         if (logger.IsEnabled(LogLevel.Debug) && Guid.TryParse(userId, out var userGuid))
         {
             userName = await identityService.GetUserNameAsync(userGuid, cancellationToken);

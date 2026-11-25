@@ -22,13 +22,6 @@ namespace TrackHub.Manager.Infrastructure.Writers;
 public sealed class TransporterTypeWriter(IApplicationDbContext context, ICurrentPrincipal principal) : ITransporterTypeWriter
 {
 
-    /// <summary>
-    /// Update a transporter type based on the provided transporter type DTO.
-    /// </summary>
-    /// <param name="transporterTypeDto"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    /// <exception cref="NotFoundException"></exception>
     public async Task UpdateTransporterTypeAsync(TransporterTypeDto transporterTypeDto, CancellationToken cancellationToken)
     {
         var transporterType = await context.TransporterTypes.FindAsync([transporterTypeDto.TransporterTypeId], cancellationToken)

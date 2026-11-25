@@ -22,15 +22,12 @@ namespace TrackHub.TripManagement.Application.TripStops.Commands.Progress;
 
 /// <summary>
 /// Marks a stop <c>Skipped</c> with a reason (customer closed, refused, no access). Idempotent on
-/// <c>trip-skip:{tripStopId:N}:{clientEventId:N}</c> (acceptance 15).
-/// <para>
-/// No <c>PrincipalTypes = "Staff"</c> here (acceptance 6); spec 10 widens the attribute additively.
-/// </para>
+/// <c>trip-skip:{tripStopId:N}:{clientEventId:N}</c>.
 /// </summary>
 [Authorize(Resource = Resources.Trips, Action = Actions.Edit)]
 [RequireFeature(FeatureKeys.TripManagement)]
 // Enforcement: the handler derives the caller's own account and passes it to the reader/writer,
-// which filters every row on it (TripVisibility is the single visibility resolver - spec 11).
+// which filters every row on it (TripVisibility is the single visibility resolver).
 [AccountScopeEnforcedInHandler]
 public readonly record struct SkipStopCommand(
     Guid TripId,

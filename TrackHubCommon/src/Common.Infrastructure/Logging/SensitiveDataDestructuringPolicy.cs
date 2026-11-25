@@ -21,10 +21,8 @@ using Serilog.Events;
 namespace Common.Infrastructure.Logging;
 
 /// <summary>
-/// Redacts credential-bearing members from any TrackHub type written to a log with the
-/// destructuring operator. Structured log properties are persisted verbatim by the PostgreSQL
-/// sink, so a single <c>{@Payload}</c> on a request carrying a password would place live
-/// credentials in the logs table.
+/// Redacts credential-bearing members from TrackHub types written with the destructuring operator, since
+/// the PostgreSQL sink persists structured properties verbatim.
 /// </summary>
 public sealed class SensitiveDataDestructuringPolicy : IDestructuringPolicy
 {

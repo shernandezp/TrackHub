@@ -36,7 +36,6 @@ public class GetDevicesByOperatorQueryHandler(
 {
     private string? EncryptionKey { get; } = configuration["AppSettings:EncryptionKey"];
 
-    // Handles the GetDevicesByOperatorQuery and returns a list of external device view models
     public async Task<IEnumerable<DeviceVm>> Handle(GetDevicesByOperatorQuery request, CancellationToken cancellationToken)
     {
         // Caller-scoped resolve authorizes the operator; the service-identity re-read supplies the
@@ -51,7 +50,6 @@ public class GetDevicesByOperatorQueryHandler(
         return await GetDevicesAsync(@operator, cancellationToken);
     }
 
-    // Retrieves the devices for the operator and returns a list of external device view models
     private async Task<IEnumerable<DeviceVm>> GetDevicesAsync(
         OperatorVm @operator,
         CancellationToken cancellationToken)
@@ -60,7 +58,6 @@ public class GetDevicesByOperatorQueryHandler(
         return await FetchAndProcessDevicesAsync(reader, @operator, cancellationToken);
     }
 
-    // Fetches and processes the devices using the external device reader and returns a list of external device view models
     private async Task<IEnumerable<DeviceVm>> FetchAndProcessDevicesAsync(
         IExternalDeviceReader reader,
         OperatorVm @operator,

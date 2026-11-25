@@ -24,10 +24,6 @@ export interface TrailLayerProps {
   color?: string;
 }
 
-/**
- * Provider-agnostic trail layer: a short polyline of the last N received
- * points for the selected unit. Points are `{ lat, lng }` objects.
- */
 const TrailLayer = ({ points = [], color = '#1E90FF' }: TrailLayerProps) => {
   const { provider } = useMapProvider();
   return provider === MAP_PROVIDERS.GOOGLE

@@ -39,7 +39,6 @@ public class CreateClientCommandHandlerTests
     [Test]
     public async Task Handle_ValidCommand_CreatesClientWithSaltAndKey()
     {
-        // Arrange
         var clientDto = new ClientDto(Guid.NewGuid(), "MyClient", "Description", "secret123");
         var expectedVm = new ClientVm(Guid.NewGuid(), clientDto.UserId, "MyClient", "Description", "encrypted", true, DateTimeOffset.UtcNow);
 
@@ -49,10 +48,8 @@ public class CreateClientCommandHandlerTests
 
         var handler = new CreateClientCommandHandler(_writerMock.Object, _configMock.Object, _publisherMock.Object, _principalMock.Object);
 
-        // Act
         var result = await handler.Handle(new CreateClientCommand(clientDto), CancellationToken.None);
 
-        // Assert
         Assert.That(result, Is.EqualTo(expectedVm));
         _writerMock.Verify(w => w.CreateClientAsync(
             clientDto,
@@ -64,13 +61,11 @@ public class CreateClientCommandHandlerTests
     [Test]
     public async Task Handle_MissingEncryptionKey_ThrowsException()
     {
-        // Arrange — config returns null for encryption key
         _configMock.Setup(c => c["AppSettings:EncryptionKey"]).Returns((string?)null);
 
         var handler = new CreateClientCommandHandler(_writerMock.Object, _configMock.Object, _publisherMock.Object, _principalMock.Object);
         var clientDto = new ClientDto(null, "Client", "Desc", "secret");
 
-        // Act & Assert
         await Assert.ThrowsAsync<ArgumentNullException>(async () =>
             await handler.Handle(new CreateClientCommand(clientDto), CancellationToken.None));
     }
@@ -78,7 +73,6 @@ public class CreateClientCommandHandlerTests
     [Test]
     public async Task Handle_GeneratesUniqueSaltPerCall()
     {
-        // Arrange
         var clientDto = new ClientDto(null, "Client", "Desc", "secret");
         byte[]? firstSalt = null;
         byte[]? secondSalt = null;
@@ -94,11 +88,9 @@ public class CreateClientCommandHandlerTests
 
         var handler = new CreateClientCommandHandler(_writerMock.Object, _configMock.Object, _publisherMock.Object, _principalMock.Object);
 
-        // Act
         await handler.Handle(new CreateClientCommand(clientDto), CancellationToken.None);
         await handler.Handle(new CreateClientCommand(clientDto), CancellationToken.None);
 
-        // Assert — each call should produce a different salt
         Assert.That(firstSalt, Is.Not.Null);
         Assert.That(secondSalt, Is.Not.Null);
         Assert.That(firstSalt, Is.Not.EqualTo(secondSalt));

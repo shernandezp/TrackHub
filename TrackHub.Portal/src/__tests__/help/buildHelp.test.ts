@@ -14,8 +14,8 @@
 *  limitations under the License.
 */
 
-// Validator-rule coverage for scripts/build-help.mjs: every rule
-// gets a broken fixture; a valid fixture proves the happy path and manifest.
+// Every validator rule in scripts/build-help.mjs gets a broken fixture; a valid fixture proves
+// the happy path and manifest.
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import fs from 'node:fs';

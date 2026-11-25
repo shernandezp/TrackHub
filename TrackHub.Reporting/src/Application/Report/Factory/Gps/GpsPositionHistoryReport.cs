@@ -27,8 +27,8 @@ public sealed class GpsPositionHistoryReport(
         Guid? transporterId = filters.GetGuid(FilterNames.Transporter);
         Guid? deviceId = filters.GetGuid(FilterNames.Device);
         var take = GpsReportSupport.ResolveTake(filters, limits);
-        // The window goes to the SOURCE and the feed is followed to its end: one capped page was
-        // the newest N fixes, so a monthly export of an active fleet covered its last few hours.
+        // The window goes to the SOURCE and the feed is followed to its end: one capped page holds only
+        // the newest N fixes, so a monthly export of an active fleet would cover its last few hours.
         var from = filters.GetDate(FilterNames.From);
         var to = filters.GetDate(FilterNames.To);
         var history = await FeedDrain.DrainByCursorAsync<Domain.Models.Manager.ManagerTransporterPositionHistoryVm>(async cursor =>

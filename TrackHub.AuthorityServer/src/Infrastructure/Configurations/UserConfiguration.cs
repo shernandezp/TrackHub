@@ -19,19 +19,15 @@ using TrackHub.AuthorityServer.Infrastructure.Entities;
 
 namespace TrackHub.AuthorityServer.Infrastructure.Configurations;
 
-// ExcludeFromMigrations (here and on the four sibling security.* configurations) applies the DM-05
-// convention: this context is a NARROW PROJECTION of tables TrackHubSecurity owns, mapping only the
-// columns the authentication flow needs and omitting firstname/lastname/integrationuser and the
-// client administration columns. TrackHubSecurity emits the DDL for these tables; this project's
-// SecurityDb migration is intentionally empty so applying it can never create a narrowed schema.
+// ExcludeFromMigrations (here and on the sibling security.* configurations): this context is a
+// narrow projection of tables TrackHubSecurity owns and emits the DDL for; this project's SecurityDb
+// migration is intentionally empty so applying it can never create a narrowed schema.
 public class UserConfiguration : IEntityTypeConfiguration<User>
 {
     public void Configure(EntityTypeBuilder<User> builder)
     {
-        //Table name
         builder.ToTable(name: TableMetadata.User, schema: SchemaMetadata.Security, t => t.ExcludeFromMigrations());
 
-        //Column names
         builder.Property(x => x.UserId).HasColumnName("id");
         builder.Property(x => x.Username).HasColumnName("username");
         builder.Property(x => x.Password).HasColumnName("password");

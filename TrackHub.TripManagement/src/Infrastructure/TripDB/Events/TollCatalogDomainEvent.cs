@@ -18,9 +18,9 @@ using Common.Infrastructure;
 namespace TrackHub.TripManagement.Infrastructure.TripDB.Events;
 
 /// <summary>
-/// A platform toll-catalog change (TollStationChanged / TollTariffChanged, spec 11 section 10).
-/// Carries no AccountId: the catalog is platform reference data with no tenant owner
-/// (spec 11 section 5). Station and tariff changes move money on estimates, which is why every
+/// A platform toll-catalog change (TollStationChanged / TollTariffChanged).
+/// Carries no AccountId: the catalog is platform reference data with no tenant owner.
+/// Station and tariff changes move money on estimates, which is why every
 /// one of them is both audited and announced.
 /// </summary>
 public sealed class TollCatalogDomainEvent(string eventType, Guid entityId, string? code) : BaseEvent

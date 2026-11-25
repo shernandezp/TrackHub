@@ -15,10 +15,6 @@
 
 namespace TrackHub.Manager.Domain.Constants;
 
-/// <summary>
-/// Platform alert-event catalog. Emitters own raising these; kept in Manager until a
-/// second service needs them at compile time.
-/// </summary>
 public static class AlertEventTypes
 {
     public const string GeofenceEntered = nameof(GeofenceEntered);
@@ -41,9 +37,7 @@ public static class AlertEventTypes
     public const string StaffQualificationExpiring = nameof(StaffQualificationExpiring);
     public const string StaffQualificationExpired = nameof(StaffQualificationExpired);
 
-    // Trip management (spec 11 §12), emitted by TrackHub.TripManagement under `trip_client`.
-    // Severity is assigned by the emitter, not here: Info for all of these EXCEPT
-    // TripDelayed, TripRouteDeviation and TripCancelled, which are Warning.
+    // Emitted by TrackHub.TripManagement under `trip_client`; severities are assigned by each emitter.
     public const string TripAssigned = nameof(TripAssigned);
     public const string TripStarted = nameof(TripStarted);
     public const string TripStopArrived = nameof(TripStopArrived);

@@ -14,8 +14,6 @@
 *  limitations under the License.
 */
 
-// Screen/topic resolution and index visibility filtering.
-
 import { describe, expect, it } from 'vitest';
 import { isTopicVisible, resolveScreenKey, topicsForScreen } from 'context/help/HelpContext';
 import type { HelpManifest, HelpTopicMeta } from 'queries/help';

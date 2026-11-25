@@ -25,7 +25,6 @@ import { toCamelCase } from 'utils/stringUtils';
 
 const SRC = path.join(__dirname, '..', '..');
 
-// Every source file that renders the POI and Geocoding Providers panels.
 const PANEL_SOURCES = [
   'layouts/manageadmin/components/pois/index.js',
   'layouts/manageadmin/components/pois/PoiDialog/index.js',
@@ -44,7 +43,7 @@ const resolveKey = (bundle: unknown, key: string): unknown =>
   );
 
 const staticKeysIn = (file: string): string[] => {
-  // Extension-agnostic: source files move .js → .jsx → .tsx during the TS migration
+  // Extension-agnostic so a renamed source file stays covered.
   const base = path.join(SRC, file.replace(/\.js$/, ''));
   const resolved = ['.js', '.jsx', '.ts', '.tsx'].map((ext) => base + ext).find(fs.existsSync);
   if (!resolved) throw new Error(`Source file not found for any extension: ${file}`);

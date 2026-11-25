@@ -84,12 +84,8 @@ public sealed class TrackHubGraphQLErrorFilter : IErrorFilter
                 .Build();
         }
 
-        // The REST pipeline has mapped NotFoundException to a 404 ProblemDetails since day one
-        // (CustomExceptionHandler), but the GraphQL filter never had a branch for it — so every
-        // "not found" on a GraphQL surface arrived as an unmapped "Unexpected Execution Error" with
-        // no code. That covers the DELIBERATE non-disclosure path: a cross-account transporter,
-        // staff, geofence or document id is answered NotFound precisely so it cannot be probed,
-        // and the caller could not tell that apart from a server fault.
+        // Cross-account ids are deliberately answered NotFound so they cannot be probed; the code lets the
+        // caller tell that apart from a server fault.
         if (error.Exception is NotFoundException notFound)
         {
             return ErrorBuilder.FromError(error)
@@ -100,21 +96,16 @@ public sealed class TrackHubGraphQLErrorFilter : IErrorFilter
 
         if (error.Exception is ConflictException conflict)
         {
-            // conflict.Code, not a flat "CONFLICT": the specific literal is what a client branches
-            // on and what the portal translates. A hardcoded code collapsed
-            // STOP_ALREADY_DEPARTED, TRIP_HAS_HISTORY, TRIP_DUPLICATE_CODE and
-            // TOLL_OVERLAPPING_TARIFF into one indistinguishable error.
+            // conflict.Code, not a flat "CONFLICT": the specific literal is what a client branches on and what
+            // the portal translates.
             return ErrorBuilder.FromError(error)
                 .SetMessage(conflict.Message)
                 .SetCode(conflict.Code)
                 .Build();
         }
 
-        // Without this branch a ValidationException fell through to `return error` and reached the
-        // client as an unmapped "Unexpected Execution Error" with no code — including the specific,
-        // localizable rejections the domain raises deliberately (TRIP_NOT_ACTIVE,
-        // POD_DOCUMENT_NOT_CLEAN). Field-level failures travel in an `errors` extension so a form
-        // can highlight the offending input instead of showing one flat message.
+        // Specific codes such as TRIP_NOT_ACTIVE surface as the error code; field-level failures travel in an
+        // `errors` extension so a form can highlight the offending input.
         if (error.Exception is ValidationException validation)
         {
             return ErrorBuilder.FromError(error)

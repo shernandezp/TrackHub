@@ -15,42 +15,34 @@
 
 namespace TrackHub.Manager.Domain.Models;
 
-/// <summary>Server-side page of transporters plus the unpaged total for pagination controls.</summary>
 public readonly record struct TransportersPageVm(
     IReadOnlyCollection<TransporterVm> Items,
     int TotalCount);
 
-/// <summary>Server-side page of devices plus the unpaged total for pagination controls.</summary>
 public readonly record struct DevicesPageVm(
     IReadOnlyCollection<DeviceVm> Items,
     int TotalCount);
 
-/// <summary>Server-side page of groups plus the unpaged total for pagination controls.</summary>
 public readonly record struct GroupsPageVm(
     IReadOnlyCollection<GroupVm> Items,
     int TotalCount);
 
-/// <summary>Server-side page of operators plus the unpaged total for pagination controls.</summary>
 public readonly record struct OperatorsPageVm(
     IReadOnlyCollection<OperatorVm> Items,
     int TotalCount);
 
-/// <summary>Server-side page of users plus the unpaged total for pagination controls.</summary>
 public readonly record struct UsersPageVm(
     IReadOnlyCollection<UserVm> Items,
     int TotalCount);
 
-/// <summary>Server-side page of points of interest plus the unpaged total for pagination controls.</summary>
 public readonly record struct PointsOfInterestPageVm(
     IReadOnlyCollection<PointOfInterestVm> Items,
     int TotalCount);
 
-/// <summary>Server-side page of accounts plus the unpaged total for pagination controls.</summary>
 public readonly record struct AccountsPageVm(
     IReadOnlyCollection<AccountVm> Items,
     int TotalCount);
 
-/// <summary>Server-side page of transporter/device assignments plus the unpaged total.</summary>
 public readonly record struct TransporterDeviceAssignmentsPageVm(
     IReadOnlyCollection<TransporterDeviceAssignmentVm> Items,
     int TotalCount);

@@ -34,10 +34,9 @@ import themeDark from 'assets/theme-dark';
 const GLOBAL_CSS_COMPONENTS = new Set(['MuiCssBaseline']);
 
 /**
- * Slots already stale when this guard was written (Material UI v9). Each is a real
- * dead override — the Argon styling it carries does not reach the DOM — but fixing them
- * changes how components look and needs eyeballing, so they are recorded rather than
- * hidden. Shrink this list; never grow it.
+ * Dead overrides: the Argon styling they carry does not reach the DOM, but fixing them changes how
+ * components look and needs eyeballing, so they are recorded rather than hidden. Shrink this
+ * list; never grow it.
  */
 const KNOWN_STALE = new Set([
   // v9 replaced the variant+color / variant+size composite classes with `variants`.
@@ -53,11 +52,9 @@ const KNOWN_STALE = new Set([
   'MuiButton.textSizeLarge',
   'MuiButton.textPrimary',
   'MuiButton.textSecondary',
-  // Now composed from `docked` + `anchorLeft`.
   'MuiDrawer.paperAnchorDockedLeft',
   // Removed by MUI; the slot is just `select`.
   'MuiSelect.selectMenu',
-  // Now `sizeSmall` on the root rather than a composite input class.
   'MuiInput.inputSizeSmall',
   'MuiOutlinedInput.inputSizeSmall',
   'MuiFilledInput.inputSizeSmall',

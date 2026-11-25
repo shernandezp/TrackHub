@@ -7,8 +7,8 @@ public sealed class TransporterPositionReader(IApplicationDbContext context, IVi
 {
     public async Task<IReadOnlyCollection<TransporterPositionVm>> GetTransporterPositionsAsync(Guid userId, Guid operatorId, CancellationToken cancellationToken)
     {
-        // Stored-projection read for the live map, reimplemented on the single visibility primitive
-        //: privileged roles read account-wide, plain users are group-scoped.
+        // Stored-projection read for the live map, built on the single visibility primitive:
+        // privileged roles read account-wide, plain users are group-scoped.
         var accountId = await context.Users
             .Where(u => u.UserId == userId)
             .Select(u => u.AccountId)

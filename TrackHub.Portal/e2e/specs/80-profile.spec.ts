@@ -1,8 +1,3 @@
-/**
- * Profile: the signed-in user's own record, their platform settings and the
- * roles/policies they hold.
- */
-
 import { test, expect, config, flag, unique } from '../fixtures';
 import { signIn } from '../fixtures/auth';
 import {
@@ -24,7 +19,7 @@ test.describe('profile', () => {
     await expect(page.getByRole('heading', { name: t('userprofile.title') })).toBeVisible();
     await expect(page.getByRole('heading', { name: t('role.title') })).toBeVisible();
 
-    // The administrator holds Administrator and Manager (Security DBInitializer).
+    // The administrator holds Administrator and Manager.
     await expect(
       cardOf(page, 'user-part-of').getByText(t('roles.administrator'), { exact: true })
     ).toBeVisible();

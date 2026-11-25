@@ -24,7 +24,7 @@ namespace TrackHub.TripManagement.Web.Endpoints;
 /// <c>AccountStatusBehavior</c> both resolve a principal, and a public-link subject is not one.
 /// Running this through the pipeline would either fail closed on every request or require
 /// weakening two behaviours that exist to protect every other surface — so the resolver is
-/// injected directly instead (spec 11 §7.8).
+/// injected directly instead.
 /// </para>
 /// <para>
 /// Rate-limited per client IP, which is why the service also runs <c>UseForwardedHeaders</c>:
@@ -32,18 +32,11 @@ namespace TrackHub.TripManagement.Web.Endpoints;
 /// partition into one shared bucket.
 /// </para>
 /// <para>
-/// <b>Deliberately NOT output-cached.</b> This endpoint originally carried the spec-28 announcements
-/// precedent's 30 s <c>CacheOutput</c>, but that precedent does not transfer: announcements are a
-/// genuinely public, non-revocable, subject-less payload, so serving one 30 s stale costs nothing.
-/// A public tracking link is the opposite — a revocable, expiring, per-subject credential. Caching
-/// it broke acceptance 24 twice over: the cache key (grantId + account + resource + token) had no
-/// invalidation on revoke, so a revoked link kept returning 200 for up to 30 s; and because a cache
-/// hit never reaches Manager's resolver, it incremented no access count and wrote no
-/// <c>PublicLinkAccessed</c> audit event, while acceptance 24 requires that of <i>every</i>
-/// successful resolution. Evicting by tag on revoke would have fixed only the first half — the
-/// audit and access-count guarantee is unsatisfiable by any response cache, because the guarantee
-/// is precisely that the request reaches the resolver. Per-IP rate limiting is the abuse control
-/// here; do not reintroduce <c>CacheOutput</c> on this route.
+/// <b>Deliberately NOT output-cached.</b> A public tracking link is a revocable, expiring,
+/// per-subject credential: a cached response would keep a revoked link answering 200 for the cache
+/// window, and a cache hit never reaches Manager's resolver, so it would count no access and write
+/// no <c>PublicLinkAccessed</c> audit event. Per-IP rate limiting is the abuse control here; do not
+/// reintroduce <c>CacheOutput</c> on this route.
 /// </para>
 /// </summary>
 public sealed class PublicTrips : EndpointGroupBase

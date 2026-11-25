@@ -41,13 +41,7 @@ import { toCamelCase } from 'utils/stringUtils';
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
 
-/**
- * Dialog/form state for a POI. Merges an API {@link PointOfInterest} (when
- * editing) with the loose fresh-add shape; select/text controls may hand back
- * `type`/`color`/`groupId` as strings, hence the widened unions. The
- * `name`/`type`/`latitude`/`longitude` requirement is enforced by the dialog's
- * validate() gate before save.
- */
+/** Select/text controls may hand back `type`/`color`/`groupId` as strings, hence the widened unions. */
 export interface PoiFormValues {
   pointOfInterestId?: string;
   name?: string;
@@ -62,7 +56,6 @@ export interface PoiFormValues {
 }
 
 
-/** A column descriptor / rendered row for the vendored POIs `Table`. */
 export interface PoiColumn { name: string; title?: string; align?: "left" | "right" | "center"; }
 export interface PoiRow {
   [key: string]: ReactNode;
@@ -100,11 +93,9 @@ function usePoiTableData(
   const updatePoi = useUpdatePointOfInterest();
   const deletePoi = useDeletePointOfInterest();
 
-  // Current account id, required to create a POI (PointOfInterestDtoInput.accountId).
   const accountQuery = useAccountByUser({ enabled });
   const accountId = accountQuery.data?.accountId ?? null;
 
-  // Keep the global spinner UX for the initial load / invalidation refetch.
   useEffect(() => {
     setLoading(poisQuery.isFetching || groupsQuery.isFetching);
   }, [poisQuery.isFetching, groupsQuery.isFetching, setLoading]);
@@ -112,8 +103,6 @@ function usePoiTableData(
   const onSave = async (poi: PoiFormValues) => {
     setLoading(true);
     try {
-      // validate + coordinate checks gate this call, so the required create/update
-      // input fields are present — assert them at the boundary.
       if (poi.pointOfInterestId) {
         await updatePoi.mutateAsync({
           pointOfInterestId: poi.pointOfInterestId,

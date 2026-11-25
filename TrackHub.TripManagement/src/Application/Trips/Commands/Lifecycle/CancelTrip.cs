@@ -21,12 +21,12 @@ namespace TrackHub.TripManagement.Application.Trips.Commands.Lifecycle;
 
 /// <summary>
 /// Cancels a trip from any non-terminal status. Cancellation PRESERVES stops, events, POD and
-/// documents — it is the answer to "this trip cannot be deleted", not a soft delete (acceptance 16).
+/// documents — it is the answer to "this trip cannot be deleted", not a soft delete.
 /// </summary>
 [Authorize(Resource = Resources.Trips, Action = Actions.Edit)]
 [RequireFeature(FeatureKeys.TripManagement)]
 // Enforcement: the handler derives the caller's own account and passes it to the reader/writer,
-// which filters every row on it (TripVisibility is the single visibility resolver - spec 11).
+// which filters every row on it (TripVisibility is the single visibility resolver).
 [AccountScopeEnforcedInHandler]
 public readonly record struct CancelTripCommand(Guid TripId, string Reason) : IRequest;
 

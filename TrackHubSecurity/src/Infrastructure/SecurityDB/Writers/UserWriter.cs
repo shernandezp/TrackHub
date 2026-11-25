@@ -21,25 +21,16 @@ using TrackHub.Security.Infrastructure.Interfaces;
 
 namespace TrackHub.Security.Infrastructure.Writers;
 
-// This class represents a writer for the User entity in the security database. Every by-id
-// mutation loads the row first and checks its owning account against the caller
+// Every by-id mutation loads the row first and checks its owning account against the caller
 // (RequireAccountAccess) — the enforcement point the [AccountScopeEnforcedInHandler] markers on
 // the user commands cite.
 public sealed class UserWriter(IApplicationDbContext context, ICurrentPrincipal principal)
     : AccountScopedDataAccess(context, principal), IUserWriter
 {
-    /// <summary>
-    /// Creates a new user asynchronously
-    /// </summary>
-    /// <param name="userDto"></param>
-    /// <param name="accountId"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>The created user view model</returns>
     public async Task<UserVm> CreateUserAsync(CreateUserDto userDto, Guid accountId, CancellationToken cancellationToken)
     {
         await RequireAccountAccessAsync(accountId, cancellationToken);
 
-        // Hash the password
         var password = userDto.Password.HashPassword();
 
         var user = new User(
@@ -81,13 +72,6 @@ public sealed class UserWriter(IApplicationDbContext context, ICurrentPrincipal 
             []);
     }
 
-    /// <summary>
-    /// Updates an existing user asynchronously.
-    /// </summary>
-    /// <param name="userDto"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>The task result.</returns>
-    /// <exception cref="NotFoundException">If the user does not exist</exception>
     public async Task UpdateUserAsync(UpdateUserDto userDto, CancellationToken cancellationToken)
     {
         var user = await RequireUserForChangeAsync(userDto.UserId, cancellationToken);
@@ -112,14 +96,6 @@ public sealed class UserWriter(IApplicationDbContext context, ICurrentPrincipal 
         await Context.SaveChangesAsync(cancellationToken);
     }
 
-    /// <summary>
-    /// This method is used to update the user's information
-    /// </summary>
-    /// <param name="userDto"></param>
-    /// <param name="userId"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>The task result</returns>
-    /// <exception cref="NotFoundException">If the user does not exist</exception>
     public async Task UpdateUserAsync(UpdateCurrentUserDto userDto, Guid userId, CancellationToken cancellationToken)
     {
         var user = await RequireUserForChangeAsync(userId, cancellationToken);
@@ -135,13 +111,6 @@ public sealed class UserWriter(IApplicationDbContext context, ICurrentPrincipal 
         await Context.SaveChangesAsync(cancellationToken);
     }
 
-    /// <summary>
-    /// Updates the password of an existing user asynchronously
-    /// </summary>
-    /// <param name="userPasswordDto"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>The task result</returns>
-    /// <exception cref="NotFoundException">If the user does not exist</exception>
     public async Task UpdatePasswordAsync(UserPasswordDto userPasswordDto, bool verifyCurrentPassword, CancellationToken cancellationToken)
     {
         var user = await RequireUserForChangeAsync(userPasswordDto.UserId, cancellationToken);
@@ -180,13 +149,6 @@ public sealed class UserWriter(IApplicationDbContext context, ICurrentPrincipal 
         await Context.SaveChangesAsync(cancellationToken);
     }
 
-    /// <summary>
-    /// Deletes a user asynchronously
-    /// </summary>
-    /// <param name="userId"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>The task result</returns>
-    /// <exception cref="NotFoundException">If the user does not exist</exception>
     public async Task DeleteUserAsync(Guid userId, CancellationToken cancellationToken)
     {
         var user = await RequireUserForChangeAsync(userId, cancellationToken);

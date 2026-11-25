@@ -16,7 +16,7 @@
 namespace TrackHub.Manager.Domain.Interfaces;
 
 /// <summary>
-/// The single implementation of anonymous public-link resolution (spec 02 §7.4, spec 11 §7.8/§18.10).
+/// The single implementation of anonymous public-link resolution.
 /// <para>
 /// It is deliberately NOT an <c>IPublicLinkGrantWriter</c> member: the caller has no principal to
 /// scope by, so it must not inherit the account-scoped write checks. Access counting, the

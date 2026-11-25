@@ -50,7 +50,6 @@ import { useAuth } from "AuthContext";
 import { useFeatures } from 'context/features';
 import { useArgonController } from 'context';
 
-// Dashboard layout components
 import GeneralMap from "layouts/dashboard/components/GeneralMap";
 import type { TrailPoint } from "layouts/dashboard/components/GeneralMap";
 import { countRecentDevices, countDevicesInMovement, getPercentage, getUnitStatus, filterPositions } from 'layouts/dashboard/utils/dashboard';
@@ -58,7 +57,6 @@ import { countRecentDevices, countDevicesInMovement, getPercentage, getUnitStatu
 const TRAIL_LENGTH = 10;
 const GEOFENCING_FEATURE_KEY = 'geofencing';
 
-/** A per-type total shown as a chip / stat summary. */
 interface TypeSummaryItem { name: string; total: number; }
 
 interface TransportersProps {
@@ -74,11 +72,10 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
   const queryClient = useQueryClient();
   const { setLoading } = useContext(LoadingContext);
   const { isAuthenticated } = useAuth();
-  // The live map is platform baseline and is never feature-gated (spec 07 §3).
+  // The live map is platform baseline and is never feature-gated.
   // The in-geofence tile and the overlay toggle are the only geofencing-gated
   // surfaces on this screen: without the feature the query answers
   // FEATURE_DISABLED, so the tile is not rendered and the query never fires
-  // (spec 07 §16 acceptance 7).
   const { isFeatureEnabled } = useFeatures();
   const geofencingEnabled = isFeatureEnabled(GEOFENCING_FEATURE_KEY);
   const [controller] = useArgonController();
@@ -272,7 +269,7 @@ function Transporters({ searchQuery, settings, setShowGeofence, showGeofence, ge
     if (!showPois && !poisLoadedRef.current) {
       setLoading(true);
       // The overlay renders pin colours and popup type/description/address, all
-      // of which `pointOfInterestLookup` now carries.
+      // of which `pointOfInterestLookup` carries.
       const result = await queryClient.fetchQuery({
         queryKey: poiKeys.lookup(),
         queryFn: ({ signal }) => getPointOfInterestLookup({ signal }),

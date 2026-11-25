@@ -21,11 +21,8 @@ namespace TrackHub.Security.Application.Action.GetAll;
 [Authorize(Resource = Resources.Permissions, Action = Actions.Read)]
 public readonly record struct GetActionsQuery() : IRequest<IReadOnlyCollection<ActionVm>>;
 
-// The GetActionsQueryHandler is a class that implements the IRequestHandler interface to handle the GetActionsQuery.
 public class GetActionsQueryHandler(IActionReader reader) : IRequestHandler<GetActionsQuery, IReadOnlyCollection<ActionVm>>
 {
-    // The Handle method is responsible for handling the GetActionsQuery and returning the result.
-    // It asynchronously calls the GetActionsAsync method of the IActionReader dependency to retrieve all actions.
     public async Task<IReadOnlyCollection<ActionVm>> Handle(GetActionsQuery request, CancellationToken cancellationToken)
         => SeededCatalogLimits.EnsureWithinCeiling(await reader.GetActionsAsync(cancellationToken), "actions");
 

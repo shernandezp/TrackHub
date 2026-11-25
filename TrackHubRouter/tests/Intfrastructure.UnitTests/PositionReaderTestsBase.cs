@@ -15,22 +15,15 @@
 
 namespace TrackHub.Router.Infrastructure.Tests;
 
-/// <summary>
-/// Base class for PositionReader unit tests providing common setup and helper methods
-/// </summary>
-/// <typeparam name="TPositionReader">The type of PositionReader being tested</typeparam>
 public abstract class PositionReaderTestsBase<TPositionReader>
 {
     protected Mock<ICredentialHttpClientFactory> HttpClientFactoryMock { get; private set; } = null!;
     protected Mock<IHttpClientService> HttpClientServiceMock { get; private set; } = null!;
-    // Default mock: TryGet misses (out param stays default), so readers behave as before caching.
+    // Default mock: TryGet misses (out param stays default), so readers always log in.
     protected Mock<IProviderSessionStore> SessionStoreMock { get; private set; } = null!;
     protected TPositionReader PositionReader { get; private set; } = default!;
     protected CancellationToken TestCancellationToken { get; } = CancellationToken.None;
 
-    /// <summary>
-    /// Override this method to create the specific PositionReader instance
-    /// </summary>
     protected abstract TPositionReader CreatePositionReader(
         ICredentialHttpClientFactory httpClientFactory,
         IHttpClientService httpClientService);
@@ -44,9 +37,6 @@ public abstract class PositionReaderTestsBase<TPositionReader>
         PositionReader = CreatePositionReader(HttpClientFactoryMock.Object, HttpClientServiceMock.Object);
     }
 
-    /// <summary>
-    /// Creates a test DeviceTransporterVm with the specified identifier and name
-    /// </summary>
     protected DeviceTransporterVm CreateDeviceTransporterVm(
         int identifier = 1, 
         string name = "TestDevice",
@@ -63,15 +53,9 @@ public abstract class PositionReaderTestsBase<TPositionReader>
             TransporterTypeId = (short)TransporterType.Truck
         };
 
-    /// <summary>
-    /// Creates a list of test DeviceTransporterVm instances
-    /// </summary>
     protected List<DeviceTransporterVm> CreateDeviceTransporterVmList(params int[] identifiers)
         => identifiers.Select((id, index) => CreateDeviceTransporterVm(id, $"TestDevice{index + 1}")).ToList();
 
-    /// <summary>
-    /// Creates an expected PositionVm with default values for testing
-    /// </summary>
     protected PositionVm CreateExpectedPositionVm(
         Guid? transporterId = null,
         string deviceName = "TestDevice",
@@ -108,26 +92,17 @@ public abstract class PositionReaderTestsBase<TPositionReader>
             attributes
         );
 
-    /// <summary>
-    /// Asserts that the result is an empty collection
-    /// </summary>
     protected void AssertIsEmpty<T>(IEnumerable<T> result)
     {
         Assert.That(result, Is.Empty);
     }
 
-    /// <summary>
-    /// Asserts that the result is not empty
-    /// </summary>
     protected void AssertIsNotEmpty<T>(IEnumerable<T> result)
     {
         Assert.That(result, Is.Not.Empty);
     }
 
-    /// <summary>
-    /// Asserts that the result equals the expected value
-    /// For PositionVm specifically, compares individual properties to handle struct equality properly
-    /// </summary>
+    // PositionVm is compared property by property to handle struct equality.
     protected void AssertEquals<T>(T result, T expected)
     {
         if (typeof(T) == typeof(PositionVm))

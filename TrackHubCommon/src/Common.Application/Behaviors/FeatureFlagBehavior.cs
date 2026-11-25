@@ -23,13 +23,8 @@ using Microsoft.Extensions.Logging;
 namespace Common.Application.Behaviors;
 
 /// <summary>
-/// Pipeline behavior that enforces <see cref="RequireFeatureAttribute"/> declarations on
-/// commands and queries. The account whose flag is evaluated is, in order:
-///   1. The <c>AccountId</c> property on the request (if non-empty Guid).
-///   2. The current principal's <see cref="ICurrentPrincipal.AccountId"/>.
-/// If neither is available and the principal is a service client without a scoped
-/// account, the check passes when <see cref="RequireFeatureAttribute.AllowGlobalServiceClient"/>
-/// is true (the default) and fails closed otherwise.
+/// Enforces <see cref="RequireFeatureAttribute"/> against the request's <c>AccountId</c>, else the principal's.
+/// With neither, a service client passes only when <see cref="RequireFeatureAttribute.AllowGlobalServiceClient"/> is true.
 /// </summary>
 public sealed class FeatureFlagBehavior<TRequest, TResponse>(
     IFeatureFlagService featureFlagService,

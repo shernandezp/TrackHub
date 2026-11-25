@@ -4,12 +4,8 @@ using System.Text.RegularExpressions;
 
 namespace TrackHub.Manager.Application.Staff.Commands;
 
-/// <summary>
-/// Shared field rules for the staff write commands. Until spec 09 these commands shipped with NO
-/// validators at all — a create with an empty name reached the writer (spec 09 §2.2.4). The rules are
-/// deliberately permissive about formatting (international phone shapes vary) and strict only about
-/// what the database and the portal form already require.
-/// </summary>
+// Deliberately permissive about formatting (international phone shapes vary) and strict only about
+// what the database and the portal form already require.
 internal static class StaffMemberRules
 {
     // Digits with the usual separators; length is bounded by the column, not by this pattern.

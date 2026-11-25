@@ -33,7 +33,6 @@ builder.AddTrackHubDataProtection();
 var allowedCORSOrigins = builder.Configuration.GetAllowedCorsOrigins();
 Guard.Against.NullOrEmpty(allowedCORSOrigins, message: $"Allowed Origins configuration for CORS not loaded");
 
-// Add services to the container.
 builder.Services.AddApplicationServices();
 builder.Services.AddApplicationDbContext(builder.Configuration);
 builder.Services.AddManagerApiContext();
@@ -47,12 +46,11 @@ builder.Services.AddRoutingApiContext(builder.Configuration);
 builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddWebServices();
 
-// The module's two hosted jobs. Both are on-work-only recorders (SVD-11): an old BackgroundJobRun
+// The module's two hosted jobs. Both are on-work-only recorders: an old BackgroundJobRun
 // row for their keys is the healthy steady state, not a stuck job.
 builder.Services.AddScheduledJob<TripEtaRefreshJob>();
 builder.Services.AddScheduledJob<TripScheduleReminderJob>();
 
-// Add HealthChecks
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<ApplicationDbContext>();
 
@@ -60,9 +58,7 @@ builder.Services.AddTrackHubGraphQLServer<Query, Mutation>(builder.Environment.I
 
 // Anonymous public tracking endpoint: a named rate-limit policy applied per endpoint, so nothing
 // else in the pipeline changes behavior. There is deliberately NO output cache here — see the
-// comment on PublicTrips: a response cache cannot satisfy acceptance 24's "every successful
-// resolution increments the access count and writes one PublicLinkAccessed audit event", and it
-// kept revoked links alive for the cache window.
+// comment on PublicTrips.
 //
 // Partitioned PER CLIENT IP, not one global bucket: a single shared limiter would start rejecting
 // as soon as a few dozen customers had a tracking page open, which is exactly when the endpoint
@@ -97,13 +93,12 @@ app.UseExceptionHandler(options => { });
 
 app.UseHeaderPropagation();
 
-// UseCors MUST precede UseHealthChecks (SVD-10 invariant). UseHealthChecks short-circuits the
+// UseCors MUST precede UseHealthChecks. UseHealthChecks short-circuits the
 // pipeline, so a health probe mapped ahead of CORS never gets its Access-Control-* headers — the
 // portal's cross-origin fetch then fails and the /status tile renders a FALSE OUTAGE for a service
 // that is perfectly healthy. Do not reorder these two lines.
 app.UseCors("AllowFrontend");
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseHsts();

@@ -1,9 +1,3 @@
-/**
- * The shell every signed-in screen renders inside: sidenav, navbar (contextual
- * help, notification bell, mini toggle, sign off), the configurator drawer, the
- * announcement banner and the routing fallbacks.
- */
-
 import fs from 'node:fs';
 import path from 'node:path';
 import { test, expect, flag, unique } from '../fixtures';
@@ -21,7 +15,6 @@ const manifest = (): HelpManifest =>
     fs.readFileSync(path.join(PORTAL_ROOT, 'public', 'help', 'manifest.json'), 'utf8')
   ) as HelpManifest;
 
-/** Resolves once an account-settings save has actually answered. */
 const settingsSaved = (page: import('@playwright/test').Page) =>
   page
     .waitForResponse(

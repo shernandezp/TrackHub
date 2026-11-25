@@ -18,7 +18,7 @@ using TrackHub.TripManagement.Application.Trips.Services;
 namespace TrackHub.TripManagement.Application.UnitTests;
 
 /// <summary>
-/// Spec 11a §5.2: a trip closes itself when its route is done. Two rules, and the second one exists
+/// A trip closes itself when its route is done. Two rules, and the second one exists
 /// entirely for the depot reality — a truck that arrives home and parks never "departs" its final
 /// stop, and the trip still has to close.
 /// </summary>
@@ -99,13 +99,13 @@ public class TripAutoCompletionServiceTests
     }
 
     /// <summary>
-    /// The dwell rule and the departure debounce were RACING, and the dwell rule won whenever the
-    /// dwell outran <c>finalStopCompletionMinutes</c> — which an ordinary 45-minute unload does.
+    /// The dwell rule must not close a trip while the departure debounce is running, which happens
+    /// whenever the dwell outruns <c>finalStopCompletionMinutes</c> — as an ordinary 45-minute unload does.
     /// <para>
     /// The rule's claim is "it parked here and will never depart". A running exit-debounce clock is
-    /// positive evidence to the contrary, held in the same fix. Closing anyway stamped
-    /// <c>ActualEndAt</c> with the ARRIVAL instant and dropped the trip out of the working set, so
-    /// the real departure was never recorded: the trip silently lost its whole final dwell.
+    /// positive evidence to the contrary, held in the same fix. Closing anyway would stamp
+    /// <c>ActualEndAt</c> with the ARRIVAL instant and drop the trip out of the working set, so
+    /// the real departure would never be recorded and the trip would lose its whole final dwell.
     /// </para>
     /// </summary>
     [Test]

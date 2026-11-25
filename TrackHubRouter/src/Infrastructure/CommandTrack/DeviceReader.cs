@@ -22,7 +22,6 @@ using TrackHub.Router.Domain.Helpers;
 
 namespace TrackHub.Router.Infrastructure.CommandTrack;
 
-// This class represents a device reader that retrieves device information from CommandTrack API
 public sealed class DeviceReader(ICredentialHttpClientFactory httpClientFactory,
     IHttpClientService httpClientService,
     ICredentialWriter credentialWriter,
@@ -37,7 +36,6 @@ public sealed class DeviceReader(ICredentialHttpClientFactory httpClientFactory,
         return DeviceMapper.Instance.Map(device, deviceDto);
     }
 
-    // Retrieves a single device asynchronously
     public async Task<IEnumerable<DeviceVm>> GetDevicesAsync(IEnumerable<DeviceTransporterVm> devices, CancellationToken cancellationToken)
     {
         var devicesDictionary = devices.ToDeviceLookup(device => device.Identifier);
@@ -56,7 +54,6 @@ public sealed class DeviceReader(ICredentialHttpClientFactory httpClientFactory,
         return results;
     }
 
-    // Retrieves multiple devices asynchronously
     public async Task<IEnumerable<DeviceVm>> GetDevicesAsync(CancellationToken cancellationToken)
     {
         var devices = await WithReauthenticationAsync(

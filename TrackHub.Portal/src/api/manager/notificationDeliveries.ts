@@ -14,14 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Notification-delivery API (Manager backend): delivery history, delivery
- * health, the current user's in-app notification feed, retry and test sends.
- * Plain typed async functions that THROW ApiError — the caller decides
- * fallback/toast (admin panels own the try/catch; the bell consumes the feed
- * through TanStack Query hooks in src/queries/notifications.ts).
- */
-
 import { executeGraphQL } from 'api/core/graphqlClient';
 import type { RequestOptions } from 'api/core/errors';
 import type { Page } from 'api/core/paging';

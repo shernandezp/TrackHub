@@ -202,10 +202,10 @@ public sealed class ReverseGeocodingService(
     }
 
     /// <summary>
-    /// Reserves the caller's slot in the provider's request rate and waits for it OUTSIDE the gate:
-    /// holding the gate across the delay serialised every geocoding call in the process behind the
-    /// slowest one. Returns false when a background caller would have to wait beyond
-    /// <see cref="BackgroundReservationHorizon"/>, which leaves the slot for interactive work.
+    /// Reserves the caller's slot in the provider's request rate and waits for it OUTSIDE the gate, so
+    /// one slow call never serialises the process's geocoding behind it. Returns false when a
+    /// background caller would have to wait beyond <see cref="BackgroundReservationHorizon"/>, which
+    /// leaves the slot for interactive work.
     /// </summary>
     private static async Task<bool> ThrottleAsync(int requestsPerSecond, bool interactive, CancellationToken cancellationToken)
     {

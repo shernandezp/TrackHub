@@ -20,13 +20,9 @@ using FluentValidation.Results;
 namespace Common.Application.Paging;
 
 /// <summary>
-/// The page marker for an APPEND-ONLY feed: the (instant, id) of the last row a page returned.
-/// <para>
-/// Offset paging over these is O(offset) — the database walks and discards every skipped row, and
-/// past a few thousand the planner abandons the ordered index scan and sorts the whole match set.
-/// A cursor turns that into a range seek that costs the same on page one and page ten thousand, and
-/// it cannot repeat or drop a row when new ones arrive at the head while someone is reading.
-/// </para>
+/// The page marker for an append-only feed: the (instant, id) of the last row a page returned. A range
+/// seek costs the same on every page, unlike O(offset) paging, and never repeats or drops a row when new
+/// ones arrive at the head.
 /// </summary>
 public static class FeedCursor
 {

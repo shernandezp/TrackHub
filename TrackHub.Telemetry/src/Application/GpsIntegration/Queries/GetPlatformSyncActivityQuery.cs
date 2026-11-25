@@ -2,7 +2,7 @@ namespace TrackHub.Telemetry.Application.GpsIntegration.Queries;
 
 // Platform-wide SyncWorker liveness for the status page.
 //
-// Guarded by OperatorSyncRuns/Read rather than Administrative/Read (Sergio, 2026-07-19): both
+// Guarded by OperatorSyncRuns/Read rather than Administrative/Read: both
 // SuperAdministrators and Managers see the "GPS synchronisation" tile, because it pairs with the
 // gpsIntegration dashboard Managers already own. The response is deliberately platform-wide and
 // carries ONLY timestamps and counts — never an account id, name, or operator — so a Manager

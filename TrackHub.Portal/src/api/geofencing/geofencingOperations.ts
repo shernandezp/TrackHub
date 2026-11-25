@@ -14,12 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Geofencing GraphQL documents (Geofencing backend). Merges the former
- * geofence.js + geofencing.js hooks. Codegen validates these against
- * schemas/geofencing.graphql; values always travel as variables.
- */
-
 import { graphql } from './generated';
 
 export const GeofenceFieldsFragment = graphql(`

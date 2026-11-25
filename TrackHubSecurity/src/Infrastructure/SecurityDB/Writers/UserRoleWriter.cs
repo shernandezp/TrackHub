@@ -20,13 +20,11 @@ using TrackHub.Security.Infrastructure.Interfaces;
 
 namespace TrackHub.Security.Infrastructure.Writers;
 
-// This class represents a writer for the UserRole entity in the security database. The TARGET
-// user's owning account is checked against the caller before a grant is written or removed — the
+// The TARGET user's owning account is checked against the caller before a grant is written or removed — the
 // enforcement point the [AccountScopeEnforcedInHandler] markers on the user-role commands cite.
 public sealed class UserRoleWriter(IApplicationDbContext context, ICurrentPrincipal principal)
     : AccountScopedDataAccess(context, principal), IUserRoleWriter
 {
-    // Creates a new UserRole asynchronously and returns the created UserRoleVm.
     public async Task<UserRoleVm> CreateUserRoleAsync(UserRoleDto userRoleDto, CancellationToken cancellationToken)
     {
         await RequireTargetUserAccessAsync(userRoleDto.UserId, cancellationToken);
@@ -46,7 +44,6 @@ public sealed class UserRoleWriter(IApplicationDbContext context, ICurrentPrinci
             userRole.RoleId);
     }
 
-    // Deletes a UserRole asynchronously based on the provided userId and roleId.
     public async Task DeleteUserRoleAsync(Guid userId, int roleId, CancellationToken cancellationToken)
     {
         await RequireTargetUserAccessAsync(userId, cancellationToken);

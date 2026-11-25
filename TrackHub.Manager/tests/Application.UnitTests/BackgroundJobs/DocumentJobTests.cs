@@ -22,8 +22,6 @@ using Common.Domain.Constants;
 
 namespace Application.UnitTests.BackgroundJobs;
 
-// The scan classification, the expiration bands and the legal-hold hook had no unit-test surface
-// while they lived in the Web layer against a raw DbContext.
 [TestFixture]
 public class DocumentJobTests
 {

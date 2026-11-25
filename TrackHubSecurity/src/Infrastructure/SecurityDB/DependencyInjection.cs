@@ -39,9 +39,7 @@ public static class DependencyInjection
             options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
         });
 
-        //This is required to call user defined methods in the Management api
         services.AddSingleton<IGraphQLClientFactory, Common.Infrastructure.GraphQLClientFactory>();
-        //This is required to use the local Identity implementation
         services.AddScoped<IIdentityService, IdentityService>();
 
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
@@ -68,8 +66,6 @@ public static class DependencyInjection
         services.AddScoped<IUserRoleWriter, UserRoleWriter>();
         services.AddScoped<IUserRoleReader, UserRoleReader>();
 
-        // Module discovery seam: registers any IServiceModule implementations shipped in
-        // this assembly (none in this repository).
         services.AddDiscoveredModules(typeof(ApplicationDbContext).Assembly, configuration);
 
         return services;

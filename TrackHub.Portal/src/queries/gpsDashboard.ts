@@ -14,12 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * GPS-integration dashboard query hooks (Manager backend). Components consume
- * these — not the api layer directly. Loading/error state comes from the hook;
- * failures also surface in the global toast via the query client.
- */
-
 import { useQuery } from '@tanstack/react-query';
 import { getGpsIntegrationDashboard } from 'api/manager/gpsDashboard';
 

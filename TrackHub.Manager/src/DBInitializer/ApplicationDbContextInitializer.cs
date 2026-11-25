@@ -27,9 +27,6 @@ namespace DBInitializer;
 
 internal class ApplicationDbContextInitializer(ILogger<ApplicationDbContextInitializer> logger, ApplicationDbContext context)
 {
-    // The canonical governed catalog is the aggregate of every IReportCatalogContribution in
-    // this assembly (one file per module, discovered here; core rows live in
-    // CoreReportCatalogContribution).
     private static readonly IReportCatalogContribution[] ReportContributions =
         [.. typeof(ApplicationDbContextInitializer).Assembly.GetTypes()
             .Where(t => t is { IsAbstract: false, IsInterface: false } && typeof(IReportCatalogContribution).IsAssignableFrom(t))
@@ -82,17 +79,8 @@ internal class ApplicationDbContextInitializer(ILogger<ApplicationDbContextIniti
 
     public async Task TrySeedAsync()
     {
-        // Default data
-        // Report catalog: idempotent per-code upsert that runs every start. New rows are
-        // inserted Active; existing rows get their Description + governance metadata refreshed in place,
-        // but Active and Type are never overwritten (admins may have disabled a report).
-        //
-        // DESIGN NOTE — code is the source of truth for seeded catalog metadata. Because this refresh runs
-        // on every start, a SuperAdministrator's UpdateReportCommand edits to the seeded fields
-        // (Description/Category/RequiredFeatureKey/ManagerOnly/SupportsPdf/SortOrder) are TRANSIENT: they
-        // revert to these code values on the next restart. Only Active (enable/disable a report) persists
-        // across restarts. This is intentional — the governed catalog's shape ships with the deployment;
-        // UpdateReport is for toggling availability, not for permanently re-authoring seeded metadata.
+        // Code owns the seeded catalog metadata: it is refreshed on every start, so admin edits to it
+        // revert on restart. Only Active and Type are never overwritten (admins may disable a report).
         var reportType = (short)ReportType.Basic;
         var existingReports = await context.Reports.AsTracking().ToListAsync();
         var reportsByCode = existingReports.ToDictionary(r => r.Code, StringComparer.Ordinal);
@@ -134,8 +122,8 @@ internal class ApplicationDbContextInitializer(ILogger<ApplicationDbContextIniti
             var accountType = (short)AccountType.Personal;
             var masterAccount = new Account("Master Account", "Master Account Description", accountType, true);
             context.Accounts.Add(masterAccount);
-            // Well-known id: Security seeds the bootstrap administrator against the same account,
-            // and a minted-per-seeder guid left the two databases describing different tenants.
+            // Well-known id: Security seeds the bootstrap administrator against the same account, so a
+            // per-seeder guid would leave the two databases describing different tenants.
             context.Entry(masterAccount).Property(x => x.AccountId).CurrentValue = PlatformBootstrap.MasterAccountId;
             await context.SaveChangesAsync();
         }
@@ -158,11 +146,8 @@ internal class ApplicationDbContextInitializer(ILogger<ApplicationDbContextIniti
             await context.SaveChangesAsync();
         }
 
-        // One-time backfill (idempotent; kept for not-yet-migrated environments):
-        // platform default notification templates are NOT seeded: localized
-        // text never lives in the database. Defaults come from the NotificationDefaultMessages
-        // resources at render time; the templates table holds account-authored overrides only.
-        // Remove rows an earlier initializer version may have seeded.
+        // Default notification templates come from resources at render time; the table holds
+        // account overrides only, so remove account-less rows an earlier initializer seeded.
         var seededDefaults = await context.NotificationTemplates
             .AsTracking().Where(t => t.AccountId == null).ToListAsync();
         if (seededDefaults.Count > 0)
@@ -171,10 +156,8 @@ internal class ApplicationDbContextInitializer(ILogger<ApplicationDbContextIniti
             await context.SaveChangesAsync();
         }
 
-        // One-time backfill (idempotent; kept for not-yet-migrated environments):
-        // rule CRUD is now gated by the `notifications` feature, so every account that already has
-        // NotificationRule rows gets an enabled feature row. Runs through the entity writer path,
-        // never raw SQL.
+        // Rule CRUD is gated by the `notifications` feature, so every account that already has
+        // rules gets an enabled feature row.
         var ruleAccounts = await context.NotificationRules.Select(r => r.AccountId).Distinct().ToListAsync();
         var gatedAccounts = await context.AccountFeatures
             .Where(f => f.FeatureKey == FeatureKeys.Notifications)

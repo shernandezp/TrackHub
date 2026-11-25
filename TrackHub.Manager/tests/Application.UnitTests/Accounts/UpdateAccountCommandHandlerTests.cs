@@ -22,16 +22,13 @@ public class UpdateAccountCommandHandlerTests
     [Test]
     public async Task Handle_WhenCalled_CallsUpdate()
     {
-        // Arrange
         var dto = new UpdateAccountDto(Guid.NewGuid(), "Name", "Desc", 1, true);
         var command = new UpdateAccountCommand(dto);
 
         _accountWriterMock.Setup(w => w.UpdateAccountAsync(dto, CancellationToken.None)).Returns(Task.CompletedTask);
 
-        // Act
         await _handler.Handle(command, CancellationToken.None);
 
-        // Assert
         _accountWriterMock.Verify(w => w.UpdateAccountAsync(dto, CancellationToken.None), Times.Once);
     }
 }

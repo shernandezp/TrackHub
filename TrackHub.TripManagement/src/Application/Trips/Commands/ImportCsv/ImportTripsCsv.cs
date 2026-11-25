@@ -22,7 +22,7 @@ using TrackHub.TripManagement.Application.Trips.Services.Interfaces;
 namespace TrackHub.TripManagement.Application.Trips.Commands.ImportCsv;
 
 /// <summary>
-/// Bulk trip planning from a spreadsheet — the input side of zero-touch (spec 11a §9.1).
+/// Bulk trip planning from a spreadsheet — the input side of zero-touch.
 /// <para>
 /// A transportation company plans a whole week per vehicle at once. Without this the module is
 /// coherent only in theory: a dispatcher who must not click Start per trip would still be creating
@@ -31,18 +31,18 @@ namespace TrackHub.TripManagement.Application.Trips.Commands.ImportCsv;
 /// <para>
 /// This is the PORTAL command and it is a portal user's, not a service client's: rows are subject to
 /// the caller's own group visibility, one transporter at a time, exactly as the create dialog is.
-/// The partner-facing <c>ImportTrips</c> stays separate and stays ServiceClient-only (§9.2).
+/// The partner-facing <c>ImportTrips</c> stays separate and stays ServiceClient-only.
 /// </para>
 /// <para>
 /// <b>No batch failure.</b> Every row reports its own outcome and the good ones land — rolling back
 /// a 300-row plan because row 174 names a place that was renamed would make the operator re-run the
-/// whole file to discover that row 175 is wrong too (the toll-catalog import precedent).
+/// whole file to discover that row 175 is wrong too.
 /// </para>
 /// </summary>
 [Authorize(Resource = Resources.Trips, Action = Actions.Write)]
 [RequireFeature(FeatureKeys.TripManagement)]
 // Enforcement: the handler derives the caller's own account and passes it to the reader/writer,
-// which filters every row on it (TripVisibility is the single visibility resolver - spec 11).
+// which filters every row on it (TripVisibility is the single visibility resolver).
 [AccountScopeEnforcedInHandler]
 public readonly record struct ImportTripsCsvCommand(string Csv) : IRequest<TripCsvImportResultVm>;
 
@@ -140,7 +140,7 @@ public sealed class ImportTripsCsvCommandHandler(
         var fields = SplitRow(line);
 
         // Through plannedStart, which is column 9 and the last REQUIRED one. Accepting a shorter row
-        // and letting it fail on "plannedStart is not a valid date-time" told the operator the wrong
+        // and letting it fail on "plannedStart is not a valid date-time" would tell the operator the wrong
         // thing about a line that was simply cut short.
         if (fields.Length < RequiredColumns)
         {
@@ -174,8 +174,8 @@ public sealed class ImportTripsCsvCommandHandler(
             }
 
             // The SAME rule the create dialog applies: a staff qualifies for a unit only through
-            // Manager's assignment. Skipping it here would have made bulk upload the one way to put
-            // a staff on a vehicle they are not cleared for (acceptance 2).
+            // Manager's assignment, or bulk upload would be the one way to put
+            // a staff on a vehicle they are not cleared for.
             if (!await managerValidationClient.ValidateStaffAssignmentAsync(
                     staff.Id, "Transporter", transporter.Id, cancellationToken))
             {
@@ -280,7 +280,7 @@ public sealed class ImportTripsCsvCommandHandler(
             await stopWriter.AddStopAsync(trip.TripId, accountId, BuildStop(origin, TripStopActivities.Other), cancellationToken);
         }
 
-        // Last, once the route exists: the declaration replays it (spec 11a §5.4). Recorded evidence
+        // Last, once the route exists: the declaration replays it. Recorded evidence
         // still wins over the declared instant.
         if (startedAt.HasValue)
         {
@@ -321,8 +321,7 @@ public sealed class ImportTripsCsvCommandHandler(
 
     /// <summary>
     /// RFC 4180 enough for the files a spreadsheet exports: quoted cells may contain commas, and a
-    /// doubled quote inside a quoted cell is a literal one. A naive <c>Split(',')</c> tore
-    /// "Bogota, Colombia" into two columns and shifted every field after it.
+    /// doubled quote inside a quoted cell is a literal one, so "Bogota, Colombia" stays one column.
     /// </summary>
     private static string[] SplitRow(string line)
     {
@@ -375,7 +374,7 @@ public sealed class ImportTripsCsvCommandHandler(
     /// <summary>
     /// Round-trip ("2026-08-03T07:30:00Z") and plain local ("2026-08-03 07:30") both parse. A plain
     /// value is read as UTC rather than as the server's local time: the server's timezone is an
-    /// implementation detail no spreadsheet author knows about (the UTC-everywhere decision).
+    /// implementation detail no spreadsheet author knows about.
     /// </summary>
     private static bool TryParseInstant(string value, out DateTimeOffset parsed)
         => DateTimeOffset.TryParse(

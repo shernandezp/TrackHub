@@ -25,7 +25,7 @@ using TrackHub.Reporting.Infrastructure.GraphQLApi;
 
 namespace TrackHub.Reporting.Infrastructure.UnitTests;
 
-// Manager now answers accounts / groupsByAccount / usersByGroup / transportersByGroup with a page
+// Manager answers accounts / groupsByAccount / usersByGroup / transportersByGroup with a page
 // envelope. If this reader took only the first page, the group-membership export would lose entire
 // GROUPS from its outer loop and the file would still look complete — no error, no short-row marker,
 // just missing groups. These tests pin the drain: every page is followed, and an over-limit set
@@ -107,7 +107,7 @@ public class AdminReportReaderPagingTests
         });
     }
 
-    // The regression this whole finding is about: an account with more groups than one page. Taking
+    // An account with more groups than one page. Taking
     // the first page would silently drop the rest from the membership export's OUTER loop.
     [Test]
     public async Task MultiPageAccount_DrainsEveryGroupRatherThanTheFirstPage()

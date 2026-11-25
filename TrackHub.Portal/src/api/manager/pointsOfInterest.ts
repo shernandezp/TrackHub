@@ -14,11 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Point-of-interest API (Manager backend): plain typed async functions. Failures
- * THROW ApiError — fallbacks and toasts belong to the caller layer (src/queries).
- */
-
 import { executeGraphQL } from 'api/core/graphqlClient';
 import type { RequestOptions } from 'api/core/errors';
 import type { ListParams, Page } from 'api/core/paging';
@@ -44,7 +39,6 @@ export type { PointOfInterestDtoInput, UpdatePointOfInterestDtoInput };
 
 type PoiFields = Omit<PointOfInterestDtoInput, 'accountId'>;
 
-/** Normalizes the mutable POI fields shared by create and update. */
 function toPoiFields(poi: PoiFields): PoiFields {
   return {
     name: poi.name,
@@ -72,12 +66,7 @@ export async function getPointsOfInterestByAccount(
   return data.pointsOfInterestByAccount;
 }
 
-/**
- * Every POI as the map projection: id/name/coordinates plus the colour, type,
- * description, address and active flag the overlays render. Unpaged by design —
- * the server raises past its ceiling rather than truncating, so the map never
- * silently drops pins.
- */
+/** Unpaged by design: the server raises past its ceiling rather than truncating, so the map never silently drops pins. */
 export async function getPointOfInterestLookup(options?: RequestOptions): Promise<PointOfInterestLookup[]> {
   const data = await executeGraphQL('manager', GetPointOfInterestLookupDocument, undefined, options);
   return data.pointOfInterestLookup;
@@ -86,8 +75,7 @@ export async function getPointOfInterestLookup(options?: RequestOptions): Promis
 export async function createPointOfInterest(
   poi: PointOfInterestDtoInput
 ): Promise<PointOfInterest> {
-  // PointOfInterestDtoInput requires accountId (the legacy string-built create
-  // never sent it — POI creation was broken). Callers must supply it now.
+  // PointOfInterestDtoInput requires accountId.
   const input: PointOfInterestDtoInput = { accountId: poi.accountId, ...toPoiFields(poi) };
   const data = await executeGraphQL('manager', CreatePointOfInterestDocument, {
     pointOfInterest: input,
@@ -107,7 +95,6 @@ export async function updatePointOfInterest(
   return data.updatePointOfInterest;
 }
 
-/** Returns the id of the deleted POI (schema: `deletePointOfInterest: UUID!`). */
 export async function deletePointOfInterest(pointOfInterestId: string): Promise<string> {
   const data = await executeGraphQL('manager', DeletePointOfInterestDocument, {
     id: pointOfInterestId,

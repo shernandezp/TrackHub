@@ -26,7 +26,6 @@ import { LoadingContext } from 'LoadingContext';
 import { toCamelCase } from 'utils/stringUtils';
 import type { FormChangeHandler } from 'controls/Dialogs/useForm';
 
-// A single resource-action assignment cell (nested under resourceId → actionId).
 interface ActionAssignment { actionId: number; actionName: string; resourceId: number }
 type AssignmentMap = Record<string, Record<string, ActionAssignment>>;
 interface SelectOption { value: number; name: string; label: string }
@@ -45,7 +44,6 @@ function RoleAssignmentTable({ open }: RoleAssignmentTableProps) {
   const rolesQuery = useRoles({ enabled: open });
   const roleResourcesQuery = useRoleResources(role);
 
-  // Keep the global spinner UX while the lists load/refresh.
   useEffect(() => {
     setLoading(
       actionsQuery.isFetching ||
@@ -117,7 +115,6 @@ function RoleAssignmentTable({ open }: RoleAssignmentTableProps) {
         result = deleted === role;
       }
     } catch {
-      // Silent (matches the old handleSilentError): no toast, treat as failure.
       result = false;
     } finally {
       setLoading(false);

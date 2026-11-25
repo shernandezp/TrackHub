@@ -7,10 +7,8 @@ using Moq;
 namespace Common.Infrastructure.Tests;
 
 /// <summary>
-/// The service-identity token now travels on the REQUEST, not on the client. Two properties matter
-/// and neither is visible from a construction-time attach: the token is fetched per request (so a
-/// long-lived client never presents an expired one), and a caller's own token is never replaced —
-/// overwriting it would turn a user-scoped call into a service-scoped one.
+/// The token is fetched per request, so a long-lived client never presents an expired one, and a caller's
+/// own token is never replaced, which would turn a user-scoped call into a service-scoped one.
 /// </summary>
 public class ClientCredentialsTokenHandlerTests
 {

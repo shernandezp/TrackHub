@@ -1,9 +1,6 @@
 /**
- * Playwright configuration for the portal's end-to-end suite (spec 30).
- *
- * The suite drives the REAL portal against the REAL stack — no mocked backends.
- * `page.route` appears in exactly one place, and only to break a health probe on
- * purpose so the status page's outage state can be asserted.
+ * Runs against the real stack, no mocked backends. `page.route` appears in exactly
+ * one place, only to break a health probe on purpose.
  */
 
 import { defineConfig, devices } from '@playwright/test';
@@ -20,7 +17,7 @@ export default defineConfig({
   timeout: 120_000,
   expect: { timeout: 20_000 },
   // One worker against one shared account: parallel workers would race on the
-  // same rows (a `Created` trip holds the unit's arming slot — spec 11b).
+  // same rows (a `Created` trip holds the unit's arming slot).
   fullyParallel: false,
   workers: 1,
   // A flaky test is a bug, not something to retry away.
@@ -36,7 +33,7 @@ export default defineConfig({
     actionTimeout: 30_000,
     navigationTimeout: 60_000,
     // `datetime-local` holds LOCAL wall time and the portal shifts it by the
-    // viewer's offset in both directions (rules item 14). Pinning the browser to
+    // viewer's offset in both directions. Pinning the browser to
     // UTC keeps a typed ISO instant and the value read back identical.
     timezoneId: 'UTC',
     locale: 'en-US',
@@ -59,8 +56,7 @@ export default defineConfig({
       },
     },
     {
-      // Same flows, Spanish UI. The spec itself switches the signed-in user's
-      // saved language and restores it; E2E_LANG tells the selectors which
+      // Same flows, Spanish UI. E2E_LANG tells the selectors which
       // bundle to resolve against.
       name: 'chromium-es',
       dependencies: ['setup'],

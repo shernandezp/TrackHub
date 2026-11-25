@@ -39,7 +39,6 @@ interface AssignmentPanelProps {
   editable: boolean;
 }
 
-/** Staff assignment for a trip, plus the current assignment's acknowledgement state. */
 function AssignmentPanel({
   detail,
   staff,

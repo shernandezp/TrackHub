@@ -28,7 +28,7 @@ namespace TrackHub.TripManagement.Application.Tolls.Queries.EstimateTolls;
 [Authorize(Resource = Resources.Trips, Action = Actions.Read)]
 [RequireFeature(FeatureKeys.TripManagement)]
 // Enforcement: the handler derives the caller's own account and passes it to the reader/writer,
-// which filters every row on it (TripVisibility is the single visibility resolver - spec 11).
+// which filters every row on it (TripVisibility is the single visibility resolver).
 [AccountScopeEnforcedInHandler]
 public readonly record struct EstimateTollsQuery(Guid RoutePlanId, string? TollVehicleClass) : IRequest<TollEstimateVm>;
 
@@ -49,13 +49,8 @@ public sealed class EstimateTollsQueryHandler(
         var plan = await routePlanReader.GetPlanAsync(request.RoutePlanId, caller.AccountId, cancellationToken)
             ?? throw new NotFoundException(request.RoutePlanId.ToString(), nameof(RoutePlanVm));
 
-        // The plan lookup is account-scoped but NOT group-scoped, so on its own a dispatcher
-        // holding another group's routePlanId got that route's toll total and its per-station
-        // breakdown. Composed from the existing mechanism rather than adding a visibility
-        // predicate to IRoutePlanReader: the plan already carries its TripId, and GetTripAsync
-        // applies the one Visible() predicate (acceptance 4) and raises NotFoundException for a
-        // trip outside the caller's groups — so an unknown plan and an invisible one are
-        // indistinguishable, which is the point (non-disclosure).
+        // The plan lookup is account-scoped but NOT group-scoped; GetTripAsync on the plan's TripId applies
+        // the Visible() predicate, so an unknown plan and another group's plan are indistinguishable.
         var trip = await tripReader.GetTripAsync(plan.TripId, caller.AccountId, TripVisibility.ResolveScopeUserId(user, UserId), cancellationToken);
 
         var geometry = await routePlanReader.GetPlanGeometryAsync(request.RoutePlanId, caller.AccountId, cancellationToken);
@@ -65,10 +60,8 @@ public sealed class EstimateTollsQueryHandler(
             geometry,
             request.TollVehicleClass ?? plan.TollVehicleClass,
             // Priced on the trip's PLANNED START, exactly as PlanTripRouteCommand prices the stored
-            // estimate. Pricing this "what-if" on the plan's ComputedAt instead made the planner
-            // panel and the persisted figure disagree for the same vehicle class whenever a tariff
-            // changed between planning and departure, with nothing on screen saying which date was
-            // used. Tariffs are temporal (§6.2), so the date is part of the answer.
+            // estimate, so the planner panel and the persisted figure agree for the same vehicle class even when a
+            // tariff changed between planning and departure. Tariffs are temporal, so the date is part of the answer.
             (await (zones ?? UtcAccountTimeZoneResolver.Instance).ResolveAsync(trip.AccountId, cancellationToken)).DateOf(trip.PlannedStartAt),
             config.TollMatchToleranceMeters,
             cancellationToken);

@@ -16,13 +16,7 @@
 namespace TrackHub.Manager.Domain.Models;
 
 /// <summary>
-/// Manager-internal result of <see cref="IPublicLinkGrantResolver"/>: the discriminated outcome plus
-/// the full grant on success. <see cref="Grant"/> is populated only when <see cref="Resolution"/> is
-/// <see cref="PublicLinkResolution.Found"/>.
-/// <para>
-/// The anonymous REST endpoint projects this into its long-standing JSON body (scopes, purpose,
-/// expiry, access counters). The ServiceClient GraphQL mutation projects it down to the much narrower
-/// <see cref="PublicLinkResolutionVm"/>. One resolution implementation, two projections.
-/// </para>
+/// Manager-internal; <see cref="Grant"/> is populated only when <see cref="Resolution"/> is
+/// <see cref="PublicLinkResolution.Found"/>. GraphQL callers get the narrower <see cref="PublicLinkResolutionVm"/>.
 /// </summary>
 public readonly record struct PublicLinkGrantResolutionResult(PublicLinkResolution Resolution, PublicLinkGrantVm? Grant);

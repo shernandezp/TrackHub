@@ -18,10 +18,10 @@ namespace TrackHub.TripManagement.Domain.Models;
 /// <summary>
 /// Trip-level export row. Flat by design: a report row is READ, never joined. Display names and the
 /// route-plan roll-up are resolved server-side so Reporting drains one paged feed instead of
-/// fanning out per row to Manager (spec 11 §13).
+/// fanning out per row to Manager.
 /// <para>
 /// The measured durations answer the question the module exists to answer — how long did loading,
-/// transit and the whole trip actually take (spec 11a §13). They are computed here rather than in
+/// transit and the whole trip actually take. They are computed here rather than in
 /// Reporting so every consumer gets the same arithmetic, and each is null when the measurement it
 /// depends on was never taken: a trip whose start was declared has no loading time, and saying so
 /// beats reporting zero.
@@ -72,9 +72,7 @@ public readonly record struct TripReportRowVm(
 /// <para>
 /// <b><paramref name="NextSkip"/> is the producer's own cursor, not <c>Items.Count</c>.</b> The toll
 /// feed pages ROUTE PLANS and then expands each into one row per matched station, so a page of 500
-/// plans can return 1500 rows. A consumer that advanced by rows skipped 1500 plans and compared a
-/// row count against a plan <paramref name="TotalCount"/>, terminating early and silently dropping
-/// trips from a financial report. Consumers must follow this cursor and stop on
+/// plans can return 1500 rows. Consumers must follow this cursor and stop on
 /// <paramref name="HasMore"/>; only the producer knows what unit it pages in.
 /// </para>
 /// </summary>
@@ -88,7 +86,7 @@ public readonly record struct TripReportPageVm(IReadOnlyCollection<TripReportRow
 /// <param name="Activity">
 /// What the vehicle did here. It is what turns the dwell between
 /// <paramref name="ActualArrivalAt"/> and <paramref name="ActualDepartureAt"/> from an anonymous
-/// number of minutes into loading or unloading time (spec 11a §13).
+/// number of minutes into loading or unloading time.
 /// </param>
 public readonly record struct TripStopReportRowVm(
     Guid TripStopId,
@@ -115,9 +113,7 @@ public readonly record struct TripStopReportRowVm(
 /// <para>
 /// <b><paramref name="NextSkip"/> is the producer's own cursor, not <c>Items.Count</c>.</b> The toll
 /// feed pages ROUTE PLANS and then expands each into one row per matched station, so a page of 500
-/// plans can return 1500 rows. A consumer that advanced by rows skipped 1500 plans and compared a
-/// row count against a plan <paramref name="TotalCount"/>, terminating early and silently dropping
-/// trips from a financial report. Consumers must follow this cursor and stop on
+/// plans can return 1500 rows. Consumers must follow this cursor and stop on
 /// <paramref name="HasMore"/>; only the producer knows what unit it pages in.
 /// </para>
 /// </summary>
@@ -129,7 +125,7 @@ public readonly record struct TripStopReportPageVm(IReadOnlyCollection<TripStopR
 /// <b><paramref name="Amount"/> stays null and <paramref name="HasTariff"/> false when no tariff
 /// covers the class on the plan date.</b> That pair is what renders the <c>PartialNoTariff</c>
 /// column in <c>trip-toll-cost</c>. Emitting <c>0</c> instead would make a catalog gap invisible and
-/// net it silently into the total — the exact failure mode spec 11 §18.9 exists to prevent.
+/// net it silently into the total.
 /// </para>
 /// </summary>
 public readonly record struct TripTollReportRowVm(
@@ -152,9 +148,7 @@ public readonly record struct TripTollReportRowVm(
 /// <para>
 /// <b><paramref name="NextSkip"/> is the producer's own cursor, not <c>Items.Count</c>.</b> The toll
 /// feed pages ROUTE PLANS and then expands each into one row per matched station, so a page of 500
-/// plans can return 1500 rows. A consumer that advanced by rows skipped 1500 plans and compared a
-/// row count against a plan <paramref name="TotalCount"/>, terminating early and silently dropping
-/// trips from a financial report. Consumers must follow this cursor and stop on
+/// plans can return 1500 rows. Consumers must follow this cursor and stop on
 /// <paramref name="HasMore"/>; only the producer knows what unit it pages in.
 /// </para>
 /// </summary>
@@ -162,7 +156,7 @@ public readonly record struct TripTollReportPageVm(IReadOnlyCollection<TripTollR
 
 /// <summary>
 /// POD register row. <paramref name="DocumentCount"/> is a count, never the document list: this
-/// feed is a register, and the bytes stay behind Manager's access policy (spec 11 §13, SC-06).
+/// feed is a register, and the bytes stay behind Manager's access policy.
 /// </summary>
 public readonly record struct TripPodReportRowVm(
     Guid ProofOfDeliveryId,
@@ -183,9 +177,7 @@ public readonly record struct TripPodReportRowVm(
 /// <para>
 /// <b><paramref name="NextSkip"/> is the producer's own cursor, not <c>Items.Count</c>.</b> The toll
 /// feed pages ROUTE PLANS and then expands each into one row per matched station, so a page of 500
-/// plans can return 1500 rows. A consumer that advanced by rows skipped 1500 plans and compared a
-/// row count against a plan <paramref name="TotalCount"/>, terminating early and silently dropping
-/// trips from a financial report. Consumers must follow this cursor and stop on
+/// plans can return 1500 rows. Consumers must follow this cursor and stop on
 /// <paramref name="HasMore"/>; only the producer knows what unit it pages in.
 /// </para>
 /// </summary>

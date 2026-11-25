@@ -21,9 +21,8 @@ namespace TrackHub.Manager.Application.BackgroundJobs;
 /// <summary>
 /// Reclaims the stored bytes of document versions that are superseded or belong to a Voided/Deleted
 /// document once the retention window has passed. Metadata rows are retained for audit and the
-/// current bytes of an Active document are never touched. Retention ENFORCEMENT policy, legal holds
-/// and regulatory export packaging are owned by spec 24; this job only reclaims storage and honors
-/// the legal-hold hook. A security/cleanup job, so it runs regardless of the `documents` feature.
+/// current bytes of an Active document are never touched. It only reclaims storage and honors the
+/// legal-hold hook. A security/cleanup job, so it runs regardless of the `documents` feature.
 /// </summary>
 public sealed class DocumentRetentionCleanupJob(
     IDocumentRetentionStore store,

@@ -16,19 +16,9 @@
 namespace TrackHub.Manager.Domain.Models;
 
 /// <summary>
-/// GraphQL-facing result of <c>resolvePublicLinkGrant</c> — deliberately narrow.
-/// <para>
-/// It carries only the echo a downstream service needs to correlate its own record
-/// (<see cref="PublicLinkGrantId"/>, <see cref="ResourceId"/>) and never the grant's scopes,
-/// purpose, expiry or access counters: the caller already knows what it asked for, and a
-/// ServiceClient resolving a link on a visitor's behalf has no need for the grant's internals.
-/// The richer <see cref="PublicLinkGrantResolutionResult"/> stays inside Manager for the anonymous
-/// REST endpoint, whose pre-existing body shape is a fixed contract.
-/// </para>
-/// <para>
-/// Both identifiers are null unless <see cref="Resolution"/> is
+/// Deliberately narrow: only the echo a downstream service needs to correlate its own record, never
+/// the grant's internals. Both identifiers are null unless <see cref="Resolution"/> is
 /// <see cref="PublicLinkResolution.Found"/>, so a rejected caller learns nothing.
-/// </para>
 /// </summary>
 public readonly record struct PublicLinkResolutionVm(
     PublicLinkResolution Resolution,

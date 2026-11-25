@@ -16,21 +16,12 @@
 
 import { toISOStringWithTimezone } from "utils/dateUtils";
 
-/** Heterogeneous value accepted by the formatter helpers below. */
 type FormattableValue = string | number | boolean | Date | null | undefined;
 
-/**
- * Formats the given value as a string.
- * Returns null if the input is falsy.
- */
 export function formatJSONValue(value: FormattableValue): string | null {
   return value ? `${value}` : null;
 }
 
-/**
- * Formats the given date value to an ISO string with timezone offset.
- * Returns null if the input is falsy.
- */
 export function formatDateTimeOffSet(value: string | number | Date | null | undefined): string | null {
   return value ? `${toISOStringWithTimezone(new Date(value))}` : null;
 }

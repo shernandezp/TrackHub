@@ -24,15 +24,10 @@ public readonly record struct GetUsersByAccountQuery(
     int? Take = null,
     string? Search = null) : IRequest<UsersPageVm>;
 
-// The GetUsersByAccountQueryHandler is a class that implements the IRequestHandler interface to handle the GetUsersByAccountQuery.
-// It takes an IUserReader dependency in the constructor and provides the implementation for handling the query.
 public class GetUsersByAccountQueryHandler(IUserReader reader, IUser user) : IRequestHandler<GetUsersByAccountQuery, UsersPageVm>
 {
     private Guid UserId { get; } = Guid.TryParse(user.Id, out var userId) ? userId : throw new UnauthorizedAccessException();
 
-    // The Handle method is responsible for handling the GetUsersByAccountQuery and returning the result.
-    // It asynchronously calls the GetUsersAsync method of the IUserReader dependency to retrieve one
-    // page of the caller's account, plus the unpaged total the range indicator needs.
     public async Task<UsersPageVm> Handle(GetUsersByAccountQuery request, CancellationToken cancellationToken)
     {
         var user = await reader.GetUserAsync(UserId, cancellationToken);

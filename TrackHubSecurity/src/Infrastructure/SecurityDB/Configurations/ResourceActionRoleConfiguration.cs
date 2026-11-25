@@ -22,10 +22,8 @@ public class ResourceActionRoleConfiguration : IEntityTypeConfiguration<Resource
 {
     public void Configure(EntityTypeBuilder<ResourceActionRole> builder)
     {
-        //Table name
         builder.ToTable(name: TableMetadata.ResourceActionRole, schema: SchemaMetadata.Security);
 
-        //Column names
         builder.Property(x => x.ResourceActionRoleId).HasColumnName("id");
         builder.Property(x => x.ResourceId).HasColumnName("resourceid");
         builder.Property(x => x.ActionId).HasColumnName("actionid");

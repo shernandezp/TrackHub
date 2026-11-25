@@ -19,13 +19,8 @@ using TrackHub.Manager.Infrastructure.Interfaces;
 namespace TrackHub.Manager.Infrastructure.ManagerDB.Writers;
 
 /// <summary>
-/// The one and only public-link resolution implementation (spec 11 §7.8/§18.10, closing spec 02 §7.4).
-/// <para>
-/// Previously this logic existed twice and diverged: the anonymous REST endpoint hashed, matched,
-/// counted access and wrote a <c>PublicLinkAccessed</c> audit row inline against the DbContext, while
-/// <c>PublicLinkGrantWriter.RecordPublicLinkAccessAsync</c> counted access a SECOND time and wrote a
-/// DIFFERENT action name (<c>RecordPublicLinkAccess</c>). Both are collapsed here.
-/// </para>
+/// The one and only public-link resolution implementation: the only place that counts access and
+/// writes the <c>PublicLinkAccessed</c> audit row.
 /// <para>
 /// Deliberately does NOT derive from <see cref="AccountScopedDataAccess"/>: the anonymous caller has
 /// no principal, so there is no account scope to enforce and no <c>ICurrentPrincipal</c> to read. The
@@ -36,9 +31,8 @@ namespace TrackHub.Manager.Infrastructure.ManagerDB.Writers;
 public sealed class PublicLinkGrantResolver(IApplicationDbContext context) : IPublicLinkGrantResolver
 {
     /// <summary>
-    /// Audit actor type for a public-link resolution. This is the audit contract the anonymous REST
-    /// endpoint has always written and downstream audit consumers match on — do not "normalize" it to
-    /// the calling principal's type just because a ServiceClient may now be the transport.
+    /// Audit actor type for a public-link resolution. Downstream audit consumers match on it — do not
+    /// "normalize" it to the calling principal's type when a ServiceClient is the transport.
     /// </summary>
     private const string PublicLinkActorType = "PublicLink";
 

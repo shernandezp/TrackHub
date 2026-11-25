@@ -18,7 +18,6 @@ using TrackHub.Router.Infrastructure.Flespi.Models;
 
 namespace TrackHub.Router.Infrastructure.Flespi.Tests;
 
-// Value-correctness tests for the Flespi mapper (TT-01).
 [TestFixture]
 public class PositionMapperTests
 {

@@ -20,63 +20,25 @@ using System.Reflection;
 namespace Common.Application.Behaviors;
 
 /// <summary>
-/// Single source of truth for "which account does this request name?".
-/// <para>
-/// <see cref="AccountScopeBehavior{TRequest, TResponse}"/>, <see cref="AccountStatusBehavior{TRequest, TResponse}"/>
-/// and <see cref="FeatureFlagBehavior{TRequest, TResponse}"/> all key off the request's
-/// <c>AccountId</c>; they must agree exactly, or the tenant guard would evaluate a different
-/// account than the feature/status checks.
-/// </para>
-/// <para>
-/// The account id is NOT always a property of the request root: several commands carry it inside a
-/// DTO member (<c>CreateBackgroundJobRunCommand(BackgroundJobRunDto)</c> and friends). A guard that a
-/// request escapes merely by nesting the field one level deeper is no guard at all, so the lookup
-/// recurses — under strict limits, because it sits on the hot path of every request:
-/// </para>
-/// <list type="bullet">
-/// <item><b>Depth.</b> At most <see cref="MaxNestingDepth"/> (2) levels below the root — request →
-/// DTO → nested DTO. Every real case in the platform is depth 1; depth 2 is headroom, not an
-/// invitation to walk object graphs.</item>
-/// <item><b>Only TrackHub-owned types.</b> Recursion descends exclusively into types declared in a
-/// <c>TrackHub*</c> or <c>Common.*</c> assembly, so framework types, primitives, enums and
-/// <see cref="string"/> terminate the walk immediately. Anything implementing
-/// <see cref="IEnumerable"/> is skipped outright: a collection names zero or many accounts, not one,
-/// and a request that batches across accounts is a cross-account surface that must SAY so with
-/// <see cref="Attributes.AllowCrossAccountAttribute"/>.</item>
-/// <item><b>Precedence.</b> The search is breadth-first and, within a level, ordered by ordinal
-/// property name, so the resolved account is deterministic and never depends on reflection's
-/// member ordering. A root-level <c>AccountId</c> ALWAYS wins over a nested one, and a shallower
-/// nested one wins over a deeper one. A request that exposes two accounts at the same depth
-/// resolves the alphabetically-first path — such a request is a design smell and should carry a
-/// single authoritative top-level <c>AccountId</c> instead.</item>
-/// <item><b>No per-call reflection.</b> The discovered property path is cached per request type;
-/// steady-state cost is one dictionary lookup plus one <see cref="PropertyInfo.GetValue(object)"/>
-/// per path step.</item>
-/// </list>
+/// Single source of truth for which account a request names, shared by the scope, status and feature
+/// behaviors so they always evaluate the same account. The <c>AccountId</c> may sit inside a DTO member,
+/// so the lookup recurses breadth-first up to <see cref="MaxNestingDepth"/> levels, only into TrackHub-owned
+/// non-collection types (a collection names many accounts and must be marked cross-account). A shallower
+/// match wins, ties resolve by ordinal property name, and the path is cached per request type.
 /// </summary>
 public static class RequestAccountResolver
 {
     /// <summary>
-    /// How far below the request root an <c>AccountId</c> is looked for. 0 would mean "root only"
-    /// (the original, escapable behaviour); 2 covers request → DTO → nested DTO. Shared with
-    /// <see cref="Testing.AccountScopeCoverage"/> so the coverage walk and the account walk agree
-    /// on reach: a wire key the coverage test can see is a key this resolver could have scoped.
+    /// Shared with <see cref="Testing.AccountScopeCoverage"/> so the coverage walk and the account walk agree on reach.
     /// </summary>
     internal const int MaxNestingDepth = 2;
 
     private const BindingFlags PublicInstance = BindingFlags.Public | BindingFlags.Instance;
 
-    /// <summary>
-    /// Property chain from the request root to its <c>AccountId</c>, or <c>null</c> when the type
-    /// names no account at all. Resolved once per request type.
-    /// </summary>
     private static readonly ConcurrentDictionary<Type, PropertyInfo[]?> AccountIdPaths = new();
 
     /// <summary>
-    /// Returns the account id carried by the request itself, or <c>null</c> when the request type
-    /// exposes no <c>AccountId</c> (at the root or within reach of the bounded nested search) or the
-    /// value is absent/<see cref="Guid.Empty"/>. Deliberately does NOT fall back to the principal —
-    /// callers decide whether a fallback is meaningful for their check.
+    /// Deliberately does not fall back to the principal; callers decide whether a fallback is meaningful.
     /// </summary>
     public static Guid? GetRequestAccountId<TRequest>(TRequest request)
     {
@@ -86,13 +48,8 @@ public static class RequestAccountResolver
     }
 
     /// <summary>
-    /// Whether the request type exposes a resolvable <c>AccountId</c> at the root or within the
-    /// bounded nested search — i.e. whether <see cref="AccountScopeBehavior{TRequest, TResponse}"/>
-    /// has an account to scope. A type that returns <c>false</c> here must carry
-    /// <see cref="Attributes.PlatformScopedAttribute"/> or <see cref="Attributes.AllowCrossAccountAttribute"/>
-    /// (or reach the guard under a principal that carries an account) or the guard denies it. Exposed
-    /// for the per-service enforcement tests that prove every request is either account-bearing or a
-    /// declared opt-out; type-only, so it needs no request instance.
+    /// A type returning <c>false</c> must be marked platform-scoped or cross-account, or reach the guard
+    /// under a principal that carries an account. Type-only, for the per-service enforcement tests.
     /// </summary>
     public static bool NamesAccount(Type requestType)
         => AccountIdPaths.GetOrAdd(requestType, static type => FindAccountIdPath(type)) is not null;
@@ -118,10 +75,6 @@ public static class RequestAccountResolver
         return current is Guid guid && guid != Guid.Empty ? guid : null;
     }
 
-    /// <summary>
-    /// Breadth-first search for the request's <c>AccountId</c>, shallowest first. Returns the
-    /// property chain to read it, or <c>null</c> if the type names no account.
-    /// </summary>
     private static PropertyInfo[]? FindAccountIdPath(Type requestType)
     {
         var frontier = new List<PropertyInfo[]> { Array.Empty<PropertyInfo>() };
@@ -157,9 +110,6 @@ public static class RequestAccountResolver
         return null;
     }
 
-    /// <summary>
-    /// The type's own readable <c>Guid</c>/<c>Guid?</c> account property, if it has one.
-    /// </summary>
     private static PropertyInfo? GetAccountIdProperty(Type type)
     {
         var property = FindProperty(type, "AccountId") ?? FindProperty(type, "accountId");
@@ -184,10 +134,7 @@ public static class RequestAccountResolver
         }
     }
 
-    /// <summary>
-    /// Complex TrackHub-owned members worth descending into, in a deterministic ordinal order.
-    /// Shared with <see cref="Testing.AccountScopeCoverage"/> so both walks descend identically.
-    /// </summary>
+    /// <summary>Shared with <see cref="Testing.AccountScopeCoverage"/> so both walks descend identically.</summary>
     internal static IEnumerable<PropertyInfo> GetRecursableProperties(Type type)
         => type.GetProperties(PublicInstance)
             .Where(property => IsReadable(property) && IsTrackHubComplexType(UnwrapNullable(property.PropertyType)))
@@ -196,11 +143,6 @@ public static class RequestAccountResolver
     internal static bool IsReadable(PropertyInfo? property)
         => property is { CanRead: true } && property.GetIndexParameters().Length == 0;
 
-    /// <summary>
-    /// True for a DTO/record/class declared by this platform. Framework types, primitives, enums,
-    /// <see cref="string"/> and every collection are excluded, which is what keeps the walk cheap
-    /// and bounded regardless of the depth limit.
-    /// </summary>
     private static bool IsTrackHubComplexType(Type type)
     {
         if (type.IsPrimitive || type.IsEnum || type == typeof(string) || typeof(IEnumerable).IsAssignableFrom(type))

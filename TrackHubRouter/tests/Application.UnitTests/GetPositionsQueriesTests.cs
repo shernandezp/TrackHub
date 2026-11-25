@@ -69,8 +69,6 @@ public class GetPositionsQueriesTests : TestsContext
         _configurationMock.Setup(x => x["AppSettings:EncryptionKey"]).Returns("4F2C2E66-107F-452A-ACDE-402DFD47B84C");
     }
 
-    // A capability catalog that reports every capability supported, so tests exercise the
-    // handlers exactly as before the partial-provider guards were introduced.
     private static IProviderCapabilityCatalog AllCapabilities()
     {
         var catalog = new Mock<IProviderCapabilityCatalog>();
@@ -80,8 +78,6 @@ public class GetPositionsQueriesTests : TestsContext
         return catalog.Object;
     }
 
-    // A device-catalog cache that always invokes the loader (behaves as if disabled), so tests
-    // exercise the underlying device reader exactly as before the cache was introduced (A-12).
     private static IDeviceCatalogCache PassThroughCache()
     {
         var cache = new Mock<IDeviceCatalogCache>();
@@ -136,7 +132,7 @@ public class GetPositionsQueriesTests : TestsContext
     [Test]
     public async Task GetPositionsByOperator_ProviderThrows_PublishesNotificationWithProviderError()
     {
-        // Regression for router-audit A-08: a provider fetch that throws must be surfaced on the
+        // A provider fetch that throws must be surfaced on the
         // notification (ProviderErrorCode) rather than swallowed to an empty success.
         var publisherMock = new Mock<IPublisher>();
         var readerMock = new Mock<IPositionReader>();

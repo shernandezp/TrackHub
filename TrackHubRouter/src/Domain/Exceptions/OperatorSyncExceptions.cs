@@ -16,16 +16,15 @@
 namespace TrackHub.Router.Domain.Exceptions;
 
 // A manual sync targeted an operator that does not exist or does not belong to the requesting
-// account. Mapped to the OPERATOR_NOT_FOUND GraphQL error code: the Router
-// returns a typed error instead of a silent false so the caller learns why the trigger was rejected.
+// account. Mapped to the OPERATOR_NOT_FOUND GraphQL error code so the caller learns why the trigger
+// was rejected.
 public sealed class OperatorNotFoundException(Guid operatorId)
     : Exception($"Operator {operatorId} was not found for the requesting account.")
 {
     public Guid OperatorId { get; } = operatorId;
 }
 
-// A manual sync targeted a disabled operator. Mapped to the OPERATOR_DISABLED GraphQL error code
-//.
+// Mapped to the OPERATOR_DISABLED GraphQL error code.
 public sealed class OperatorDisabledException(Guid operatorId)
     : Exception($"Operator {operatorId} is disabled.")
 {

@@ -14,11 +14,7 @@
 *  limitations under the License.
 */
 
-/**
- * Platform status GraphQL documents (Manager backend) — the ADMINISTRATOR tier
- * only. The public tier reads announcements through the anonymous REST endpoint
- * instead. Codegen validates these against schemas/manager.graphql.
- */
+/** The ADMINISTRATOR tier only; the public tier reads announcements through the anonymous REST endpoint. */
 
 import { graphql } from './generated';
 

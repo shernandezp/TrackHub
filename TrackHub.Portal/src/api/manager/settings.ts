@@ -14,11 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Account/user settings API (Manager backend): plain typed async functions.
- * Failures THROW ApiError — fallbacks and toasts belong to the caller layer.
- */
-
 import { executeGraphQL } from 'api/core/graphqlClient';
 import type {
   AccountSettingsItemFragment as AccountSettingsItemType,

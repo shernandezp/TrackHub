@@ -22,7 +22,6 @@ public static partial class Reports
     public const string TransportersInGeofence = nameof(TransportersInGeofence);
     public const string GeofenceEvents = nameof(GeofenceEvents);
 
-    // GPS integration reports
     public const string GpsProviderHealthSummary = "gps.provider-health-summary";
     public const string GpsProviderSyncHistory = "gps.provider-sync-history";
     public const string GpsSyncStatistics = "gps.sync-statistics";

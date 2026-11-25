@@ -25,7 +25,6 @@ import { useTranslation } from "react-i18next";
 import ArgonBox from "components/ArgonBox";
 import ArgonTypography from "components/ArgonTypography";
 
-/** A single column descriptor for {@link Table}. */
 export interface TableColumn {
   name: string;
   title?: string;
@@ -40,7 +39,6 @@ export interface TableColumn {
   sortValue?: (row: TableRowData) => number | string | Date | null | undefined;
 }
 
-/** A table row: known control fields plus arbitrary keyed cell values. */
 export interface TableRowData {
   id?: string | number;
   hasBorder?: boolean;
@@ -87,19 +85,15 @@ export interface TableProps {
   searchQuery?: string;
   compact?: boolean;
   scrollable?: boolean;
-  /** Size columns to their content and scroll horizontally when they overflow the container
-   *  (for wide datasets, e.g. report previews). Default keeps the fixed 100%-width layout. */
+  /** Size columns to their content and scroll horizontally when they overflow (wide datasets such as report previews). */
   horizontalScroll?: boolean;
   maxHeight?: string;
   /** Rows rendered in scrollable mode before the list is truncated. */
   maxScrollableRows?: number;
   defaultRowsPerPage?: number;
   /**
-   * The rows are one SERVER page. Turns off the client-side pager, the
-   * `searchQuery` filter and the column-sort affordance: all three would
-   * silently operate within the page only, which reads as if they applied to
-   * the whole result set. Pair with `controls/Tables/ServerPagination` and push
-   * search/sort to the server query.
+   * The rows are one SERVER page: turns off the client-side pager, `searchQuery` filter and column
+   * sort, which would silently operate within the page only. Pair with `ServerPagination`.
    */
   serverPaged?: boolean;
 }
@@ -188,7 +182,6 @@ function Table({
     selectedRowIndex + 1
   );
 
-  // Auto-scroll to selected row in scrollable mode
   useEffect(() => {
     if (scrollable && selected) {
       const selectedRowRef = rowRefs.current[selected];
@@ -243,8 +236,6 @@ function Table({
           selectedField={selectedField}
           handleRowSelection={handleRowSelection}
           page={scrollable || serverPaged ? 0 : page}
-          // A scrollable table has no pager, so it used to mount every row: a thousand-unit fleet
-          // rebuilt five thousand cells on each map refresh. The cap keeps the scroller honest.
           rowsPerPage={
             scrollable
               ? scrollableRowCount

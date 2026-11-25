@@ -18,11 +18,7 @@ import TextField from '@mui/material/TextField';
 import { useTranslation } from 'react-i18next';
 import ArgonBox from 'components/ArgonBox';
 
-/**
- * Search box for a SERVER-paged list. The value is a draft that
- * `controls/Tables/useServerList` debounces into the query's `search` argument,
- * so the search covers the whole result set rather than the loaded page.
- */
+/** The value is a draft that `useServerList` debounces into the query's `search`, so it covers the whole result set. */
 export interface ServerSearchProps {
   value: string;
   onChange: (value: string) => void;

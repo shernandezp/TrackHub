@@ -17,21 +17,14 @@ using System.Reflection;
 
 namespace Common.Web.Infrastructure;
 
-// Provides extension methods for the MethodInfo class.
 public static class MethodInfoExtensions
 {
-    // Determines if the method is anonymous by checking if the method name contains invalid characters.
-    // Returns: True if the method is anonymous, false otherwise.
     public static bool IsAnonymous(this MethodInfo method)
     {
         var invalidChars = new[] { '<', '>' };
         return method.Name.Any(invalidChars.Contains);
     }
 
-    // Throws an exception if the input delegate's method is anonymous.
-    // Parameters:
-    // - guardClause: The IGuardClause instance.
-    // - input: The input delegate.
     public static void AnonymousMethod(this IGuardClause guardClause, Delegate input)
     {
         if (input.Method.IsAnonymous())

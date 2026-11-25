@@ -43,12 +43,6 @@ public sealed class UserWriter(IApplicationDbContext context, ICurrentPrincipal 
         throw new ForbiddenAccessException($"Insufficient permissions. Required account access: {accountId}.");
     }
 
-    /// <summary>
-    /// Creates a new user asynchronously
-    /// </summary>
-    /// <param name="userDto"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>The created user view model</returns>
     public async Task<UserVm> CreateUserAsync(UserDto userDto, CancellationToken cancellationToken)
     {
         RequireReplicaAccess(userDto.AccountId);
@@ -74,13 +68,6 @@ public sealed class UserWriter(IApplicationDbContext context, ICurrentPrincipal 
             user.AccountId);
     }
 
-    /// <summary>
-    /// Updates an existing user asynchronously
-    /// </summary>
-    /// <param name="userDto"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    /// <exception cref="NotFoundException"></exception>
     public async Task UpdateUserAsync(UpdateUserDto userDto, CancellationToken cancellationToken)
     {
         var user = await context.Users.FindAsync([userDto.UserId], cancellationToken);
@@ -111,13 +98,6 @@ public sealed class UserWriter(IApplicationDbContext context, ICurrentPrincipal 
         await context.SaveChangesAsync(cancellationToken);
     }
 
-    /// <summary>
-    /// Deletes a user asynchronously
-    /// </summary>
-    /// <param name="userId"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    /// <exception cref="NotFoundException"></exception>
     public async Task DeleteUserAsync(Guid userId, CancellationToken cancellationToken)
     {
         var user = await context.Users.FindAsync([userId], cancellationToken)

@@ -21,15 +21,8 @@ using Common.Application.Interfaces;
 
 namespace TrackHub.Manager.Infrastructure.ManagerDB.Writers;
 
-// AccountWriter class is responsible for writing account-related data to the database
 public sealed class AccountWriter(IApplicationDbContext context, ICurrentPrincipal principal) : IAccountWriter
 {
-    // Creates a new account asynchronously
-    // Parameters:
-    // - accountDto: The account data transfer object
-    // - cancellationToken: The cancellation token
-    // Returns:
-    // - The created account view model
     public async Task<AccountVm> CreateAccountAsync(AccountDto accountDto, CancellationToken cancellationToken)
     {
         var account = new Account(
@@ -56,10 +49,6 @@ public sealed class AccountWriter(IApplicationDbContext context, ICurrentPrincip
             account.LastModified, account.Version);
     }
 
-    // Updates an existing account asynchronously
-    // Parameters:
-    // - accountDto: The updated account data transfer object
-    // - cancellationToken: The cancellation token
     public async Task UpdateAccountAsync(UpdateAccountDto accountDto, CancellationToken cancellationToken)
     {
         var account = await context.Accounts.FindAsync(accountDto.AccountId, cancellationToken)
@@ -75,10 +64,9 @@ public sealed class AccountWriter(IApplicationDbContext context, ICurrentPrincip
         // A blank zone keeps the current one: the field is optional on the wire.
         account.TimeZoneId = AccountTimeZone.Normalize(accountDto.TimeZoneId, account.TimeZoneId);
 
-        // The legacy `active` flag can no longer change lifecycle state:
-        // suspend/cancel/archive and re-activation all require ChangeAccountStatus. Keep Active as the
-        // derived read of the unchanged Status so updateAccount can never move an account out of, or
-        // into, the operational band {Trial, Active}.
+        // The legacy `active` flag cannot change lifecycle state; that requires ChangeAccountStatus.
+        // Active stays the derived read of the unchanged Status so updateAccount can never move an
+        // account out of, or into, the operational band {Trial, Active}.
         account.Active = ((AccountStatus)account.Status).IsOperational();
 
         AddAuditEvent(account.AccountId, "UpdateAccount", $"{account.AccountId}", previous, Describe(account));

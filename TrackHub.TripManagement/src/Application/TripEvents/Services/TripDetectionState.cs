@@ -21,8 +21,7 @@ namespace TrackHub.TripManagement.Application.TripEvents.Services;
 /// This is a WITHIN-BATCH optimisation only. The source of truth is the database: every field that
 /// spans fixes is seeded from the persisted trip/stop row and written back through the writers.
 /// Router pushes exactly ONE position per transporter per call, so a batch-local departure clock or
-/// deviation run-length is discarded before it can ever mature — which is precisely why departure
-/// and deviation detection never fired in production (spec 11 §7.4).
+/// deviation run-length is discarded before it can ever mature.
 /// </para>
 /// </summary>
 public sealed class TripDetectionState(OpenTripVm trip)
@@ -49,7 +48,7 @@ public sealed class TripDetectionState(OpenTripVm trip)
 
     /// <summary>
     /// Whether the origin snapshot exists. Set by a successful arming, and false for every trip that
-    /// predates zero-touch — origin measurement simply never fires for those (§14).
+    /// predates zero-touch — origin measurement simply never fires for those.
     /// </summary>
     public bool HasOriginGeom { get; set; } = trip.HasOriginGeom;
 

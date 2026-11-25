@@ -18,11 +18,8 @@ using FluentValidation.Results;
 namespace TrackHub.Security.Application.Lookups;
 
 /// <summary>
-/// The bound for the seeded permission catalogs — roles, policies, resources, actions. These are
-/// fixed-size sets that only ever change with a code change, and they are the AXES of the permission
-/// matrix: paging them would render a matrix missing rows or columns, which is worse than useless.
-/// So they stay whole, and a catalog that has grown past anything a seeded set should reach raises
-/// loudly instead of being trimmed to fit.
+/// The seeded permission catalogs are the axes of the permission matrix, so they are never paged;
+/// one grown past anything a seeded set should reach raises instead of being trimmed.
 /// </summary>
 public static class SeededCatalogLimits
 {

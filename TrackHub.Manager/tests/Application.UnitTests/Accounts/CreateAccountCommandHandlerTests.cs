@@ -31,7 +31,6 @@ public class CreateAccountCommandHandlerTests
     [Test]
     public async Task Handle_WhenCalled_CreatesAccountPublishesAndCreatesUser()
     {
-        // Arrange
         var accountDto = new AccountDto(
             "Acme",
             "Description",
@@ -62,10 +61,8 @@ public class CreateAccountCommandHandlerTests
 
         var command = new CreateAccountCommand(accountDto);
 
-        // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
-        // Assert
         Assert.That(result, Is.EqualTo(accountVm));
         _publisherMock.Verify(p => p.Publish(It.IsAny<AccountCreated.Notification>(), CancellationToken.None), Times.Once);
         _securityWriterMock.Verify(s => s.CreateUserAsync(It.Is<CreateUserDto>(d => d.AccountId == accountVm.AccountId && d.EmailAddress == accountDto.EmailAddress && d.Password == accountDto.Password), CancellationToken.None), Times.Once);

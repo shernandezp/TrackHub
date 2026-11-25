@@ -18,7 +18,7 @@ namespace TrackHub.TripManagement.Domain.Interfaces;
 /// <summary>
 /// Read side of the trip aggregate. Every method takes the resolved <c>accountId</c> and, where
 /// group scoping applies, the acting <c>userId</c> — visibility is filtered in the query through
-/// <c>trip.vw_visible_transporter</c>, never re-implemented per handler (acceptance 4).
+/// <c>trip.vw_visible_transporter</c>, never re-implemented per handler.
 /// </summary>
 public interface ITripReader
 {
@@ -57,20 +57,14 @@ public interface ITripReader
     /// Single-trip lookup for the write paths (lifecycle, stops, deliveries, POD) and for route
     /// replay.
     /// <para>
-    /// <paramref name="userId"/> is NOT optional and has no default on purpose. This method used to
-    /// take only <c>(tripId, accountId)</c>, which made every write path in the module
-    /// visibility-blind while the list/detail/report paths filtered correctly: a dispatcher holding
-    /// a trip id from another group in the same account could start, complete or DELETE that trip,
-    /// record proof of delivery against it, and pull the transporter's full position history. The
-    /// scope now travels with the id, resolved once by
-    /// <c>TripVisibility.ResolveScopeUserId</c> — null means the principal sees the whole account
-    /// (Administrator/Manager and account-scoped service clients), exactly as everywhere else in
-    /// this interface.
+    /// <paramref name="userId"/> is NOT optional and has no default on purpose: without it every write
+    /// path would be visibility-blind, letting a dispatcher act on another group's trip. Null means the
+    /// principal sees the whole account (Administrator/Manager and account-scoped service clients).
     /// </para>
     /// <para>
     /// A trip the caller cannot see is <c>NotFoundException</c>, never
     /// <c>ForbiddenAccessException</c>: telling a dispatcher "that trip exists but is not yours"
-    /// discloses another group's dispatch activity (spec 11 §7.10, non-disclosure).
+    /// discloses another group's dispatch activity (non-disclosure).
     /// </para>
     /// </summary>
     Task<TripVm> GetTripAsync(Guid tripId, Guid accountId, Guid? userId, CancellationToken cancellationToken);
@@ -78,8 +72,7 @@ public interface ITripReader
     /// <summary>
     /// The account's trip carrying this <c>Code</c>, or <c>null</c>. Both this and
     /// <see cref="FindByExternalReferenceAsync"/> are exact single-row reads against the per-account
-    /// unique index; the partner import used to probe the paged board with the value as a free-text
-    /// search term, which cost up to 25 pages of un-indexed ILIKE scans per imported row.
+    /// unique index.
     /// </summary>
     Task<TripVm?> FindByCodeAsync(Guid accountId, string code, CancellationToken cancellationToken);
 
@@ -88,9 +81,8 @@ public interface ITripReader
 
     /// <summary>
     /// The owning trip of a stop, or <c>null</c> when the stop does not exist in the account or its
-    /// trip is outside the caller's groups. Exists because the stop- and delivery-addressed
-    /// commands (<c>UpdateTripStop</c>, <c>RemoveTripStop</c>, the delivery commands) carry no trip
-    /// id at all and so had no way to apply the visibility predicate.
+    /// trip is outside the caller's groups. The stop- and delivery-addressed
+    /// commands carry no trip id, so this is how they apply the visibility predicate.
     /// </summary>
     Task<Guid?> FindVisibleTripIdByStopAsync(Guid tripStopId, Guid accountId, Guid? userId, CancellationToken cancellationToken);
 
@@ -100,16 +92,14 @@ public interface ITripReader
     /// <summary>
     /// True when the transporter exists AND belongs to the account. This is the account-boundary
     /// half of the transporter check that <c>IsTransporterVisibleAsync</c> does not perform: a
-    /// principal that sees the whole account skips the group predicate, and without this it skipped
-    /// the account predicate too — letting an Account A administrator point a trip at Account B's
-    /// transporter, whose name the report readers then resolve by unscoped id (spec 11 §5,
-    /// acceptance 2).
+    /// principal that sees the whole account skips the group predicate but not this one, or a trip could
+    /// point at another account's transporter, whose name the report readers resolve by unscoped id.
     /// </summary>
     Task<bool> TransporterExistsInAccountAsync(Guid transporterId, Guid accountId, CancellationToken cancellationToken);
 
     /// <summary>
     /// True when the geofence exists AND belongs to the account. A stop's <c>GeofenceId</c> is a
-    /// cross-account reference and must be validated at write time (spec 11 §5): the arrival
+    /// cross-account reference and must be validated at write time: the arrival
     /// snapshot silently falls back to a radius buffer when the lookup misses, so an unvalidated id
     /// turns a detection failure into an apparent success.
     /// </summary>
@@ -117,7 +107,7 @@ public interface ITripReader
 
     /// <summary>
     /// The transporters this caller may plan for, by name — the resolution table a bulk upload
-    /// matches its <c>transporter</c> column against (spec 11a §9.1).
+    /// matches its <c>transporter</c> column against.
     /// <para>
     /// Group visibility applies exactly as it does everywhere else: a scoped dispatcher's upload
     /// cannot name a vehicle they cannot see, and an unresolved name reports the same error whether
@@ -145,12 +135,10 @@ public interface ITripReader
     /// <summary>True when the acting user's groups cover the transporter (or the user sees all).</summary>
     Task<bool> IsTransporterVisibleAsync(Guid accountId, Guid userId, Guid transporterId, CancellationToken cancellationToken);
 
-    // ---------------------------------------------------------------------------------------
-    // Reporting export feeds (spec 11 §13). Four paged drains, not one: the six catalogued trip
+    // Reporting export feeds. Four paged drains, not one: the six catalogued trip
     // reports are trip-level, stop-level, station-level and POD-level, so a single trip feed would
     // force Reporting to re-expand rows it cannot see. All four apply the SAME group visibility as
-    // the list and detail paths (acceptance 3) and page at 500.
-    // ---------------------------------------------------------------------------------------
+    // the list and detail paths and page at 500.
 
     /// <summary>Trip-level rows with display names and the route-plan/toll roll-up folded in.</summary>
     Task<TripReportPageVm> GetTripReportRowsAsync(
@@ -178,7 +166,7 @@ public interface ITripReader
 
     /// <summary>
     /// One row per route-plan/station match. A match with no tariff for the class on the plan date
-    /// MUST come back with a null amount and <c>HasTariff = false</c> — never zero (spec 11 §18.9).
+    /// MUST come back with a null amount and <c>HasTariff = false</c> — never zero.
     /// </summary>
     Task<TripTollReportPageVm> GetTripTollReportRowsAsync(
         Guid accountId,

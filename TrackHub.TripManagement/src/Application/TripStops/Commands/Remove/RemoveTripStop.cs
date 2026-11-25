@@ -25,7 +25,7 @@ namespace TrackHub.TripManagement.Application.TripStops.Commands.Remove;
 [Authorize(Resource = Resources.Trips, Action = Actions.Delete)]
 [RequireFeature(FeatureKeys.TripManagement)]
 // Enforcement: the handler derives the caller's own account and passes it to the reader/writer,
-// which filters every row on it (TripVisibility is the single visibility resolver - spec 11).
+// which filters every row on it (TripVisibility is the single visibility resolver).
 [AccountScopeEnforcedInHandler]
 public readonly record struct RemoveTripStopCommand(Guid TripStopId) : IRequest;
 
@@ -42,7 +42,7 @@ public sealed class RemoveTripStopCommandHandler(
         var caller = await userReader.GetUserAsync(UserId, cancellationToken);
         var scopeUserId = TripVisibility.ResolveScopeUserId(user, UserId);
 
-        // Addressed by stop id alone: without this the account was the only boundary, so a
+        // Addressed by stop id alone, so the owning trip's visibility is checked or a
         // dispatcher could delete a stop out of another group's trip.
         await TripVisibility.ResolveVisibleTripByStopAsync(
             reader, request.TripStopId, caller.AccountId, scopeUserId, cancellationToken);

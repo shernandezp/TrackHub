@@ -55,7 +55,7 @@ public class CredentialUriValidationTests
         CreateValidator().TestValidate(CommandFor("http://localhost:8080/")).ShouldNotHaveAnyValidationErrors();
     }
 
-    // Create and update now share one rule set. A Uri without a trailing slash is accepted on
+    // Create and update share one rule set. A Uri without a trailing slash is accepted on
     // both: the Router's CredentialHttpClientFactory appends it for the providers that resolve
     // relative paths against the base address, and a credential Uri that names a complete
     // endpoint rather than a base is legitimate input that a mandatory slash would corrupt.

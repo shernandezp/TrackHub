@@ -37,7 +37,7 @@ internal static class GpsReportSupport
     }
 
     // The window goes to the source and the feed is followed to its end; a capped newest-first
-    // page filtered in memory made a monthly statistic cover the last day or two.
+    // page filtered in memory would make a monthly statistic cover the last day or two.
     public static async Task<IReadOnlyCollection<Domain.Models.Manager.ManagerOperatorSyncRunVm>> DrainSyncRunsAsync(
         IGpsTelemetryReader telemetry, Guid accountId, Guid? operatorId, FilterDto filters, int take, CancellationToken cancellationToken)
     {

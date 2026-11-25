@@ -20,12 +20,6 @@ namespace TrackHub.Router.Infrastructure.CommandTrack.Mappers;
 internal static class PositionMapper
 {
 
-    /// <summary>
-    /// Maps a Position object to a PositionVm object
-    /// </summary>
-    /// <param name="position"></param>
-    /// <param name="deviceDto"></param>
-    /// <returns>returns a PositionVm object</returns>
     public static PositionVm MapToPositionVm(this Position position, DeviceTransporterVm deviceDto)
         => new(
             deviceDto.TransporterId,
@@ -52,12 +46,6 @@ internal static class PositionMapper
             }
         );
 
-    /// <summary>
-    /// Maps a DevicePosition object to a PositionVm object
-    /// </summary>
-    /// <param name="position"></param>
-    /// <param name="deviceDto"></param>
-    /// <returns>returns a PositionVm object</returns>
     public static PositionVm MapToPositionVm(this DevicePosition position, DeviceTransporterVm deviceDto)
         => new(
             deviceDto.TransporterId,
@@ -85,12 +73,6 @@ internal static class PositionMapper
             }
         );
 
-    /// <summary>
-    /// Maps a collection of Position objects to a collection of PositionVm objects
-    /// </summary>
-    /// <param name="positions"></param>
-    /// <param name="deviceDto"></param>
-    /// <returns>returns a collection of PositionVm objects</returns>
     public static IEnumerable<PositionVm> MapToPositionVm(this IEnumerable<Position> positions, DeviceTransporterVm deviceDto)
     {
         foreach (var position in positions)
@@ -99,12 +81,6 @@ internal static class PositionMapper
         }
     }
 
-    /// <summary>
-    /// Maps a collection of Position objects to a collection of PositionVm objects using a dictionary of device transporters
-    /// </summary>
-    /// <param name="positions"></param>
-    /// <param name="devicesDictionary"></param>
-    /// <returns>returns a collection of PositionVm objects</returns>
     public static IEnumerable<PositionVm> MapToPositionVm(this IEnumerable<Position> positions, IDictionary<string, DeviceTransporterVm> devicesDictionary)
     {
         foreach (var position in positions)
@@ -120,12 +96,6 @@ internal static class PositionMapper
         }
     }
 
-    /// <summary>
-    /// Maps a collection of DevicePosition objects to a collection of PositionVm objects using a dictionary of device transporters
-    /// </summary>
-    /// <param name="positions"></param>
-    /// <param name="devicesDictionary"></param>
-    /// <returns>returns a collection of PositionVm objects</returns>
     public static IEnumerable<PositionVm> MapToPositionVm(this IEnumerable<DevicePosition> positions, IDictionary<string, DeviceTransporterVm> devicesDictionary)
     {
         foreach (var position in positions)

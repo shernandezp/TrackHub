@@ -48,7 +48,6 @@ public class CreateTransporterCommandHandlerTests
     [Test]
     public async Task Handle_ValidCommand_DelegatesToWriterWithAccountId()
     {
-        // Arrange
         var dto = new TransporterDto("Truck-001", 1, Guid.Empty);
         var expectedVm = new TransporterVm(Guid.NewGuid(), "Truck-001", TransporterType.Truck, 1, 0);
         _writerMock.Setup(w => w.CreateTransporterAsync(
@@ -58,10 +57,8 @@ public class CreateTransporterCommandHandlerTests
 
         var handler = new CreateTransporterCommandHandler(_writerMock.Object, _userReaderMock.Object, _userMock.Object);
 
-        // Act
         var result = await handler.Handle(new CreateTransporterCommand(dto), CancellationToken.None);
 
-        // Assert
         Assert.That(result, Is.EqualTo(expectedVm));
         _writerMock.Verify(w => w.CreateTransporterAsync(
             It.Is<TransporterDto>(d => d.AccountId == _accountId),
@@ -71,7 +68,7 @@ public class CreateTransporterCommandHandlerTests
     [Test]
     public async Task Handle_OverridesAccountIdFromUserContext()
     {
-        // Arrange — DTO has Guid.Empty for AccountId (from GraphQL input)
+        // GraphQL input arrives with Guid.Empty for AccountId.
         var dto = new TransporterDto("Asset-X", 3, Guid.Empty);
         var expectedVm = new TransporterVm(Guid.NewGuid(), "Asset-X", TransporterType.Bicycle, 3, 0);
         _writerMock.Setup(w => w.CreateTransporterAsync(It.IsAny<TransporterDto>(), It.IsAny<CancellationToken>()))
@@ -79,10 +76,8 @@ public class CreateTransporterCommandHandlerTests
 
         var handler = new CreateTransporterCommandHandler(_writerMock.Object, _userReaderMock.Object, _userMock.Object);
 
-        // Act
         var result = await handler.Handle(new CreateTransporterCommand(dto), CancellationToken.None);
 
-        // Assert
         Assert.That(result.TransporterTypeId, Is.EqualTo(3));
         Assert.That(result.Name, Is.EqualTo("Asset-X"));
         _writerMock.Verify(w => w.CreateTransporterAsync(
@@ -93,11 +88,9 @@ public class CreateTransporterCommandHandlerTests
     [Test]
     public void Handle_NullUserId_ThrowsUnauthorizedAccessException()
     {
-        // Arrange
         var nullUserMock = new Mock<IUser>();
         nullUserMock.Setup(u => u.Id).Returns((string?)null);
 
-        // Act & Assert
         Assert.Throws<UnauthorizedAccessException>(() =>
             new CreateTransporterCommandHandler(_writerMock.Object, _userReaderMock.Object, nullUserMock.Object));
     }

@@ -16,18 +16,14 @@
 namespace Common.Domain.Helpers;
 
 /// <summary>
-/// Wall-clock conversions for external services that speak a known fixed UTC offset
-/// (rules.md → Timestamps: "a provider with a known fixed zone may hardcode the
-/// conversion in its own mapper"). Request dates go out as the service's wall time;
-/// response dates come back naive and are pinned to the service's offset.
+/// Wall-clock conversions for external services that speak a known fixed UTC offset: request dates go
+/// out as the service's wall time, and naive response dates are pinned to the service's offset.
 /// </summary>
 public static class FixedOffsetTime
 {
-    /// <summary>The service-zone wall-clock time of a UTC instant.</summary>
     public static DateTime ToWallClock(DateTimeOffset instant, TimeSpan offset)
         => instant.ToOffset(offset).DateTime;
 
-    /// <summary>The UTC instant of a naive service wall-clock time.</summary>
     public static DateTimeOffset FromWallClock(DateTime wallClock, TimeSpan offset)
         => new DateTimeOffset(DateTime.SpecifyKind(wallClock, DateTimeKind.Unspecified), offset).ToUniversalTime();
 }

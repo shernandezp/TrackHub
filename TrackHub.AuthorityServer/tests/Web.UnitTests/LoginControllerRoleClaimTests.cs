@@ -31,9 +31,6 @@ using TrackHub.AuthorityServer.Web.Models;
 
 namespace TrackHub.AuthorityServer.Web.UnitTests;
 
-// Login leg: the auth cookie carries the user's role so the authorize
-// endpoint can forward it into the access token (before, user tokens had no role claim and
-// IsPrivileged never fired for portal users).
 [TestFixture]
 public class LoginControllerRoleClaimTests
 {

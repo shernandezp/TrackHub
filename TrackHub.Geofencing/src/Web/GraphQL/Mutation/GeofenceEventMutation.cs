@@ -20,9 +20,6 @@ namespace TrackHub.Geofencing.Web.GraphQL.Mutation;
 
 public partial class Mutation
 {
-    /// <summary>
-    /// Processes transporter positions to detect geofence entry/exit events.
-    /// </summary>
     public async Task<GeofenceProcessingResultVm> ProcessPositions([Service] ISender sender, ProcessPositionsCommand command, CancellationToken cancellationToken)
         => await sender.Send(command, cancellationToken);
 }

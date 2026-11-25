@@ -60,8 +60,6 @@ public class PingOperatorQueryTests : TestsContext
             AllCapabilities(),
             Mock.Of<ILogger<PingOperatorQueryHandler>>());
 
-    // Reports every capability supported, so these tests exercise the handler exactly as
-    // before the partial-provider guard was introduced.
     private static IProviderCapabilityCatalog AllCapabilities()
     {
         var catalog = new Mock<IProviderCapabilityCatalog>();

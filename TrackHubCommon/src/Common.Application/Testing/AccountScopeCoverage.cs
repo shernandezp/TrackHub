@@ -22,31 +22,17 @@ using Common.Mediator;
 namespace Common.Application.Testing;
 
 /// <summary>
-/// Tenant-scope coverage (TS-06) — the SHARED engine behind every service's
-/// <c>AccountScopeCoverageTests</c>. Each service's unit-test project asserts, against its own
-/// Application assembly, that <see cref="UndeclaredKeyedRequests"/> returns empty. A request that
-/// carries a wire entity key other than a required <c>AccountId</c> (a by-id/by-key <see cref="Guid"/>, a group <see cref="long"/>, or a
-/// collection of them — at the root or inside a TrackHub-owned DTO member) could reference another
-/// tenant's entity, so it MUST declare how its scope is enforced:
-/// <see cref="AccountScopeEnforcedInHandlerAttribute"/> (the handler loads the entity and checks
-/// caller access), <see cref="PlatformScopedAttribute"/> (platform-owned data), or
-/// <see cref="AllowCrossAccountAttribute"/> (a service-identity cross-tenant surface). A keyless
-/// request derives its account from the caller and needs no marker. This fails the build the
-/// instant a new keyed request is added without declaring its scope — the guard that catches the
-/// next by-id escape at test time, since handler-level unit tests never run the pipeline.
-/// <para>
-/// The wire-key walk deliberately shares <see cref="RequestAccountResolver"/>'s reach (same depth
-/// bound, same TrackHub-owned-member descent): a key nested inside a DTO the resolver would walk is
-/// found here too, so wrapping the key in a <c>FiltersInput</c>-style DTO cannot slip a keyed
-/// request past the gate.
-/// </para>
+/// The shared engine behind every service's <c>AccountScopeCoverageTests</c>. A request carrying a wire
+/// entity key other than a required <c>AccountId</c> could reference another tenant's entity, so it must
+/// declare its scope with <see cref="AccountScopeEnforcedInHandlerAttribute"/>, <see cref="PlatformScopedAttribute"/>
+/// or <see cref="AllowCrossAccountAttribute"/>; handler unit tests never run the pipeline, so this is the gate.
+/// The walk shares <see cref="RequestAccountResolver"/>'s reach, so nesting a key in a DTO cannot slip past it.
 /// </summary>
 public static class AccountScopeCoverage
 {
     /// <summary>
-    /// Request types in <paramref name="applicationAssembly"/> that carry a wire entity key other
-    /// than a required <c>AccountId</c> and declare no scope marker. A key beside the account is a
-    /// second hop the account check does not cover. Must be empty.
+    /// Keyed request types declaring no scope marker; a key beside the account is a second hop the account
+    /// check does not cover. Must be empty.
     /// </summary>
     public static IReadOnlyList<string> UndeclaredKeyedRequests(Assembly applicationAssembly)
         => RequestTypes(applicationAssembly)
@@ -66,11 +52,8 @@ public static class AccountScopeCoverage
                     || (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IRequest<>))));
 
     /// <summary>
-    /// A wire entity key: a <c>Guid</c>/<c>Guid?</c>, <c>long</c>/<c>long?</c>, or a collection
-    /// (excluding <see cref="string"/>) — anything that could name another tenant's entity — at the
-    /// request root or inside a TrackHub-owned complex member, walked breadth-first to the same
-    /// depth bound as <see cref="RequestAccountResolver"/>. Paging ints and filter strings are not
-    /// keys and do not require a marker (those requests are scoped to the caller's own account).
+    /// A <c>Guid</c>, <c>long</c> or non-string collection that could name another tenant's entity. Paging
+    /// ints and filter strings are not keys.
     /// </summary>
     private static bool CarriesWireKey(Type requestType)
     {

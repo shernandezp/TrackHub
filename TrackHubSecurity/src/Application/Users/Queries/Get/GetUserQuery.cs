@@ -21,11 +21,8 @@ namespace TrackHub.Security.Application.Users.Queries.Get;
 [AccountScopeEnforcedInHandler]
 public readonly record struct GetUserQuery(Guid Id) : IRequest<UserVm>;
 
-// The GetUserQueryHandler class is responsible for handling the GetUserQuery and returning the corresponding UserVm.
 public class GetUserQueryHandler(IUserReader reader) : IRequestHandler<GetUserQuery, UserVm>
 {
-    // The Handle method is called when the GetUserQuery is executed.
-    // It retrieves the user from the IUserReader and returns the corresponding UserVm.
     public async Task<UserVm> Handle(GetUserQuery request, CancellationToken cancellationToken)
         => await reader.GetUserAsync(request.Id, cancellationToken);
 

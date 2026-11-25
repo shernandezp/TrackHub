@@ -31,8 +31,7 @@ namespace TrackHub.ServiceContracts.Tests.RoundTripTests;
 // TripManagement's REAL PublicLinkGrantClient against Manager's REAL resolvers. The
 // PublicLinkResolution literals (FOUND / NOT_FOUND / EXPIRED — the 200 / 404 / 410 public
 // tracking shapes) travel as GraphQL enum values in the RESPONSE and are invisible to Layer A
-// document validation, so each one needs a round-trip proving the consumer maps it correctly
-// (spec 11 §16, §17.24; rules.md).
+// document validation, so each one needs a round-trip proving the consumer maps it correctly.
 [TestFixture]
 public class TripManagementPublicLinkRoundTripTests
 {

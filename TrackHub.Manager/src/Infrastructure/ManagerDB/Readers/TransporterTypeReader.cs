@@ -21,11 +21,6 @@ namespace TrackHub.Manager.Infrastructure.Readers;
 public sealed class TransporterTypeReader(IApplicationDbContext context) : ITransporterTypeReader
 {
 
-    /// <summary>
-    /// Retrieve a collection of transporter types asynchronously.
-    /// </summary>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     public async Task<IReadOnlyCollection<TransporterTypeVm>> GetTransporterTypesAsync(CancellationToken cancellationToken)
         => await context.TransporterTypes
             .OrderBy(tt => tt.TransporterTypeId)
@@ -38,12 +33,6 @@ public sealed class TransporterTypeReader(IApplicationDbContext context) : ITran
                 (TransporterType)tt.TransporterTypeId))
             .ToListAsync(cancellationToken);
 
-    /// <summary>
-    /// Retrieve a transporter type by ID asynchronously.
-    /// </summary>
-    /// <param name="transporterTypeId"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     public async Task<TransporterTypeVm> GetTransporterTypeAsync(short transporterTypeId, CancellationToken cancellationToken)
         => await context.TransporterTypes
             .Where(d => d.TransporterTypeId == transporterTypeId)

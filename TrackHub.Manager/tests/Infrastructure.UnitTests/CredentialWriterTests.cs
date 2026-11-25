@@ -54,9 +54,7 @@ public class CredentialWriterTests
         await context.Operators.AddAsync(@operator);
         await context.SaveChangesAsync(CancellationToken.None);
 
-        // The arrange block seeded through THIS context, so those entities are still tracked. A
-        // writer in the running service sees a cold context; clearing here keeps the fixture
-        // faithful and stops the writer Attach colliding with the seed instance.
+        // The running service's writer sees a cold context; also stops its Attach colliding with the seed.
         context.ChangeTracker.Clear();
 
         var writer = new CredentialWriter(context as IApplicationDbContext, Principal(Guid.NewGuid()));
@@ -76,9 +74,7 @@ public class CredentialWriterTests
         await context.Credentials.AddAsync(credential);
         await context.SaveChangesAsync(CancellationToken.None);
 
-        // The arrange block seeded through THIS context, so those entities are still tracked. A
-        // writer in the running service sees a cold context; clearing here keeps the fixture
-        // faithful and stops the writer Attach colliding with the seed instance.
+        // The running service's writer sees a cold context; also stops its Attach colliding with the seed.
         context.ChangeTracker.Clear();
 
         var writer = new CredentialWriter(context as IApplicationDbContext, Principal(Guid.NewGuid()));
@@ -99,9 +95,7 @@ public class CredentialWriterTests
         await context.Credentials.AddAsync(credential);
         await context.SaveChangesAsync(CancellationToken.None);
 
-        // The arrange block seeded through THIS context, so those entities are still tracked. A
-        // writer in the running service sees a cold context; clearing here keeps the fixture
-        // faithful and stops the writer Attach colliding with the seed instance.
+        // The running service's writer sees a cold context; also stops its Attach colliding with the seed.
         context.ChangeTracker.Clear();
 
         var writer = new CredentialWriter(context as IApplicationDbContext, Principal(accountId));
@@ -125,9 +119,7 @@ public class CredentialWriterTests
         await context.Credentials.AddAsync(credential);
         await context.SaveChangesAsync(CancellationToken.None);
 
-        // The arrange block seeded through THIS context, so those entities are still tracked. A
-        // writer in the running service sees a cold context; clearing here keeps the fixture
-        // faithful and stops the writer Attach colliding with the seed instance.
+        // The running service's writer sees a cold context; also stops its Attach colliding with the seed.
         context.ChangeTracker.Clear();
 
         var writer = new CredentialWriter(context as IApplicationDbContext, Principal(Guid.NewGuid()));
@@ -147,9 +139,7 @@ public class CredentialWriterTests
         await context.Credentials.AddAsync(credential);
         await context.SaveChangesAsync(CancellationToken.None);
 
-        // The arrange block seeded through THIS context, so those entities are still tracked. A
-        // writer in the running service sees a cold context; clearing here keeps the fixture
-        // faithful and stops the writer Attach colliding with the seed instance.
+        // The running service's writer sees a cold context; also stops its Attach colliding with the seed.
         context.ChangeTracker.Clear();
         var principal = new Mock<ICurrentPrincipal>();
         principal.SetupGet(p => p.PrincipalType).Returns(PrincipalType.ServiceClient);
@@ -175,9 +165,7 @@ public class CredentialWriterTests
         await context.Credentials.AddAsync(credential);
         await context.SaveChangesAsync(CancellationToken.None);
 
-        // The arrange block seeded through THIS context, so those entities are still tracked. A
-        // writer in the running service sees a cold context; clearing here keeps the fixture
-        // faithful and stops the writer Attach colliding with the seed instance.
+        // The running service's writer sees a cold context; also stops its Attach colliding with the seed.
         context.ChangeTracker.Clear();
 
         var writer = new CredentialWriter(context as IApplicationDbContext, Principal(accountId));
@@ -196,9 +184,7 @@ public class CredentialWriterTests
         await context.Operators.AddAsync(@operator);
         await context.SaveChangesAsync(CancellationToken.None);
 
-        // The arrange block seeded through THIS context, so those entities are still tracked. A
-        // writer in the running service sees a cold context; clearing here keeps the fixture
-        // faithful and stops the writer Attach colliding with the seed instance.
+        // The running service's writer sees a cold context; also stops its Attach colliding with the seed.
         context.ChangeTracker.Clear();
 
         var writer = new CredentialWriter(context as IApplicationDbContext, Principal(accountId));
@@ -217,9 +203,7 @@ public class CredentialWriterTests
         await context.Credentials.AddAsync(credential);
         await context.SaveChangesAsync(CancellationToken.None);
 
-        // The arrange block seeded through THIS context, so those entities are still tracked. A
-        // writer in the running service sees a cold context; clearing here keeps the fixture
-        // faithful and stops the writer Attach colliding with the seed instance.
+        // The running service's writer sees a cold context; also stops its Attach colliding with the seed.
         context.ChangeTracker.Clear();
 
         var writer = new CredentialWriter(context as IApplicationDbContext, Principal(Guid.NewGuid()));

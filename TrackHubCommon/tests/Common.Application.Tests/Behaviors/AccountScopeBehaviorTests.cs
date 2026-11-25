@@ -126,14 +126,8 @@ public class AccountScopeBehaviorTests
         act.Should().Throw<ArgumentException>();
     }
 
-    // ---------------------------------------------------------------------------------------
-    // Nested account ids. Several commands carry the tenant inside a DTO member
-    // (CreateBackgroundJobRunCommand, RecordAlertEventCommand, CreateAuditEventCommand,
-    // CreatePublicLinkGrantCommand, Router's OperatorVm-carrying sync commands). Before
-    // TrackHubCommon 1.0.7 those escaped the guard purely by SHAPE. These tests are the proof
-    // that they no longer do — the handler-level unit suites never run the pipeline, so nothing
-    // else in the platform exercises this.
-    // ---------------------------------------------------------------------------------------
+    // Nested account ids: several commands carry the tenant inside a DTO member, and the handler-level
+    // unit suites never run the pipeline, so these tests are the only proof the guard reaches them.
 
     public readonly record struct AccountBearingDto(Guid AccountId, string Payload);
 
@@ -255,8 +249,7 @@ public class AccountScopeBehaviorTests
     [Fact]
     public async Task Handle_NoAccountAnywhere_CallerHasAccount_ProceedsToNext()
     {
-        // No AccountId at any reachable depth and no marker: the account is derived from the caller's
-        // identity (cat 2). With a real caller account the handler scopes to the caller's own tenant.
+        // No reachable AccountId and no marker: the account is derived from the caller's identity.
         _principalMock.Setup(p => p.AccountId).Returns(Guid.NewGuid());
 
         var result = await BehaviorFor<NoAccountAnywhereRequest>().HandleAsync(
@@ -299,9 +292,8 @@ public class AccountScopeBehaviorTests
         var accountId = Guid.NewGuid();
         _principalMock.Setup(p => p.AccountId).Returns(accountId);
 
-        // The nested DTO names a foreign account; the root names the caller's own. The ROOT is
-        // authoritative, so this passes — the handler is responsible for not trusting the DTO's
-        // copy of the id (the platform convention is to overwrite it from the root).
+        // The nested DTO names a foreign account and the root the caller's own; the root is authoritative,
+        // so this passes and the handler must not trust the DTO's copy of the id.
         var result = await BehaviorFor<TopLevelAndNestedRequest>().HandleAsync(
             new TopLevelAndNestedRequest
             {
@@ -349,10 +341,8 @@ public class AccountScopeBehaviorTests
     [Fact]
     public async Task Handle_AccountBeyondTheDepthLimit_IsNotSeenAndFallsBackToCaller()
     {
-        // An account buried three levels deep is out of the guard's reach, so the type resolves no
-        // account path. It is therefore treated as "names no account" and the account is derived from
-        // the caller (cat 2). Documents the bound, not an endorsement: the platform convention is a
-        // top-level AccountId — a request must not nest the tenant beyond the depth limit.
+        // An account three levels deep is out of the guard's reach, so the account is derived from the
+        // caller. Documents the bound, not an endorsement: requests carry a top-level AccountId.
         _principalMock.Setup(p => p.AccountId).Returns(Guid.NewGuid());
 
         var result = await BehaviorFor<DepthThreeRequest>().HandleAsync(
@@ -363,17 +353,9 @@ public class AccountScopeBehaviorTests
         result.Should().Be("OK");
     }
 
-    // ---------------------------------------------------------------------------------------
-    // TS-06 model. A request that resolves NO account off the wire is handled by one of four paths:
-    //   * [AllowCrossAccount]  -> pass (service-identity cross-tenant surface)
-    //   * [PlatformScoped]     -> pass (platform-owned data, identical for every tenant)
-    //   * [AccountScopeEnforcedInHandler] -> documentation/coverage marker ONLY: the handler enforces
-    //                             the by-id ownership check, but it still needs a caller account to
-    //                             check against, so the runtime outcome equals the unmarked case.
-    //   * unmarked             -> account derived from the caller's identity: pass when the principal
-    //                             has an account, DENY when it does not (the fail-closed line that
-    //                             still catches a global service identity hitting an unmarked request).
-    // ---------------------------------------------------------------------------------------
+    // A request resolving no account off the wire: [AllowCrossAccount] and [PlatformScoped] pass;
+    // [AccountScopeEnforcedInHandler] behaves like an unmarked request at runtime; unmarked passes only
+    // when the principal has an account.
 
     public readonly record struct ByIdRequest(Guid Id) : IRequest<string>;
 
@@ -395,8 +377,7 @@ public class AccountScopeBehaviorTests
     [Fact]
     public async Task Handle_UnmarkedByIdRequest_CallerHasAccount_ProceedsToNext()
     {
-        // Cat 2: no account on the wire, no marker. The account is the caller's own — the handler
-        // scopes to it and cannot cross tenants. Passes for a user principal with an account.
+        // No account on the wire, no marker: passes for a user principal with an account.
         _principalMock.Setup(p => p.AccountId).Returns(Guid.NewGuid());
 
         var result = await BehaviorFor<ByIdRequest>().HandleAsync(
@@ -433,9 +414,7 @@ public class AccountScopeBehaviorTests
     [Fact]
     public async Task Handle_EnforcedByIdRequest_CallerHasAccount_ProceedsToNext()
     {
-        // [AccountScopeEnforcedInHandler]: the handler loads the keyed entity and enforces caller
-        // access against the caller's account. With a real caller account the request proceeds and
-        // the handler's ownership check applies downstream.
+        // With a real caller account the request proceeds and the handler's ownership check applies downstream.
         _principalMock.Setup(p => p.AccountId).Returns(Guid.NewGuid());
 
         var result = await BehaviorFor<EnforcedByIdRequest>().HandleAsync(
@@ -473,8 +452,7 @@ public class AccountScopeBehaviorTests
     [Fact]
     public async Task Handle_CollectionRequest_Unmarked_CallerHasAccount_ProceedsToNext()
     {
-        // The resolver never descends into a collection, so this resolves no account. Unmarked, it is
-        // cat 2 — scoped to the caller's own account.
+        // The resolver never descends into a collection, so this is scoped to the caller's own account.
         _principalMock.Setup(p => p.AccountId).Returns(Guid.NewGuid());
 
         var result = await BehaviorFor<CollectionNestedRequest>().HandleAsync(
@@ -488,9 +466,7 @@ public class AccountScopeBehaviorTests
     [Fact]
     public async Task Handle_CollectionRequest_Unmarked_ServiceIdentity_ThrowsForbidden()
     {
-        // The historical bulk escape: a collection reached by a service identity with no account. With
-        // no marker it cannot be scoped, so it is denied — a service-identity batch must declare
-        // itself [AllowCrossAccount] (or carry a top-level AccountId).
+        // A collection reached by a service identity with no account cannot be scoped, so it is denied.
         _principalMock.Setup(p => p.AccountId).Returns((Guid?)null);
         _principalMock.Setup(p => p.PrincipalType).Returns(PrincipalType.ServiceClient);
 
@@ -535,13 +511,8 @@ public class AccountScopeBehaviorTests
         act.Should().Throw<ArgumentException>();
     }
 
-    // ---------------------------------------------------------------------------------------
-    // TEST-02. The resolver only recurses into TrackHub*/Common.* assemblies. Every fixture above
-    // lives in Common.Application.Tests, exercising ONLY the `Common.` arm. These cases emit types
-    // into a dynamic assembly named `TrackHub.*` (the arm that covers every real request DTO in the
-    // eight services) and into a `System.*`-named assembly (proving the walk terminates on framework
-    // types), so both arms of IsTrackHubComplexType are actually exercised.
-    // ---------------------------------------------------------------------------------------
+    // The resolver only recurses into TrackHub*/Common.* assemblies. These cases emit types into a
+    // dynamic `TrackHub.*` assembly and a `System.*`-named one, so both arms of IsTrackHubComplexType run.
 
     private static Type EmitNestedAccountRequest(string assemblyName)
     {
@@ -580,7 +551,7 @@ public class AccountScopeBehaviorTests
     [Fact]
     public void NamesAccount_NestedAccountInTrackHubAssembly_IsResolved()
     {
-        // The `TrackHub` arm of IsTrackHubComplexType — unexercised by every in-assembly fixture.
+        // The `TrackHub` arm of IsTrackHubComplexType.
         var type = EmitNestedAccountRequest("TrackHub.Fake.Application");
 
         RequestAccountResolver.NamesAccount(type).Should().BeTrue();

@@ -29,10 +29,6 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
-/**
-  The linearGradient() function helps you to create a linear gradient color background
- */
-
 function linearGradient(color: string, colorState: string, angle = 310): string {
   return `linear-gradient(${angle}deg, ${color}, ${colorState})`;
 }

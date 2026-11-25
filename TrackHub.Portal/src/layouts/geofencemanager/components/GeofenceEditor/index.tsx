@@ -24,15 +24,9 @@ import OSMGeofenceEditor from 'controls/Maps/OSM/GeofenceEditor';
 import GoogleGeofenceEditor from 'controls/Maps/Google/GeofenceEditor';
 import MapControlStyle from 'controls/Maps/styles/MapControl';
 
-/** A point in the imperative map-editor handle payloads. */
 export interface MapPoint { lat: number; lng: number; }
-/** Whether a geofence is a free-drawn polygon or a center+radius circle. */
 export type GeofenceShape = 'polygon' | 'circle';
-/**
- * Result of committing (save/edit) a drawn geofence shape on the map. Polygons
- * carry their ring in `latlngs`; circles carry `center` + `radiusMeters` and an
- * empty `latlngs`.
- */
+/** Polygons carry their ring in `latlngs`; circles carry `center` + `radiusMeters` and an empty `latlngs`. */
 export interface GeofenceShapeHandle {
   id: string;
   shape: GeofenceShape;
@@ -40,11 +34,7 @@ export interface GeofenceShapeHandle {
   center?: MapPoint;
   radiusMeters?: number;
 }
-/**
- * A geofence rendered on the map. Polygons use `latlngs` (geom as [lat, lng]
- * tuples); circles additionally set `shape: 'circle'`, `center` and
- * `radiusMeters` so they render as true circles and stay editable.
- */
+/** Circles additionally set `shape: 'circle'`, `center` and `radiusMeters` so they render as true circles and stay editable. */
 export interface MapPolygon {
   id: string;
   name: string;
@@ -62,7 +52,6 @@ export type CancelGeofenceHandler = () => void;
 export type EditGeofenceHandler = () => GeofenceShapeHandle;
 export type RemoveGeofenceHandler = (id: string) => void;
 
-/** Refs the vendored map editors populate with imperative draw handles. */
 export interface GeofenceEditorHandles {
   addRef?: RefObject<AddGeofenceHandler | null>;
   addCircleRef?: RefObject<AddCircleGeofenceHandler | null>;

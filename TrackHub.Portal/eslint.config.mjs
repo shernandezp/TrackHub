@@ -3,9 +3,7 @@ import reactHooks from "eslint-plugin-react-hooks";
 import prettierRecommended from "eslint-plugin-prettier/recommended";
 import globals from "globals";
 
-// Parity with the retired .eslintrc.json (react/recommended + prettier, a few
-// overrides). Deliberately NOT js/recommended: enabling it on 480 legacy files
-// would drown real signal.
+// Deliberately NOT js/recommended: enabling it on the legacy files would drown real signal.
 //
 // NOTE: typescript-eslint is installed but disabled — its typescript-estree
 // does not support TypeScript 7 yet (crashes on ts.ModuleKind.Cjs). Until it
@@ -52,7 +50,7 @@ export default [
     files: ["src/**/*.test.{js,jsx}", "src/__tests__/**"],
     languageOptions: { globals: { ...globals.node } },
   },
-  // Phase 7 guard: src/ is 100% TypeScript — any new .js/.jsx file is an error.
+  // src/ is 100% TypeScript — any new .js/.jsx file is an error.
   {
     files: ["src/**/*.{js,jsx}"],
     rules: {

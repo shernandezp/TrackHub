@@ -2,9 +2,8 @@ using TrackHub.Manager.Domain.Constants;
 
 namespace TrackHub.Manager.Application.Documents.Commands;
 
-// Runs the upload endpoint's authorization and tenant scope BEFORE any byte reaches storage.
-// Registering afterwards meant an unauthorized caller had already filled the document store, and
-// the compensating delete is best-effort inside a catch.
+// Runs the upload endpoint's authorization and tenant scope BEFORE any byte reaches storage, so an
+// unauthorized caller never fills the document store.
 [Authorize(Resource = Resources.Documents, Action = Actions.Write, PrincipalTypes = "User,Staff")]
 public readonly record struct AuthorizeDocumentUploadCommand(Guid AccountId) : IRequest<bool>;
 public class AuthorizeDocumentUploadCommandHandler : IRequestHandler<AuthorizeDocumentUploadCommand, bool>

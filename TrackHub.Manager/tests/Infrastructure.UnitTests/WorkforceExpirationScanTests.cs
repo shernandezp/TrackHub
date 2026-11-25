@@ -9,8 +9,8 @@ using CommonConstants = Common.Domain.Constants;
 namespace Infrastructure.UnitTests;
 
 /// <summary>
-/// AC6: "Qualification expiration produces exactly one alert event per threshold (30/15/7/0) per
-/// qualification, only for workforce-enabled accounts."
+/// Qualification expiration produces exactly one alert event per threshold (30/15/7/0) per
+/// qualification, only for workforce-enabled accounts.
 /// <para>
 /// The scan itself lives in a <c>BackgroundService</c> whose cycle body is private, so these tests
 /// drive the same logic against the same tables and assert on what the cycle would have written.
@@ -70,7 +70,7 @@ public class WorkforceExpirationScanTests
     public void BandProgression_RaisesEachBandExactlyOnce_AcrossTheLifetime()
     {
         // Walk one qualification from 40 days out to past due; each band must appear exactly once and
-        // never regress (AC6).
+        // never regress.
         var raised = new List<int>();
         foreach (var daysLeft in Enumerable.Range(-10, 51).Reverse())
         {
@@ -145,15 +145,15 @@ public class WorkforceExpirationScanTests
             .Select(q => q.StaffQualificationId)
             .ToList();
 
-        // Only the due, non-revoked qualification on the workforce-enabled account survives (AC6).
+        // Only the due, non-revoked qualification on the workforce-enabled account survives.
         Assert.That(candidates, Is.EqualTo(new[] { due.StaffQualificationId }));
     }
 
     [Test]
     public void AlertPayload_IsValidJson_ForEveryQualificationType()
     {
-        // The payload used to be string-interpolated; serializing it keeps it well-formed even if a
-        // future import path writes a type outside the validated constant set.
+        // Serializing the payload keeps it well-formed even if a future import path writes a type
+        // outside the validated constant set.
         foreach (var qualificationType in StaffQualificationTypes.All.Append("Weird \"quoted\"\n type"))
         {
             var payload = JsonSerializer.Serialize(new
@@ -172,8 +172,8 @@ public class WorkforceExpirationScanTests
     [Test]
     public async Task EvaluatorFailure_DoesNotPreventTheAlertEventFromBeingRecorded()
     {
-        // Ordering contract: the alert event commits BEFORE fan-out, so AC6 holds even when delivery
-        // fails. A throwing evaluator must not roll back or suppress the recorded event.
+        // Ordering contract: the alert event commits BEFORE fan-out, so the expiry alert is recorded
+        // even when delivery fails. A throwing evaluator must not roll back or suppress the recorded event.
         using var context = NewContext(nameof(EvaluatorFailure_DoesNotPreventTheAlertEventFromBeingRecorded));
         var accountId = Guid.NewGuid();
         EnableWorkforce(context, accountId);

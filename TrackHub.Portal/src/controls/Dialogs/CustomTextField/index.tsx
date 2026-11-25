@@ -21,9 +21,6 @@ import ArgonBox from 'components/ArgonBox';
 import FieldLabel from 'controls/Dialogs/FieldLabel';
 import { textFieldSx, errorFieldSx } from 'controls/Dialogs/fieldStyles';
 
-// The rendered field forwards any extra MUI TextField prop (value, onChange,
-// type, placeholder, …); `label` is rendered through FieldLabel instead, and
-// `errorMsg` maps onto the field's error/helper text.
 export type CustomTextFieldProps = Omit<TextFieldProps, 'label'> & {
   errorMsg?: string;
   label?: ReactNode;

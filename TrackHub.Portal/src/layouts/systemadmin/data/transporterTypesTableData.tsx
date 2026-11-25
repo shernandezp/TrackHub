@@ -27,12 +27,6 @@ import ArgonButton from "components/ArgonButton";
 import { useTransporterTypes, useUpdateTransporterType } from 'queries/transporterTypes';
 import type { TransporterTypeItem, TransporterTypeDtoInput } from "api/manager/transporterTypes";
 
-/**
- * Dialog/form state for a transporter type. Merges an API
- * {@link TransporterTypeItem} (when editing) with the loose edit shape; all
- * fields are optional and the requirement set is enforced by the dialog's
- * validate() gate before save.
- */
 export interface TransporterTypeFormValues {
   transporterTypeId?: number;
   accBased?: boolean;
@@ -42,7 +36,6 @@ export interface TransporterTypeFormValues {
   type?: string;
 }
 
-/** A column descriptor / rendered row for the vendored transporter-types `Table`. */
 export interface TransporterTypeTableColumn { name: string; title?: string; align?: "left" | "right" | "center"; }
 export type TransporterTypeTableRow = Record<string, ReactNode>;
 export interface TransporterTypeTableData { columns: TransporterTypeTableColumn[]; rows: TransporterTypeTableRow[]; }
@@ -59,7 +52,6 @@ function useTransporterTypesTableData(
   const transporterTypeList = transporterTypesQuery.data ?? [];
   const updateTransporterType = useUpdateTransporterType();
 
-  // Keep the global spinner UX for the initial load / invalidation refetch.
   useEffect(() => {
     setLoading(transporterTypesQuery.isFetching);
   }, [transporterTypesQuery.isFetching, setLoading]);
@@ -67,8 +59,6 @@ function useTransporterTypesTableData(
   const onSave = async (transporterType: TransporterTypeFormValues) => {
     setLoading(true);
     try {
-      // validate(['accBased','stoppedGap','maxTimeGap','maxDistance']) gates this;
-      // assert the required update input fields at the boundary.
       await updateTransporterType.mutateAsync({
         transporterTypeId: transporterType.transporterTypeId,
         accBased: transporterType.accBased,

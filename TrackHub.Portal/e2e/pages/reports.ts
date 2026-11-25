@@ -1,10 +1,6 @@
 /**
- * The Reports screen: the catalog accordion set and the catalog-driven filter
- * form beside it.
- *
- * What a report offers is DATA, not layout — the filter controls are built from
- * the catalog row's `filters` JSON — so the page object reads the catalog from
- * the API and drives the screen from it.
+ * The filter controls are built from the catalog row's `filters` JSON, so the page
+ * object reads the catalog from the API and drives the screen from it.
  */
 
 import type { Page } from '@playwright/test';
@@ -18,7 +14,6 @@ export interface CatalogReport {
   requiredFeatureKey?: string | null;
   /** The row's own sentence, which names the report when the bundle has no key. */
   description?: string | null;
-  /** The catalog row's filter definitions, seeded as a JSON string. */
   filters?: string | null;
 }
 
@@ -32,7 +27,7 @@ export interface ReportFilterDefinition {
 export const filtersOf = (report: CatalogReport): ReportFilterDefinition[] =>
   report.filters ? (JSON.parse(report.filters) as ReportFilterDefinition[]) : [];
 
-/** What the catalog row reads on screen (mirrors `utils/reportUtils.reportLabels`). */
+/** Mirrors `utils/reportUtils.reportLabels`. */
 export const reportLabel = (t: (key: string) => string, report: CatalogReport): string => {
   try {
     return t(`reportList.${toCamelCase(report.code)}`);
@@ -47,10 +42,8 @@ export const catalogOf = (api: { gql: <T>(b: 'manager', q: string) => Promise<T>
     'query { reports { code category description supportsPdf requiredFeatureKey filters } }'
   );
 
-/** The card holding the selected report's filter controls. */
 export const filterCard = (page: Page) => page.getByTestId('card-report-filters');
 
-/** Opens a report's filter form: expand its category, then click its name. */
 export async function chooseReport(
   page: Page,
   t: (key: string) => string,

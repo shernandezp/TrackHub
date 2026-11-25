@@ -17,8 +17,7 @@ using TrackHub.Router.Domain.Exceptions;
 
 namespace TrackHub.Router.Application.PingOperator;
 
-// Scoped registry resolving the keyed connectivity tester from the caller's own request scope
-// (router-audit A-07).
+// Scoped registry resolving the keyed connectivity tester from the caller's own request scope.
 public class ConnectivityRegistry(IServiceProvider serviceProvider) : IConnectivityRegistry
 {
     public IConnectivityTester GetTester(ProtocolType type)

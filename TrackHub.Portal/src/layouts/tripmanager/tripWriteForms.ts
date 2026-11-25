@@ -15,14 +15,9 @@
 */
 
 /**
- * Form state and payload builders for the trip manager's write surfaces
- * (deliveries, proof of delivery, transporter → toll class).
- *
- * These are deliberately pure and separate from the dialogs: the payload shapes
- * are contract-critical — an omitted `clientEventId`, a blank string sent where
- * the backend expects null, or a stale coordinate silently changes what the
- * server records — so they are unit-tested directly rather than only through a
- * rendered dialog.
+ * Pure and separate from the dialogs because the payload shapes are contract-critical (an omitted
+ * `clientEventId`, a blank string where the backend expects null, a stale coordinate), so they are
+ * unit-tested directly.
  */
 
 import { toDateTimeLocalInput, fromDateTimeLocalInput } from 'utils/dateUtils';
@@ -42,7 +37,6 @@ export const toLocalInput = (iso?: string | null): string => toDateTimeLocalInpu
 
 export const toIso = (local?: string | null): string | null => fromDateTimeLocalInput(local);
 
-/** RFC 4122 id used as an idempotency key by every progress/POD/outcome command. */
 export const newClientEventId = (): string => crypto.randomUUID();
 
 /** Empty, blank and unparseable inputs all mean "not supplied", never 0. */
@@ -57,17 +51,10 @@ const trimmedOrNull = (value?: string | null): string | null => {
   return trimmed === '' ? null : trimmed;
 };
 
-/* ------------------------------------------------------------------ stops */
-
 /**
- * `TripStop.City` is capped at 200 chars by the backend validator — mirrored
- * here so an over-long locality is caught in the dialog instead of coming back
- * as a 400.
- *
- * City is a SEPARATE field from `Address` on purpose: the anonymous customer
- * snapshot may carry the coarse locality but never the full street address, so
- * the two carry different disclosure levels and must never be derived from one
- * another (spec 11 §7.8).
+ * Mirrors the backend's 200-char cap on `TripStop.City`. City is SEPARATE from `Address` on
+ * purpose: the anonymous customer snapshot may carry the locality but never the street address,
+ * so the two must never be derived from one another.
  */
 export const STOP_CITY_MAX_LENGTH = 200;
 
@@ -79,23 +66,17 @@ export const normalizeStopCity = (city?: string | null): string | null => {
 export const isStopCityWithinLimit = (city?: string | null): boolean =>
   (normalizeStopCity(city) ?? '').length <= STOP_CITY_MAX_LENGTH;
 
-/* ------------------------------------------- trip creation: destinations  */
-
 /**
- * How the dispatcher shapes a new trip. This is a FORM concept, not a stored
- * column: the backend derives nothing from it, and an existing trip's type is
- * re-derived from its stops (see {@link deriveTripType}). `round` appends a
- * return stop at the origin when the trip is created.
+ * A FORM concept, not a stored column: an existing trip's type is re-derived from its stops
+ * ({@link deriveTripType}). `round` appends a return stop at the origin on creation.
  */
 export const TRIP_TYPES = ['single', 'round', 'multi'] as const;
 
 export type TripType = (typeof TRIP_TYPES)[number];
 
 /**
- * A destination queued in the create-trip dialog before the trip exists.
- * Coordinates always come from a picker (map click, POI, geofence) — never
- * typed by hand (spec 11 §8). Address/city are left for the reverse geocoder
- * when the stop is later edited in the planner.
+ * Coordinates always come from a picker, never typed. Address/city are left for the reverse
+ * geocoder when the stop is later edited in the planner.
  */
 export interface TripDestinationDraft {
   name: string;
@@ -106,7 +87,6 @@ export interface TripDestinationDraft {
   address?: string | null;
   city?: string | null;
   arrivalRadiusMeters: number;
-  /** What the vehicle does here — it is what gives this stop's dwell a meaning. */
   activity: StopActivity;
   requiresPod: boolean;
   priority: number;
@@ -115,9 +95,8 @@ export interface TripDestinationDraft {
 export const DEFAULT_ARRIVAL_RADIUS_METERS = 150;
 
 /**
- * What a stop is FOR (spec 11a §4.2). Without it a dwell figure is an anonymous
- * number of minutes; with it the same measurement reads as loading time at a plant
- * and unloading time at a client.
+ * Without it a dwell figure is an anonymous number of minutes; with it the same measurement reads
+ * as loading time at a plant and unloading time at a client.
  */
 export const STOP_ACTIVITIES = ['Load', 'Unload', 'Other'] as const;
 
@@ -129,7 +108,6 @@ export const DEFAULT_STOP_ACTIVITY: StopActivity = 'Unload';
 export const normalizeStopActivity = (value?: string | null): StopActivity =>
   STOP_ACTIVITIES.find((activity) => activity === value) ?? DEFAULT_STOP_ACTIVITY;
 
-/** Builds the AddTripStop payload for a queued destination. */
 export function buildStopPayloadFromDestination(
   destination: TripDestinationDraft
 ): TripStopDtoInput {
@@ -149,11 +127,7 @@ export function buildStopPayloadFromDestination(
   };
 }
 
-/**
- * The auto-appended final stop of a round trip: back to the origin. When the
- * origin was picked from a geofence its id travels along, so arrival detection
- * uses the real shape instead of the fallback radius.
- */
+/** When the origin was picked from a geofence its id travels along, so arrival detection uses the real shape. */
 export function returnToOriginStop(
   originName: string,
   latitude: number,
@@ -206,7 +180,6 @@ export interface RouteSourceStop {
   priority: number;
 }
 
-/** An existing trip's shape, re-derived from its stops rather than stored. */
 export function deriveTripType(
   originLatitude: number,
   originLongitude: number,
@@ -231,11 +204,8 @@ export interface RouteTemplate {
 }
 
 /**
- * Turns an existing trip's stops into a reusable route for the create dialog
- * (slice 2's "recurring trip templates", in its light form). A detected round
- * trip drops the trailing return stop — the dialog re-appends it at save time —
- * so the copied route passes through the form without duplicating the origin
- * stop.
+ * A detected round trip drops the trailing return stop (the dialog re-appends it at save time), so
+ * the copied route does not duplicate the origin stop.
  */
 export function destinationsFromStops(
   stops: RouteSourceStop[],
@@ -264,16 +234,7 @@ export function destinationsFromStops(
   };
 }
 
-/* ------------------------------------------------- board: phase & exceptions */
-
-/**
- * The exception filters the board leads with (spec 11a §10). Dispatcher attention
- * is exception-driven now: the system runs the ordinary lifecycle, so what a human
- * needs is the short list of trips that are NOT going to plan.
- */
 export const TRIP_EXCEPTIONS = ['overdue', 'delayed', 'offCorridor', 'stalledFinalStop'] as const;
-
-/* ------------------------------------------------------------- deliveries */
 
 /** Outcomes accepted by `updateDeliveryOutcome` (TripManagement `DeliveryStatuses`). */
 export const DELIVERY_STATUSES = [
@@ -285,7 +246,6 @@ export const DELIVERY_STATUSES = [
 
 export type DeliveryStatus = (typeof DELIVERY_STATUSES)[number];
 
-/** Dialog/form state for a delivery line on a stop. */
 export interface DeliveryFormValues {
   deliveryId?: string;
   tripStopId?: string;
@@ -310,13 +270,9 @@ export function buildDeliveryPayload(values: DeliveryFormValues): DeliveryDtoInp
   };
 }
 
-/* ---------------------------------------------------- proof of delivery   */
-
 /**
- * One uploaded document queued for a POD. `scanStatus` is carried because the
- * backend rejects the whole capture with `POD_DOCUMENT_NOT_CLEAN` if any
- * attachment has not finished scanning — the screen must be able to say
- * which one before the user submits (spec 11 §9).
+ * `scanStatus` is carried because the backend rejects the whole capture with
+ * `POD_DOCUMENT_NOT_CLEAN` if any attachment has not finished scanning.
  */
 export interface PodAttachment {
   documentId: string;
@@ -326,7 +282,6 @@ export interface PodAttachment {
 
 export const isCleanAttachment = (attachment: PodAttachment): boolean => isServableScan(attachment.scanStatus);
 
-/** Dialog/form state for a proof-of-delivery capture. */
 export interface PodFormValues {
   tripStopId?: string;
   deliveryId?: string | null;
@@ -341,13 +296,8 @@ export interface PodFormValues {
 export const POD_REQUIRED_FIELDS = ['receiverName'];
 
 /**
- * Builds the POD command payload.
- *
- * `clientEventId` is supplied by the caller rather than generated here: the
- * backend is idempotent on `(tripStopId, clientEventId)`, so a retry of the
- * SAME capture attempt has to reuse the id it already sent. Generating one
- * inside this function would mint a fresh id on every retry and turn a
- * duplicate submission into a duplicate POD row (spec 11 §7.3, §9).
+ * `clientEventId` is supplied by the caller: the backend is idempotent on
+ * `(tripStopId, clientEventId)`, so a retry of the SAME attempt must reuse the id it sent.
  */
 export function buildPodPayload(
   values: PodFormValues,
@@ -370,12 +320,9 @@ export function buildPodPayload(
 }
 
 /**
- * Upload metadata for a POD attachment. Trip documents are owned by the trip's
- * TRANSPORTER, not by the trip: `DocumentAccessPolicy` resolves transporter
- * ownership through group visibility for portal users and through
- * `validateStaffAssignment` for staff, which is exactly the audience a POD
- * should have. A `"Trip"` owner type was rejected because Manager cannot
- * resolve trip ownership without calling TripManagement (spec 11 §11).
+ * Trip documents are owned by the trip's TRANSPORTER: `DocumentAccessPolicy` resolves that through
+ * group visibility for portal users and `validateStaffAssignment` for staff, which is the audience
+ * a POD should have. Manager cannot resolve trip ownership without calling TripManagement.
  */
 export function podDocumentFields(
   accountId: string,

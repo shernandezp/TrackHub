@@ -15,14 +15,8 @@
 
 namespace TrackHub.Geofencing.Application.GeofenceEvents.Services.Interfaces;
 
-/// <summary>
-/// Interface for geofence detection service.
-/// </summary>
 public interface IGeofenceDetectionService
 {
-    /// <summary>
-    /// Processes transporter positions to detect geofence entry/exit events.
-    /// </summary>
     Task<GeofenceProcessingResultVm> ProcessPositionsAsync(
         IEnumerable<TransporterPositionDto> positions,
         Guid accountId,

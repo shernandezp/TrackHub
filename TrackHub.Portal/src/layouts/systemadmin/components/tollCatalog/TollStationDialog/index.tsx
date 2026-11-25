@@ -28,7 +28,6 @@ import type { MapProvider } from 'controls/Maps/core/MapProviderContext';
 import type { RoutePoint } from 'controls/Maps/core/mapTypes';
 import type { FormChangeHandler } from 'controls/Dialogs/useForm';
 
-/** Dialog/form state for a toll station. */
 export interface TollStationFormValues {
   tollStationId?: string;
   name?: string;
@@ -50,17 +49,12 @@ interface TollStationDialogProps {
   values: TollStationFormValues;
   handleChange: FormChangeHandler;
   errors: Record<string, string>;
-  /** Account map provider, so the picker matches the rest of the portal. */
   mapType?: MapProvider;
   mapKey?: string | null;
   darkMode?: boolean;
 }
 
-/**
- * Station editor with both entry paths the spec requires: a map picker and
- * direct coordinate entry. The map is opt-in so the dialog stays light for the
- * common case of pasting coordinates from an operator's own catalog.
- */
+/** The map is opt-in so the dialog stays light for the common case of pasting coordinates. */
 function TollStationDialog({
   open,
   setOpen,

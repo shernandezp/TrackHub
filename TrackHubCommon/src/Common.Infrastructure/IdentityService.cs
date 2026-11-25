@@ -22,25 +22,16 @@ using Microsoft.Extensions.Configuration;
 namespace Common.Infrastructure;
 
 /// <summary>
-/// Represents the implementation of the identity service.
+/// Authorization decisions are cached in memory for <c>AppSettings:AuthorizationCacheSeconds</c> (default
+/// 30 s, 0 disables), the same staleness window accepted for account status and feature flags.
 /// </summary>
-/// <remarks>
-/// Initializes a new instance of the <see cref="IdentityService"/> class.
-/// Authorization decisions (user role+policy and service-client permissions) are cached
-/// in-memory for a short TTL (default 30 s, <c>AppSettings:AuthorizationCacheSeconds</c>,
-/// 0 disables) — same staleness window already accepted for account status and feature flags.
-/// </remarks>
-/// <param name="graphQLClient">The GraphQL client factory.</param>
-/// <param name="cache">The in-memory cache for authorization decisions.</param>
-/// <param name="configuration">The configuration (cache TTL).</param>
 public sealed class IdentityService(IGraphQLClientFactory graphQLClient, IMemoryCache cache, IConfiguration configuration)
     : GraphQLService(graphQLClient.CreateClient(Clients.Identity)), IIdentityService
 {
     private readonly TimeSpan _decisionTtl = TimeSpan.FromSeconds(
         configuration.GetValue<int?>("AppSettings:AuthorizationCacheSeconds") ?? 30);
 
-    // Single source of truth for the identity documents this client sends against Security;
-    // the ServiceContracts tests validate these exact strings against the Security schema.
+    // The ServiceContracts tests validate these exact documents against the Security schema.
     internal const string UserNameQuery = @"
                     query($userId: UUID!) {
                         userName(query: { userId: $userId })
@@ -88,12 +79,6 @@ public sealed class IdentityService(IGraphQLClientFactory graphQLClient, IMemory
         return decision;
     }
 
-    /// <summary>
-    /// Retrieves the username associated with the specified user ID.
-    /// </summary>
-    /// <param name="userId">The user ID.</param>
-    /// <param name="token">The cancellation token.</param>
-    /// <returns>The username.</returns>
     public Task<string> GetUserNameAsync(Guid userId, CancellationToken token)
     {
         var request = new GraphQLRequest
@@ -104,14 +89,6 @@ public sealed class IdentityService(IGraphQLClientFactory graphQLClient, IMemory
         return QueryAsync<string>(request, token);
     }
 
-    /// <summary>
-    /// Checks if the specified user is authorized to perform the specified action on the specified resource.
-    /// </summary>
-    /// <param name="userId">The user ID.</param>
-    /// <param name="resource">The resource.</param>
-    /// <param name="action">The action.</param>
-    /// <param name="token">The cancellation token.</param>
-    /// <returns>True if the user is authorized, otherwise false.</returns>
     public Task<bool> AuthorizeAsync(Guid userId, string resource, string action, CancellationToken token)
     {
         var request = new GraphQLRequest
@@ -122,14 +99,6 @@ public sealed class IdentityService(IGraphQLClientFactory graphQLClient, IMemory
         return QueryAsync<bool>(request, token);
     }
 
-    /// <summary>
-    /// Checks if the specified user is in the specified role for the specified resource and action.
-    /// </summary>
-    /// <param name="userId">The user ID.</param>
-    /// <param name="resource">The resource.</param>
-    /// <param name="action">The action.</param>
-    /// <param name="token">The cancellation token.</param>
-    /// <returns>True if the user is in the role, otherwise false.</returns>
     public Task<bool> IsInRoleAsync(Guid userId, string resource, string action, CancellationToken token)
     {
         var request = new GraphQLRequest
@@ -140,15 +109,6 @@ public sealed class IdentityService(IGraphQLClientFactory graphQLClient, IMemory
         return QueryAsync<bool>(request, token);
     }
 
-    /// <summary>
-    /// Combined role + policy authorization decision, evaluated by Security in a single call
-    /// and cached for the decision TTL. Used by the authorization pipeline.
-    /// </summary>
-    /// <param name="userId">The user ID.</param>
-    /// <param name="resource">The resource.</param>
-    /// <param name="action">The action.</param>
-    /// <param name="token">The cancellation token.</param>
-    /// <returns>True if the user is authorized, otherwise false.</returns>
     public Task<bool> AuthorizeUserAsync(Guid userId, string resource, string action, CancellationToken token)
         => GetOrCreateDecisionAsync($"authz:user:{userId}:{resource}:{action}", () =>
         {

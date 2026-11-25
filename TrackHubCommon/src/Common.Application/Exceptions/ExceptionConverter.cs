@@ -18,14 +18,11 @@ using HotChocolate;
 
 namespace Common.Application.Exceptions;
 
-// This class provides extension methods to convert different types of errors to IError objects
 public static class ExceptionConverter
 {
-    // Converts a collection of GraphQLError objects to an array of IError objects
     public static IError[] ConvertToIError(this IEnumerable<GraphQLError> graphQLError)
         => graphQLError.Select(error => error.ConvertToIError()).ToArray();
 
-    // Converts a GraphQLError object to an IError object
     public static IError ConvertToIError(this GraphQLError graphQLError)
     {
         var builder = ErrorBuilder.New()

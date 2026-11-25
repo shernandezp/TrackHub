@@ -16,24 +16,15 @@
 
 import type { TFunction } from 'i18next';
 
-/**
- * Generates WhatsApp share URL for location
- */
 export const getWhatsAppShareUrl = (lat: number, lng: number, name: string): string => {
     const message = encodeURIComponent(`${name} location: https://www.google.com/maps?q=${lat},${lng}`);
     return `https://wa.me/?text=${message}`;
 };
 
-/**
- * Generates Google Street View URL
- */
 export const getStreetViewUrl = (lat: number, lng: number): string => {
     return `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lng}`;
 };
 
-/**
- * Returns a localized relative time text (e.g. "5 min ago") for a date value.
- */
 export const getRelativeTimeText = (
     value: string | number | Date | null | undefined,
     t: TFunction

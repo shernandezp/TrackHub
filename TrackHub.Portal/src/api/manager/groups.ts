@@ -14,12 +14,7 @@
 *  limitations under the License.
 */
 
-/**
- * Group API (Manager backend): plain typed async functions. Failures THROW
- * ApiError — fallbacks and toasts belong to the caller layer (src/queries for
- * component reads; the allocator dialogs call the membership mutations directly
- * so they can preserve the legacy silent-delete semantics).
- */
+/** The allocator dialogs call the membership mutations directly to keep the silent-delete semantics. */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
 import type { RequestOptions } from 'api/core/errors';
@@ -66,11 +61,7 @@ export async function getGroups(params: ListParams = {}, options?: RequestOption
   return data.groupsByAccount;
 }
 
-/**
- * The account's groups as id + display name. Unpaged by design (the server
- * raises past its own ceiling rather than truncating) — for the dashboard group
- * filter, the POI form's group select and the POI table's groupId→name map.
- */
+/** Unpaged by design: the server raises past its own ceiling rather than truncating. */
 export async function getGroupLookup(options?: RequestOptions): Promise<GroupLookup[]> {
   const data = await executeGraphQL('manager', GetGroupLookupDocument, undefined, options);
   return data.groupLookup;
@@ -101,7 +92,6 @@ export async function updateGroup(
   return data.updateGroup;
 }
 
-/** Returns the id of the deleted group (schema: `deleteGroup: Long!`). */
 export async function deleteGroup(groupId: number): Promise<number> {
   const data = await executeGraphQL('manager', DeleteGroupDocument, { id: groupId });
   return data.deleteGroup;
@@ -122,9 +112,8 @@ export async function getUsersByGroup(
 }
 
 /**
- * Every member of a group, all server pages drained. There is no per-group user
- * lookup, and the allocator dialog subtracts this list from the account's users:
- * a truncated membership makes assigned users reappear as available.
+ * There is no per-group user lookup, and the allocator dialog subtracts this list from the
+ * account's users: a truncated membership makes assigned users reappear as available.
  */
 export async function getAllUsersByGroup(groupId: number, options?: RequestOptions): Promise<GroupUser[]> {
   return fetchAllPages(async (skip, take) => (await getUsersByGroup(groupId, { skip, take }, options)).items);
@@ -140,7 +129,6 @@ export async function createUserGroup(
   return data.createUserGroup;
 }
 
-/** Returns the id of the deleted membership (schema: `deleteUserGroup: UUID!`). */
 export async function deleteUserGroup(userId: string, groupId: number): Promise<string> {
   const data = await executeGraphQL('manager', DeleteUserGroupDocument, { userId, groupId });
   return data.deleteUserGroup;
@@ -156,7 +144,6 @@ export async function createTransporterGroup(
   return data.createTransporterGroup;
 }
 
-/** Returns the id of the deleted membership (schema: `deleteTransporterGroup: UUID!`). */
 export async function deleteTransporterGroup(
   transporterId: string,
   groupId: number

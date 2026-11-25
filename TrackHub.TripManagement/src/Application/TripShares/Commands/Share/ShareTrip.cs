@@ -21,17 +21,16 @@ namespace TrackHub.TripManagement.Application.TripShares.Commands.Share;
 /// <summary>
 /// Issues a public tracking link for a trip. The grant itself is created in Manager — a parallel
 /// link mechanism is forbidden, so token hashing, access counting and the audit event have exactly
-/// one implementation (spec 11 §18.10). Manager's <c>[RequireFeature(public-links)]</c> still
+/// one implementation. Manager's <c>[RequireFeature(public-links)]</c> still
 /// applies on top of this module's own gate.
 /// <para>
-/// The plaintext token is returned <b>once</b>, here, and is never re-readable afterwards
-/// (acceptance 23).
+/// The plaintext token is returned <b>once</b>, here, and is never re-readable afterwards.
 /// </para>
 /// </summary>
 [Authorize(Resource = Resources.Trips, Action = Actions.Custom)]
 [RequireFeature(FeatureKeys.TripManagement)]
 // Enforcement: the handler derives the caller's own account and passes it to the reader/writer,
-// which filters every row on it (TripVisibility is the single visibility resolver - spec 11).
+// which filters every row on it (TripVisibility is the single visibility resolver).
 [AccountScopeEnforcedInHandler]
 public readonly record struct ShareTripCommand(
     Guid TripId,

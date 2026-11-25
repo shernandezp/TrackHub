@@ -28,11 +28,6 @@ import { formatDateTime } from "utils/dateUtils";
 import { LoadingContext } from 'LoadingContext';
 import { getStringValue } from 'utils/booleanUtils';
 
-/**
- * Dialog/form state for a client. Merges an API {@link Client} (when editing)
- * with the create-only `secret` field; all fields are optional and the
- * requirement set is enforced by the dialog's validate() gate before save.
- */
 export interface ClientFormValues {
   clientId?: string;
   userId?: string | null;
@@ -43,10 +38,8 @@ export interface ClientFormValues {
   lastModified?: string;
 }
 
-/** Option row for the linked-user select. */
 export interface ClientUserOption { value: string; label: string; }
 
-/** A column descriptor / rendered row for the vendored clients `Table`. */
 export interface ClientTableColumn { name: string; title?: string; align?: "left" | "right" | "center"; }
 export type ClientTableRow = Record<string, ReactNode>;
 export interface ClientTableData { columns: ClientTableColumn[]; rows: ClientTableRow[]; }
@@ -74,7 +67,6 @@ function useClientsTableData(
     [usersQuery.data]
   );
 
-  // Keep the global spinner UX for the initial load / invalidation refetch.
   useEffect(() => {
     setLoading(clientsQuery.isFetching || usersQuery.isFetching);
   }, [clientsQuery.isFetching, usersQuery.isFetching, setLoading]);
@@ -82,7 +74,6 @@ function useClientsTableData(
   const onSave = async (client: ClientFormValues) => {
     setLoading(true);
     try {
-      // validate() gates this call; assert the required create/update fields.
       if (client.clientId) {
         await updateClient.mutateAsync({ clientId: client.clientId, userId: client.userId } as { clientId: string; userId: string });
       } else {

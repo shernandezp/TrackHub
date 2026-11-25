@@ -23,8 +23,8 @@ namespace TrackHub.Manager.Application.BackgroundJobs;
 
 /// <summary>
 /// Raises exactly one qualification alert per (qualification, expiry, threshold) across the 30/15/7/0-day
-/// bands (spec 09 §10). Idempotency lives in BackgroundJobRun, so a threshold is never re-notified,
-/// including across restarts. Qualification alerting is a `workforce` capability (AC6).
+/// bands. Idempotency lives in BackgroundJobRun, so a threshold is never re-notified, including
+/// across restarts. Qualification alerting is a `workforce` capability.
 /// </summary>
 public sealed class WorkforceExpirationJob(
     IAccountFeatureGate features,

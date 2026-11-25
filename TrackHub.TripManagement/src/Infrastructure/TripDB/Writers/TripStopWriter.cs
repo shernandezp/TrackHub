@@ -78,7 +78,7 @@ public sealed class TripStopWriter(IApplicationDbContext context) : ITripStopWri
         // immediately - otherwise detection would never fire for it (the bulk snapshot has passed).
         //
         // "Watching" is armed OR started, not just started. Paused counts because Resume does not
-        // re-snapshot; ARMED counts because arming now takes the bulk snapshot for a Created trip,
+        // re-snapshot; ARMED counts because arming takes the bulk snapshot for a Created trip,
         // and a stop added afterwards would otherwise be the one stop on the route with no geometry.
         if (IsWatched(trip))
         {
@@ -118,12 +118,10 @@ public sealed class TripStopWriter(IApplicationDbContext context) : ITripStopWri
         // Re-snapshot only while the snapshot is still live for this stop; a stop already Arrived
         // keeps the geometry its arrival was judged against.
         //
-        // Keyed on the TRIP being watched, not on ArrivalGeom already being non-null. The old
-        // condition could only ever refresh a geometry that existed, so a stop left null-geometry
-        // (see AddStopAsync) stayed undetectable no matter how many times it was edited — editing
-        // was the one obvious way a dispatcher would have tried to fix it.
+        // Keyed on the TRIP being watched, not on ArrivalGeom already being non-null, so a stop left
+        // null-geometry (see AddStopAsync) becomes detectable again when a dispatcher edits it.
         //
-        // ARMED counts as watched: a Created trip carries a snapshot from arming now, and the
+        // ARMED counts as watched: a Created trip carries a snapshot from arming, and the
         // start-time fill only touches NULL geometries — so moving a stop on an armed trip would
         // otherwise leave detection judging arrivals against the place the stop used to be.
         if (string.Equals(entity.Status, TripStopStatuses.Pending, StringComparison.Ordinal))
@@ -148,7 +146,7 @@ public sealed class TripStopWriter(IApplicationDbContext context) : ITripStopWri
         var entity = await FindAsync(tripStopId, accountId, null, cancellationToken);
         await TripEditGuard.EnsureEditableAsync(context, entity.TripId, accountId, cancellationToken);
 
-        // An Arrived or Departed stop is recorded history and cannot be removed (spec 11 7.3).
+        // An Arrived or Departed stop is recorded history and cannot be removed.
         if (!string.Equals(entity.Status, TripStopStatuses.Pending, StringComparison.Ordinal))
         {
             throw ConflictException.WithCode(TripErrorCodes.StopAlreadyDeparted);
@@ -246,9 +244,7 @@ public sealed class TripStopWriter(IApplicationDbContext context) : ITripStopWri
         // stop that has not - a reorder can never rewrite history.
         //
         // The rule is "no progressed stop may appear AFTER an unprogressed one", so the only
-        // state needed is whether an unprogressed stop has been seen yet. The previous version
-        // tracked `lastClosedIndex` and tested `i < lastClosedIndex`, which is unsatisfiable for
-        // an ascending loop index - the guard could never throw for any input.
+        // state needed is whether an unprogressed stop has been seen yet.
         var seenUnprogressedIndex = -1;
         for (var i = 0; i < ordered.Count; i++)
         {
@@ -346,12 +342,12 @@ public sealed class TripStopWriter(IApplicationDbContext context) : ITripStopWri
 
         // IDEMPOTENCY IS CHECKED BEFORE THE TRANSITION GUARD, and the order is the whole point.
         //
-        // The guard used to run first, so a replayed arrival threw STOP_ALREADY_DEPARTED once the
-        // stop had moved on. That is exactly what spec 10's offline outbox produces: a staff
+        // Otherwise a replayed arrival would throw STOP_ALREADY_DEPARTED once the
+        // stop had moved on, which is exactly what an offline outbox produces: a staff
         // captures arrival and departure with no signal, the departure syncs first (or the arrival
         // is retried after both landed), and the queued arrival then fails permanently with an
-        // error the device can only surface as a hard failure. Acceptance 15 requires a duplicate
-        // to be a SUCCESS with no second row — a state guard must never fire on an event the
+        // error the device can only surface as a hard failure. A duplicate must
+        // be a SUCCESS with no second row — a state guard must never fire on an event the
         // server has already accepted.
         if (await context.TripEvents.AnyAsync(
                 e => e.AccountId == accountId && e.IdempotencyKey == idempotencyKey, cancellationToken))
@@ -378,7 +374,7 @@ public sealed class TripStopWriter(IApplicationDbContext context) : ITripStopWri
         };
 
         // Timestamps once written are NEVER overwritten by a later detection or manual override
-        // (acceptance 12). The status still advances; only the first recorded instant survives.
+        // — the status still advances; only the first recorded instant survives.
         switch (toStatus)
         {
             case TripStopStatuses.Arrived:
@@ -420,7 +416,7 @@ public sealed class TripStopWriter(IApplicationDbContext context) : ITripStopWri
         }
         catch (DbUpdateException exception) when (UniqueViolation.Matches(exception, "ux_trip_events_idempotencykey"))
         {
-            // Duplicate submission: report "nothing written" without a second row (acceptance 15).
+            // Duplicate submission: report "nothing written" without a second row.
             //
             // Both the dead insert AND the status/timestamp mutations must be dropped from the
             // change tracker. The context is scoped to the request: leaving them tracked makes the
@@ -578,10 +574,10 @@ public sealed class TripStopWriter(IApplicationDbContext context) : ITripStopWri
     }
 
     /// <summary>
-    /// Stop progression is <c>Pending → Arrived → Departed</c>, or <c>Pending → Skipped</c>
-    /// (acceptance 12). Re-submitting the status the stop already holds is NOT a conflict: that is
+    /// Stop progression is <c>Pending → Arrived → Departed</c>, or <c>Pending → Skipped</c>.
+    /// Re-submitting the status the stop already holds is NOT a conflict: that is
     /// the idempotent retry path, and the unique idempotency index — not this guard — is what makes
-    /// it a no-op (acceptance 15).
+    /// it a no-op.
     /// </summary>
     private static void GuardStopTransition(string fromStatus, string toStatus)
     {

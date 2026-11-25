@@ -21,9 +21,8 @@ import ArgonTypography from 'components/ArgonTypography';
 import type { ServiceState } from 'api/core/healthProbe';
 
 export interface ServiceTileProps {
-  /** Plain-language service name, already localized (never a codename — ST-08). */
+  /** Plain-language service name, already localized (never a codename). */
   name: string;
-  /** One-line description of what the service does for the user. */
   description: string;
   state: ServiceState;
   /** Optional technical detail line (e.g. "reachable, database not"). */

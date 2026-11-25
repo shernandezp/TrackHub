@@ -1,11 +1,6 @@
 /**
- * Locale-aware selector helper.
- *
- * Every visible string in the portal comes from `src/locales/{en,es}.json` deep-merged
- * with `src/edition/locales/{en,es}.json`, so a
- * test that selects by accessible NAME has to resolve the same key the component
- * rendered. Resolving through the real bundles is what lets one test body run in
- * both languages (`chromium` vs `chromium-es`) instead of duplicating selectors.
+ * Selectors resolve through the real locale bundles so one test body runs in
+ * both languages (`chromium` vs `chromium-es`).
  */
 
 import en from '../../src/locales/en.json';
@@ -16,9 +11,8 @@ import editionEs from '../../src/edition/locales/es.json';
 export type Language = 'en' | 'es';
 
 /**
- * The same deep merge `src/index.tsx` performs. Without it every key an edition
- * bundle adds or overrides resolves to the core value — or throws as unknown — and
- * the selector then looks for a string the screen never rendered.
+ * Mirrors the deep merge in `src/index.tsx`; without it edition keys resolve to
+ * the core value and the selector looks for a string the screen never rendered.
  */
 function mergeTranslations(core: unknown, edition: unknown): unknown {
   if (core === null || edition === null || typeof core !== 'object' || typeof edition !== 'object') {
@@ -36,7 +30,6 @@ export const BUNDLES: Record<Language, unknown> = {
   es: mergeTranslations(es, editionEs),
 };
 
-/** The language the current Playwright project drives the UI in. */
 export const activeLanguage = (): Language =>
   (process.env.E2E_LANG === 'es' ? 'es' : 'en');
 
@@ -58,9 +51,8 @@ function interpolate(template: string, vars?: Record<string, string | number>): 
 }
 
 /**
- * Resolves a translation key for a language, falling back to English exactly as
- * i18next does (`fallbackLng: 'en'`). Throws on an unknown key: a silently
- * missing string would turn into a selector that can never match.
+ * Falls back to English like i18next (`fallbackLng: 'en'`). Throws on an unknown
+ * key: a silently missing string would make a selector that can never match.
  */
 export function translate(
   key: string,
@@ -76,14 +68,9 @@ export function translate(
 
 export type Translator = (key: string, vars?: Record<string, string | number>) => string;
 
-/** A translator bound to one language. */
 export const translatorFor = (language: Language): Translator =>
   (key, vars) => translate(key, language, vars);
 
-/**
- * Every leaf key in a bundle, `a.b.c` form. Used by the i18n spec to prove no raw
- * key leaked into rendered text.
- */
 export function allKeys(language: Language = 'en'): string[] {
   const keys: string[] = [];
   const walk = (node: unknown, prefix: string): void => {

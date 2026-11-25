@@ -35,7 +35,6 @@ export function announcementText(announcement: LocalizableAnnouncement, language
   return announcement.messageEn;
 }
 
-/** Severity → MUI Alert severity (Info=blue, Warning=amber, Critical=red). */
 export function severityToMuiSeverity(severity: AnnouncementSeverity): 'info' | 'warning' | 'error' {
   switch (severity) {
     case 'WARNING':

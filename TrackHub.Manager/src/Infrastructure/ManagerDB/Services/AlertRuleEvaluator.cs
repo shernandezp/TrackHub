@@ -27,8 +27,8 @@ public sealed class AlertRuleEvaluator(IApplicationDbContext context, ILogger<Al
             return 0;
         }
 
-        // Suspended accounts still record baseline alert events but get no notification fan-out
-        //. A missing account row (in-memory tests) is not treated as suspended.
+        // Suspended accounts still record baseline alert events but get no notification fan-out.
+        // A missing account row (in-memory tests) is not treated as suspended.
         if (await context.Accounts.AnyAsync(a => a.AccountId == alertEvent.AccountId && !a.Active, cancellationToken))
         {
             return 0;

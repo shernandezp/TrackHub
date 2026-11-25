@@ -85,7 +85,6 @@ public class ValueObjectTests
     [Fact]
     public void EqualOperator_BothNull_ReturnsTrue()
     {
-        // Use reflection to test static protected method
         var method = typeof(ValueObject).GetMethod("EqualOperator",
             System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
         var result = (bool)method!.Invoke(null, [null, null])!;

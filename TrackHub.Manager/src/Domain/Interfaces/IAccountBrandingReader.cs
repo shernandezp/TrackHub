@@ -17,14 +17,9 @@ namespace TrackHub.Manager.Domain.Interfaces;
 
 public interface IAccountBrandingReader
 {
-    /// <summary>
-    /// Returns the account's branding, or platform-default branding when no row exists.
-    /// </summary>
+    /// <summary>Platform-default branding when no row exists.</summary>
     Task<AccountBrandingVm> GetBrandingAsync(Guid accountId, CancellationToken cancellationToken);
 
-    /// <summary>
-    /// True when <paramref name="documentId"/> references a Manager <c>Document</c> owned by
-    /// <paramref name="accountId"/> with owner type <c>AccountBranding</c> (branding logo asset).
-    /// </summary>
+    /// <summary>True when the document is this account's <c>AccountBranding</c>-owned logo asset.</summary>
     Task<bool> LogoDocumentBelongsToAccountAsync(Guid accountId, Guid documentId, CancellationToken cancellationToken);
 }

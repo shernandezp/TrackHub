@@ -19,24 +19,14 @@ namespace TrackHub.Security.Infrastructure.Readers;
 
 public sealed class RoleReader(IApplicationDbContext context) : IRoleReader
 {
-    // Get a role by name
-    // param name: The name of the role
-    // param cancellationToken: A token to cancel the operation
-    // returns: A RoleVm object
     public async Task<RoleVm> GetRoleAsync(string name, CancellationToken cancellationToken)
         => await context.Roles
             .Where(r => r.Name == name)
             .Select(r => new RoleVm(r.RoleId, r.Name))
             .FirstAsync(cancellationToken);
 
-    // Get all roles the caller is entitled to see
-    // param includeAdministrator: Whether the Administrator role belongs in the result
-    // param cancellationToken: A token to cancel the operation
-    // returns: A collection of RoleVm objects
-    //
-    // The Administrator exclusion is applied in SQL rather than over a materialized list: post-fetch
-    // filtering in the handler is what makes any windowed read ragged, and it also pulled back a row
-    // the caller was never entitled to.
+    // The Administrator exclusion is applied in SQL: post-fetch filtering would make any windowed
+    // read ragged.
     public async Task<IReadOnlyCollection<RoleVm>> GetRolesAsync(bool includeAdministrator, CancellationToken cancellationToken)
         => await context.Roles
             .Where(r => includeAdministrator || r.Name != Common.Domain.Constants.Roles.Administrator)
@@ -45,10 +35,6 @@ public sealed class RoleReader(IApplicationDbContext context) : IRoleReader
             .Select(r => new RoleVm(r.RoleId, r.Name))
             .ToListAsync(cancellationToken);
 
-    // Get all resources with their actions for a role
-    // param roleId: The id of the role
-    // param cancellationToken: A token to cancel the operation
-    // returns: A RoleResourceVm object
     public async Task<RoleResourceVm> GetResourcesAsync(int roleId, CancellationToken cancellationToken)
         => await context.Roles
             .Where(r => r.RoleId == roleId)

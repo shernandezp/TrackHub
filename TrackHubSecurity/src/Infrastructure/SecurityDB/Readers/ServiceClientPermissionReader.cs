@@ -41,15 +41,12 @@ public sealed class ServiceClientPermissionReader(IApplicationDbContext context)
                 x.AllowCrossAccount))
             .ToListAsync(cancellationToken);
 
-    // Account matching, explicit (replaces the old "NULL AccountId matches anything" wildcard):
+    // Account matching:
     //   * AllowCrossAccount        -> a declared platform-wide grant; matches any token account.
     //   * AccountId == token account -> the grant is bound to exactly that tenant.
     //   * both NULL                -> an unscoped grant used by an unscoped token; no tenant is
     //                                 being crossed, so nothing to restrict here (the request's own
     //                                 AccountId is policed by Common's AccountScopeBehavior).
-    // A grant bound to account A can no longer be exercised by a token for account B, and an
-    // unbound grant can no longer be exercised by an account-bearing token that never declared
-    // cross-account reach.
     public async Task<bool> HasPermissionAsync(string clientId, string resource, string action, Guid? accountId, IReadOnlyCollection<string> scopes, IReadOnlyCollection<string> audiences, CancellationToken cancellationToken)
     {
         var now = DateTimeOffset.UtcNow;

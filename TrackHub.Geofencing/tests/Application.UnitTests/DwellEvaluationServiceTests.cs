@@ -31,7 +31,6 @@ public class DwellEvaluationServiceTests
     [SetUp]
     public void SetUp()
     {
-        // Create fresh mocks per test to ensure isolation
         _geofenceEventReaderMock = new Mock<IGeofenceEventReader>();
         _geofenceEventWriterMock = new Mock<IGeofenceEventWriter>();
         _alertEmitterMock = new Mock<IAlertEmitter>();
@@ -103,8 +102,6 @@ public class DwellEvaluationServiceTests
             It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
-    // ----- DwellThresholdMinutes: both sides of the boundary -------------------------------------
-    //
     // The guard is `EventDateTime + threshold > now -> skip`, so the threshold is inclusive: a visit
     // whose elapsed time has just reached it alerts. Cases two hours away from the line pass even
     // with the comparison deleted; these sit one minute either side of it.

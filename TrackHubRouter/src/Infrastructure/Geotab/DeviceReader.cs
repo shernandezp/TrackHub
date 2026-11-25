@@ -22,7 +22,6 @@ using TrackHub.Router.Domain.Extensions;
 
 namespace TrackHub.Router.Infrastructure.Geotab;
 
-// This class represents a device reader that retrieves device information from the Geotab API
 public sealed class DeviceReader(IProviderSessionStore sessionStore)
     : GeotabReaderBase(sessionStore), IExternalDeviceReader
 {
@@ -34,7 +33,6 @@ public sealed class DeviceReader(IProviderSessionStore sessionStore)
         return DeviceMapper.Instance.Map(device!, deviceDto);
     }
 
-    // Retrieves a single device asynchronously
     public async Task<IEnumerable<DeviceVm>> GetDevicesAsync(IEnumerable<DeviceTransporterVm> devices, CancellationToken cancellationToken)
     {
         var deviceSearch = new DeviceSearch
@@ -51,7 +49,6 @@ public sealed class DeviceReader(IProviderSessionStore sessionStore)
         return DeviceMapper.Instance.Map(result, devicesDictionary);
     }
 
-    // Retrieves multiple devices asynchronously
     public async Task<IEnumerable<DeviceVm>> GetDevicesAsync(CancellationToken cancellationToken)
     {
         var devices = await Api.CallAsync<IEnumerable<Device>>("Get", typeof(Device), cancellationToken);

@@ -22,7 +22,6 @@ public readonly record struct UpdateAccountSettingsCommand(AccountSettingsDto Ac
 
 public class UpdateAccountSettingsCommandHandler(IAccountSettingsWriter writer) : IRequestHandler<UpdateAccountSettingsCommand>
 {
-    // Handles the update account settings command
     public async Task Handle(UpdateAccountSettingsCommand request, CancellationToken cancellationToken)
         => await writer.UpdateAccountSettingsAsync(request.AccountSettings, cancellationToken);
 }

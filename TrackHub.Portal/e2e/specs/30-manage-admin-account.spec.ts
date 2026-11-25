@@ -1,8 +1,3 @@
-/**
- * Account Management → Account & Subscription: the account record, its branding
- * and the read-only feature entitlements.
- */
-
 import { test, expect, unique } from '../fixtures';
 import { CrudFlow } from '../pages/crud';
 import { Section } from '../pages/tableAccordion';

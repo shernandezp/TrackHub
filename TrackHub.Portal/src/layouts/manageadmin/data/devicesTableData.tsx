@@ -27,7 +27,6 @@ import type { ListParams } from 'api/core/paging';
 import { LoadingContext } from 'LoadingContext';
 import { useAuth } from "AuthContext";
 
-/** A column descriptor / rendered row for the vendored devices `Table`. */
 export interface DeviceTableColumn { name: string; title?: string; align?: "left" | "right" | "center"; }
 export type DeviceTableRow = Record<string, ReactNode>;
 export interface DeviceTableData { columns: DeviceTableColumn[]; rows: DeviceTableRow[]; }
@@ -47,7 +46,6 @@ function useDeviceTableData(
   const totalCount = devicesQuery.data?.totalCount ?? 0;
   const deleteDevice = useDeleteDevice();
 
-  // Keep the global spinner UX for the initial load / invalidation refetch.
   useEffect(() => {
     setLoading(devicesQuery.isFetching);
   }, [devicesQuery.isFetching, setLoading]);

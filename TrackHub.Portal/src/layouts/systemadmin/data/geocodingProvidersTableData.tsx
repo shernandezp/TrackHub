@@ -37,12 +37,6 @@ import { getGeocodingProviderType } from "data/geocodingProviderTypes";
 import { toCamelCase } from 'utils/stringUtils';
 import { LoadingContext } from 'LoadingContext';
 
-/**
- * Dialog/form state for a geocoding provider. Merges an API
- * {@link GeocodingProvider} (when editing) with fresh-add defaults; all fields
- * are optional and the requirement set is enforced by the dialog's validate()
- * gate before save.
- */
 export interface GeocodingProviderFormValues {
   geocodingProviderId?: string;
   name?: string;
@@ -55,7 +49,6 @@ export interface GeocodingProviderFormValues {
   active?: boolean;
 }
 
-/** A column descriptor / rendered row for the vendored providers `Table`. */
 export interface GeocodingProviderTableColumn { name: string; title?: string; align?: "left" | "right" | "center"; }
 export type GeocodingProviderTableRow = Record<string, ReactNode>;
 export interface GeocodingProviderTableData { columns: GeocodingProviderTableColumn[]; rows: GeocodingProviderTableRow[]; }
@@ -77,7 +70,6 @@ function useGeocodingProvidersTableData(
   const deleteProvider = useDeleteGeocodingProvider();
   const activateProvider = useSetActiveGeocodingProvider();
 
-  // Keep the global spinner UX for the initial load / invalidation refetch.
   useEffect(() => {
     setLoading(providersQuery.isFetching);
   }, [providersQuery.isFetching, setLoading]);
@@ -85,8 +77,6 @@ function useGeocodingProvidersTableData(
   const onSave = async (provider: GeocodingProviderFormValues) => {
     setLoading(true);
     try {
-      // validate(['name','type','endpointUri']) gates this; assert the required
-      // create/update input fields at the boundary.
       if (provider.geocodingProviderId) {
         await updateProvider.mutateAsync({
           geocodingProviderId: provider.geocodingProviderId,

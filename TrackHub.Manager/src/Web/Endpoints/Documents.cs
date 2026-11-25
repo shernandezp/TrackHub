@@ -13,9 +13,8 @@ using TrackHub.Manager.Infrastructure.ManagerDB.Storage;
 
 namespace TrackHub.Manager.Web.Endpoints;
 
-// File-byte surfaces for documents. Metadata still flows through GraphQL; these REST
-// endpoints stream/redirect bytes. Authorization is enforced by the dispatched commands/queries
-// (User/Staff/ServiceClient) except the anonymous token-validated public download.
+// Metadata flows through GraphQL; these endpoints stream/redirect bytes. Authorization is enforced
+// by the dispatched commands/queries, except the anonymous token-validated public download.
 public sealed class Documents : Common.Web.Infrastructure.EndpointGroupBase
 {
     public override void Map(WebApplication app)
@@ -28,8 +27,6 @@ public sealed class Documents : Common.Web.Infrastructure.EndpointGroupBase
         app.MapGet("~/documents/public/{publicLinkGrantId:guid}", PublicDownload);
     }
 
-    // POST ~/documents/upload — multipart. User or Staff. Streams to storage under a server-generated
-    // key while computing SHA-256, creates the document Quarantined, and returns the redacted VM.
     public static async Task<IResult> Upload(HttpRequest request, ISender sender, IDocumentStorage storage, IUser user, ApplicationDbContext context, CancellationToken cancellationToken)
     {
         if (!request.HasFormContentType)
@@ -49,7 +46,7 @@ public sealed class Documents : Common.Web.Infrastructure.EndpointGroupBase
             return Results.BadRequest($"File exceeds the {DocumentLimits.DefaultMaxBytes / (1024 * 1024)} MB limit.");
         }
 
-        // From the principal only. Falling back to a form field let the caller name the tenant.
+        // From the principal only: a form field would let the caller name the tenant.
         var accountId = user.AccountId;
         if (accountId is null || accountId == Guid.Empty)
         {
@@ -104,7 +101,6 @@ public sealed class Documents : Common.Web.Infrastructure.EndpointGroupBase
         }
     }
 
-    // POST ~/documents/{id}/versions — multipart. User (Documents/Edit). Streams new bytes then re-points.
     public static async Task<IResult> UploadVersion(Guid documentId, HttpRequest request, ISender sender, IDocumentStorage storage, CancellationToken cancellationToken)
     {
         if (!request.HasFormContentType)
@@ -149,8 +145,6 @@ public sealed class Documents : Common.Web.Infrastructure.EndpointGroupBase
         }
     }
 
-    // GET ~/documents/{id}/download — User/Staff/ServiceClient. Authorization + scan gate enforced by
-    // the query + reader. S3 → 302 presigned; local FS → stream with Content-Disposition.
     public static async Task<IResult> Download(Guid documentId, ISender sender, IDocumentStorage storage, ApplicationDbContext context, IUser user, CancellationToken cancellationToken)
     {
         var vm = await sender.Send(new GetDocumentQuery(documentId), cancellationToken);
@@ -161,14 +155,11 @@ public sealed class Documents : Common.Web.Infrastructure.EndpointGroupBase
 
         if (vm.Status == DocumentStatuses.Uploaded || !DocumentScanStatuses.IsServable(vm.ScanStatus))
         {
-            // Quarantined, infected or failed bytes are undownloadable.
             return Results.StatusCode(StatusCodes.Status403Forbidden);
         }
 
-        // The scan verdict that matters is the CURRENT VERSION's — those are the bytes about to be
-        // served. The document-level column is a denormalisation of it and is checked above; this
-        // second read is the authoritative one, so a document row whose verdict disagrees with its
-        // current version (however it got that way) cannot serve unscanned or infected bytes.
+        // The authoritative verdict is the CURRENT VERSION's (the bytes about to be served); the
+        // document-level column is only a denormalisation of it.
         var target = await context.Documents
             .Where(x => x.DocumentId == documentId)
             .Select(x => new
@@ -193,7 +184,6 @@ public sealed class Documents : Common.Web.Infrastructure.EndpointGroupBase
 
         var storageKey = target.StorageKey;
 
-        // Sensitive-classification downloads are audited.
         if (DocumentClassifications.IsSensitive(vm.Classification))
         {
             context.AuditEvents.Add(new AuditEvent(vm.AccountId, user.PrincipalType.ToString(), ActorId(user), "DownloadDocument", "Document", documentId.ToString(), "Succeeded", null, $$"""{"classification":"{{vm.Classification}}"}""", null, null, null, user.CorrelationId));
@@ -210,7 +200,6 @@ public sealed class Documents : Common.Web.Infrastructure.EndpointGroupBase
         return Results.File(stream, vm.ContentType, vm.FileName);
     }
 
-    // GET ~/documents/public/{grantId}?token=… — anonymous, token-validated share.
     public static async Task<IResult> PublicDownload(Guid publicLinkGrantId, Guid accountId, string resourceId, string token, ApplicationDbContext context, IDocumentStorage storage, CancellationToken cancellationToken)
     {
         if (accountId == Guid.Empty || string.IsNullOrWhiteSpace(resourceId) || string.IsNullOrWhiteSpace(token))
@@ -244,9 +233,7 @@ public sealed class Documents : Common.Web.Infrastructure.EndpointGroupBase
             return Results.NotFound();
         }
 
-        // Same authoritative check as the authenticated Download path — and it matters more here,
-        // because this route is anonymous: a public link is exactly how infected bytes would reach
-        // someone outside the account.
+        // Same authoritative current-version check as Download; it matters more on this anonymous route.
         var publicVersionScanStatus = await context.DocumentVersions
             .Where(v => v.DocumentId == document.DocumentId && v.VersionNumber == document.CurrentVersion)
             .Select(v => v.ScanStatus)

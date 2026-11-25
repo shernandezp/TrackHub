@@ -17,7 +17,7 @@ namespace TrackHub.TripManagement.Domain.Interfaces;
 
 /// <summary>
 /// Reads Geofencing's recorded visit history so a trip created AFTER its vehicle already left can be
-/// built from measurements instead of guesses (spec 11a §5.4).
+/// built from measurements instead of guesses.
 /// <para>
 /// This is the only place trip management looks at another module's event history, and it is
 /// strictly read-only: the trip module replays what Geofencing observed, it never asserts anything

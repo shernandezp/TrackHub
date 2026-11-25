@@ -150,7 +150,6 @@ function ManageAlertSubscriptions() {
     if (!validate(['principalType', 'principalId', 'channel']) || !validateExtra() || !account?.accountId) return;
     setLoading(true);
     try {
-      // validate() gates the required fields; assert the mutation input at the boundary.
       const subscription = {
         accountId: account.accountId,
         principalType: values.principalType,
@@ -170,7 +169,6 @@ function ManageAlertSubscriptions() {
       setOpen(false);
       await loadSubscriptions();
     } catch (error) {
-      // Keep the dialog open on failure so the user can retry without re-entering.
       notifyApiError(error);
     } finally {
       setLoading(false);

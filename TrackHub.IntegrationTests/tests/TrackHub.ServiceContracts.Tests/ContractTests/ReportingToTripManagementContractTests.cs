@@ -22,7 +22,7 @@ using TrackHub.ServiceContracts.Tests.Harness;
 
 namespace TrackHub.ServiceContracts.Tests.ContractTests;
 
-// The four report feeds Reporting drains from TripManagement for the spec 11 §13 reports
+// The four report feeds Reporting drains from TripManagement for the trip reports
 // (trip summary/detail, on-time, dwell, toll cost, POD export), validated against
 // TripManagement's real, in-process-built schema.
 [TestFixture]

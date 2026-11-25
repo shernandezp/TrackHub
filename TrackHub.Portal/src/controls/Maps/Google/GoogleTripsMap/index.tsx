@@ -82,7 +82,6 @@ const GoogleTripsMap = ({
 
   const toPath = (trip: MapTrip) => trip.coordinates.map(coord => ({ lat: coord[0], lng: coord[1] }));
 
-    // Center in selected polyline
   useEffect(() => {
     if (mapRef.current && selectedTrip) {
       const selectedTripData = trips.find(trip => trip.id === selectedTrip);
@@ -96,7 +95,6 @@ const GoogleTripsMap = ({
     }
   }, [selectedTrip, trips]);
 
-  // center the map on the bounds of the trips
   useEffect(() => {
     if (mapRef.current && trips.length > 0) {
       const bounds = new window.google.maps.LatLngBounds();

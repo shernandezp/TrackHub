@@ -56,7 +56,6 @@ function UserAllocatorDialog({ open, setOpen, groupId }: UserAllocatorDialogProp
     setUser(null);
   };
 
-  // Keep the global spinner UX while the membership list loads.
   useEffect(() => {
     setLoading(assignedUsersQuery.isFetching);
   }, [assignedUsersQuery.isFetching, setLoading]);
@@ -65,7 +64,6 @@ function UserAllocatorDialog({ open, setOpen, groupId }: UserAllocatorDialogProp
     if (!user) return;
     setLoading(true);
     try {
-      // createUserGroup surfaces failures via the global toast (legacy handleError).
       await createUserGroup(user.value, groupId);
     } catch (e) {
       notifyApiError(e);
@@ -76,7 +74,6 @@ function UserAllocatorDialog({ open, setOpen, groupId }: UserAllocatorDialogProp
 
   const handleDelete = async (selectedRows: number[]) => {
     setLoading(true);
-    // deleteUserGroup keeps the legacy silent semantics (handleSilentError).
     const deletePromises = selectedRows.map(index =>
       deleteUserGroup(data[index].userId, groupId).catch(() => undefined));
     await Promise.all(deletePromises);

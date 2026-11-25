@@ -21,8 +21,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Common.Web.Infrastructure;
 
-// CustomExceptionHandler class implements the IExceptionHandler interface
-// to handle exceptions and return appropriate HTTP responses.
 public class CustomExceptionHandler : IExceptionHandler
 {
     internal const string DuplicateMessage = "A record with the same values already exists.";
@@ -32,7 +30,6 @@ public class CustomExceptionHandler : IExceptionHandler
 
     public CustomExceptionHandler()
     {
-        // Register known exception types and their corresponding handlers.
         _exceptionHandlers = new()
             {
                 { typeof(ValidationException), HandleValidationException },
@@ -46,12 +43,10 @@ public class CustomExceptionHandler : IExceptionHandler
             };
     }
 
-    // TryHandleAsync method attempts to handle the exception by invoking the appropriate handler based on the exception type.
-    // It returns true if the exception was handled successfully, otherwise false.
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
-        // Walking the hierarchy rather than matching the exact type, so a subclass of a mapped
-        // exception keeps its contract instead of falling through to a 500.
+        // Walk the hierarchy so a subclass of a mapped exception keeps its contract instead of falling
+        // through to a 500.
         for (var type = exception.GetType(); type is not null; type = type.BaseType)
         {
             if (_exceptionHandlers.TryGetValue(type, out Func<HttpContext, Exception, Task>? value))
@@ -73,7 +68,6 @@ public class CustomExceptionHandler : IExceptionHandler
             return true;
         }
 
-        // Fallback: return 500 for any unhandled exception type
         httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
         await httpContext.Response.WriteAsJsonAsync(new ProblemDetails
@@ -86,7 +80,6 @@ public class CustomExceptionHandler : IExceptionHandler
         return true;
     }
 
-    // HandleConflictException handles ConflictException by setting the response status code to 409 (Conflict).
     private async Task HandleConflictException(HttpContext httpContext, Exception ex)
     {
         httpContext.Response.StatusCode = StatusCodes.Status409Conflict;
@@ -99,7 +92,6 @@ public class CustomExceptionHandler : IExceptionHandler
         });
     }
 
-    // HandleAccountSuspendedException handles AccountSuspendedException by setting the response status code to 403 (Forbidden).
     private async Task HandleAccountSuspendedException(HttpContext httpContext, Exception ex)
     {
         var exception = (AccountSuspendedException)ex;
@@ -114,8 +106,8 @@ public class CustomExceptionHandler : IExceptionHandler
         });
     }
 
-    // HandleFeatureDisabledException mirrors the GraphQL filter's FEATURE_DISABLED contract, so a
-    // REST caller can tell "not entitled" from "server broken".
+    // Mirrors the GraphQL filter's FEATURE_DISABLED contract, so a REST caller can tell "not entitled"
+    // from "server broken".
     private async Task HandleFeatureDisabledException(HttpContext httpContext, Exception ex)
     {
         var exception = (FeatureDisabledException)ex;
@@ -134,8 +126,6 @@ public class CustomExceptionHandler : IExceptionHandler
         await httpContext.Response.WriteAsJsonAsync(problem);
     }
 
-    // HandleValidationException method handles the ValidationException by setting the response status code to 400 (Bad Request)
-    // and returning a ValidationProblemDetails object as JSON response.
     private async Task HandleValidationException(HttpContext httpContext, Exception ex)
     {
         var exception = (ValidationException)ex;
@@ -149,8 +139,6 @@ public class CustomExceptionHandler : IExceptionHandler
         });
     }
 
-    // HandleNotFoundException method handles the NotFoundException by setting the response status code to 404 (Not Found)
-    // and returning a ProblemDetails object as JSON response.
     private async Task HandleNotFoundException(HttpContext httpContext, Exception ex)
     {
         var exception = (NotFoundException)ex;
@@ -166,8 +154,6 @@ public class CustomExceptionHandler : IExceptionHandler
         });
     }
 
-    // HandleUnauthorizedAccessException method handles the UnauthorizedAccessException by setting the response status code to 401 (Unauthorized)
-    // and returning a ProblemDetails object as JSON response.
     private async Task HandleUnauthorizedAccessException(HttpContext httpContext, Exception ex)
     {
         httpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
@@ -180,8 +166,6 @@ public class CustomExceptionHandler : IExceptionHandler
         });
     }
 
-    // HandleForbiddenAccessException method handles the ForbiddenAccessException by setting the response status code to 403 (Forbidden)
-    // and returning a ProblemDetails object as JSON response.
     private async Task HandleForbiddenAccessException(HttpContext httpContext, Exception ex)
     {
         var exception = (ForbiddenAccessException)ex;
@@ -196,8 +180,6 @@ public class CustomExceptionHandler : IExceptionHandler
         });
     }
 
-    // HandleTooManyRequestsException method handles the TooManyRequestsException by setting the response status code to 429 (Too Many Requests)
-    // and returning a ProblemDetails object as JSON response with Retry-After header.
     private async Task HandleTooManyRequestsException(HttpContext httpContext, Exception ex)
     {
         var exception = (TooManyRequestsException)ex;

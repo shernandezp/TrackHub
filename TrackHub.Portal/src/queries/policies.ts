@@ -14,13 +14,7 @@
 *  limitations under the License.
 */
 
-/**
- * Policy query/mutation hooks (Security backend). Components consume these —
- * not the api layer directly. Loading/error state comes from the hooks;
- * failures also surface in the global toast via the query client's handlers.
- * The resource/action assignment mutations stay outside this layer: their old
- * callers swallowed errors silently and drive local checkbox state directly.
- */
+/** The resource/action assignment mutations stay outside this layer: their callers swallow errors and drive local checkbox state. */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from 'api/security/policies';

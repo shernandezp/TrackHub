@@ -15,12 +15,12 @@
 
 namespace TrackHub.Reporting.Domain.Models;
 
-// Row VMs for the six spec 11 §13 trip reports.
+// Row VMs for the six trip reports.
 // Property order = Excel/PDF column order; property name = resx header key (all three Resources*.resx).
 
 // The measured columns sit beside the planned/actual ones rather than replacing them: the point of
 // the report is the comparison. LoadingMinutes/TransitMinutes/TotalMinutes are what answer "how long
-// did loading, transit and the whole trip actually take" (spec 11a §13).
+// did loading, transit and the whole trip actually take".
 public readonly record struct TripSummaryRowVm(
     string TripCode, [property: ReportValues("TripStatus")] string TripStatus, string TransporterName, string StaffName,
     DateTimeOffset PlannedStartAt, DateTimeOffset? ActualStartAt,
@@ -54,13 +54,13 @@ public readonly record struct TripStopDwellRowVm(
     double AverageDwellMinutes, double MinDwellMinutes, double MaxDwellMinutes, double TotalDwellMinutes);
 
 // One row per matched station. PartialNoTariff makes a catalog gap visible instead of netting the
-// missing tariff to zero (spec 11 §7.7 / §13).
+// missing tariff to zero.
 public readonly record struct TripTollCostRowVm(
     string TripCode, string RoutePlanId, string TollStationName,
     string RoadName, string Direction, string TollVehicleClass,
     decimal? EstimatedTollAmount, string TollCurrency, bool PartialNoTariff);
 
-// Sensitive export (spec 06 §13 / SC-06): carries receiver identity and capture coordinates.
+// Sensitive export: carries receiver identity and capture coordinates.
 public readonly record struct TripPodExportRowVm(
     string TripCode, int StopSequence, string StopName,
     string ReceiverName, string ReceiverDocument,

@@ -22,8 +22,6 @@ using Common.Domain.Constants;
 
 namespace Application.UnitTests.BackgroundJobs;
 
-// The backoff ladder, the entitlement hold, the failure classification and the webhook auto-disable
-// had no unit-test surface while they lived in the Web layer against a raw DbContext.
 [TestFixture]
 public class NotificationDispatchJobTests
 {

@@ -14,11 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * SyncWorker liveness API (Telemetry backend): plain typed async functions.
- * Failures THROW ApiError — fallbacks and toasts belong to the caller layer.
- */
-
 import { executeGraphQL } from 'api/core/graphqlClient';
 import type { RequestOptions } from 'api/core/errors';
 import { GetPlatformSyncActivityDocument } from './platformStatusOperations';
@@ -34,9 +29,8 @@ export type PlatformSyncActivity = Awaited<ReturnType<typeof getPlatformSyncActi
 export const SYNC_WORKER_FRESH_MS = 5 * 60 * 1000;
 
 /**
- * Derives the SyncWorker tile state from data recency (ST-04):
- * `up` when anything was written in the last 5 minutes; `unknown` when no
- * account has GPS integration enabled ("nothing to sync"); `down` otherwise.
+ * `up` when anything was written in the last 5 minutes; `unknown` when no account has GPS
+ * integration enabled ("nothing to sync"); `down` otherwise.
  */
 export function deriveSyncWorkerState(
   activity: Pick<PlatformSyncActivity, 'lastSyncRunAt' | 'lastHealthCheckAt' | 'hasEnabledGpsIntegration'> | undefined,

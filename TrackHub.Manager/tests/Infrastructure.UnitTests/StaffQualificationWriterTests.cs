@@ -64,7 +64,7 @@ public class StaffQualificationWriterTests
         var foreignStaff = SeedStaff(context, Guid.NewGuid(), "Foreign");
         var writer = new StaffQualificationWriter(context, Principal(accountId), Mock.Of<IAlertRecorder>());
 
-        // Cross-account references surface as 404, never as a permission hint (AC1).
+        // Cross-account references surface as 404, never as a permission hint.
         await Assert.ThrowsAsync<NotFoundException>(() =>
             writer.CreateStaffQualificationAsync(Dto(accountId, foreignStaff.StaffId), CancellationToken.None));
     }

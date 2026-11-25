@@ -18,10 +18,6 @@ using TrackHub.Router.Domain.Interfaces.Manager;
 
 namespace TrackHub.Router.Infrastructure.Protrack;
 
-/// <summary>
-/// Connectivity tester for Protrack API.
-/// Tests connection by authenticating and fetching device list.
-/// </summary>
 public sealed class ConnectivityTester(
     ICredentialHttpClientFactory httpClientFactory,
     IHttpClientService httpClientService,
@@ -29,13 +25,9 @@ public sealed class ConnectivityTester(
     IProviderSessionStore sessionStore)
     : ProtrackReaderBase(httpClientFactory, httpClientService, credentialWriter, sessionStore), IConnectivityTester
 {
-    /// <summary>
-    /// Tests connectivity by attempting to authenticate and retrieve device list from Protrack API.
-    /// </summary>
     public async Task Ping(CredentialTokenDto credential, CancellationToken cancellationToken)
     {
         await Init(credential, cancellationToken);
-        // Make a simple API call to verify the access token is valid
         await HttpClientService.GetAsync<DeviceListResponse>(
             $"{BaseUrl}/api/device/list?access_token={AccessToken}", cancellationToken: cancellationToken);
     }

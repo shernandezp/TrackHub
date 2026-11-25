@@ -30,11 +30,6 @@ import {
   qualificationStatusLabel,
 } from 'layouts/manageadmin/components/staff/qualificationConstants';
 
-/**
- * Dialog/form state for a staff qualification. All fields are optional here;
- * the screen's validate() gate enforces the required `qualificationType`/`status`
- * before save, and staff/account ids come from the screen, not the form.
- */
 export interface QualificationFormValues {
   staffQualificationId?: string;
   qualificationType?: string;
@@ -54,19 +49,16 @@ interface QualificationDialogProps {
   handleSubmit: () => void | Promise<void>;
   values: QualificationFormValues;
   handleChange: FormChangeHandler;
-  /** Per-field validation messages from the screen's `validate()` gate. */
   errors: FormErrors;
-  /** The staff's spec-04 documents (owner entity `Staff`), the link candidates. */
+  /** The staff's documents (owner entity `Staff`), the link candidates. */
   documents: DocumentVm[];
 }
 
-/** Human label for a document option: its title, else the stored file name. */
 function documentLabel(document: DocumentVm): string {
   const name = document.title || document.fileName;
   return document.category ? `${name} (${document.category})` : name;
 }
 
-/** Sentinel option value meaning "no linked document" (see the picker comment). */
 const NO_DOCUMENT = '__none__';
 
 function QualificationDialog({
@@ -189,11 +181,10 @@ function QualificationDialog({
           placeholder={t('generic.selectItem')}
         />
         {/*
-          Spec 09 §8/§11: the evidence link is a spec-04 Document owned by the
-          `Staff`, picked from that staff's documents — never a hand-typed GUID.
-          The `NO_DOCUMENT` sentinel exists only to give the list a "clear the
-          link" entry (CustomSelect reserves the empty value for its disabled
-          placeholder); it is normalized away before it reaches form state.
+          The evidence link is a Document owned by the `Staff`, picked from that staff's documents,
+          never a hand-typed GUID. The `NO_DOCUMENT` sentinel only gives the list a "clear the link"
+          entry (CustomSelect reserves the empty value for its disabled placeholder); it is
+          normalized away before it reaches form state.
         */}
         <CustomSelect
           list={documentOptions}

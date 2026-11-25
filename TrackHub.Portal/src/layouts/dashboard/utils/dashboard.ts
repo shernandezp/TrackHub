@@ -16,16 +16,9 @@
 
 import type { Position } from 'api/router/router';
 
-/**
- * Live status of a unit, derived from its latest position.
- */
 export type UnitStatus = 'moving' | 'stopped' | 'offline';
 
-/**
- * Client-side narrowing options for {@link filterPositions}. Every field is a
- * pure narrowing of the already-authorized set; group/operator narrowing is
- * applied server-side by devicePositionsByUser.
- */
+/** Every field is a pure narrowing; group/operator narrowing is applied server-side by devicePositionsByUser. */
 export interface PositionFilterOptions {
   transporterType?: string;
   status?: string;
@@ -53,19 +46,15 @@ export function countRecentDevices(positions: Position[], interval: number): num
   }
 
   /**
-   * Computes the live status of a unit from its latest position.
    * - 'offline': no position within the online interval.
    * - 'moving': recent position with speed > 0 or ignition on.
    * - 'stopped': recent position, not moving.
-   * @param device - Position record (deviceDateTime, speed, attributes).
-   * @param onlineIntervalMinutes - AccountSettings online interval in minutes.
-   * @returns Unit status.
    */
   export function getUnitStatus(device: Position, onlineIntervalMinutes: number): UnitStatus {
     const interval = onlineIntervalMinutes && onlineIntervalMinutes > 0 ? onlineIntervalMinutes : 60;
     const deviceDateTime = device && device.deviceDateTime ? new Date(device.deviceDateTime) : null;
     // getTime() reproduces the JS `isNaN(date)` coercion while satisfying the
-    // number-typed isNaN signature (no behavior change).
+    // number-typed isNaN signature.
     if (!deviceDateTime || isNaN(deviceDateTime.getTime())) {
       return 'offline';
     }
@@ -81,13 +70,7 @@ export function countRecentDevices(positions: Position[], interval: number): num
     return 'stopped';
   }
 
-  /**
-   * Client-side narrowing of the already-authorized position set.
-   * Filters never widen the set the user was authorized to receive.
-   * @param positions - Positions returned by devicePositionsByUser.
-   * @param options - Narrowing options.
-   * @returns Filtered positions.
-   */
+  /** Filters never widen the set the user was authorized to receive. */
   export function filterPositions(
     positions: Position[],
     { transporterType, status, searchText, onlineInterval }: PositionFilterOptions = {}

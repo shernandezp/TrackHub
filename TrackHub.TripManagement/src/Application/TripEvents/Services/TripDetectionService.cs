@@ -22,13 +22,12 @@ namespace TrackHub.TripManagement.Application.TripEvents.Services;
 
 /// <summary>
 /// The zero-touch lifecycle, measured from the pushed position feed: arming, auto-start at the
-/// origin, origin departure, stop arrivals and departures, corridor deviation and auto-completion
-/// (spec 11a §6).
+/// origin, origin departure, stop arrivals and departures, corridor deviation and auto-completion.
 /// <para>
-/// Detection is an <b>assist, not the record of truth</b> (spec 11 §18.13): weak GPS, indoor docks
+/// Detection is an <b>assist, not the record of truth</b>: weak GPS, indoor docks
 /// and devices that were off are field reality, so a manual override always wins and both land in
-/// the same idempotent event log discriminated by <c>Source</c>. What changed with zero-touch is
-/// which side does the ordinary work — automation runs the lifecycle, the dispatcher overrides it.
+/// the same idempotent event log discriminated by <c>Source</c>. Automation runs the lifecycle, the
+/// dispatcher overrides it.
 /// </para>
 /// <para>
 /// Alert emission and job recording are best-effort and isolated — a Manager outage logs and never
@@ -78,8 +77,8 @@ public sealed class TripDetectionService(
 
         var config = await accountFeatureReader.GetAccountConfigAsync(accountId, cancellationToken);
 
-        // With autoLifecycle off the working set is exactly what it was before zero-touch — only
-        // InProgress trips — so an account without reliable GPS runs the manual flow untouched (§8).
+        // With autoLifecycle off the working set is only InProgress trips, so an account without
+        // reliable GPS runs the manual flow untouched.
         DateTimeOffset? armableUntil = config.AutoLifecycle
             ? DateTimeOffset.UtcNow.AddMinutes(config.ActivationLeadMinutes)
             : null;
@@ -110,10 +109,7 @@ public sealed class TripDetectionService(
                 // ONE commit per (fix, trip) — or none.
                 //
                 // Everything the pipeline buffers for this fix — the odometer, both debounce clocks,
-                // the deviation run length, the arming snapshot — lands together or not at all. It
-                // used to be five separate saves, which is not just five round trips: a process that
-                // died between them left the odometer advanced and the departure unrecorded, with
-                // nothing to say which half had happened (§6).
+                // the deviation run length, the arming snapshot — lands together or not at all.
                 //
                 // An event-producing write inside the fix (a transition, a stop arrival) commits the
                 // buffer along with itself, which is exactly right — the start and the origin arrival
@@ -153,13 +149,11 @@ public sealed class TripDetectionService(
         {
             // 1-3. Arm, then auto-start — BEFORE the odometer. The progress writer ignores
             //      anything that is not InProgress, so a trip sitting in the queue accrues no
-            //      distance baseline, no LastPoint and no LastPositionAt: the very hazard spec
-            //      11 §10 refused to accept cannot occur here (spec 11a §2).
+            //      distance baseline, no LastPoint and no LastPositionAt.
             //
             //      Arming comes FIRST because it is what creates the geometry the containment
-            //      test needs. Asking before arming answered "not at the origin" for every trip
-            //      on the fix that armed it, costing a whole cycle of latency for a truck that
-            //      was already standing at the gate.
+            //      test needs; asking before arming would answer "not at the origin" on the fix that
+            //      armed it, costing a cycle of latency for a truck already standing at the gate.
             if (state.IsCreated)
             {
                 await ArmAsync(state, cancellationToken);
@@ -171,7 +165,7 @@ public sealed class TripDetectionService(
             //
             // And only while one of those three still cares. Every consumer is gated on the trip
             // not having left its origin yet, so once OriginDepartedAt is stamped the answer is
-            // read by nobody — asking anyway spent a spatial query per fix per trip for the
+            // read by nobody, and asking would spend a spatial query per fix per trip for the
             // entire rest of the run, which on a large fleet is most of the pipeline's cost.
             state.InsideOrigin = state.HasOriginGeom
                 && state.OriginDepartedAt is null
@@ -211,7 +205,7 @@ public sealed class TripDetectionService(
 
     // 1. Arming. Freezes the origin zone and every stop's arrival geometry and marks the trip as
     //    watched. Idempotent, event-free and reached at most once per trip: a trip armed and never
-    //    run leaves no history and stays deletable (acceptance 16).
+    //    run leaves no history and stays deletable.
     private async Task ArmAsync(TripDetectionState state, CancellationToken cancellationToken)
     {
         if (state.ArmedAt.HasValue)
@@ -236,8 +230,7 @@ public sealed class TripDetectionService(
     }
 
     // 2. Auto-start. The trigger is POSITIONAL — the vehicle standing in its origin zone — never a
-    //    clock, which is the distinction spec 11a §2 draws when it reverses spec 11 §10 for this
-    //    path only. OriginArrivedAt is stamped first so the transition can adopt it as the measured
+    //    clock. OriginArrivedAt is stamped first so the transition can adopt it as the measured
     //    ActualStartAt rather than reaching for the server clock.
     //
     //    Leaves the trip's status on the state; the caller gates the rest of the pipeline on it.
@@ -307,7 +300,7 @@ public sealed class TripDetectionService(
     //    the edge of the zone must not end a loading window the truck is still sitting in.
     //
     //    This is the boundary between the two measured phases — everything before it is loading,
-    //    everything after it is transit (spec 11a §4.3).
+    //    everything after it is transit.
     private async Task DetectOriginDepartureAsync(
         TripDetectionState state, Guid accountId, TransporterPositionDto position, CancellationToken cancellationToken)
     {
@@ -343,7 +336,7 @@ public sealed class TripDetectionService(
         state.OriginOutsideSince = null;
 
         // Timeline only. Origin departure is a measurement the dispatch board reads as "in transit";
-        // it is deliberately absent from Manager's alert catalog, so nothing is paged (§11).
+        // it is deliberately absent from Manager's alert catalog, so nothing is paged.
         await tripEventWriter.AppendAsync(
             accountId, state.TripId, null, TripEventTypes.TripOriginDeparted, position.DeviceDateTime,
             TripEventSources.Detection, null, $"trip-origin-depart:{state.TripId:N}", cancellationToken);
@@ -356,9 +349,9 @@ public sealed class TripDetectionService(
     private async Task<int> DetectArrivalsAsync(
         TripDetectionState state, Guid accountId, TransporterPositionDto position, CancellationToken cancellationToken)
     {
-        // A vehicle still standing in its origin zone has not arrived anywhere. Without this a round
-        // trip's return-to-depot stop — whose zone IS the origin — registered as Arrived on the very
-        // fix that started the trip, and the route was "complete" before the truck moved.
+        // A vehicle still standing in its origin zone has not arrived anywhere. Otherwise a round
+        // trip's return-to-depot stop — whose zone IS the origin — would register as Arrived on the very
+        // fix that started the trip.
         //
         // Gated on the trip not yet having departed its origin, so the genuine return at the END of
         // the round trip still detects normally.
@@ -381,7 +374,7 @@ public sealed class TripDetectionService(
                 continue;
 
             // Keyed WITHOUT a client event id: detection may see the same stop across many
-            // batches, and exactly one arrival must ever be recorded (acceptance 13).
+            // batches, and exactly one arrival must ever be recorded.
             var recorded = await stopWriter.RecordStopProgressAsync(
                 state.TripId, stop.TripStopId, accountId, TripStopStatuses.Arrived, position.DeviceDateTime,
                 position.Latitude, position.Longitude, TripEventSources.Detection,
@@ -413,9 +406,7 @@ public sealed class TripDetectionService(
     //    would close a stop the vehicle is still sitting in.
     //
     //    The clock is PERSISTED (TripStop.OutsideSinceAt). Router delivers one fix per call, so the
-    //    comparison below is only ever reachable from a LATER call — with a per-request clock the
-    //    first outside fix stored the instant and the second call reset it, so no stop ever
-    //    departed and an auto-tracked trip could only be completed with `force`.
+    //    comparison below is only ever reachable from a LATER call.
     private async Task<int> DetectDeparturesAsync(
         TripDetectionState state, Guid accountId, TransporterPositionDto position, CancellationToken cancellationToken)
     {
@@ -463,11 +454,10 @@ public sealed class TripDetectionService(
     }
 
     // 7. Deviation. Three consecutive fixes outside the corridor open an episode; re-entry clears
-    //    it so a later departure can open a new one (acceptance 14).
+    //    it so a later departure can open a new one.
     //
     //    The run length is PERSISTED (Trip.ConsecutiveOutsideFixes). Router delivers one fix per
-    //    call, so an in-memory counter went 0 → 1 and was thrown away every batch and the threshold
-    //    of three was unreachable — corridor deviation was completely inert.
+    //    call, so an in-memory counter would never reach the threshold.
     private async Task<int> DetectDeviationAsync(
         TripDetectionState state, Guid accountId, TransporterPositionDto position, CancellationToken cancellationToken)
     {
@@ -499,7 +489,7 @@ public sealed class TripDetectionService(
         if (inside.Value)
         {
             // Re-entry closes the episode — in the database, so a LATER departure opens a new one
-            // with a new episode start and therefore a new idempotency key (acceptance 14).
+            // with a new episode start and therefore a new idempotency key.
             if (state.ConsecutiveOutside != 0 || state.DeviationOpenedAt is not null)
             {
                 var closedEpisode = state.DeviationOpenedAt;
@@ -569,10 +559,10 @@ public sealed class TripDetectionService(
     /// The cheap pre-filter that decides whether completion is even worth asking about: a running
     /// trip with a route and no <c>Pending</c> stop left.
     /// <para>
-    /// Gating on "a stop just closed" instead would have made the DWELL rule unreachable from the
+    /// Gating on "a stop just closed" instead would make the DWELL rule unreachable from the
     /// position feed. That rule fires on time passing at an <c>Arrived</c> final stop — no departure
-    /// ever happens — so a parked truck that keeps reporting would have waited for the sweep, which
-    /// exists for the opposite case (a truck that has stopped reporting entirely, §5.2).
+    /// ever happens — so a parked truck that keeps reporting would wait for the sweep, which
+    /// exists for the opposite case (a truck that has stopped reporting entirely).
     /// </para>
     /// </summary>
     private static bool HasNothingLeftToVisit(TripDetectionState state)
@@ -582,7 +572,7 @@ public sealed class TripDetectionService(
 
     // 8. Completion, evaluated on every fix once the route has nothing pending left. The
     //    trip-eta-refresh sweep runs the same check for the devices that go dark, which is the only
-    //    case the position feed can never reach (§5.2).
+    //    case the position feed can never reach.
     private async Task TryCompleteAsync(
         TripDetectionState state, Guid accountId, TransporterPositionDto position,
         TripAccountConfigVm config, CancellationToken cancellationToken)
@@ -622,7 +612,7 @@ public sealed class TripDetectionService(
     {
         try
         {
-            // The SAME alert and the same dedup key the manual path emits — spec 11a §11: the
+            // The SAME alert and the same dedup key the manual path emits: the
             // timeline's Source, not a separate alert type, is what says a start was measured.
             await alertEmitter.EmitAsync(
                 eventType,

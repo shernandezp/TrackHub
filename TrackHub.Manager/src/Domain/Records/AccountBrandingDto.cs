@@ -15,8 +15,8 @@
 
 namespace TrackHub.Manager.Domain.Records;
 
-// Account branding input DTO (upsert). PrimaryColor is validated as #RRGGBB; LogoDocumentId, if
-// present, must reference a Manager Document owned by the same Account with owner type AccountBranding.
+// PrimaryColor is validated as #RRGGBB; LogoDocumentId, if present, must reference a Document owned
+// by the same account with owner type AccountBranding.
 public readonly record struct AccountBrandingDto(
     Guid AccountId,
     string DisplayName,

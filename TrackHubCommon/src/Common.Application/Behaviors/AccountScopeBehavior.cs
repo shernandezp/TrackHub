@@ -24,37 +24,11 @@ using Microsoft.Extensions.Logging;
 namespace Common.Application.Behaviors;
 
 /// <summary>
-/// Central tenant-scope guard. Runs immediately AFTER
-/// <see cref="AuthorizationBehavior{TRequest, TResponse}"/> (the principal must already be
-/// established and its permission grant verified) and before every other behavior and the handler.
-/// <para>
-/// Authorization answers "may this caller perform this action?"; it says nothing about WHICH
-/// tenant's data the caller named. The premise of the platform is that every business request
-/// belongs to an account — resolvable EITHER from the request (an <c>AccountId</c> field) or from
-/// the caller's identity. This guard establishes that account and denies anything it cannot.
-/// </para>
-/// <para>The rules, in order:</para>
-/// <list type="number">
-/// <item><b>The request names an account</b> (an <c>AccountId</c> within reach). It MUST equal the
-/// principal's own account, unless the type is marked <see cref="AllowCrossAccountAttribute"/> (a
-/// deliberate, audited cross-tenant surface). A mismatch, or a principal carrying no account at all,
-/// throws <see cref="ForbiddenAccessException"/>.</item>
-/// <item><b>The request names no account</b> but is marked
-/// <see cref="AllowCrossAccountAttribute"/> (service-identity cross-tenant surface) or
-/// <see cref="PlatformScopedAttribute"/> (platform-owned data, identical for every tenant) —
-/// pass, the marker (and its mandatory justification) is the record of why.</item>
-/// <item><b>The request names no account and carries no pass-through marker</b> — the account is
-/// derived from the CALLER'S identity: the handler is trusted to scope to
-/// <c>ICurrentPrincipal.AccountId</c>, which it cannot cross. This is the ordinary tenant request
-/// that simply reads its account from the token. It passes ONLY when the principal actually has an
-/// account; a principal with no account scope (a global service identity) reaching an account-less
-/// request cannot be scoped and is denied — the fail-closed line that still catches the
-/// service-identity escape shapes. <see cref="AccountScopeEnforcedInHandlerAttribute"/> deliberately
-/// does NOT change this outcome: it documents WHERE the by-id ownership check lives (the handler),
-/// but the handler still needs a caller account to check AGAINST, so a no-account principal is
-/// denied all the same — a service identity that legitimately needs such a surface must use a
-/// dedicated <see cref="AllowCrossAccountAttribute"/> request instead.</item>
-/// </list>
+/// Central tenant-scope guard, run right after <see cref="AuthorizationBehavior{TRequest, TResponse}"/>.
+/// A request naming an account must match the principal's unless marked <see cref="AllowCrossAccountAttribute"/>.
+/// A request naming none passes on <see cref="AllowCrossAccountAttribute"/> or <see cref="PlatformScopedAttribute"/>;
+/// otherwise the handler scopes to the caller's account, so a principal with no account is denied, even
+/// for <see cref="AccountScopeEnforcedInHandlerAttribute"/> requests (the handler needs an account to check against).
 /// </summary>
 public sealed class AccountScopeBehavior<TRequest, TResponse>(
     ICurrentPrincipal principal,
@@ -70,7 +44,6 @@ public sealed class AccountScopeBehavior<TRequest, TResponse>(
         var requestAccountId = RequestAccountResolver.GetRequestAccountId(request);
         if (requestAccountId is not null)
         {
-            // The request names a concrete account off the wire — enforce it against the principal.
             var crossAccount = IsCrossAccount(typeof(TRequest));
             if (crossAccount is not null)
             {
@@ -112,8 +85,7 @@ public sealed class AccountScopeBehavior<TRequest, TResponse>(
             return await next();
         }
 
-        // The request names no account in its fields. A declared pass-through surface passes on
-        // its marker (each marker's constructor forces a recorded justification):
+        // No account in the request: a declared pass-through marker passes.
         if (IsCrossAccount(typeof(TRequest)) is not null)     // service-identity cross-tenant surface
         {
             return await next();
@@ -130,12 +102,8 @@ public sealed class AccountScopeBehavior<TRequest, TResponse>(
             return await next();
         }
 
-        // Otherwise the account is derived from the caller's identity: the handler scopes to the
-        // principal's own account, which it cannot cross. This holds ONLY when the principal has an
-        // account — a global service identity with no account scope reaching an account-less request
-        // cannot be scoped, so it is denied (the fail-closed line). [AccountScopeEnforcedInHandler]
-        // lands here deliberately: the handler enforces the by-id ownership check, but it still
-        // needs a caller account to check against.
+        // Otherwise the handler scopes to the principal's own account, so a principal without one is denied;
+        // [AccountScopeEnforcedInHandler] lands here too, as its ownership check still needs a caller account.
         if (principal.AccountId is { } callerAccountId && callerAccountId != Guid.Empty)
         {
             return await next();

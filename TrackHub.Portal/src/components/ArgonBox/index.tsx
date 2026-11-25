@@ -35,19 +35,14 @@ import type { Theme } from "@mui/material/styles";
 import { unstable_extendSxProp as extendSxProp } from "@mui/system";
 import type { SystemProps } from "@mui/system";
 
-// Custom styles for ArgonBox
 import ArgonBoxRoot from "components/ArgonBox/ArgonBoxRoot";
 
 /**
- * Material UI v9 dropped the system shorthands (`mt`, `display`, `width`, …) from
- * Box in favour of `sx`. ArgonBox is this portal's layout primitive and the Argon
- * template uses the shorthand form at several hundred call sites, so the shorthand
- * stays part of ArgonBox's own contract instead: it is declared here and folded into
- * `sx` at render time by the very helper Box itself used to call.
- *
- * The six Argon-specific props below deliberately shadow their system namesakes
- * (`color` takes a palette key like "white", not a CSS colour) — they are
- * destructured off before the fold, so they keep reaching ArgonBoxRoot's ownerState.
+ * Material UI v9 dropped the system shorthands (`mt`, `display`, `width`, …) from Box in favour
+ * of `sx`; the template uses them at hundreds of call sites, so ArgonBox declares them and folds
+ * them into `sx` at render time. The six Argon-specific props below shadow their system namesakes
+ * (`color` takes a palette key like "white", not a CSS colour) and are destructured off before
+ * the fold, so they keep reaching ArgonBoxRoot's ownerState.
  */
 export interface ArgonBoxProps
   extends Omit<BoxProps, "color" | "borderRadius">,
@@ -58,10 +53,7 @@ export interface ArgonBoxProps
   opacity?: number;
   borderRadius?: string;
   shadow?: string;
-  /**
-   * Image attributes, valid when `component="img"`. Declared on the control
-   * (rather than cast at each call site) per the portal's rule 13.
-   */
+  /** Valid when `component="img"`. */
   src?: string;
   alt?: string;
 }

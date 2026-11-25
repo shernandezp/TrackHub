@@ -16,7 +16,6 @@ public class StaffValidatorTests
         => new(Guid.NewGuid(), Guid.NewGuid(), type ?? StaffQualificationTypes.License, "C2", "LIC-1",
             issuedAt, expiresAt, "RUNT", status ?? StaffQualificationStatuses.Valid, null, null);
 
-    // Before spec 09 these commands had NO validators — an empty name reached the writer (§2.2.4).
     [Test]
     public void CreateStaffMember_RejectsUnknownStaffType()
     {

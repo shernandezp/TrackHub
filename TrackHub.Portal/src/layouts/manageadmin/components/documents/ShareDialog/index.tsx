@@ -39,8 +39,8 @@ interface ShareDialogProps {
   document?: DocumentVm | null;
 }
 
-// Create/copy a document public-share link. Reuses PublicLinkGrant with
-// ResourceType="Document" + scope "document.read"; the token + URL are shown once at creation.
+// Reuses PublicLinkGrant with ResourceType="Document" + scope "document.read"; the token + URL
+// are shown once at creation.
 function ShareDialog({ open, setOpen, accountId = null, document = null }: ShareDialogProps) {
   const { t } = useTranslation();
   const [values, handleChange, setValues, setErrors, validate, errors] = useForm<ShareFormValues>({});
@@ -52,7 +52,6 @@ function ShareDialog({ open, setOpen, accountId = null, document = null }: Share
     if (share) { reset(); setOpen(false); return; }
     if (!validate(['expiresAt']) || !document?.documentId || !accountId) return;
     try {
-      // expiresAt is gated by validate(['expiresAt']); assert the mutation input at the boundary.
       const grant = await createPublicLinkGrant({
         accountId,
         resourceType: 'Document',
@@ -70,7 +69,6 @@ function ShareDialog({ open, setOpen, accountId = null, document = null }: Share
         setOpen(false);
       }
     } catch (error) {
-      // Keep the dialog open on failure so the user can retry.
       notifyApiError(error);
     }
   };

@@ -14,7 +14,7 @@
 *  limitations under the License.
 */
 
-// AccountStatus enum mirror (Common.Domain.Enums.AccountStatus). Backend is authoritative; these are
+// Mirrors Common.Domain.Enums.AccountStatus. Backend is authoritative; these are
 // cosmetic helpers for the SuperAdministrator accounts panel.
 export const ACCOUNT_STATUS_NAME = {
   1: 'TRIAL',
@@ -24,12 +24,9 @@ export const ACCOUNT_STATUS_NAME = {
   5: 'ARCHIVED'
 } as const;
 
-// Numeric statusId union (mirrors Common.Domain.Enums.AccountStatus values).
 export type AccountStatusId = keyof typeof ACCOUNT_STATUS_NAME;
-// Status enum name union (TRIAL | ACTIVE | SUSPENDED | CANCELLED | ARCHIVED).
 export type AccountStatusName = (typeof ACCOUNT_STATUS_NAME)[AccountStatusId];
 
-// Colored badge per status (ArgonBadge color).
 export const ACCOUNT_STATUS_COLOR = {
   TRIAL: 'info',
   ACTIVE: 'success',
@@ -38,10 +35,8 @@ export const ACCOUNT_STATUS_COLOR = {
   ARCHIVED: 'secondary'
 } as const;
 
-// ArgonBadge color token union.
 export type AccountStatusColor = (typeof ACCOUNT_STATUS_COLOR)[AccountStatusName];
 
-// i18n key suffix per status enum name.
 export const ACCOUNT_STATUS_I18N = {
   TRIAL: 'account.statusTrial',
   ACTIVE: 'account.statusActive',
@@ -50,10 +45,8 @@ export const ACCOUNT_STATUS_I18N = {
   ARCHIVED: 'account.statusArchived'
 } as const;
 
-// i18n key union for the status labels.
 export type AccountStatusI18nKey = (typeof ACCOUNT_STATUS_I18N)[AccountStatusName];
 
-// Allowed lifecycle transitions by current statusId.
 export const ALLOWED_TRANSITIONS = {
   1: ['ACTIVE', 'SUSPENDED', 'CANCELLED'],
   2: ['SUSPENDED', 'CANCELLED'],

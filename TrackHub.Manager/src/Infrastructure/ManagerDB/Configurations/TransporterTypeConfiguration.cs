@@ -23,10 +23,8 @@ public sealed class TransporterTypeConfiguration : IEntityTypeConfiguration<Tran
 {
     public void Configure(EntityTypeBuilder<TransporterType> builder)
     {
-        //Table name
         builder.ToTable(name: TableMetadata.TransporterType, schema: SchemaMetadata.Application);
 
-        //Column names
         builder.Property(x => x.TransporterTypeId).HasColumnName("id");
         builder.Property(x => x.AccBased).HasColumnName("accbased");
         builder.Property(x => x.StoppedGap).HasColumnName("stoppedgap");

@@ -18,14 +18,10 @@ using Common.Infrastructure;
 namespace TrackHub.Manager.Infrastructure.Events;
 
 /// <summary>
-/// Workforce domain events (spec 09 §10), dispatched by the existing
-/// <c>DispatchDomainEventsInterceptor</c> after a successful save.
+/// Workforce domain events, dispatched by <c>DispatchDomainEventsInterceptor</c> after a successful save.
 /// <para>
-/// NOTE for future maintainers: spec 09 §10 describes these as "consumed for audit today". That is
-/// inaccurate — the audit trail is written directly by the writers via <c>AddAuditEvent</c>, and these
-/// events currently have NO subscriber. They exist because the spec commits to them as an extension
-/// point for future modules; publishing with no registered handler is a no-op. Do not remove the
-/// audit writes on the assumption that a handler covers them.
+/// These events have NO subscriber: the audit trail is written directly by the writers via
+/// <c>AddAuditEvent</c>. Do not remove the audit writes on the assumption that a handler covers them.
 /// </para>
 /// </summary>
 public sealed class StaffAssignedToTransporterEvent(Guid accountId, Guid staffTransporterAssignmentId, Guid staffId, Guid transporterId, DateTimeOffset startsAt, string assignmentType) : BaseEvent

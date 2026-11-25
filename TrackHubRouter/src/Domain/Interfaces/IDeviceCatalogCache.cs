@@ -17,12 +17,11 @@ using TrackHub.Router.Domain.Models;
 
 namespace TrackHub.Router.Domain.Interfaces;
 
-// Short-TTL cache of an operator's device→transporter catalog, keyed by (account, operator). The
-// 10-second position loop was re-fetching this rarely-changing catalog from Manager on every cycle
-// per operator (router-audit A-12); the cache collapses that to one load per TTL. An entry is also
-// keyed by the operator's persisted LastDeviceSyncAt, so a device sync run by any process (API or
-// worker) invalidates it. Keyed by the explicit account+operator scope (never a caller identity), so
-// it is safe to cache.
+// Short-TTL cache of an operator's rarely-changing device→transporter catalog, so the 10-second
+// position loop does not re-fetch it from Manager every cycle. An entry is also keyed by the
+// operator's persisted LastDeviceSyncAt, so a device sync run by any process (API or worker)
+// invalidates it. Keyed by the explicit account+operator scope (never a caller identity), so it is
+// safe to cache.
 public interface IDeviceCatalogCache
 {
     Task<IEnumerable<DeviceTransporterVm>> GetOrLoadAsync(

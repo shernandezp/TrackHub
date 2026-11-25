@@ -29,17 +29,11 @@ export { useHelp } from 'context/help/HelpContext';
 
 interface HelpProviderProps {
   children: ReactNode;
-  /** Route keys the current principal can access (role + feature filtered, from App). */
   allowedScreens: string[];
   isFeatureEnabled: (featureKey?: string | null) => boolean;
 }
 
-/**
- * Contextual help state: mounted once in App around the dashboard
- * shell. Owns the modal open state and the in-modal navigation stack, and
- * binds the F1 / Shift+? shortcuts. Data fetching lives in the dialog so
- * users who never open help never fetch anything.
- */
+/** Data fetching lives in the dialog, so users who never open help never fetch anything. */
 function HelpProvider({ children, allowedScreens, isFeatureEnabled }: HelpProviderProps) {
   const { pathname } = useLocation();
   const [open, setOpen] = useState(false);

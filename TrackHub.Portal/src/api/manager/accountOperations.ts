@@ -15,19 +15,12 @@
 */
 
 /**
- * Account GraphQL documents (Manager backend). Codegen validates these against
- * schemas/manager.graphql and emits typed document nodes — values always travel
- * as variables, never string interpolation.
- *
- * The `accountContext` bootstrap read (status + branding + features) is folded
- * into this account module: it is a single-account, account-scoped read tied to
- * account identity/lifecycle, with no independent domain surface. Branding and
- * features keep their own modules because they own dedicated CRUD screens.
+ * The `accountContext` bootstrap read lives here because it is a single-account read tied to
+ * account identity; branding and features keep their own modules because they own CRUD screens.
  */
 
 import { graphql } from './generated';
 
-/** Account record for the systemadmin/manageadmin account lists and CRUD flows. */
 export const AccountItemFragment = graphql(`
   fragment AccountItem on AccountVm {
     accountId
@@ -78,10 +71,8 @@ export const UpdateAccountDocument = graphql(`
 `);
 
 /**
- * Platform-side account edit used by the systemadmin console. `updateAccount` is
- * the account-scoped twin an account administrator uses on its OWN account; only
- * this one may target another account, and it is gated by the Administrator-only
- * AccountsMaster/Edit permission.
+ * The only account write that may target another account (`updateAccount` is the own-account
+ * twin); gated by the Administrator-only AccountsMaster/Edit permission.
  */
 export const UpdateAccountMasterDocument = graphql(`
   mutation UpdateAccountMaster($id: UUID!, $account: UpdateAccountDtoInput!) {
@@ -99,11 +90,7 @@ export const ChangeAccountStatusDocument = graphql(`
   }
 `);
 
-/**
- * Single bootstrap read for the current principal's account: lifecycle status,
- * branding, and the effective feature set. Allowed on non-operational accounts
- * so the shell can render a suspension state without further operational queries.
- */
+/** Allowed on non-operational accounts so the shell can render a suspension state. */
 export const GetAccountContextDocument = graphql(`
   query GetAccountContext {
     accountContext {

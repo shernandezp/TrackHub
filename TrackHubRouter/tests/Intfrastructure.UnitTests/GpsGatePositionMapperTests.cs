@@ -18,7 +18,6 @@ using TrackHub.Router.Infrastructure.GpsGate.Models;
 
 namespace TrackHub.Router.Infrastructure.GpsGate.Tests;
 
-// Value-correctness tests for the GpsGate mapper (TT-01).
 [TestFixture]
 public class PositionMapperTests
 {

@@ -15,11 +15,8 @@
 */
 
 /**
- * Operator query/mutation hooks. Operators live on two backends: CRUD +
- * enable/sync on Manager, health + sync-run reads on Telemetry. The cache keys
- * are namespaced accordingly (`operatorKeys` vs `operatorTelemetryKeys`) so an
- * operator mutation never blows away unrelated telemetry cache entries.
- * Components consume these — not the api layer directly.
+ * Operators live on two backends (CRUD on Manager, health + sync runs on Telemetry); the keys are
+ * namespaced so an operator mutation never blows away unrelated telemetry entries.
  */
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -51,9 +48,6 @@ export const operatorTelemetryKeys = {
     [...operatorTelemetryKeys.all, 'healthHistory', operatorId, take] as const,
 };
 
-// --- Manager reads -------------------------------------------------------
-
-/** One server page of operators (`{ items, totalCount }`) for the operator list. */
 export function useOperatorsByCurrentAccount(
   params: ListParams = {},
   options: { enabled?: boolean } = {}
@@ -68,7 +62,6 @@ export function useOperatorsByCurrentAccount(
   });
 }
 
-/** The account's operators as id + name, for the dashboard and report filters. */
 export function useOperatorLookup(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: operatorKeys.lookup(),
@@ -77,11 +70,7 @@ export function useOperatorLookup(options: { enabled?: boolean } = {}) {
   });
 }
 
-/**
- * Every operator with its sync metadata (all server pages drained). The GPS
- * screens label and filter rows by operator and read fields the lookup does not
- * carry, so they need the complete record set.
- */
+/** All pages drained: the GPS screens read fields the lookup does not carry. */
 export function useGpsOperators(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: operatorKeys.gps(),
@@ -89,8 +78,6 @@ export function useGpsOperators(options: { enabled?: boolean } = {}) {
     enabled: options.enabled ?? true,
   });
 }
-
-// --- Manager mutations ---------------------------------------------------
 
 export function useCreateOperator() {
   const queryClient = useQueryClient();
@@ -141,8 +128,6 @@ export function useTriggerOperatorDeviceSync() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: operatorKeys.all }),
   });
 }
-
-// --- Telemetry reads -----------------------------------------------------
 
 export function useOperatorSyncRuns(
   accountId: string | null,

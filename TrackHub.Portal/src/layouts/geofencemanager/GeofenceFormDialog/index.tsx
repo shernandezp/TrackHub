@@ -26,7 +26,6 @@ import { colors } from 'data/colors';
 import { toCamelCase } from 'utils/stringUtils';
 import type { GeofenceFormValues } from 'layouts/geofencemanager/data/geofencesData';
 
-/** A translated option for the type/color selects. */
 interface SelectOption { value: number; label: string; }
 
 interface GeofenceFormDialogProps {

@@ -17,15 +17,8 @@ using TrackHub.Security.Infrastructure.Interfaces;
 
 namespace TrackHub.Security.Infrastructure.Readers;
 
-// This class implements the IUserRoleReader interface and provides methods to read user roles from the security database.
 public sealed class UserRoleReader(IApplicationDbContext context) : IUserRoleReader
 {
-    // Retrieves the role names associated with a given user ID asynchronously.
-    // Parameters:
-    // - userId: The ID of the user.
-    // - cancellationToken: A cancellation token to cancel the operation if needed.
-    // Returns:
-    // - A collection of role names associated with the user.
     public async Task<IReadOnlyCollection<string>> GetUserRoleNamesAsync(Guid userId, CancellationToken cancellationToken)
         => await context.UserRoles
             .Include(ur => ur.Role)
@@ -33,12 +26,6 @@ public sealed class UserRoleReader(IApplicationDbContext context) : IUserRoleRea
             .Select(ur => ur.Role.Name)
             .ToListAsync(cancellationToken);
 
-    // Retrieves the role IDs associated with a given user ID asynchronously.
-    // Parameters:
-    // - userId: The ID of the user.
-    // - cancellationToken: A cancellation token to cancel the operation if needed.
-    // Returns:
-    // - A collection of role IDs associated with the user.
     public async Task<IReadOnlyCollection<int>> GetUserRolesIdsAsync(Guid userId, CancellationToken cancellationToken) 
         => await context.UserRoles
             .Where(ur => ur.UserId.Equals(userId))

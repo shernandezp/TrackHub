@@ -19,7 +19,7 @@ namespace TrackHub.TripManagement.Infrastructure.TripDB.Entities;
 
 /// <summary>
 /// Staff/transporter assignment history. At most ONE Active row per trip, enforced by a partial
-/// unique index rather than by handler discipline (spec 11 section 6.1).
+/// unique index rather than by handler discipline.
 /// </summary>
 public sealed class TripAssignment : BaseAuditableEntity
 {

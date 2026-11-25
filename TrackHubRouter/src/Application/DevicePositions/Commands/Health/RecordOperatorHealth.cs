@@ -26,9 +26,9 @@ using TrackHub.Router.Domain.Models;
 namespace TrackHub.Router.Application.DevicePositions.Commands.Health;
 
 // In-process only (no [Authorize]): the SyncWorker's operator-health loop dispatches it. The
-// account rides inside OperatorVm, so TrackHubCommon 1.0.7's widened resolver now sees it and the
-// worker — which runs entirely under client credentials (AuthorityServer:IsService) and therefore
-// has no account claim — would fail closed without this declaration.
+// account rides inside OperatorVm, so the account-scope resolver sees it and the worker — which runs
+// entirely under client credentials (AuthorityServer:IsService) and therefore has no account claim —
+// would fail closed without this declaration.
 [AllowCrossAccount("SyncWorker operator-health loop: one global syncworker_client identity enumerates every account's operators and probes them in turn, so the OperatorVm's AccountId is by definition not the worker's own (it has none).")]
 public readonly record struct RecordOperatorHealthCommand(
     OperatorVm Operator,

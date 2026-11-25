@@ -43,7 +43,6 @@ public static class DependencyInjection
         var connectionString = configuration.GetRequiredConnectionString("DefaultConnection");
 
 
-        // Configure NpgsqlDataSourceBuilder and enable dynamic JSON serialization
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
         dataSourceBuilder.ConfigureJsonOptions(new JsonSerializerOptions
         {
@@ -106,8 +105,7 @@ public static class DependencyInjection
         services.AddScoped<IDocumentWriter, DocumentWriter>();
         services.AddScoped<IDocumentAccessPolicy, DocumentAccessPolicy>();
 
-        // Document storage provider selected by config: LocalFileSystem (dev), S3, or
-        // AzureBlob. A real AV provider is a separate deployment blocker; dev uses the no-op scanner.
+        // No real AV provider is wired yet, so every environment uses the no-op scanner.
         AddDocumentStorage(services, configuration);
         services.AddSingleton<IDocumentScanner, NoOpDocumentScanner>();
         services.AddScoped<INotificationReader, NotificationReader>();
@@ -129,7 +127,6 @@ public static class DependencyInjection
         services.AddScoped<INotificationDigestStore, TrackHub.Manager.Infrastructure.ManagerDB.Jobs.NotificationDigestStore>();
         services.AddScoped<INotificationDispatchStore, TrackHub.Manager.Infrastructure.ManagerDB.Jobs.NotificationDispatchStore>();
 
-        // Notification channel providers. Push is contract-only for now.
         services.Configure<SmtpOptions>(configuration.GetSection(SmtpOptions.SectionName));
         services.Configure<WhatsAppOptions>(configuration.GetSection(WhatsAppOptions.SectionName));
         // A 3xx from a tenant-controlled endpoint must not be followed to an internal target, and
@@ -172,23 +169,18 @@ public static class DependencyInjection
         services.AddMemoryCache();
         services.AddScoped<Common.Application.Interfaces.IFeatureFlagService, TrackHub.Manager.Infrastructure.ManagerDB.Services.FeatureFlagService>();
 
-        // Account lifecycle + branding.
         services.AddScoped<IAccountStatusWriter, AccountStatusWriter>();
         services.AddScoped<IAccountBrandingReader, AccountBrandingReader>();
         services.AddScoped<IAccountBrandingWriter, AccountBrandingWriter>();
         services.AddScoped<Common.Application.Interfaces.IAccountOperationalStatusReader, AccountOperationalStatusReader>();
         services.AddScoped<Common.Application.Interfaces.IAccountOperationalStatusService, Common.Application.Services.CachedAccountOperationalStatusService>();
 
-        // Module discovery seam: registers any IServiceModule implementations shipped in
-        // this assembly (none in this repository).
         services.AddDiscoveredModules(typeof(ApplicationDbContext).Assembly, configuration);
 
         return services;
     }
 
-    // Registers the IDocumentStorage implementation chosen by DocumentStorage:Provider
-    // (LocalFileSystem | S3 | AzureBlob). The client is a singleton; the local FS default is a writable
-    // OS-temp path (the app directory is not assumed writable).
+    // The local FS default is an OS-temp path because the app directory is not assumed writable.
     private static void AddDocumentStorage(IServiceCollection services, IConfiguration configuration)
     {
         var provider = (configuration.GetValue<string>("DocumentStorage:Provider") ?? LocalFileSystemDocumentStorage.ProviderName).Trim();

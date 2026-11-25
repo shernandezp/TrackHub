@@ -14,12 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Transporter query/mutation hooks. Components consume these — not the api
- * layer directly. Loading/error state comes from the hooks; failures also
- * surface in the global toast via the query client's error handlers.
- */
-
 import { keepPreviousData, useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as api from 'api/manager/transporters';
 import type {
@@ -45,7 +39,6 @@ export const transporterKeys = {
     [...transporterKeys.assignments, 'byTransporter', transporterId, activeOnly] as const,
 };
 
-/** One server page of the account's transporters, for the admin list screen. */
 export function useTransportersByAccount(
   params: ListParams = {},
   options: { enabled?: boolean } = {}
@@ -60,7 +53,6 @@ export function useTransportersByAccount(
   });
 }
 
-/** The transporters the signed-in user may track, as id + name. */
 export function useTransporterLookupByUser(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: transporterKeys.lookupByUser(),
@@ -151,7 +143,6 @@ export function useDeleteTransporter() {
   });
 }
 
-/** One server page of the account's device assignments (`{ items, totalCount }`). */
 export function useTransporterDeviceAssignmentsByAccount(
   accountId: string | undefined,
   activeOnly = false,

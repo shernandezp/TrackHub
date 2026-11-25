@@ -22,10 +22,8 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
 {
     public void Configure(EntityTypeBuilder<Role> builder)
     {
-        //Table name
         builder.ToTable(name: TableMetadata.Role, schema: SchemaMetadata.Security);
 
-        //Column names
         builder.Property(x => x.RoleId).HasColumnName("id");
         builder.Property(x => x.Name).HasColumnName("name");
         builder.Property(x => x.Description).HasColumnName("description");

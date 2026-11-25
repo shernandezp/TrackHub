@@ -20,7 +20,7 @@ using TrackHub.Reporting.Domain.Records;
 
 namespace TrackHub.Reporting.Application.Report.Factory.Trip;
 
-// Stop-level detail (spec 11 §13): every stop of every trip in the window with its planned window,
+// Stop-level detail: every stop of every trip in the window with its planned window,
 // actual arrival/departure, dwell, status and delivery outcome counts. Filters: from/to = window,
 // transporterId = optional unit. Ordered by trip then stop sequence so a trip reads top to
 // bottom. Excel only — a stop-level export routinely exceeds the 500-row PDF limit.

@@ -38,9 +38,9 @@ public static class DependencyInjection
         var protocols = configuration.GetSection("AppSettings:Protocols").Get<IEnumerable<string>>();
         Guard.Against.Null(protocols, message: $"Client configuration for Protocols not loaded");
 
-        // Uniform registration for every provider (no adapter special-casing — router-audit A-18);
-        // each provider's readers are registered keyed by ProtocolType (router-audit A-07). Each
-        // registration yields the assembly's own descriptor; together they form the runtime capability catalog.
+        // Uniform registration for every provider; each provider's readers are registered keyed by
+        // ProtocolType. Each registration yields the assembly's own descriptor; together they form the
+        // runtime capability catalog.
         var descriptors = protocols
             .Select(protocol => services.RegisterProtocol(protocol))
             .DistinctBy(descriptor => descriptor.Protocol)
@@ -50,7 +50,7 @@ public static class DependencyInjection
         services.AddHttpClient(NominatimReverseGeocoder.HttpClientName);
 
         // Provider credential clients: auto-redirect disabled so an operator-configured base URL
-        // cannot be used to 302-redirect the Router to an internal endpoint (router-audit A-20).
+        // cannot be used to 302-redirect the Router to an internal endpoint.
         // ConnectCallback additionally refuses a non-routable destination at dial time, so a
         // credential host whose DNS record changes after validation cannot reach the intranet.
         services.AddHttpClient(CredentialHttpClientFactory.ProviderHttpClientName)
@@ -73,8 +73,8 @@ public static class DependencyInjection
         services.AddSingleton<IProviderSessionStore, ProviderSessionStore>();
         services.AddScoped<ICredentialHttpClientFactory, CredentialHttpClientFactory>();
         // Transient: each provider reader gets its OWN HttpClientService, so two concurrent
-        // same-protocol operators in one sync scope never share the mutable Init state
-        // (router-audit A-07/ARCH-12). Paired with keyed-transient readers below.
+        // same-protocol operators in one sync scope never share the mutable Init state. Paired with
+        // keyed-transient readers below.
         services.AddTransient<IHttpClientService, HttpClientService>();
         // Scoped: the registries resolve keyed readers from the caller's live request scope.
         services.AddScoped<IConnectivityRegistry, ConnectivityRegistry>();

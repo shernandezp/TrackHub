@@ -26,10 +26,10 @@ namespace TrackHub.TripManagement.Web.BackgroundServices;
 /// <para>
 /// The auto-completion sweep deliberately shares this cycle and this job key instead of adding a
 /// <c>BackgroundJobKeys</c> entry: it is a fallback for a case detection cannot see (no more fixes
-/// are coming), not a schedule of its own (spec 11a §5.2).
+/// are coming), not a schedule of its own.
 /// </para>
 /// <para>
-/// <b>On-work-only recorder (SVD-11):</b> a <c>BackgroundJobRun</c> row is written ONLY when the
+/// <b>On-work-only recorder:</b> a <c>BackgroundJobRun</c> row is written ONLY when the
 /// cycle actually did something — refreshed an ETA or closed a trip. An old row for
 /// <c>trip-eta-refresh</c> is therefore the healthy steady state — a fleet with no trips in progress
 /// is not a stuck job — and <c>/status</c> must render it neutrally rather than as a staleness alarm.

@@ -60,7 +60,7 @@ import type { StaffQualification } from 'api/manager/staff';
 import { LoadingContext } from 'LoadingContext';
 import { formatDateOnly } from 'utils/dateUtils';
 
-/** Spec 09 §11: qualification evidence is a spec-04 Document owned by the staff. */
+/** Qualification evidence is a Document owned by the staff. */
 const DOCUMENT_OWNER_ENTITY_TYPE = 'Staff';
 
 interface ConfirmState {
@@ -90,7 +90,7 @@ function ManageStaffQualifications() {
   });
   const qualifications = qualificationsQuery.data ?? [];
 
-  // The staff's spec-04 documents feed the dialog's document picker; the
+  // The staff's documents feed the dialog's document picker; the
   // embedded panel below uploads into the same owner scope.
   const documentsQuery = useDocumentsForOwner(accountId, DOCUMENT_OWNER_ENTITY_TYPE, staffId || null, {
     enabled: expanded && hasStaff,
@@ -132,7 +132,6 @@ function ManageStaffQualifications() {
     if (!validate(['qualificationType', 'status']) || !accountId || !staffId) return;
     setLoading(true);
     try {
-      // validate() + the id guards above ensure the required dto fields exist.
       const qualification = {
         accountId,
         staffId,
@@ -288,8 +287,7 @@ function ManageStaffQualifications() {
           />
         )}
 
-        {/* Spec 09 §8/§11: the spec-04 document component, scoped to this staff.
-            Evidence uploaded here becomes selectable in the qualification dialog. */}
+        {/* Scoped to this staff: evidence uploaded here becomes selectable in the qualification dialog. */}
         {hasStaff && (
           <>
             <ArgonBox mt={3} mb={1}>

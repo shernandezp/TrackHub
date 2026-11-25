@@ -35,8 +35,6 @@ public class LoginController(ISender sender, IStringLocalizer<LoginController> l
 {
     private const string StaffMobileClientId = "staff_mobile_client";
 
-    // GET: /Login
-    // Returns the login view.
     [HttpGet]
     [AllowAnonymous]
     public IActionResult Index(string? returnUrl = null)
@@ -45,12 +43,8 @@ public class LoginController(ISender sender, IStringLocalizer<LoginController> l
         return View(new LoginViewModel { PlatformStatusUrl = PlatformStatusUrl() });
     }
 
-    /// <summary>
-    /// Absolute URL of the portal's public status page, so a user whose sign-in failed can check
-    /// whether the platform is the cause. Derived from the already-configured portal origin
-    /// (<c>AllowedCorsOrigins</c>) rather than hardcoded; returns null when it is unset or
-    /// unusable, in which case the view simply omits the link.
-    /// </summary>
+    // The portal's public status page, so a user whose sign-in failed can check whether the platform
+    // is the cause. Null when no usable portal origin is configured; the view then omits the link.
     private string? PlatformStatusUrl()
     {
         var origin = configuration.GetAllowedCorsOrigins().FirstOrDefault();
@@ -60,8 +54,6 @@ public class LoginController(ISender sender, IStringLocalizer<LoginController> l
             : null;
     }
 
-    // POST: /Login
-    // Handles the login form submission.
     [HttpPost]
     [AllowAnonymous]
     [ValidateAntiForgeryToken]
@@ -104,7 +96,6 @@ public class LoginController(ISender sender, IStringLocalizer<LoginController> l
 
             var user = await sender.Send(new GetUsersQuery(model.Email, model.Password));
 
-            // Create claims for the authenticated user.
             var claims = new List<Claim>
             {
                 new(ClaimTypes.Sid, $"{user.UserId}"),
@@ -123,13 +114,10 @@ public class LoginController(ISender sender, IStringLocalizer<LoginController> l
                 claims.Add(new Claim(ClaimTypes.Role, role));
             }
 
-            // Create a claims identity using the claims and the default authentication scheme.
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
-            // Sign in the user with the created claims identity.
             await HttpContext.SignInAsync(new ClaimsPrincipal(claimsIdentity));
 
-            // Redirect the user to the return URL.
             return Redirect(model.ReturnUrl);
         }
         catch (AuthenticationException ex)
@@ -151,8 +139,8 @@ public class LoginController(ISender sender, IStringLocalizer<LoginController> l
         return View(model);
     }
 
-    // A substring match selected the staff branch for any url merely containing that text,
-    // including inside a state or redirect_uri parameter.
+    // Parses client_id instead of a substring match, which would also hit the text inside a state or
+    // redirect_uri parameter.
     private static bool IsStaffMobileLogin(string? returnUrl)
     {
         if (string.IsNullOrWhiteSpace(returnUrl))

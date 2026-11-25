@@ -131,7 +131,6 @@ function ManageNotificationRules() {
       setOpen(false);
       await loadRules();
     } catch (error) {
-      // Keep the dialog open on failure so the user can retry without re-entering.
       notifyApiError(error);
     } finally {
       setLoading(false);

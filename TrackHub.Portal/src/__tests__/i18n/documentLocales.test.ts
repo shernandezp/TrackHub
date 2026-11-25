@@ -21,7 +21,6 @@ import es from 'locales/es.json';
 
 const SRC = path.join(__dirname, '..', '..');
 
-// Every source file that renders the Document Management screens.
 const PANEL_SOURCES = [
   'layouts/manageadmin/components/documents/index.js',
   'layouts/manageadmin/components/documents/DocumentPanel/index.js',
@@ -40,7 +39,7 @@ const resolveKey = (bundle: unknown, key: string): unknown =>
 // Static t('...') keys that are NOT passed a defaultValue (those with a defaultValue are allowed to be
 // absent from the bundles).
 const staticKeysIn = (file: string): string[] => {
-  // Extension-agnostic: source files move .js → .jsx → .tsx during the TS migration
+  // Extension-agnostic so a renamed source file stays covered.
   const base = path.join(SRC, file.replace(/\.js$/, ''));
   const resolved = ['.js', '.jsx', '.ts', '.tsx'].map((ext) => base + ext).find(fs.existsSync);
   if (!resolved) throw new Error(`Source file not found for any extension: ${file}`);

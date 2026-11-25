@@ -20,12 +20,12 @@ namespace TrackHub.TripManagement.Application.Trips.Commands.Delete;
 
 /// <summary>
 /// Permitted only for a <c>Created</c> trip with no recorded events. Trip history is permanent:
-/// anything that has actually happened is cancelled, never deleted (acceptance 16).
+/// anything that has actually happened is cancelled, never deleted.
 /// </summary>
 [Authorize(Resource = Resources.Trips, Action = Actions.Delete)]
 [RequireFeature(FeatureKeys.TripManagement)]
 // Enforcement: the handler derives the caller's own account and passes it to the reader/writer,
-// which filters every row on it (TripVisibility is the single visibility resolver - spec 11).
+// which filters every row on it (TripVisibility is the single visibility resolver).
 [AccountScopeEnforcedInHandler]
 public readonly record struct DeleteTripCommand(Guid TripId) : IRequest;
 

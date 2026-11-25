@@ -26,8 +26,8 @@ using TrackHub.Manager.Infrastructure.ManagerDB.Writers;
 namespace Infrastructure.UnitTests;
 
 // AccountSupportGrant.AccessLevel is enforced on mutation paths — a read-only
-// cross-account grant permits reads but every cross-account mutation is rejected. AC15: the mutating
-// staff writer emits an audit event. AC1: without any grant, cross-account access is forbidden.
+// cross-account grant permits reads but every cross-account mutation is rejected. The mutating
+// staff writer emits an audit event. Without any grant, cross-account access is forbidden.
 [TestFixture]
 public class SupportGrantAccessTests
 {
@@ -41,7 +41,7 @@ public class SupportGrantAccessTests
         var principal = new Mock<ICurrentPrincipal>();
         principal.SetupGet(p => p.PrincipalType).Returns(PrincipalType.User);
         principal.SetupGet(p => p.UserId).Returns(supportUserId);
-        principal.SetupGet(p => p.AccountId).Returns(Guid.NewGuid()); // a different account than the target
+        principal.SetupGet(p => p.AccountId).Returns(Guid.NewGuid());
         principal.SetupGet(p => p.Role).Returns(Roles.Administrator);
         principal.SetupGet(p => p.SubjectId).Returns(supportUserId.ToString());
         principal.SetupGet(p => p.StaffId).Returns((Guid?)null);
@@ -94,7 +94,6 @@ public class SupportGrantAccessTests
 
         Assert.That(result.AccountId, Is.EqualTo(targetAccountId));
         Assert.That(context.StaffMembers.Count(), Is.EqualTo(1));
-        // AC15: the mutation emitted exactly one audit event carrying the target account + action.
         var audit = context.AuditEvents.Single();
         Assert.That(audit.AccountId, Is.EqualTo(targetAccountId));
         Assert.That(audit.Action, Is.EqualTo("CreateStaffMember"));

@@ -15,9 +15,8 @@
 
 namespace TrackHub.Router.Domain.Models;
 
-// Device-sync counts returned by Manager's synchronizeOperatorDevices mutation.
-// Manager no longer records the sync run; it returns these counts so the Router can be the single
-// writer of sync-run telemetry, recording exactly one run per attempt.
+// Returned by Manager's synchronizeOperatorDevices mutation so the Router is the single writer of
+// sync-run telemetry, recording exactly one run per attempt.
 public readonly record struct DeviceSyncCountsVm(
     int DevicesSeen,
     int DevicesAdded,

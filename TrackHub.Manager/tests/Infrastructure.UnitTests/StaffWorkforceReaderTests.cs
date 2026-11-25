@@ -32,7 +32,7 @@ public class StaffWorkforceReaderTests
         using var context = NewContext(nameof(ValidateStaffAssignment_TrueForAssignmentRow));
         var accountId = Guid.NewGuid();
         var transporterId = Guid.NewGuid();
-        // No DefaultTransporterId at all — only the assignment row can satisfy this (AC4).
+        // No DefaultTransporterId at all — only the assignment row can satisfy this.
         var staff = new StaffMember(accountId, "Ana", null, null, null, true, null, null, null, null);
         context.StaffMembers.Add(staff);
         context.StaffTransporterAssignments.Add(ActiveAssignment(accountId, staff.StaffId, transporterId));
@@ -58,13 +58,13 @@ public class StaffWorkforceReaderTests
         var reader = new StaffMemberReader(context, Principal(accountId));
         var ok = await reader.ValidateStaffAssignmentAsync(staff.StaffId, "Transporter", transporter.TransporterId.ToString(), CancellationToken.None);
 
-        // The legacy path DocumentAccessPolicy relies on must keep working untouched (AC4).
+        // The legacy path DocumentAccessPolicy relies on must keep working untouched.
         Assert.That(ok, Is.True);
     }
 
-    // Spec §5: a cross-account transporter reference must never validate. Writers now reject one, but
-    // rows written before that check existed would otherwise let a staff reach another tenant's
-    // documents through DocumentAccessPolicy.
+    // A cross-account transporter reference must never validate. Writers reject one, but rows written
+    // before that check existed would otherwise let a staff reach another tenant's documents through
+    // DocumentAccessPolicy.
     [Test]
     public async Task ValidateStaffAssignment_FalseForCrossAccountDefaultTransporter()
     {
@@ -249,7 +249,7 @@ public class StaffWorkforceReaderTests
         Assert.Multiple(() =>
         {
             Assert.That(profile.Staff.Name, Is.EqualTo("Ana"));
-            // Another staff's qualifications and assignments must never leak in (AC2).
+            // Another staff's qualifications and assignments must never leak in.
             Assert.That(profile.Qualifications.Select(x => x.Number), Is.EqualTo(new[] { "mine" }));
             Assert.That(profile.ActiveAssignments, Has.Count.EqualTo(1));
             Assert.That(profile.ActiveAssignments.Single().StaffId, Is.EqualTo(me.StaffId));

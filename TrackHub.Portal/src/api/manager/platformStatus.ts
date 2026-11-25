@@ -14,11 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Platform status API (Manager backend): plain typed async functions.
- * Failures THROW ApiError — fallbacks and toasts belong to the caller layer.
- */
-
 import axios from 'axios';
 import { executeGraphQL } from 'api/core/graphqlClient';
 import type { RequestOptions } from 'api/core/errors';
@@ -39,10 +34,7 @@ import {
 export type PlatformAnnouncement = PlatformAnnouncementItemFragment;
 export type { PlatformAnnouncementDtoInput, AnnouncementSeverity };
 
-/**
- * The anonymous projection returned by `GET /api/PlatformStatus/announcements`.
- * Narrower than the administrator VM on purpose: no `active`, no `lastModified`.
- */
+/** Narrower than the administrator VM on purpose: no `active`, no `lastModified`. */
 export interface VisibleAnnouncement {
   id: string;
   messageEn: string;
@@ -53,12 +45,9 @@ export interface VisibleAnnouncement {
 }
 
 /**
- * Currently-visible announcements, read WITHOUT authentication.
- *
- * Sanctioned anonymous fetch: `restClient` always acquires a token, which is
- * exactly wrong here — this must work for a signed-out visitor and for one whose
- * sign-in service is down. Returns [] rather than throwing when Manager is
- * unreachable: per ST-09 a Manager outage removes the banner, never the page.
+ * Sanctioned anonymous fetch: `restClient` always acquires a token, which is wrong here; this must
+ * work signed out or with the sign-in service down. Returns [] when Manager is unreachable: an
+ * outage removes the banner, never the page.
  */
 export async function getVisibleAnnouncements(options?: RequestOptions): Promise<VisibleAnnouncement[]> {
   try {

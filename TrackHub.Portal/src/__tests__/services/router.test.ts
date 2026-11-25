@@ -27,8 +27,7 @@ describe('router api', () => {
     vi.clearAllMocks();
   });
 
-  // The api layer no longer swallows failures into an empty list: a GraphQL
-  // feature-restriction error propagates as the thrown ApiError, and the
+  // A GraphQL feature-restriction error propagates as the thrown ApiError; the
   // query/toast layer owns the fallback UX.
   test('getDevicePositions rejects with the ApiError thrown by the client', async () => {
     const error = new ApiError('Feature disabled', { code: 'FEATURE_DISABLED' });

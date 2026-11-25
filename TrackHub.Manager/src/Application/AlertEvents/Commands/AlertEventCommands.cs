@@ -2,9 +2,6 @@ using TrackHub.Manager.Domain.Constants;
 
 namespace TrackHub.Manager.Application.AlertEvents.Commands;
 
-// The account is nested in AlertEventDto, so this surface was invisible to the tenant guard until
-// TrackHubCommon 1.0.7 widened the resolver. It is a genuine cross-tenant surface: every producer
-// is a global service identity emitting an alert for whichever account owns the resource.
 [Authorize(Resource = Resources.Alerts, Action = Actions.Write)]
 [AllowCrossAccount("Platform alert ingestion. Geofencing (geofence_client), TripManagement (trip_client) and Router/SyncWorker (router_client/syncworker_client) each emit alerts under their own global service identity for whichever account owns the geofence/trip/operator; none of those tokens carries an account claim, so there is nothing to compare the event's AccountId against.")]
 public readonly record struct RecordAlertEventCommand(AlertEventDto AlertEvent) : IRequest<AlertEventVm>;

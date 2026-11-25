@@ -16,9 +16,8 @@
 namespace TrackHub.TripManagement.Application.UnitTests;
 
 /// <summary>
-/// Spec 11a §4.3/§10: the phase is what the dispatch board leads with, and it is DERIVED from
-/// recorded facts on every read. A board full of rows reading <c>InProgress</c> is exactly why a
-/// dispatcher used to have to open each one.
+/// The phase is what the dispatch board leads with, and it is DERIVED from
+/// recorded facts on every read.
 /// </summary>
 [TestFixture]
 public class TripPhaseResolverTests
@@ -50,7 +49,7 @@ public class TripPhaseResolverTests
     /// <summary>
     /// Overdue is a READING, never a status change: the trip stays Created and stays queued, and the
     /// decision to cancel or re-plan belongs to a dispatcher. Silently skipping it would run
-    /// Thursday's trip before anyone noticed Monday's never left (§7).
+    /// Thursday's trip before anyone noticed Monday's never left.
     /// </summary>
     [Test]
     public void ATripPastItsGrace_ReadsOverdueWithoutChangingStatus()
@@ -73,7 +72,7 @@ public class TripPhaseResolverTests
             Assert.That(phase.Phase, Is.EqualTo(TripPhases.AtOrigin));
             Assert.That(phase.PhaseStopName, Is.EqualTo("Plant 3"));
 
-            // Origin dwell IS loading time by definition (§4.2) — stated, not looked up.
+            // Origin dwell IS loading time by definition — stated, not looked up.
             Assert.That(phase.PhaseStopActivity, Is.EqualTo(TripStopActivities.Load));
         });
     }
@@ -81,9 +80,9 @@ public class TripPhaseResolverTests
     /// <summary>
     /// A running trip whose origin was never MEASURED must not be narrated as loading. Three
     /// populations land here and none of them is exotic: an account with <c>autoLifecycle</c> off
-    /// never arms, a trip that predates the zero-touch migration has no <c>OriginGeom</c> (§14), and
+    /// never arms, a trip that predates the zero-touch migration has no <c>OriginGeom</c>, and
     /// a manual override starts a trip detection never saw. Reading "no departure recorded" as
-    /// "still at the origin" pinned all three on "Loading at Plant 3" for their whole run.
+    /// "still at the origin" would pin all three on "Loading at Plant 3" for their whole run.
     /// </summary>
     [Test]
     public void ARunningTripWhoseOriginWasNeverMeasured_ReadsFromItsStopsInsteadOfClaimingItIsLoading()

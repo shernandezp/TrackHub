@@ -15,20 +15,14 @@
  */
 
 /**
- * Module augmentation for the vendored Argon Dashboard 2 MUI theme.
- *
- * Argon extends MUI's `Theme` with three extra branches (`boxShadows`, `borders`,
- * `functions`) and layers a large set of custom color groups onto the palette. These
- * shapes are derived from `assets/theme/base/colors`, `.../base/boxShadows`,
- * `.../base/borders`, `.../functions/*` and the `createTheme(...)` call in
- * `assets/theme/index`. Both the light (`theme/`) and dark (`theme-dark/`) trees share
- * this shape and differ only in values.
+ * Argon extends MUI's `Theme` with `boxShadows`, `borders` and `functions` and layers custom color
+ * groups onto the palette; shapes derive from `assets/theme/base/*`, `functions/*` and
+ * `assets/theme/index`. The light and dark trees share this shape.
  */
 
 import "@mui/material/styles";
 
 declare module "@mui/material/styles" {
-  // ---- Argon helper functions surfaced on the theme (theme.functions.*) ----------------
   interface ArgonThemeFunctions {
     boxShadow: (
       offset: number[],
@@ -43,7 +37,6 @@ declare module "@mui/material/styles" {
     rgba: (color: string, opacity: number) => string;
   }
 
-  // ---- theme.boxShadows.* (base/boxShadows) --------------------------------------------
   interface ArgonBoxShadows {
     xs: string;
     sm: string;
@@ -60,14 +53,12 @@ declare module "@mui/material/styles" {
     tabsBoxShadow: { indicator: string };
   }
 
-  // ---- theme.borders.* (base/borders) --------------------------------------------------
   interface ArgonBorders {
     borderColor: string;
     borderWidth: Record<string, string | number>;
     borderRadius: Record<string, string>;
   }
 
-  // ---- Argon custom palette color groups ------------------------------------------------
   type ArgonGradient = { main: string; state: string };
   type ArgonSocialColor = { main: string; dark: string };
   type ArgonAlertColor = { main: string; state: string; border: string };
@@ -79,7 +70,6 @@ declare module "@mui/material/styles" {
     functions: ArgonThemeFunctions;
   }
 
-  // ---- Argon custom typography fields (theme.typography.*) ------------------------------
   // Argon layers a `size` scale and a `fontSizeRegular` alias onto MUI's typography.
   interface TypographyVariants {
     size: Record<string, string>;

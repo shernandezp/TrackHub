@@ -1,6 +1,6 @@
 namespace TrackHub.Manager.Domain.Records;
 
-// Global admin library search filters. Group-scoped for non-admins in the reader.
+// Group-scoped for non-admins in the reader.
 public readonly record struct DocumentSearchFilter(
     string? OwnerEntityType = null,
     string? OwnerEntityId = null,

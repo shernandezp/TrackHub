@@ -31,24 +31,19 @@ Coded by www.creative-tim.com
 
 import { useEffect, useContext } from "react";
 
-// @mui material components
 import Grid from "@mui/material/Grid";
 
-// Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
 
-// Argon Dashboard 2 MUI example components
 import DashboardLayout from "controls/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "controls/Navbars/DashboardNavbar";
 import Footer from "controls/Footer";
 import ProfileInfoCard from "layouts/profile/components/ProfileInfoCard";
 import UserPartOf from "layouts/profile/components/UserPartOf";
 
-// Overview page components
 import Header from "layouts/profile/components/Header";
 import PlatformSettings from "layouts/profile/components/PlatformSettings";
 
-// Data
 import { useCurrentUser, useUpdateCurrentUser, useUpdatePassword } from "queries/users";
 import type { CurrentUser } from "api/security/users";
 import { LoadingContext } from 'LoadingContext';
@@ -60,16 +55,10 @@ function Overview() {
   const { isAuthenticated } = useAuth();
 
   const currentUserQuery = useCurrentUser({ enabled: isAuthenticated });
-  // Loaded shape is a CurrentUser; the `{}` fallback mirrors the pre-load state
-  // the child components already guard against (Object.keys checks).
   const user = (currentUserQuery.data ?? {}) as CurrentUser;
   const updateCurrentUserMutation = useUpdateCurrentUser();
   const updatePasswordMutation = useUpdatePassword();
 
-  // Preserve the prop contracts ProfileInfoCard expects: updateCurrentUser(values)
-  // and updatePassword(userId, { userId, password }) — the password-change flow
-  // is unchanged. firstName/lastName are guaranteed by ProfileInfoCard's validate()
-  // gate before this runs, so the non-null assertions match runtime behavior.
   const updateCurrentUser = (values: Partial<CurrentUser>): Promise<boolean> =>
     updateCurrentUserMutation.mutateAsync({
       firstName: values.firstName!,
@@ -81,7 +70,6 @@ function Overview() {
   const updatePassword = (userId: string, userData: { password?: string; currentPassword?: string }): Promise<boolean> =>
     updatePasswordMutation.mutateAsync({ userId, password: userData.password!, currentPassword: userData.currentPassword });
 
-  // Keep the global spinner UX while the profile loads.
   useEffect(() => {
     setLoading(currentUserQuery.isFetching);
   }, [currentUserQuery.isFetching, setLoading]);

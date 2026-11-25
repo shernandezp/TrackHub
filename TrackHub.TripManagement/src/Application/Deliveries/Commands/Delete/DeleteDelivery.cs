@@ -22,7 +22,7 @@ namespace TrackHub.TripManagement.Application.Deliveries.Commands.Delete;
 [Authorize(Resource = Resources.Trips, Action = Actions.Delete)]
 [RequireFeature(FeatureKeys.TripManagement)]
 // Enforcement: the handler derives the caller's own account and passes it to the reader/writer,
-// which filters every row on it (TripVisibility is the single visibility resolver - spec 11).
+// which filters every row on it (TripVisibility is the single visibility resolver).
 [AccountScopeEnforcedInHandler]
 public readonly record struct DeleteDeliveryCommand(Guid DeliveryId) : IRequest;
 

@@ -40,7 +40,6 @@ function GpsDashboard() {
   const dashboardQuery = useGpsDashboard(accountId ?? undefined);
   const dashboard = dashboardQuery.data ?? null;
 
-  // Keep the global spinner UX for the dashboard load / invalidation refetch.
   useEffect(() => {
     setLoading(dashboardQuery.isFetching);
   }, [dashboardQuery.isFetching, setLoading]);
@@ -62,8 +61,6 @@ function GpsDashboard() {
     })();
   }, [t]);
 
-  // The refresh bus (operator toggle/sync/credential save) now drives a cache
-  // invalidation; the query refetches. A read failure is surfaced by the toast.
   useEffect(() => {
     const handleRefresh = () => queryClient.invalidateQueries({ queryKey: gpsDashboardKeys.all });
     window.addEventListener(GPS_INTEGRATION_REFRESH_EVENT, handleRefresh);

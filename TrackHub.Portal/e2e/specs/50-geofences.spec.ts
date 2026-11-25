@@ -1,13 +1,7 @@
 /**
- * Geofences (feature `geofencing`): the map editor, the list beside it, and the
- * per-geofence properties.
- *
- * Shapes are drawn on a Leaflet map. Circles are drawable from the browser (the
- * tool takes a click for the centre and a drag for the radius) and that path is
- * exercised here. Polygons need a click per vertex plus a commit gesture that
- * `leaflet-editable` only completes reliably with a real pointer, so the polygon
- * used by the edit/toggle/delete/filter tests is SEEDED through the API — what
- * those tests measure is the screen, not the drawing library.
+ * Polygons need a click per vertex plus a commit gesture `leaflet-editable` only
+ * completes reliably with a real pointer, so the polygon used by the
+ * edit/toggle/delete/filter tests is seeded through the API; circles are drawn.
  */
 
 import { test, expect, uniqueName } from '../fixtures';
@@ -33,7 +27,6 @@ test.describe('geofences', () => {
     await expect(page.getByRole('combobox', { name: t('geofence.filterActive') })).toBeVisible();
     await expect(page.getByText(/\d+\s*[–-]\s*\d+/).first()).toBeVisible();
 
-    // The two drawing tools sit on the map control overlay.
     await expect(page.getByLabel(t('geofence.drawPolygon'))).toBeVisible();
     await expect(page.getByLabel(t('geofence.drawCircle'))).toBeVisible();
   });

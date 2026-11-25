@@ -15,8 +15,6 @@
 
 namespace TrackHub.Router.Infrastructure.ManagerApi;
 
-// This class represents a device reader that implements the IDeviceReader interface.
-// It is responsible for retrieving devices by operator from the GraphQL service.
 public class DeviceTransporterReader(IGraphQLClientFactory graphQLClient)
     : GraphQLService(graphQLClient.CreateClient(Clients.Manager)), IDeviceTransporterReader
 {
@@ -72,12 +70,6 @@ public class DeviceTransporterReader(IGraphQLClientFactory graphQLClient)
         => await QueryAsync<IReadOnlyCollection<Guid>>(
             new GraphQLRequest { Query = TransporterIdsByGroupQuery, Variables = new { groupId } }, cancellationToken);
 
-    /// <summary>
-    /// Retrieves devices by operator asynchronously.
-    /// </summary>
-    /// <param name="operatorId">The ID of the operator.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>A collection of DeviceVm objects representing the devices.</returns>
     public async Task<IEnumerable<DeviceTransporterVm>> GetVisibleDeviceTransportersByOperatorAsync(Guid operatorId, CancellationToken cancellationToken)
     {
         var request = new GraphQLRequest
@@ -102,12 +94,6 @@ public class DeviceTransporterReader(IGraphQLClientFactory graphQLClient)
         return await QueryAsync<IEnumerable<DeviceTransporterVm>>(request, cancellationToken);
     }
 
-    /// <summary>
-    /// Retrieves device transporter by id asynchronously.
-    /// </summary>
-    /// <param name="transporterId">The ID of the transporter.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>A DeviceVm object representing the device.</returns>
     public async Task<DeviceTransporterVm> GetDevicesTransporterAsync(Guid transporterId, CancellationToken cancellationToken)
     {
         var request = new GraphQLRequest

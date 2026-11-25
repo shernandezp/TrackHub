@@ -25,7 +25,7 @@ using TrackHub.TripManagement.Infrastructure.TripDB.Writers;
 namespace Infrastructure.UnitTests;
 
 /// <summary>
-/// The rebuilt lifecycle funnel (spec 11a §12): status, timestamps and the timeline event are ONE
+/// The lifecycle funnel: status, timestamps and the timeline event are ONE
 /// save, so a duplicate or a racing transition writes nothing at all.
 /// <para>
 /// These run against a context that answers with a genuine PostgreSQL 23505, because the failure
@@ -76,7 +76,7 @@ public class LifecycleFunnelTests
             Assert.That(trip.Status, Is.EqualTo(TripStatuses.InProgress));
 
             // The MEASURED instant, never the server clock: an automatic start is a fact about the
-            // vehicle, not about when the server got round to noticing (§12.3).
+            // vehicle, not about when the server got round to noticing.
             Assert.That(trip.ActualStartAt, Is.EqualTo(Measured));
             Assert.That(context.TripEvents.Count(), Is.EqualTo(1));
         });
@@ -133,7 +133,7 @@ public class LifecycleFunnelTests
     [Test]
     public async Task AReplayedTransition_IsRecognisedBeforeTheMatrixGuardRuns()
     {
-        // Idempotency is checked FIRST. Running the matrix guard first answered
+        // Idempotency is checked FIRST. Running the matrix guard first would answer
         // TRIP_INVALID_TRANSITION to a replay of a transition the server itself had already applied.
         using var context = await SeededAsync();
         var writer = new TripWriter(context, User().Object);
@@ -189,8 +189,7 @@ public class LifecycleFunnelTests
             Assert.That(trip.ArmedAt, Is.Not.Null);
             Assert.That(trip.OriginGeom, Is.Not.Null, "the origin zone is the whole point of arming");
 
-            // No event, so the trip stays deletable: an armed trip that never ran orphans nothing
-            // (acceptance 16).
+            // No event, so the trip stays deletable: an armed trip that never ran orphans nothing.
             Assert.That(context.TripEvents.Count(), Is.Zero);
         });
     }
@@ -246,7 +245,7 @@ public class LifecycleFunnelTests
 
     /// <summary>
     /// Re-pointing a trip detection is already watching would change the meaning of a measurement in
-    /// flight (§12.4). While it is still only planned, the edit is allowed and DISARMS it, so the
+    /// flight. While it is still only planned, the edit is allowed and DISARMS it, so the
     /// next cycle re-arms against the new plan rather than the old geometry.
     /// </summary>
     [Test]
@@ -346,7 +345,7 @@ public class LifecycleFunnelTests
         var writer = new TripStopWriter(context);
 
         // Those stops carry arrivals, departures, deliveries and POD. A "re-plan" that deleted them
-        // would erase measurements, which is why the partner import checks this too (§9.2).
+        // would erase measurements, which is why the partner import checks this too.
         var ex = await Assert.ThrowsAsync<ConflictException>(async () => await writer.ReplaceStopsAsync(
             TripId, WriterTestData.AccountId, [], CancellationToken.None));
 

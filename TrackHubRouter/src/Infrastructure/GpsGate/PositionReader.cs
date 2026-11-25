@@ -21,7 +21,6 @@ using TrackHub.Router.Domain.Interfaces;
 
 namespace TrackHub.Router.Infrastructure.GpsGate;
 
-// This class represents a reader for GpsGate api - positions.
 public sealed class PositionReader(
     ICredentialHttpClientFactory httpClientFactory, 
     IHttpClientService httpClientService) : GpsGateReaderBase(httpClientFactory, httpClientService), IPositionReader

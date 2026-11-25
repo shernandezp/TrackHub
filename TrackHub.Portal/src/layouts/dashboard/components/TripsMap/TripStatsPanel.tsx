@@ -21,7 +21,6 @@ import { useTranslation } from 'react-i18next';
 import { TRIP_TYPE } from 'controls/Maps/core/mapTypes';
 import type { Trip } from 'api/router/router';
 
-/** Aggregated (or single-trip) statistics rendered in the panel. */
 interface TripStats {
   title?: string;
   distance: string;
@@ -84,7 +83,6 @@ const TripStatsPanel = ({ trips = [], selectedTrip }: TripStatsPanelProps) => {
       };
     }
 
-    // Aggregate
     const totalDistance = calculateTotalDistance(trips, 'totalDistance');
     const totalDuration = trips.reduce((s, t) => s + parseDurationToSeconds(t.duration), 0);
     const maxSpeed = Math.max(...trips.flatMap(t => t.points.map(p => p.speed || 0)), 0);

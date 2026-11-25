@@ -10,9 +10,8 @@ public sealed class DeviceTransporterReader(IApplicationDbContext context, ICurr
 {
     public async Task<IReadOnlyCollection<DeviceTransporterVm>> GetDeviceTransporterByUserAsync(Guid userId, Guid operatorId, CancellationToken cancellationToken)
     {
-        // Reimplemented on the single visibility primitive: privileged roles
-        // read account-wide, plain users are group-scoped. The map, its stored fallback, and the
-        // replay check all answer through GetVisibleTransporterIdsAsync so they cannot diverge (K1).
+        // The map, its stored fallback, and the replay check all answer through
+        // GetVisibleTransporterIdsAsync so they cannot diverge.
         var accountId = await Context.Users
             .Where(u => u.UserId == userId)
             .Select(u => u.AccountId)

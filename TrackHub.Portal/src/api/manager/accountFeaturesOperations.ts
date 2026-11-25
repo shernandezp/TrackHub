@@ -14,12 +14,7 @@
 *  limitations under the License.
 */
 
-/**
- * Account features GraphQL documents (Manager backend). Codegen validates these
- * against schemas/manager.graphql and emits typed document nodes — values always
- * travel as variables, never string interpolation. The `*Master` operations are
- * the SuperAdministrator cross-account variants (AccountFeaturesMaster resource).
- */
+/** The `*Master` operations are the SuperAdministrator cross-account variants (AccountFeaturesMaster resource). */
 
 import { graphql } from './generated';
 

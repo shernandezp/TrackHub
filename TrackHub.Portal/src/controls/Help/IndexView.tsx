@@ -39,11 +39,7 @@ function topicI18n(topic: HelpTopicMeta, lang: string) {
   return topic.i18n[lang] ?? topic.i18n.en;
 }
 
-/**
- * Browsable, searchable topic index. Search is a client-side filter over the
- * localized title/description/tags; the current screen's topics are pinned in
- * a "This screen" group above the category groups.
- */
+/** The current screen's topics are pinned in a "This screen" group above the category groups. */
 function IndexView({ manifest, lang, onOpenTopic }: IndexViewProps) {
   const { t } = useTranslation();
   const { currentScreenKey, allowedScreens, isFeatureEnabled } = useHelpContext();

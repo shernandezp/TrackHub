@@ -17,8 +17,8 @@ namespace TrackHub.TripManagement.Infrastructure.ManagerApi;
 
 /// <summary>
 /// Public-link lifecycle delegated to Manager under <c>trip_client</c> — this module never hashes
-/// a token, counts an access or writes the <c>PublicLinkAccessed</c> audit event itself
-/// (spec 11 §7.8, §18.10). Manager generates the token and returns its one-time plaintext.
+/// a token, counts an access or writes the <c>PublicLinkAccessed</c> audit event itself.
+/// Manager generates the token and returns its one-time plaintext.
 /// </summary>
 public class PublicLinkGrantClient(IGraphQLClientFactory graphQLClient)
     : GraphQLService(graphQLClient.CreateClient(Clients.Manager, asService: true)), IPublicLinkGrantClient

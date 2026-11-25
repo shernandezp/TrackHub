@@ -173,16 +173,6 @@ public abstract class AccountScopedDataAccess(IApplicationDbContext context, ICu
 
     protected static string Quote(DateTimeOffset? value) => AuditJson.Quote(value);
 
-    /// <summary>
-    /// Serializes a value as a JSON string literal for the hand-built audit payloads.
-    /// <para>
-    /// Uses <see cref="JsonSerializer"/> rather than manual escaping: the previous implementation
-    /// escaped only <c>\</c> and <c>"</c>, so any control character — a newline in a free-text field
-    /// such as a staff qualification's Notes — produced a raw U+000A inside a JSON string and made
-    /// <c>audit_events.newvaluesjson</c> unparseable. Every audit payload in this service flows
-    /// through here, so fixing it once fixes them all.
-    /// </para>
-    /// </summary>
     protected static string Quote(string? value) => AuditJson.Quote(value);
 
     // A settings patch touches only its own keys, so after a concurrent write it is re-applied to

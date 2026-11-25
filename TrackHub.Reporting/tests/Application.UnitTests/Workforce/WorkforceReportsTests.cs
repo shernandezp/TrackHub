@@ -50,7 +50,6 @@ public class WorkforceReportsTests
         Assert.That(new AssignmentHistoryReport(_reader.Object).ReportCode, Is.EqualTo("workforce-assignment-history"));
     }
 
-    // ---- Staff registry ----
 
     [Test]
     public async Task Registry_OrdersByNameAndProjectsNullsToEmptyStrings()
@@ -106,7 +105,6 @@ public class WorkforceReportsTests
         _reader.Verify(r => r.EnsureWorkforceFeatureAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    // ---- Qualification expirations ----
 
     [Test]
     public async Task Expirations_DefaultsToThirtyDayWindow()
@@ -193,7 +191,6 @@ public class WorkforceReportsTests
         }));
     }
 
-    // ---- Assignment history ----
 
     // `transporterId` is the catalog's picker filter for this code — the report must read it.
     [Test]

@@ -26,11 +26,11 @@ namespace Infrastructure.UnitTests;
 /// with a genuine PostgreSQL 23505 <see cref="DbUpdateException"/>.
 /// <para>
 /// The Application suite stubs these paths by having a mocked writer return <c>false</c>, which
-/// proves the caller honours a duplicate but proves nothing about the writer. That gap hid two
-/// defects: catching the violation WITHOUT detaching the failed <c>Added</c> entries leaves them in
+/// proves the caller honours a duplicate but proves nothing about the writer. Catching the
+/// violation WITHOUT detaching the failed <c>Added</c> entries leaves them in
 /// a request-scoped context's change tracker, so the next <c>SaveChangesAsync</c> replays the dead
-/// insert — a retried POD returned 500 instead of the idempotent success spec 10's offline outbox
-/// depends on (acceptance 15), and a genuine event later in the same request was silently lost.
+/// insert — a retried POD would return 500 instead of the idempotent success the offline outbox
+/// depends on, and a genuine event later in the same request would be lost.
 /// Only a test that keeps saving on the SAME context after the violation can see either.
 /// </para>
 /// </summary>
@@ -71,12 +71,10 @@ public class WriterDuplicateHandlingTests
     /// <summary>
     /// A replayed event must short-circuit BEFORE the stop-transition guard.
     /// <para>
-    /// Found by a smoke test, not by this suite: every duplicate test here replayed against a stop
-    /// that had not moved on, so the guard was never reached. The real sequence is spec 10's
-    /// offline outbox — a staff captures arrival and departure with no signal, both eventually
+    /// The real sequence is the offline outbox — a staff captures arrival and departure with no signal, both eventually
     /// sync, and the queued arrival is retried once the stop is already <c>Departed</c>. With the
-    /// guard running first that retry threw <c>STOP_ALREADY_DEPARTED</c> permanently, so the device
-    /// could only ever surface it as a hard failure. Acceptance 15 says a duplicate is a success.
+    /// guard running first that retry would throw <c>STOP_ALREADY_DEPARTED</c> permanently, so the device
+    /// could only ever surface it as a hard failure. A duplicate is a success.
     /// </para>
     /// </summary>
     [Test]
@@ -113,7 +111,7 @@ public class WriterDuplicateHandlingTests
         Assert.That(events, Is.EqualTo(1), "no second event row");
     }
 
-    // The regression this fixture exists for. After a duplicate, the SAME scoped context must still
+    // After a duplicate, the SAME scoped context must still
     // be usable: the failed insert has to have left the change tracker.
     [Test]
     public async Task StopProgress_AfterADuplicate_StillRecordsAGenuineLaterEventOnTheSameContext()
@@ -200,9 +198,7 @@ public class WriterDuplicateHandlingTests
         Assert.That(pods, Is.EqualTo(1), "a retried offline submission must produce exactly one row");
     }
 
-    // Acceptance 15 verbatim: "a duplicate submission returns success and produces exactly one row".
-    // Before the detach fix this threw DbUpdateException out to the caller as a 500, and spec 10's
-    // outbox would have retried it forever.
+    // A duplicate submission returns success and produces exactly one row.
     [Test]
     public async Task Pod_AfterADuplicate_TheSameContextIsStillUsable()
     {

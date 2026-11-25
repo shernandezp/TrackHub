@@ -38,7 +38,7 @@ public sealed class ProofOfDeliveryConfiguration : IEntityTypeConfiguration<Proo
         builder.Property(x => x.ClientEventId).HasColumnName("clienteventid");
 
         // Offline-outbox safety: a retried POD submission hits this index and returns the
-        // existing record instead of creating a second one (acceptance 15).
+        // existing record instead of creating a second one.
         builder.HasIndex(x => new { x.TripStopId, x.ClientEventId })
             .HasDatabaseName("ux_trip_pods_tripstopid_clienteventid")
             .IsUnique();

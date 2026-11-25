@@ -21,10 +21,8 @@ public interface IGraphQLClientFactory
     IGraphQLClient CreateClient(string name);
 
     /// <summary>
-    /// Creates a client for the named GraphQL service. When <paramref name="asService"/> is true the
-    /// client authenticates with the host's client-credentials (service) identity even if the host
-    /// normally propagates user tokens; use it for system operations that must not depend on the
-    /// calling user's permissions.
+    /// When <paramref name="asService"/> is true the client uses the host's service identity even if the host
+    /// normally propagates user tokens, for system operations that must not depend on the caller's permissions.
     /// </summary>
     IGraphQLClient CreateClient(string name, bool asService);
 

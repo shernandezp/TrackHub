@@ -33,14 +33,12 @@ const createSvgIcon = (
     const scaledWidth = options.width || 40;
     const scaledHeight = options.height || 40;
     // The markup below is parsed as HTML by L.divIcon, so the two values that can come from account
-    // data are escaped here rather than at the (currently constant) call sites.
+    // data are escaped here rather than at the call sites.
     const circleColor = escapeHtml(options.color || "#1E90FF");
     const label = escapeHtml(text);
 
-    // Calculate darker gradient color
     const gradientColor = darkenColor(circleColor, 0.7); // Darken by 30%
 
-    // Define SVG content
     const svg = `
         <svg width="${scaledWidth}" height="${scaledHeight}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
             <!-- Circle representing the sun -->
@@ -62,20 +60,16 @@ const createSvgIcon = (
 };
 
 function darkenColor(hexColor: string, factor: number): string {
-    // Remove the '#' if present
     hexColor = hexColor.replace('#', '');
 
-    // Parse the hex color to RGB
     const red = parseInt(hexColor.substring(0, 2), 16);
     const green = parseInt(hexColor.substring(2, 4), 16);
     const blue = parseInt(hexColor.substring(4, 6), 16);
 
-    // Darken the RGB values
     const darkenedRed = Math.round(red * factor);
     const darkenedGreen = Math.round(green * factor);
     const darkenedBlue = Math.round(blue * factor);
 
-    // Convert back to hexadecimal
     const darkenedHex = `#${darkenedRed.toString(16).padStart(2, '0')}${darkenedGreen.toString(16).padStart(2, '0')}${darkenedBlue.toString(16).padStart(2, '0')}`;
 
     return darkenedHex;
@@ -91,9 +85,9 @@ const UNIT_STATUS_COLOR: Record<UnitIconStatus, string> = {
 const SELECTION_COLOR = '#0B7499';
 
 /**
- * A unit marker: a solid status-coloured badge with a white outline, so it cannot be mistaken for
- * the base map's own place pins. The status is carried by shape as well as colour — a teardrop
- * pointing along the heading when moving, a rounded square when stopped, a barred disc when offline.
+ * A solid status-coloured badge with a white outline, so it cannot be mistaken for the base map's
+ * own place pins. Status is carried by shape as well as colour: a teardrop along the heading when
+ * moving, a rounded square when stopped, a barred disc when offline.
  */
 const createUnitIcon = (
     status: UnitIconStatus,

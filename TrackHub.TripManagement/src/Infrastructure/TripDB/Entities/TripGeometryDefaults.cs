@@ -15,7 +15,7 @@
 
 namespace TrackHub.TripManagement.Infrastructure.TripDB.Entities;
 
-/// <summary>Persistence-side defaults for the spatial columns (spec 11 section 6.1).</summary>
+/// <summary>Persistence-side defaults for the spatial columns.</summary>
 public static class TripGeometryDefaults
 {
     /// <summary>Mirrors the domain band so the column default and the validators cannot drift apart.</summary>

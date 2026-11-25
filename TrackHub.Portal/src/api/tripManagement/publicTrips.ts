@@ -15,18 +15,12 @@
 */
 
 /**
- * Anonymous customer trip tracking (TripManagement backend, REST).
+ * Sanctioned anonymous fetch: `restClient.restRequest` always acquires a token, and the recipient
+ * of a shared link has nothing to sign in with. Failures are still normalized to `ApiError` so the
+ * page can tell 404 (missing/revoked/wrong scope/feature disabled) from 410 (expired).
  *
- * SANCTIONED ANONYMOUS FETCH, the `getVisibleAnnouncements` precedent:
- * `restClient.restRequest` always acquires an access token, which is exactly
- * wrong here — the recipient of a shared link is not a platform principal and
- * has nothing to sign in with. Failures are still normalized to `ApiError` so
- * the page can distinguish 404 (missing/revoked/wrong scope/feature disabled)
- * from 410 (expired) and render the right localized state.
- *
- * The response is the server's already-projected snapshot: whatever the trip's
- * share flags withheld simply is not in the payload. The page renders what it
- * receives and never re-filters or substitutes placeholders (acceptance 23).
+ * The response is the server's already-projected snapshot; the page renders what it receives and
+ * never re-filters or substitutes placeholders.
  */
 
 import axios, { AxiosError } from 'axios';
@@ -47,11 +41,8 @@ export interface PublicTripStop {
 }
 
 /**
- * The anonymous tracking snapshot (`PublicTripVm`). Every optional field is
- * genuinely absent when the share did not grant it — the UI must test for
- * presence rather than assume a value, and must never show a placeholder in
- * place of a field the server deliberately withheld. Toll and cost figures are
- * never present at all, by design.
+ * Every optional field is genuinely absent when the share did not grant it: test for presence and
+ * never show a placeholder for a withheld field. Toll and cost figures are never present.
  */
 export interface PublicTrip {
   tripId: string;
@@ -62,10 +53,9 @@ export interface PublicTrip {
   actualStartAt?: string | null;
   actualEndAt?: string | null;
   /**
-   * There is deliberately NO `customerName` here. `PublicTripVm` does not expose
-   * one: on a multi-drop trip the consignee is not the same party as every link
-   * holder, so disclosing it would tell one recipient who another recipient is
-   * (spec 11 §7.8). Do not re-add the field to mirror the internal `TripVm`.
+   * Deliberately NO `customerName`: on a multi-drop trip the consignee is not the same party as
+   * every link holder, so disclosing it would tell one recipient who another is. Do not re-add it
+   * to mirror the internal `TripVm`.
    */
   stops: PublicTripStop[];
   /** Present only when the share includes the vehicle. */
@@ -76,15 +66,10 @@ export interface PublicTrip {
   lastLatitude?: number | null;
   lastLongitude?: number | null;
   lastPositionAt?: string | null;
-  /**
-   * Planned route geometry — present ONLY when the share ticked `includeRoute`,
-   * which defaults to false. It used to be disclosed unconditionally; treat its
-   * absence as the normal case, never as a missing field to work around.
-   */
+  /** Present ONLY when the share ticked `includeRoute` (default false); absence is the normal case. */
   plannedRoute?: { coordinates: Array<{ latitude: number; longitude: number }> } | null;
 }
 
-/** The four query values a tracking URL must carry. */
 export interface PublicTripLinkParams {
   publicLinkGrantId: string;
   accountId: string;
@@ -92,10 +77,9 @@ export interface PublicTripLinkParams {
   token: string;
 }
 
-/** Distinguishable outcomes the tracking page renders as localized states. */
 export type PublicTripErrorCode = 'NOT_FOUND' | 'EXPIRED' | 'INVALID_LINK' | 'UNAVAILABLE';
 
-/** Reads the four link parameters out of a URL query string. Returns null when any is missing. */
+/** Returns null when any parameter is missing. */
 export function parsePublicTripLink(search: string): PublicTripLinkParams | null {
   const params = new URLSearchParams(search);
   const publicLinkGrantId = params.get('grant');
@@ -106,7 +90,6 @@ export function parsePublicTripLink(search: string): PublicTripLinkParams | null
   return { publicLinkGrantId, accountId, resourceId, token };
 }
 
-/** Builds the shareable customer URL for a created trip share. */
 export function publicTripUrl(origin: string, params: PublicTripLinkParams): string {
   const query = new URLSearchParams({
     grant: params.publicLinkGrantId,
@@ -117,11 +100,7 @@ export function publicTripUrl(origin: string, params: PublicTripLinkParams): str
   return `${origin.replace(/\/+$/, '')}/track?${query.toString()}`;
 }
 
-/**
- * Fetches the tracking snapshot WITHOUT authentication. Throws an `ApiError`
- * whose `code` is one of {@link PublicTripErrorCode} so the page can render a
- * clean localized 404/410 rather than a transport message.
- */
+/** Throws an `ApiError` whose `code` is one of {@link PublicTripErrorCode}. */
 export async function getPublicTrip(params: PublicTripLinkParams, options?: RequestOptions): Promise<PublicTrip> {
   const url = `${REST_ENDPOINTS.tripManagementPublicTrips}/${encodeURIComponent(params.publicLinkGrantId)}`;
   try {

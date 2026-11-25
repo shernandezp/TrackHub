@@ -15,7 +15,6 @@
 
 namespace TrackHub.Manager.Domain.Constants;
 
-/// <summary>Template locales supported by the notification layer.</summary>
 public static class NotificationLocales
 {
     public const string English = "en";

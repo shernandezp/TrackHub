@@ -18,18 +18,13 @@ using Common.Domain.Constants;
 
 public sealed class ManagerCreated
 {
-    // Represents a notification for when a manager is created
     public readonly record struct Notification(Guid UserId) : INotification
     {
-        // Handles the ManagerCreated notification
         public class EventHandler(IUserRoleWriter writer, IRoleReader roleReader) : INotificationHandler<Notification>
         {
-            // Handles the notification by creating a user role for the manager
             public async Task Handle(Notification notification, CancellationToken cancellationToken)
             {
-                // Get the manager role
                 var role = await roleReader.GetRoleAsync(Roles.Manager, cancellationToken);
-                // Create a user role for the manager
                 await writer.CreateUserRoleAsync(new UserRoleDto(
                     notification.UserId,
                     role.RoleId

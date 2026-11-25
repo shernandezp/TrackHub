@@ -25,13 +25,11 @@ public sealed class OperatorConfiguration : IEntityTypeConfiguration<Operator>
     public void Configure(EntityTypeBuilder<Operator> builder)
     {
         builder.Property(x => x.Version).HasColumnName("editversion").HasConversion<long>().IsConcurrencyToken();
-        //Table name
         builder.ToTable(
             name: TableMetadata.Operator,
             schema: SchemaMetadata.Application,
             t => t.HasCheckConstraint("ck_operators_protocoltype", EnumColumn.Check<ProtocolType>("protocoltype")));
 
-        //Column names
         builder.Property(x => x.OperatorId).HasColumnName("id");
         builder.Property(x => x.Name).HasColumnName("name");
         builder.Property(x => x.Description).HasColumnName("description");

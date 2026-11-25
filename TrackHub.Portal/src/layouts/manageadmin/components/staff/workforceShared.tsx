@@ -14,11 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Small presentation helpers shared by the workforce accordions (credentials,
- * qualifications, assignments, expirations).
- */
-
 import type { ReactNode } from 'react';
 import ArgonTypography from 'components/ArgonTypography';
 import SearchSelect from 'edition/SearchSelect';
@@ -76,7 +71,6 @@ export function effectiveQualificationStatus(
   return status === 'Valid' && days !== null && days < 0 ? 'Expired' : status;
 }
 
-/** Assignment/qualification lifecycle status color. */
 export function statusColor(status: string | null | undefined): BadgeColor {
   switch ((status || '').toUpperCase()) {
     case 'ACTIVE':

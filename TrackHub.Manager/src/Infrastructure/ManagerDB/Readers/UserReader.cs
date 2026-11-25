@@ -19,8 +19,6 @@ using TrackHub.Manager.Infrastructure.Interfaces;
 
 namespace TrackHub.Manager.Infrastructure.ManagerDB.Readers;
 
-// This class represents a reader for retrieving user data from the database.
-//
 // Tenant scoping: the by-id and by-group reads take a caller-supplied key, and their queries carry no
 // top-level AccountId, so AccountScopeBehavior has no account to compare and this DbContext has no
 // global query filter. Scoping happens here, where the row's owning account first becomes known.
@@ -29,12 +27,6 @@ namespace TrackHub.Manager.Infrastructure.ManagerDB.Readers;
 public sealed class UserReader(IApplicationDbContext context, ICurrentPrincipal principal)
     : AccountScopedDataAccess(context, principal), IUserReader
 {
-    /// <summary>
-    /// Retrieves a user by their ID.
-    /// </summary>
-    /// <param name="id"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>A UserVm object representing the retrieved user.</returns>
     public async Task<UserVm> GetUserAsync(Guid id, CancellationToken cancellationToken)
     {
         var user = await Context.Users
@@ -51,17 +43,6 @@ public sealed class UserReader(IApplicationDbContext context, ICurrentPrincipal 
         return user;
     }
 
-    /// <summary>
-    /// Retrieves a page of the users in a group.
-    /// </summary>
-    /// <param name="groupId"></param>
-    /// <param name="skip"></param>
-    /// <param name="take"></param>
-    /// <param name="search"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>
-    /// A UsersPageVm carrying the requested window and the unpaged total.
-    /// </returns>
     public async Task<UsersPageVm> GetUsersByGroupAsync(long groupId, int skip, int take, string? search, CancellationToken cancellationToken)
     {
         // GroupId is a sequential bigint and therefore directly enumerable, so the group's owning

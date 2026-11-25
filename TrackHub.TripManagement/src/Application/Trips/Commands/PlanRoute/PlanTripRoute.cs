@@ -27,7 +27,7 @@ namespace TrackHub.TripManagement.Application.Trips.Commands.PlanRoute;
 /// Plans the trip's route through OpenRouteService and stores the result with its corridor and
 /// toll estimate.
 /// <para>
-/// <b>No routing failure ever reaches this command's caller</b> (acceptance 18). An unconfigured
+/// <b>No routing failure ever reaches this command's caller</b>. An unconfigured
 /// provider or a provider outage is persisted as a <c>Failed</c> <see cref="RoutePlanVm"/> carrying
 /// an error code and RETURNED — the trip stays fully usable, ETA falls back to the planned
 /// schedule, and the dispatcher sees why rather than a stack trace.
@@ -38,7 +38,7 @@ namespace TrackHub.TripManagement.Application.Trips.Commands.PlanRoute;
 [RequireFeature(FeatureKeys.TripManagement)]
 [RateLimiting(PermitLimit = 10, WindowSeconds = 60)]
 // Enforcement: the handler derives the caller's own account and passes it to the reader/writer,
-// which filters every row on it (TripVisibility is the single visibility resolver - spec 11).
+// which filters every row on it (TripVisibility is the single visibility resolver).
 [AccountScopeEnforcedInHandler]
 public readonly record struct PlanTripRouteCommand(Guid TripId, int? CorridorMeters, string? TollVehicleClass) : IRequest<RoutePlanVm>;
 
@@ -98,9 +98,8 @@ public sealed class PlanTripRouteCommandHandler(
 
         var estimate = await EstimateTollsAsync(caller.AccountId, trip, route, vehicleClass, cancellationToken);
 
-        // The per-leg breakdown and the ordered waypoints are part of what acceptance 17 requires
-        // route planning to RETURN. The provider already parses them; passing nulls here threw them
-        // away and left §6.1's LegsJson/WaypointsJson permanently empty.
+        // The per-leg breakdown and the ordered waypoints are part of what route planning returns;
+        // the provider already parses them.
         var plan = await routePlanWriter.SaveReadyPlanAsync(
             request.TripId,
             caller.AccountId,
@@ -125,11 +124,9 @@ public sealed class PlanTripRouteCommandHandler(
     /// <summary>
     /// Toll estimation is a best-effort enrichment of a plan, never a precondition for having one.
     /// It reads account config and runs an <c>ST_DWithin</c> match over the toll catalog, so a
-    /// PostGIS hiccup or a catalog read failure used to surface as an unhandled 500 from a ROUTE
-    /// PLANNING call - the trip lost its plan because a price lookup failed. It now degrades to a
-    /// plan saved with <c>TollStatus = NotComputed</c>: no estimate, and the status says so rather
-    /// than implying a zero (spec 11 §18.9's "never silently understated" applied to the failure
-    /// path as well as the missing-tariff one).
+    /// PostGIS hiccup or a catalog read failure degrades to a plan saved with
+    /// <c>TollStatus = NotComputed</c> rather than losing the plan: no estimate, and the status says so
+    /// rather than implying a zero.
     /// </summary>
     private async Task<TollEstimateVm> EstimateTollsAsync(
         Guid accountId, TripVm trip, RouteResultVm route, string? vehicleClass, CancellationToken cancellationToken)

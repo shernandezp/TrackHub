@@ -18,7 +18,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\TrackHub.ServiceContracts.Harness\TrackHub.ServiceContracts.Harness.csproj" />
-    <!-- Consumers: the real GraphQL client classes of each service (spec 25 §6). Manager's
+    <!-- Consumers: the real GraphQL client classes of each service. Manager's
          SecurityApi/RouterApi and Security's ManagerApi arrive transitively via the producer
          Web references below; Reporting's GraphQLApi needs a direct reference. -->
     <ProjectReference Include="..\..\..\TrackHubRouter\src\Infrastructure\ManagerApi\ManagerApi.csproj" />

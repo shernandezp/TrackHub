@@ -20,10 +20,8 @@ using Npgsql;
 namespace Common.Infrastructure;
 
 /// <summary>
-/// The one place a TrackHub service turns a configured connection string into the one it opens.
-/// Npgsql pools per distinct connection string per process and defaults to 100 connections, so a
-/// deployment of twenty services silently claims twenty times the server's whole budget; and with
-/// no auto-prepare every statement is parsed and planned again on every execution.
+/// Npgsql pools per distinct connection string and defaults to 100 connections, so twenty services
+/// would claim twenty times the server's budget; without auto-prepare every statement is re-planned.
 /// </summary>
 public static class DatabaseConnectionStrings
 {
@@ -46,10 +44,7 @@ public static class DatabaseConnectionStrings
         return Normalize(connectionString, configuration);
     }
 
-    /// <summary>
-    /// Fills in the pool ceiling, timeouts and auto-prepare settings the connection string does not
-    /// state. Anything it states explicitly is left exactly as configured.
-    /// </summary>
+    /// <summary>Anything the connection string states explicitly is left exactly as configured.</summary>
     public static string Normalize(string connectionString, IConfiguration? configuration = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(connectionString);
@@ -58,7 +53,7 @@ public static class DatabaseConnectionStrings
         var builder = new NpgsqlConnectionStringBuilder(connectionString);
 
         // NpgsqlConnectionStringBuilder answers ContainsKey for every keyword it knows, set or not,
-        // so the plain base builder is what distinguishes a stated value from a staff default.
+        // so the plain base builder is what distinguishes a stated value from a default.
         var stated = new DbConnectionStringBuilder { ConnectionString = connectionString };
 
         if (!IsStated(stated, "Maximum Pool Size", "MaxPoolSize"))

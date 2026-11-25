@@ -23,7 +23,7 @@ namespace TrackHub.TripManagement.Application.Trips.Services;
 /// <summary>
 /// ETA refresh and schedule reminders.
 /// <para>
-/// ETA is <b>deterministic, not learned</b> (spec 11 §18.11): the latest position plus an ORS
+/// ETA is <b>deterministic, not learned</b>: the latest position plus an ORS
 /// distance/duration when both are available, the planned schedule otherwise, and the source is
 /// recorded per stop so the UI can be honest about confidence instead of dressing a fallback up as
 /// a live estimate.
@@ -46,7 +46,7 @@ public sealed class TripEtaService(
     /// so without a grace a trip whose start fell between two cycles (or during a restart) would
     /// never be reminded at all; with too generous a grace the first run after a deployment shouts
     /// about last year's abandoned trips. Two cadences is the smallest window that survives a
-    /// missed cycle (spec 11 §10).
+    /// missed cycle.
     /// </summary>
     private static readonly TimeSpan ScheduleReminderGrace = TimeSpan.FromMinutes(30);
 
@@ -86,7 +86,7 @@ public sealed class TripEtaService(
 
         // A stale or missing position is NOT a reason to leave the previous Ors estimate standing:
         // that would keep presenting a hours-old guess as live-sourced. The freshness flag decides
-        // which branch is honest (spec 11 §10, §18.11).
+        // which branch is honest.
         if (candidate.HasFreshPosition
             && routingProvider.IsConfigured
             && candidate.LastLatitude is { } latitude
@@ -100,8 +100,8 @@ public sealed class TripEtaService(
                     cancellationToken);
 
                 // Anchored to NOW, not to the position's timestamp. The travel time still has to be
-                // spent starting from this instant; anchoring it to a 14-minute-old fix made every
-                // ETA up to 14 minutes optimistic and biased the TripDelayed threshold with it.
+                // spent starting from this instant; anchoring it to an old fix would make every
+                // ETA optimistic by the fix's age and bias the TripDelayed threshold with it.
                 etaAt = now.AddSeconds(summary.DurationSeconds);
                 etaSource = EtaSources.Ors;
 
@@ -134,7 +134,7 @@ public sealed class TripEtaService(
             (etaAt, etaSource) = FallBack(candidate);
         }
 
-        // SVD-11: this job records a run only when it did work. A candidate whose stored ETA already
+        // This job records a run only when it did work. A candidate whose stored ETA already
         // says exactly this - the steady state for a trip that has been dark for hours - must leave
         // no trace, or the on-work-only recorder degenerates into a per-cycle one.
         var changed = etaAt != candidate.CurrentEtaAt || !string.Equals(etaSource, candidate.CurrentEtaSource, StringComparison.Ordinal);
@@ -186,7 +186,7 @@ public sealed class TripEtaService(
             return false;
         }
 
-        // Stamped only after a successful emission — the one-shot marker (acceptance: once per stop).
+        // Stamped only after a successful emission — the one-shot marker, once per stop.
         await stopWriter.MarkStopDelayAlertedAsync(candidate.NextStopId, accountId, alertedAt, cancellationToken);
         return true;
     }
@@ -210,12 +210,11 @@ public sealed class TripEtaService(
                 {
                     // The event log is the once-only guard. NOTHING here changes trip status:
                     // auto-starting a trip nobody began would fabricate an ActualStartAt and a
-                    // distance baseline out of thin air (spec 11 §10).
+                    // distance baseline out of thin air.
                     //
-                    // Order matters: CHECK the key, EMIT, then APPEND. Appending first burned the
+                    // Order matters: CHECK the key, EMIT, then APPEND. Appending first would burn the
                     // key before the emission was known to have succeeded, so a transient Manager
-                    // failure meant the reminder was never retried and the account got it zero
-                    // times rather than once. Same rule the delay and deviation paths follow —
+                    // failure would mean the reminder is never sent. Same rule the delay and deviation paths follow —
                     // the marker is written only after a successful emission.
                     var idempotencyKey = $"trip-start-due:{trip.TripId:N}:{trip.PlannedStartAt.UtcTicks}";
 

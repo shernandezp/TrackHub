@@ -14,12 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Public-link-grant API (Manager backend): plain typed async functions. Failures
- * THROW ApiError — consumed imperatively (load-on-expand + share dialog), caller
- * owns try/catch.
- */
-
 import { executeGraphQL } from 'api/core/graphqlClient';
 import type { Page } from 'api/core/paging';
 import type {

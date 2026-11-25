@@ -29,7 +29,6 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
-// @mui material components
 import Avatar from "@mui/material/Avatar";
 import { styled } from "@mui/material/styles";
 
@@ -47,13 +46,11 @@ export default styled(Avatar)<{ ownerState: ArgonAvatarOwnerState }>(({ theme, o
   const { pxToRem, linearGradient } = functions;
   const { size: fontSize, fontWeightBold } = typography;
 
-  // backgroundImage value
   const backgroundValue =
     bgColor === "transparent"
       ? transparent.main
       : linearGradient(gradients[bgColor!].main, gradients[bgColor!].state);
 
-  // size value
   let sizeValue;
 
   switch (size) {

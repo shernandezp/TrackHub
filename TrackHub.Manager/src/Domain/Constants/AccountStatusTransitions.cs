@@ -31,11 +31,9 @@ public static class AccountStatusTransitions
             [AccountStatus.Archived] = [],
         };
 
-    /// <summary>True when <paramref name="to"/> is a permitted transition from <paramref name="from"/>.</summary>
     public static bool IsAllowed(AccountStatus from, AccountStatus to)
         => Allowed.TryGetValue(from, out var targets) && Array.IndexOf(targets, to) >= 0;
 
-    /// <summary>A non-empty reason is mandatory when suspending or cancelling.</summary>
     public static bool RequiresReason(AccountStatus to)
         => to is AccountStatus.Suspended or AccountStatus.Cancelled;
 }

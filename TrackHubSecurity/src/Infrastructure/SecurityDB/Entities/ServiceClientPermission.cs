@@ -39,9 +39,7 @@ public sealed class ServiceClientPermission(
 
     /// <summary>
     /// Declares this grant as a platform-wide (cross-tenant) grant: it matches regardless of the
-    /// token's account claim. This replaces the old implicit rule where a NULL
-    /// <see cref="AccountId"/> silently matched every account, which made "global" indistinguishable
-    /// from "unscoped" and gave any service client an unbounded tenant reach.
+    /// token's account claim.
     /// </summary>
     public bool AllowCrossAccount { get; set; } = allowCrossAccount;
     public string Resource { get; set; } = resource;

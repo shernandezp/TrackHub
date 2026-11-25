@@ -15,15 +15,9 @@
 
 namespace Common.Application.Attributes;
 
-/// <summary>
-/// Specifies the class this attribute is applied to requires authorization.
-/// </summary>
 [AttributeUsage(AttributeTargets.All, AllowMultiple = true, Inherited = true)]
 public class AuthorizeAttribute : Attribute
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AuthorizeAttribute"/> class. 
-    /// </summary>
     public AuthorizeAttribute() { }
 
     public string Resource { get; set; } = string.Empty;

@@ -49,11 +49,7 @@ export interface ConfigFieldDef { name: string; labelKey: string; kind: 'number'
  */
 export const configFieldKey = (field: ConfigFieldDef): string => `config.${field.name}`;
 
-/**
- * SuperAdministrator editor state for a single account feature (loose until the
- * add-mode guard / save). In "add" mode account+feature are chosen; in "edit"
- * mode they are fixed.
- */
+/** Loose until the add-mode guard / save. */
 export interface FeatureFormValues {
   accountId?: string;
   accountName?: string;
@@ -68,7 +64,6 @@ export interface FeatureFormValues {
   [configKey: string]: unknown;
 }
 
-/** Option row for the account/feature selects. */
 export interface FeatureSelectOption { value: string; label: string }
 
 // Billing-owned features the SuperAdministrator can assign to an account.
@@ -87,7 +82,7 @@ const knownFeatures = [
 ];
 
 // Features carrying editable configuration values stored in configurationJson. A feature may carry
-// SEVERAL: trip-management's zero-touch lifecycle is tuned per account (spec 11a §8), and one value
+// SEVERAL: trip-management's zero-touch lifecycle is tuned per account, and one value
 // per feature could not express it.
 //
 // Every default here MIRRORS the backend's own fallback. They are not the source of truth — the
@@ -96,7 +91,7 @@ const knownFeatures = [
 const configFields: Record<string, ConfigFieldDef[]> = {
   'gps.integration': [{ name: 'storingIntervalSeconds', labelKey: 'accountFeatures.config.storingIntervalSeconds', kind: 'number', default: 360 }],
   'gps.positionHistory': [{ name: 'retentionDays', labelKey: 'accountFeatures.config.retentionDays', kind: 'number', default: 30 }],
-  // Spec 09 §18.6: per-account opt-in, default false — accounts differ on strictness.
+  // Per-account opt-in, default false — accounts differ on strictness.
   workforce: [{ name: 'blockAssignmentOnExpiredLicense', labelKey: 'accountFeatures.config.blockAssignmentOnExpiredLicense', kind: 'boolean', default: false }],
   'trip-management': [
     // The kill switch first: an account without reliable GPS turns the whole zero-touch lifecycle
@@ -167,7 +162,6 @@ function SystemAccountFeatures() {
   const handleDialogAccountChange = (account: SearchOption | null) =>
     setValues(current => ({ ...current, accountId: account?.value ?? '', accountName: account?.label }));
 
-  /** Seeds one form key per configured field, falling back to the documented default. */
   const seedConfigValues = (featureKey: string, configurationJson?: string | null): Record<string, number | boolean> => {
     const stored = parseJson<Record<string, unknown>>(configurationJson);
     return Object.fromEntries(

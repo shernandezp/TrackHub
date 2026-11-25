@@ -28,7 +28,7 @@ using TrackHub.ServiceContracts.Tests.Harness;
 
 namespace TrackHub.ServiceContracts.Tests.RoundTripTests;
 
-// Spec 09 §16 Layer B. Layer A only proves the workforce documents PARSE against Manager's schema;
+// Layer B. Layer A only proves the workforce documents PARSE against Manager's schema;
 // everything travelling in GraphQL variables — the "Transporter" resource-type literal, the optional
 // staff/transporter filters, the DateTimeOffset window, the paging bounds — is invisible to document
 // validation. These tests push Reporting's REAL query documents through Manager's REAL resolvers and
@@ -159,9 +159,9 @@ public class WorkforceRoundTripTests
         }
     }
 
-    // AC4: ValidateStaffAssignment is satisfied by an active assignment row OR the default
+    // ValidateStaffAssignment is satisfied by an active assignment row OR the default
     // transporter. The "Transporter" resource-type literal travels as a variable, so Layer A cannot
-    // see it; spec 10 and DocumentAccessPolicy both depend on it matching exactly.
+    // see it; the staff app and DocumentAccessPolicy both depend on it matching exactly.
     [TestCase("Transporter", true, TestName = "ValidateStaffAssignment_AssignmentRowPathSatisfies")]
     [TestCase("Transporter", false, TestName = "ValidateStaffAssignment_DefaultTransporterPathSatisfies")]
     public async Task ValidateStaffAssignment_RoundTripsResourceTypeLiteral(string resourceType, bool satisfied)

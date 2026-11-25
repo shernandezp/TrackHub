@@ -36,7 +36,7 @@ public partial class Mutation
         return true;
     }
 
-    // Delete mutations return the deleted identifier, not a boolean (rules.md naming).
+    // Delete mutations return the deleted identifier, not a boolean.
     public async Task<Guid> DeleteTrip([Service] ISender sender, Guid id, CancellationToken cancellationToken)
     {
         await sender.Send(new DeleteTripCommand(id), cancellationToken);
@@ -47,7 +47,7 @@ public partial class Mutation
         => await sender.Send(command, cancellationToken);
 
     /// <summary>
-    /// Bulk trip planning from a spreadsheet (spec 11a §9.1). Per-row results; one bad row never
+    /// Bulk trip planning from a spreadsheet. Per-row results; one bad row never
     /// fails the batch.
     /// </summary>
     public async Task<TripCsvImportResultVm> ImportTripsCsv([Service] ISender sender, ImportTripsCsvCommand command, CancellationToken cancellationToken)
@@ -64,7 +64,7 @@ public partial class Mutation
 
     /// <summary>
     /// Records that a freshly planned trip is already under way, backfilling what Geofencing
-    /// measured (spec 11a §5.4). Returns whether the start came from evidence or from the caller's
+    /// measured. Returns whether the start came from evidence or from the caller's
     /// declaration, so the dispatcher can see which.
     /// </summary>
     public async Task<TripStartBackfillResultVm> DeclareTripInTransit(

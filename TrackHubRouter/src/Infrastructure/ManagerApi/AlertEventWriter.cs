@@ -1,8 +1,8 @@
 namespace TrackHub.Router.Infrastructure.ManagerApi;
 
-// asService — see the note on OperatorSyncRunWriter. RecordAlertEventCommand needs Alerts/Write,
-// which the Manager role does not hold (Read + Edit only) and the User role does not hold at all,
-// so a sync-failure alert raised during a user-triggered sync was itself refused.
+// asService: RecordAlertEventCommand needs Alerts/Write, which the Manager role does not hold
+// (Read + Edit only) and the User role does not hold at all, so a user token would refuse a
+// sync-failure alert raised during a user-triggered sync.
 public class AlertEventWriter(IGraphQLClientFactory graphQLClient)
     : GraphQLService(graphQLClient.CreateClient(Clients.Manager, asService: true)), IAlertEventWriter
 {

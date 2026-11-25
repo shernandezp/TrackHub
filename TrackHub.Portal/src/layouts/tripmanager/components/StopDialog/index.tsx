@@ -35,16 +35,14 @@ import type { PointOfInterestLookup } from 'api/manager/pointsOfInterest';
 import type { Geofence } from 'api/geofencing/geofencing';
 import { DEFAULT_STOP_ACTIVITY, STOP_ACTIVITIES } from '../../tripWriteForms';
 
-/** Dialog/form state for a trip stop. */
 export interface StopFormValues {
   tripStopId?: string;
   name?: string;
   address?: string | null;
   /**
-   * Coarse locality. Deliberately a SEPARATE field from `address`: the anonymous
-   * customer snapshot may carry the city but never the full street address, so
-   * projecting `address` as the locality would leak every other stop's exact
-   * delivery address to any link holder (spec 11 §7.8).
+   * Deliberately SEPARATE from `address`: the anonymous customer snapshot may carry the city but
+   * never the street address, so projecting `address` as the locality would leak every stop's
+   * exact delivery address to any link holder.
    */
   city?: string | null;
   latitude?: number | string;
@@ -52,9 +50,7 @@ export interface StopFormValues {
   geofenceId?: string | null;
   arrivalRadiusMeters?: number | string;
   /**
-   * What the vehicle does here — `Load`, `Unload` or `Other`. It is what turns the
-   * dwell between arrival and departure from an anonymous number of minutes into
-   * loading or unloading time in the reports (spec 11a §4.2).
+   * Turns the dwell between arrival and departure into loading or unloading time in the reports.
    */
   activity?: string | null;
   plannedArrivalFrom?: string | null;
@@ -79,12 +75,9 @@ interface StopDialogProps {
 }
 
 /**
- * Stop editor. A stop's coordinates come from exactly three places — a map
- * click, an existing point of interest, or an account geofence. There is
- * deliberately NO free-text address search: forward geocoding is out of scope
- * (spec 11 §18.8), and all three sources already yield coordinates. The address
- * field is filled by the REVERSE geocoder from whichever point was chosen, and
- * stays editable.
+ * Coordinates come only from a map click, a point of interest or a geofence; there is
+ * deliberately no forward address search. The address is filled by the reverse geocoder from
+ * the chosen point and stays editable.
  */
 function StopDialog({
   open,
@@ -257,8 +250,8 @@ function StopDialog({
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
-            {/* The ONLY location detail a shared tracking link may show. The
-                full address above stays internal — see spec 11 §7.8. */}
+            {/* The ONLY location detail a shared tracking link may show; the
+                full address above stays internal. */}
             <CustomTextField
               margin="dense"
               name="city"

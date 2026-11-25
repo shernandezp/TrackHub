@@ -23,13 +23,11 @@ public sealed class PointOfInterestConfiguration : IEntityTypeConfiguration<Poin
 {
     public void Configure(EntityTypeBuilder<PointOfInterest> builder)
     {
-        //Table name
         builder.ToTable(
             name: TableMetadata.PointOfInterest,
             schema: SchemaMetadata.Map,
             t => t.HasCheckConstraint("ck_pointsofinterest_type", EnumColumn.Check<PointOfInterestType>("type")));
 
-        //Column names
         builder.Property(x => x.PointOfInterestId).HasColumnName("id");
         builder.Property(x => x.Name).HasColumnName("name");
         builder.Property(x => x.Description).HasColumnName("description");

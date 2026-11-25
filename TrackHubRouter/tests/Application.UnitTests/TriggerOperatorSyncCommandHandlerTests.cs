@@ -61,7 +61,6 @@ public class TriggerOperatorSyncCommandHandlerTests : TestsContext
         var op = new OperatorVm(Guid.NewGuid(), (int)ProtocolType.CommandTrack, otherAccount, TestCredentialTokenVm);
         SetupOperator(op);
 
-        // A2: operator that does not belong to the account -> typed error, never a silent false.
         await Assert.ThrowsAsync<OperatorNotFoundException>(() => CreateHandler().Handle(
             new TriggerOperatorSyncCommand(accountId, op.OperatorId), CancellationToken.None));
         _queueMock.Verify(q => q.TryEnqueue(It.IsAny<SyncDispatchRequest>()), Times.Never);
@@ -75,7 +74,6 @@ public class TriggerOperatorSyncCommandHandlerTests : TestsContext
             Enabled: false);
         SetupOperator(op);
 
-        // A2: disabled operator -> typed error, never a silent false.
         await Assert.ThrowsAsync<OperatorDisabledException>(() => CreateHandler().Handle(
             new TriggerOperatorSyncCommand(accountId, op.OperatorId), CancellationToken.None));
         _queueMock.Verify(q => q.TryEnqueue(It.IsAny<SyncDispatchRequest>()), Times.Never);

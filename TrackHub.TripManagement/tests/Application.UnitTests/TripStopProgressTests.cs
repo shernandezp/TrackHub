@@ -21,8 +21,8 @@ using TrackHub.TripManagement.Application.Trips.Services.Interfaces;
 namespace TrackHub.TripManagement.Application.UnitTests;
 
 /// <summary>
-/// Acceptance 15: every command carrying a <c>clientEventId</c> is idempotent server-side.
-/// This is verified by test because spec 10's offline outbox depends on it — an outbox that
+/// Every command carrying a <c>clientEventId</c> is idempotent server-side.
+/// The offline outbox depends on it — an outbox that
 /// retries a queued arrival must not produce two arrivals, and the server must not rely on the
 /// client being careful.
 /// </summary>
@@ -48,12 +48,9 @@ public class TripStopProgressTests
     /// <summary>
     /// A duplicate answers TRUE — success — and emits no alert.
     /// <para>
-    /// This previously asserted <c>false</c> ("nothing written"), which is the WRITER's contract,
-    /// not this mutation's. Over a <c>Boolean!</c> field a caller cannot tell that apart from a
-    /// failure, and spec 10's offline outbox — the named consumer of this idempotency — would keep
-    /// the event queued and retry it forever. Acceptance 15 says a duplicate submission returns
-    /// success, so the device can drop it. The portal ignores the value entirely (its mutation
-    /// succeeds on the absence of a GraphQL error), so nothing else depends on the old shape.
+    /// Not the WRITER's <c>false</c> ("nothing written"): over a <c>Boolean!</c> field a caller
+    /// cannot tell that apart from a failure, and the offline outbox would keep the event queued
+    /// and retry it forever. A duplicate submission returns success so the device can drop it.
     /// </para>
     /// </summary>
     [Test]
@@ -122,12 +119,12 @@ public class TripStopProgressTests
 
     /// <summary>
     /// A replay of an event the server ALREADY ACCEPTED succeeds, even though the trip has since
-    /// closed. Found by the deployed smoke suite, not by this one.
+    /// closed.
     /// <para>
-    /// The trip-status guard used to run first, so an outbox replaying an arrival after the trip
-    /// completed met <c>TRIP_NOT_ACTIVE</c> — a hard error the device can only surface as permanent
-    /// failure and retry forever, which is precisely what acceptance 15 exists to prevent. Closing
-    /// the last stop now auto-completes the trip (§5.2), so this went from a corner case to the
+    /// With the trip-status guard first, an outbox replaying an arrival after the trip
+    /// completed would meet <c>TRIP_NOT_ACTIVE</c> — a hard error the device can only surface as
+    /// permanent failure and retry forever. Closing
+    /// the last stop auto-completes the trip, so this is the
     /// ordinary end of every route.
     /// </para>
     /// </summary>
@@ -148,9 +145,9 @@ public class TripStopProgressTests
     }
 
     /// <summary>
-    /// Spec 11a §5.2 makes "the last open stop closed" a completion trigger, not a detection-only
+    /// "The last open stop closed" is a completion trigger, not a detection-only
     /// one. A dispatcher departing the final stop by hand — the case the override exists for, a
-    /// truck whose tracker is dead — otherwise watched the trip stay InProgress until the
+    /// truck whose tracker is dead — would otherwise watch the trip stay InProgress until the
     /// five-minute sweep, contradicting what they had just recorded.
     /// </summary>
     [Test]

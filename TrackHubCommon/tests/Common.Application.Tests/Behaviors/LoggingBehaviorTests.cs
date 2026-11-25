@@ -39,8 +39,7 @@ public class LoggingBehaviorTests
     [Fact]
     public async Task Handle_WithServiceClientSubject_DoesNotThrowAndSkipsUserNameLookup()
     {
-        // Regression: client-credentials tokens carry a non-Guid subject (the client id).
-        // new Guid("router_client") used to throw here and fail EVERY service-to-service request.
+        // Client-credentials tokens carry a non-Guid subject (the client id), which must not fail the request.
         var user = new Mock<IUser>();
         var identityService = new Mock<IIdentityService>();
 
@@ -56,8 +55,7 @@ public class LoggingBehaviorTests
     [Fact]
     public async Task Handle_WhenDebugLoggingDisabled_SkipsUserNameLookup()
     {
-        // The display-name resolution costs an identity round-trip per request; it must only
-        // run when Debug logging is actually enabled.
+        // The display-name resolution costs an identity round-trip, so it runs only with Debug enabled.
         var user = new Mock<IUser>();
         var identityService = new Mock<IIdentityService>();
 

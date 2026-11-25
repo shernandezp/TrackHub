@@ -29,14 +29,11 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
-// @mui material components
 import Link from "@mui/material/Link";
 
-// Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
 import ArgonTypography from "components/ArgonTypography";
 
-// Argon Dashboard 2 MUI base styles
 import typography from "assets/theme/base/typography";
 
 import { versionLabel } from "constants/appVersion";
@@ -80,11 +77,9 @@ function Footer({
             &nbsp;{name}&nbsp;
           </ArgonTypography>
         </Link>
-        {/* Portal build, kept in the LEFT group on purpose: the settings button in App.tsx is
-            fixed at right/bottom 2rem and covers anything the footer puts on its right edge.
-            Deliberately unlabelled and untranslated — "v1.1.0" reads the same in every
-            language, and it is the quickest way to confirm which build a browser is actually
-            running after a deployment or a rollback. */}
+        {/* Kept in the LEFT group on purpose: the settings button in App.tsx is fixed at right/bottom
+            2rem and covers the footer's right edge. Unlabelled and untranslated: "v1.1.0" reads
+            the same in every language. */}
         <ArgonTypography variant="button" fontWeight="regular" color="text">
           &middot;&nbsp;{versionLabel()}
         </ArgonTypography>

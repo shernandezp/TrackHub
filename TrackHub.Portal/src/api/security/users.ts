@@ -14,12 +14,7 @@
 *  limitations under the License.
 */
 
-/**
- * User API (Security backend): plain typed async functions. Failures THROW
- * ApiError — fallbacks and toasts belong to the caller layer. `isAdmin` /
- * `isManager` are the silent ops: their callers default to `false` on failure
- * (the old useUserService swallowed them without a toast).
- */
+/** `isAdmin` / `isManager` are silent: their callers default to `false` on failure. */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
 import type { RequestOptions } from 'api/core/errors';
@@ -63,7 +58,6 @@ export async function getCurrentUser(options?: RequestOptions): Promise<CurrentU
   return data.currentUser;
 }
 
-/** Integration users only — used to populate the client-owner picker. */
 export async function getUsers(options?: RequestOptions): Promise<IntegrationUser[]> {
   const data = await executeGraphQL('security', GetIntegrationUsersDocument, undefined, options);
   return data.users;
@@ -78,7 +72,6 @@ export async function getUsersByAccount(params: ListParams = {}, options?: Reque
   return data.usersByAccount;
 }
 
-/** Every member of the caller's account, id and username only. */
 export async function getUserLookupByAccount(options?: RequestOptions): Promise<UserLookup[]> {
   const data = await executeGraphQL('security', GetUserLookupByAccountDocument, undefined, options);
   return data.userLookupByAccount;
@@ -101,11 +94,7 @@ export async function createUser(user: CreateUserDtoInput): Promise<User> {
   return data.createUser;
 }
 
-/**
- * Creates a manager for the given account. Note: unlike the old string-built
- * query, `integrationUser` is now always supplied (schema-required Boolean!);
- * the legacy document omitted it, so this path could never have succeeded.
- */
+/** `integrationUser` is schema-required (Boolean!). */
 export async function createManager(
   user: CreateUserDtoInput,
   accountId: string
@@ -166,7 +155,6 @@ export async function updatePassword(userId: string, password: string, currentPa
   return data.updatePassword;
 }
 
-/** Returns the id of the deleted user (schema: `deleteUser: UUID!`). */
 export async function deleteUser(userId: string): Promise<string> {
   const data = await executeGraphQL('security', DeleteUserDocument, { id: userId });
   return data.deleteUser;

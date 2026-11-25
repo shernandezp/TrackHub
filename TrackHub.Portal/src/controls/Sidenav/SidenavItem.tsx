@@ -31,19 +31,15 @@ Coded by www.creative-tim.com
 
 import type { ReactNode } from "react";
 
-// @mui material components
 import ListItem from "@mui/material/ListItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import Icon from "@mui/material/Icon";
 
-// Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
 
-// Custom styles for the sidenavItem
 import { item, itemIcon, itemText, itemIconBox } from "controls/Sidenav/styles/sidenavItem";
 
-// Argon Dashboard 2 MUI context
 import { useArgonController } from "context";
 
 export interface SidenavItemProps {

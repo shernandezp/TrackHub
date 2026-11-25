@@ -20,7 +20,7 @@ using TrackHub.Router.Domain.Models;
 
 namespace TrackHub.Router.Infrastructure.Common;
 
-// In-process TTL cache of operator device catalogs (router-audit A-12). The catalog stamp covers
+// In-process TTL cache of operator device catalogs. The catalog stamp covers
 // device syncs from any process; the TTL bounds staleness for changes made outside a sync (e.g.
 // transporter re-assignment in Manager).
 public sealed class DeviceCatalogCache : IDeviceCatalogCache

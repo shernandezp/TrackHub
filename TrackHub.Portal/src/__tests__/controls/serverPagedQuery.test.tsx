@@ -29,9 +29,8 @@ vi.mock('api/manager/devices', () => ({
 }));
 
 // The admin lists wire a paged query, useServerList and useClampPage together. While the next
-// page loads the query has no data for its new key, so the clamp saw totalCount 0 and snapped
-// the page back to one — the "next" button never moved. The hooks now keep the previous page's
-// data as a placeholder, which is what this pins.
+// page loads the query has no data for its new key, so a clamp seeing totalCount 0 would snap
+// the page back to one; the hooks keep the previous page's data as a placeholder.
 function usePagedDevices() {
   const { page, setPage, params } = useServerList(10);
   const query = useDevicesByAccount(params);

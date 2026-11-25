@@ -204,7 +204,7 @@ describe('isCleanAttachment', () => {
 describe('podDocumentFields', () => {
   test('POD evidence is owned by the trip transporter, not by the trip', () => {
     // Manager cannot resolve a "Trip" owner type without calling TripManagement,
-    // so spec 11 §11 owns POD documents through the transporter instead.
+    // so POD documents are owned through the transporter instead.
     expect(podDocumentFields(ACCOUNT_ID, TRANSPORTER_ID, 'signature.png')).toEqual({
       accountId: ACCOUNT_ID,
       ownerEntityType: 'Transporter',
@@ -359,8 +359,7 @@ describe('trip creation destinations', () => {
 });
 
 /**
- * Spec 11a §4.2: what a stop is FOR. The normalizer has to be forgiving in one
- * direction only — an omitted or unrecognised value becomes `Unload`, so a client
+ * Forgiving in one direction only: an omitted or unrecognised value becomes `Unload`, so a client
  * that predates the field keeps working, while a real value is never rewritten.
  */
 describe('stop activity', () => {

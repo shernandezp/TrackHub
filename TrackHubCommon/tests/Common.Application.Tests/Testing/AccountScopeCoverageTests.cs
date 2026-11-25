@@ -6,26 +6,22 @@ using FluentAssertions;
 namespace Common.Application.Tests.Testing;
 
 /// <summary>
-/// Proves the shared TS-06 coverage engine (<see cref="AccountScopeCoverage"/>) that every
-/// service's <c>AccountScopeCoverageTests</c> delegates to. The critical case is the WRAPPED key:
-/// a wire key hidden one level down inside a TrackHub-owned DTO (the <c>FiltersInput</c> shape)
-/// must be found — a root-only inspection let exactly those requests bypass the gate.
+/// The critical case is the wrapped key: a wire key one level down inside a TrackHub-owned DTO
+/// (the <c>FiltersInput</c> shape) must be found.
 /// </summary>
 public class AccountScopeCoverageTests
 {
-    // --- fixtures: keyed / keyless shapes -------------------------------------------------
-
     public readonly record struct FiltersDto(Guid DeviceId, string? Search);
 
     public readonly record struct KeylessFiltersDto(string? Search, int Page);
 
-    /// <summary>Root-level wire key, unmarked — the classic offender.</summary>
+    /// <summary>Root-level wire key, unmarked.</summary>
     public class RootKeyRequest : IRequest<string>
     {
         public Guid Id { get; init; }
     }
 
-    /// <summary>Wire key WRAPPED in a DTO member — must still be detected (the hardening).</summary>
+    /// <summary>Wire key wrapped in a DTO member; must still be detected.</summary>
     public class WrappedKeyRequest : IRequest<string>
     {
         public FiltersDto Filters { get; init; }
@@ -94,8 +90,7 @@ public class AccountScopeCoverageTests
     [Fact]
     public void UndeclaredKeyedRequests_FindsKeyWrappedInsideDto()
     {
-        // The FiltersInput shape: the key sits one level down inside a TrackHub-owned DTO. A
-        // root-only inspection missed it; the shared walk must not.
+        // The FiltersInput shape: the key sits one level down inside a TrackHub-owned DTO.
         UndeclaredKeyed().Should().Contain(typeof(WrappedKeyRequest).FullName);
     }
 

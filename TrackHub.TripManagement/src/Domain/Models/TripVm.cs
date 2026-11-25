@@ -17,11 +17,11 @@ namespace TrackHub.TripManagement.Domain.Models;
 
 /// <summary>
 /// Dispatch-board projection of a trip. Carries no stop or route detail — except the derived
-/// <see cref="Phase"/>, which is the one thing the board leads with (spec 11a §10).
+/// <see cref="Phase"/>, which is the one thing the board leads with.
 /// <para>
 /// <see cref="ActualStartAt"/> and <see cref="ActualEndAt"/> are MEASURED by default: the instant
 /// the vehicle reached its origin zone and the instant its route closed. A manual override still
-/// writes them, and the timeline's <c>Source</c> is the permanent record of which happened (§5.3).
+/// writes them, and the timeline's <c>Source</c> is the permanent record of which happened.
 /// </para>
 /// </summary>
 public readonly record struct TripVm(
@@ -94,8 +94,8 @@ public readonly record struct TripStopVm(
     string Name,
     string? Address,
     // The coarse locality, distinct from the full street Address. Exposed so the stop edit dialog
-    // can round-trip it — without this an edit saved the locality back empty, and the public
-    // snapshot (which may expose City but never Address) silently lost it.
+    // can round-trip it; otherwise an edit would save the locality back empty and the public
+    // snapshot (which may expose City but never Address) would silently lose it.
     string? City,
     double Latitude,
     double Longitude,
@@ -203,7 +203,7 @@ public readonly record struct TripDocumentVm(
 
 /// <summary>
 /// A share's configuration and lifecycle. <c>Token</c> is populated exactly once, by the create
-/// path — it is never re-readable afterwards (spec 11 acceptance 23).
+/// path — it is never re-readable afterwards.
 /// </summary>
 public readonly record struct TripShareVm(
     Guid TripShareId,
@@ -237,7 +237,7 @@ public readonly record struct NamedEntityVm(Guid Id, string Name);
 
 /// <summary>
 /// Outcome of a bulk trip upload. Rows that failed are reported individually and the rest still
-/// landed, so the operator fixes those lines and re-imports rather than guessing (spec 11a §9.1).
+/// landed, so the operator fixes those lines and re-imports rather than guessing.
 /// </summary>
 public readonly record struct TripCsvImportResultVm(
     int RowsRead,

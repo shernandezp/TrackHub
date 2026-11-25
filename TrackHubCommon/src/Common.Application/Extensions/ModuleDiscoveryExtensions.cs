@@ -22,10 +22,7 @@ namespace Common.Application.Extensions;
 
 public static class ModuleDiscoveryExtensions
 {
-    /// <summary>
-    /// Discovers every <see cref="IServiceModule"/> implementation in <paramref name="assembly"/>
-    /// and invokes its registrations. Modules run in deterministic (full-name) order.
-    /// </summary>
+    /// <summary>Modules run in deterministic (full-name) order.</summary>
     public static IServiceCollection AddDiscoveredModules(
         this IServiceCollection services,
         Assembly assembly,

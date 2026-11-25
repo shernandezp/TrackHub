@@ -18,20 +18,9 @@ namespace TrackHub.TripManagement.Domain.Interfaces;
 /// <summary>
 /// Validates a trip's optional <c>ServiceOrderId</c> against the trip's account.
 /// <para>
-/// <b>Why this port exists.</b> Spec 11 §5 lists <c>ServiceOrderId</c> among the cross-account
-/// references that must be validated at write time, but spec 12 owns service orders and this
-/// module has no service-order store or client. The reference was therefore persisted verbatim on
-/// create and update and echoed back through <c>TripVm</c>, <c>TripDetailVm</c> and the
-/// <c>trip-summary</c> report with no check of any kind — an unvalidated, possibly cross-account id
-/// travelling into report output.
-/// </para>
-/// <para>
-/// Rather than either leaving it unchecked or stripping the field, the call sites are made correct
-/// and complete NOW: <c>CreateTripCommand</c> and <c>UpdateTripCommand</c> validate the reference
-/// exactly like they validate the transporter, staff and geofence. The default implementation is
-/// permissive because there is nothing to ask; the moment spec 12 lands, it registers a real
-/// implementation over this same port and every trip write starts enforcing the reference with no
-/// change to any handler.
+/// This module has no service-order store, so the default implementation is permissive. Create and
+/// update validate the reference exactly like the transporter, staff and geofence, so a real
+/// implementation registered over this port enforces it on every trip write with no handler change.
 /// </para>
 /// </summary>
 public interface IServiceOrderValidator

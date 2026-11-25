@@ -15,7 +15,6 @@
 
 namespace TrackHub.Manager.Domain.Constants;
 
-/// <summary>Notification channels. Stored as strings in ChannelsJson and deliveries.</summary>
 public static class NotificationChannels
 {
     public const string InApp = nameof(InApp);
@@ -28,6 +27,6 @@ public static class NotificationChannels
 
     public static bool IsValid(string? value) => value != null && All.Contains(value);
 
-    /// <summary>Channels whose delivery Recipient is a contact endpoint (personal data — masked in list VMs).</summary>
+    /// <summary>The Recipient is personal contact data, masked in list VMs.</summary>
     public static bool RecipientIsContact(string channel) => channel is Email or WhatsApp;
 }

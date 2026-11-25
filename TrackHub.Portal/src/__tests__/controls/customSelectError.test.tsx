@@ -15,10 +15,8 @@
  */
 
 /**
- * CustomSelect had no way to show a validation message, so a required select that failed
- * the screen's validate() gate simply refused to save with no feedback. These pin the
- * message surfacing and the invalid state — the failure mode is silence, which no
- * higher-level test would catch.
+ * A required select that fails the screen's validate() gate must say why; the failure mode is
+ * silence, which no higher-level test would catch.
  */
 
 import { render, screen } from '@testing-library/react';

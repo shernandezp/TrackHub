@@ -35,8 +35,8 @@ interface GoogleRouteLayerProps {
 }
 
 /**
- * Google has no `useMapEvents`; attach the click listener imperatively and
- * remove it on cleanup so no listener survives a re-render (core README rule).
+ * Google has no `useMapEvents`; attach the click listener imperatively and remove it on cleanup
+ * so no listener survives a re-render.
  */
 const MapClickHandler = ({ onMapClick }: { onMapClick: (point: RoutePoint) => void }) => {
   const map = useGoogleMap();

@@ -19,12 +19,10 @@ import { useNavigate, Link as RouterLink } from 'react-router';
 import { useTranslation } from "react-i18next";
 import { useAuth } from "AuthContext";
 
-// @mui material components
 import Card from "@mui/material/Card";
 import Container from "@mui/material/Container";
 import Alert from "@mui/material/Alert";
 
-// Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
 import ArgonTypography from "components/ArgonTypography";
 import ArgonButton from "components/ArgonButton";
@@ -38,7 +36,6 @@ const ErrorPage = () => {
   const [countdown, setCountdown] = useState(30);
 
   useEffect(() => {
-    // Get the specific error from session storage
     const authError = sessionStorage.getItem('auth_error');
     
     // If no error exists, redirect to dashboard (user shouldn't be on this page)
@@ -61,7 +58,6 @@ const ErrorPage = () => {
         setErrorMessage(authError || t('authError.generic'));
     }
 
-    // Start countdown for retry button
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
@@ -77,11 +73,9 @@ const ErrorPage = () => {
   }, []);
 
   const handleRetry = () => {
-    // Clear error states
     sessionStorage.removeItem('auth_error');
     resetAuthError();
     
-    // Attempt login again
     login();
   };
 

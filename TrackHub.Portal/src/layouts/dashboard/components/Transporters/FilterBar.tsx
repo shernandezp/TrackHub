@@ -21,10 +21,8 @@ import CompactSelect from 'controls/Selects/CompactSelect';
 import type { CompactSelectOption } from 'controls/Selects/CompactSelect';
 import { useTranslation } from 'react-i18next';
 
-/** An option for one of the filter-bar selects. */
 export type FilterOption = CompactSelectOption;
 
-/** Client-side filter state driving the live map narrowing. */
 export interface DashboardFilters {
   transporterType: string;
   groupId: string | number;

@@ -39,7 +39,7 @@ public sealed class TripAssignmentConfiguration : IEntityTypeConfiguration<TripA
             .HasDatabaseName("ix_trip_assignments_accountid_tripid");
 
         // Exactly ONE Active assignment per trip, enforced by the database rather than by handler
-        // discipline (spec 11 section 6.1). A duplicate assign attempt surfaces as CONFLICT.
+        // discipline. A duplicate assign attempt surfaces as CONFLICT.
         builder.HasIndex(x => x.TripId)
             .HasDatabaseName("ux_trip_assignments_active_per_trip")
             .IsUnique()

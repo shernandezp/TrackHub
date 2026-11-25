@@ -133,9 +133,8 @@ const PAGE_SIZE = 10;
 const ALL = 'all';
 
 /**
- * Feed for the create dialog's "reuse a previous route" picker. A stable
- * reference so the query key never churns; 50 recent trips is plenty for a
- * dispatcher re-running known routes (full templates are spec 11 slice 2).
+ * A stable reference so the query key never churns; 50 recent trips is plenty for a dispatcher
+ * re-running known routes.
  */
 const COPY_SOURCE_FILTERS: TripListFilters = { take: 50 };
 const TRIP_STATUSES = ['Created', 'InProgress', 'Paused', 'Completed', 'Cancelled', 'Aborted'] as const;
@@ -147,33 +146,20 @@ const EDITABLE_STATUSES = new Set(['Created', 'Paused']);
 const TERMINAL_STATUSES = new Set(['Completed', 'Cancelled', 'Aborted']);
 
 /**
- * The trip workspace is tabbed rather than stacked.
- *
- * Rendering every section at once made this screen roughly five viewports tall
- * and put TWO large maps (the planner's 52vh and the replay's 45vh) plus a POD
- * image gallery on screen together. Tabs keep the workspace to one screen, and
- * because each panel only mounts when it is opened, the replay query and the
- * second map cost nothing until a dispatcher actually asks for them.
- *
- * Ordered by how a trip is worked: plan it, crew it, run the stops, then look
- * at what it cost and what it left behind.
+ * Tabbed rather than stacked: each panel mounts only when opened, so the replay query and the
+ * second map cost nothing until asked for. Ordered by how a trip is worked.
  */
 const WORKSPACE_TABS = ['route', 'assignment', 'stops', 'tolls', 'pod', 'timeline', 'replay'] as const;
 type WorkspaceTab = (typeof WORKSPACE_TABS)[number];
 
 /**
- * Dispatch board and trip workspace.
- *
- * The board is SERVER-paged and server-filtered: every filter travels in the
- * `trips` query, so the page a dispatcher sees is the page the backend built —
- * group visibility, feature gating and paging all stay on the server side.
+ * The board is SERVER-paged and server-filtered: group visibility, feature gating and paging all
+ * stay on the server side.
  */
 function TripManager() {
   const { t } = useTranslation();
   const [controller] = useArgonController();
   const { darkMode } = controller;
-
-  /* ------------------------------------------------------------- settings */
 
   const [mapSettings, setMapSettings] = useState<{ maps: MapProvider; mapsKey: string | null }>({
     maps: MAP_PROVIDERS.OSM,
@@ -190,8 +176,6 @@ function TripManager() {
       .catch(notifyApiError);
   }, []);
 
-  /* -------------------------------------------------------------- filters */
-
   const [page, setPage] = useState(0);
   const [status, setStatus] = useState<string>(ALL);
   const [exception, setException] = useState<string>(ALL);
@@ -199,8 +183,7 @@ function TripManager() {
   const [staffFilter, setStaffFilter] = useState<SearchOption | null>(null);
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
-  // The box updates as the user types; the query waits for them to stop. Wired straight through, a
-  // twelve-character trip code issued twelve backend reads, each one a full page.
+  // The query waits for typing to stop; wired straight through, each keystroke issued a full-page read.
   const [searchDraft, setSearchDraft] = useState('');
   const search = useDebouncedValue(searchDraft);
 
@@ -222,8 +205,6 @@ function TripManager() {
     }),
     [calendar, status, from, to, transporterFilter, staffFilter, search, page, exception]
   );
-
-  /* --------------------------------------------------------------- data */
 
   const accountQuery = useAccountByUser();
   const accountId = accountQuery.data?.accountId;
@@ -263,16 +244,12 @@ function TripManager() {
   const detailQuery = useTripDetail(selectedTripId);
   const detail = detailQuery.data;
 
-  /* ---------------------------------------------------------- permissions */
-
   // Trips/Delete is NOT in the default User role matrix (the dispatcher creates and
   // runs trips; retiring one is a Manager action), so the three destructive controls
   // on this screen are permission-gated rather than always rendered. A user elevated
   // by a policy that grants Trips/Delete sees them.
   const { can } = usePermissions();
   const canDeleteTrips = can(PermissionResources.Trips, PermissionActions.Delete);
-
-  /* ---------------------------------------------------------- mutations */
 
   const createTrip = useCreateTrip();
   const updateTrip = useUpdateTrip();
@@ -293,13 +270,11 @@ function TripManager() {
   const uploadDocument = useUploadDocument();
   const refreshDocument = useRefreshDocument();
 
-  /* -------------------------------------------------------- trip dialog */
-
   const [tripOpen, setTripOpen] = useState(false);
   const [tripValues, tripChange, setTripValues, setTripErrors, validateTrip, tripErrors] =
     useForm<TripFormValues>({});
   // Destinations queued in the create dialog; they become stops right after the
-  // trip header is created (the create command owns only the header, §7.3).
+  // trip header is created (the create command owns only the header).
   const [tripDestinations, setTripDestinations] = useState<TripDestinationDraft[]>([]);
 
   // Reusable-route feed for the create dialog, fetched only while it is open.
@@ -311,7 +286,6 @@ function TripManager() {
     [copySourcesQuery.data]
   );
 
-  /** Prefills origin, route shape and toll class from an existing trip. */
   const applyTripTemplate = async (sourceTripId: string) => {
     try {
       const source = await getTripDetail(sourceTripId);
@@ -349,7 +323,7 @@ function TripManager() {
         originName: detail.trip.originName,
         originLatitude: detail.trip.originLatitude,
         originLongitude: detail.trip.originLongitude,
-        // Seeded from the STORED column now that the origin zone is real: leaving it
+        // Seeded from the STORED column: leaving it
         // blank would save the trip back with its geofence link dropped, and the
         // origin would silently fall from the plant's real shape to a 150 m circle.
         originGeofenceId: detail.trip.originGeofenceId,
@@ -457,8 +431,6 @@ function TripManager() {
     }
   };
 
-  /* -------------------------------------------------------- stop dialog */
-
   const [stopOpen, setStopOpen] = useState(false);
   const { isFeatureEnabled } = useFeatures();
   const geofencesQuery = useAllGeofences(
@@ -483,7 +455,7 @@ function TripManager() {
             // coordinate pair it has not seen yet, so on a second edit of the
             // same stop it correctly stays silent — and a blank seed would then
             // save the locality away as null. `city` is the only place name the
-            // anonymous customer snapshot may carry (spec 11 §7.8), so losing it
+            // anonymous customer snapshot may carry, so losing it
             // costs the customer their delivery's locality.
             city: existing.city ?? '',
             latitude: existing.latitude,
@@ -557,8 +529,6 @@ function TripManager() {
       // Surfaced by the global toast.
     }
   };
-
-  /* ---------------------------------------------------- delivery dialogs */
 
   const stopLabel = (tripStopId?: string | null): string => {
     const stop = detail?.stops.find((candidate) => candidate.tripStopId === tripStopId);
@@ -644,8 +614,6 @@ function TripManager() {
 
   const [deleteDeliveryTarget, setDeleteDeliveryTarget] = useState<TripDelivery | null>(null);
 
-  /* --------------------------------------------------------- POD capture */
-
   const [podOpen, setPodOpen] = useState(false);
   const [podValues, podChange, setPodValues, setPodErrors, validatePod, podErrors] =
     useForm<PodFormValues>({});
@@ -666,9 +634,8 @@ function TripManager() {
   };
 
   /**
-   * POD evidence is uploaded through the EXISTING spec 04 document endpoint and
-   * linked by id — no POD-specific upload surface exists or is needed. The
-   * document is owned by the trip's transporter (spec 11 §11).
+   * POD evidence is uploaded through the existing document endpoint and linked by id. The
+   * document is owned by the trip's transporter.
    */
   const uploadPodFiles = async (files: File[]) => {
     if (!accountId || !detail) return;
@@ -725,14 +692,11 @@ function TripManager() {
 
   const [importOpen, setImportOpen] = useState(false);
 
-  /* --------------------------------------------------- lifecycle dialogs */
-
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [reasonAction, setReasonAction] = useState<'cancel' | 'abort' | null>(null);
   const [reason, setReason] = useState('');
   const [completeOpen, setCompleteOpen] = useState(false);
   const [forceComplete, setForceComplete] = useState(false);
-  // The manual verbs live behind one affordance now — see the Override group below.
   const [overrideOpen, setOverrideOpen] = useState(false);
   const [inTransitOpen, setInTransitOpen] = useState(false);
   const [inTransitStartedAt, setInTransitStartedAt] = useState('');
@@ -774,8 +738,6 @@ function TripManager() {
     );
   };
 
-  /* ---------------------------------------------------------------- board */
-
   const statusOptions = useMemo(
     () => [
       { value: ALL, label: t('trips.allStatuses') },
@@ -810,10 +772,9 @@ function TripManager() {
             : 'secondary';
 
   /**
-   * The phase, in the dispatcher's words: "Loading at Plant 3", "In transit → Client X
-   * (ETA 11:05)", "Unloading at Client Y", "Overdue". The backend hands over the phase
-   * plus the stop it concerns; the sentence is built here because it is a UI reading of
-   * those facts, not a stored string (spec 11a §10).
+   * The backend hands over the phase plus the stop it concerns; the sentence ("Loading at
+   * Plant 3", "In transit → Client X (ETA 11:05)") is built here because it is a UI reading of
+   * those facts, not a stored string.
    */
   const phaseLabel = (trip: Trip): string => {
     const phase = t(`trips.phases.${trip.phase}` as 'trips.phases.Scheduled');
@@ -833,12 +794,8 @@ function TripManager() {
             ? 'success'
             : 'secondary';
 
-  // The board spans the FULL width, so it can afford the columns a dispatcher
-  // actually scans by — who is carrying it and who is driving — without the
-  // crowding that made a one-third-width board collide with itself.
-  //
-  // Phase leads the status badge: a column of rows all reading "InProgress" is
-  // precisely why a dispatcher used to have to open each one.
+  // The board spans the full width, so it can afford the columns a dispatcher
+  // scans by: who is carrying it and who is driving.
   const columns = [
     { name: 'code', title: t('trips.code'), align: 'left' as const },
     { name: 'customer', title: t('trips.customerName'), align: 'left' as const },
@@ -943,9 +900,9 @@ function TripManager() {
                   setStatus(String(value));
                 }}
               />
-              {/* Exception-driven attention (spec 11a §10): the system runs the
-                  ordinary lifecycle, so what a dispatcher needs on screen is the
-                  short list of trips that are NOT going to plan. */}
+              {/* Exception-driven attention: the system runs the ordinary lifecycle, so
+                  what a dispatcher needs on screen is the short list of trips
+                  that are NOT going to plan. */}
               <CompactSelect
                 name="exception"
                 value={exception}
@@ -1015,9 +972,6 @@ function TripManager() {
               <ArgonButton variant="gradient" color="info" size="small" onClick={() => openTrip(false)}>
                 <Icon>add</Icon>&nbsp;{t('trips.newTrip')}
               </ArgonButton>
-              {/* Bulk planning is the input side of zero-touch: a dispatcher who no
-                  longer starts trips one by one must not have to create them one by
-                  one either (spec 11a §9.1). */}
               <ArgonButton
                 variant="outlined"
                 color="info"
@@ -1029,14 +983,8 @@ function TripManager() {
             </ArgonBox>
           </Grid>
 
-          {/* MASTER over DETAIL: the board takes the full width on top, the trip
-              workspace the full width underneath.
-
-              Side by side, neither half had room — six columns collided inside a
-              one-third-width board, while the map, stop tables and POD gallery
-              were squeezed into the remaining two thirds. Stacking them gives
-              both the whole window, and the board is short enough (10 rows) that
-              the workspace below still starts above the fold. */}
+          {/* Master over detail, stacked: side by side, neither half had room. The board
+              is short enough (10 rows) that the workspace still starts above the fold. */}
           <Grid size={{ xs: 12 }}>
             <ArgonTypography variant="button" fontWeight="medium">
               {t('trips.board')}
@@ -1083,9 +1031,6 @@ function TripManager() {
 
           </Grid>
 
-          {/* The workspace gets the full width too — the planner map, the stop and
-              delivery tables and the POD gallery are the widest content on the
-              screen and were the things most starved by the old split. */}
           <Grid size={{ xs: 12 }}>
             {!detail ? (
               <ArgonTypography variant="caption" color="secondary">
@@ -1145,12 +1090,9 @@ function TripManager() {
                   <ArgonButton variant="outlined" color="info" size="small" onClick={() => setShareOpen(true)}>
                     <Icon>share</Icon>&nbsp;{t('trips.actions.share')}
                   </ArgonButton>
-                  {/* The manual lifecycle verbs are OVERRIDES now, and they are grouped
-                      to say so (spec 11a §10). The system starts, advances and closes a
-                      trip from the zones; these exist for the exceptions — a dead
-                      tracker, a dispatcher correction — and putting them behind one
-                      affordance is what stops the screen from inviting the manual flow
-                      the module no longer runs on. Permissions are unchanged. */}
+                  {/* The manual lifecycle verbs are OVERRIDES, grouped to say so: the system
+                      starts, advances and closes a trip from the zones; these exist for
+                      the exceptions (a dead tracker, a dispatcher correction). */}
                   <ArgonButton
                     variant={overrideOpen ? 'gradient' : 'outlined'}
                     color="secondary"
@@ -1187,7 +1129,7 @@ function TripManager() {
                         </ArgonButton>
                         {/* The trip whose truck left before anyone wrote it down.
                             Backfill from Geofencing's record wins over the declared
-                            time whenever there is one (spec 11a §5.4). */}
+                            time whenever there is one. */}
                         <ArgonButton
                           variant="outlined"
                           color="info"
@@ -1213,7 +1155,7 @@ function TripManager() {
                     )}
                     {/* Complete works from Paused too: a dispatcher who took control of
                         a finished trip should not have to hand it back to automation
-                        just to close it (spec 11a §5.1). */}
+                        just to close it. */}
                     {(running || detail.trip.status === 'Paused') && (
                       <ArgonButton
                         variant="outlined"
@@ -1274,16 +1216,11 @@ function TripManager() {
                   ))}
                 </Tabs>
 
-                {/* Every panel below is keyed by trip id so switching trips
-                    REMOUNTS it. Each holds trip-specific `useState` seeded once,
-                    at mount. The surrounding `{!detail ? … }` ternary looks like
-                    it unmounts them between trips, but it does not: TanStack
-                    serves a previously visited trip's detail from cache
-                    synchronously, so `detail` never goes undefined on the way
-                    back and the panel keeps the PREVIOUS trip's values while
-                    displaying the new one. That is not cosmetic — Assign then
-                    writes trip A's staff onto trip B, and Replan applies A's
-                    corridor width. */}
+                {/* Every panel below is keyed by trip id so switching trips REMOUNTS it:
+                    each holds trip-specific `useState` seeded at mount, and TanStack
+                    serves a visited trip's detail from cache synchronously, so the
+                    ternary never unmounts them. Without the key, Assign writes
+                    trip A's staff onto trip B. */}
                 {workspaceTab === 'route' && (
                   <RoutePlanner
                     key={detail.trip.tripId}
@@ -1534,12 +1471,9 @@ function TripManager() {
         />
       </FormDialog>
 
-      {/* "This trip is already under way" (spec 11a §5.4).
-
-          The date-time is the FALLBACK, not the input: when Geofencing recorded the
-          vehicle leaving the origin zone, those measurements win and the field is
-          ignored. It is left optional here for exactly that reason — requiring it
-          would make a dispatcher invent a time the system can measure better. */}
+      {/* The date-time is the FALLBACK, not the input: when Geofencing recorded the
+          vehicle leaving the origin zone, those measurements win. Optional so a
+          dispatcher never invents a time the system can measure better. */}
       <FormDialog
         title={t('trips.inTransit.title')}
         open={inTransitOpen}

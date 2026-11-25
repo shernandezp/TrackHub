@@ -22,12 +22,12 @@ namespace TrackHub.TripManagement.Application.Trips.Commands.Assign;
 /// <summary>
 /// Assigns a staff. Manager owns the assignment rules — a staff qualifies through an active
 /// <c>StaffTransporterAssignment</c> or their <c>DefaultTransporterId</c> — so this never
-/// re-implements them locally (spec 11 §7.3).
+/// re-implements them locally.
 /// </summary>
 [Authorize(Resource = Resources.Trips, Action = Actions.Edit)]
 [RequireFeature(FeatureKeys.TripManagement)]
 // Enforcement: the handler derives the caller's own account and passes it to the reader/writer,
-// which filters every row on it (TripVisibility is the single visibility resolver - spec 11).
+// which filters every row on it (TripVisibility is the single visibility resolver).
 [AccountScopeEnforcedInHandler]
 public readonly record struct AssignTripCommand(Guid TripId, Guid StaffId, Guid? TransporterId) : IRequest<TripAssignmentVm>;
 

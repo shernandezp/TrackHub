@@ -17,11 +17,7 @@ namespace TrackHub.Manager.Domain.Interfaces;
 
 public interface IAccountStatusWriter
 {
-    /// <summary>
-    /// Applies a validated lifecycle transition: updates <c>Status</c>/<c>StatusChangedAt</c> (and the
-    /// derived <c>Active</c>), writes an <c>AccountStatusChanged</c> audit event, and returns the
-    /// updated account plus its previous status (for the domain event).
-    /// </summary>
+    /// <summary>Also updates the derived <c>Active</c> flag and writes an <c>AccountStatusChanged</c> audit event.</summary>
     Task<(AccountVm Account, AccountStatus PreviousStatus)> ChangeStatusAsync(
         Guid accountId, AccountStatus targetStatus, string? reason, CancellationToken cancellationToken);
 }

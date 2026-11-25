@@ -17,9 +17,8 @@ namespace TrackHub.TripManagement.Infrastructure.RoutingApi;
 
 /// <summary>
 /// OpenRouteService routing settings — <c>AppSettings:Routing</c>, deployment-supplied via
-/// environment variables (the spec 05 <c>AppSettings:Smtp</c>/<c>AppSettings:WhatsApp</c>
-/// precedent). Pointing <see cref="BaseUrl"/> at a self-hosted ORS instance is supported and is
-/// the only change such a deployment needs (spec 11 §7.2a, §14).
+/// environment variables. Pointing <see cref="BaseUrl"/> at a self-hosted ORS instance is supported
+/// and is the only change such a deployment needs.
 /// </summary>
 public sealed class RoutingOptions
 {

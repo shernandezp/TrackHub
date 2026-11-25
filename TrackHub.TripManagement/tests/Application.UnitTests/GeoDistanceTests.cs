@@ -18,14 +18,7 @@ using TrackHub.TripManagement.Application.Common;
 namespace TrackHub.TripManagement.Application.UnitTests;
 
 /// <summary>
-/// The single function behind every trip's <c>ActualDistanceMeters</c>, and it was untested.
-/// <para>
-/// A wrong constant or a missing degrees-to-radians conversion here does not crash anything — it
-/// silently rescales every distance report, every plan-vs-actual comparison and every downstream
-/// fuel reconciliation in the platform by a constant factor that nobody would notice for months.
-/// The cases below are anchored to independently-known ground truth (a degree of latitude, a
-/// well-surveyed city pair) rather than to whatever the current implementation happens to return.
-/// </para>
+/// Cases are anchored to independently-known ground truth, not to the current output.
 /// </summary>
 [TestFixture]
 public class GeoDistanceTests

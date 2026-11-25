@@ -17,11 +17,8 @@
 namespace Common.Domain.Time;
 
 /// <summary>
-/// The calendar an ACCOUNT lives in. The servers run on UTC and every instant the platform stores
-/// is UTC; every "today", "which day does this instant belong to" and day-bucket boundary is a
-/// calendar question whose answer depends on where the customer operates. Each account carries an
-/// IANA zone (Manager, <c>accounts.timezoneid</c>); this type turns instants into days for it, and
-/// <see cref="IAccountTimeZoneResolver"/> is how a service obtains the calendar of an account.
+/// The calendar an account lives in. Instants are stored as UTC, but every "today" and day-bucket boundary
+/// depends on where the customer operates, so each account carries an IANA zone.
 /// </summary>
 public sealed class AccountTimeZone
 {
@@ -55,18 +52,14 @@ public sealed class AccountTimeZone
         return TimeZoneInfo.TryFindSystemTimeZoneById(timeZoneId.Trim(), out var zone) ? new AccountTimeZone(zone) : Utc;
     }
 
-    /// <summary>The current calendar day in the account's zone.</summary>
     public DateOnly Today() => DateOf(DateTimeOffset.UtcNow);
 
-    /// <summary>The calendar day an instant falls on in the account's zone.</summary>
     public DateOnly DateOf(DateTimeOffset instant)
         => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(instant, Zone).DateTime);
 
-    /// <summary>The wall-clock time an instant reads as in the account's zone.</summary>
     public TimeOnly ClockOf(DateTimeOffset instant)
         => TimeOnly.FromDateTime(TimeZoneInfo.ConvertTime(instant, Zone).DateTime);
 
-    /// <summary>The instant a calendar day starts in the account's zone.</summary>
     public DateTimeOffset StartOf(DateOnly day)
     {
         var local = day.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
@@ -84,8 +77,7 @@ public sealed class AccountTimeZone
 }
 
 /// <summary>
-/// Answers the calendar of an account. Manager reads its own table; every other service asks
-/// Manager and caches the answer, since a zone changes about as often as the customer moves office.
+/// Manager reads its own table; every other service asks Manager and caches the answer.
 /// </summary>
 public interface IAccountTimeZoneResolver
 {
@@ -93,9 +85,7 @@ public interface IAccountTimeZoneResolver
 }
 
 /// <summary>
-/// Answers UTC for every account. The fallback a component uses when no resolver was supplied
-/// (unit tests construct readers and services by hand), so behaviour stays what it was before
-/// accounts carried a zone.
+/// Answers UTC for every account; the fallback when no resolver was supplied, e.g. in unit tests.
 /// </summary>
 public sealed class UtcAccountTimeZoneResolver : IAccountTimeZoneResolver
 {

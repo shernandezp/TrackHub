@@ -19,7 +19,7 @@ namespace DBInitializer;
 /// One module's slice of the RBAC seed data. The initializer discovers every implementation
 /// in this assembly and seeds the aggregate, so a feature module contributes its resources,
 /// role grants and service-client allowlists from its own file instead of growing a central
-/// list. All seeding stays additive and idempotent; the Administrator role automatically
+/// list. Seeding only adds rows, so db-init must re-run on existing deployments; the Administrator
 /// receives grant-all over every contributed resource/action pair.
 /// Implementations must have a public parameterless constructor.
 /// </summary>

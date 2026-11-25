@@ -23,10 +23,8 @@ public sealed class TransporterConfiguration : IEntityTypeConfiguration<Transpor
     public void Configure(EntityTypeBuilder<Transporter> builder)
     {
         builder.Property(x => x.Version).HasColumnName("editversion").HasConversion<long>().IsConcurrencyToken();
-        //Table name
         builder.ToTable(name: TableMetadata.Transporter, schema: SchemaMetadata.Application);
 
-        //Column names
         builder.Property(x => x.TransporterId).HasColumnName("id");
         builder.Property(x => x.Name).HasColumnName("name");
         builder.Property(x => x.RetiredAt).HasColumnName("retiredat");

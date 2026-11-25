@@ -25,7 +25,7 @@ using TrackHub.TripManagement.Infrastructure.TripDB.Services;
 namespace TrackHub.TripManagement.Application.UnitTests;
 
 /// <summary>
-/// Spec 11 §17.10: TripManagement's own <c>IFeatureFlagService</c> is registered and a disabled
+/// TripManagement's own <c>IFeatureFlagService</c> is registered and a disabled
 /// account is actually rejected.
 /// </summary>
 [TestFixture]

@@ -18,7 +18,7 @@ namespace TrackHub.TripManagement.Domain.Interfaces;
 /// <summary>
 /// Emits trip alerts to Manager under this service's own <c>trip_client</c> identity, never the
 /// caller's token. Every call is best-effort at the call site: a Manager outage logs and must
-/// never fail position processing or a lifecycle command (spec 11 §7.4, §12).
+/// never fail position processing or a lifecycle command.
 /// </summary>
 public interface IAlertEmitter
 {
@@ -26,7 +26,7 @@ public interface IAlertEmitter
     /// Records one alert. <paramref name="eventType"/> and <paramref name="severity"/> must match
     /// Manager's <c>AlertEventTypes</c>/<c>AlertSeverities</c> catalogs — these literals travel in
     /// GraphQL variables and are invisible to Layer A contract validation, so each one needs a
-    /// Layer B round-trip test (rules.md).
+    /// Layer B round-trip test.
     /// </summary>
     Task EmitAsync(string eventType, string severity, string deduplicationKey, TripAlertDto alert, CancellationToken cancellationToken);
 

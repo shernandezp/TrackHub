@@ -25,12 +25,12 @@ namespace TrackHub.TripManagement.Application.TripShares.Commands.Revoke;
 /// <c>[RequireFeature(FeatureKeys.TripManagement)]</c>; this one must not. An account that has been
 /// downgraded or had the feature switched off still has live links out in the world, and taking
 /// away the ability to pull them back would turn a billing change into a data-exposure incident.
-/// Revocation is always available (spec 11 §7.3, following the spec-02 §7.4 precedent).
+/// Revocation is always available.
 /// </para>
 /// </summary>
 [Authorize(Resource = Resources.Trips, Action = Actions.Custom)]
 // Enforcement: the handler derives the caller's own account and passes it to the reader/writer,
-// which filters every row on it (TripVisibility is the single visibility resolver - spec 11).
+// which filters every row on it (TripVisibility is the single visibility resolver).
 [AccountScopeEnforcedInHandler]
 public readonly record struct RevokeTripShareCommand(Guid TripId, Guid TripShareId) : IRequest<Guid>;
 
@@ -50,8 +50,7 @@ public sealed class RevokeTripShareCommandHandler(
         var caller = await userReader.GetUserAsync(UserId, cancellationToken);
         var scopeUserId = TripVisibility.ResolveScopeUserId(user, UserId);
 
-        // Account scope alone was NOT enough here: this handler previously revoked by TripShareId
-        // with no trip lookup at all, so a dispatcher holding a borrowed or guessed share id could
+        // Account scope alone is NOT enough: a dispatcher holding a borrowed or guessed share id could
         // kill another group's customer-facing tracking link. Resolving through the shared helper
         // applies the same Visible() predicate as every other path; an unseen share is
         // NotFoundException, never Forbidden (non-disclosure).

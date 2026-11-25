@@ -14,12 +14,7 @@
 *  limitations under the License.
 */
 
-/**
- * Platform status query hooks. Components consume these — not the api layer.
- *
- * Everything polls at 60 s with `refetchIntervalInBackground: false`, so a
- * backgrounded tab stops hitting the backends (AC 6).
- */
+/** Everything polls at 60 s with `refetchIntervalInBackground: false`, so a backgrounded tab stops hitting the backends. */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { probeAllServices } from 'api/core/healthProbe';
@@ -34,7 +29,6 @@ import {
 import type { PlatformAnnouncementDtoInput } from 'api/manager/platformStatus';
 import { getPlatformSyncActivity } from 'api/telemetry/platformStatus';
 
-/** Shared poll cadence for every status source. */
 export const STATUS_POLL_MS = 60_000;
 
 export const platformStatusKeys = {
@@ -46,10 +40,7 @@ export const platformStatusKeys = {
   jobs: () => [...platformStatusKeys.all, 'jobs'] as const,
 };
 
-/**
- * Browser-side probes of every backend `/health`. Never rejects (each probe
- * resolves to a per-service state), so a total outage still renders the page.
- */
+/** Never rejects (each probe resolves to a per-service state), so a total outage still renders the page. */
 export function useServiceHealth() {
   return useQuery({
     queryKey: platformStatusKeys.health(),
@@ -67,7 +58,6 @@ export function useServiceHealth() {
   });
 }
 
-/** Currently-visible announcements, anonymous. Resolves to [] when Manager is down. */
 export function useVisibleAnnouncements() {
   return useQuery({
     queryKey: platformStatusKeys.announcements(),
@@ -81,7 +71,6 @@ export function useVisibleAnnouncements() {
   });
 }
 
-/** Administrator tier: SyncWorker liveness. Only fetched when `enabled`. */
 export function usePlatformSyncActivity(enabled: boolean) {
   return useQuery({
     queryKey: platformStatusKeys.syncActivity(),
@@ -95,7 +84,6 @@ export function usePlatformSyncActivity(enabled: boolean) {
   });
 }
 
-/** Administrator tier: latest run per background job. Only fetched when `enabled`. */
 export function useBackgroundJobStatus(enabled: boolean) {
   return useQuery({
     queryKey: platformStatusKeys.jobs(),
@@ -109,7 +97,6 @@ export function useBackgroundJobStatus(enabled: boolean) {
   });
 }
 
-/** Administrator tier: every announcement including drafts and expired rows. */
 export function useManagedAnnouncements(enabled: boolean) {
   return useQuery({
     queryKey: platformStatusKeys.managedAnnouncements(),
@@ -121,7 +108,6 @@ export function useManagedAnnouncements(enabled: boolean) {
   });
 }
 
-/** Invalidates both the management list and the public banner after any write. */
 function useAnnouncementInvalidation() {
   const queryClient = useQueryClient();
   return () => {

@@ -31,15 +31,12 @@ Coded by www.creative-tim.com
 
 import type { ReactNode } from "react";
 
-// @mui material components
 import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
 
-// Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
 import ArgonTypography from "components/ArgonTypography";
 
-// Argon Dashboard 2 MUI contexts
 import { useArgonController } from "context";
 
 type DetailedStatisticsPercentageColor =

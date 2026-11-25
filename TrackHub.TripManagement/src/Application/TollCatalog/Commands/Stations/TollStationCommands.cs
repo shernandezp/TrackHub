@@ -15,7 +15,7 @@
 
 namespace TrackHub.TripManagement.Application.TollCatalog.Commands.Stations;
 
-// NOT feature-flagged — platform reference data, not a tenant feature (spec 11 §3, §5).
+// NOT feature-flagged — platform reference data, not a tenant feature.
 // Administrator-only through the Security role matrix on Resources.TollCatalog.
 // Every write is audited: station changes move money on estimates.
 

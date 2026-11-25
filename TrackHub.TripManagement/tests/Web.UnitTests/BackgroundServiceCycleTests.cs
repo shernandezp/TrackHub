@@ -24,9 +24,9 @@ using TrackHub.TripManagement.Web.BackgroundServices;
 namespace Web.UnitTests;
 
 /// <summary>
-/// One cycle of each background service. Neither had any test.
+/// One cycle of each background service.
 /// <para>
-/// <b>SVD-11, the on-work-only recorder.</b> A <c>BackgroundJobRun</c> row is written ONLY when the
+/// <b>The on-work-only recorder.</b> A <c>BackgroundJobRun</c> row is written ONLY when the
 /// cycle actually did something. This is not a micro-optimisation: <c>/status</c> reads the LAST run
 /// of each job key, and if these jobs recorded every cycle then the row would tick over every 5 and
 /// 15 minutes regardless of whether anything worked, so a genuinely broken job would look perfectly
@@ -42,7 +42,6 @@ namespace Web.UnitTests;
 [TestFixture]
 public class BackgroundServiceCycleTests
 {
-    // ----- ETA refresh --------------------------------------------------------------------------
 
     [Test]
     public async Task EtaRefresh_WithNoWorkDone_WritesNoJobRunRow()
@@ -67,7 +66,7 @@ public class BackgroundServiceCycleTests
         await harness.EtaService().RunOnceAsync(DateTimeOffset.UtcNow, CancellationToken.None);
 
         // The payload counts both kinds of work the cycle does — ETAs refreshed and trips closed by
-        // the auto-completion sweep, which shares this job key rather than adding one (spec 11a §5.2).
+        // the auto-completion sweep, which shares this job key rather than adding one.
         harness.Recorder.Verify(r => r.RecordAsync(
             BackgroundJobKeys.TripEtaRefresh, null, "7/0", It.IsAny<string>(), "Succeeded",
             It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), null, null,
@@ -76,7 +75,7 @@ public class BackgroundServiceCycleTests
 
     /// <summary>
     /// The sweep alone counts as work. A cycle that refreshed no ETA but auto-completed a trip whose
-    /// tracker went dark has genuinely done something, and SVD-11's on-work-only rule must record it
+    /// tracker went dark has genuinely done something, and the on-work-only rule must record it
     /// — otherwise the one job that closes those trips leaves no trace it ever ran.
     /// </summary>
     [Test]
@@ -134,7 +133,6 @@ public class BackgroundServiceCycleTests
         Assert.That(harness.RecorderResolutions, Is.Zero);
     }
 
-    // ----- Schedule reminder --------------------------------------------------------------------
 
     [Test]
     public async Task ScheduleReminder_WithNoReminderRaised_WritesNoJobRunRow()

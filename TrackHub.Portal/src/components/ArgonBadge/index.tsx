@@ -33,7 +33,6 @@ import { forwardRef } from "react";
 import type { ReactNode } from "react";
 import type { BadgeProps } from "@mui/material/Badge";
 
-// Custom styles for the ArgonBadge
 import ArgonBadgeRoot from "components/ArgonBadge/ArgonBadgeRoot";
 
 export interface ArgonBadgeProps extends Omit<BadgeProps, "color" | "variant" | "children"> {

@@ -15,16 +15,10 @@
 */
 
 /**
- * Escapes a value for interpolation into an HTML string.
- *
- * React escapes interpolated values automatically; the map layer does NOT, because Leaflet's
- * `bindPopup`/`bindTooltip` and the Google `InfoWindow` accept an HTML **string** which they assign
- * via `innerHTML`. Every dynamic value interpolated into one of those strings must pass through
- * here — transporter names are account-editable free text and reverse-geocoded addresses come from
- * a third-party provider, so neither is trustworthy.
- *
- * Escapes the five characters that can break out of either an element body or a
- * double/single-quoted attribute value, so one helper is safe in both positions.
+ * Leaflet's `bindPopup`/`bindTooltip` and the Google `InfoWindow` assign HTML strings via
+ * `innerHTML`, so every dynamic value interpolated into them must pass through here: transporter
+ * names are account-editable and reverse-geocoded addresses come from a third party. Safe in both
+ * element bodies and quoted attribute values.
  */
 export const escapeHtml = (value: unknown): string =>
   String(value ?? '')

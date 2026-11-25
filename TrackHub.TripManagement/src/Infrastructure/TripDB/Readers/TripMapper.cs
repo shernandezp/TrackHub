@@ -25,7 +25,7 @@ namespace TrackHub.TripManagement.Infrastructure.TripDB.Readers;
 /// straight into a record struct inside the query. That is deliberate: Npgsql cannot translate an
 /// <c>OrderBy</c> whose key is a member of a constructor-built record struct, and EF InMemory
 /// evaluates such an ordering client-side so unit tests pass while production throws
-/// "could not be translated" (rules.md, Forbidden patterns - it shipped in spec 09). Ordering
+/// "could not be translated". Ordering
 /// therefore always happens on entity columns before this mapper is reached.
 /// </para>
 /// </summary>
@@ -209,7 +209,7 @@ internal static class TripMapper
 
     /// <summary>
     /// Share projection. <c>Token</c> is always null here: the plaintext token is returned exactly
-    /// once by the create path and is never re-readable (acceptance 23).
+    /// once by the create path and is never re-readable.
     /// </summary>
     internal static TripShareVm ToVm(TripShare share, string? token = null)
         => new(

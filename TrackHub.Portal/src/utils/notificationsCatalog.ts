@@ -14,14 +14,8 @@
 *  limitations under the License.
 */
 
-/**
- * Static catalogs for the alerts & notifications module. Labels come
- * from i18n (`alertEventTypes.*`, `notificationChannels.*`) via toCamelCase;
- * these are the raw backend identifiers. UI gating is cosmetic — the backend
- * is authoritative for feature entitlements.
- */
+/** Raw backend identifiers; labels come from i18n via toCamelCase. UI gating is cosmetic. */
 
-/** Alert event types emitted across the platform. */
 export const ALERT_EVENT_TYPES = [
   'GeofenceEntered',
   'GeofenceExited',
@@ -46,13 +40,12 @@ export const ALERT_EVENT_TYPES = [
   'TripStartDue',
 ] as const;
 
-/** Rule delivery channels. Push is not yet available and is intentionally hidden. */
+/** Push is intentionally hidden. */
 export const NOTIFICATION_CHANNELS = ['InApp', 'Email', 'Webhook', 'WhatsApp'] as const;
 
 /** Channels a principal can subscribe to directly (no Webhook at principal level). */
 export const SUBSCRIPTION_CHANNELS = ['InApp', 'Email', 'WhatsApp'] as const;
 
-/** Delivery lifecycle statuses (filterable in the delivery-history panel). */
 export const DELIVERY_STATUSES = [
   'Pending',
   'Sending',
@@ -70,10 +63,8 @@ export const TEMPLATE_KEYS = [
   'NotificationDigest',
 ] as const;
 
-/** Digest modes accepted in a rule's throttlingJson. */
 export const DIGEST_MODES = ['None', 'Hourly', 'Daily'] as const;
 
-/** Feature keys gating the notifications module and its billable channels. */
 export const NOTIFICATIONS_FEATURE_KEY = 'notifications';
 export const NOTIFICATIONS_EMAIL_FEATURE_KEY = 'notifications.email';
 export const NOTIFICATIONS_WHATSAPP_FEATURE_KEY = 'notifications.whatsapp';

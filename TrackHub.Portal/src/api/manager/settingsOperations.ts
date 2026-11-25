@@ -14,12 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Account/user settings GraphQL documents (Manager backend). Codegen validates
- * these against schemas/manager.graphql and emits typed document nodes — values
- * always travel as variables, never string interpolation.
- */
-
 import { graphql } from './generated';
 
 export const AccountSettingsItemFragment = graphql(`

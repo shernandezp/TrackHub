@@ -29,7 +29,6 @@ public class DocumentConfiguration : IEntityTypeConfiguration<Document>
         builder.Property(x => x.VisibilityScope).HasColumnName("visibilityscope").HasMaxLength(ColumnMetadata.DefaultNameLength).IsRequired();
         builder.Property(x => x.ScanStatus).HasColumnName("scanstatus").HasMaxLength(ColumnMetadata.DefaultNameLength).IsRequired();
 
-        // Document-library columns.
         builder.Property(x => x.FileName).HasColumnName("filename").HasMaxLength(ColumnMetadata.DefaultNameLength).IsRequired();
         builder.Property(x => x.Category).HasColumnName("category").HasMaxLength(ColumnMetadata.DefaultNameLength).IsRequired();
         builder.Property(x => x.Title).HasColumnName("title").HasMaxLength(ColumnMetadata.DefaultNameLength);

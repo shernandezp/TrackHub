@@ -23,7 +23,6 @@ public sealed class Document(Guid accountId, string ownerEntityType, string owne
     public string VisibilityScope { get; set; } = visibilityScope;
     public string ScanStatus { get; set; } = scanStatus;
 
-    // Document-library columns.
     public string FileName { get; set; } = fileName;
     public string Category { get; set; } = category;
     public string? Title { get; set; } = title;

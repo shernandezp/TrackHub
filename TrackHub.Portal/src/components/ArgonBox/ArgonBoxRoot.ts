@@ -29,7 +29,6 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
-// @mui material components
 import Box from "@mui/material/Box";
 import { styled } from "@mui/material/styles";
 
@@ -104,7 +103,6 @@ export default styled(Box)<{ ownerState: ArgonBoxOwnerState }>(({ theme, ownerSt
   const validBorderRadius = ["xs", "sm", "md", "lg", "xl", "xxl", "section"];
   const validBoxShadows = ["xs", "sm", "md", "lg", "xl", "xxl", "inset"];
 
-  // background value
   let backgroundValue = bgColor;
 
   if (variant === "gradient") {
@@ -117,21 +115,18 @@ export default styled(Box)<{ ownerState: ArgonBoxOwnerState }>(({ theme, ownerSt
     backgroundValue = bgColor;
   }
 
-  // color value
   let colorValue = color;
 
   if (validColors.find((el) => el === color)) {
     colorValue = paletteColors[color!] ? paletteColors[color!].main : greyColors[color!];
   }
 
-  // borderRadius value
   let borderRadiusValue = borderRadius;
 
   if (validBorderRadius.find((el) => el === borderRadius)) {
     borderRadiusValue = radius[borderRadius!];
   }
 
-  // boxShadow value
   const argonBoxShadows = boxShadows as unknown as Record<string, string>;
   let boxShadowValue: string | Record<string, string> = argonBoxShadows;
 

@@ -28,9 +28,8 @@ namespace TrackHub.Reporting.Infrastructure.GraphQLApi;
 // authorization error (a non-manager exporting a global PDF report may lack Accounts/Read), a transport
 // fault — is swallowed and logged, returning null: a branding lookup must NEVER fail the export.
 //
-// Only the account display name is wired today: the logo lives as a Document (branding exposes only a
-// LogoDocumentId, not bytes), so embedding the image requires the document-download flow. PdfReportBuilder
-// already renders LogoImage when present, so wiring it later is additive.
+// Only the account display name is wired: the logo lives as a Document (branding exposes only a
+// LogoDocumentId, not bytes), so embedding the image requires the document-download flow.
 public sealed class ReportBrandingReader(
     IGraphQLClientFactory graphQLClient,
     IMemoryCache cache,

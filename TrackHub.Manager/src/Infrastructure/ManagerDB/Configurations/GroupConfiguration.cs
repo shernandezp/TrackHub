@@ -24,10 +24,8 @@ public sealed class GroupConfiguration : IEntityTypeConfiguration<Group>
     public void Configure(EntityTypeBuilder<Group> builder)
     {
         builder.Property(x => x.Version).HasColumnName("editversion").HasConversion<long>().IsConcurrencyToken();
-        //Table name
         builder.ToTable(name: TableMetadata.Group, schema: SchemaMetadata.Application);
 
-        //Column names
         builder.Property(x => x.GroupId).HasColumnName("id");
         builder.Property(x => x.Name).HasColumnName("name");
         builder.Property(x => x.Description).HasColumnName("description");

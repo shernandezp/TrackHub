@@ -18,7 +18,7 @@ namespace TrackHub.TripManagement.Domain.Models;
 /// <summary>
 /// Platform toll reference data — no <c>AccountId</c>. It describes public road infrastructure,
 /// not tenant business data, so it is readable by any authenticated account user and writable
-/// only by an Administrator (spec 11 §5; see findings.md SVD-12).
+/// only by an Administrator.
 /// </summary>
 public readonly record struct TollVehicleClassVm(
     Guid TollVehicleClassId,
@@ -46,7 +46,7 @@ public readonly record struct TollStationsPageVm(IReadOnlyCollection<TollStation
 
 /// <summary>
 /// A station with its full tariff history. Tariffs are temporal and never overwritten, so a
-/// historical trip's estimate stays explainable (spec 11 §5, acceptance 21).
+/// historical trip's estimate stays explainable.
 /// </summary>
 public readonly record struct TollStationDetailVm(
     TollStationVm Station,
@@ -99,7 +99,7 @@ public readonly record struct TransporterTollClassVm(
 
 /// <summary>
 /// Per-row outcome of a toll catalog CSV import. The batch never rolls back on a bad row — the
-/// caller gets a row-level error report instead (the spec 08 geofence-import contract).
+/// caller gets a row-level error report instead.
 /// </summary>
 public readonly record struct TollCatalogImportResultVm(
     int RowsRead,

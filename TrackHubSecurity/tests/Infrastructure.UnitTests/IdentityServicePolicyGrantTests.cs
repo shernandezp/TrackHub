@@ -18,11 +18,8 @@ using TrackHub.Security.Infrastructure.Identity;
 
 namespace Infrastructure.UnitTests;
 
-// Pins POLICIES AS ADDITIVE GRANTS (role OR policy).
-//
-// The prior reading was the inverse — holding every attached policy was REQUIRED — which meant
-// attaching a policy to a resource/action revoked it from everyone who did not hold that policy,
-// Administrator's grant-all included. These tests fail if that inversion ever returns.
+// Pins POLICIES AS ADDITIVE GRANTS (role OR policy): attaching a policy must never revoke a
+// resource/action from users who do not hold it.
 [TestFixture]
 public class IdentityServicePolicyGrantTests
 {
@@ -69,7 +66,6 @@ public class IdentityServicePolicyGrantTests
     private static Task<bool> Authorize(IdentityService service)
         => service.AuthorizeUserAsync(UserId, Resource, Action, CancellationToken.None);
 
-    // The everyday case: the role grants it, nothing else is attached.
     [Test]
     public async Task RoleGrant_WithNoPolicyAttached_Authorizes()
     {
@@ -78,7 +74,6 @@ public class IdentityServicePolicyGrantTests
         Assert.That(await Authorize(service), Is.True);
     }
 
-    // The point of the change: one user raised above their role WITHOUT widening the role.
     [Test]
     public async Task PolicyGrant_AloneAuthorizes_WhenTheRoleDoesNot()
     {
@@ -87,7 +82,6 @@ public class IdentityServicePolicyGrantTests
         Assert.That(await Authorize(service), Is.True);
     }
 
-    // A policy the user does NOT hold grants them nothing.
     [Test]
     public async Task UnheldPolicy_DoesNotAuthorize_WhenTheRoleDoesNot()
     {
@@ -96,7 +90,6 @@ public class IdentityServicePolicyGrantTests
         Assert.That(await Authorize(service), Is.False);
     }
 
-    // The regression that matters: attaching a policy must not REVOKE an existing role grant.
     [Test]
     public async Task AttachingAPolicy_DoesNotRevokeAnExistingRoleGrant()
     {
@@ -105,7 +98,6 @@ public class IdentityServicePolicyGrantTests
         Assert.That(await Authorize(service), Is.True);
     }
 
-    // Holding one of several attached policies is enough — they are alternatives, not a checklist.
     [Test]
     public async Task HoldingOneOfSeveralAttachedPolicies_Authorizes()
     {
@@ -114,7 +106,6 @@ public class IdentityServicePolicyGrantTests
         Assert.That(await Authorize(service), Is.True);
     }
 
-    // Neither path grants it.
     [Test]
     public async Task NeitherRoleNorPolicy_Denies()
     {

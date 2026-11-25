@@ -35,18 +35,14 @@ import type { Theme } from "@mui/material/styles";
 import { unstable_extendSxProp as extendSxProp } from "@mui/system";
 import type { SystemProps } from "@mui/system";
 
-// Custom styles for ArgonTypography
 import ArgonTypographyRoot from "components/ArgonTypography/ArgonTypographyRoot";
 
-// Argon Dashboard 2 MUI context
 import { useArgonController } from "context";
 
 /**
- * As with ArgonBox, Material UI v9 dropped the system shorthands (`display`, `mb`,
- * `fontSize`, …) from Typography; they stay part of ArgonTypography's own contract and
- * are folded into `sx` at render time. `color`, `fontWeight` and `textTransform` below
- * shadow their system namesakes (they take Argon tokens, not CSS values) and are
- * destructured off before the fold so they still drive ownerState.
+ * As with ArgonBox, the system shorthands stay part of ArgonTypography's contract and are folded
+ * into `sx` at render time. `color`, `fontWeight` and `textTransform` take Argon tokens, not CSS
+ * values, and are destructured off before the fold so they still drive ownerState.
  */
 export interface ArgonTypographyProps
   extends Omit<TypographyProps, "color" | "fontWeight" | "textTransform">,
@@ -65,10 +61,7 @@ export interface ArgonTypographyProps
     | "white";
   fontWeight?: false | "light" | "regular" | "medium" | "bold";
   textTransform?: "none" | "capitalize" | "uppercase" | "lowercase";
-  /**
-   * react-router target, valid when `component` is a router `Link`. Declared on
-   * the control (rather than cast at each call site) per the portal's rule 13.
-   */
+  /** Valid when `component` is a router `Link`. */
   to?: string;
   verticalAlign?:
     | "unset"
@@ -82,11 +75,7 @@ export interface ArgonTypographyProps
     | "bottom";
   textGradient?: boolean;
   opacity?: number;
-  /**
-   * Anchor target when rendered polymorphically as a link (`component="a"`).
-   * The interface extends TypographyProps non-polymorphically, so anchor
-   * attributes must be declared explicitly.
-   */
+  /** The interface extends TypographyProps non-polymorphically, so anchor attributes are declared explicitly. */
   href?: string;
   children: ReactNode;
 }

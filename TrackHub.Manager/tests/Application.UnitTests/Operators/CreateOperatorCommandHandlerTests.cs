@@ -39,7 +39,6 @@ public class CreateOperatorCommandHandlerTests
     [Test]
     public async Task Handle_ValidCommand_LooksUpUserAccountAndCreatesOperator()
     {
-        // Arrange
         var userId = Guid.NewGuid();
         var accountId = Guid.NewGuid();
         var operatorDto = new OperatorDto("TestOperator", "Desc", "+1234", "test@test.com", "Addr", "Contact", 1);
@@ -56,10 +55,8 @@ public class CreateOperatorCommandHandlerTests
         var handler = new CreateOperatorCommandHandler(_writerMock.Object, _userReaderMock.Object, _userMock.Object);
         var command = new CreateOperatorCommand(operatorDto);
 
-        // Act
         var result = await handler.Handle(command, CancellationToken.None);
 
-        // Assert
         Assert.That(result, Is.EqualTo(expectedVm));
         _userReaderMock.Verify(r => r.GetUserAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
         _writerMock.Verify(w => w.CreateOperatorAsync(operatorDto, accountId, It.IsAny<CancellationToken>()), Times.Once);
@@ -68,7 +65,6 @@ public class CreateOperatorCommandHandlerTests
     [Test]
     public async Task Handle_ValidCommand_PropagatesCorrectAccountId()
     {
-        // Arrange — verify the accountId from user lookup is forwarded, not some other ID
         var userId = Guid.NewGuid();
         var accountId = Guid.NewGuid();
         var differentAccountId = Guid.NewGuid();
@@ -82,10 +78,8 @@ public class CreateOperatorCommandHandlerTests
 
         var handler = new CreateOperatorCommandHandler(_writerMock.Object, _userReaderMock.Object, _userMock.Object);
 
-        // Act
         await handler.Handle(new CreateOperatorCommand(operatorDto), CancellationToken.None);
 
-        // Assert — writer must NOT be called with differentAccountId
         _writerMock.Verify(w => w.CreateOperatorAsync(operatorDto, differentAccountId, It.IsAny<CancellationToken>()), Times.Never);
         _writerMock.Verify(w => w.CreateOperatorAsync(operatorDto, accountId, It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -93,10 +87,8 @@ public class CreateOperatorCommandHandlerTests
     [Test]
     public void Constructor_NullUserId_ThrowsUnauthorizedAccessException()
     {
-        // Arrange
         _userMock.Setup(u => u.Id).Returns((string?)null);
 
-        // Act & Assert
         Assert.Throws<UnauthorizedAccessException>(() =>
             new CreateOperatorCommandHandler(_writerMock.Object, _userReaderMock.Object, _userMock.Object));
     }

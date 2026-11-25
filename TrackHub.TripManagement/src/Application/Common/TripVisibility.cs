@@ -20,11 +20,9 @@ namespace TrackHub.TripManagement.Application.Common;
 
 /// <summary>
 /// The single visibility resolver for this module. Every read path (list, detail, timeline,
-/// report, export) and every write-side transporter check funnels through here so acceptance 3
-/// ("the same filter applies to list, detail, report and export paths identically") and
-/// acceptance 4 ("<c>trip.vw_visible_transporter</c> is the single visibility source — no handler
-/// re-implements group logic") hold by construction rather than by convention. A helper copied
-/// per handler would drift; this one cannot.
+/// report, export) and every write-side transporter check funnels through here, so the same filter applies
+/// to every path and <c>trip.vw_visible_transporter</c> stays the single visibility source. A helper copied
+/// per handler would drift.
 /// </summary>
 public static class TripVisibility
 {
@@ -44,15 +42,11 @@ public static class TripVisibility
 
     /// <summary>
     /// Write-side counterpart: a dispatcher may not attach a trip to a transporter outside their
-    /// groups (spec 11 §4).
+    /// groups.
     /// <para>
-    /// A principal that sees the whole account skips the GROUP predicate but NOT the ACCOUNT one.
-    /// This method used to return early for Administrator/Manager/ServiceClient with no check at
-    /// all, so an Account A administrator could create a trip pointing at Account B's transporter.
-    /// That is not a cosmetic dangling reference: the report readers resolve
-    /// <c>TransporterName</c>/<c>StaffName</c> by unscoped id, so Account B's transporter and
-    /// staff names surfaced inside Account A's report output. Cross-account references are invalid
-    /// at write time (spec 11 §5, acceptance 2).
+    /// A principal that sees the whole account skips the GROUP predicate but NOT the ACCOUNT one: the report
+    /// readers resolve <c>TransporterName</c>/<c>StaffName</c> by unscoped id, so a cross-account reference
+    /// would surface another account's names in this account's reports.
     /// </para>
     /// <para>
     /// The two failures are deliberately different: a transporter that is not in the account at all
@@ -100,10 +94,8 @@ public static class TripVisibility
     /// The arrival-snapshot code (taken at <c>StartTrip</c>) looks the geofence up with an account
     /// predicate and, on a miss, falls back to buffering the stop point by
     /// <c>ArrivalRadiusMeters</c> — with no error. That fallback is correct for a geofence deleted
-    /// AFTER the stop was created, but it also silently swallowed a wrong or cross-account id
-    /// entered at creation: a dispatcher who deliberately picked a polygon got a 150 m circle and
-    /// no indication that detection would behave differently. Validating here keeps the fallback
-    /// for the genuine case while making a bad id a 404 at the moment it is submitted.
+    /// AFTER the stop was created, but must not hide a wrong or cross-account id entered at creation, which would
+    /// silently turn a chosen polygon into a 150 m circle; a bad id is a 404 when submitted.
     /// </para>
     /// </summary>
     public static async Task EnsureGeofenceInAccountAsync(
@@ -139,8 +131,7 @@ public static class TripVisibility
     }
 
     /// <summary>
-    /// Resolves the trip owning a stop, applying the caller's visibility scope. The stop-addressed
-    /// commands carry no trip id, so without this they wrote against any stop in the account.
+    /// Resolves the trip owning a stop, applying the caller's visibility scope; stop-addressed commands carry no trip id.
     /// Invisible or unknown → <c>NotFoundException</c> (non-disclosure).
     /// </summary>
     public static async Task<Guid> ResolveVisibleTripByStopAsync(
@@ -166,20 +157,10 @@ public static class TripVisibility
     /// Share-addressed counterpart of <see cref="ResolveVisibleTripByStopAsync"/>, for
     /// <c>RevokeTripShareCommand</c>.
     /// <para>
-    /// Revoke resolved the share by id under ACCOUNT scope only and never looked the trip up at
-    /// all, so a dispatcher holding a borrowed or guessed <c>TripShareId</c> could kill a public
-    /// tracking link belonging to another group's trip — a denial of service against a
-    /// customer-facing link they were never allowed to see. The returned trip id is also the
-    /// authoritative one: the command carries a caller-supplied <c>TripId</c> that must not be
-    /// trusted to address the audit event, or a mismatched pair would write the revocation onto a
-    /// different trip's timeline.
-    /// </para>
-    /// <para>
-    /// Composed from the existing mechanisms rather than adding a fourth bespoke lookup: the share
-    /// reader answers "which trip", and <see cref="ITripReader.GetTripAsync"/> applies the one
-    /// <c>Visible()</c> predicate and raises <c>NotFoundException</c> for a trip outside the
-    /// caller's groups. Unknown share and invisible trip are therefore indistinguishable, which is
-    /// the point (non-disclosure, spec 11 §7.10).
+    /// Without the trip check, a dispatcher holding a borrowed or guessed <c>TripShareId</c> could kill a public
+    /// tracking link for another group's trip. The returned trip id is authoritative: the caller-supplied
+    /// <c>TripId</c> must not address the audit event, or a mismatched pair would write the revocation onto a
+    /// different trip's timeline. Unknown share and invisible trip are indistinguishable (non-disclosure).
     /// </para>
     /// </summary>
     public static async Task<Guid> ResolveVisibleTripByShareAsync(
@@ -201,15 +182,15 @@ public static class TripVisibility
 
     /// <summary>
     /// Resolves the acting user id from the token subject. Never <c>Guid.Parse(user.Id)</c>:
-    /// service-client subjects are not Guids (rules.md).
+    /// service-client subjects are not Guids.
     /// </summary>
     public static Guid RequireUserId(IUser user)
         => Guid.TryParse(user.Id, out var userId) ? userId : throw new UnauthorizedAccessException();
 
     /// <summary>
     /// The export/report path, where the account travels on the request. A USER caller may only ask
-    /// for their own account (acceptance 1) and is group-scoped exactly as on the list and detail
-    /// paths (acceptance 3); a service client sees the whole account, but only the account its token
+    /// for their own account and is group-scoped exactly as on the list and detail
+    /// paths; a service client sees the whole account, but only the account its token
     /// is bound to — an integration credential of one tenant must never read another's feeds.
     /// </summary>
     public static async Task<Guid?> ResolveReportScopeAsync(

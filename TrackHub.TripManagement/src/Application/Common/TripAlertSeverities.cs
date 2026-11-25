@@ -18,7 +18,7 @@ namespace TrackHub.TripManagement.Application.Common;
 /// <summary>
 /// Severity literals mirroring Manager's <c>AlertSeverities</c> catalog. They travel in GraphQL
 /// variables and are therefore invisible to Layer A contract validation — each one needs a Layer B
-/// round-trip case (rules.md).
+/// round-trip case.
 /// </summary>
 public static class TripAlertSeverities
 {

@@ -24,15 +24,8 @@ public class UpdateCurrentUserCommandHandler(IUserWriter writer, IUser user) : I
 {
     private Guid UserId { get; } = Guid.TryParse(user.Id, out var userId) ? userId : throw new UnauthorizedAccessException();
 
-    /// <summary>
-    /// Handle the UpdateUserCommand
-    /// </summary>
-    /// <param name="request"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>The task result</returns>
     public async Task Handle(UpdateCurrentUserCommand request, CancellationToken cancellationToken)
     {
-        // Update the user asynchronously
         await writer.UpdateUserAsync(request.User, UserId, cancellationToken);
     }
 }

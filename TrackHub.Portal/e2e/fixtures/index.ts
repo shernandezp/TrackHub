@@ -1,15 +1,6 @@
 /**
- * The suite's `test` export: Playwright's, plus the fixtures every spec needs.
- *
- * - `t` resolves a translation key in the language the current PROJECT drives
- *   the UI in, so one test body runs in English and Spanish unchanged.
- * - `api` is the seeding/cleanup client (worker-scoped: one token per worker).
- * - `cleanup` is the per-test undo registry, drained after the test whether it
- *   passed or failed.
- * - `shell`, `form`, `confirm`, `message`, `allocator` are the shared page
- *   objects; `sectionOf` addresses any `TableAccordion` by its key.
- * - `managerPage`, `userPage`, `anonPage` open a second browser context for the
- *   role/gate tests without re-typing credentials.
+ * Playwright's `test` plus the suite fixtures. `api` is worker-scoped (one token
+ * per worker); `cleanup` is drained after each test whether it passed or failed.
  */
 
 import { test as base, expect } from '@playwright/test';
@@ -44,7 +35,7 @@ export interface E2EWorkerFixtures {
   api: ApiClient;
 }
 
-/** Opens a second context for another role. A role that cannot sign in is a FAILURE. */
+/** A role that cannot sign in is a FAILURE. */
 async function contextForRole(
   browser: import('@playwright/test').Browser,
   role: RoleName

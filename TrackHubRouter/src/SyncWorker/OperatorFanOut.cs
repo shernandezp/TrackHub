@@ -25,9 +25,8 @@ namespace TrackHub.Router.SyncWorker;
 
 /// <summary>
 /// Walks every GPS-enabled account and dispatches the due operators. Accounts run concurrently
-/// and every operator draws from one shared gate: sequentially, a single unreachable provider
-/// held the whole platform's cadence for its 30 s timeout, one operator at a time, so healthy
-/// accounts missed their cycle entirely.
+/// and every operator draws from one shared gate, so a single unreachable provider cannot hold the
+/// whole platform's cadence for its timeout.
 /// </summary>
 public sealed class OperatorFanOut(
     IServiceScopeFactory scopeFactory,

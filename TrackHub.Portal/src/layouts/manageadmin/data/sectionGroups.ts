@@ -15,11 +15,8 @@
 */
 
 /**
- * Functional groups for the Account Management screen. The order is fixed and
- * language-independent (workflow order: account setup → fleet → access →
- * alerts → documents → operations); labels come from
- * `manageAdmin.groups.<key>` in the locale bundles. New sections must be
- * added to exactly one group.
+ * The order is fixed and language-independent (workflow order); labels come from
+ * `manageAdmin.groups.<key>`. New sections must be added to exactly one group.
  */
 export const SECTION_GROUP_KEYS = [
   'account',

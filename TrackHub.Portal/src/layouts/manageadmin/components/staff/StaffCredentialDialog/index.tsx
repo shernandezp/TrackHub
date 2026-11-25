@@ -23,10 +23,8 @@ import CustomTextField from 'controls/Dialogs/CustomTextField';
 import ArgonTypography from 'components/ArgonTypography';
 import type { FormChangeHandler } from 'controls/Dialogs/useForm';
 
-/** Which credential lifecycle step the dialog is collecting input for. */
 export type CredentialDialogMode = 'create' | 'activate' | 'lock' | 'reset';
 
-/** Dialog/form state for the staff credential lifecycle operations. */
 export interface CredentialFormValues {
   login?: string;
   password?: string;
@@ -58,7 +56,6 @@ function StaffCredentialDialog({
 
   const titles: Record<CredentialDialogMode, string> = {
     create: t('workforce.credentials.create'),
-    // Wires the long-dangling staff.activation key to its first consumer.
     activate: t('staff.activation'),
     lock: t('workforce.credentials.lockTitle'),
     reset: t('workforce.credentials.resetTitle'),

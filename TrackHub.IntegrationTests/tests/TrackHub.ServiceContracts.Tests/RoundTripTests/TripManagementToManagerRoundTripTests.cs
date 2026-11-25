@@ -35,9 +35,9 @@ namespace TrackHub.ServiceContracts.Tests.RoundTripTests;
 
 // The TripManagement service's REAL AlertEmitter pushes its mutation through Manager's REAL
 // resolvers. Event-type and severity literals travel in GraphQL variables and are invisible to
-// Layer A document validation — spec 11 §16 requires a round-trip case for EVERY new trip event
-// type and severity literal, because a literal that exists here but not in Manager's
-// AlertEventTypes catalog is exactly the drift this layer exists to catch (rules.md).
+// Layer A document validation, so EVERY trip event type and severity literal gets a round-trip
+// case: a literal that exists here but not in Manager's AlertEventTypes catalog is exactly the
+// drift this layer exists to catch.
 [TestFixture]
 public class TripManagementToManagerRoundTripTests
 {
@@ -64,7 +64,7 @@ public class TripManagementToManagerRoundTripTests
     public void ResetSender() => _sender.Reset();
 
     /// <summary>
-    /// The ten trip alert literals spec 11 §12 declares, with the severity the emitting call site
+    /// The ten trip alert literals, with the severity the emitting call site
     /// actually passes. Adding an emission without extending Manager's catalog fails here.
     /// </summary>
     private static IEnumerable<TestCaseData> TripAlerts()

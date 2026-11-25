@@ -83,8 +83,6 @@ function ManageSynchronizedDevices() {
   const [recentOnly, setRecentOnly] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const loaded = useRef(false);
-  // The device list is one SERVER page: status, operator and free-text search
-  // are query arguments, not post-filters over the loaded rows.
   const { page, setPage, searchDraft, setSearchDraft, params } = useServerList(PAGE_SIZE);
   useClampPage(page, PAGE_SIZE, totalCount, setPage);
   const operatorsQuery = useGpsOperators({ enabled: expanded });
@@ -131,7 +129,6 @@ function ManageSynchronizedDevices() {
       setTotalCount(result.totalCount);
     } catch (e) {
       if (!isCurrent()) return;
-      // Preserve the legacy toast-on-error behavior; keep the inline notice too.
       notifyApiError(e);
       setError(t('gpsIntegration.errors.devicesLoad'));
     } finally {
@@ -157,8 +154,6 @@ function ManageSynchronizedDevices() {
     }
   }, [expanded]);
 
-  // Every filter and the page index are server arguments, so any change is a
-  // refetch — never a narrowing of the rows already on screen.
   useEffect(() => {
     if (accountId) refresh(accountId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -232,7 +227,6 @@ function ManageSynchronizedDevices() {
       setDialogOpen(false);
       await refresh();
     } catch (e) {
-      // Keep the dialog open so the operator can correct a duplicate identifier etc.
       notifyApiError(e);
     } finally { setLoading(false); }
   };
@@ -299,8 +293,7 @@ function ManageSynchronizedDevices() {
       {error
         ? <ArgonBox><ArgonTypography variant="button" color="error">{error}</ArgonTypography></ArgonBox>
         : <>
-              {/* The filter bar stays mounted even on an empty result: the
-                  filters are server arguments now, so hiding them would strand
+              {/* The filter bar stays mounted on an empty result: hiding it would strand
                   the user on a search that matched nothing. */}
               <ArgonBox mb={1}>
                 <Grid container spacing={1} sx={{ alignItems: "center" }}>

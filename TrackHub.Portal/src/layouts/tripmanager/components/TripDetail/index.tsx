@@ -41,38 +41,23 @@ interface TripDetailProps {
   darkMode?: boolean;
   onStopAction: (action: 'arrive' | 'depart' | 'skip', tripStopId: string) => void;
   stopActionPending?: boolean;
-  /** Stop progress can only be recorded while the trip is actually running. */
   canRecordProgress: boolean;
-  /** Opens the POD capture dialog for a stop. */
   onRecordPod: (tripStopId: string) => void;
   onAddDelivery: (tripStopId: string) => void;
   onEditDelivery: (delivery: TripDelivery) => void;
   onDeliveryOutcome: (delivery: TripDelivery) => void;
   onDeleteDelivery: (delivery: TripDelivery) => void;
-  /**
-   * Deliveries and POD stay writable until the trip reaches a terminal status —
-   * the backend's own rule for both commands is `TripStatuses.IsTerminal`.
-   */
+  /** The backend's rule for both commands is `TripStatuses.IsTerminal`. */
   canWriteDeliveries: boolean;
   /**
-   * Which panel to render. The trip workspace is tabbed, so exactly one of these
-   * is on screen at a time.
-   *
-   * This matters for more than tidiness: rendering every section at once put two
-   * large maps (the planner's 52vh and the replay's 45vh) plus a POD image
-   * gallery in the DOM simultaneously, and the replay query fired whether or not
-   * anyone had scrolled to it. Selecting a section keeps the heavy work to the
-   * tab the dispatcher actually opened.
+   * Exactly one panel is on screen: rendering all at once put two large maps plus a POD gallery
+   * in the DOM and fired the replay query regardless.
    */
   section: TripDetailSection;
 }
 
 export type TripDetailSection = 'stops' | 'timeline' | 'pod' | 'replay';
 
-/**
- * Trip detail: stop table, delivery table, event timeline, proof-of-delivery
- * gallery, and the recorded-route replay.
- */
 function TripDetail({
   detail,
   mapType,
@@ -107,7 +92,7 @@ function TripDetail({
     { name: 'sequence', title: t('tripStops.sequence'), align: 'center' as const, width: '48px' },
     { name: 'name', title: t('tripStops.name'), align: 'left' as const },
     // Next to the arrival/departure pair it explains: the gap between them is loading time at a
-    // Load stop and unloading time at an Unload one (spec 11a §4.2).
+    // Load stop and unloading time at an Unload one.
     { name: 'activity', title: t('tripStops.activity.label'), align: 'left' as const },
     { name: 'window', title: t('tripStops.plannedFrom'), align: 'left' as const },
     { name: 'eta', title: t('tripStops.eta'), align: 'left' as const },
@@ -204,8 +189,8 @@ function TripDetail({
             <Icon>logout</Icon>&nbsp;{t('tripStops.actions.depart')}
           </ArgonButton>
         )}
-        {/* Spec 11 §9: until the staff app exists, POD and delivery capture
-            are the dispatcher's job — so both live on the stop row. */}
+        {/* Until a staff app captures them, POD and delivery capture
+            are the dispatcher's job, so both live on the stop row. */}
         {canWriteDeliveries && (
           <>
             <ArgonButton
@@ -310,7 +295,7 @@ function TripDetail({
         })}
       />
     ),
-    // The source is what tells a MEASURED start from a dispatcher's override (spec 11a §5.3),
+    // The source is what tells a MEASURED start from a dispatcher's override,
     // so it is worth a word rather than an enum name.
     source: (
       <Description
@@ -492,7 +477,7 @@ function TripDetail({
         {replayEnabled && replay && (
           <>
             {/* Telemetry caps a replay at 10 000 points. A truncated track is
-                surfaced loudly — never silently shortened (acceptance 22). */}
+                surfaced loudly, never silently shortened. */}
             {replay.truncated && (
               <ArgonTypography variant="caption" color="warning" fontWeight="medium" display="block">
                 {t('trips.replay.truncated', { count: replay.points.length })}

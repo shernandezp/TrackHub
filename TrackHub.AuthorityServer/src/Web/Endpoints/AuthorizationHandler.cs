@@ -24,22 +24,17 @@ using Microsoft.AspNetCore;
 
 namespace TrackHub.AuthorityServer.Web.Endpoints;
 
-// This class handles the authorization process.
 public sealed class AuthorizationHandler(SubjectValidity subjectValidity, IUserReader userReader)
 {
     private const string StaffMobileClientId = "staff_mobile_client";
 
-    // This method is responsible for authorizing the request.
     public async Task Authorize(HttpContext context)
     {
-        // Retrieve the OpenID Connect request from the context.
         var request = context.GetOpenIddictServerRequest() ??
             throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
 
-        // Retrieve the user principal stored in the authentication cookie.
         var result = await context.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
-        // If the user principal can't be extracted, challenge the authentication scheme.
         if (!result.Succeeded)
         {
             await ChallengeWithCurrentRequestAsync(context);
@@ -118,18 +113,14 @@ public sealed class AuthorizationHandler(SubjectValidity subjectValidity, IUserR
             }
         }
 
-        // Create a claims identity and principal.
         var claimsIdentity = new ClaimsIdentity(claims, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
         var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
 
-        // Set the scopes for the claims principal.
         claimsPrincipal.SetScopes(request.GetScopes());
 
-        // Resolve and set resources (audience) from the granted scopes.
         var scopeManager = context.RequestServices.GetRequiredService<IOpenIddictScopeManager>();
         claimsPrincipal.SetResources(await scopeManager.ListResourcesAsync(claimsPrincipal.GetScopes()).ToListAsync());
 
-        // Sign in the claims principal.
         if (claimsPrincipal != null)
         {
             await context.SignInAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme, claimsPrincipal);

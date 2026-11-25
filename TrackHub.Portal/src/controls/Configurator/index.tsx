@@ -32,18 +32,15 @@ Coded by www.creative-tim.com
 import { useContext, useState, useEffect } from "react";
 import type { ChangeEvent } from "react";
 
-// @mui material components
 import Divider from "@mui/material/Divider";
 import Switch from "@mui/material/Switch";
 import Icon from "@mui/material/Icon";
 
-// Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
 import ArgonButton from "components/ArgonButton";
 import ArgonTypography from "components/ArgonTypography";
 import CustomTextField from "controls/Dialogs/CustomTextField";
 
-// Custom styles for the Configurator
 import ConfiguratorRoot from "controls/Configurator/ConfiguratorRoot";
 import { useNotification } from 'context/NotificationContext';
 import { useTranslation } from "react-i18next";
@@ -54,7 +51,6 @@ import maps from "data/maps";
 import type { FormChangeEvent } from "controls/Dialogs/useForm";
 import type { AccountSettings, AccountSettingsDtoInput } from "api/manager/settings";
 
-// Argon Dashboard 2 MUI context
 import { useArgonController, setOpenConfigurator } from "context";
 
 interface ConfiguratorState {

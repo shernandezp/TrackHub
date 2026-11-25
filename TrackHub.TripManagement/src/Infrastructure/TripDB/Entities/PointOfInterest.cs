@@ -16,11 +16,11 @@
 namespace TrackHub.TripManagement.Infrastructure.TripDB.Entities;
 
 /// <summary>
-/// Read-only projection of the Manager-owned <c>map.points_of_interest</c> table (SVD-05), mapped
+/// Read-only projection of the Manager-owned <c>map.points_of_interest</c> table, mapped
 /// with <c>ExcludeFromMigrations</c>.
 /// <para>
 /// Read for one purpose: resolving a place NAME typed into a bulk-upload spreadsheet, after the
-/// account's geofences have been tried (spec 11a §9.1). A POI has no shape, so a trip that lands on
+/// account's geofences have been tried. A POI has no shape, so a trip that lands on
 /// one is measured against a radius buffer instead.
 /// </para>
 /// </summary>

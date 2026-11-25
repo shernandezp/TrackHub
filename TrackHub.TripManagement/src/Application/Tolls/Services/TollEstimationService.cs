@@ -26,11 +26,11 @@ namespace TrackHub.TripManagement.Application.Tolls.Services;
 /// <list type="bullet">
 ///   <item><description>no stations matched at all → <c>NoStations</c> with a <b>null</b> amount.
 ///   Never zero-as-fact and never an error: the platform ships an empty catalog by design
-///   (spec 11 §7.7), and "no toll data" is not the same claim as "this route is free".</description></item>
+///   and "no toll data" is not the same claim as "this route is free".</description></item>
 ///   <item><description>every match priced → <c>Computed</c> with the sum.</description></item>
 ///   <item><description>at least one match unpriced → <c>PartialNoTariff</c> carrying only the
 ///   priced subtotal. <b>An estimate that quietly understates cost is worse than no estimate</b>,
-///   so the gap is reported rather than netted to zero (spec 11 §18.9, acceptance 21).</description></item>
+///   so the gap is reported rather than netted to zero.</description></item>
 /// </list>
 /// </summary>
 public sealed class TollEstimationService(ITollCatalogReader tollCatalogReader) : ITollEstimationService
@@ -77,7 +77,7 @@ public sealed class TollEstimationService(ITollCatalogReader tollCatalogReader) 
 
         // Adding COP to USD produces a number that is wrong in both. Report the breakdown and
         // refuse the total rather than labelling the sum with whichever currency happened to be
-        // matched first — which also made the answer depend on match ORDER.
+        // matched first.
         if (mixedCurrency)
             return new TollEstimateVm(vehicleClassCode, null, null, TollStatuses.MixedCurrency, matches);
 

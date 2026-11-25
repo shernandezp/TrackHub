@@ -27,14 +27,13 @@ public class ProtocolRegistrationExtensionsTests
     [Test]
     public void RegisterProtocol_GeoTab_ResolvesTheGeotabNamespaceReaders()
     {
-        // Regression for router-audit A-01: the config/enum spelling "GeoTab" differs from the
-        // provider assembly namespace "Geotab". Case-sensitive type resolution silently registered
-        // nothing (Geotab was dead); the fix resolves it case-insensitively.
+        // The config/enum spelling "GeoTab" differs from the provider assembly namespace "Geotab";
+        // case-sensitive type resolution would silently register nothing.
         var services = new ServiceCollection();
 
         services.RegisterProtocol(ProtocolType.GeoTab.ToString());
 
-        // Readers are registered KEYED by ProtocolType (router-audit A-07); the keyed
+        // Readers are registered KEYED by ProtocolType; the keyed
         // implementation type must resolve to the actual Geotab-namespace reader.
         var positionReader = services.FirstOrDefault(d => d.ServiceType == typeof(IPositionReader) && d.IsKeyedService);
         var deviceReader = services.FirstOrDefault(d => d.ServiceType == typeof(IExternalDeviceReader) && d.IsKeyedService);
@@ -52,8 +51,8 @@ public class ProtocolRegistrationExtensionsTests
     [Test]
     public void RegisterProtocol_Protrack_ResolvesReadersFromTheProtrackAssembly()
     {
-        // Wired into Infrastructure/Common 2026-07-18 — this guards the assembly reference so
-        // configuring "Protrack" keeps resolving instead of failing at startup.
+        // Guards the assembly reference so configuring "Protrack" resolves instead of failing at
+        // startup.
         var services = new ServiceCollection();
 
         services.RegisterProtocol(ProtocolType.Protrack.ToString());
@@ -142,9 +141,8 @@ public class ProtocolRegistrationExtensionsTests
     [Test]
     public void RegisterProtocol_UnknownConfiguredProtocol_ThrowsToFailFast()
     {
-        // Regression for router-audit A-06: a configured protocol with no provider assembly must
-        // fail fast at startup, not be silently skipped (which later surfaced as a masked
-        // "Unexpected Execution Error" on the first sync).
+        // A configured protocol with no provider assembly must fail fast at startup, not be silently
+        // skipped and surface later as a masked "Unexpected Execution Error" on the first sync.
         var services = new ServiceCollection();
 
         Assert.Throws<InvalidOperationException>(() => services.RegisterProtocol("NoSuchProviderXyz"));

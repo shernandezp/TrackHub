@@ -46,20 +46,13 @@ public class GetPositionByTransporterQueryHandler(
 {
     private string? EncryptionKey { get; } = configuration["AppSettings:EncryptionKey"];
 
-    /// <summary>
-    /// Get the position of a device by its transporter id.
-    /// </summary>
-    /// <param name="request"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     public async Task<PositionVm> Handle(GetPositionByTransporterQuery request, CancellationToken cancellationToken)
     {
         // Resolved under the caller's identity, so Manager applies their account scope.
         var scoped = await operatorReader.GetOperatorByTransporterAsync(request.TransporterId, cancellationToken);
         await EnsureTransporterVisibilityAsync(groupVisibilityReader, principal, scoped.AccountId, request.TransporterId, cancellationToken);
 
-        // Mode split through the single resolver: integration enabled -> serve the
-        // stored projection; disabled -> read the provider on demand.
+        // Integration enabled -> serve the stored projection; disabled -> read the provider on demand.
         var integrationEnabled = await modeResolver.IsIntegrationEnabledAsync(scoped.AccountId, cancellationToken);
         if (!scoped.Enabled || integrationEnabled)
         {
@@ -74,14 +67,6 @@ public class GetPositionByTransporterQueryHandler(
         return await TryGetDevicePositionAsync(@operator, request.TransporterId, cancellationToken);
     }
 
-    /// <summary>
-    /// Get the position of a device by its transporter id.
-    /// </summary>
-    /// <param name="encryptionKey"></param>
-    /// <param name="operator"></param>
-    /// <param name="device"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
     private async Task<PositionVm> TryGetDevicePositionAsync(
         OperatorVm @operator,
         Guid transporterId,

@@ -1,10 +1,7 @@
 /**
- * Account Management → Alerts & Notifications: rules, subscriptions, templates,
- * alert events and the delivery log.
- *
  * A delivery cannot be observed end to end from a browser (e-mail and WhatsApp
- * leave the platform), so what is asserted here is the configuration surface and
- * the delivery list — not that a message arrived.
+ * leave the platform), so only the configuration surface and the delivery list
+ * are asserted.
  */
 
 import { test, expect, unique } from '../fixtures';

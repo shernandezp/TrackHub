@@ -32,13 +32,10 @@ Coded by www.creative-tim.com
 import { useEffect } from "react";
 import type { ReactNode } from "react";
 
-// react-router components
 import { useLocation } from "react-router";
 
-// Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
 
-// Argon Dashboard 2 MUI context
 import { useArgonController, setLayout } from "context";
 
 export interface DashboardLayoutProps {

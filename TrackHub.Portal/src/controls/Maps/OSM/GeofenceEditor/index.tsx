@@ -44,10 +44,8 @@ import type {
 } from 'layouts/geofencemanager/components/GeofenceEditor';
 
 /**
- * A geofence held in editor state. This is the single source of truth: it is
- * rendered by a declarative react-leaflet `<Polygon>`/`<Circle>`, and the
- * underlying leaflet layer instance (captured via that component's `ref`, kept
- * in {@link layersRef}) is what leaflet-editable drives when editing.
+ * The single source of truth: rendered by a declarative react-leaflet `<Polygon>`/`<Circle>`,
+ * whose layer instance (kept in {@link layersRef}) is what leaflet-editable drives when editing.
  */
 interface EditorGeofence {
   id: string;
@@ -102,10 +100,8 @@ const OSMGeofenceEditor = ({
     height = '70vh'
 }: OSMGeofenceEditorProps) => {
   const mapRef = useRef<L.Map | null>(null);
-  // Underlying leaflet layer instance for each rendered geofence, keyed by id,
-  // captured from the declarative <Polygon>/<Circle> `ref`. This is what
-  // leaflet-editable's enableEdit/disableEdit operate on — there is no second,
-  // imperative copy of a geofence layer.
+  // Captured from the declarative <Polygon>/<Circle> `ref`: what leaflet-editable's
+  // enableEdit/disableEdit operate on; there is no second, imperative copy of a geofence layer.
   const layersRef = useRef<Map<string, L.Polygon | L.Circle>>(new Map());
   // The transient layer that leaflet-editable creates while the user draws a NEW
   // shape (before it is committed to `geofences` state). Removed after save/cancel.
@@ -165,7 +161,7 @@ const OSMGeofenceEditor = ({
   // load and again whenever the source changes (e.g. a mutation refetched an
   // edited radius), but only while idle: an in-progress draw (drawingLayerRef)
   // or edit (editedGeofenceRef) is never wiped. With a single declarative source
-  // this is just a state replace — react-leaflet reconciles the layers by key.
+  // or edit (editedGeofenceRef) is never wiped.
   useEffect(() => {
     if (!mapRef.current) return;
     if (editedGeofenceRef.current !== null || drawingLayerRef.current !== null) return;
@@ -261,7 +257,6 @@ const OSMGeofenceEditor = ({
       } else if (layer instanceof L.Polygon) {
         const coordinates = layer.getLatLngs()[0] as L.LatLng[];
         layer.disableEdit();
-        // Ensure the polygon ring is closed (first === last).
         const closed = [...coordinates];
         if (closed.length > 0 && !closed[0].equals(closed[closed.length - 1])) {
           closed.push(closed[0]);
@@ -313,7 +308,6 @@ const OSMGeofenceEditor = ({
       return { id, shape: 'circle', latlngs: [], center: { lat: center.lat, lng: center.lng }, radiusMeters: radius };
     }
     const latlngs = (layer as L.Polygon).getLatLngs()[0] as L.LatLng[];
-    // Ensure the polygon is closed
     const closed = [...latlngs];
     if (closed.length > 0 && !closed[0].equals(closed[closed.length - 1])) {
       closed.push(closed[0]);

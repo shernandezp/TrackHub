@@ -14,12 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Action query hooks (Security backend). Components consume these — not the api
- * layer directly. Loading/error state comes from the hooks; failures also
- * surface in the global toast via the query client's error handlers.
- */
-
 import { useQuery } from '@tanstack/react-query';
 import * as api from 'api/security/actions';
 

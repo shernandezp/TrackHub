@@ -22,8 +22,8 @@ using TrackHub.TripManagement.Infrastructure.ManagerApi;
 
 namespace TrackHub.ServiceContracts.Tests.ContractTests;
 
-// Every document the TripManagement service ships against Manager under the trip_client identity
-// (spec 11 §16): alert emission, background job-run recording, the three cross-account
+// Every document the TripManagement service ships against Manager under the trip_client identity:
+// alert emission, background job-run recording, the three cross-account
 // validations, the public-link grant lifecycle including resolution, and POD document state.
 // Validated against Manager's real, in-process-built schema.
 [TestFixture]

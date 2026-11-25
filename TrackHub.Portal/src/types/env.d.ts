@@ -1,9 +1,6 @@
 /**
- * Typed environment variables (CRA-era REACT_APP_ prefix, kept via Vite's
- * envPrefix-less define shim in vite.config.ts). Source code reads these
- * through process.env.*; the references are statically replaced at build
- * time. Centralized typed access arrives with src/api/core/endpoints.ts
- *.
+ * REACT_APP_ prefix kept via the define shim in vite.config.ts; references are statically
+ * replaced at build time. Read them through src/api/core/endpoints.ts.
  */
 declare namespace NodeJS {
   interface ProcessEnv {
@@ -26,10 +23,6 @@ declare namespace NodeJS {
   }
 }
 
-/**
- * Build stamp injected by vite.config.ts `define`. Read only through
- * src/constants/appVersion.ts, which guards against the (non-Vite) case where the
- * replacement never happened.
- */
+/** Read only through src/constants/appVersion.ts, which guards against the replacement never happening. */
 declare const __APP_VERSION__: string;
 declare const __BUILD_TIME__: string;

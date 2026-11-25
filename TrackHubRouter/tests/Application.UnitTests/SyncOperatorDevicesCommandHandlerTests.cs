@@ -73,8 +73,6 @@ public class SyncOperatorDevicesCommandHandlerTests : TestsContext
         AllCapabilities(),
         Mock.Of<ILogger<SyncOperatorDevicesCommandHandler>>());
 
-    // Reports every capability supported, so these tests exercise the handler exactly as
-    // before the partial-provider guard was introduced.
     private static IProviderCapabilityCatalog AllCapabilities()
     {
         var catalog = new Mock<IProviderCapabilityCatalog>();
@@ -116,7 +114,7 @@ public class SyncOperatorDevicesCommandHandlerTests : TestsContext
             new DeviceVm(Guid.NewGuid(), 2, "S2", "Device 2", 0, 0, "Dev2", "hash2", "ACTIVE")
         };
         _readerMock.Setup(r => r.GetDevicesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(devices);
-        // Manager returns the counts (A6); the Router records the run.
+        // Manager returns the counts; the Router records the run.
         _deviceSyncWriterMock.Setup(w => w.SynchronizeAsync(
                 It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<IEnumerable<SynchronizedDeviceDto>>(),
                 It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
@@ -135,7 +133,7 @@ public class SyncOperatorDevicesCommandHandlerTests : TestsContext
             true,
             false,
             It.IsAny<CancellationToken>()), Times.Once);
-        // A6: the Router is the single sync-run writer; it records exactly one SUCCEEDED run with the
+        // The Router is the single sync-run writer; it records exactly one SUCCEEDED run with the
         // counts Manager returned.
         _syncRunWriterMock.Verify(w => w.RecordAsync(
             It.Is<OperatorSyncRunDto>(r => r.Result == "SUCCEEDED"
@@ -239,7 +237,7 @@ public class SyncOperatorDevicesCommandHandlerTests : TestsContext
             true,
             false,
             It.IsAny<CancellationToken>()), Times.Once);
-        // A6: even an empty catalog produces exactly one SUCCEEDED run, recorded by the Router.
+        // Even an empty catalog produces exactly one SUCCEEDED run, recorded by the Router.
         _syncRunWriterMock.Verify(w => w.RecordAsync(
             It.Is<OperatorSyncRunDto>(r => r.Result == "SUCCEEDED"),
             It.IsAny<CancellationToken>()), Times.Once);

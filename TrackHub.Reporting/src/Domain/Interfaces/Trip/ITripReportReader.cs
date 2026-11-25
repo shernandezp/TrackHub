@@ -17,7 +17,7 @@ using TrackHub.Reporting.Domain.Models;
 
 namespace TrackHub.Reporting.Domain.Interfaces.Trip;
 
-// Reads the TripManagement data the spec 11 §13 reports project. Every call runs under the caller's
+// Reads the TripManagement data the trip reports project. Every call runs under the caller's
 // propagated token; TripManagement enforces account scoping, `Trips/Export` and the `trip-management`
 // feature gate. All four feeds page transparently up to the 100k defensive row cap.
 public interface ITripReportReader

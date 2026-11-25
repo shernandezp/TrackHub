@@ -22,7 +22,7 @@ using TrackHub.TripManagement.Domain.Exceptions;
 namespace TrackHub.TripManagement.Application.UnitTests;
 
 /// <summary>
-/// Acceptance 18: ORS unavailable or unconfigured records a <c>Failed</c> plan with an error code,
+/// ORS unavailable or unconfigured records a <c>Failed</c> plan with an error code,
 /// the trip stays fully usable, and <b>no exception reaches the caller</b>. A routing outage is an
 /// operational fact about a third party, not a reason a dispatcher cannot run their fleet.
 /// </summary>
@@ -80,9 +80,7 @@ public class PlanTripRouteCommandHandlerTests
             1000d, 600, It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<TollEstimateVm>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    // Acceptance 17 requires route planning to return a PER-LEG BREAKDOWN. The provider parses the
-    // legs; the handler used to pass legsJson: null / waypointsJson: null, so §6.1's columns were
-    // permanently empty and no leg data ever reached a caller.
+    // Route planning must return a PER-LEG BREAKDOWN, persisted in the plan's legs/waypoints columns.
     [Test]
     public async Task SuccessfulPlan_PersistsTheLegBreakdownAndTheOrderedWaypoints()
     {
@@ -114,9 +112,9 @@ public class PlanTripRouteCommandHandlerTests
         Assert.That(harness.WaypointsJson, Does.Contain("latitude"));
     }
 
-    // Acceptance 18 says a routing call leaves the trip fully usable with no exception reaching the
+    // A routing call leaves the trip fully usable with no exception reaching the
     // caller. Toll estimation runs ST_DWithin against the catalog, so a PostGIS or catalog failure
-    // used to surface as an unhandled 500 from a ROUTE PLANNING call.
+    // would otherwise surface as an unhandled 500 from a ROUTE PLANNING call.
     [Test]
     public async Task TollEstimationFailure_StillSavesTheRouteWithoutAnEstimate()
     {

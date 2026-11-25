@@ -14,11 +14,6 @@
 *  limitations under the License.
 */
 
-/**
- * Public-link-grant GraphQL documents (Manager backend). Codegen validates
- * these against schemas/manager.graphql — values always travel as variables.
- */
-
 import { graphql } from './generated';
 
 export const PublicLinkGrantFieldsFragment = graphql(`

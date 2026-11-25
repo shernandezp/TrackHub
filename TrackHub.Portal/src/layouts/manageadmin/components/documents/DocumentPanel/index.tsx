@@ -46,9 +46,7 @@ interface DocumentPanelProps {
   onDocumentsChanged?: (documents: DocumentVm[]) => void;
 }
 
-// Reusable, owner-scoped document panel. Lists an owner's documents and provides upload
-// (drag-drop), download, new-version, void, remove-reference, and share. Embeddable on any owner detail
-// surface; gated by the OWNER module's feature (pass canManage), not the `documents` feature.
+// Gated by the owner module's feature (pass canManage), not the `documents` feature.
 function DocumentPanel({ accountId = null, ownerEntityType, ownerEntityId = null, canManage = true, onDocumentsChanged }: DocumentPanelProps) {
   const { t } = useTranslation();
   const { setLoading } = useContext(LoadingContext);

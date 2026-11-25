@@ -20,26 +20,17 @@ import OSMRouteLayer from './OSM';
 import GoogleRouteLayer from './Google';
 
 export interface RouteLayerProps {
-  /** Planned-route polyline, in order. */
   route?: RoutePoint[];
   /** Corridor ring — the deviation tolerance band around the planned route. */
   corridor?: RoutePoint[];
-  /** Trip stops, rendered as numbered pins coloured by stop status. */
   stops?: RouteStop[];
-  /** Toll stations matched to the planned route. */
   tollStations?: RouteTollStation[];
   /** Called with the clicked map coordinate — the planner's stop-placement gesture. */
   onMapClick?: (point: RoutePoint) => void;
-  /** Called with a stop's id when its pin is clicked. */
   onStopClick?: (stopId: string) => void;
 }
 
-/**
- * Provider-agnostic route layer: planned-route polyline, corridor polygon,
- * numbered stop markers and toll-station markers. Written once against
- * `core/mapTypes` and dispatched to the OSM or Google adapter — consumers only
- * ever import this dispatcher, never an adapter.
- */
+/** Consumers only ever import this dispatcher, never an adapter. */
 const RouteLayer = ({
   route = [],
   corridor = [],

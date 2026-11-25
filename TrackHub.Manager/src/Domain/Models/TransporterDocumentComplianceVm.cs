@@ -17,8 +17,7 @@ namespace TrackHub.Manager.Domain.Models;
 
 /// <summary>
 /// One group-visible transporter with the document categories that currently have an Active
-/// document. Batched compliance projection consumed by the missing-required-documents report
-/// (replaces one documentsForOwner call per transporter).
+/// document, batched so the missing-required-documents report avoids one call per transporter.
 /// </summary>
 public readonly record struct TransporterDocumentComplianceVm(
     Guid TransporterId,

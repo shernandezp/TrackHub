@@ -20,7 +20,7 @@ namespace TrackHub.TripManagement.Infrastructure.TripDB.Entities;
 /// <summary>
 /// A temporal price. Tariffs are NEVER overwritten: a change closes the open row by stamping
 /// <see cref="EffectiveTo"/> and inserts a new one, so a historical trip estimate stays
-/// reproducible (spec 11 section 5, acceptance 21). At most one open row per
+/// reproducible. At most one open row per
 /// (TollStationId, TollVehicleClassCode), enforced by a partial unique index.
 /// </summary>
 public sealed class TollTariff : BaseAuditableEntity

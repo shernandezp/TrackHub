@@ -54,21 +54,21 @@ public readonly record struct TripAccountConfigVm(
     public const int DefaultScheduleLeadMinutes = 60;
     public const double DefaultTollMatchToleranceMeters = 100d;
 
-    /// <summary>How long before <c>PlannedStartAt</c> a trip becomes armable (spec 11a §8).</summary>
+    /// <summary>How long before <c>PlannedStartAt</c> a trip becomes armable.</summary>
     public const int DefaultActivationLeadMinutes = 60;
 
-    /// <summary>How far back a late-created trip searches Geofencing's visit history (§5.4).</summary>
+    /// <summary>How far back a late-created trip searches Geofencing's visit history.</summary>
     public const int DefaultBackfillLookbackHours = 24;
 
-    /// <summary>Dwell at an <c>Arrived</c> final stop before dwell-based completion (§5.2).</summary>
+    /// <summary>Dwell at an <c>Arrived</c> final stop before dwell-based completion.</summary>
     public const int DefaultFinalStopCompletionMinutes = 30;
 
-    /// <summary>How long past the planned start before the board phase reads Overdue (§7).</summary>
+    /// <summary>How long past the planned start before the board phase reads Overdue.</summary>
     public const int DefaultOverdueGraceMinutes = 120;
 
     /// <summary>
-    /// Account-level kill switch for the zero-touch lifecycle. Defaults ON — that is the mandate —
-    /// and a fleet without reliable GPS turns it off to run the manual flow exactly as before.
+    /// Account-level kill switch for the zero-touch lifecycle. Defaults ON; a fleet without reliable
+    /// GPS turns it off to run the manual flow.
     /// </summary>
     public const bool DefaultAutoLifecycle = true;
 

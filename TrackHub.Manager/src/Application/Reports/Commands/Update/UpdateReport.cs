@@ -20,7 +20,6 @@ public readonly record struct UpdateReportCommand(UpdateReportDto Report) : IReq
 
 public class UpdateReportCommandHandler(IReportWriter writer) : IRequestHandler<UpdateReportCommand>
 {
-    // Handles the update report command
     public async Task Handle(UpdateReportCommand request, CancellationToken cancellationToken)
         => await writer.UpdateReportAsync(request.Report, cancellationToken);
 }

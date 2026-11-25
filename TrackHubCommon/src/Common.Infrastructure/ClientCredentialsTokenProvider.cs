@@ -21,9 +21,8 @@ using System.Text.Json;
 namespace Common.Infrastructure;
 
 /// <summary>
-/// Acquires and caches the host's client-credentials token. Registered as a singleton so the cache
-/// and its refresh lock are process-wide: concurrent callers wait on one refresh rather than
-/// stampeding the token endpoint.
+/// A singleton so the cache and refresh lock are process-wide: concurrent callers wait on one refresh
+/// rather than stampeding the token endpoint.
 /// </summary>
 public sealed class ClientCredentialsTokenProvider(IHttpClientFactory httpClientFactory, IConfiguration configuration)
     : IClientCredentialsTokenProvider

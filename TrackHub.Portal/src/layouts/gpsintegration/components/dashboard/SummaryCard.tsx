@@ -25,20 +25,16 @@ type RowColor = 'success' | 'warning' | 'error' | 'info' | 'text' | 'secondary';
 export interface SummaryRow {
   label: string;
   value: ReactNode;
-  /** Emphasis color for the value; defaults to plain text. */
   color?: RowColor;
 }
 
 interface SummaryCardProps {
   title: string;
-  /** Headline figure of the card (e.g. "3/5"). */
   primary: ReactNode;
-  /** Caption under the headline explaining what it counts. */
   primaryLabel: string;
   rows: SummaryRow[];
 }
 
-/** Dense dashboard card: one headline figure plus compact label/value rows. */
 function SummaryCard({ title, primary, primaryLabel, rows }: SummaryCardProps) {
   return (
     <Card sx={{ height: '100%' }}>

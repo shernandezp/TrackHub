@@ -64,7 +64,7 @@ public class BackgroundJobStatusReaderTests
 
         using (Assert.EnterMultipleScope())
         {
-            // Per the spec 28 §4.2 audit, alert-evaluation is the ONLY key with a guaranteed
+            // Alert-evaluation is the ONLY key with a guaranteed
             // recording floor — every other job records only when it actually did work, so a stale
             // timestamp there is normal and must never be rendered as a failure.
             Assert.That(status.Single(x => x.JobKey == BackgroundJobKeys.AlertEvaluation).RecordsEveryCycle, Is.True);

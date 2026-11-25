@@ -14,11 +14,7 @@
 *  limitations under the License.
 */
 
-/**
- * The caller's effective permission set (Security backend): the union of the
- * resource/actions their ROLES grant and the ones their POLICIES grant — the
- * same two paths `authorizeUser` evaluates at enforcement time.
- */
+/** The union of what the caller's ROLES and POLICIES grant: the two paths `authorizeUser` evaluates. */
 
 import { graphql } from './generated';
 

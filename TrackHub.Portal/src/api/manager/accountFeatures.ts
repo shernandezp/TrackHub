@@ -14,11 +14,7 @@
 *  limitations under the License.
 */
 
-/**
- * Account features API (Manager backend): plain typed async functions. Failures
- * THROW ApiError — fallbacks and toasts belong to the caller layer. The `*Master`
- * functions are the SuperAdministrator cross-account variants.
- */
+/** The `*Master` functions are the SuperAdministrator cross-account variants. */
 
 import { executeGraphQL } from 'api/core/graphqlClient';
 import type {

@@ -20,11 +20,9 @@ using TrackHub.Manager.Infrastructure.Interfaces;
 
 namespace TrackHub.Manager.Infrastructure.ManagerDB.Writers;
 
-// OperatorWriter class responsible for creating, updating, and deleting operators
 public sealed class OperatorWriter(IApplicationDbContext context, ICurrentPrincipal principal)
     : AccountScopedDataAccess(context, principal), IOperatorWriter
 {
-    // CreateOperatorAsync method creates a new operator
     public async Task<OperatorVm> CreateOperatorAsync(OperatorDto operatorDto, Guid accountId, CancellationToken cancellationToken)
     {
         var @operator = new Operator(
@@ -70,7 +68,6 @@ public sealed class OperatorWriter(IApplicationDbContext context, ICurrentPrinci
             null);
     }
 
-    // UpdateOperatorAsync method updates an existing operator
     public async Task UpdateOperatorAsync(UpdateOperatorDto operatorDto, CancellationToken cancellationToken)
     {
         var @operator = await Context.Operators.FindAsync([operatorDto.OperatorId], cancellationToken)
@@ -94,7 +91,6 @@ public sealed class OperatorWriter(IApplicationDbContext context, ICurrentPrinci
         await Context.SaveChangesAsync(cancellationToken);
     }
 
-    // DeleteOperatorAsync method deletes an existing operator
     public async Task DeleteOperatorAsync(Guid operatorId, CancellationToken cancellationToken)
     {
         var @operator = await Context.Operators.FindAsync([operatorId], cancellationToken)

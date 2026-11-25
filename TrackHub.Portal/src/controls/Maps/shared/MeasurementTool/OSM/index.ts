@@ -45,7 +45,6 @@ const MeasurementTool = ({ position = 'topright', unit = 'metric', enabled = tru
             const latlng = e.latlng;
             pointsRef.current.push({ lat: latlng.lat, lng: latlng.lng });
 
-            // Add marker
             const marker = L.circleMarker(latlng, {
                 radius: 5,
                 color: '#ff0000',
@@ -55,7 +54,6 @@ const MeasurementTool = ({ position = 'topright', unit = 'metric', enabled = tru
             markersRef.current.push(marker);
             measureLayerRef.current!.addLayer(marker);
 
-            // Draw line if more than one point
             if (pointsRef.current.length > 1) {
                 const polyline = L.polyline(
                     pointsRef.current.map(p => [p.lat, p.lng] as [number, number]),
@@ -63,7 +61,6 @@ const MeasurementTool = ({ position = 'topright', unit = 'metric', enabled = tru
                 );
                 measureLayerRef.current!.addLayer(polyline);
 
-                // Calculate and show distance
                 const distance = calculatePathDistance(pointsRef.current);
                 const formattedDistance = formatDistance(distance, unit);
 
@@ -89,7 +86,6 @@ const MeasurementTool = ({ position = 'topright', unit = 'metric', enabled = tru
             setIsActive(prev => !prev);
         };
 
-        // Create custom control
         const MeasureControl = L.Control.extend({
             options: {
                 position: position
@@ -140,7 +136,6 @@ const MeasurementTool = ({ position = 'topright', unit = 'metric', enabled = tru
         };
     }, [map, position, enabled]);
 
-    // Handle activation state changes
     useEffect(() => {
         if (!map || !enabled) return;
 
@@ -148,7 +143,6 @@ const MeasurementTool = ({ position = 'topright', unit = 'metric', enabled = tru
             const latlng = e.latlng;
             pointsRef.current.push({ lat: latlng.lat, lng: latlng.lng });
 
-            // Add marker
             const marker = L.circleMarker(latlng, {
                 radius: 5,
                 color: '#ff0000',
@@ -162,7 +156,6 @@ const MeasurementTool = ({ position = 'topright', unit = 'metric', enabled = tru
             }
             measureLayerRef.current.addLayer(marker);
 
-            // Draw line if more than one point
             if (pointsRef.current.length > 1) {
                 const polyline = L.polyline(
                     pointsRef.current.map(p => [p.lat, p.lng] as [number, number]),
@@ -170,7 +163,6 @@ const MeasurementTool = ({ position = 'topright', unit = 'metric', enabled = tru
                 );
                 measureLayerRef.current.addLayer(polyline);
 
-                // Calculate and show distance
                 const distance = calculatePathDistance(pointsRef.current);
                 const formattedDistance = formatDistance(distance, unit);
 
@@ -182,7 +174,6 @@ const MeasurementTool = ({ position = 'topright', unit = 'metric', enabled = tru
         };
 
         if (isActive) {
-            // Start measuring
             pointsRef.current = [];
             markersRef.current = [];
 
@@ -197,7 +188,6 @@ const MeasurementTool = ({ position = 'topright', unit = 'metric', enabled = tru
                 buttonRef.current.style.background = '#e0e0e0';
             }
         } else {
-            // Stop measuring
             if (measureLayerRef.current) {
                 measureLayerRef.current.clearLayers();
             }

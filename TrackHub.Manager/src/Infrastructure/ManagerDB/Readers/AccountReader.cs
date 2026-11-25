@@ -21,21 +21,13 @@ using TrackHub.Manager.Infrastructure.Interfaces;
 
 namespace TrackHub.Manager.Infrastructure.ManagerDB.Readers;
 
-// AccountReader class for reading account data
 public sealed class AccountReader(IApplicationDbContext context, ICurrentPrincipal principal)
     : AccountScopedDataAccess(context, principal), IAccountReader
 {
-    /// <summary>
-    /// Retrieves an account by ID
-    /// </summary>
-    /// <param name="id"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>Returns an AccountVm object</returns>
     public async Task<AccountVm> GetAccountAsync(Guid id, CancellationToken cancellationToken)
     {
-        // By-id tenant guard ([AccountScopeEnforcedInHandler] on GetAccountQuery cites this): the
-        // id IS the account, so access is checked before the row is read. The console list path is
-        // GetAccountsAsync below, gated by its own master-class surfaces.
+        // By-id tenant guard that [AccountScopeEnforcedInHandler] on GetAccountQuery relies on: the
+        // id IS the account, so access is checked before the row is read.
         RequireAccountAccess(id);
 
         var found = await Context.Accounts
@@ -56,14 +48,6 @@ public sealed class AccountReader(IApplicationDbContext context, ICurrentPrincip
         return found;
     }
 
-    /// <summary>
-    /// Retrieves a page of accounts
-    /// </summary>
-    /// <param name="skip"></param>
-    /// <param name="take"></param>
-    /// <param name="search"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>Returns a page of AccountVm objects plus the unpaged total</returns>
     public async Task<AccountsPageVm> GetAccountsAsync(int skip, int take, string? search, CancellationToken cancellationToken)
     {
         var query = Context.Accounts.AsQueryable();

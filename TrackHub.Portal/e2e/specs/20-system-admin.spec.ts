@@ -125,10 +125,9 @@ test.describe('system admin', () => {
     await expect(row).toBeVisible();
     // A new account is operational from the start: createAccount maps `active` onto the
     // lifecycle status (true -> Active). Trial is reached through a subscription, never
-    // through creation (spec 03 — migration backfills true -> Active, false -> Suspended).
+    // through creation.
     await expect(row).toContainText(t('account.statusActive'));
 
-    // Editing it sticks.
     await row.getByRole('button', { name: t('generic.edit') }).click();
     await form.waitOpen();
     await expect(form.field('name')).toHaveValue(name);
@@ -301,9 +300,8 @@ test.describe('system admin', () => {
     // The station table is ONE server page of 100, ordered by name, drawn from a
     // catalog of ~300 platform stations — there is no client pager to walk. So
     // the name has to sort into that window for the assertion to be about the
-    // save rather than about paging. This only stays true because the cleanup
-    // below actually works now: it used a mutation shape that does not exist
-    // (`command: { tollStationId }` instead of `id`), `tryGql` swallowed the
+    // save rather than about paging. A cleanup that silently fails leaks
+    // stations into the shared catalog and breaks this window.
     // error, and thirteen stations had leaked into the shared catalog.
     const stationName = `AAA-${unique()}`;
     const catalog = new Section(page, 'toll-catalog', t);

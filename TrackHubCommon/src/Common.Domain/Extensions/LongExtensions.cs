@@ -18,9 +18,6 @@ namespace Common.Domain.Extensions;
 public static class LongExtensions
 {
 
-    /// <summary>
-    /// Converts Unix timestamp to DateTimeOffset.
-    /// </summary>
     public static DateTimeOffset FromUnixTimestamp(this long value)
         => DateTimeOffset.FromUnixTimeSeconds(value);
 

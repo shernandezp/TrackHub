@@ -23,7 +23,6 @@ public readonly record struct IsInRoleQuery(Guid UserId, string Resource, string
 
 public class GetUsersQueryHandler(IIdentityService service, IUser user) : IRequestHandler<IsInRoleQuery, bool>
 {
-    // Handles the IsInRoleQuery by calling the IsInRoleAsync method of the IIdentityService
     public async Task<bool> Handle(IsInRoleQuery request, CancellationToken cancellationToken)
     {
         IdentityCallerGuard.EnsureCallerIsSubjectUserOrService(user, request.UserId, "IsInRole");

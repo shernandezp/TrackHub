@@ -18,7 +18,7 @@ namespace TrackHub.TripManagement.Domain.Interfaces;
 /// <summary>
 /// Route-plan persistence. A provider failure is stored as a <c>Failed</c> plan with an error
 /// code — never surfaced as an exception to the trip command's caller, and never a reason the
-/// trip cannot proceed (spec 11 §7.3, acceptance 18).
+/// trip cannot proceed.
 /// </summary>
 public interface IRoutePlanWriter
 {

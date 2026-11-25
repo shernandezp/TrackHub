@@ -2,7 +2,7 @@ namespace TrackHub.Manager.Domain.Interfaces;
 
 public interface IPlatformAnnouncementReader
 {
-    /// <summary>All rows, newest first — the administrator management surface.</summary>
+    /// <summary>Newest first.</summary>
     Task<IReadOnlyCollection<PlatformAnnouncementVm>> GetPlatformAnnouncementsAsync(int skip, int take, CancellationToken cancellationToken);
 
     /// <summary>

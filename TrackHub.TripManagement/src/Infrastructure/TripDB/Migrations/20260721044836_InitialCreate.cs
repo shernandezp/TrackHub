@@ -620,7 +620,7 @@ namespace TrackHub.TripManagement.Infrastructure.Migrations
                 filter: "externalreference IS NOT NULL");
 
             // Group visibility and user-account resolution are served by two SQL views over
-            // the Manager-owned app tables (spec 11 section 6). No app.* or geofencing.*
+            // the Manager-owned app tables. No app.* or geofencing.*
             // table is created, altered or dropped by this migration.
             migrationBuilder.Sql(Views.vw_users);
             migrationBuilder.Sql(Views.vw_visible_transporter);

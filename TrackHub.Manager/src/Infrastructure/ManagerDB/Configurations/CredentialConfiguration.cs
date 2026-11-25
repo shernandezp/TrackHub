@@ -22,10 +22,8 @@ public sealed class CredentialConfiguration : IEntityTypeConfiguration<Credentia
 {
     public void Configure(EntityTypeBuilder<Credential> builder)
     {
-        //Table name
         builder.ToTable(name: TableMetadata.Credential, schema: SchemaMetadata.Application);
 
-        //Column names
         builder.Property(x => x.CredentialId).HasColumnName("id");
         builder.Property(x => x.Uri).HasColumnName("uri");
         builder.Property(x => x.Username).HasColumnName("username");

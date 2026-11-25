@@ -24,7 +24,7 @@ namespace TrackHub.TripManagement.Application.Integration.Commands.ImportTrips;
 /// <para>
 /// <b>Per-item results, never a batch failure.</b> A partner that sends 200 trips and gets one
 /// rejection must not have the other 199 silently dropped — every row reports its own outcome and
-/// the caller can retry precisely what failed (spec 11 §7.9).
+/// the caller can retry precisely what failed.
 /// </para>
 /// <para>
 /// Idempotent on <c>ExternalReference</c>, which is unique per account: a re-sent batch updates
@@ -70,10 +70,9 @@ public sealed class ImportTripsCommandHandler(
 
     private async Task<TripImportResultVm> ImportOneAsync(Guid accountId, TripImportDto item, CancellationToken cancellationToken)
     {
-        // The import path skipped transporter validation entirely, so a partner could book a trip
-        // against a transporter in a DIFFERENT account — whose name the report readers then resolve
-        // by unscoped id. There is no user and therefore no group scope here, but the account
-        // boundary still applies (spec 11 §5, acceptance 2). Per-item, so one bad row does not fail
+        // A partner must not book a trip against a transporter in a DIFFERENT account, whose name the report
+        // readers resolve by unscoped id. There is no group scope here, but the account boundary still applies.
+        // Per-item, so one bad row does not fail
         // the batch: the exception is caught by Handle and reported against this row alone.
         await TripVisibility.EnsureTransporterInAccountAsync(reader, accountId, item.TransporterId, cancellationToken);
 
@@ -94,7 +93,7 @@ public sealed class ImportTripsCommandHandler(
         // The staff needs the SAME check the portal create/update paths apply. Without it a partner
         // scoped to account A could import a trip carrying account B's staffId: nothing here has an
         // FK to app.staff_members, and the report readers resolve staff names by UNSCOPED id, so B's
-        // staff name would render inside A's trip and stop reports (acceptance 2). Manager's
+        // staff name would render inside A's trip and stop reports. Manager's
         // assignment rule is the account boundary here — the transporter is already confirmed
         // in-account above, and a staff only qualifies through an assignment to it. A staff carried
         // over from the stored trip is checked again when the partner moves the trip to another unit.
@@ -153,10 +152,10 @@ public sealed class ImportTripsCommandHandler(
 
     /// <summary>
     /// A partner that reports <c>startedAt</c> is telling us the truck already left. Backfill runs
-    /// LAST, once the row's stops exist, because it replays the route (spec 11a §5.4).
+    /// LAST, once the row's stops exist, because it replays the route.
     /// <para>
     /// The caller here is a tenant-bound service client, not a user, so there is no group scope to
-    /// resolve — it sees the whole account by design (SVD-13).
+    /// resolve — it sees the whole account by design.
     /// </para>
     /// </summary>
     private async Task DeclareInTransitIfRequestedAsync(

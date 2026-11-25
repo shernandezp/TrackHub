@@ -27,22 +27,13 @@ public readonly record struct UpdateUserCommand(UpdateUserDto User) : IRequest;
 public class UpdateUserCommandHandler(IUserWriter writer, IUserReader reader, IPublisher publisher, ICurrentPrincipal principal) : IRequestHandler<UpdateUserCommand>
 {
 
-    /// <summary>
-    /// Handle the UpdateUserCommand
-    /// </summary>
-    /// <param name="request"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>The task result</returns>
     public async Task Handle(UpdateUserCommand request, CancellationToken cancellationToken)
     {
-        // Update the user asynchronously
         await writer.UpdateUserAsync(request.User, cancellationToken);
 
-        // Create a shrank version of the updated user
         var stored = await reader.GetUserAsync(request.User.UserId, cancellationToken);
         var user = new UpdateUserShrankDto(request.User.UserId, request.User.Username, request.User.Active, UserUpdated.EffectiveRole(stored.Roles), stored.AccountId);
 
-        // Publish a notification for the user update
         await publisher.Publish(new UserUpdated.Notification(request.User.UserId, user), cancellationToken);
         await publisher.Publish(SecurityAudit.Event(principal, "UpdateUser", "User", request.User.UserId.ToString(), principal.AccountId), cancellationToken);
     }

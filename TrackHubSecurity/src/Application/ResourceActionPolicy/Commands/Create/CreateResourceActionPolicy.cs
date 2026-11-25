@@ -27,7 +27,6 @@ public class CreateResourceActionPolicyCommandHandler(IResourceActionPolicyWrite
 {
     private Guid UserId { get; } = Guid.TryParse(user.Id, out var userId) ? userId : throw new UnauthorizedAccessException();
 
-    // This method handles the CreateResourceActionPolicyCommand and returns a ResourceActionPolicyVm
     public async Task<ResourceActionPolicyVm> Handle(CreateResourceActionPolicyCommand request, CancellationToken cancellationToken)
     {
         var isAdmin = await userReader.IsAdminAsync(UserId, cancellationToken);

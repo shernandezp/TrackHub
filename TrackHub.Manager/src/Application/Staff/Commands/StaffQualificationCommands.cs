@@ -59,7 +59,7 @@ public class UpdateStaffQualificationCommandValidator : AbstractValidator<Update
     }
 }
 
-// Hard delete — the before-image survives in the audit trail (spec 09 §7.1).
+// Hard delete — the before-image survives in the audit trail.
 [Authorize(Resource = Resources.Staff, Action = Actions.Delete)]
 [RequireFeature(FeatureKeys.Workforce)]
 // Enforcement: the reader/writer this handler delegates to extends AccountScopedDataAccess and

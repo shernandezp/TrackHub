@@ -18,8 +18,8 @@ namespace TrackHub.Router.Domain.Models;
 // Provider-neutral position attributes. The five promoted fields stay strongly typed (they are the
 // signals every consumer already understands); everything else a provider reports — fuel level,
 // RPM, battery voltage, harsh-event flags, door/PTO state, GSM signal, etc. — flows through the
-// open Extra bag, so adding a new signal no longer requires a schema change across
-// Router/Telemetry/Reporting/portal (router-audit A-03). Extra is a JSON object string (build it
+// open Extra bag, so adding a new signal requires no schema change across
+// Router/Telemetry/Reporting/portal. Extra is a JSON object string (build it
 // with AttributesExtra.From) so it is a plain GraphQL `String` on the wire and in the Router's
 // output schema, and is stored verbatim in Telemetry's schemaless `attributes` json column.
 public readonly record struct AttributesVm(

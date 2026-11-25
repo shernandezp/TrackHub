@@ -42,8 +42,6 @@ import { notifyApiError } from "api/core/errors";
 import { LoadingContext } from 'LoadingContext';
 import { formatDateTime } from "utils/dateUtils";
 
-// Change event shape emitted by the vendored dialog controls.
-
 const PUBLIC_LINKS_FEATURE_KEY = "public-links";
 
 function TextCell({ children }: { children?: ReactNode }) {
@@ -106,7 +104,6 @@ function ManagePublicLinks() {
     if (!validate(['resourceType', 'resourceId', 'scopes', 'expiresAt']) || !account?.accountId) return;
     setLoading(true);
     try {
-      // validate() gates the required fields, so assert the mutation input at the boundary.
       const grant = {
         accountId: account.accountId,
         resourceType: values.resourceType,
@@ -123,7 +120,6 @@ function ManagePublicLinks() {
       }
       await loadLinks();
     } catch (error) {
-      // Keep the dialog open on failure so the user can retry.
       notifyApiError(error);
     } finally {
       setLoading(false);

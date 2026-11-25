@@ -16,7 +16,7 @@
 namespace TrackHub.TripManagement.Domain.Constants;
 
 /// <summary>
-/// Trip lifecycle statuses and the transition matrix that governs them (spec 11 §17.11).
+/// Trip lifecycle statuses and the transition matrix that governs them.
 /// Stored as strings; the matrix is the single source of truth for every lifecycle command.
 /// </summary>
 public static class TripStatuses
@@ -40,9 +40,8 @@ public static class TripStatuses
         [Created] = new HashSet<string>(StringComparer.Ordinal) { InProgress, Cancelled },
         [InProgress] = new HashSet<string>(StringComparer.Ordinal) { Paused, Completed, Aborted, Cancelled },
 
-        // Paused → Completed is a manual-only edge (spec 11a §5.1). Without it a dispatcher who
-        // took control of a finished trip had to Resume it — briefly handing it back to automation —
-        // purely so they could close it.
+        // Paused → Completed is a manual-only edge, so a dispatcher who took control of a finished
+        // trip does not have to Resume it — briefly handing it back to automation — just to close it.
         [Paused] = new HashSet<string>(StringComparer.Ordinal) { InProgress, Completed, Cancelled, Aborted },
         [Completed] = new HashSet<string>(StringComparer.Ordinal),
         [Cancelled] = new HashSet<string>(StringComparer.Ordinal),
@@ -58,9 +57,8 @@ public static class TripStatuses
     /// and any stop added or edited now must be snapshotted individually.
     /// <para>
     /// <c>Paused</c> counts. Only the <c>Created → InProgress</c> transition takes the bulk
-    /// snapshot, and Resume does not repeat it, so a stop added while paused was left with a null
-    /// <c>ArrivalGeom</c> — detection filters those out, so it could never auto-arrive and the trip
-    /// became completable only by manual override or <c>force</c>.
+    /// snapshot, and Resume does not repeat it; a stop added while paused would be left with a null
+    /// <c>ArrivalGeom</c>, which detection filters out, so it could never auto-arrive.
     /// </para>
     /// </summary>
     public static bool HasStarted(string status)
@@ -91,7 +89,7 @@ public static class TripStopStatuses
 
 /// <summary>
 /// The zone radii this module accepts. Shared by the origin and by every stop on purpose — a trip's
-/// ends are measured exactly the way its middle is (spec 11a §4.1).
+/// ends are measured exactly the way its middle is.
 /// </summary>
 public static class TripGeometry
 {
@@ -108,7 +106,7 @@ public static class TripGeometry
 
 /// <summary>
 /// What a stop is FOR. Dwell without this is an anonymous number of minutes; with it the same
-/// measurement reads as loading time or unloading time in the reports (spec 11a §4.2).
+/// measurement reads as loading time or unloading time in the reports.
 /// </summary>
 public static class TripStopActivities
 {
@@ -130,7 +128,7 @@ public static class TripStopActivities
 
 /// <summary>
 /// The live phase of a trip, DERIVED server-side from status plus the measured origin and stop
-/// timestamps (spec 11a §4.3). Never stored: it is a reading of the recorded facts, and a stored
+/// timestamps. Never stored: it is a reading of the recorded facts, and a stored
 /// copy would be one more thing that can disagree with them.
 /// </summary>
 public static class TripPhases
@@ -197,7 +195,7 @@ public static class RoutePlanProviders
 
 /// <summary>
 /// Where a stop's ETA came from. Recorded per stop so the UI can be honest about confidence
-/// instead of presenting a planned-schedule fallback as a live estimate (spec 11 §18.11).
+/// instead of presenting a planned-schedule fallback as a live estimate.
 /// </summary>
 public static class EtaSources
 {
@@ -213,7 +211,7 @@ public static class EtaSources
 /// <summary>
 /// Outcome of toll matching over a route plan. <see cref="PartialNoTariff"/> exists so an
 /// estimate can never silently understate cost: a matched station with no tariff for the trip's
-/// class contributes 0 AND says so (spec 11 §6.2, §18.9).
+/// class contributes 0 AND says so.
 /// </summary>
 public static class TollStatuses
 {
@@ -226,11 +224,8 @@ public static class TollStatuses
     /// The matched stations price in more than one currency, so no single total is meaningful.
     /// <para>
     /// The amount is null and the per-station breakdown carries each station's own amount and
-    /// currency. Previously the service summed across currencies and labelled the result with
-    /// whichever it matched FIRST — 12 500 COP + 3.50 USD reported as "12503.50 COP", and reversing
-    /// the match order reported the same route in USD. Reachable on ordinary Colombian border
-    /// corridors (Cúcuta–San Antonio, Ipiales–Tulcán). It is the same class of lie
-    /// <see cref="PartialNoTariff"/> exists to prevent, and worse for being silent.
+    /// currency: summing 12 500 COP + 3.50 USD under whichever currency matched first would be wrong
+    /// in both and depend on match order. Reachable on ordinary Colombian border corridors.
     /// </para>
     /// </summary>
     public const string MixedCurrency = nameof(MixedCurrency);
@@ -273,7 +268,7 @@ public static class TripEventTypes
     /// <para>
     /// TIMELINE-ONLY. Deliberately NOT mirrored in Manager's <c>AlertEventTypes</c> — it is a
     /// measurement, not something anyone needs to be woken up for, and adding it would put a new
-    /// literal on the wire for no subscriber (spec 11a §11).
+    /// literal on the wire for no subscriber.
     /// </para>
     /// </summary>
     public const string TripOriginDeparted = nameof(TripOriginDeparted);
@@ -328,8 +323,8 @@ public static class TripDocumentKinds
 }
 
 /// <summary>
-/// Specific, localizable rejection codes. Spec 11 §9 requires these rather than generic failures
-/// so spec 10's offline error centre can explain a rejection to a staff without guessing.
+/// Specific, localizable rejection codes rather than generic failures, so the mobile app's
+/// offline error centre can explain a rejection to a staff without guessing.
 /// </summary>
 public static class TripErrorCodes
 {
@@ -353,19 +348,19 @@ public static class TripErrorCodes
 
     /// <summary>
     /// The transporter is already running another trip. One physical unit runs one trip at a time,
-    /// enforced by <c>ux_trips_transporterid_inprogress</c> (spec 11a §4.1).
+    /// enforced by <c>ux_trips_transporterid_inprogress</c>.
     /// </summary>
     public const string TransporterBusy = "TRIP_TRANSPORTER_BUSY";
 
     /// <summary>
     /// The trip is armed — detection is watching it — so its transporter and origin are frozen.
-    /// Re-pointing a watched trip mid-decision changes what the running measurement means (§12.4).
+    /// Re-pointing a watched trip mid-decision changes what the running measurement means.
     /// </summary>
     public const string TripArmed = "TRIP_ARMED";
 
     /// <summary>
     /// An "already in transit" trip was declared without a start time and no recorded visit could be
-    /// found to back-fill from, so there is nothing honest to stamp <c>ActualStartAt</c> with (§5.4).
+    /// found to back-fill from, so there is nothing honest to stamp <c>ActualStartAt</c> with.
     /// </summary>
     public const string StartEvidenceRequired = "TRIP_START_EVIDENCE_REQUIRED";
     public const string StaffNotAssignable = "TRIP_STAFF_NOT_ASSIGNABLE";
@@ -376,7 +371,7 @@ public static class TripErrorCodes
     /// The provider answered, but the geometry it returned cannot produce a usable route line or
     /// corridor (fewer than two coordinates, or a buffer that degenerates to a non-polygon). Stored
     /// as a <c>Failed</c> plan rather than a <c>Ready</c> one with null geometry: a Ready plan with
-    /// no corridor makes every later position read as out-of-corridor (spec 11 §6.1, §7.4).
+    /// no corridor makes every later position read as out-of-corridor.
     /// </summary>
     public const string RoutingInvalidGeometry = "ROUTING_INVALID_GEOMETRY";
     public const string OverlappingTariff = "TOLL_OVERLAPPING_TARIFF";

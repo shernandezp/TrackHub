@@ -19,8 +19,6 @@ using TrackHub.Router.Infrastructure.Samsara.Models;
 
 namespace TrackHub.Router.Infrastructure.Samsara.Tests;
 
-// Value-correctness test for a provider mapper (router-audit A-16): the conversions that feed the
-// platform's reported speed/position must be asserted, not just that empty input yields empty.
 [TestFixture]
 public class PositionMapperTests
 {

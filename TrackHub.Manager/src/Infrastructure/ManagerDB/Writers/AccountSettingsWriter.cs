@@ -19,15 +19,8 @@ using TrackHub.Manager.Infrastructure.Interfaces;
 
 namespace TrackHub.Manager.Infrastructure.ManagerDB.Writers;
 
-// AccountSettingsWriter class is responsible for writing account settings-related data to the database
 public sealed class AccountSettingsWriter(IApplicationDbContext context, ICurrentPrincipal principal) : IAccountSettingsWriter
 {
-    /// <summary>
-    /// Creates a new account setting asynchronously
-    /// </summary>
-    /// <param name="accountSettingsDto"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>The created account settings view model</returns>
     public async Task<AccountSettingsVm> CreateAccountSettingsAsync(Guid accountId, CancellationToken cancellationToken)
     {
         var accountSettings = new AccountSettings(accountId);
@@ -46,13 +39,6 @@ public sealed class AccountSettingsWriter(IApplicationDbContext context, ICurren
             accountSettings.Version);
     }
 
-    /// <summary>
-    /// Updates an existing account setting asynchronously
-    /// </summary>
-    /// <param name="accountSettingsDto"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    /// <exception cref="NotFoundException"></exception>
     public async Task UpdateAccountSettingsAsync(AccountSettingsDto accountSettingsDto, CancellationToken cancellationToken)
     {
         var accountSettings = await context.AccountSettings.FindAsync([accountSettingsDto.AccountId], cancellationToken)

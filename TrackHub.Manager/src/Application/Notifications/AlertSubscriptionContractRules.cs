@@ -17,7 +17,6 @@ using TrackHub.Manager.Domain.Constants;
 
 namespace TrackHub.Manager.Application.Notifications;
 
-/// <summary>Shared validation for the create/update subscription commands.</summary>
 public static class AlertSubscriptionContractRules
 {
     // Subscriptions target person channels; Webhook is rule-level and Push is not yet available.

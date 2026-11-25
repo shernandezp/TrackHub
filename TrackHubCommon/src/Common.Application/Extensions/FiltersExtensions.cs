@@ -23,13 +23,9 @@ namespace Common.Application.Extensions;
 public static class FiltersExtensions
 {
     /// <summary>
-    /// Builds the filter set for a query, refusing any key outside the surface's allow-list.
+    /// Refuses any key outside the allow-list: keys reach <c>Expression.Property</c>, so a caller could
+    /// otherwise filter on unprojected columns such as a password hash, an equality oracle.
     /// </summary>
-    /// <remarks>
-    /// Filter keys reach <see cref="System.Linq.Expressions.Expression.Property(System.Linq.Expressions.Expression, string)"/>,
-    /// so without an allow-list a caller can filter an entity on columns the projection never
-    /// returns — including a password hash, which turns a list endpoint into an equality oracle.
-    /// </remarks>
     public static Filters GetFilters(this FiltersInput filtersInput, IReadOnlySet<string> allowedKeys)
     {
         ArgumentNullException.ThrowIfNull(filtersInput);

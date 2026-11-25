@@ -15,9 +15,6 @@
 
 namespace TrackHub.Geofencing.Infrastructure.Entities;
 
-/// <summary>
-/// Entity representing a geofence entry or exit event.
-/// </summary>
 public class GeofenceEvent(
     Guid transporterId,
     Guid geofenceId,
@@ -44,15 +41,13 @@ public class GeofenceEvent(
     /// One-time dwell alert emission stamp for this visit (null = not alerted).
     /// </summary>
     public DateTimeOffset? DwellAlertedAt { get; set; }
-    // First instant this visit was observed OUTSIDE the geofence. The exit debounce
-    // needs an outside-since clock; measuring it from the ENTRY instant skipped the exit on short
-    // visits and closed them at a much later fix, so DepartureTimestamp became the sampling
-    // interval rather than the real departure. Mirrors TripStop.OutsideSinceAt.
+    // First instant this visit was observed OUTSIDE the geofence. The exit debounce measures from
+    // it: measured from entry, short visits skipped their exit and were closed at a much later fix.
+    // Mirrors TripStop.OutsideSinceAt.
     public DateTimeOffset? OutsideSinceAt { get; set; }
     // Alert markers, stamped after a successful emission (or at once when the geofence does not
     // alert on that edge) so the retry loop can find visits whose alert never reached Manager.
     public DateTimeOffset? EntryAlertedAt { get; set; }
     public DateTimeOffset? ExitAlertedAt { get; set; }
-    // Navigation properties
     public Geofence? Geofence { get; set; }
 }

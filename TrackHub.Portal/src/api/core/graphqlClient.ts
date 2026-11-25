@@ -46,11 +46,7 @@ function hasUsableData(payload: GraphQLResponsePayload): boolean {
   );
 }
 
-/**
- * Executes a GraphQL operation against one of the TrackHub backends.
- * Values ALWAYS travel as GraphQL variables — never interpolated into the
- * document. Throws ApiError on failure; returns the data payload on success.
- */
+/** Values ALWAYS travel as GraphQL variables, never interpolated into the document. */
 export async function executeGraphQL<TData, TVariables>(
   backend: GraphQLBackend,
   document: TypedDocumentNode<TData, TVariables> | string,

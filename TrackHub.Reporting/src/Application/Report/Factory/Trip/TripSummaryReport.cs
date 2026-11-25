@@ -20,7 +20,7 @@ using TrackHub.Reporting.Domain.Records;
 
 namespace TrackHub.Reporting.Application.Report.Factory.Trip;
 
-// Trips by period (spec 11 §13): plan versus reality on one line per trip. Filters:
+// Trips by period: plan versus reality on one line per trip. Filters:
 // from/to = window, transporterId = optional unit (unparseable values are ignored). Most
 // recent departure first. Excel only.
 public sealed class TripSummaryReport(ITripReportReader reader) : IReport

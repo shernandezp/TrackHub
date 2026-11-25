@@ -20,16 +20,12 @@ using TrackHub.Router.Domain.Helpers;
 
 namespace TrackHub.Router.Infrastructure.Samsara;
 
-/// <summary>
-/// Reader for retrieving device (vehicle) information from Samsara API.
-/// </summary>
 public sealed class DeviceReader(
     ICredentialHttpClientFactory httpClientFactory,
     IHttpClientService httpClientService)
     : SamsaraReaderBase(httpClientFactory, httpClientService), IExternalDeviceReader
 {
     /// <summary>
-    /// Retrieves a single device asynchronously based on the provided device DTO.
     /// Uses the stats endpoint filtered by vehicle ID.
     /// </summary>
     public async Task<DeviceVm> GetDeviceAsync(DeviceTransporterVm deviceDto, CancellationToken cancellationToken)
@@ -43,9 +39,6 @@ public sealed class DeviceReader(
             : DeviceMapper.Instance.Map(vehicle.Value, deviceDto);
     }
 
-    /// <summary>
-    /// Retrieves multiple devices asynchronously based on the provided device DTOs.
-    /// </summary>
     public async Task<IEnumerable<DeviceVm>> GetDevicesAsync(IEnumerable<DeviceTransporterVm> devices, CancellationToken cancellationToken)
     {
         var devicesDictionary = devices.ToDeviceLookup(device => device.Serial);
@@ -59,9 +52,6 @@ public sealed class DeviceReader(
         return results;
     }
 
-    /// <summary>
-    /// Retrieves all devices asynchronously.
-    /// </summary>
     public async Task<IEnumerable<DeviceVm>> GetDevicesAsync(CancellationToken cancellationToken)
     {
         var vehicles = await GetAllPagesAsync<VehicleStatsResponse, VehicleStats>("fleet/vehicles/stats", cancellationToken);

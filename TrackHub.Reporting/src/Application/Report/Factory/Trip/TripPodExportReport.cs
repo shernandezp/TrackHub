@@ -20,18 +20,12 @@ using TrackHub.Reporting.Domain.Records;
 
 namespace TrackHub.Reporting.Application.Report.Factory.Trip;
 
-// Proof-of-delivery register (spec 11 §13). Filters: from/to = window, transporterId =
+// Proof-of-delivery register. Filters: from/to = window, transporterId =
 // optional unit. Most recent capture first. Excel only.
 //
-// SENSITIVE EXPORT. It carries receiver names, receiver identity documents and the coordinates where
-// the signature was captured. Spec 06 §13 / spec 11 §13 call for a HIGH-SEVERITY export audit; the
-// platform has no severity dimension to record it on yet — `IReportAuditWriter.RecordReportExportAsync`
-// takes no severity, and neither `ReportMetadataVm` nor the Manager `Report` catalog row carries a
-// sensitivity column, so severity is not derivable from the catalog either. That is finding SC-06
-// (open), whose approved remedy is specs/24a-audit-event-classification.md, NOT a local flag on this
-// report. Until 24a lands this export audits exactly like every other one — the same position the
-// three equally sensitive `workforce-*` PII exports are in. Do not invent a divergent local
-// mechanism here; wire this report's severity when 24a delivers the classification axis.
+// SENSITIVE EXPORT: it carries receiver names, receiver identity documents and the coordinates where
+// the signature was captured. It audits like every other export because the export audit has no
+// severity dimension; give the audit one rather than adding a local flag to this report.
 public sealed class TripPodExportReport(ITripReportReader reader) : IReport
 {
     public string ReportCode => TripReportCodes.PodExport;

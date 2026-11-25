@@ -20,12 +20,12 @@ using TrackHub.Reporting.Domain.Records;
 
 namespace TrackHub.Reporting.Application.Report.Factory.Trip;
 
-// Estimated toll by trip/route/station/vehicle class (spec 11 §13). Filters: from/to = window,
+// Estimated toll by trip/route/station/vehicle class. Filters: from/to = window,
 // transporterId = optional unit. SupportsPdf.
 //
 // The `PartialNoTariff` column is the point of the report: a station crossed with no tariff for the
 // trip's vehicle class on the plan date carries a NULL amount, not a zero. Leaving it out would turn
-// a catalog gap into an invisible discount (spec 11 §7.7).
+// a catalog gap into an invisible discount.
 public sealed class TripTollCostReport(ITripReportReader reader) : IReport
 {
     public string ReportCode => TripReportCodes.TollCost;

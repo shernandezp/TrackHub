@@ -49,7 +49,7 @@ const WORKFORCE_KEYS = [
   'workforce.assignments.emptyActive',
 ];
 
-/** Keys that were present in both bundles but referenced by nothing — deleted. */
+/** Keys referenced by nothing; they must stay deleted. */
 const REMOVED_KEYS = [
   'workforce.credentials.credential',
   'workforce.credentials.verifiedAt',

@@ -44,13 +44,11 @@ builder.Services.AddCors(options => options
                     .AllowAnyHeader()
                     .AllowCredentials()));
 
-// Add services to the container.
 builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
 builder.Services.AddControllersWithViews()
     .AddViewLocalization()
     .AddDataAnnotationsLocalization();
 
-// Configure supported cultures and localization options
 var supportedCultures = new[]
 {
     new CultureInfo("en"),
@@ -70,7 +68,6 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
                 .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme,
                     options => options.LoginPath = "/login");
 
-// Add services to the container.
 builder.Services.AddApplicationServices();
 builder.Services.AddApplicationDbContext(builder.Configuration);
 builder.Services.AddOpenIdDictDbContext(builder.Configuration);
@@ -78,11 +75,9 @@ builder.Services.AddOpenIdDictServices(builder.Configuration);
 
 builder.Services.AddRazorPages();
 
-// Add HealthChecks
 builder.Services.AddHealthChecks()
             .AddDbContextCheck<SecurityDbContext>();
 
-//Register Handlers
 builder.Services.AddScoped<SubjectValidity>();
 
 // The per-user lockout counts failures against ONE account, so it does nothing against spraying a
@@ -103,7 +98,6 @@ builder.Services.AddRateLimiter(options =>
 builder.Services.AddScoped<AuthorizationHandler>();
 builder.Services.AddScoped<TokenHandler>();
 
-// Configure HSTS
 builder.Services.AddHsts(options =>
 {
     options.MaxAge = TimeSpan.FromDays(365 * 2);
@@ -113,16 +107,14 @@ builder.Services.AddHsts(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseHsts();
 }
 
-// Add localization middleware
 app.UseRequestLocalization(localizationOptions);
 
-// Trust reverse proxy headers (nginx terminates SSL)
+// nginx terminates TLS.
 var forwardedHeadersOptions = TrustedProxies.Create(builder.Configuration);
 app.UseForwardedHeaders(forwardedHeadersOptions);
 app.UseExceptionHandler(options => { });
@@ -131,9 +123,7 @@ app.UsePathBase("/Identity");
 
 // CORS MUST precede UseHealthChecks: the latter is terminal middleware (it writes the response and
 // never calls next), so registering it first would emit /Identity/health with no
-// Access-Control-Allow-Origin and the portal's public status page could never read it — the Sign-in
-// tile would report an outage while sign-in was healthy. Every other service already orders it this
-// way; AuthorityServer was the outlier.
+// Access-Control-Allow-Origin and the portal's public status page could never read it.
 app.UseCors("AllowFrontend");
 
 app.UseHealthChecks("/health");
@@ -178,9 +168,8 @@ app.MapGet("~/logout", async (HttpContext context) =>
         [OpenIddictServerAspNetCoreDefaults.AuthenticationScheme]);
 });
 
-// POST /revoke is handled by OpenIddict's revocation endpoint (SetRevocationEndpointUris):
-// it validates the body token + client_id per RFC 7009 and revokes it. The former custom
-// handler shadowed that endpoint and never worked (it read a claim no anonymous call carries).
+// POST /revoke is handled by OpenIddict's revocation endpoint (SetRevocationEndpointUris); a custom
+// handler here would shadow it.
 
 app.MapControllerRoute(
     name: "default",

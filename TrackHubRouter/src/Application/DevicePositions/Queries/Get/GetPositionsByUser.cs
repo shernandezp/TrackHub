@@ -51,12 +51,6 @@ public class GetPositionsByUserQueryHandler(
 {
     private string? EncryptionKey { get; } = configuration["AppSettings:EncryptionKey"];
 
-    /// <summary>
-    /// Retrieves the operators, protocols, and device positions asynchronously
-    /// </summary>
-    /// <param name="request"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>Returns the collection of PositionVm</returns>
     public async Task<IEnumerable<PositionVm>> Handle(GetPositionsByUserQuery request, CancellationToken cancellationToken)
     {
         // Visibility is resolved under the caller's identity (Manager applies their account and group
@@ -84,8 +78,7 @@ public class GetPositionsByUserQueryHandler(
             return [];
         }
 
-        // Mode split per account, resolved through the single IAccountModeResolver
-        //:
+        // Mode split per account:
         // - gps.integration DISABLED  -> on-demand: read the GPS provider directly, persist
         //   what was read, and fall back to the stored projection if the provider fails.
         // - gps.integration ENABLED   -> always serve the stored latest-position projection;
@@ -115,8 +108,8 @@ public class GetPositionsByUserQueryHandler(
 
         if (storedProjectionOperators.Count > 0)
         {
-            // One batched Telemetry read for every stored-projection operator (this path runs
-            // on every map refresh — previously one call per operator).
+            // One batched Telemetry read for every stored-projection operator: this path runs on
+            // every map refresh.
             try
             {
                 allPositions.AddRange(await transporterPositionReader.GetTransporterPositionsAsync(
@@ -132,16 +125,14 @@ public class GetPositionsByUserQueryHandler(
             ? (await deviceReader.GetTransporterIdsByGroupAsync(groupId, cancellationToken)).ToHashSet()
             : null;
 
-        //Most recent position for each transporter if multiple positions are available
         var result = allPositions
             .Where(p => groupMembers is null || groupMembers.Contains(p.TransporterId))
             .GroupBy(p => p.TransporterId)
             .Select(g => g.OrderByDescending(p => p.DeviceDateTime).First())
             .ToList();
 
-        // Diagnosability: an empty map for an account that actually has active
-        // assignments is the known defect signature. Name the branch that produced nothing so it is
-        // never silent. No contract change — empty remains a valid response.
+        // An empty map for an account that has active assignments must never be silent: name the
+        // branch that produced nothing. Empty remains a valid response.
         if (result.Count == 0 && groupMembers is null && operators.Any(o => o.Enabled))
         {
             await LogEmptyMapDiagnosticsAsync(operators, onDemandOperators, cancellationToken);
@@ -150,9 +141,6 @@ public class GetPositionsByUserQueryHandler(
         return result;
     }
 
-    // Emits a structured warning per enabled operator that has active assignments in the account yet
-    // contributed no positions, naming the branch (provider read + stored fallback, or stored
-    // projection / visibility narrowing).
     private async Task LogEmptyMapDiagnosticsAsync(
         IReadOnlyCollection<OperatorVm> operators,
         IReadOnlyCollection<OperatorVm> onDemandOperators,
@@ -176,14 +164,9 @@ public class GetPositionsByUserQueryHandler(
             var assignedCount = assigned.Count();
             if (assignedCount == 0)
             {
-                // Used to `continue` silently, which made an empty map indistinguishable from a
-                // broken provider. A device carries no position of its own — the transporter does —
-                // so until a device is assigned to one the map is empty however healthy the provider
-                // is. This is a normal intermediate state, not a defect: providers that declare no
-                // DeviceCatalog capability have their devices registered by hand, and auto-assign
-                // deliberately touches only devices a sync has just discovered (re-assigning on every
-                // sync would resurrect transporters an operator had unassigned on purpose). Saying so
-                // is all that is needed — the operator finishes the wiring in the UI.
+                // A normal intermediate state, not a defect: positions belong to transporters, and
+                // auto-assign deliberately touches only devices a sync has just discovered
+                // (re-assigning on every sync would resurrect transporters unassigned on purpose).
                 logger.LogWarning(
                     "Live map returned no positions for operator {OperatorId} (account {AccountId}): none of its devices are assigned to a transporter. "
                     + "A registered device only reaches the map once it is assigned to a transporter AND that transporter is in a group the user belongs to.",
@@ -200,13 +183,6 @@ public class GetPositionsByUserQueryHandler(
         }
     }
 
-    /// <summary>
-    /// Retrieves the device positions asynchronously
-    /// </summary>
-    /// <param name="operators"></param>
-    /// <param name="protocols"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>returns the collection of PositionVm</returns>
     private async IAsyncEnumerable<IEnumerable<PositionVm>> GetDevicePositionAsync(
         IEnumerable<OperatorVm> operators,
         IEnumerable<ProtocolType> protocols,
@@ -227,13 +203,6 @@ public class GetPositionsByUserQueryHandler(
         }
     }
 
-    /// <summary>
-    /// Fetches and processes the positions asynchronously
-    /// </summary>
-    /// <param name="reader"></param>
-    /// <param name="operators"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>returns the collection of PositionVm</returns>
     private async Task<IEnumerable<PositionVm>> FetchAndProcessPositionsAsync(
         IPositionReader reader,
         IEnumerable<OperatorVm> operators,
@@ -323,10 +292,7 @@ public class GetPositionsByUserQueryHandler(
         }
     }
 
-    /// <summary>
-    /// Best-effort upsert of provider-read positions using the Router's service identity.
-    /// Failures are logged and never block the map read.
-    /// </summary>
+    // Best-effort, under the Router's service identity: failures never block the map read.
     private async Task PersistLatestPositionsAsync(
         IReadOnlyCollection<PositionVm> positions,
         CancellationToken cancellationToken)

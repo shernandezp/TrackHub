@@ -18,11 +18,8 @@ import { jwtDecode } from 'jwt-decode';
 import { ApiError } from './errors';
 
 /**
- * Framework-agnostic access-token holder. AuthContext (React) is the writer:
- * it mirrors its token state here and registers its refresh routine. The api
- * layer is the reader, so services stay plain async functions instead of
- * hooks. Tokens live in memory only, matching the pre-existing security
- * posture (nothing persisted to storage).
+ * AuthContext is the writer and registers its refresh routine; the api layer
+ * reads, so services stay plain async functions. Tokens live in memory only.
  */
 
 type RefreshHandler = () => Promise<string | undefined>;
@@ -57,15 +54,10 @@ export const tokenStore = {
     return accessToken;
   },
 
-  /** AuthContext registers its handleRefreshToken here (returns the new access token). */
   registerRefreshHandler(handler: RefreshHandler | null): void {
     refreshHandler = handler;
   },
 
-  /**
-   * Returns a currently-valid access token, refreshing (once, shared across
-   * concurrent callers) when the held token is missing or expired.
-   */
   async acquireValidAccessToken(): Promise<string> {
     if (accessToken && isTokenValid(accessToken)) {
       return accessToken;
@@ -103,7 +95,6 @@ export const tokenStore = {
     return this.acquireValidAccessToken();
   },
 
-  /** Test/logout hook: drop all state. */
   reset(): void {
     accessToken = null;
     refreshHandler = null;

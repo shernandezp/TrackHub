@@ -32,22 +32,16 @@ Coded by www.creative-tim.com
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
-// @mui material components
 import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
 import type { SxProps, Theme } from "@mui/material/styles";
 
-// Argon Dashboard 2 MUI components
 import ArgonBox from "components/ArgonBox";
 import ArgonTypography from "components/ArgonTypography";
 import ArgonAvatar from "components/ArgonAvatar";
 
-// Argon Dashboard 2 MUI example components
-
-// Argon Dashboard 2 MUI base styles
 import breakpoints from "assets/theme/base/breakpoints";
 
-// Images
 import profileImage from "assets/images/profile.jpeg";
 
 import type { CurrentUser } from "api/security/users";
@@ -73,22 +67,16 @@ function Header({ user }: HeaderProps) {
   }, [user]);
 
   useEffect(() => {
-    // A function that sets the orientation state of the tabs.
     function handleTabsOrientation() {
       return window.innerWidth < breakpoints.values.sm
         ? setTabsOrientation("vertical")
         : setTabsOrientation("horizontal");
     }
 
-    /**
-     The event listener that's calling the handleTabsOrientation function when resizing the window.
-    */
     window.addEventListener("resize", handleTabsOrientation);
 
-    // Call the handleTabsOrientation function to set the state with the initial value.
     handleTabsOrientation();
 
-    // Remove event listener on cleanup
     return () => window.removeEventListener("resize", handleTabsOrientation);
   }, [tabsOrientation]);
 

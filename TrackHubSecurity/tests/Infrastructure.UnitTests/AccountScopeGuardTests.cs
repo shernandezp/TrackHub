@@ -26,13 +26,8 @@ using TrackHub.Security.Infrastructure.Writers;
 
 namespace Infrastructure.UnitTests;
 
-/// <summary>
-/// Foreign-deny pins for the TS-06 by-id guards (the enforcement the
-/// <c>[AccountScopeEnforcedInHandler]</c> markers on the user requests cite): a caller from one
-/// account must not read, mutate, delete, or grant roles/policies against a user owned by another
-/// account, while same-account callers, the Administrator, and global service identities keep
-/// working. Removing a RequireAccountAccess call fails one of these.
-/// </summary>
+// Foreign-deny pins for the by-id guards the [AccountScopeEnforcedInHandler] markers cite; removing
+// a RequireAccountAccess call fails one of these.
 [TestFixture]
 internal class AccountScopeGuardTests
 {

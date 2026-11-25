@@ -19,7 +19,7 @@ namespace TrackHub.TripManagement.Application.Common;
 
 /// <summary>
 /// Builds a <see cref="ValidationException"/> carrying one of the specific
-/// <see cref="TripErrorCodes"/> literals rather than a generic failure (spec 11 §9), so spec 10's
+/// <see cref="TripErrorCodes"/> literals rather than a generic failure, so the mobile app's
 /// offline error centre can explain a rejection instead of guessing. The code IS the message —
 /// no localized string ever leaves the backend; the portal localizes it.
 /// </summary>

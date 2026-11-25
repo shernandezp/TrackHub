@@ -18,7 +18,6 @@ using TrackHub.Router.Domain.Interfaces;
 namespace TrackHub.Router.Infrastructure.Wialon;
 
 /// <summary>
-/// Connectivity tester for Wialon API.
 /// Init may be satisfied from the session cache, so the ping issues a minimal authenticated
 /// search (1 unit) to keep the health probe a REAL provider round-trip — a cached sid must never
 /// turn the PING loop into a no-op.
@@ -29,10 +28,6 @@ public sealed class ConnectivityTester(
     IProviderSessionStore sessionStore)
     : WialonReaderBase(httpClientFactory, httpClientService, sessionStore), IConnectivityTester
 {
-    /// <summary>
-    /// Tests connectivity by authenticating (or reusing the cached session) and issuing a
-    /// minimal search against the Wialon API.
-    /// </summary>
     public async Task Ping(CredentialTokenDto credential, CancellationToken cancellationToken)
     {
         await Init(credential, cancellationToken);

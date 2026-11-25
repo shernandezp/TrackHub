@@ -15,7 +15,6 @@
 
 namespace TrackHub.Manager.Domain.Constants;
 
-/// <summary>Alert severity values already used by existing emitters. Stored as strings.</summary>
 public static class AlertSeverities
 {
     public const string Info = nameof(Info);

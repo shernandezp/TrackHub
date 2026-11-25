@@ -21,19 +21,12 @@ using TrackHub.Router.Domain.Helpers;
 namespace TrackHub.Router.Infrastructure.Traccar;
 
 
-// This class represents a reader for Traccar api - devices.
 public sealed class DeviceReader(
     ICredentialHttpClientFactory httpClientFactory,
     IHttpClientService httpClientService)
     : TraccarReaderBase(httpClientFactory, httpClientService), IExternalDeviceReader
 {
 
-    /// <summary>
-    /// Retrieves a single device asynchronously based on the provided device DTO.
-    /// </summary>
-    /// <param name="deviceDto"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>Returns the device as an DeviceVm.</returns>
     public async Task<DeviceVm> GetDeviceAsync(DeviceTransporterVm deviceDto, CancellationToken cancellationToken)
     {
         var url = $"api/devices?id={deviceDto.Identifier}";
@@ -45,12 +38,6 @@ public sealed class DeviceReader(
         return DeviceMapper.Instance.Map(device, deviceDto);
     }
 
-    /// <summary>
-    /// Retrieves multiple devices asynchronously based on the provided device DTOs.
-    /// </summary>
-    /// <param name="devices"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>Returns the devices as a collection of DeviceVm.</returns>
     public async Task<IEnumerable<DeviceVm>> GetDevicesAsync(IEnumerable<DeviceTransporterVm> devices, CancellationToken cancellationToken)
     {
         var devicesDictionary = devices.ToDeviceLookup(device => device.Identifier);
@@ -67,11 +54,6 @@ public sealed class DeviceReader(
         return results;
     }
 
-    /// <summary>
-    /// Retrieves all devices asynchronously.
-    /// </summary>
-    /// <param name="cancellationToken"></param>
-    /// <returns>Returns all devices as a collection of DeviceVm.</returns>
     public async Task<IEnumerable<DeviceVm>> GetDevicesAsync(CancellationToken cancellationToken)
     {
         var url = "api/devices?all=true";
