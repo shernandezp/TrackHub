@@ -33,7 +33,7 @@ en vivo, un solo conjunto de geocercas, un solo tablero de viajes, un solo catá
 solo modelo de permisos sobre toda la flota — sin importar quién suministró el hardware.
 
 Es open source, autoalojado, multiempresa y bilingüe (inglés / español), construido como una
-plataforma de microservicios GraphQL en .NET 10 con un portal en React 19.
+plataforma de microservicios GraphQL en .NET 11 con un portal en React 19.
 
 ---
 
@@ -141,7 +141,7 @@ respaldos, la reversión y la solución de problemas.
 
 ### Compilar y probar desde el código fuente
 
-Requiere el SDK de .NET 10 y, para el portal, Node.js 22.
+Requiere el SDK de .NET 11 y, para el portal, Node.js 22.
 
 ```bash
 git clone https://github.com/shernandezp/TrackHub.git
@@ -176,7 +176,7 @@ Cada servicio tiene además su propio `.slnx`, para trabajar en él sin cargar e
 
 | | |
 |---|---|
-| **Backend** | .NET 10, HotChocolate GraphQL, EF Core + Npgsql, NetTopologySuite, FluentValidation, Serilog, OpenIddict |
+| **Backend** | .NET 11, HotChocolate GraphQL, EF Core + Npgsql, NetTopologySuite, FluentValidation, Serilog, OpenIddict |
 | **Frontend** | React 19, TypeScript 7, Vite 8, MUI 9, TanStack Query, Vitest 5, Playwright, Leaflet / Google Maps |
 | **Datos** | PostgreSQL 14+ con PostGIS — dos bases de datos (`TrackHub`, `TrackHubSecurity`), un esquema por servicio |
 | **Integración** | GraphQL en todas partes, también entre servicios; OAuth 2.0 client credentials para las identidades de servicio |

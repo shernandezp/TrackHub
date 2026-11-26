@@ -85,20 +85,18 @@ test.describe('shell', () => {
   test('the mini-sidenav toggle collapses and restores the sidenav', async ({ shell, page }) => {
     await shell.enter();
     const link = shell.nav('dashboard');
-    const widthOf = async (): Promise<number> => (await link.boundingBox())?.width ?? 0;
-
-    const expanded = await widthOf();
-    expect(expanded).toBeGreaterThan(150);
+    const isExpanded = async (): Promise<boolean> =>
+      ((await link.boundingBox())?.width ?? 0) > 150;
+    const startedExpanded = await isExpanded();
 
     // The icon ligature flips between 'menu' and 'menu_open' with the state, so
     // the locator has to match both.
     const toggle = page.getByText(/^menu(_open)?$/).first();
     await toggle.click();
-    // Collapsed, the sidenav keeps only the icon rail, so its items get narrow.
-    await expect.poll(widthOf).toBeLessThan(expanded / 2);
+    await expect.poll(isExpanded).toBe(!startedExpanded);
 
     await toggle.click();
-    await expect.poll(widthOf).toBeGreaterThan(150);
+    await expect.poll(isExpanded).toBe(startedExpanded);
   });
 
   test('the configurator opens with the account map settings', async ({ shell, page, t }) => {

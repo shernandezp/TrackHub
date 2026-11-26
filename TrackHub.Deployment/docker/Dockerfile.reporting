@@ -1,10 +1,10 @@
 # TrackHub Reporting API (REST)
-# Multi-stage build for .NET 10
+# Multi-stage build for .NET 11
 
 # Stage 1: Build
 # TrackHubCommon is a ProjectReference, so it must
 # be present in the same layout as the repository and restores resolve it directly.
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
 WORKDIR /src
 
 # Central build configuration, shared by every project.
@@ -39,7 +39,7 @@ COPY TrackHub.Reporting/ TrackHub.Reporting/
 
 RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish TrackHub.Reporting/src/Web/Web.csproj -c Release -o /app/publish
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:11.0 AS runtime
 WORKDIR /app
 
 # Install curl for health checks

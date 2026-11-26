@@ -4,7 +4,7 @@
 # Stage 1: Build all three database initializers
 # TrackHubCommon is a ProjectReference, so every service is copied under its
 # real repository path and restores resolve it directly.
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
 WORKDIR /src
 
 COPY global.json Directory.Build.props Directory.Packages.props ./
@@ -17,7 +17,7 @@ RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish Trac
 RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish TrackHubSecurity/src/DBInitializer/DBInitializer.csproj      -c Release -o /app/security-init
 RUN --mount=type=cache,id=nuget,target=/root/.nuget/packages dotnet publish TrackHub.Manager/src/DBInitializer/DBInitializer.csproj      -c Release -o /app/manager-init
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:11.0 AS runtime
 WORKDIR /app
 
 # Install PostgreSQL client for connectivity checks
