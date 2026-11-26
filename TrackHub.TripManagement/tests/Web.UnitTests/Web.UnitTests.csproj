@@ -4,7 +4,6 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>Web.UnitTests</RootNamespace>
   </PropertyGroup>
   <ItemGroup>

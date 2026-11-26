@@ -12,7 +12,7 @@ troubleshooting) is in [INSTALL.md](INSTALL.md).
 | **Database** | PostgreSQL 14+ reachable from the server, with the PostGIS extension available |
 | **Domain** | A DNS name pointing at the server, ports 80 and 443 open |
 | **Route planning** | An OpenRouteService API key — free, same day, at <https://openrouteservice.org/dev/#/signup> |
-| **Migration host** | The .NET 10 SDK and `dotnet-ef`, on any machine that can reach PostgreSQL (this server is fine) |
+| **Migration host** | The .NET 11 SDK and `dotnet-ef`, on any machine that can reach PostgreSQL (this server is fine) |
 
 ## 1. Install Docker
 

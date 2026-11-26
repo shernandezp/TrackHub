@@ -53,7 +53,7 @@ test.describe('gps providers', () => {
     await operators.form.saveAndClose();
 
     const row = await operators.section.findRow(name);
-    await row.getByRole('button', { name: t('credential.title') }).click();
+    await row.getByRole('button', { name: t('credential.title'), exact: true }).click();
     await operators.form.waitOpen();
 
     await expect(operators.form.field('uri')).toHaveValue('https://api.service24gps.com/api/v1');
@@ -65,7 +65,7 @@ test.describe('gps providers', () => {
     await operators.form.fill({ username: 'e2e', password: 'e2e', key: 'e2e-key' });
     await operators.form.saveAndClose();
 
-    await (await operators.section.findRow(name)).getByRole('button', { name: t('credential.title') }).click();
+    await (await operators.section.findRow(name)).getByRole('button', { name: t('credential.title'), exact: true }).click();
     await operators.form.waitOpen();
     await expect(operators.form.field('uri')).toHaveValue('https://api.service24gps.com/api/v1');
     await expect(operators.form.field('username')).toHaveValue('e2e');
@@ -89,7 +89,7 @@ test.describe('gps providers', () => {
     await expect(operators.form.root.getByText(/one position update every/i)).toHaveCount(0);
     await operators.form.saveAndClose();
 
-    await (await operators.section.findRow(name)).getByRole('button', { name: t('credential.title') }).click();
+    await (await operators.section.findRow(name)).getByRole('button', { name: t('credential.title'), exact: true }).click();
     await operators.form.waitOpen();
 
     await expect(operators.form.field('uri')).toHaveValue('https://api.gomotive.com');

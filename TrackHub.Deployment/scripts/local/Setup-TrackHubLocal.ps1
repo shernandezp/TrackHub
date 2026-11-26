@@ -247,7 +247,7 @@ if ((Test-Path $BundlePath) -and -not $Force) {
     docker run --rm `
         -v "${ProjectDirU}/certificates:/certs:ro" `
         -v "${ProjectDirU}/local:/out" `
-        mcr.microsoft.com/dotnet/aspnet:10.0 `
+        mcr.microsoft.com/dotnet/aspnet:11.0 `
         sh -c "cat /etc/ssl/certs/ca-certificates.crt /certs/trackhub-local.crt > /out/ca-bundle.crt" 2>&1 | Out-Null
     if (-not (Test-Path $BundlePath)) { throw "CA bundle build failed." }
     $n = (Select-String -Path $BundlePath -Pattern 'BEGIN CERTIFICATE' -AllMatches).Count

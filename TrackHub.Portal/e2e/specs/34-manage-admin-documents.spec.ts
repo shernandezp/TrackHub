@@ -249,16 +249,16 @@ test.describe('account management — documents & sharing', () => {
     await expect(links.form.field('mintedToken')).not.toHaveValue('', { timeout: 45_000 });
     await links.form.cancel();
 
-    const row = await links.section.findRow(transporterId);
+    const row = await links.section.findRow(unitName);
     await expect(row).toContainText('track');
 
     await links.reload(shell, 'manageAdmin');
-    const stored = await links.section.findRow(transporterId);
+    const stored = await links.section.findRow(unitName);
     await stored.getByRole('button', { name: t('publicLinks.revoke') }).click();
     await expect
-      .poll(async () => (await links.section.findRow(transporterId)).innerText(), {
+      .poll(async () => (await links.section.findRow(unitName)).innerText(), {
         timeout: 45_000,
       })
-      .toContain(t('publicLinks.revokedAt'));
+      .toContain(t('publicLinks.revoked'));
   });
 });

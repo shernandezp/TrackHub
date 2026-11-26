@@ -39,10 +39,13 @@ test.describe('reports', () => {
       const section = new Section(page, `report-category-${category}`, t);
       await expect(section.root).toBeVisible({ timeout: 60_000 });
       await section.expand();
+      const labels = new Map<string, number>();
       for (const report of reports) {
-        await expect(
-          section.root.getByText(reportLabel(t, report), { exact: true })
-        ).toBeVisible();
+        const label = reportLabel(t, report);
+        labels.set(label, (labels.get(label) ?? 0) + 1);
+      }
+      for (const [label, count] of labels) {
+        await expect(section.root.getByText(label, { exact: true })).toHaveCount(count);
       }
     }
   });

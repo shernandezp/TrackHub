@@ -54,6 +54,8 @@ export class Shell {
   }
 
   async navigateTo(key: NavKey): Promise<void> {
+    // A mini sidenav expands on hover and moves its items.
+    await this.nav(key).hover();
     await this.nav(key).click();
     await this.page.waitForURL(`**${NAV_ROUTES[key]}`);
   }

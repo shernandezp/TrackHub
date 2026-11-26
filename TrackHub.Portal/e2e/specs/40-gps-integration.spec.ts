@@ -109,7 +109,7 @@ test.describe('gps integration', () => {
     );
 
     const row = await operators.section.findRow(name);
-    await row.getByRole('button', { name: t('credential.title') }).click();
+    await row.getByRole('button', { name: t('credential.title'), exact: true }).click();
     await operators.form.waitOpen();
 
     await operators.form.save();

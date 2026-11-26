@@ -22,7 +22,7 @@ public sealed class OperatorCatalogGate(IApplicationDbContext context) : IOperat
     public async Task<T> RunAsync<T>(Guid operatorId, Func<Task<T>> work, CancellationToken cancellationToken)
     {
         await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
-        await context.Database.ExecuteSqlInterpolatedAsync($"SELECT 1 FROM app.operators WHERE id = {operatorId} FOR UPDATE", cancellationToken);
+        await context.Database.ExecuteSqlAsync($"SELECT 1 FROM app.operators WHERE id = {operatorId} FOR UPDATE", cancellationToken);
         var result = await work();
         await transaction.CommitAsync(cancellationToken);
         return result;

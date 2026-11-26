@@ -33,7 +33,7 @@ geofences, one trip board, one report catalog and one permission model over the 
 regardless of who supplied the hardware.
 
 It is open source, self-hosted, multi-tenant and bilingual (English / Spanish), built as a
-.NET 10 GraphQL microservice platform with a React 19 portal.
+.NET 11 GraphQL microservice platform with a React 19 portal.
 
 ---
 
@@ -140,7 +140,7 @@ covers configuration, upgrades, backups, rollback and troubleshooting.
 
 ### Build and test from source
 
-Requires the .NET 10 SDK and, for the portal, Node.js 22.
+Requires the .NET 11 SDK and, for the portal, Node.js 22.
 
 ```bash
 git clone https://github.com/shernandezp/TrackHub.git
@@ -175,7 +175,7 @@ Each service also has its own `.slnx`, for working on it without loading the who
 
 | | |
 |---|---|
-| **Backend** | .NET 10, HotChocolate GraphQL, EF Core + Npgsql, NetTopologySuite, FluentValidation, Serilog, OpenIddict |
+| **Backend** | .NET 11, HotChocolate GraphQL, EF Core + Npgsql, NetTopologySuite, FluentValidation, Serilog, OpenIddict |
 | **Frontend** | React 19, TypeScript 7, Vite 8, MUI 9, TanStack Query, Vitest 5, Playwright, Leaflet / Google Maps |
 | **Data** | PostgreSQL 14+ with PostGIS — two databases (`TrackHub`, `TrackHubSecurity`), one schema per service |
 | **Integration** | GraphQL everywhere, including service-to-service; OAuth 2.0 client credentials for service identities |
